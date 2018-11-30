@@ -19,26 +19,23 @@
  * We have to use macros here because our leak analysis tool things we are
  * leaking strings when we have |static const nsString|. Sad :(
  */
-#define LEVELCHANGE_EVENT_NAME           NS_LITERAL_STRING("levelchange")
-#define CHARGINGCHANGE_EVENT_NAME        NS_LITERAL_STRING("chargingchange")
-#define DISCHARGINGTIMECHANGE_EVENT_NAME NS_LITERAL_STRING("dischargingtimechange")
-#define CHARGINGTIMECHANGE_EVENT_NAME    NS_LITERAL_STRING("chargingtimechange")
+#define LEVELCHANGE_EVENT_NAME NS_LITERAL_STRING("levelchange")
+#define CHARGINGCHANGE_EVENT_NAME NS_LITERAL_STRING("chargingchange")
+#define DISCHARGINGTIMECHANGE_EVENT_NAME \
+  NS_LITERAL_STRING("dischargingtimechange")
+#define CHARGINGTIMECHANGE_EVENT_NAME NS_LITERAL_STRING("chargingtimechange")
 
 namespace mozilla {
 namespace dom {
 namespace battery {
 
 BatteryManager::BatteryManager(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
-  , mLevel(kDefaultLevel)
-  , mCharging(kDefaultCharging)
-  , mRemainingTime(kDefaultRemainingTime)
-{
-}
+    : DOMEventTargetHelper(aWindow),
+      mLevel(kDefaultLevel),
+      mCharging(kDefaultCharging),
+      mRemainingTime(kDefaultRemainingTime) {}
 
-void
-BatteryManager::Init()
-{
+void BatteryManager::Init() {
   hal::RegisterBatteryObserver(this);
 
   hal::BatteryInformation batteryInfo;
@@ -47,21 +44,14 @@ BatteryManager::Init()
   UpdateFromBatteryInfo(batteryInfo);
 }
 
-void
-BatteryManager::Shutdown()
-{
-  hal::UnregisterBatteryObserver(this);
-}
+void BatteryManager::Shutdown() { hal::UnregisterBatteryObserver(this); }
 
-JSObject*
-BatteryManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* BatteryManager::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return BatteryManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool
-BatteryManager::Charging() const
-{
+bool BatteryManager::Charging() const {
   MOZ_ASSERT(NS_IsMainThread());
   // For testing, unable to report the battery status information
   if (Preferences::GetBool("dom.battery.test.default", false)) {
@@ -77,9 +67,7 @@ BatteryManager::Charging() const
   return mCharging;
 }
 
-double
-BatteryManager::DischargingTime() const
-{
+double BatteryManager::DischargingTime() const {
   MOZ_ASSERT(NS_IsMainThread());
   // For testing, unable to report the battery status information
   if (Preferences::GetBool("dom.battery.test.default", false)) {
@@ -96,9 +84,7 @@ BatteryManager::DischargingTime() const
   return mRemainingTime;
 }
 
-double
-BatteryManager::ChargingTime() const
-{
+double BatteryManager::ChargingTime() const {
   MOZ_ASSERT(NS_IsMainThread());
   // For testing, unable to report the battery status information
   if (Preferences::GetBool("dom.battery.test.default", false)) {
@@ -115,9 +101,7 @@ BatteryManager::ChargingTime() const
   return mRemainingTime;
 }
 
-double
-BatteryManager::Level() const
-{
+double BatteryManager::Level() const {
   MOZ_ASSERT(NS_IsMainThread());
   // For testing, unable to report the battery status information
   if (Preferences::GetBool("dom.battery.test.default")) {
@@ -127,9 +111,8 @@ BatteryManager::Level() const
   return mLevel;
 }
 
-void
-BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInfo)
-{
+void BatteryManager::UpdateFromBatteryInfo(
+    const hal::BatteryInformation& aBatteryInfo) {
   mLevel = aBatteryInfo.level();
 
   // Round to the nearest ten percent for non-chrome.
@@ -138,16 +121,16 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
   mCharging = aBatteryInfo.charging();
   mRemainingTime = aBatteryInfo.remainingTime();
 
-  if (!nsContentUtils::IsChromeDoc(doc))
-  {
+  if (!nsContentUtils::IsChromeDoc(doc)) {
     mLevel = lround(mLevel * 10.0) / 10.0;
     if (mLevel == 1.0) {
-      mRemainingTime = mCharging ? kDefaultRemainingTime : kUnknownRemainingTime;
+      mRemainingTime =
+          mCharging ? kDefaultRemainingTime : kUnknownRemainingTime;
     } else if (mRemainingTime != kUnknownRemainingTime) {
       // Round the remaining time to a multiple of 15 minutes and never zero
       const double MINUTES_15 = 15.0 * 60.0;
-      mRemainingTime = fmax(lround(mRemainingTime / MINUTES_15) * MINUTES_15,
-                            MINUTES_15);
+      mRemainingTime =
+          fmax(lround(mRemainingTime / MINUTES_15) * MINUTES_15, MINUTES_15);
     }
   }
 
@@ -155,14 +138,13 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
   if (mLevel == 1.0 && mCharging == true &&
       mRemainingTime != kDefaultRemainingTime) {
     mRemainingTime = kDefaultRemainingTime;
-    NS_ERROR("Battery API: When charging and level at 1.0, remaining time "
-             "should be 0. Please fix your backend!");
+    NS_ERROR(
+        "Battery API: When charging and level at 1.0, remaining time "
+        "should be 0. Please fix your backend!");
   }
 }
 
-void
-BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
-{
+void BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo) {
   double previousLevel = mLevel;
   bool previousCharging = mCharging;
   double previousRemainingTime = mRemainingTime;
@@ -201,6 +183,6 @@ BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo)
   }
 }
 
-} // namespace battery
-} // namespace dom
-} // namespace mozilla
+}  // namespace battery
+}  // namespace dom
+}  // namespace mozilla

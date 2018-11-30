@@ -14,33 +14,29 @@
 
 namespace mozilla {
 
-class WatchdogTimerEvent final : public nsITimerCallback
-                               , public nsINamed
-{
-    const WeakPtr<WebGLContextLossHandler> mHandler;
+class WatchdogTimerEvent final : public nsITimerCallback, public nsINamed {
+  const WeakPtr<WebGLContextLossHandler> mHandler;
 
-public:
-    NS_DECL_ISUPPORTS
+ public:
+  NS_DECL_ISUPPORTS
 
-    explicit WatchdogTimerEvent(WebGLContextLossHandler* handler)
-        : mHandler(handler)
-    { }
+  explicit WatchdogTimerEvent(WebGLContextLossHandler* handler)
+      : mHandler(handler) {}
 
-    NS_IMETHOD GetName(nsACString& aName) override
-    {
-      aName.AssignLiteral("WatchdogTimerEvent");
-      return NS_OK;
+  NS_IMETHOD GetName(nsACString& aName) override {
+    aName.AssignLiteral("WatchdogTimerEvent");
+    return NS_OK;
+  }
+
+ private:
+  virtual ~WatchdogTimerEvent() {}
+
+  NS_IMETHOD Notify(nsITimer*) override {
+    if (mHandler) {
+      mHandler->TimerCallback();
     }
-
-private:
-    virtual ~WatchdogTimerEvent() { }
-
-    NS_IMETHOD Notify(nsITimer*) override {
-        if (mHandler) {
-            mHandler->TimerCallback();
-        }
-        return NS_OK;
-    }
+    return NS_OK;
+  }
 };
 
 NS_IMPL_ISUPPORTS(WatchdogTimerEvent, nsITimerCallback, nsINamed)
@@ -48,63 +44,60 @@ NS_IMPL_ISUPPORTS(WatchdogTimerEvent, nsITimerCallback, nsINamed)
 ////////////////////////////////////////
 
 WebGLContextLossHandler::WebGLContextLossHandler(WebGLContext* webgl)
-    : mWebGL(webgl)
-    , mTimer(NS_NewTimer())
-    , mTimerPending(false)
-    , mShouldRunTimerAgain(false)
+    : mWebGL(webgl),
+      mTimer(NS_NewTimer()),
+      mTimerPending(false),
+      mShouldRunTimerAgain(false)
 #ifdef DEBUG
-    , mEventTarget(GetCurrentThreadSerialEventTarget())
+      ,
+      mEventTarget(GetCurrentThreadSerialEventTarget())
 #endif
 {
-    MOZ_ASSERT(mEventTarget);
+  MOZ_ASSERT(mEventTarget);
 }
 
-WebGLContextLossHandler::~WebGLContextLossHandler()
-{
-    const DebugOnly<nsISerialEventTarget*> callingThread = GetCurrentThreadSerialEventTarget();
-    MOZ_ASSERT(!callingThread || mEventTarget->IsOnCurrentThread());
-}
-
-////////////////////
-
-void
-WebGLContextLossHandler::RunTimer()
-{
-    MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
-
-    // If the timer was already running, don't restart it here. Instead,
-    // wait until the previous call is done, then fire it one more time.
-    // This is also an optimization to prevent unnecessary
-    // cross-communication between threads.
-    if (mTimerPending) {
-        mShouldRunTimerAgain = true;
-        return;
-    }
-
-    const RefPtr<WatchdogTimerEvent> event = new WatchdogTimerEvent(this);
-    const uint32_t kDelayMS = 1000;
-    mTimer->InitWithCallback(event, kDelayMS, nsITimer::TYPE_ONE_SHOT);
-
-    mTimerPending = true;
+WebGLContextLossHandler::~WebGLContextLossHandler() {
+  const DebugOnly<nsISerialEventTarget*> callingThread =
+      GetCurrentThreadSerialEventTarget();
+  MOZ_ASSERT(!callingThread || mEventTarget->IsOnCurrentThread());
 }
 
 ////////////////////
 
-void
-WebGLContextLossHandler::TimerCallback()
-{
-    MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+void WebGLContextLossHandler::RunTimer() {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
 
-    mTimerPending = false;
+  // If the timer was already running, don't restart it here. Instead,
+  // wait until the previous call is done, then fire it one more time.
+  // This is also an optimization to prevent unnecessary
+  // cross-communication between threads.
+  if (mTimerPending) {
+    mShouldRunTimerAgain = true;
+    return;
+  }
 
-    const bool runOnceMore = mShouldRunTimerAgain;
-    mShouldRunTimerAgain = false;
+  const RefPtr<WatchdogTimerEvent> event = new WatchdogTimerEvent(this);
+  const uint32_t kDelayMS = 1000;
+  mTimer->InitWithCallback(event, kDelayMS, nsITimer::TYPE_ONE_SHOT);
 
-    mWebGL->UpdateContextLossStatus();
-
-    if (runOnceMore && !mTimerPending) {
-        RunTimer();
-    }
+  mTimerPending = true;
 }
 
-} // namespace mozilla
+////////////////////
+
+void WebGLContextLossHandler::TimerCallback() {
+  MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
+
+  mTimerPending = false;
+
+  const bool runOnceMore = mShouldRunTimerAgain;
+  mShouldRunTimerAgain = false;
+
+  mWebGL->UpdateContextLossStatus();
+
+  if (runOnceMore && !mTimerPending) {
+    RunTimer();
+  }
+}
+
+}  // namespace mozilla

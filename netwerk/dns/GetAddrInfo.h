@@ -36,9 +36,8 @@ class AddrInfo;
  * @param aGetTtl[in] If true, the TTL will be retrieved if DNS provides the
  *     answers..
  */
-nsresult
-GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily, uint16_t aFlags,
-            AddrInfo** aAddrInfo, bool aGetTtl);
+nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
+                     uint16_t aFlags, AddrInfo** aAddrInfo, bool aGetTtl);
 
 /**
  * Initialize the GetAddrInfo module.
@@ -46,8 +45,7 @@ GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily, uint16_t aFlags,
  * GetAddrInfoShutdown() should be called for every time this function is
  * called.
  */
-nsresult
-GetAddrInfoInit();
+nsresult GetAddrInfoInit();
 
 /**
  * Shutdown the GetAddrInfo module.
@@ -56,10 +54,9 @@ GetAddrInfoInit();
  * An assertion may throw (but is not guarenteed) if this function is called
  * too many times.
  */
-nsresult
-GetAddrInfoShutdown();
+nsresult GetAddrInfoShutdown();
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // netwerk_dns_GetAddrInfo_h
+#endif  // netwerk_dns_GetAddrInfo_h

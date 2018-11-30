@@ -39,30 +39,27 @@ typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
 // this is achieved by having JSRuntime() call this function. There can be
 // multiple JSRuntimes per process so this function can thus be called multiple
 // times, having no effect after the first call.
-void
-EnsureEagerProcessSignalHandlers();
+void EnsureEagerProcessSignalHandlers();
 
 // Assuming EnsureEagerProcessSignalHandlers() has already been called,
 // this function performs the full installation of signal handlers which must
 // be performed per-thread/JSContext. This operation may incur some overhead and
 // so should be done only when needed to use wasm. Currently, this is done in
-// wasm::HasCompilerSupport() which is called when deciding whether to expose the
-// 'WebAssembly' object on the global object.
-bool
-EnsureFullSignalHandlers(JSContext* cx);
+// wasm::HasCompilerSupport() which is called when deciding whether to expose
+// the 'WebAssembly' object on the global object.
+bool EnsureFullSignalHandlers(JSContext* cx);
 
 // Return whether, with the given simulator register state, a memory access to
 // 'addr' of size 'numBytes' needs to trap and, if so, where the simulator
 // should redirect pc to.
-bool
-MemoryAccessTraps(const RegisterState& regs, uint8_t* addr, uint32_t numBytes, uint8_t** newPC);
+bool MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
+                       uint32_t numBytes, uint8_t** newPC);
 
 // Return whether, with the given simulator register state, an illegal
 // instruction fault is expected and, if so, the value of the next PC.
-bool
-HandleIllegalInstruction(const RegisterState& regs, uint8_t** newPC);
+bool HandleIllegalInstruction(const RegisterState& regs, uint8_t** newPC);
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_signal_handlers_h
+#endif  // wasm_signal_handlers_h

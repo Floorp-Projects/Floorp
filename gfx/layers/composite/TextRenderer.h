@@ -21,31 +21,22 @@ class TextureSource;
 class TextureSourceProvider;
 struct FontBitmapInfo;
 
-class TextRenderer
-{
+class TextRenderer {
   ~TextRenderer();
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(TextRenderer)
 
-  enum class FontType {
-    Default,
-    FixedWidth,
-    NumTypes
-  };
+  enum class FontType { Default, FixedWidth, NumTypes };
 
-  explicit TextRenderer()
-  {}
+  explicit TextRenderer() {}
 
-  RefPtr<TextureSource>
-  RenderText(TextureSourceProvider* aProvider,
-             const std::string& aText,
-             uint32_t aTextSize,
-             uint32_t aTargetPixelWidth,
-             FontType aFontType);
+  RefPtr<TextureSource> RenderText(TextureSourceProvider* aProvider,
+                                   const std::string& aText, uint32_t aTextSize,
+                                   uint32_t aTargetPixelWidth,
+                                   FontType aFontType);
 
-  void RenderText(Compositor* aCompositor,
-                  const std::string& aText,
+  void RenderText(Compositor* aCompositor, const std::string& aText,
                   const gfx::IntPoint& aOrigin,
                   const gfx::Matrix4x4& aTransform, uint32_t aTextSize,
                   uint32_t aTargetPixelWidth,
@@ -58,14 +49,14 @@ public:
     const FontBitmapInfo* mInfo;
   };
 
-protected:
+ protected:
   // Note that this may still fail to set mGlyphBitmaps to a valid value
   // if the underlying CreateDataSourceSurface fails for some reason.
   bool EnsureInitialized(FontType aType);
 
   static const FontBitmapInfo* GetFontInfo(FontType aType);
 
-private:
+ private:
   EnumeratedArray<FontType, FontType::NumTypes, UniquePtr<FontCache>> mFonts;
 };
 
@@ -89,7 +80,7 @@ struct FontBitmapInfo {
   }
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

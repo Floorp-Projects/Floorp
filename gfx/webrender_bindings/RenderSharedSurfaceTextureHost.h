@@ -21,17 +21,16 @@ namespace wr {
  * into the render texture cache by wrapping an existing surface wrapper. These
  * surfaces are backed by BGRA/X shared memory buffers.
  */
-class RenderSharedSurfaceTextureHost final : public RenderTextureHost
-{
-public:
-  explicit RenderSharedSurfaceTextureHost(gfx::SourceSurfaceSharedDataWrapper* aSurface);
+class RenderSharedSurfaceTextureHost final : public RenderTextureHost {
+ public:
+  explicit RenderSharedSurfaceTextureHost(
+      gfx::SourceSurfaceSharedDataWrapper* aSurface);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex,
-                           gl::GLContext* aGL,
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
-private:
+ private:
   ~RenderSharedSurfaceTextureHost() override;
 
   RefPtr<gfx::SourceSurfaceSharedDataWrapper> mSurface;
@@ -39,7 +38,7 @@ private:
   bool mLocked;
 };
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOST_H
+#endif  // MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOST_H

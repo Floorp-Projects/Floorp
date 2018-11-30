@@ -14,22 +14,21 @@
 #include <imgIContainer.h>
 
 class nsWindowGfx {
-public:
-  enum IconSizeType {
-    kSmallIcon,
-    kRegularIcon
-  };
+ public:
+  enum IconSizeType { kSmallIcon, kRegularIcon };
   static mozilla::gfx::IntSize GetIconMetrics(IconSizeType aSizeType);
-  static nsresult CreateIcon(imgIContainer *aContainer, bool aIsCursor,
+  static nsresult CreateIcon(imgIContainer* aContainer, bool aIsCursor,
                              uint32_t aHotspotX, uint32_t aHotspotY,
-                             mozilla::gfx::IntSize aScaledSize, HICON *aIcon);
+                             mozilla::gfx::IntSize aScaledSize, HICON* aIcon);
 
-private:
+ private:
   /**
    * Cursor helpers
    */
-  static uint8_t*         Data32BitTo1Bit(uint8_t* aImageData, uint32_t aWidth, uint32_t aHeight);
-  static HBITMAP          DataToBitmap(uint8_t* aImageData, uint32_t aWidth, uint32_t aHeight, uint32_t aDepth);
+  static uint8_t* Data32BitTo1Bit(uint8_t* aImageData, uint32_t aWidth,
+                                  uint32_t aHeight);
+  static HBITMAP DataToBitmap(uint8_t* aImageData, uint32_t aWidth,
+                              uint32_t aHeight, uint32_t aDepth);
 };
 
-#endif // WindowGfx_h__
+#endif  // WindowGfx_h__

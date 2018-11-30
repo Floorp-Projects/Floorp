@@ -18,44 +18,37 @@
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/DocumentTypeBinding.h"
 
-already_AddRefed<mozilla::dom::DocumentType>
-NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
-                      nsAtom *aName,
-                      const nsAString& aPublicId,
-                      const nsAString& aSystemId,
-                      const nsAString& aInternalSubset)
-{
+already_AddRefed<mozilla::dom::DocumentType> NS_NewDOMDocumentType(
+    nsNodeInfoManager* aNodeInfoManager, nsAtom* aName,
+    const nsAString& aPublicId, const nsAString& aSystemId,
+    const nsAString& aInternalSubset) {
   MOZ_ASSERT(aName, "Must have a name");
 
-  RefPtr<mozilla::dom::NodeInfo> ni =
-    aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nullptr,
-                                  kNameSpaceID_None,
-                                  nsINode::DOCUMENT_TYPE_NODE, aName);
+  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfoManager->GetNodeInfo(
+      nsGkAtoms::documentTypeNodeName, nullptr, kNameSpaceID_None,
+      nsINode::DOCUMENT_TYPE_NODE, aName);
 
-  RefPtr<mozilla::dom::DocumentType> docType =
-    new mozilla::dom::DocumentType(ni.forget(), aPublicId, aSystemId,
-                                   aInternalSubset);
+  RefPtr<mozilla::dom::DocumentType> docType = new mozilla::dom::DocumentType(
+      ni.forget(), aPublicId, aSystemId, aInternalSubset);
   return docType.forget();
 }
 
 namespace mozilla {
 namespace dom {
 
-JSObject*
-DocumentType::WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DocumentType::WrapNode(JSContext* cx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return DocumentType_Binding::Wrap(cx, this, aGivenProto);
 }
 
 DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                            const nsAString& aPublicId,
                            const nsAString& aSystemId,
-                           const nsAString& aInternalSubset) :
-  CharacterData(std::move(aNodeInfo)),
-  mPublicId(aPublicId),
-  mSystemId(aSystemId),
-  mInternalSubset(aInternalSubset)
-{
+                           const nsAString& aInternalSubset)
+    : CharacterData(std::move(aNodeInfo)),
+      mPublicId(aPublicId),
+      mSystemId(aSystemId),
+      mInternalSubset(aInternalSubset) {
   MOZ_ASSERT(mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
              "Bad NodeType in aNodeInfo");
   MOZ_ASSERT(!IsCharacterData());
@@ -63,49 +56,29 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 
 DocumentType::~DocumentType() = default;
 
-bool
-DocumentType::IsNodeOfType(uint32_t aFlags) const
-{
-  return false;
-}
+bool DocumentType::IsNodeOfType(uint32_t aFlags) const { return false; }
 
-const nsTextFragment*
-DocumentType::GetText()
-{
-  return nullptr;
-}
+const nsTextFragment* DocumentType::GetText() { return nullptr; }
 
-void
-DocumentType::GetName(nsAString& aName) const
-{
-  aName = NodeName();
-}
+void DocumentType::GetName(nsAString& aName) const { aName = NodeName(); }
 
-void
-DocumentType::GetPublicId(nsAString& aPublicId) const
-{
+void DocumentType::GetPublicId(nsAString& aPublicId) const {
   aPublicId = mPublicId;
 }
 
-void
-DocumentType::GetSystemId(nsAString& aSystemId) const
-{
+void DocumentType::GetSystemId(nsAString& aSystemId) const {
   aSystemId = mSystemId;
 }
 
-void
-DocumentType::GetInternalSubset(nsAString& aInternalSubset) const
-{
+void DocumentType::GetInternalSubset(nsAString& aInternalSubset) const {
   aInternalSubset = mInternalSubset;
 }
 
-already_AddRefed<CharacterData>
-DocumentType::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
-{
+already_AddRefed<CharacterData> DocumentType::CloneDataNode(
+    mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const {
   return do_AddRef(new DocumentType(do_AddRef(aNodeInfo), mPublicId, mSystemId,
                                     mInternalSubset));
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

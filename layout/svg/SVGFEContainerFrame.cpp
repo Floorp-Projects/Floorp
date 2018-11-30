@@ -18,46 +18,41 @@ using namespace mozilla;
  * This frame is used by filter primitive elements that
  * have special child elements that provide parameters.
  */
-class SVGFEContainerFrame final : public nsContainerFrame
-{
-  friend nsIFrame*
-  NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-protected:
+class SVGFEContainerFrame final : public nsContainerFrame {
+  friend nsIFrame* NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell,
+                                             ComputedStyle* aStyle);
+
+ protected:
   explicit SVGFEContainerFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID)
-  {
+      : nsContainerFrame(aStyle, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & eSupportsContainLayoutAndPaint) {
       return false;
     }
 
     return nsContainerFrame::IsFrameOfType(
-            aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
+        aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGFEContainer"), aResult);
   }
 #endif
 
 #ifdef DEBUG
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 #endif
 
-  virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                                    nsAtom* aAttribute,
-                                    int32_t  aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     // We don't maintain a visual overflow rect
@@ -65,20 +60,16 @@ public:
   }
 };
 
-nsIFrame*
-NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell,
+                                    ComputedStyle* aStyle) {
   return new (aPresShell) SVGFEContainerFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 
 #ifdef DEBUG
-void
-SVGFEContainerFrame::Init(nsIContent*       aContent,
-                          nsContainerFrame* aParent,
-                          nsIFrame*         aPrevInFlow)
-{
+void SVGFEContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                               nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eFILTER),
                "Trying to construct an SVGFEContainerFrame for a "
                "content element that doesn't support the right interfaces");
@@ -87,15 +78,14 @@ SVGFEContainerFrame::Init(nsIContent*       aContent,
 }
 #endif /* DEBUG */
 
-nsresult
-SVGFEContainerFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                      nsAtom* aAttribute,
-                                      int32_t  aModType)
-{
-  nsSVGFE *element = static_cast<nsSVGFE*>(GetContent());
+nsresult SVGFEContainerFrame::AttributeChanged(int32_t aNameSpaceID,
+                                               nsAtom* aAttribute,
+                                               int32_t aModType) {
+  nsSVGFE* element = static_cast<nsSVGFE*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
-    MOZ_ASSERT(GetParent()->IsSVGFilterFrame(),
-               "Observers observe the filter, so that's what we must invalidate");
+    MOZ_ASSERT(
+        GetParent()->IsSVGFilterFrame(),
+        "Observers observe the filter, so that's what we must invalidate");
     SVGObserverUtils::InvalidateDirectRenderingObservers(GetParent());
   }
 

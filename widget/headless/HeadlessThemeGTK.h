@@ -12,55 +12,50 @@
 namespace mozilla {
 namespace widget {
 
-class HeadlessThemeGTK final : private nsNativeTheme,
-                               public nsITheme {
-public:
+class HeadlessThemeGTK final : private nsNativeTheme, public nsITheme {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   HeadlessThemeGTK() = default;
-  NS_IMETHOD DrawWidgetBackground(gfxContext* aContext,
-                                  nsIFrame* aFrame,
+  NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
-  MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
-                                                     nsIFrame* aFrame,
-                                                     StyleAppearance aAppearance) override;
+  MOZ_MUST_USE LayoutDeviceIntMargin
+  GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
+                  StyleAppearance aAppearance) override;
 
-  bool GetWidgetPadding(nsDeviceContext* aContext,
-                        nsIFrame* aFrame,
+  bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
                         LayoutDeviceIntMargin* aResult) override;
-  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                  nsIFrame* aFrame,
+  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
                                   mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame,
-                                StyleAppearance aAppearance,
-                                nsAtom* aAttribute,
-                                bool* aShouldRepaint,
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppearance,
+                                nsAtom* aAttribute, bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue) override;
 
   NS_IMETHOD ThemeChanged() override;
 
-  NS_IMETHOD_(bool) ThemeSupportsWidget(nsPresContext* aPresContext,
-                                        nsIFrame* aFrame,
-                                        StyleAppearance aAppearance) override;
+  NS_IMETHOD_(bool)
+  ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
+                      StyleAppearance aAppearance) override;
 
   NS_IMETHOD_(bool) WidgetIsContainer(StyleAppearance aAppearance) override;
 
-  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
+  NS_IMETHOD_(bool)
+  ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
 
   virtual bool ThemeNeedsComboboxDropmarker() override;
 
-protected:
-  virtual ~HeadlessThemeGTK() { }
+ protected:
+  virtual ~HeadlessThemeGTK() {}
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_widget_HeadlessThemeGTK_h
+#endif  // mozilla_widget_HeadlessThemeGTK_h

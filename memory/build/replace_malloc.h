@@ -98,16 +98,16 @@ MOZ_BEGIN_EXTERN_C
 #endif
 
 struct ReplaceMallocBridge;
-typedef void (*jemalloc_init_func)(malloc_table_t*, struct ReplaceMallocBridge**);
+typedef void (*jemalloc_init_func)(malloc_table_t*,
+                                   struct ReplaceMallocBridge**);
 
 // Replace-malloc library initialization function. See top of this file
-MOZ_REPLACE_PUBLIC void
-replace_init(malloc_table_t*, struct ReplaceMallocBridge**) MOZ_REPLACE_WEAK;
+MOZ_REPLACE_PUBLIC void replace_init(
+    malloc_table_t*, struct ReplaceMallocBridge**) MOZ_REPLACE_WEAK;
 
 // ensure this is visible and libxul/etc reference it with a weak ref
-MFBT_API void
-jemalloc_replace_dynamic(jemalloc_init_func);
+MFBT_API void jemalloc_replace_dynamic(jemalloc_init_func);
 
 MOZ_END_EXTERN_C
 
-#endif // replace_malloc_h
+#endif  // replace_malloc_h

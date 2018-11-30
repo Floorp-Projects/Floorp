@@ -12,9 +12,8 @@
 #include "nsDebug.h"
 #include "nsPluginNativeWindow.h"
 
-class nsPluginNativeWindowImpl : public nsPluginNativeWindow
-{
-public:
+class nsPluginNativeWindowImpl : public nsPluginNativeWindow {
+ public:
   nsPluginNativeWindowImpl();
   virtual ~nsPluginNativeWindowImpl();
 
@@ -23,8 +22,7 @@ public:
 #endif
 };
 
-nsPluginNativeWindowImpl::nsPluginNativeWindowImpl() : nsPluginNativeWindow()
-{
+nsPluginNativeWindowImpl::nsPluginNativeWindowImpl() : nsPluginNativeWindow() {
   // initialize the struct fields
   window = nullptr;
   x = 0;
@@ -46,19 +44,17 @@ nsPluginNativeWindowImpl::nsPluginNativeWindowImpl() : nsPluginNativeWindow()
 #endif
 }
 
-nsPluginNativeWindowImpl::~nsPluginNativeWindowImpl()
-{
-}
+nsPluginNativeWindowImpl::~nsPluginNativeWindowImpl() {}
 
-nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
-{
+nsresult PLUG_NewPluginNativeWindow(
+    nsPluginNativeWindow** aPluginNativeWindow) {
   NS_ENSURE_ARG_POINTER(aPluginNativeWindow);
   *aPluginNativeWindow = new nsPluginNativeWindowImpl();
   return NS_OK;
 }
 
-nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow)
-{
+nsresult PLUG_DeletePluginNativeWindow(
+    nsPluginNativeWindow* aPluginNativeWindow) {
   NS_ENSURE_ARG_POINTER(aPluginNativeWindow);
   delete static_cast<nsPluginNativeWindowImpl*>(aPluginNativeWindow);
   return NS_OK;

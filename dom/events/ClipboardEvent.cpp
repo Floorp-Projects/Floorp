@@ -12,12 +12,10 @@
 namespace mozilla {
 namespace dom {
 
-ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
-                               nsPresContext* aPresContext,
+ClipboardEvent::ClipboardEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                                InternalClipboardEvent* aEvent)
-  : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalClipboardEvent(false, eVoidEvent))
-{
+    : Event(aOwner, aPresContext,
+            aEvent ? aEvent : new InternalClipboardEvent(false, eVoidEvent)) {
   if (aEvent) {
     mEventIsInternal = false;
   } else {
@@ -26,23 +24,18 @@ ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
   }
 }
 
-void
-ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
-                                   bool aCancelable,
-                                   DataTransfer* aClipboardData)
-{
+void ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
+                                        bool aCancelable,
+                                        DataTransfer* aClipboardData) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mEvent->AsClipboardEvent()->mClipboardData = aClipboardData;
 }
 
-already_AddRefed<ClipboardEvent>
-ClipboardEvent::Constructor(const GlobalObject& aGlobal,
-                            const nsAString& aType,
-                            const ClipboardEventInit& aParam,
-                            ErrorResult& aRv)
-{
+already_AddRefed<ClipboardEvent> ClipboardEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const ClipboardEventInit& aParam, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<ClipboardEvent> e = new ClipboardEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
@@ -68,38 +61,32 @@ ClipboardEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-DataTransfer*
-ClipboardEvent::GetClipboardData()
-{
+DataTransfer* ClipboardEvent::GetClipboardData() {
   InternalClipboardEvent* event = mEvent->AsClipboardEvent();
 
   if (!event->mClipboardData) {
     if (mEventIsInternal) {
       event->mClipboardData =
-        new DataTransfer(ToSupports(this), eCopy, false, -1);
+          new DataTransfer(ToSupports(this), eCopy, false, -1);
     } else {
-      event->mClipboardData =
-        new DataTransfer(ToSupports(this), event->mMessage,
-                         event->mMessage == ePaste,
-                         nsIClipboard::kGlobalClipboard);
+      event->mClipboardData = new DataTransfer(
+          ToSupports(this), event->mMessage, event->mMessage == ePaste,
+          nsIClipboard::kGlobalClipboard);
     }
   }
 
   return event->mClipboardData;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<ClipboardEvent>
-NS_NewDOMClipboardEvent(EventTarget* aOwner,
-                        nsPresContext* aPresContext,
-                        InternalClipboardEvent* aEvent)
-{
-  RefPtr<ClipboardEvent> it =
-    new ClipboardEvent(aOwner, aPresContext, aEvent);
+already_AddRefed<ClipboardEvent> NS_NewDOMClipboardEvent(
+    EventTarget* aOwner, nsPresContext* aPresContext,
+    InternalClipboardEvent* aEvent) {
+  RefPtr<ClipboardEvent> it = new ClipboardEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

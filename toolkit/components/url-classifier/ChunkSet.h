@@ -19,7 +19,7 @@ namespace safebrowsing {
  * server.
  */
 class ChunkSet {
-public:
+ public:
   nsresult Serialize(nsACString& aStr);
   nsresult Set(uint32_t aChunk);
   bool Has(uint32_t chunk) const;
@@ -31,34 +31,22 @@ public:
   nsresult Write(nsIOutputStream* aOut) const;
   nsresult Read(nsIInputStream* aIn, uint32_t aNumElements);
 
-private:
+ private:
   class Range {
-  public:
+   public:
     Range(uint32_t aBegin, uint32_t aEnd) : mBegin(aBegin), mEnd(aEnd) {}
 
     uint32_t Length() const;
     nsresult Remove(const Range& aRange, ChunkSet& aRemainderSet) const;
     bool FoldLeft(const Range& aRange);
 
-    bool operator==(const Range& rhs) const {
-      return mBegin == rhs.mBegin;
-    }
-    bool operator<(const Range& rhs) const {
-      return mBegin < rhs.mBegin;
-    }
+    bool operator==(const Range& rhs) const { return mBegin == rhs.mBegin; }
+    bool operator<(const Range& rhs) const { return mBegin < rhs.mBegin; }
 
-    uint32_t Begin() const {
-      return mBegin;
-    }
-    void Begin(const uint32_t aBegin) {
-      mBegin = aBegin;
-    }
-    uint32_t End() const {
-      return mEnd;
-    }
-    void End(const uint32_t aEnd) {
-      mEnd = aEnd;
-    }
+    uint32_t Begin() const { return mBegin; }
+    void Begin(const uint32_t aBegin) { mBegin = aBegin; }
+    uint32_t End() const { return mEnd; }
+    void End(const uint32_t aEnd) { mEnd = aEnd; }
 
     bool Contains(const Range& aRange) const {
       return mBegin <= aRange.mBegin && aRange.mEnd <= mEnd;
@@ -78,11 +66,12 @@ private:
         return 0;
       }
 
-      explicit IntersectionComparator(const Range& aTarget) : mTarget(aTarget){}
+      explicit IntersectionComparator(const Range& aTarget)
+          : mTarget(aTarget) {}
       const Range& mTarget;
     };
 
-  private:
+   private:
     uint32_t mBegin;
     uint32_t mEnd;
   };
@@ -93,7 +82,7 @@ private:
   bool HasSubrange(const Range& aSubrange) const;
 };
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
 #endif

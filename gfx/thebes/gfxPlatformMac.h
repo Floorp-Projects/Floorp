@@ -14,87 +14,82 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class VsyncSource;
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 class gfxPlatformMac : public gfxPlatform {
-public:
-    gfxPlatformMac();
-    virtual ~gfxPlatformMac();
+ public:
+  gfxPlatformMac();
+  virtual ~gfxPlatformMac();
 
-    static gfxPlatformMac *GetPlatform() {
-        return (gfxPlatformMac*) gfxPlatform::GetPlatform();
-    }
+  static gfxPlatformMac* GetPlatform() {
+    return (gfxPlatformMac*)gfxPlatform::GetPlatform();
+  }
 
-    bool UsesTiling() const override;
-    bool ContentUsesTiling() const override;
+  bool UsesTiling() const override;
+  bool ContentUsesTiling() const override;
 
-    virtual already_AddRefed<gfxASurface>
-      CreateOffscreenSurface(const IntSize& aSize,
-                             gfxImageFormat aFormat) override;
+  virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(
+      const IntSize& aSize, gfxImageFormat aFormat) override;
 
-    gfxFontGroup*
-    CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
-                    const gfxFontStyle *aStyle,
-                    gfxTextPerfMetrics* aTextPerf,
-                    gfxUserFontSet *aUserFontSet,
-                    gfxFloat aDevToCssSize) override;
+  gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
+                                const gfxFontStyle* aStyle,
+                                gfxTextPerfMetrics* aTextPerf,
+                                gfxUserFontSet* aUserFontSet,
+                                gfxFloat aDevToCssSize) override;
 
-    virtual gfxPlatformFontList* CreatePlatformFontList() override;
+  virtual gfxPlatformFontList* CreatePlatformFontList() override;
 
-    void
-    ReadSystemFontList(InfallibleTArray<mozilla::dom::SystemFontListEntry>*
-                       aFontList) override;
+  void ReadSystemFontList(
+      InfallibleTArray<mozilla::dom::SystemFontListEntry>* aFontList) override;
 
-    bool IsFontFormatSupported(uint32_t aFormatFlags) override;
+  bool IsFontFormatSupported(uint32_t aFormatFlags) override;
 
-    virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
-                                        Script aRunScript,
-                                        nsTArray<const char*>& aFontList) override;
+  virtual void GetCommonFallbackFonts(
+      uint32_t aCh, uint32_t aNextCh, Script aRunScript,
+      nsTArray<const char*>& aFontList) override;
 
-    // lookup the system font for a particular system font type and set
-    // the name and style characteristics
-    static void
-    LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
-                     nsACString& aSystemFontName,
-                     gfxFontStyle &aFontStyle,
-                     float aDevPixPerCSSPixel);
+  // lookup the system font for a particular system font type and set
+  // the name and style characteristics
+  static void LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
+                               nsACString& aSystemFontName,
+                               gfxFontStyle& aFontStyle,
+                               float aDevPixPerCSSPixel);
 
-    virtual bool SupportsApzWheelInput() const override {
-      return true;
-    }
+  virtual bool SupportsApzWheelInput() const override { return true; }
 
-    bool RespectsFontStyleSmoothing() const override {
-      // gfxMacFont respects the font smoothing hint.
-      return true;
-    }
+  bool RespectsFontStyleSmoothing() const override {
+    // gfxMacFont respects the font smoothing hint.
+    return true;
+  }
 
-    bool RequiresAcceleratedGLContextForCompositorOGL() const override {
-      // On OS X in a VM, unaccelerated CompositorOGL shows black flashes, so we
-      // require accelerated GL for CompositorOGL but allow unaccelerated GL for
-      // BasicCompositor.
-      return true;
-    }
+  bool RequiresAcceleratedGLContextForCompositorOGL() const override {
+    // On OS X in a VM, unaccelerated CompositorOGL shows black flashes, so we
+    // require accelerated GL for CompositorOGL but allow unaccelerated GL for
+    // BasicCompositor.
+    return true;
+  }
 
-    virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
+  virtual already_AddRefed<mozilla::gfx::VsyncSource>
+  CreateHardwareVsyncSource() override;
 
-    // lower threshold on font anti-aliasing
-    uint32_t GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
+  // lower threshold on font anti-aliasing
+  uint32_t GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
 
-protected:
-    bool AccelerateLayersByDefault() override;
+ protected:
+  bool AccelerateLayersByDefault() override;
 
-    BackendPrefsData GetBackendPrefs() const override;
+  BackendPrefsData GetBackendPrefs() const override;
 
-    bool CheckVariationFontSupport() override;
+  bool CheckVariationFontSupport() override;
 
-private:
-    virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size) override;
+ private:
+  virtual void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
 
-    // read in the pref value for the lower threshold on font anti-aliasing
-    static uint32_t ReadAntiAliasingThreshold();
+  // read in the pref value for the lower threshold on font anti-aliasing
+  static uint32_t ReadAntiAliasingThreshold();
 
-    uint32_t mFontAntiAliasingThreshold;
+  uint32_t mFontAntiAliasingThreshold;
 };
 
 #endif /* GFX_PLATFORM_MAC_H */

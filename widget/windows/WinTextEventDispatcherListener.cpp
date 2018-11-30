@@ -14,41 +14,29 @@ namespace mozilla {
 namespace widget {
 
 StaticRefPtr<WinTextEventDispatcherListener>
-  WinTextEventDispatcherListener::sInstance;
+    WinTextEventDispatcherListener::sInstance;
 
 // static
-WinTextEventDispatcherListener*
-WinTextEventDispatcherListener::GetInstance()
-{
+WinTextEventDispatcherListener* WinTextEventDispatcherListener::GetInstance() {
   if (!sInstance) {
     sInstance = new WinTextEventDispatcherListener();
   }
   return sInstance.get();
 }
 
-void
-WinTextEventDispatcherListener::Shutdown()
-{
-  sInstance = nullptr;
-}
+void WinTextEventDispatcherListener::Shutdown() { sInstance = nullptr; }
 
-NS_IMPL_ISUPPORTS(WinTextEventDispatcherListener,
-                  TextEventDispatcherListener,
+NS_IMPL_ISUPPORTS(WinTextEventDispatcherListener, TextEventDispatcherListener,
                   nsISupportsWeakReference)
 
-WinTextEventDispatcherListener::WinTextEventDispatcherListener()
-{
-}
+WinTextEventDispatcherListener::WinTextEventDispatcherListener() {}
 
-WinTextEventDispatcherListener::~WinTextEventDispatcherListener()
-{
-}
+WinTextEventDispatcherListener::~WinTextEventDispatcherListener() {}
 
 NS_IMETHODIMP
 WinTextEventDispatcherListener::NotifyIME(
-                                  TextEventDispatcher* aTextEventDispatcher,
-                                  const IMENotification& aNotification)
-{
+    TextEventDispatcher* aTextEventDispatcher,
+    const IMENotification& aNotification) {
   nsWindow* window = static_cast<nsWindow*>(aTextEventDispatcher->GetWidget());
   if (NS_WARN_IF(!window)) {
     return NS_ERROR_FAILURE;
@@ -57,28 +45,24 @@ WinTextEventDispatcherListener::NotifyIME(
 }
 
 NS_IMETHODIMP_(IMENotificationRequests)
-WinTextEventDispatcherListener::GetIMENotificationRequests()
-{
+WinTextEventDispatcherListener::GetIMENotificationRequests() {
   return IMEHandler::GetIMENotificationRequests();
 }
 
 NS_IMETHODIMP_(void)
 WinTextEventDispatcherListener::OnRemovedFrom(
-                                  TextEventDispatcher* aTextEventDispatcher)
-{
+    TextEventDispatcher* aTextEventDispatcher) {
   // XXX When input transaction is being stolen by add-on, what should we do?
 }
 
 NS_IMETHODIMP_(void)
 WinTextEventDispatcherListener::WillDispatchKeyboardEvent(
-                                  TextEventDispatcher* aTextEventDispatcher,
-                                  WidgetKeyboardEvent& aKeyboardEvent,
-                                  uint32_t aIndexOfKeypress,
-                                  void* aData)
-{
-  static_cast<NativeKey*>(aData)->
-    WillDispatchKeyboardEvent(aKeyboardEvent, aIndexOfKeypress);
+    TextEventDispatcher* aTextEventDispatcher,
+    WidgetKeyboardEvent& aKeyboardEvent, uint32_t aIndexOfKeypress,
+    void* aData) {
+  static_cast<NativeKey*>(aData)->WillDispatchKeyboardEvent(aKeyboardEvent,
+                                                            aIndexOfKeypress);
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

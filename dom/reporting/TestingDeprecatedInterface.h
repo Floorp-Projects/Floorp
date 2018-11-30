@@ -15,41 +15,32 @@
 namespace mozilla {
 namespace dom {
 
-class TestingDeprecatedInterface final : public nsISupports
-                                       , public nsWrapperCache
-{
-public:
+class TestingDeprecatedInterface final : public nsISupports,
+                                         public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestingDeprecatedInterface)
 
-  static already_AddRefed<TestingDeprecatedInterface>
-  Constructor(const GlobalObject& aGlobal,
-              ErrorResult& aRv);
+  static already_AddRefed<TestingDeprecatedInterface> Constructor(
+      const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mGlobal;
-  }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
-  void
-  DeprecatedMethod() const;
+  void DeprecatedMethod() const;
 
-  bool
-  DeprecatedAttribute() const;
+  bool DeprecatedAttribute() const;
 
-private:
+ private:
   explicit TestingDeprecatedInterface(nsIGlobalObject* aGlobal);
   ~TestingDeprecatedInterface();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TestingDeprecatedInterface_h
-
+#endif  // mozilla_dom_TestingDeprecatedInterface_h

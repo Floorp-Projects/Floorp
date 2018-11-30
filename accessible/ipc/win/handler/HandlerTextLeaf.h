@@ -6,7 +6,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #ifndef mozilla_a11y_HandlerTextLeaf_h
 #define mozilla_a11y_HandlerTextLeaf_h
@@ -18,18 +18,17 @@
 namespace mozilla {
 namespace a11y {
 
-class HandlerTextLeaf final : public IAccessible2
-                              , public IServiceProvider
-{
-public:
-  explicit HandlerTextLeaf(IDispatch* aParent, long aIndexInParent,
-                           HWND aHwnd, AccChildData& aData);
+class HandlerTextLeaf final : public IAccessible2, public IServiceProvider {
+ public:
+  explicit HandlerTextLeaf(IDispatch *aParent, long aIndexInParent, HWND aHwnd,
+                           AccChildData &aData);
 
   DECL_IUNKNOWN
 
   // IDispatch
   STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) override;
-  STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
+  STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid,
+                           ITypeInfo **ppTInfo) override;
   STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames,
                              LCID lcid, DISPID *rgDispId) override;
   STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
@@ -42,7 +41,8 @@ public:
   STDMETHODIMP get_accChild(VARIANT varChild, IDispatch **ppdispChild) override;
   STDMETHODIMP get_accName(VARIANT varChild, BSTR *pszName) override;
   STDMETHODIMP get_accValue(VARIANT varChild, BSTR *pszValue) override;
-  STDMETHODIMP get_accDescription(VARIANT varChild, BSTR *pszDescription) override;
+  STDMETHODIMP get_accDescription(VARIANT varChild,
+                                  BSTR *pszDescription) override;
   STDMETHODIMP get_accRole(VARIANT varChild, VARIANT *pvarRole) override;
   STDMETHODIMP get_accState(VARIANT varChild, VARIANT *pvarState) override;
   STDMETHODIMP get_accHelp(VARIANT varChild, BSTR *pszHelp) override;
@@ -59,43 +59,43 @@ public:
                            long *pcyHeight, VARIANT varChild) override;
   STDMETHODIMP accNavigate(long navDir, VARIANT varStart,
                            VARIANT *pvarEndUpAt) override;
-  STDMETHODIMP accHitTest( long xLeft, long yTop, VARIANT *pvarChild) override;
+  STDMETHODIMP accHitTest(long xLeft, long yTop, VARIANT *pvarChild) override;
   STDMETHODIMP accDoDefaultAction(VARIANT varChild) override;
   STDMETHODIMP put_accName(VARIANT varChild, BSTR szName) override;
   STDMETHODIMP put_accValue(VARIANT varChild, BSTR szValue) override;
 
   // IAccessible2
-  STDMETHODIMP get_nRelations(long* nRelations) override;
+  STDMETHODIMP get_nRelations(long *nRelations) override;
   STDMETHODIMP get_relation(long relationIndex,
-                            IAccessibleRelation** relation) override;
-  STDMETHODIMP get_relations(long maxRelations, IAccessibleRelation** relations,
-                             long* nRelations) override;
-  STDMETHODIMP role(long* role) override;
+                            IAccessibleRelation **relation) override;
+  STDMETHODIMP get_relations(long maxRelations, IAccessibleRelation **relations,
+                             long *nRelations) override;
+  STDMETHODIMP role(long *role) override;
   STDMETHODIMP scrollTo(IA2ScrollType scrollType) override;
   STDMETHODIMP scrollToPoint(IA2CoordinateType coordinateType, long x,
                              long y) override;
-  STDMETHODIMP get_groupPosition(long* groupLevel, long* similarItemsInGroup,
-                                 long* positionInGroup) override;
-  STDMETHODIMP get_states(AccessibleStates* states) override;
-  STDMETHODIMP get_extendedRole(BSTR* extendedRole) override;
-  STDMETHODIMP get_localizedExtendedRole(BSTR* localizedExtendedRole) override;
-  STDMETHODIMP get_nExtendedStates(long* nExtendedStates) override;
-  STDMETHODIMP get_extendedStates(long maxExtendedStates, BSTR** extendedStates,
-                                  long* nExtendedStates) override;
-  STDMETHODIMP get_localizedExtendedStates(long maxLocalizedExtendedStates,
-                                           BSTR** localizedExtendedStates,
-                                           long* nLocalizedExtendedStates) override;
-  STDMETHODIMP get_uniqueID(long* uniqueID) override;
-  STDMETHODIMP get_windowHandle(HWND* windowHandle) override;
-  STDMETHODIMP get_indexInParent(long* indexInParent) override;
-  STDMETHODIMP get_locale(IA2Locale* locale) override;
-  STDMETHODIMP get_attributes(BSTR* attributes) override;
+  STDMETHODIMP get_groupPosition(long *groupLevel, long *similarItemsInGroup,
+                                 long *positionInGroup) override;
+  STDMETHODIMP get_states(AccessibleStates *states) override;
+  STDMETHODIMP get_extendedRole(BSTR *extendedRole) override;
+  STDMETHODIMP get_localizedExtendedRole(BSTR *localizedExtendedRole) override;
+  STDMETHODIMP get_nExtendedStates(long *nExtendedStates) override;
+  STDMETHODIMP get_extendedStates(long maxExtendedStates, BSTR **extendedStates,
+                                  long *nExtendedStates) override;
+  STDMETHODIMP get_localizedExtendedStates(
+      long maxLocalizedExtendedStates, BSTR **localizedExtendedStates,
+      long *nLocalizedExtendedStates) override;
+  STDMETHODIMP get_uniqueID(long *uniqueID) override;
+  STDMETHODIMP get_windowHandle(HWND *windowHandle) override;
+  STDMETHODIMP get_indexInParent(long *indexInParent) override;
+  STDMETHODIMP get_locale(IA2Locale *locale) override;
+  STDMETHODIMP get_attributes(BSTR *attributes) override;
 
   // IServiceProvider
   STDMETHODIMP QueryService(REFGUID aServiceId, REFIID aIid,
-                            void** aOutInterface) override;
+                            void **aOutInterface) override;
 
-private:
+ private:
   ~HandlerTextLeaf();
 
   RefPtr<IDispatch> mParent;
@@ -104,7 +104,7 @@ private:
   AccChildData mData;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_HandlerTextLeaf_h
+#endif  // mozilla_a11y_HandlerTextLeaf_h

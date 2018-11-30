@@ -11,9 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-static bool
-ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute)
-{
+static bool ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute) {
   if (aElement->IsXULElement(nsGkAtoms::window)) {
     // This is not an element of the top document, its owner is
     // not an nsXULWindow. Persist it.
@@ -22,10 +20,8 @@ ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute)
     }
     // The following attributes of xul:window should be handled in
     // nsXULWindow::SavePersistentAttributes instead of here.
-    if (aAttribute == nsGkAtoms::screenX ||
-        aAttribute == nsGkAtoms::screenY ||
-        aAttribute == nsGkAtoms::width ||
-        aAttribute == nsGkAtoms::height ||
+    if (aAttribute == nsGkAtoms::screenX || aAttribute == nsGkAtoms::screenY ||
+        aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
         aAttribute == nsGkAtoms::sizemode) {
       return false;
     }
@@ -36,36 +32,23 @@ ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute)
 NS_IMPL_ISUPPORTS(XULPersist, nsIDocumentObserver)
 
 XULPersist::XULPersist(nsIDocument* aDocument)
-  : nsStubDocumentObserver(),
-    mDocument(aDocument)
-{
-}
+    : nsStubDocumentObserver(), mDocument(aDocument) {}
 
-XULPersist::~XULPersist()
-{
-}
+XULPersist::~XULPersist() {}
 
-void
-XULPersist::Init()
-{
+void XULPersist::Init() {
   ApplyPersistentAttributes();
   mDocument->AddObserver(this);
 }
 
-void
-XULPersist::DropDocumentReference()
-{
+void XULPersist::DropDocumentReference() {
   mDocument->RemoveObserver(this);
   mDocument = nullptr;
 }
 
-void
-XULPersist::AttributeChanged(dom::Element* aElement,
-                             int32_t aNameSpaceID,
-                             nsAtom* aAttribute,
-                             int32_t aModType,
-                             const nsAttrValue* aOldValue)
-{
+void XULPersist::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
+                                  nsAtom* aAttribute, int32_t aModType,
+                                  const nsAttrValue* aOldValue) {
   NS_ASSERTION(aElement->OwnerDoc() == mDocument, "unexpected doc");
 
   // Might not need this, but be safe for now.
@@ -81,19 +64,14 @@ XULPersist::AttributeChanged(dom::Element* aElement,
       // XXXldb This should check that it's a token, not just a substring.
       persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod<Element*, int32_t, nsAtom*>(
-        "dom::XULPersist::Persist",
-        this,
-        &XULPersist::Persist,
-        aElement,
-        kNameSpaceID_None,
-        aAttribute));
+        NewRunnableMethod<Element*, int32_t, nsAtom*>(
+            "dom::XULPersist::Persist", this, &XULPersist::Persist, aElement,
+            kNameSpaceID_None, aAttribute));
   }
 }
 
-void
-XULPersist::Persist(Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute)
-{
+void XULPersist::Persist(Element* aElement, int32_t aNameSpaceID,
+                         nsAtom* aAttribute) {
   if (!mDocument) {
     return;
   }
@@ -131,13 +109,14 @@ XULPersist::Persist(Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute)
   }
 
   if (hasAttr && valuestr.IsEmpty()) {
-      mLocalStore->RemoveValue(uri, id, attrstr);
+    mLocalStore->RemoveValue(uri, id, attrstr);
     return;
   }
 
   // Persisting attributes to top level windows is handled by nsXULWindow.
   if (aElement->IsXULElement(nsGkAtoms::window)) {
-    if (nsCOMPtr<nsIXULWindow> win = mDocument->GetXULWindowIfToplevelChrome()) {
+    if (nsCOMPtr<nsIXULWindow> win =
+            mDocument->GetXULWindowIfToplevelChrome()) {
       return;
     }
   }
@@ -145,9 +124,7 @@ XULPersist::Persist(Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute)
   mLocalStore->SetValue(uri, id, attrstr, valuestr);
 }
 
-nsresult
-XULPersist::ApplyPersistentAttributes()
-{
+nsresult XULPersist::ApplyPersistentAttributes() {
   if (!mDocument) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -170,9 +147,7 @@ XULPersist::ApplyPersistentAttributes()
   return NS_OK;
 }
 
-nsresult
-XULPersist::ApplyPersistentAttributesInternal()
-{
+nsresult XULPersist::ApplyPersistentAttributesInternal() {
   nsCOMArray<Element> elements;
 
   nsAutoCString utf8uri;
@@ -220,10 +195,8 @@ XULPersist::ApplyPersistentAttributesInternal()
   return NS_OK;
 }
 
-nsresult
-XULPersist::ApplyPersistentAttributesToElements(const nsAString &aID,
-                                                nsCOMArray<Element>& aElements)
-{
+nsresult XULPersist::ApplyPersistentAttributesToElements(
+    const nsAString& aID, nsCOMArray<Element>& aElements) {
   nsAutoCString utf8uri;
   nsresult rv = mDocument->GetDocumentURI()->GetSpec(utf8uri);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -269,7 +242,8 @@ XULPersist::ApplyPersistentAttributesToElements(const nsAString &aID,
       // Applying persistent attributes to top level windows is handled
       // by nsXULWindow.
       if (element->IsXULElement(nsGkAtoms::window)) {
-        if (nsCOMPtr<nsIXULWindow> win = mDocument->GetXULWindowIfToplevelChrome()) {
+        if (nsCOMPtr<nsIXULWindow> win =
+                mDocument->GetXULWindowIfToplevelChrome()) {
           continue;
         }
       }
@@ -281,5 +255,5 @@ XULPersist::ApplyPersistentAttributesToElements(const nsAString &aID,
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

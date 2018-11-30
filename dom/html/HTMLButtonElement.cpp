@@ -33,7 +33,7 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozAutoDocUpdate.h"
 
-#define NS_IN_SUBMIT_CLICK      (1 << 0)
+#define NS_IN_SUBMIT_CLICK (1 << 0)
 #define NS_OUTER_ACTIVATE_EVENT (1 << 1)
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Button)
@@ -42,62 +42,51 @@ namespace mozilla {
 namespace dom {
 
 static const nsAttrValue::EnumTable kButtonTypeTable[] = {
-  { "button", NS_FORM_BUTTON_BUTTON },
-  { "reset", NS_FORM_BUTTON_RESET },
-  { "submit", NS_FORM_BUTTON_SUBMIT },
-  { nullptr, 0 }
-};
+    {"button", NS_FORM_BUTTON_BUTTON},
+    {"reset", NS_FORM_BUTTON_RESET},
+    {"submit", NS_FORM_BUTTON_SUBMIT},
+    {nullptr, 0}};
 
 // Default type is 'submit'.
 static const nsAttrValue::EnumTable* kButtonDefaultType = &kButtonTypeTable[2];
 
-
 // Construction, destruction
-HTMLButtonElement::HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                                     FromParser aFromParser)
-  : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), kButtonDefaultType->value),
-    mDisabledChanged(false),
-    mInInternalActivate(false),
-    mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT))
-{
+HTMLButtonElement::HTMLButtonElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    FromParser aFromParser)
+    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo),
+                                        kButtonDefaultType->value),
+      mDisabledChanged(false),
+      mInInternalActivate(false),
+      mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)) {
   // Set up our default state: enabled
   AddStatesSilently(NS_EVENT_STATE_ENABLED);
 }
 
-HTMLButtonElement::~HTMLButtonElement()
-{
-}
+HTMLButtonElement::~HTMLButtonElement() {}
 
 // nsISupports
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLButtonElement,
-                                   nsGenericHTMLFormElementWithState,
-                                   mValidity)
+                                   nsGenericHTMLFormElementWithState, mValidity)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLButtonElement,
                                              nsGenericHTMLFormElementWithState,
                                              nsIConstraintValidation)
 
-void
-HTMLButtonElement::SetCustomValidity(const nsAString& aError)
-{
+void HTMLButtonElement::SetCustomValidity(const nsAString& aError) {
   nsIConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
 
-void
-HTMLButtonElement::UpdateBarredFromConstraintValidation()
-{
+void HTMLButtonElement::UpdateBarredFromConstraintValidation() {
   SetBarredFromConstraintValidation(mType == NS_FORM_BUTTON_BUTTON ||
                                     mType == NS_FORM_BUTTON_RESET ||
                                     IsDisabled());
 }
 
-void
-HTMLButtonElement::FieldSetDisabledChanged(bool aNotify)
-{
-
+void HTMLButtonElement::FieldSetDisabledChanged(bool aNotify) {
   // FieldSetDisabledChanged *has* to be called *before*
   // UpdateBarredFromConstraintValidation, because the latter depends on our
   // disabled state.
@@ -109,53 +98,41 @@ HTMLButtonElement::FieldSetDisabledChanged(bool aNotify)
 
 NS_IMPL_ELEMENT_CLONE(HTMLButtonElement)
 
-void
-HTMLButtonElement::GetFormEnctype(nsAString& aFormEncType)
-{
-  GetEnumAttr(nsGkAtoms::formenctype, "", kFormDefaultEnctype->tag, aFormEncType);
+void HTMLButtonElement::GetFormEnctype(nsAString& aFormEncType) {
+  GetEnumAttr(nsGkAtoms::formenctype, "", kFormDefaultEnctype->tag,
+              aFormEncType);
 }
 
-void
-HTMLButtonElement::GetFormMethod(nsAString& aFormMethod)
-{
+void HTMLButtonElement::GetFormMethod(nsAString& aFormMethod) {
   GetEnumAttr(nsGkAtoms::formmethod, "", kFormDefaultMethod->tag, aFormMethod);
 }
 
-void
-HTMLButtonElement::GetType(nsAString& aType)
-{
+void HTMLButtonElement::GetType(nsAString& aType) {
   GetEnumAttr(nsGkAtoms::type, kButtonDefaultType->tag, aType);
 }
 
-int32_t
-HTMLButtonElement::TabIndexDefault()
-{
-  return 0;
-}
+int32_t HTMLButtonElement::TabIndexDefault() { return 0; }
 
-bool
-HTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex)
-{
-  if (nsGenericHTMLFormElementWithState::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
+bool HTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                                        int32_t* aTabIndex) {
+  if (nsGenericHTMLFormElementWithState::IsHTMLFocusable(
+          aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
   }
 
   *aIsFocusable =
 #ifdef XP_MACOSX
-    (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
+      (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
 #endif
-    !IsDisabled();
+      !IsDisabled();
 
   return false;
 }
 
-bool
-HTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
-                                  nsAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsIPrincipal* aMaybeScriptedPrincipal,
-                                  nsAttrValue& aResult)
-{
+bool HTMLButtonElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                       const nsAString& aValue,
+                                       nsIPrincipal* aMaybeScriptedPrincipal,
+                                       nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::type) {
       return aResult.ParseEnumValue(aValue, kButtonTypeTable, false,
@@ -174,17 +151,13 @@ HTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-bool
-HTMLButtonElement::IsDisabledForEvents(WidgetEvent* aEvent)
-{
+bool HTMLButtonElement::IsDisabledForEvents(WidgetEvent* aEvent) {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIFrame* formFrame = do_QueryFrame(formControlFrame);
   return IsElementDisabledForEvents(aEvent, formFrame);
 }
 
-void
-HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
-{
+void HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.mCanHandle = false;
 
   if (IsDisabledForEvents(aVisitor.mEvent)) {
@@ -196,10 +169,9 @@ HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   // DOMActivate that was dispatched directly, this will be set, but if we're
   // a DOMActivate dispatched from click handling, it will not be set.
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
-  bool outerActivateEvent =
-    ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
-     (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
-      !mInInternalActivate));
+  bool outerActivateEvent = ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
+                             (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
+                              !mInInternalActivate));
 
   if (outerActivateEvent) {
     aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
@@ -215,9 +187,7 @@ HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
-nsresult
-HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
-{
+nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   nsresult rv = NS_OK;
   if (!aVisitor.mPresContext) {
     return rv;
@@ -247,7 +217,8 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     }
   }
 
-  // mForm is null if the event handler removed us from the document (bug 194582).
+  // mForm is null if the event handler removed us from the document (bug
+  // 194582).
   if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) && mForm) {
     // tell the form that we are about to exit a click handler
     // so the form knows not to defer subsequent submissions
@@ -259,35 +230,33 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
     switch (aVisitor.mEvent->mMessage) {
       case eKeyPress:
-      case eKeyUp:
-        {
-          // For backwards compat, trigger buttons with space or enter
-          // (bug 25300)
-          WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-          if ((keyEvent->mKeyCode == NS_VK_RETURN &&
-               eKeyPress == aVisitor.mEvent->mMessage) ||
-              (keyEvent->mKeyCode == NS_VK_SPACE &&
-               eKeyUp == aVisitor.mEvent->mMessage)) {
-            DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
-                                   aVisitor.mPresContext);
-            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-          }
+      case eKeyUp: {
+        // For backwards compat, trigger buttons with space or enter
+        // (bug 25300)
+        WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+        if ((keyEvent->mKeyCode == NS_VK_RETURN &&
+             eKeyPress == aVisitor.mEvent->mMessage) ||
+            (keyEvent->mKeyCode == NS_VK_SPACE &&
+             eKeyUp == aVisitor.mEvent->mMessage)) {
+          DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
+                                 aVisitor.mPresContext);
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
-        break;
+      } break;
 
       default:
         break;
     }
     if (aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) {
-      if (mForm && (mType == NS_FORM_BUTTON_SUBMIT ||
-                    mType == NS_FORM_BUTTON_RESET)) {
-        InternalFormEvent event(true,
-          (mType == NS_FORM_BUTTON_RESET) ? eFormReset : eFormSubmit);
+      if (mForm &&
+          (mType == NS_FORM_BUTTON_SUBMIT || mType == NS_FORM_BUTTON_RESET)) {
+        InternalFormEvent event(
+            true, (mType == NS_FORM_BUTTON_RESET) ? eFormReset : eFormSubmit);
         event.mOriginator = this;
         nsEventStatus status = nsEventStatus_eIgnore;
 
         nsCOMPtr<nsIPresShell> presShell =
-          aVisitor.mPresContext->GetPresShell();
+            aVisitor.mPresContext->GetPresShell();
         // If |nsIPresShell::Destroy| has been called due to
         // handling the event, the pres context will return
         // a null pres shell.  See bug 125624.
@@ -312,17 +281,16 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     // be submitted immediatelly.
     // Note, NS_IN_SUBMIT_CLICK is set only when we're in outer activate event.
     mForm->FlushPendingSubmission();
-  } //if
+  }  // if
 
   return rv;
 }
 
-nsresult
-HTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent)
-{
-  nsresult rv =
-    nsGenericHTMLFormElementWithState::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLButtonElement::BindToTree(nsIDocument* aDocument,
+                                       nsIContent* aParent,
+                                       nsIContent* aBindingParent) {
+  nsresult rv = nsGenericHTMLFormElementWithState::BindToTree(
+      aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Update our state; we may now be the default submit element
@@ -331,9 +299,7 @@ HTMLButtonElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void
-HTMLButtonElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
+void HTMLButtonElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   nsGenericHTMLFormElementWithState::UnbindFromTree(aDeep, aNullParent);
 
   // Update our state; we may no longer be the default submit element
@@ -341,14 +307,10 @@ HTMLButtonElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 NS_IMETHODIMP
-HTMLButtonElement::Reset()
-{
-  return NS_OK;
-}
+HTMLButtonElement::Reset() { return NS_OK; }
 
 NS_IMETHODIMP
-HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
-{
+HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
   //
   // We only submit if we were the button pressed
   //
@@ -382,9 +344,7 @@ HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
   return aFormSubmission->AddNameValuePair(name, value);
 }
 
-void
-HTMLButtonElement::DoneCreatingElement()
-{
+void HTMLButtonElement::DoneCreatingElement() {
   if (!mInhibitStateRestoration) {
     nsresult rv = GenerateStateKey();
     if (NS_SUCCEEDED(rv)) {
@@ -393,11 +353,9 @@ HTMLButtonElement::DoneCreatingElement()
   }
 }
 
-nsresult
-HTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify)
-{
+nsresult HTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                          const nsAttrValueOrString* aValue,
+                                          bool aNotify) {
   if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
     mDisabledChanged = true;
@@ -407,13 +365,11 @@ HTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                                           aValue, aNotify);
 }
 
-nsresult
-HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify)
-{
+nsresult HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                         const nsAttrValue* aValue,
+                                         const nsAttrValue* aOldValue,
+                                         nsIPrincipal* aSubjectPrincipal,
+                                         bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::type) {
       if (aValue) {
@@ -434,14 +390,12 @@ HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  return nsGenericHTMLFormElementWithState::AfterSetAttr(aNameSpaceID, aName,
-                                                         aValue, aOldValue,
-                                                         aSubjectPrincipal, aNotify);
+  return nsGenericHTMLFormElementWithState::AfterSetAttr(
+      aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
 NS_IMETHODIMP
-HTMLButtonElement::SaveState()
-{
+HTMLButtonElement::SaveState() {
   if (!mDisabledChanged) {
     return NS_OK;
   }
@@ -457,9 +411,7 @@ HTMLButtonElement::SaveState()
   return NS_OK;
 }
 
-bool
-HTMLButtonElement::RestoreState(PresState* aState)
-{
+bool HTMLButtonElement::RestoreState(PresState* aState) {
   if (aState && aState->disabledSet() && !aState->disabled()) {
     SetDisabled(false, IgnoreErrors());
   }
@@ -467,9 +419,7 @@ HTMLButtonElement::RestoreState(PresState* aState)
   return false;
 }
 
-EventStates
-HTMLButtonElement::IntrinsicState() const
-{
+EventStates HTMLButtonElement::IntrinsicState() const {
   EventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
 
   if (IsCandidateForConstraintValidation()) {
@@ -493,11 +443,10 @@ HTMLButtonElement::IntrinsicState() const
   return state;
 }
 
-JSObject*
-HTMLButtonElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLButtonElement::WrapNode(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return HTMLButtonElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

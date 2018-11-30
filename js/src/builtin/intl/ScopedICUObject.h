@@ -15,32 +15,29 @@
 
 namespace js {
 
-template<typename T, void (Delete)(T*)>
-class ScopedICUObject
-{
-    T* ptr_;
+template <typename T, void(Delete)(T*)>
+class ScopedICUObject {
+  T* ptr_;
 
-  public:
-    explicit ScopedICUObject(T* ptr)
-      : ptr_(ptr)
-    {}
+ public:
+  explicit ScopedICUObject(T* ptr) : ptr_(ptr) {}
 
-    ~ScopedICUObject() {
-        if (ptr_) {
-            Delete(ptr_);
-        }
+  ~ScopedICUObject() {
+    if (ptr_) {
+      Delete(ptr_);
     }
+  }
 
-    // In cases where an object should be deleted on abnormal exits,
-    // but returned to the caller if everything goes well, call forget()
-    // to transfer the object just before returning.
-    T* forget() {
-        T* tmp = ptr_;
-        ptr_ = nullptr;
-        return tmp;
-    }
+  // In cases where an object should be deleted on abnormal exits,
+  // but returned to the caller if everything goes well, call forget()
+  // to transfer the object just before returning.
+  T* forget() {
+    T* tmp = ptr_;
+    ptr_ = nullptr;
+    return tmp;
+  }
 };
 
-} // namespace js
+}  // namespace js
 
 #endif /* builtin_intl_ScopedICUObject_h */

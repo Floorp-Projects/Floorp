@@ -25,9 +25,8 @@ namespace Compression {
  * 4x the speed and produces output of about 1.5x the size.
  */
 
-class LZ4
-{
-public:
+class LZ4 {
+ public:
   /**
    * Compresses |aInputSize| bytes from |aSource| into |aDest|. Destination
    * buffer must be already allocated, and must be sized to handle worst cases
@@ -37,8 +36,8 @@ public:
    * @param aInputSize is the input size. Max supported value is ~1.9GB
    * @return the number of bytes written in buffer |aDest|
    */
-  static MFBT_API size_t
-  compress(const char* aSource, size_t aInputSize, char* aDest);
+  static MFBT_API size_t compress(const char* aSource, size_t aInputSize,
+                                  char* aDest);
 
   /**
    * Compress |aInputSize| bytes from |aSource| into an output buffer
@@ -55,9 +54,9 @@ public:
    * @return the number of bytes written in buffer |aDest| or 0 if the
    *   compression fails
    */
-  static MFBT_API size_t
-  compressLimitedOutput(const char* aSource, size_t aInputSize, char* aDest,
-                        size_t aMaxOutputSize);
+  static MFBT_API size_t compressLimitedOutput(const char* aSource,
+                                               size_t aInputSize, char* aDest,
+                                               size_t aMaxOutputSize);
 
   /**
    * If the source stream is malformed, the function will stop decoding
@@ -72,8 +71,8 @@ public:
    * @param aOutputSize is the output size, therefore the original size
    * @return true on success, false on failure
    */
-  static MFBT_API MOZ_MUST_USE bool
-  decompress(const char* aSource, char* aDest, size_t aOutputSize);
+  static MFBT_API MOZ_MUST_USE bool decompress(const char* aSource, char* aDest,
+                                               size_t aOutputSize);
 
   /**
    * If the source stream is malformed, the function will stop decoding
@@ -92,9 +91,10 @@ public:
    *   buffer (necessarily <= aMaxOutputSize)
    * @return true on success, false on failure
    */
-  static MFBT_API MOZ_MUST_USE bool
-  decompress(const char* aSource, size_t aInputSize, char* aDest,
-             size_t aMaxOutputSize, size_t* aOutputSize);
+  static MFBT_API MOZ_MUST_USE bool decompress(const char* aSource,
+                                               size_t aInputSize, char* aDest,
+                                               size_t aMaxOutputSize,
+                                               size_t* aOutputSize);
 
   /**
    * If the source stream is malformed, the function will stop decoding
@@ -115,9 +115,11 @@ public:
    *   buffer (necessarily <= aMaxOutputSize)
    * @return true on success, false on failure
    */
-  static MFBT_API MOZ_MUST_USE bool
-  decompressPartial(const char* aSource, size_t aInputSize, char* aDest,
-                    size_t aMaxOutputSize, size_t* aOutputSize);
+  static MFBT_API MOZ_MUST_USE bool decompressPartial(const char* aSource,
+                                                      size_t aInputSize,
+                                                      char* aDest,
+                                                      size_t aMaxOutputSize,
+                                                      size_t* aOutputSize);
 
   /*
    * Provides the maximum size that LZ4 may output in a "worst case"
@@ -128,8 +130,7 @@ public:
    * @param aInputSize is the input size. Max supported value is ~1.9GB
    * @return maximum output size in a "worst case" scenario
    */
-  static inline size_t maxCompressedSize(size_t aInputSize)
-  {
+  static inline size_t maxCompressedSize(size_t aInputSize) {
     size_t max = (aInputSize + (aInputSize / 255) + 16);
     MOZ_ASSERT(max > aInputSize);
     return max;

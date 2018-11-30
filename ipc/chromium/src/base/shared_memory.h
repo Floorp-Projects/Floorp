@@ -39,7 +39,7 @@ class SharedMemory {
   // Create a new SharedMemory object from an existing, open
   // shared memory file.
   SharedMemory(SharedMemoryHandle init_handle, bool read_only)
-    : SharedMemory() {
+      : SharedMemory() {
     SetHandle(init_handle, read_only);
   }
 
@@ -83,7 +83,7 @@ class SharedMemory {
 
   // Gets a pointer to the opened memory space if it has been
   // Mapped via Map().  Returns NULL if it is not mapped.
-  void *memory() const { return memory_; }
+  void* memory() const { return memory_; }
 
   // Get access to the underlying OS handle for this segment.
   // Use of this handle for anything other than an opaque
@@ -111,8 +111,7 @@ class SharedMemory {
   //   return ok;
   // Note that the memory is unmapped by calling this method, regardless of the
   // return value.
-  bool GiveToProcess(ProcessId target_pid,
-                     SharedMemoryHandle* new_handle) {
+  bool GiveToProcess(ProcessId target_pid, SharedMemoryHandle* new_handle) {
     return ShareToProcessCommon(target_pid, new_handle, true);
   }
 
@@ -126,20 +125,19 @@ class SharedMemory {
 
  private:
   bool ShareToProcessCommon(ProcessId target_pid,
-                            SharedMemoryHandle* new_handle,
-                            bool close_self);
+                            SharedMemoryHandle* new_handle, bool close_self);
 
 #if defined(OS_WIN)
   // If true indicates this came from an external source so needs extra checks
   // before being mapped.
   bool external_section_;
-  HANDLE             mapped_file_;
+  HANDLE mapped_file_;
 #elif defined(OS_POSIX)
-  int                mapped_file_;
+  int mapped_file_;
 #endif
-  void*              memory_;
-  bool               read_only_;
-  size_t             max_size_;
+  void* memory_;
+  bool read_only_;
+  size_t max_size_;
 
   DISALLOW_EVIL_CONSTRUCTORS(SharedMemory);
 };

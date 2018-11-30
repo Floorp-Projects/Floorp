@@ -12,4 +12,4 @@
  * Status nsresult codes
  */
 
-#endif // __ftpCore_h___
+#endif  // __ftpCore_h___

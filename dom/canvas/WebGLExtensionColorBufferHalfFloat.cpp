@@ -11,39 +11,38 @@
 
 namespace mozilla {
 
-WebGLExtensionColorBufferHalfFloat::WebGLExtensionColorBufferHalfFloat(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-    MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+WebGLExtensionColorBufferHalfFloat::WebGLExtensionColorBufferHalfFloat(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 
-    auto& fua = webgl->mFormatUsage;
+  auto& fua = webgl->mFormatUsage;
 
-    auto fnUpdateUsage = [&fua](GLenum sizedFormat, webgl::EffectiveFormat effFormat) {
-        auto usage = fua->EditUsage(effFormat);
-        usage->SetRenderable();
-        fua->AllowRBFormat(sizedFormat, usage);
-    };
+  auto fnUpdateUsage = [&fua](GLenum sizedFormat,
+                              webgl::EffectiveFormat effFormat) {
+    auto usage = fua->EditUsage(effFormat);
+    usage->SetRenderable();
+    fua->AllowRBFormat(sizedFormat, usage);
+  };
 
-#define FOO(x) fnUpdateUsage(LOCAL_GL_ ## x, webgl::EffectiveFormat::x)
+#define FOO(x) fnUpdateUsage(LOCAL_GL_##x, webgl::EffectiveFormat::x)
 
-    FOO(RGBA16F);
-    FOO(RGB16F);
+  FOO(RGBA16F);
+  FOO(RGB16F);
 
 #undef FOO
 }
 
-WebGLExtensionColorBufferHalfFloat::~WebGLExtensionColorBufferHalfFloat()
-{
+WebGLExtensionColorBufferHalfFloat::~WebGLExtensionColorBufferHalfFloat() {}
+
+bool WebGLExtensionColorBufferHalfFloat::IsSupported(
+    const WebGLContext* webgl) {
+  const auto& gl = webgl->gl;
+  return gl->IsSupported(gl::GLFeature::renderbuffer_color_half_float) &&
+         gl->IsSupported(gl::GLFeature::frag_color_float);
 }
 
-bool
-WebGLExtensionColorBufferHalfFloat::IsSupported(const WebGLContext* webgl)
-{
-    const auto& gl = webgl->gl;
-    return gl->IsSupported(gl::GLFeature::renderbuffer_color_half_float) &&
-           gl->IsSupported(gl::GLFeature::frag_color_float);
-}
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionColorBufferHalfFloat,
+                          EXT_color_buffer_half_float)
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionColorBufferHalfFloat, EXT_color_buffer_half_float)
-
-} // namespace mozilla
+}  // namespace mozilla

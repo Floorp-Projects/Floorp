@@ -15,5 +15,5 @@ ComputePipeline::~ComputePipeline() = default;
 
 WEBGPU_IMPL_GOOP_0(ComputePipeline)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

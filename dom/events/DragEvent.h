@@ -16,52 +16,43 @@ namespace dom {
 
 class DataTransfer;
 
-class DragEvent : public MouseEvent
-{
-public:
-  DragEvent(EventTarget* aOwner,
-            nsPresContext* aPresContext,
+class DragEvent : public MouseEvent {
+ public:
+  DragEvent(EventTarget* aOwner, nsPresContext* aPresContext,
             WidgetDragEvent* aEvent);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(DragEvent, MouseEvent)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return DragEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  DragEvent* AsDragEvent() override
-  {
-    return this;
-  }
+  DragEvent* AsDragEvent() override { return this; }
 
   DataTransfer* GetDataTransfer();
 
-  void InitDragEvent(const nsAString& aType,
-                     bool aCanBubble, bool aCancelable,
+  void InitDragEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                      nsGlobalWindowInner* aView, int32_t aDetail,
-                     int32_t aScreenX, int32_t aScreenY,
-                     int32_t aClientX, int32_t aClientY,
-                     bool aCtrlKey, bool aAltKey, bool aShiftKey,
-                     bool aMetaKey, uint16_t aButton,
-                     EventTarget* aRelatedTarget,
-                     DataTransfer* aDataTransfer);
+                     int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
+                     int32_t aClientY, bool aCtrlKey, bool aAltKey,
+                     bool aShiftKey, bool aMetaKey, uint16_t aButton,
+                     EventTarget* aRelatedTarget, DataTransfer* aDataTransfer);
 
   static already_AddRefed<DragEvent> Constructor(const GlobalObject& aGlobal,
                                                  const nsAString& aType,
                                                  const DragEventInit& aParam,
                                                  ErrorResult& aRv);
 
-protected:
+ protected:
   ~DragEvent() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::DragEvent>
-NS_NewDOMDragEvent(mozilla::dom::EventTarget* aOwner,
-                   nsPresContext* aPresContext,
-                   mozilla::WidgetDragEvent* aEvent);
+already_AddRefed<mozilla::dom::DragEvent> NS_NewDOMDragEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetDragEvent* aEvent);
 
-#endif // mozilla_dom_DragEvent_h_
+#endif  // mozilla_dom_DragEvent_h_

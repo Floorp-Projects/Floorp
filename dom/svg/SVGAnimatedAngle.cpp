@@ -16,21 +16,15 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedAngle, mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedAngle, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedAngle, Release)
 
-JSObject*
-SVGAnimatedAngle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimatedAngle::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedAngle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<SVGAngle>
-SVGAnimatedAngle::BaseVal()
-{
+already_AddRefed<SVGAngle> SVGAnimatedAngle::BaseVal() {
   return mVal->ToDOMBaseVal(mSVGElement);
 }
 
-already_AddRefed<SVGAngle>
-SVGAnimatedAngle::AnimVal()
-{
+already_AddRefed<SVGAngle> SVGAnimatedAngle::AnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }
-

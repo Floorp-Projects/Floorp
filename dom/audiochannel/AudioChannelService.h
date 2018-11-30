@@ -24,25 +24,21 @@ struct PRLogModuleInfo;
 namespace mozilla {
 namespace dom {
 
-class AudioPlaybackConfig
-{
-public:
+class AudioPlaybackConfig {
+ public:
   AudioPlaybackConfig()
-    : mVolume(1.0)
-    , mMuted(false)
-    , mSuspend(nsISuspendedTypes::NONE_SUSPENDED)
-    , mNumberOfAgents(0)
-  {}
+      : mVolume(1.0),
+        mMuted(false),
+        mSuspend(nsISuspendedTypes::NONE_SUSPENDED),
+        mNumberOfAgents(0) {}
 
   AudioPlaybackConfig(float aVolume, bool aMuted, uint32_t aSuspended)
-    : mVolume(aVolume)
-    , mMuted(aMuted)
-    , mSuspend(aSuspended)
-    , mNumberOfAgents(0)
-  {}
+      : mVolume(aVolume),
+        mMuted(aMuted),
+        mSuspend(aSuspended),
+        mNumberOfAgents(0) {}
 
-  void SetConfig(float aVolume, bool aMuted, uint32_t aSuspended)
-  {
+  void SetConfig(float aVolume, bool aMuted, uint32_t aSuspended) {
     mVolume = aVolume;
     mMuted = aMuted;
     mSuspend = aSuspended;
@@ -54,9 +50,8 @@ public:
   uint32_t mNumberOfAgents;
 };
 
-class AudioChannelService final : public nsIObserver
-{
-public:
+class AudioChannelService final : public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -71,10 +66,7 @@ public:
     eAudible = 2
   };
 
-  enum AudioCaptureState : bool {
-    eCapturing = true,
-    eNotCapturing = false
-  };
+  enum AudioCaptureState : bool { eCapturing = true, eNotCapturing = false };
 
   enum AudibleChangedReasons : uint32_t {
     eVolumeChanged = 0,
@@ -123,8 +115,7 @@ public:
    * it would dispatch the playback event to observers which want to know the
    * actual audible state of the window.
    */
-  void AudioAudibleChanged(AudioChannelAgent* aAgent,
-                           AudibleState aAudible,
+  void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible,
                            AudibleChangedReasons aReason);
 
   bool IsWindowActive(nsPIDOMWindowOuter* aWindow);
@@ -138,12 +129,11 @@ public:
   // top outerWindow (subiframes, etc.) and we have to identify all the agents
   // just for a particular innerWindow.
   void SetWindowAudioCaptured(nsPIDOMWindowOuter* aWindow,
-                              uint64_t aInnerWindowID,
-                              bool aCapture);
+                              uint64_t aInnerWindowID, bool aCapture);
 
   void NotifyMediaResumedFromBlock(nsPIDOMWindowOuter* aWindow);
 
-private:
+ private:
   AudioChannelService();
   ~AudioChannelService();
 
@@ -159,19 +149,16 @@ private:
 
   void RefreshAgentsAudioFocusChanged(AudioChannelAgent* aAgent);
 
-  class AudioChannelWindow final
-  {
-  public:
+  class AudioChannelWindow final {
+   public:
     explicit AudioChannelWindow(uint64_t aWindowID)
-      : mWindowID(aWindowID)
-      , mIsAudioCaptured(false)
-      , mOwningAudioFocus(!AudioChannelService::IsEnableAudioCompeting())
-      , mShouldSendActiveMediaBlockStopEvent(false)
-    {}
+        : mWindowID(aWindowID),
+          mIsAudioCaptured(false),
+          mOwningAudioFocus(!AudioChannelService::IsEnableAudioCompeting()),
+          mShouldSendActiveMediaBlockStopEvent(false) {}
 
     void AudioFocusChanged(AudioChannelAgent* aNewPlayingAgent);
-    void AudioAudibleChanged(AudioChannelAgent* aAgent,
-                             AudibleState aAudible,
+    void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible,
                              AudibleChangedReasons aReason);
 
     void AppendAgent(AudioChannelAgent* aAgent, AudibleState aAudible);
@@ -195,7 +182,8 @@ private:
     // another event "activeMediablockStop" when the window is resumed from
     // suspend-block.
     bool mShouldSendActiveMediaBlockStopEvent;
-  private:
+
+   private:
     void AudioCapturedChanged(AudioChannelAgent* aAgent,
                               AudioCaptureState aCapture);
 
@@ -230,20 +218,20 @@ private:
     bool IsInactiveWindow() const;
   };
 
-  AudioChannelWindow*
-  GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow);
+  AudioChannelWindow* GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow);
 
-  AudioChannelWindow*
-  GetWindowData(uint64_t aWindowID) const;
+  AudioChannelWindow* GetWindowData(uint64_t aWindowID) const;
 
   nsTObserverArray<nsAutoPtr<AudioChannelWindow>> mWindows;
 };
 
 const char* SuspendTypeToStr(const nsSuspendedTypes& aSuspend);
-const char* AudibleStateToStr(const AudioChannelService::AudibleState& aAudible);
-const char* AudibleChangedReasonToStr(const AudioChannelService::AudibleChangedReasons& aReason);
+const char* AudibleStateToStr(
+    const AudioChannelService::AudibleState& aAudible);
+const char* AudibleChangedReasonToStr(
+    const AudioChannelService::AudibleChangedReasons& aReason);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

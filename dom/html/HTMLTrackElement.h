@@ -24,10 +24,10 @@ namespace dom {
 class WebVTTListener;
 class WindowDestroyObserver;
 
-class HTMLTrackElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+class HTMLTrackElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLTrackElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -36,50 +36,36 @@ public:
 
   // HTMLTrackElement WebIDL
   void GetKind(DOMString& aKind) const;
-  void SetKind(const nsAString& aKind, ErrorResult& aError)
-  {
+  void SetKind(const nsAString& aKind, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::kind, aKind, aError);
   }
 
-  void GetSrc(DOMString& aSrc) const
-  {
-    GetHTMLURIAttr(nsGkAtoms::src, aSrc);
-  }
+  void GetSrc(DOMString& aSrc) const { GetHTMLURIAttr(nsGkAtoms::src, aSrc); }
 
   void SetSrc(const nsAString& aSrc, ErrorResult& aError);
 
-  void GetSrclang(DOMString& aSrclang) const
-  {
+  void GetSrclang(DOMString& aSrclang) const {
     GetHTMLAttr(nsGkAtoms::srclang, aSrclang);
   }
-  void GetSrclang(nsAString& aSrclang) const
-  {
+  void GetSrclang(nsAString& aSrclang) const {
     GetHTMLAttr(nsGkAtoms::srclang, aSrclang);
   }
-  void SetSrclang(const nsAString& aSrclang, ErrorResult& aError)
-  {
+  void SetSrclang(const nsAString& aSrclang, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::srclang, aSrclang, aError);
   }
 
-  void GetLabel(DOMString& aLabel) const
-  {
+  void GetLabel(DOMString& aLabel) const {
     GetHTMLAttr(nsGkAtoms::label, aLabel);
   }
-  void GetLabel(nsAString& aLabel) const
-  {
+  void GetLabel(nsAString& aLabel) const {
     GetHTMLAttr(nsGkAtoms::label, aLabel);
   }
-  void SetLabel(const nsAString& aLabel, ErrorResult& aError)
-  {
+  void SetLabel(const nsAString& aLabel, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::label, aLabel, aError);
   }
 
-  bool Default() const
-  {
-    return GetBoolAttr(nsGkAtoms::_default);
-  }
-  void SetDefault(bool aDefault, ErrorResult& aError)
-  {
+  bool Default() const { return GetBoolAttr(nsGkAtoms::_default); }
+  void SetDefault(bool aDefault, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::_default, aDefault, aError);
   }
 
@@ -91,16 +77,14 @@ public:
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // Override ParseAttribute() to convert kind strings to enum values.
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
 
   // Override BindToTree() so that we can trigger a load when we become
   // the child of a media element.
-  virtual nsresult BindToTree(nsIDocument* aDocument,
-                              nsIContent* aParent,
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
@@ -111,10 +95,11 @@ public:
 
   void NotifyShutdown();
 
-protected:
+ protected:
   virtual ~HTMLTrackElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
   void OnChannelRedirect(nsIChannel* aChannel, nsIChannel* aNewChannel,
                          uint32_t aFlags);
   // Open a new channel to the HTMLTrackElement's src attribute and call
@@ -131,14 +116,14 @@ protected:
 
   void CreateTextTrack();
 
-private:
+ private:
   void DispatchLoadResource();
   bool mLoadResourceDispatched;
 
   RefPtr<WindowDestroyObserver> mWindowDestroyObserver;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLTrackElement_h
+#endif  // mozilla_dom_HTMLTrackElement_h

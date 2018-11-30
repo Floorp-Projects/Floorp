@@ -11,31 +11,31 @@
 
 namespace mozilla {
 
-WebGLExtensionCompressedTextureETC1::WebGLExtensionCompressedTextureETC1(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-    RefPtr<WebGLContext> webgl_ = webgl; // Bug 1201275
-    const auto fnAdd = [&webgl_](GLenum sizedFormat, webgl::EffectiveFormat effFormat) {
-        auto& fua = webgl_->mFormatUsage;
+WebGLExtensionCompressedTextureETC1::WebGLExtensionCompressedTextureETC1(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {
+  RefPtr<WebGLContext> webgl_ = webgl;  // Bug 1201275
+  const auto fnAdd = [&webgl_](GLenum sizedFormat,
+                               webgl::EffectiveFormat effFormat) {
+    auto& fua = webgl_->mFormatUsage;
 
-        auto usage = fua->EditUsage(effFormat);
-        usage->isFilterable = true;
-        fua->AllowSizedTexFormat(sizedFormat, usage);
+    auto usage = fua->EditUsage(effFormat);
+    usage->isFilterable = true;
+    fua->AllowSizedTexFormat(sizedFormat, usage);
 
-        webgl_->mCompressedTextureFormats.AppendElement(sizedFormat);
-    };
+    webgl_->mCompressedTextureFormats.AppendElement(sizedFormat);
+  };
 
-#define FOO(x) LOCAL_GL_ ## x, webgl::EffectiveFormat::x
+#define FOO(x) LOCAL_GL_##x, webgl::EffectiveFormat::x
 
-    fnAdd(FOO(ETC1_RGB8_OES));
+  fnAdd(FOO(ETC1_RGB8_OES));
 
 #undef FOO
 }
 
-WebGLExtensionCompressedTextureETC1::~WebGLExtensionCompressedTextureETC1()
-{
-}
+WebGLExtensionCompressedTextureETC1::~WebGLExtensionCompressedTextureETC1() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureETC1, WEBGL_compressed_texture_etc1)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureETC1,
+                          WEBGL_compressed_texture_etc1)
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -30,42 +30,34 @@ struct DOMPointInit;
 class OwningTextOrElementOrDocument;
 class TextOrElementOrDocument;
 enum class CallerType : uint32_t;
-} // namespace dom
+}  // namespace dom
 
 typedef dom::TextOrElementOrDocument GeometryNode;
 typedef dom::OwningTextOrElementOrDocument OwningGeometryNode;
 
 /**
- * Computes quads for aNode using aOptions, according to GeometryUtils.getBoxQuads.
- * May set an error in aRv.
+ * Computes quads for aNode using aOptions, according to
+ * GeometryUtils.getBoxQuads. May set an error in aRv.
  */
-void GetBoxQuads(nsINode* aNode,
-                 const dom::BoxQuadOptions& aOptions,
+void GetBoxQuads(nsINode* aNode, const dom::BoxQuadOptions& aOptions,
                  nsTArray<RefPtr<dom::DOMQuad> >& aResult,
-                 dom::CallerType aCallerType,
-                 ErrorResult& aRv);
+                 dom::CallerType aCallerType, ErrorResult& aRv);
 
-already_AddRefed<dom::DOMQuad>
-ConvertQuadFromNode(nsINode* aTo, dom::DOMQuad& aQuad,
-                    const GeometryNode& aFrom,
-                    const dom::ConvertCoordinateOptions& aOptions,
-                    dom::CallerType aCallerType,
-                    ErrorResult& aRv);
+already_AddRefed<dom::DOMQuad> ConvertQuadFromNode(
+    nsINode* aTo, dom::DOMQuad& aQuad, const GeometryNode& aFrom,
+    const dom::ConvertCoordinateOptions& aOptions, dom::CallerType aCallerType,
+    ErrorResult& aRv);
 
-already_AddRefed<dom::DOMQuad>
-ConvertRectFromNode(nsINode* aTo, dom::DOMRectReadOnly& aRect,
-                    const GeometryNode& aFrom,
-                    const dom::ConvertCoordinateOptions& aOptions,
-                    dom::CallerType aCallerType,
-                    ErrorResult& aRv);
+already_AddRefed<dom::DOMQuad> ConvertRectFromNode(
+    nsINode* aTo, dom::DOMRectReadOnly& aRect, const GeometryNode& aFrom,
+    const dom::ConvertCoordinateOptions& aOptions, dom::CallerType aCallerType,
+    ErrorResult& aRv);
 
-already_AddRefed<dom::DOMPoint>
-ConvertPointFromNode(nsINode* aTo, const dom::DOMPointInit& aPoint,
-                     const GeometryNode& aFrom,
-                     const dom::ConvertCoordinateOptions& aOptions,
-                     dom::CallerType aCallerType,
-                     ErrorResult& aRv);
+already_AddRefed<dom::DOMPoint> ConvertPointFromNode(
+    nsINode* aTo, const dom::DOMPointInit& aPoint, const GeometryNode& aFrom,
+    const dom::ConvertCoordinateOptions& aOptions, dom::CallerType aCallerType,
+    ErrorResult& aRv);
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_GEOMETRYUTILS_H_ */

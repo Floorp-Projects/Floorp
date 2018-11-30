@@ -13,17 +13,17 @@ class nsIControllerCommandTable;
 namespace mozilla {
 
 // the editor controller is used for both text widgets, and basic text editing
-// commands in composer. The refCon that gets passed to its commands is an nsIEditor.
+// commands in composer. The refCon that gets passed to its commands is an
+// nsIEditor.
 
-class EditorController final
-{
-public:
+class EditorController final {
+ public:
   static nsresult RegisterEditorCommands(
-                    nsIControllerCommandTable* aCommandTable);
+      nsIControllerCommandTable* aCommandTable);
   static nsresult RegisterEditingCommands(
-                    nsIControllerCommandTable* aCommandTable);
+      nsIControllerCommandTable* aCommandTable);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef mozilla_EditorController_h
+#endif  // #ifndef mozilla_EditorController_h

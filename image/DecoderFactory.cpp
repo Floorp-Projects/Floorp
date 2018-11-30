@@ -28,9 +28,7 @@ using namespace gfx;
 
 namespace image {
 
-/* static */ DecoderType
-DecoderFactory::GetDecoderType(const char* aMimeType)
-{
+/* static */ DecoderType DecoderFactory::GetDecoderType(const char* aMimeType) {
   // By default we don't know.
   DecoderType type = DecoderType::UNKNOWN;
 
@@ -42,11 +40,11 @@ DecoderFactory::GetDecoderType(const char* aMimeType)
   } else if (!strcmp(aMimeType, IMAGE_APNG)) {
     type = DecoderType::PNG;
 
-  // GIF
+    // GIF
   } else if (!strcmp(aMimeType, IMAGE_GIF)) {
     type = DecoderType::GIF;
 
-  // JPEG
+    // JPEG
   } else if (!strcmp(aMimeType, IMAGE_JPEG)) {
     type = DecoderType::JPEG;
   } else if (!strcmp(aMimeType, IMAGE_PJPEG)) {
@@ -54,40 +52,36 @@ DecoderFactory::GetDecoderType(const char* aMimeType)
   } else if (!strcmp(aMimeType, IMAGE_JPG)) {
     type = DecoderType::JPEG;
 
-  // BMP
+    // BMP
   } else if (!strcmp(aMimeType, IMAGE_BMP)) {
     type = DecoderType::BMP;
   } else if (!strcmp(aMimeType, IMAGE_BMP_MS)) {
     type = DecoderType::BMP;
 
-  // BMP_CLIPBOARD
+    // BMP_CLIPBOARD
   } else if (!strcmp(aMimeType, IMAGE_BMP_MS_CLIPBOARD)) {
     type = DecoderType::BMP_CLIPBOARD;
 
-  // ICO
+    // ICO
   } else if (!strcmp(aMimeType, IMAGE_ICO)) {
     type = DecoderType::ICO;
   } else if (!strcmp(aMimeType, IMAGE_ICO_MS)) {
     type = DecoderType::ICO;
 
-  // Icon
+    // Icon
   } else if (!strcmp(aMimeType, IMAGE_ICON_MS)) {
     type = DecoderType::ICON;
 
-  // WebP
-  } else if (!strcmp(aMimeType, IMAGE_WEBP) &&
-             gfxPrefs::ImageWebPEnabled()) {
+    // WebP
+  } else if (!strcmp(aMimeType, IMAGE_WEBP) && gfxPrefs::ImageWebPEnabled()) {
     type = DecoderType::WEBP;
   }
 
   return type;
 }
 
-/* static */ already_AddRefed<Decoder>
-DecoderFactory::GetDecoder(DecoderType aType,
-                           RasterImage* aImage,
-                           bool aIsRedecode)
-{
+/* static */ already_AddRefed<Decoder> DecoderFactory::GetDecoder(
+    DecoderType aType, RasterImage* aImage, bool aIsRedecode) {
   RefPtr<Decoder> decoder;
 
   switch (aType) {
@@ -100,9 +94,8 @@ DecoderFactory::GetDecoder(DecoderType aType,
     case DecoderType::JPEG:
       // If we have all the data we don't want to waste cpu time doing
       // a progressive decode.
-      decoder = new nsJPEGDecoder(aImage,
-                                  aIsRedecode ? Decoder::SEQUENTIAL
-                                              : Decoder::PROGRESSIVE);
+      decoder = new nsJPEGDecoder(
+          aImage, aIsRedecode ? Decoder::SEQUENTIAL : Decoder::PROGRESSIVE);
       break;
     case DecoderType::BMP:
       decoder = new nsBMPDecoder(aImage);
@@ -126,24 +119,19 @@ DecoderFactory::GetDecoder(DecoderType aType,
   return decoder.forget();
 }
 
-/* static */ nsresult
-DecoderFactory::CreateDecoder(DecoderType aType,
-                              NotNull<RasterImage*> aImage,
-                              NotNull<SourceBuffer*> aSourceBuffer,
-                              const IntSize& aIntrinsicSize,
-                              const IntSize& aOutputSize,
-                              DecoderFlags aDecoderFlags,
-                              SurfaceFlags aSurfaceFlags,
-                              IDecodingTask** aOutTask)
-{
+/* static */ nsresult DecoderFactory::CreateDecoder(
+    DecoderType aType, NotNull<RasterImage*> aImage,
+    NotNull<SourceBuffer*> aSourceBuffer, const IntSize& aIntrinsicSize,
+    const IntSize& aOutputSize, DecoderFlags aDecoderFlags,
+    SurfaceFlags aSurfaceFlags, IDecodingTask** aOutTask) {
   if (aType == DecoderType::UNKNOWN) {
     return NS_ERROR_INVALID_ARG;
   }
 
   // Create an anonymous decoder. Interaction with the SurfaceCache and the
   // owning RasterImage will be mediated by DecodedSurfaceProvider.
-  RefPtr<Decoder> decoder =
-    GetDecoder(aType, nullptr, bool(aDecoderFlags & DecoderFlags::IS_REDECODE));
+  RefPtr<Decoder> decoder = GetDecoder(
+      aType, nullptr, bool(aDecoderFlags & DecoderFlags::IS_REDECODE));
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
@@ -161,9 +149,9 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   // Create a DecodedSurfaceProvider which will manage the decoding process and
   // make this decoder's output available in the surface cache.
   SurfaceKey surfaceKey =
-    RasterSurfaceKey(aOutputSize, aSurfaceFlags, PlaybackType::eStatic);
+      RasterSurfaceKey(aOutputSize, aSurfaceFlags, PlaybackType::eStatic);
   auto provider = MakeNotNull<RefPtr<DecodedSurfaceProvider>>(
-    aImage, surfaceKey, WrapNotNull(decoder));
+      aImage, surfaceKey, WrapNotNull(decoder));
   if (aDecoderFlags & DecoderFlags::CANNOT_SUBSTITUTE) {
     provider->Availability().SetCannotSubstitute();
   }
@@ -185,27 +173,23 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   return NS_OK;
 }
 
-/* static */ nsresult
-DecoderFactory::CreateAnimationDecoder(DecoderType aType,
-                                       NotNull<RasterImage*> aImage,
-                                       NotNull<SourceBuffer*> aSourceBuffer,
-                                       const IntSize& aIntrinsicSize,
-                                       DecoderFlags aDecoderFlags,
-                                       SurfaceFlags aSurfaceFlags,
-                                       size_t aCurrentFrame,
-                                       IDecodingTask** aOutTask)
-{
+/* static */ nsresult DecoderFactory::CreateAnimationDecoder(
+    DecoderType aType, NotNull<RasterImage*> aImage,
+    NotNull<SourceBuffer*> aSourceBuffer, const IntSize& aIntrinsicSize,
+    DecoderFlags aDecoderFlags, SurfaceFlags aSurfaceFlags,
+    size_t aCurrentFrame, IDecodingTask** aOutTask) {
   if (aType == DecoderType::UNKNOWN) {
     return NS_ERROR_INVALID_ARG;
   }
 
   MOZ_ASSERT(aType == DecoderType::GIF || aType == DecoderType::PNG ||
-             aType == DecoderType::WEBP,
+                 aType == DecoderType::WEBP,
              "Calling CreateAnimationDecoder for non-animating DecoderType");
 
   // Create an anonymous decoder. Interaction with the SurfaceCache and the
   // owning RasterImage will be mediated by AnimationSurfaceProvider.
-  RefPtr<Decoder> decoder = GetDecoder(aType, nullptr, /* aIsRedecode = */ true);
+  RefPtr<Decoder> decoder =
+      GetDecoder(aType, nullptr, /* aIsRedecode = */ true);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
@@ -222,9 +206,9 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
   // Create an AnimationSurfaceProvider which will manage the decoding process
   // and make this decoder's output available in the surface cache.
   SurfaceKey surfaceKey =
-    RasterSurfaceKey(aIntrinsicSize, aSurfaceFlags, PlaybackType::eAnimated);
+      RasterSurfaceKey(aIntrinsicSize, aSurfaceFlags, PlaybackType::eAnimated);
   auto provider = MakeNotNull<RefPtr<AnimationSurfaceProvider>>(
-    aImage, surfaceKey, WrapNotNull(decoder), aCurrentFrame);
+      aImage, surfaceKey, WrapNotNull(decoder), aCurrentFrame);
 
   // Attempt to insert the surface provider into the surface cache right away so
   // we won't trigger any more decoders with the same parameters.
@@ -243,9 +227,8 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
   return NS_OK;
 }
 
-/* static */ already_AddRefed<Decoder>
-DecoderFactory::CloneAnimationDecoder(Decoder* aDecoder)
-{
+/* static */ already_AddRefed<Decoder> DecoderFactory::CloneAnimationDecoder(
+    Decoder* aDecoder) {
   MOZ_ASSERT(aDecoder);
 
   // In an ideal world, we would assert aDecoder->HasAnimation() but we cannot.
@@ -254,7 +237,7 @@ DecoderFactory::CloneAnimationDecoder(Decoder* aDecoder)
   // rediscover it is animated).
   DecoderType type = aDecoder->GetType();
   MOZ_ASSERT(type == DecoderType::GIF || type == DecoderType::PNG ||
-             type == DecoderType::WEBP,
+                 type == DecoderType::WEBP,
              "Calling CloneAnimationDecoder for non-animating DecoderType");
 
   RefPtr<Decoder> decoder = GetDecoder(type, nullptr, /* aIsRedecode = */ true);
@@ -277,14 +260,13 @@ DecoderFactory::CloneAnimationDecoder(Decoder* aDecoder)
 /* static */ already_AddRefed<IDecodingTask>
 DecoderFactory::CreateMetadataDecoder(DecoderType aType,
                                       NotNull<RasterImage*> aImage,
-                                      NotNull<SourceBuffer*> aSourceBuffer)
-{
+                                      NotNull<SourceBuffer*> aSourceBuffer) {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
   }
 
   RefPtr<Decoder> decoder =
-    GetDecoder(aType, aImage, /* aIsRedecode = */ false);
+      GetDecoder(aType, aImage, /* aIsRedecode = */ false);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
@@ -306,14 +288,14 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
                                             bool aIsMetadataDecode,
                                             const Maybe<IntSize>& aExpectedSize,
                                             const Maybe<uint32_t>& aDataOffset
-                                              /* = Nothing() */)
-{
+                                            /* = Nothing() */) {
   // Create the decoder.
   RefPtr<Decoder> decoder;
   switch (aType) {
     case DecoderType::BMP:
       MOZ_ASSERT(aDataOffset);
-      decoder = new nsBMPDecoder(aICODecoder->GetImageMaybeNull(), *aDataOffset);
+      decoder =
+          new nsBMPDecoder(aICODecoder->GetImageMaybeNull(), *aDataOffset);
       break;
 
     case DecoderType::PNG:
@@ -348,19 +330,16 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
   return decoder.forget();
 }
 
-/* static */ already_AddRefed<Decoder>
-DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
-                                       NotNull<SourceBuffer*> aSourceBuffer,
-                                       const Maybe<IntSize>& aOutputSize,
-                                       DecoderFlags aDecoderFlags,
-                                       SurfaceFlags aSurfaceFlags)
-{
+/* static */ already_AddRefed<Decoder> DecoderFactory::CreateAnonymousDecoder(
+    DecoderType aType, NotNull<SourceBuffer*> aSourceBuffer,
+    const Maybe<IntSize>& aOutputSize, DecoderFlags aDecoderFlags,
+    SurfaceFlags aSurfaceFlags) {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
   }
 
   RefPtr<Decoder> decoder =
-    GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
+      GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
@@ -387,15 +366,14 @@ DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
 }
 
 /* static */ already_AddRefed<Decoder>
-DecoderFactory::CreateAnonymousMetadataDecoder(DecoderType aType,
-                                               NotNull<SourceBuffer*> aSourceBuffer)
-{
+DecoderFactory::CreateAnonymousMetadataDecoder(
+    DecoderType aType, NotNull<SourceBuffer*> aSourceBuffer) {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
   }
 
   RefPtr<Decoder> decoder =
-    GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
+      GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
@@ -410,5 +388,5 @@ DecoderFactory::CreateAnonymousMetadataDecoder(DecoderType aType,
   return decoder.forget();
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

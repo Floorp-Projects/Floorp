@@ -8,28 +8,20 @@
 #include "nsString.h"
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-GenericClassInfo::AddRef()
-{
-  return 2;
-}
+GenericClassInfo::AddRef() { return 2; }
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-GenericClassInfo::Release()
-{
-  return 1;
-}
+GenericClassInfo::Release() { return 1; }
 
 NS_IMPL_QUERY_INTERFACE(GenericClassInfo, nsIClassInfo)
 
 NS_IMETHODIMP
-GenericClassInfo::GetInterfaces(uint32_t* aCount, nsIID*** aArray)
-{
+GenericClassInfo::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
   return mData->getinterfaces(aCount, aArray);
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetScriptableHelper(nsIXPCScriptable** aHelper)
-{
+GenericClassInfo::GetScriptableHelper(nsIXPCScriptable** aHelper) {
   if (mData->getscriptablehelper) {
     return mData->getscriptablehelper(aHelper);
   }
@@ -37,38 +29,33 @@ GenericClassInfo::GetScriptableHelper(nsIXPCScriptable** aHelper)
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetContractID(nsACString& aContractID)
-{
+GenericClassInfo::GetContractID(nsACString& aContractID) {
   NS_ERROR("GetContractID not implemented");
   aContractID.SetIsVoid(true);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetClassDescription(nsACString& aDescription)
-{
+GenericClassInfo::GetClassDescription(nsACString& aDescription) {
   aDescription.SetIsVoid(true);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetClassID(nsCID** aClassID)
-{
+GenericClassInfo::GetClassID(nsCID** aClassID) {
   NS_ERROR("GetClassID not implemented");
   *aClassID = nullptr;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetFlags(uint32_t* aFlags)
-{
+GenericClassInfo::GetFlags(uint32_t* aFlags) {
   *aFlags = mData->flags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)
-{
+GenericClassInfo::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   *aClassIDNoAlloc = mData->cid;
   return NS_OK;
 }

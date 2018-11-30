@@ -24,84 +24,75 @@ using mozilla::dom::Event;
 //
 
 enum nsMactionActionTypes {
-  NS_MATHML_ACTION_TYPE_CLASS_ERROR            = 0x10,
-  NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION    = 0x20,
+  NS_MATHML_ACTION_TYPE_CLASS_ERROR = 0x10,
+  NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION = 0x20,
   NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION = 0x40,
-  NS_MATHML_ACTION_TYPE_CLASS_BITMASK          = 0xF0,
+  NS_MATHML_ACTION_TYPE_CLASS_BITMASK = 0xF0,
 
-  NS_MATHML_ACTION_TYPE_NONE       = NS_MATHML_ACTION_TYPE_CLASS_ERROR|0x01,
+  NS_MATHML_ACTION_TYPE_NONE = NS_MATHML_ACTION_TYPE_CLASS_ERROR | 0x01,
 
-  NS_MATHML_ACTION_TYPE_TOGGLE     = NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION|0x01,
-  NS_MATHML_ACTION_TYPE_UNKNOWN    = NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION|0x02,
+  NS_MATHML_ACTION_TYPE_TOGGLE =
+      NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION | 0x01,
+  NS_MATHML_ACTION_TYPE_UNKNOWN =
+      NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION | 0x02,
 
-  NS_MATHML_ACTION_TYPE_STATUSLINE = NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION|0x01,
-  NS_MATHML_ACTION_TYPE_TOOLTIP    = NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION|0x02
+  NS_MATHML_ACTION_TYPE_STATUSLINE =
+      NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION | 0x01,
+  NS_MATHML_ACTION_TYPE_TOOLTIP =
+      NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION | 0x02
 };
 
-
 // helper function to parse actiontype attribute
-static int32_t
-GetActionType(nsIContent* aContent)
-{
+static int32_t GetActionType(nsIContent* aContent) {
   nsAutoString value;
 
   if (aContent) {
     if (!aContent->IsElement() ||
         !aContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                        nsGkAtoms::actiontype_,
-                                        value))
+                                        nsGkAtoms::actiontype_, value))
       return NS_MATHML_ACTION_TYPE_NONE;
   }
 
-  if (value.EqualsLiteral("toggle"))
-    return NS_MATHML_ACTION_TYPE_TOGGLE;
+  if (value.EqualsLiteral("toggle")) return NS_MATHML_ACTION_TYPE_TOGGLE;
   if (value.EqualsLiteral("statusline"))
     return NS_MATHML_ACTION_TYPE_STATUSLINE;
-  if (value.EqualsLiteral("tooltip"))
-    return NS_MATHML_ACTION_TYPE_TOOLTIP;
+  if (value.EqualsLiteral("tooltip")) return NS_MATHML_ACTION_TYPE_TOOLTIP;
 
   return NS_MATHML_ACTION_TYPE_UNKNOWN;
 }
 
-nsIFrame*
-NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell,
+                                   ComputedStyle* aStyle) {
   return new (aPresShell) nsMathMLmactionFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmactionFrame)
 
-nsMathMLmactionFrame::~nsMathMLmactionFrame()
-{
+nsMathMLmactionFrame::~nsMathMLmactionFrame() {
   // unregister us as a mouse event listener ...
   //  printf("maction:%p unregistering as mouse event listener ...\n", this);
   if (mListener) {
     mContent->RemoveSystemEventListener(NS_LITERAL_STRING("click"), mListener,
                                         false);
-    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mouseover"), mListener,
-                                        false);
-    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mouseout"), mListener,
-                                        false);
+    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mouseover"),
+                                        mListener, false);
+    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mouseout"),
+                                        mListener, false);
   }
 }
 
-void
-nsMathMLmactionFrame::Init(nsIContent*       aContent,
-                           nsContainerFrame* aParent,
-                           nsIFrame*         aPrevInFlow)
-{
+void nsMathMLmactionFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                                nsIFrame* aPrevInFlow) {
   // Init our local attributes
 
-  mChildCount = -1; // these will be updated in GetSelectedFrame()
+  mChildCount = -1;  // these will be updated in GetSelectedFrame()
   mActionType = GetActionType(aContent);
 
   // Let the base class do the rest
   return nsMathMLSelectedFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
-nsresult
-nsMathMLmactionFrame::ChildListChanged(int32_t aModType)
-{
+nsresult nsMathMLmactionFrame::ChildListChanged(int32_t aModType) {
   // update cached values
   mChildCount = -1;
   mSelectedFrame = nullptr;
@@ -110,14 +101,12 @@ nsMathMLmactionFrame::ChildListChanged(int32_t aModType)
 }
 
 // return the frame whose number is given by the attribute selection="number"
-nsIFrame*
-nsMathMLmactionFrame::GetSelectedFrame()
-{
+nsIFrame* nsMathMLmactionFrame::GetSelectedFrame() {
   nsAutoString value;
   int32_t selection;
 
   if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) ==
-       NS_MATHML_ACTION_TYPE_CLASS_ERROR) {
+      NS_MATHML_ACTION_TYPE_CLASS_ERROR) {
     mSelection = -1;
     mInvalidMarkup = true;
     mSelectedFrame = nullptr;
@@ -127,7 +116,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
   // Selection is not applied to tooltip and statusline.
   // Thereby return the first child.
   if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) ==
-       NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION) {
+      NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION) {
     // We don't touch mChildCount here. It's incorrect to assign it 1,
     // and it's inefficient to count the children. It's fine to leave
     // it be equal -1 because it's not used with other actiontypes.
@@ -137,38 +126,33 @@ nsMathMLmactionFrame::GetSelectedFrame()
     return mSelectedFrame;
   }
 
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::selection_,
+                                 value);
   if (!value.IsEmpty()) {
     nsresult errorCode;
     selection = value.ToInteger(&errorCode);
-    if (NS_FAILED(errorCode))
-      selection = 1;
-  }
-  else selection = 1; // default is first frame
+    if (NS_FAILED(errorCode)) selection = 1;
+  } else
+    selection = 1;  // default is first frame
 
-  if (-1 != mChildCount) { // we have been in this function before...
+  if (-1 != mChildCount) {  // we have been in this function before...
     // cater for invalid user-supplied selection
-    if (selection > mChildCount || selection < 1)
-      selection = -1;
+    if (selection > mChildCount || selection < 1) selection = -1;
     // quick return if it is identical with our cache
-    if (selection == mSelection)
-      return mSelectedFrame;
+    if (selection == mSelection) return mSelectedFrame;
   }
 
   // get the selected child and cache new values...
   int32_t count = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!mSelectedFrame)
-      mSelectedFrame = childFrame; // default is first child
-    if (++count == selection)
-      mSelectedFrame = childFrame;
+    if (!mSelectedFrame) mSelectedFrame = childFrame;  // default is first child
+    if (++count == selection) mSelectedFrame = childFrame;
 
     childFrame = childFrame->GetNextSibling();
   }
   // cater for invalid user-supplied selection
-  if (selection > count || selection < 1)
-    selection = -1;
+  if (selection > count || selection < 1) selection = -1;
 
   mChildCount = count;
   mSelection = selection;
@@ -178,16 +162,13 @@ nsMathMLmactionFrame::GetSelectedFrame()
   return mSelectedFrame;
 }
 
-void
-nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
-                                          nsFrameList&    aChildList)
-{
+void nsMathMLmactionFrame::SetInitialChildList(ChildListID aListID,
+                                               nsFrameList& aChildList) {
   nsMathMLSelectedFrame::SetInitialChildList(aListID, aChildList);
 
   if (!mSelectedFrame) {
     mActionType = NS_MATHML_ACTION_TYPE_NONE;
-  }
-  else {
+  } else {
     // create mouse event listener and register it
     mListener = new nsMathMLmactionFrame::MouseListener(this);
     // printf("maction:%p registering as mouse event listener ...\n", this);
@@ -200,11 +181,9 @@ nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
   }
 }
 
-nsresult
-nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                       nsAtom* aAttribute,
-                                       int32_t  aModType)
-{
+nsresult nsMathMLmactionFrame::AttributeChanged(int32_t aNameSpaceID,
+                                                nsAtom* aAttribute,
+                                                int32_t aModType) {
   bool needsReflow = false;
 
   InvalidateFrame();
@@ -216,24 +195,23 @@ nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
 
     // Initiate a reflow when actiontype classes are different.
     if ((oldActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) !=
-          (mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK)) {
+        (mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK)) {
       needsReflow = true;
     }
   } else if (aAttribute == nsGkAtoms::selection_) {
     if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) ==
-         NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION) {
+        NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION) {
       needsReflow = true;
     }
   } else {
     // let the base class handle other attribute changes
-    return
-      nsMathMLContainerFrame::AttributeChanged(aNameSpaceID,
-                                               aAttribute, aModType);
+    return nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                                    aModType);
   }
 
   if (needsReflow) {
-    PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                  NS_FRAME_IS_DIRTY);
   }
 
   return NS_OK;
@@ -243,15 +221,11 @@ nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
 // Event handlers
 // ################################################################
 
-NS_IMPL_ISUPPORTS(nsMathMLmactionFrame::MouseListener,
-                  nsIDOMEventListener)
-
+NS_IMPL_ISUPPORTS(nsMathMLmactionFrame::MouseListener, nsIDOMEventListener)
 
 // helper to show a msg on the status bar
 // curled from nsPluginFrame.cpp ...
-static void
-ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg)
-{
+static void ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg) {
   nsCOMPtr<nsIDocShellTreeItem> docShellItem(aPresContext->GetDocShell());
   if (docShellItem) {
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -259,36 +233,31 @@ ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg)
     if (treeOwner) {
       nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
       if (browserChrome) {
-        browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, aStatusMsg.get());
+        browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK,
+                                 aStatusMsg.get());
       }
     }
   }
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::MouseListener::HandleEvent(Event* aEvent)
-{
+nsMathMLmactionFrame::MouseListener::HandleEvent(Event* aEvent) {
   nsAutoString eventType;
   aEvent->GetType(eventType);
   if (eventType.EqualsLiteral("mouseover")) {
     mOwner->MouseOver();
-  }
-  else if (eventType.EqualsLiteral("click")) {
+  } else if (eventType.EqualsLiteral("click")) {
     mOwner->MouseClick();
-  }
-  else if (eventType.EqualsLiteral("mouseout")) {
+  } else if (eventType.EqualsLiteral("mouseout")) {
     mOwner->MouseOut();
-  }
-  else {
+  } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected eventType");
   }
 
   return NS_OK;
 }
 
-void
-nsMathMLmactionFrame::MouseOver()
-{
+void nsMathMLmactionFrame::MouseOver() {
   // see if we should display a status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     // retrieve content from a second child if it exists
@@ -316,9 +285,7 @@ nsMathMLmactionFrame::MouseOver()
   }
 }
 
-void
-nsMathMLmactionFrame::MouseOut()
-{
+void nsMathMLmactionFrame::MouseOut() {
   // see if we should remove the status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
@@ -327,22 +294,19 @@ nsMathMLmactionFrame::MouseOut()
   }
 }
 
-void
-nsMathMLmactionFrame::MouseClick()
-{
+void nsMathMLmactionFrame::MouseClick() {
   if (NS_MATHML_ACTION_TYPE_TOGGLE == mActionType) {
     if (mChildCount > 1) {
-      int32_t selection = (mSelection == mChildCount)? 1 : mSelection + 1;
+      int32_t selection = (mSelection == mChildCount) ? 1 : mSelection + 1;
       nsAutoString value;
       value.AppendInt(selection);
-      bool notify = false; // don't yet notify the document
+      bool notify = false;  // don't yet notify the document
       mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_,
                                      value, notify);
 
       // Now trigger a content-changed reflow...
-      PresShell()->
-        FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange,
-                         NS_FRAME_IS_DIRTY);
+      PresShell()->FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange,
+                                    NS_FRAME_IS_DIRTY);
     }
   }
 }

@@ -19,68 +19,35 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GridArea)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-GridArea::GridArea(Grid* aParent,
-                   const nsString& aName,
-                   GridDeclaration aType,
-                   uint32_t aRowStart,
-                   uint32_t aRowEnd,
-                   uint32_t aColumnStart,
+GridArea::GridArea(Grid* aParent, const nsString& aName, GridDeclaration aType,
+                   uint32_t aRowStart, uint32_t aRowEnd, uint32_t aColumnStart,
                    uint32_t aColumnEnd)
-  : mParent(aParent)
-  , mName(aName)
-  , mType(aType)
-  , mRowStart(aRowStart)
-  , mRowEnd(aRowEnd)
-  , mColumnStart(aColumnStart)
-  , mColumnEnd(aColumnEnd)
-{
-}
+    : mParent(aParent),
+      mName(aName),
+      mType(aType),
+      mRowStart(aRowStart),
+      mRowEnd(aRowEnd),
+      mColumnStart(aColumnStart),
+      mColumnEnd(aColumnEnd) {}
 
-GridArea::~GridArea()
-{
-}
+GridArea::~GridArea() {}
 
-JSObject*
-GridArea::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* GridArea::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return GridArea_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-GridArea::GetName(nsString& aName) const
-{
-  aName = mName;
-}
+void GridArea::GetName(nsString& aName) const { aName = mName; }
 
-GridDeclaration
-GridArea::Type() const
-{
-  return mType;
-}
+GridDeclaration GridArea::Type() const { return mType; }
 
-uint32_t
-GridArea::RowStart() const
-{
-  return mRowStart;
-}
+uint32_t GridArea::RowStart() const { return mRowStart; }
 
-uint32_t
-GridArea::RowEnd() const
-{
-  return mRowEnd;
-}
+uint32_t GridArea::RowEnd() const { return mRowEnd; }
 
-uint32_t
-GridArea::ColumnStart() const
-{
-  return mColumnStart;
-}
+uint32_t GridArea::ColumnStart() const { return mColumnStart; }
 
-uint32_t
-GridArea::ColumnEnd() const
-{
-  return mColumnEnd;
-}
+uint32_t GridArea::ColumnEnd() const { return mColumnEnd; }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

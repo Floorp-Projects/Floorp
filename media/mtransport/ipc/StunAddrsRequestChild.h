@@ -13,22 +13,21 @@ namespace mozilla {
 namespace net {
 
 class StunAddrsListener {
-public:
+ public:
   virtual void OnStunAddrsAvailable(const NrIceStunAddrArray& addrs) = 0;
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
   NS_IMETHOD_(MozExternalRefCountType) Release();
 
-protected:
+ protected:
   virtual ~StunAddrsListener() {}
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 };
 
-class StunAddrsRequestChild final : public PStunAddrsRequestChild
-{
-public:
+class StunAddrsRequestChild final : public PStunAddrsRequestChild {
+ public:
   explicit StunAddrsRequestChild(StunAddrsListener* listener,
                                  nsIEventTarget* mainThreadEventTarget);
 
@@ -43,7 +42,7 @@ public:
 
   void Cancel();
 
-protected:
+ protected:
   virtual ~StunAddrsRequestChild() {}
 
   virtual mozilla::ipc::IPCResult RecvOnStunAddrsAvailable(
@@ -55,7 +54,7 @@ protected:
   NS_DECL_OWNINGTHREAD
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_StunAddrsRequestChild_h
+#endif  // mozilla_net_StunAddrsRequestChild_h

@@ -27,15 +27,12 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PaintRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PaintRequest)
 
-/* virtual */ JSObject*
-PaintRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* PaintRequest::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return PaintRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMRect>
-PaintRequest::ClientRect()
-{
+already_AddRefed<DOMRect> PaintRequest::ClientRect() {
   RefPtr<DOMRect> clientRect = new DOMRect(this);
   clientRect->SetLayoutRect(mRequest);
   return clientRect.forget();
@@ -55,11 +52,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PaintRequestList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PaintRequestList)
 
-JSObject*
-PaintRequestList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PaintRequestList::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return PaintRequestList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

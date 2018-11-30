@@ -21,12 +21,10 @@
 namespace mozilla {
 
 TransactionManager::TransactionManager(int32_t aMaxTransactionCount)
-  : mMaxTransactionCount(aMaxTransactionCount)
-  , mDoStack(TransactionStack::FOR_UNDO)
-  , mUndoStack(TransactionStack::FOR_UNDO)
-  , mRedoStack(TransactionStack::FOR_REDO)
-{
-}
+    : mMaxTransactionCount(aMaxTransactionCount),
+      mDoStack(TransactionStack::FOR_UNDO),
+      mUndoStack(TransactionStack::FOR_UNDO),
+      mRedoStack(TransactionStack::FOR_REDO) {}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TransactionManager)
 
@@ -54,8 +52,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TransactionManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransactionManager)
 
 NS_IMETHODIMP
-TransactionManager::DoTransaction(nsITransaction* aTransaction)
-{
+TransactionManager::DoTransaction(nsITransaction* aTransaction) {
   NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   bool doInterrupt = false;
@@ -87,14 +84,9 @@ TransactionManager::DoTransaction(nsITransaction* aTransaction)
 }
 
 NS_IMETHODIMP
-TransactionManager::UndoTransaction()
-{
-  return Undo();
-}
+TransactionManager::UndoTransaction() { return Undo(); }
 
-nsresult
-TransactionManager::Undo()
-{
+nsresult TransactionManager::Undo() {
   // It's possible to be called Undo() again while the transaction manager is
   // executing a transaction's DoTransaction() method.  If this happens,
   // the Undo() request is ignored, and we return NS_ERROR_FAILURE.  This
@@ -138,14 +130,9 @@ TransactionManager::Undo()
 }
 
 NS_IMETHODIMP
-TransactionManager::RedoTransaction()
-{
-  return Redo();
-}
+TransactionManager::RedoTransaction() { return Redo(); }
 
-nsresult
-TransactionManager::Redo()
-{
+nsresult TransactionManager::Redo() {
   // It's possible to be called Redo() again while the transaction manager is
   // executing a transaction's DoTransaction() method.  If this happens,
   // the Redo() request is ignored, and we return NS_ERROR_FAILURE.  This
@@ -189,14 +176,12 @@ TransactionManager::Redo()
 }
 
 NS_IMETHODIMP
-TransactionManager::Clear()
-{
+TransactionManager::Clear() {
   return ClearUndoRedo() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-TransactionManager::BeginBatch(nsISupports* aData)
-{
+TransactionManager::BeginBatch(nsISupports* aData) {
   nsresult rv = BeginBatchInternal(aData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -204,9 +189,7 @@ TransactionManager::BeginBatch(nsISupports* aData)
   return NS_OK;
 }
 
-nsresult
-TransactionManager::BeginBatchInternal(nsISupports* aData)
-{
+nsresult TransactionManager::BeginBatchInternal(nsISupports* aData) {
   // We can batch independent transactions together by simply pushing
   // a dummy transaction item on the do stack. This dummy transaction item
   // will be popped off the do stack, and then pushed on the undo stack
@@ -233,8 +216,7 @@ TransactionManager::BeginBatchInternal(nsISupports* aData)
 }
 
 NS_IMETHODIMP
-TransactionManager::EndBatch(bool aAllowEmpty)
-{
+TransactionManager::EndBatch(bool aAllowEmpty) {
   nsresult rv = EndBatchInternal(aAllowEmpty);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -242,9 +224,7 @@ TransactionManager::EndBatch(bool aAllowEmpty)
   return NS_OK;
 }
 
-nsresult
-TransactionManager::EndBatchInternal(bool aAllowEmpty)
-{
+nsresult TransactionManager::EndBatchInternal(bool aAllowEmpty) {
   // XXX: Need to add some mechanism to detect the case where the transaction
   //      at the top of the do stack isn't the dummy transaction, so we can
   //      throw an error!! This can happen if someone calls EndBatch() within
@@ -285,38 +265,32 @@ TransactionManager::EndBatchInternal(bool aAllowEmpty)
 }
 
 NS_IMETHODIMP
-TransactionManager::GetNumberOfUndoItems(int32_t* aNumItems)
-{
+TransactionManager::GetNumberOfUndoItems(int32_t* aNumItems) {
   *aNumItems = static_cast<int32_t>(NumberOfUndoItems());
   MOZ_ASSERT(*aNumItems >= 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TransactionManager::GetNumberOfRedoItems(int32_t* aNumItems)
-{
+TransactionManager::GetNumberOfRedoItems(int32_t* aNumItems) {
   *aNumItems = static_cast<int32_t>(NumberOfRedoItems());
   MOZ_ASSERT(*aNumItems >= 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TransactionManager::GetMaxTransactionCount(int32_t* aMaxCount)
-{
+TransactionManager::GetMaxTransactionCount(int32_t* aMaxCount) {
   NS_ENSURE_TRUE(aMaxCount, NS_ERROR_NULL_POINTER);
   *aMaxCount = mMaxTransactionCount;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
-{
+TransactionManager::SetMaxTransactionCount(int32_t aMaxCount) {
   return EnableUndoRedo(aMaxCount) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-bool
-TransactionManager::EnableUndoRedo(int32_t aMaxTransactionCount)
-{
+bool TransactionManager::EnableUndoRedo(int32_t aMaxTransactionCount) {
   // It is illegal to call EnableUndoRedo() while the transaction manager is
   // executing a transaction's DoTransaction() method because the undo and redo
   // stacks might get pruned.  If this happens, the EnableUndoRedo() request is
@@ -381,16 +355,13 @@ TransactionManager::EnableUndoRedo(int32_t aMaxTransactionCount)
 }
 
 NS_IMETHODIMP
-TransactionManager::PeekUndoStack(nsITransaction** aTransaction)
-{
+TransactionManager::PeekUndoStack(nsITransaction** aTransaction) {
   MOZ_ASSERT(aTransaction);
   *aTransaction = PeekUndoStack().take();
   return NS_OK;
 }
 
-already_AddRefed<nsITransaction>
-TransactionManager::PeekUndoStack()
-{
+already_AddRefed<nsITransaction> TransactionManager::PeekUndoStack() {
   RefPtr<TransactionItem> transactionItem = mUndoStack.Peek();
   if (!transactionItem) {
     return nullptr;
@@ -399,16 +370,13 @@ TransactionManager::PeekUndoStack()
 }
 
 NS_IMETHODIMP
-TransactionManager::PeekRedoStack(nsITransaction** aTransaction)
-{
+TransactionManager::PeekRedoStack(nsITransaction** aTransaction) {
   MOZ_ASSERT(aTransaction);
   *aTransaction = PeekRedoStack().take();
   return NS_OK;
 }
 
-already_AddRefed<nsITransaction>
-TransactionManager::PeekRedoStack()
-{
+already_AddRefed<nsITransaction> TransactionManager::PeekRedoStack() {
   RefPtr<TransactionItem> transactionItem = mRedoStack.Peek();
   if (!transactionItem) {
     return nullptr;
@@ -416,9 +384,7 @@ TransactionManager::PeekRedoStack()
   return transactionItem->GetTransaction();
 }
 
-nsresult
-TransactionManager::BatchTopUndo()
-{
+nsresult TransactionManager::BatchTopUndo() {
   if (mUndoStack.GetSize() < 2) {
     // Not enough transactions to merge into one batch.
     return NS_OK;
@@ -441,9 +407,7 @@ TransactionManager::BatchTopUndo()
   return rv;
 }
 
-nsresult
-TransactionManager::RemoveTopUndo()
-{
+nsresult TransactionManager::RemoveTopUndo() {
   if (mUndoStack.IsEmpty()) {
     return NS_OK;
   }
@@ -453,8 +417,7 @@ TransactionManager::RemoveTopUndo()
 }
 
 NS_IMETHODIMP
-TransactionManager::AddListener(nsITransactionListener* aListener)
-{
+TransactionManager::AddListener(nsITransactionListener* aListener) {
   if (NS_WARN_IF(!aListener)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -462,8 +425,7 @@ TransactionManager::AddListener(nsITransactionListener* aListener)
 }
 
 NS_IMETHODIMP
-TransactionManager::RemoveListener(nsITransactionListener* aListener)
-{
+TransactionManager::RemoveListener(nsITransactionListener* aListener) {
   if (NS_WARN_IF(!aListener)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -471,8 +433,7 @@ TransactionManager::RemoveListener(nsITransactionListener* aListener)
 }
 
 NS_IMETHODIMP
-TransactionManager::ClearUndoStack()
-{
+TransactionManager::ClearUndoStack() {
   if (NS_WARN_IF(!mDoStack.IsEmpty())) {
     return NS_ERROR_FAILURE;
   }
@@ -481,8 +442,7 @@ TransactionManager::ClearUndoStack()
 }
 
 NS_IMETHODIMP
-TransactionManager::ClearRedoStack()
-{
+TransactionManager::ClearRedoStack() {
   if (NS_WARN_IF(!mDoStack.IsEmpty())) {
     return NS_ERROR_FAILURE;
   }
@@ -490,10 +450,8 @@ TransactionManager::ClearRedoStack()
   return NS_OK;
 }
 
-nsresult
-TransactionManager::WillDoNotify(nsITransaction* aTransaction,
-                                 bool* aInterrupt)
-{
+nsresult TransactionManager::WillDoNotify(nsITransaction* aTransaction,
+                                          bool* aInterrupt) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -506,10 +464,8 @@ TransactionManager::WillDoNotify(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::DidDoNotify(nsITransaction* aTransaction,
-                                nsresult aDoResult)
-{
+nsresult TransactionManager::DidDoNotify(nsITransaction* aTransaction,
+                                         nsresult aDoResult) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -522,10 +478,8 @@ TransactionManager::DidDoNotify(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::WillUndoNotify(nsITransaction* aTransaction,
-                                   bool* aInterrupt)
-{
+nsresult TransactionManager::WillUndoNotify(nsITransaction* aTransaction,
+                                            bool* aInterrupt) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -538,10 +492,8 @@ TransactionManager::WillUndoNotify(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
-                                  nsresult aUndoResult)
-{
+nsresult TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
+                                           nsresult aUndoResult) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -554,10 +506,8 @@ TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::WillRedoNotify(nsITransaction* aTransaction,
-                                   bool* aInterrupt)
-{
+nsresult TransactionManager::WillRedoNotify(nsITransaction* aTransaction,
+                                            bool* aInterrupt) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -570,10 +520,8 @@ TransactionManager::WillRedoNotify(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
-                                  nsresult aRedoResult)
-{
+nsresult TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
+                                           nsresult aRedoResult) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -586,9 +534,7 @@ TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::WillBeginBatchNotify(bool* aInterrupt)
-{
+nsresult TransactionManager::WillBeginBatchNotify(bool* aInterrupt) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -601,9 +547,7 @@ TransactionManager::WillBeginBatchNotify(bool* aInterrupt)
   return NS_OK;
 }
 
-nsresult
-TransactionManager::DidBeginBatchNotify(nsresult aResult)
-{
+nsresult TransactionManager::DidBeginBatchNotify(nsresult aResult) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -616,9 +560,7 @@ TransactionManager::DidBeginBatchNotify(nsresult aResult)
   return NS_OK;
 }
 
-nsresult
-TransactionManager::WillEndBatchNotify(bool* aInterrupt)
-{
+nsresult TransactionManager::WillEndBatchNotify(bool* aInterrupt) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -631,9 +573,7 @@ TransactionManager::WillEndBatchNotify(bool* aInterrupt)
   return NS_OK;
 }
 
-nsresult
-TransactionManager::DidEndBatchNotify(nsresult aResult)
-{
+nsresult TransactionManager::DidEndBatchNotify(nsresult aResult) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -646,11 +586,9 @@ TransactionManager::DidEndBatchNotify(nsresult aResult)
   return NS_OK;
 }
 
-nsresult
-TransactionManager::WillMergeNotify(nsITransaction* aTop,
-                                    nsITransaction* aTransaction,
-                                    bool* aInterrupt)
-{
+nsresult TransactionManager::WillMergeNotify(nsITransaction* aTop,
+                                             nsITransaction* aTransaction,
+                                             bool* aInterrupt) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
@@ -663,18 +601,16 @@ TransactionManager::WillMergeNotify(nsITransaction* aTop,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::DidMergeNotify(nsITransaction* aTop,
-                                   nsITransaction* aTransaction,
-                                   bool aDidMerge,
-                                   nsresult aMergeResult)
-{
+nsresult TransactionManager::DidMergeNotify(nsITransaction* aTop,
+                                            nsITransaction* aTransaction,
+                                            bool aDidMerge,
+                                            nsresult aMergeResult) {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     nsresult rv =
-      listener->DidMerge(this, aTop, aTransaction, aDidMerge, aMergeResult);
+        listener->DidMerge(this, aTop, aTransaction, aDidMerge, aMergeResult);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -682,10 +618,8 @@ TransactionManager::DidMergeNotify(nsITransaction* aTop,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::BeginTransaction(nsITransaction* aTransaction,
-                                     nsISupports* aData)
-{
+nsresult TransactionManager::BeginTransaction(nsITransaction* aTransaction,
+                                              nsISupports* aData) {
   // XXX: POSSIBLE OPTIMIZATION
   //      We could use a factory that pre-allocates/recycles transaction items.
   RefPtr<TransactionItem> transactionItem = new TransactionItem(aTransaction);
@@ -705,9 +639,7 @@ TransactionManager::BeginTransaction(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult
-TransactionManager::EndTransaction(bool aAllowEmpty)
-{
+nsresult TransactionManager::EndTransaction(bool aAllowEmpty) {
   RefPtr<TransactionItem> transactionItem = mDoStack.Pop();
   if (!transactionItem) {
     return NS_ERROR_FAILURE;
@@ -752,7 +684,7 @@ TransactionManager::EndTransaction(bool aAllowEmpty)
   if (transaction && topTransactionItem) {
     bool didMerge = false;
     nsCOMPtr<nsITransaction> topTransaction =
-      topTransactionItem->GetTransaction();
+        topTransactionItem->GetTransaction();
     if (topTransaction) {
       bool doInterrupt = false;
       rv = WillMergeNotify(topTransaction, transaction, &doInterrupt);
@@ -761,7 +693,7 @@ TransactionManager::EndTransaction(bool aAllowEmpty)
       if (!doInterrupt) {
         rv = topTransaction->Merge(transaction, &didMerge);
         nsresult rv2 =
-          DidMergeNotify(topTransaction, transaction, didMerge, rv);
+            DidMergeNotify(topTransaction, transaction, didMerge, rv);
         if (NS_SUCCEEDED(rv)) {
           rv = rv2;
         }
@@ -787,4 +719,4 @@ TransactionManager::EndTransaction(bool aAllowEmpty)
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

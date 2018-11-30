@@ -16,18 +16,17 @@ namespace a11y {
  * Wrap TextLeafAccessible to expose ISimpleDOMText as a native interface with
  * a tear off.
  */
-class TextLeafAccessibleWrap : public TextLeafAccessible
-{
-public:
-  TextLeafAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    TextLeafAccessible(aContent, aDoc) { }
+class TextLeafAccessibleWrap : public TextLeafAccessible {
+ public:
+  TextLeafAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
+      : TextLeafAccessible(aContent, aDoc) {}
   virtual ~TextLeafAccessibleWrap() {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

@@ -24,16 +24,14 @@ class nsIWebSocketChannel;
 
 namespace IPC {
 
-class SerializedLoadContext
-{
-public:
+class SerializedLoadContext {
+ public:
   SerializedLoadContext()
-    : mIsNotNull(false)
-    , mIsPrivateBitValid(false)
-    , mIsContent(false)
-    , mUseRemoteTabs(false)
-    , mUseTrackingProtection(false)
-  {
+      : mIsNotNull(false),
+        mIsPrivateBitValid(false),
+        mIsContent(false),
+        mUseRemoteTabs(false),
+        mUseTrackingProtection(false) {
     Init(nullptr);
   }
 
@@ -58,13 +56,11 @@ public:
 };
 
 // Function to serialize over IPDL
-template<>
-struct ParamTraits<SerializedLoadContext>
-{
+template <>
+struct ParamTraits<SerializedLoadContext> {
   typedef SerializedLoadContext paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     nsAutoCString suffix;
     aParam.mOriginAttributes.CreateSuffix(suffix);
 
@@ -76,8 +72,8 @@ struct ParamTraits<SerializedLoadContext>
     WriteParam(aMsg, suffix);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     nsAutoCString suffix;
     if (!ReadParam(aMsg, aIter, &aResult->mIsNotNull) ||
         !ReadParam(aMsg, aIter, &aResult->mIsContent) ||
@@ -91,6 +87,6 @@ struct ParamTraits<SerializedLoadContext>
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // SerializedLoadContext_h
+#endif  // SerializedLoadContext_h

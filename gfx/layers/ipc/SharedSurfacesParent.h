@@ -7,16 +7,16 @@
 #ifndef MOZILLA_GFX_SHAREDSURFACESPARENT_H
 #define MOZILLA_GFX_SHAREDSURFACESPARENT_H
 
-#include <stdint.h>                     // for uint32_t
-#include "mozilla/Attributes.h"         // for override
-#include "mozilla/StaticMutex.h"        // for StaticMutex
-#include "mozilla/StaticPtr.h"          // for StaticAutoPtr
-#include "mozilla/RefPtr.h"             // for already_AddRefed
-#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/gfx/2D.h"             // for SurfaceFormat
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/layers/LayersSurfaces.h"    // for SurfaceDescriptorShared
-#include "mozilla/webrender/WebRenderTypes.h" // for wr::ExternalImageId
+#include <stdint.h>                            // for uint32_t
+#include "mozilla/Attributes.h"                // for override
+#include "mozilla/StaticMutex.h"               // for StaticMutex
+#include "mozilla/StaticPtr.h"                 // for StaticAutoPtr
+#include "mozilla/RefPtr.h"                    // for already_AddRefed
+#include "mozilla/ipc/SharedMemory.h"          // for SharedMemory, etc
+#include "mozilla/gfx/2D.h"                    // for SurfaceFormat
+#include "mozilla/gfx/Point.h"                 // for IntSize
+#include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptorShared
+#include "mozilla/webrender/WebRenderTypes.h"  // for wr::ExternalImageId
 #include "nsRefPtrHashtable.h"
 
 namespace mozilla {
@@ -24,33 +24,30 @@ namespace gfx {
 class DataSourceSurface;
 class SourceSurfaceSharedData;
 class SourceSurfaceSharedDataWrapper;
-} // namespace gfx
+}  // namespace gfx
 
 namespace layers {
 
 class SharedSurfacesChild;
 class SharedSurfacesMemoryReport;
 
-class SharedSurfacesParent final
-{
-public:
+class SharedSurfacesParent final {
+ public:
   static void Initialize();
   static void Shutdown();
 
   // Get without increasing the consumer count.
-  static already_AddRefed<gfx::DataSourceSurface>
-  Get(const wr::ExternalImageId& aId);
+  static already_AddRefed<gfx::DataSourceSurface> Get(
+      const wr::ExternalImageId& aId);
 
   // Get but also increase the consumer count. Must call Release after finished.
-  static already_AddRefed<gfx::DataSourceSurface>
-  Acquire(const wr::ExternalImageId& aId);
+  static already_AddRefed<gfx::DataSourceSurface> Acquire(
+      const wr::ExternalImageId& aId);
 
-  static bool Release(const wr::ExternalImageId& aId,
-                      bool aForCreator = false);
+  static bool Release(const wr::ExternalImageId& aId, bool aForCreator = false);
 
   static void Add(const wr::ExternalImageId& aId,
-                  const SurfaceDescriptorShared& aDesc,
-                  base::ProcessId aPid);
+                  const SurfaceDescriptorShared& aDesc, base::ProcessId aPid);
 
   static void Remove(const wr::ExternalImageId& aId);
 
@@ -63,7 +60,7 @@ public:
 
   ~SharedSurfacesParent();
 
-private:
+ private:
   friend class SharedSurfacesChild;
 
   SharedSurfacesParent();
@@ -76,10 +73,11 @@ private:
 
   static StaticAutoPtr<SharedSurfacesParent> sInstance;
 
-  nsRefPtrHashtable<nsUint64HashKey, gfx::SourceSurfaceSharedDataWrapper> mSurfaces;
+  nsRefPtrHashtable<nsUint64HashKey, gfx::SourceSurfaceSharedDataWrapper>
+      mSurfaces;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

@@ -14,7 +14,8 @@
 #include <vector>
 
 #define TEXTW(x) L##x
-#define XML(X) TEXTW(#X) // This macro creates a single string from multiple lines of text.
+#define XML(X) \
+  TEXTW(#X)  // This macro creates a single string from multiple lines of text.
 
 static const PCWSTR kXmlDescription =
     XML(
@@ -38,14 +39,12 @@ namespace mozilla {
 namespace gfx {
 
 ExtendInputEffectD2D1::ExtendInputEffectD2D1()
-  : mRefCount(0)
-  , mOutputRect(D2D1::Vector4F(-FLT_MAX, -FLT_MAX, FLT_MAX, FLT_MAX))
-{
-}
+    : mRefCount(0),
+      mOutputRect(D2D1::Vector4F(-FLT_MAX, -FLT_MAX, FLT_MAX, FLT_MAX)) {}
 
 IFACEMETHODIMP
-ExtendInputEffectD2D1::Initialize(ID2D1EffectContext* pContextInternal, ID2D1TransformGraph* pTransformGraph)
-{
+ExtendInputEffectD2D1::Initialize(ID2D1EffectContext* pContextInternal,
+                                  ID2D1TransformGraph* pTransformGraph) {
   HRESULT hr;
   hr = pTransformGraph->SetSingleTransformNode(this);
 
@@ -57,26 +56,20 @@ ExtendInputEffectD2D1::Initialize(ID2D1EffectContext* pContextInternal, ID2D1Tra
 }
 
 IFACEMETHODIMP
-ExtendInputEffectD2D1::PrepareForRender(D2D1_CHANGE_TYPE changeType)
-{
+ExtendInputEffectD2D1::PrepareForRender(D2D1_CHANGE_TYPE changeType) {
   return S_OK;
 }
 
 IFACEMETHODIMP
-ExtendInputEffectD2D1::SetGraph(ID2D1TransformGraph* pGraph)
-{
+ExtendInputEffectD2D1::SetGraph(ID2D1TransformGraph* pGraph) {
   return E_NOTIMPL;
 }
 
 IFACEMETHODIMP_(ULONG)
-ExtendInputEffectD2D1::AddRef()
-{
-  return ++mRefCount;
-}
+ExtendInputEffectD2D1::AddRef() { return ++mRefCount; }
 
 IFACEMETHODIMP_(ULONG)
-ExtendInputEffectD2D1::Release()
-{
+ExtendInputEffectD2D1::Release() {
   if (!--mRefCount) {
     delete this;
     return 0;
@@ -85,8 +78,7 @@ ExtendInputEffectD2D1::Release()
 }
 
 IFACEMETHODIMP
-ExtendInputEffectD2D1::QueryInterface(const IID &aIID, void **aPtr)
-{
+ExtendInputEffectD2D1::QueryInterface(const IID& aIID, void** aPtr) {
   if (!aPtr) {
     return E_POINTER;
   }
@@ -109,9 +101,7 @@ ExtendInputEffectD2D1::QueryInterface(const IID &aIID, void **aPtr)
   return S_OK;
 }
 
-static D2D1_RECT_L
-ConvertFloatToLongRect(const D2D1_VECTOR_4F& aRect)
-{
+static D2D1_RECT_L ConvertFloatToLongRect(const D2D1_VECTOR_4F& aRect) {
   // Clamp values to LONG range. We can't use std::min/max here because we want
   // the comparison to operate on a type that's different from the type of the
   // result.
@@ -121,9 +111,8 @@ ConvertFloatToLongRect(const D2D1_VECTOR_4F& aRect)
                      aRect.w >= LONG_MAX ? LONG_MAX : LONG(aRect.w));
 }
 
-static D2D1_RECT_L
-IntersectRect(const D2D1_RECT_L& aRect1, const D2D1_RECT_L& aRect2)
-{
+static D2D1_RECT_L IntersectRect(const D2D1_RECT_L& aRect1,
+                                 const D2D1_RECT_L& aRect2) {
   return D2D1::RectL(std::max(aRect1.left, aRect2.left),
                      std::max(aRect1.top, aRect2.top),
                      std::min(aRect1.right, aRect2.right),
@@ -131,18 +120,18 @@ IntersectRect(const D2D1_RECT_L& aRect1, const D2D1_RECT_L& aRect2)
 }
 
 IFACEMETHODIMP
-ExtendInputEffectD2D1::MapInputRectsToOutputRect(const D2D1_RECT_L* pInputRects,
-                                                 const D2D1_RECT_L* pInputOpaqueSubRects,
-                                                 UINT32 inputRectCount,
-                                                 D2D1_RECT_L* pOutputRect,
-                                                 D2D1_RECT_L* pOutputOpaqueSubRect)
-{
-  // This transform only accepts one input, so there will only be one input rect.
+ExtendInputEffectD2D1::MapInputRectsToOutputRect(
+    const D2D1_RECT_L* pInputRects, const D2D1_RECT_L* pInputOpaqueSubRects,
+    UINT32 inputRectCount, D2D1_RECT_L* pOutputRect,
+    D2D1_RECT_L* pOutputOpaqueSubRect) {
+  // This transform only accepts one input, so there will only be one input
+  // rect.
   if (inputRectCount != 1) {
     return E_INVALIDARG;
   }
 
-  // Set the output rect to the specified rect. This is the whole purpose of this effect.
+  // Set the output rect to the specified rect. This is the whole purpose of
+  // this effect.
   *pOutputRect = ConvertFloatToLongRect(mOutputRect);
   *pOutputOpaqueSubRect = IntersectRect(*pOutputRect, pInputOpaqueSubRects[0]);
   return S_OK;
@@ -151,10 +140,9 @@ ExtendInputEffectD2D1::MapInputRectsToOutputRect(const D2D1_RECT_L* pInputRects,
 IFACEMETHODIMP
 ExtendInputEffectD2D1::MapOutputRectToInputRects(const D2D1_RECT_L* pOutputRect,
                                                  D2D1_RECT_L* pInputRects,
-                                                 UINT32 inputRectCount) const
-{
+                                                 UINT32 inputRectCount) const {
   if (inputRectCount != 1) {
-      return E_INVALIDARG;
+    return E_INVALIDARG;
   }
 
   *pInputRects = *pOutputRect;
@@ -164,8 +152,7 @@ ExtendInputEffectD2D1::MapOutputRectToInputRects(const D2D1_RECT_L* pOutputRect,
 IFACEMETHODIMP
 ExtendInputEffectD2D1::MapInvalidRect(UINT32 inputIndex,
                                       D2D1_RECT_L invalidInputRect,
-                                      D2D1_RECT_L* pInvalidOutputRect) const
-{
+                                      D2D1_RECT_L* pInvalidOutputRect) const {
   MOZ_ASSERT(inputIndex == 0);
 
   *pInvalidOutputRect = invalidInputRect;
@@ -173,12 +160,14 @@ ExtendInputEffectD2D1::MapInvalidRect(UINT32 inputIndex,
 }
 
 HRESULT
-ExtendInputEffectD2D1::Register(ID2D1Factory1 *aFactory)
-{
+ExtendInputEffectD2D1::Register(ID2D1Factory1* aFactory) {
   D2D1_PROPERTY_BINDING bindings[] = {
-    D2D1_VALUE_TYPE_BINDING(L"OutputRect", &ExtendInputEffectD2D1::SetOutputRect, &ExtendInputEffectD2D1::GetOutputRect),
+      D2D1_VALUE_TYPE_BINDING(L"OutputRect",
+                              &ExtendInputEffectD2D1::SetOutputRect,
+                              &ExtendInputEffectD2D1::GetOutputRect),
   };
-  HRESULT hr = aFactory->RegisterEffectFromString(CLSID_ExtendInputEffect, kXmlDescription, bindings, 1, CreateEffect);
+  HRESULT hr = aFactory->RegisterEffectFromString(
+      CLSID_ExtendInputEffect, kXmlDescription, bindings, 1, CreateEffect);
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to register extend input effect.";
@@ -186,20 +175,16 @@ ExtendInputEffectD2D1::Register(ID2D1Factory1 *aFactory)
   return hr;
 }
 
-void
-ExtendInputEffectD2D1::Unregister(ID2D1Factory1 *aFactory)
-{
+void ExtendInputEffectD2D1::Unregister(ID2D1Factory1* aFactory) {
   aFactory->UnregisterEffect(CLSID_ExtendInputEffect);
 }
 
-HRESULT __stdcall
-ExtendInputEffectD2D1::CreateEffect(IUnknown **aEffectImpl)
-{
+HRESULT __stdcall ExtendInputEffectD2D1::CreateEffect(IUnknown** aEffectImpl) {
   *aEffectImpl = static_cast<ID2D1EffectImpl*>(new ExtendInputEffectD2D1());
   (*aEffectImpl)->AddRef();
 
   return S_OK;
 }
 
-}
-}
+}  // namespace gfx
+}  // namespace mozilla

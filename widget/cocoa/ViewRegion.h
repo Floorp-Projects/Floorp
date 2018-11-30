@@ -20,7 +20,7 @@ namespace mozilla {
  * Manages a set of NSViews to cover a LayoutDeviceIntRegion.
  */
 class ViewRegion {
-public:
+ public:
   ~ViewRegion();
 
   mozilla::LayoutDeviceIntRegion Region() { return mRegion; }
@@ -36,8 +36,7 @@ public:
    * @return  Whether or not the region changed.
    */
   bool UpdateRegion(const mozilla::LayoutDeviceIntRegion& aRegion,
-                    const nsChildView& aCoordinateConverter,
-                    NSView* aContainerView,
+                    const nsChildView& aCoordinateConverter, NSView* aContainerView,
                     NSView* (^aViewCreationCallback)());
 
   /**
@@ -45,11 +44,11 @@ public:
    */
   NSView* GetAnyView() { return mViews.Length() > 0 ? mViews[0] : NULL; }
 
-private:
+ private:
   mozilla::LayoutDeviceIntRegion mRegion;
   nsTArray<NSView*> mViews;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // ViewRegion_h
+#endif  // ViewRegion_h

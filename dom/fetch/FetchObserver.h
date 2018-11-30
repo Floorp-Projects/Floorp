@@ -14,38 +14,33 @@
 namespace mozilla {
 namespace dom {
 
-class FetchObserver final : public DOMEventTargetHelper
-                          , public AbortFollower
-{
-public:
+class FetchObserver final : public DOMEventTargetHelper, public AbortFollower {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchObserver, DOMEventTargetHelper)
 
   FetchObserver(nsIGlobalObject* aGlobal, AbortSignalImpl* aSignalImpl);
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  FetchState
-  State() const;
+  FetchState State() const;
 
   IMPL_EVENT_HANDLER(statechange);
   IMPL_EVENT_HANDLER(requestprogress);
   IMPL_EVENT_HANDLER(responseprogress);
 
-  void
-  Abort() override;
+  void Abort() override;
 
-  void
-  SetState(FetchState aState);
+  void SetState(FetchState aState);
 
-private:
+ private:
   ~FetchObserver() = default;
 
   FetchState mState;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FetchObserver_h
+#endif  // mozilla_dom_FetchObserver_h

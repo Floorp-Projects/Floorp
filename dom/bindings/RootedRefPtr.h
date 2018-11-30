@@ -22,31 +22,23 @@
 #include "js/RootingAPI.h"
 
 namespace JS {
-template<typename T>
-struct GCPolicy<RefPtr<T>>
-{
-  static RefPtr<T> initial() {
-    return RefPtr<T>();
-  }
+template <typename T>
+struct GCPolicy<RefPtr<T>> {
+  static RefPtr<T> initial() { return RefPtr<T>(); }
 
-  static void trace(JSTracer* trc, RefPtr<T>* tp, const char* name)
-  {
+  static void trace(JSTracer* trc, RefPtr<T>* tp, const char* name) {
     if (*tp) {
       (*tp)->Trace(trc);
     }
   }
 };
-} // namespace JS
+}  // namespace JS
 
 namespace js {
-template<typename T, typename Wrapper>
-struct WrappedPtrOperations<RefPtr<T>, Wrapper>
-{
-  operator T*() const
-  {
-    return static_cast<const Wrapper*>(this)->get();
-  }
+template <typename T, typename Wrapper>
+struct WrappedPtrOperations<RefPtr<T>, Wrapper> {
+  operator T*() const { return static_cast<const Wrapper*>(this)->get(); }
 };
-} // namespace js
+}  // namespace js
 
 #endif /* mozilla_RootedRefPtr_h__ */

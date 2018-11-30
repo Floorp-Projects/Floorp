@@ -13,41 +13,36 @@
 #include "nsCOMPtr.h"
 #include "PLDHashTable.h"
 
-class nsCommandParams : public nsICommandParams
-{
+class nsCommandParams : public nsICommandParams {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::IgnoredErrorResult IgnoredErrorResult;
 
-public:
+ public:
   nsCommandParams();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOMMANDPARAMS
 
   bool GetBool(const char* aName, ErrorResult& aRv) const;
-  inline bool GetBool(const char* aName) const
-  {
+  inline bool GetBool(const char* aName) const {
     IgnoredErrorResult error;
     return GetBool(aName, error);
   }
   int32_t GetInt(const char* aName, ErrorResult& aRv) const;
-  inline int32_t GetInt(const char* aName) const
-  {
+  inline int32_t GetInt(const char* aName) const {
     IgnoredErrorResult error;
     return GetInt(aName, error);
   }
   double GetDouble(const char* aName, ErrorResult& aRv) const;
-  inline double GetDouble(const char* aName) const
-  {
+  inline double GetDouble(const char* aName) const {
     IgnoredErrorResult error;
     return GetDouble(aName, error);
   }
   nsresult GetString(const char* aName, nsAString& aValue) const;
   nsresult GetCString(const char* aName, nsACString& aValue) const;
-  already_AddRefed<nsISupports>
-  GetISupports(const char* aName, ErrorResult& aRv) const;
-  inline already_AddRefed<nsISupports> GetISupports(const char* aName) const
-  {
+  already_AddRefed<nsISupports> GetISupports(const char* aName,
+                                             ErrorResult& aRv) const;
+  inline already_AddRefed<nsISupports> GetISupports(const char* aName) const {
     IgnoredErrorResult error;
     return GetISupports(aName, error);
   }
@@ -59,16 +54,14 @@ public:
   nsresult SetCString(const char* aName, const nsACString& aValue);
   nsresult SetISupports(const char* aName, nsISupports* aValue);
 
-protected:
+ protected:
   virtual ~nsCommandParams();
 
-  struct HashEntry : public PLDHashEntryHdr
-  {
+  struct HashEntry : public PLDHashEntryHdr {
     nsCString mEntryName;
 
     uint8_t mEntryType;
-    union
-    {
+    union {
       bool mBoolean;
       int32_t mLong;
       double mDouble;
@@ -79,16 +72,11 @@ protected:
     nsCOMPtr<nsISupports> mISupports;
 
     HashEntry(uint8_t aType, const char* aEntryName)
-      : mEntryName(aEntryName)
-      , mEntryType(aType)
-      , mData()
-    {
+        : mEntryName(aEntryName), mEntryType(aType), mData() {
       Reset(mEntryType);
     }
 
-    explicit HashEntry(const HashEntry& aRHS)
-      : mEntryType(aRHS.mEntryType)
-    {
+    explicit HashEntry(const HashEntry& aRHS) : mEntryType(aRHS.mEntryType) {
       Reset(mEntryType);
       switch (mEntryType) {
         case eBooleanType:
@@ -118,8 +106,7 @@ protected:
 
     ~HashEntry() { Reset(eNoType); }
 
-    void Reset(uint8_t aNewType)
-    {
+    void Reset(uint8_t aNewType) {
       switch (mEntryType) {
         case eNoType:
           break;
@@ -153,7 +140,7 @@ protected:
   HashEntry* GetNamedEntry(const char* aName) const;
   HashEntry* GetOrMakeEntry(const char* aName, uint8_t aEntryType);
 
-protected:
+ protected:
   static PLDHashNumber HashKey(const void* aKey);
 
   static bool HashMatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey);
@@ -168,16 +155,12 @@ protected:
   static const PLDHashTableOps sHashOps;
 };
 
-nsCommandParams*
-nsICommandParams::AsCommandParams()
-{
+nsCommandParams* nsICommandParams::AsCommandParams() {
   return static_cast<nsCommandParams*>(this);
 }
 
-const nsCommandParams*
-nsICommandParams::AsCommandParams() const
-{
+const nsCommandParams* nsICommandParams::AsCommandParams() const {
   return static_cast<const nsCommandParams*>(this);
 }
 
-#endif // nsCommandParams_h
+#endif  // nsCommandParams_h

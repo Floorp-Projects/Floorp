@@ -14,43 +14,31 @@ namespace embedding {
 
 NS_IMPL_ISUPPORTS(PrintProgressDialogParent, nsIObserver)
 
-PrintProgressDialogParent::PrintProgressDialogParent() :
-  mActive(true)
-{
-}
+PrintProgressDialogParent::PrintProgressDialogParent() : mActive(true) {}
 
-PrintProgressDialogParent::~PrintProgressDialogParent()
-{
-}
+PrintProgressDialogParent::~PrintProgressDialogParent() {}
 
-void
-PrintProgressDialogParent::SetWebProgressListener(nsIWebProgressListener* aListener)
-{
+void PrintProgressDialogParent::SetWebProgressListener(
+    nsIWebProgressListener* aListener) {
   mWebProgressListener = aListener;
 }
 
-void
-PrintProgressDialogParent::SetPrintProgressParams(nsIPrintProgressParams* aParams)
-{
+void PrintProgressDialogParent::SetPrintProgressParams(
+    nsIPrintProgressParams* aParams) {
   mPrintProgressParams = aParams;
 }
 
-mozilla::ipc::IPCResult
-PrintProgressDialogParent::RecvStateChange(const long& stateFlags,
-                                           const nsresult& status)
-{
+mozilla::ipc::IPCResult PrintProgressDialogParent::RecvStateChange(
+    const long& stateFlags, const nsresult& status) {
   if (mWebProgressListener) {
     mWebProgressListener->OnStateChange(nullptr, nullptr, stateFlags, status);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PrintProgressDialogParent::RecvProgressChange(const long& curSelfProgress,
-                                              const long& maxSelfProgress,
-                                              const long& curTotalProgress,
-                                              const long& maxTotalProgress)
-{
+mozilla::ipc::IPCResult PrintProgressDialogParent::RecvProgressChange(
+    const long& curSelfProgress, const long& maxSelfProgress,
+    const long& curTotalProgress, const long& maxTotalProgress) {
   if (mWebProgressListener) {
     mWebProgressListener->OnProgressChange(nullptr, nullptr, curSelfProgress,
                                            maxSelfProgress, curTotalProgress,
@@ -59,34 +47,28 @@ PrintProgressDialogParent::RecvProgressChange(const long& curSelfProgress,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PrintProgressDialogParent::RecvDocTitleChange(const nsString& newTitle)
-{
+mozilla::ipc::IPCResult PrintProgressDialogParent::RecvDocTitleChange(
+    const nsString& newTitle) {
   if (mPrintProgressParams) {
     mPrintProgressParams->SetDocTitle(newTitle);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PrintProgressDialogParent::RecvDocURLChange(const nsString& newURL)
-{
+mozilla::ipc::IPCResult PrintProgressDialogParent::RecvDocURLChange(
+    const nsString& newURL) {
   if (mPrintProgressParams) {
     mPrintProgressParams->SetDocURL(newURL);
   }
   return IPC_OK();
 }
 
-void
-PrintProgressDialogParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void PrintProgressDialogParent::ActorDestroy(ActorDestroyReason aWhy) {
   // If IPC actor is destroyed, we can't send to child via IPC.
   mActive = false;
 }
 
-mozilla::ipc::IPCResult
-PrintProgressDialogParent::Recv__delete__()
-{
+mozilla::ipc::IPCResult PrintProgressDialogParent::Recv__delete__() {
   // The child has requested that we tear down the connection, so we set a
   // member to make sure we don't try to contact it after the fact.
   mActive = false;
@@ -95,18 +77,17 @@ PrintProgressDialogParent::Recv__delete__()
 
 // nsIObserver
 NS_IMETHODIMP
-PrintProgressDialogParent::Observe(nsISupports *aSubject, const char *aTopic,
-                                   const char16_t *aData)
-{
+PrintProgressDialogParent::Observe(nsISupports* aSubject, const char* aTopic,
+                                   const char16_t* aData) {
   if (mActive) {
     if (aTopic) {
       if (!strcmp(aTopic, "cancelled")) {
         Unused << SendCancelledCurrentJob();
         if (!mDialogOpenedSent) {
           // We haven't already called SendDialogOpened, so call it now or it
-          // might never get sent and block the child from new printing requests.
-          // Also set mActive to false because we don't want to send it twice
-          // and our PrintProgressDialogChild will get deleted anyway.
+          // might never get sent and block the child from new printing
+          // requests. Also set mActive to false because we don't want to send
+          // it twice and our PrintProgressDialogChild will get deleted anyway.
           Unused << SendDialogOpened();
           mActive = false;
         }
@@ -119,13 +100,13 @@ PrintProgressDialogParent::Observe(nsISupports *aSubject, const char *aTopic,
       mDialogOpenedSent = true;
     }
   } else {
-    NS_WARNING("The print progress dialog finished opening, but communications "
-               "with the child have been closed.");
+    NS_WARNING(
+        "The print progress dialog finished opening, but communications "
+        "with the child have been closed.");
   }
 
   return NS_OK;
 }
 
-
-} // namespace embedding
-} // namespace mozilla
+}  // namespace embedding
+}  // namespace mozilla

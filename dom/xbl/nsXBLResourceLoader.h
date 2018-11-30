@@ -24,15 +24,13 @@ class nsIDocument;
 // *********************************************************************/
 // The XBLResourceLoader class
 
-class nsXBLResourceLoader : public nsICSSLoaderObserver
-{
-public:
+class nsXBLResourceLoader : public nsICSSLoaderObserver {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,
-                              bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
 
   bool LoadResources(nsIContent* aBoundElement);
@@ -46,29 +44,29 @@ public:
 
   nsresult Write(nsIObjectOutputStream* aStream);
 
-// MEMBER VARIABLES
-  nsXBLPrototypeBinding* mBinding; // A pointer back to our binding.
-  nsXBLPrototypeResources* mResources; // A pointer back to our resources
-                                       // information.  May be null if the
-                                       // resources have already been
-                                       // destroyed.
+  // MEMBER VARIABLES
+  nsXBLPrototypeBinding* mBinding;      // A pointer back to our binding.
+  nsXBLPrototypeResources* mResources;  // A pointer back to our resources
+                                        // information.  May be null if the
+                                        // resources have already been
+                                        // destroyed.
 
-  nsXBLResource* mResourceList; // The list of resources we need to load.
+  nsXBLResource* mResourceList;  // The list of resources we need to load.
   nsXBLResource* mLastResource;
 
   bool mLoadingResources;
   // We need mInLoadResourcesFunc because we do a mixture of sync and
   // async loads.
   bool mInLoadResourcesFunc;
-  int16_t mPendingSheets; // The number of stylesheets that have yet to load.
+  int16_t mPendingSheets;  // The number of stylesheets that have yet to load.
 
   // Bound elements that are waiting on the stylesheets and scripts.
   nsCOMArray<nsIContent> mBoundElements;
 
-protected:
+ protected:
   virtual ~nsXBLResourceLoader();
 
-private:
+ private:
   // The bound document is needed in StyleSheetLoaded() for servo style
   // backend, which will be set in LoadResources().
   nsIDocument* MOZ_NON_OWNING_REF mBoundDocument;

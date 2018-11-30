@@ -15,27 +15,19 @@ namespace Telemetry {
 // The maximum number of chrome hangs stacks that we're keeping.
 const size_t kMaxChromeStacksKept = 50;
 
-CombinedStacks::CombinedStacks()
-  : CombinedStacks(kMaxChromeStacksKept)
-{}
+CombinedStacks::CombinedStacks() : CombinedStacks(kMaxChromeStacksKept) {}
 
 CombinedStacks::CombinedStacks(size_t aMaxStacksCount)
-  : mNextIndex(0)
-  , mMaxStacksCount(aMaxStacksCount)
-{}
+    : mNextIndex(0), mMaxStacksCount(aMaxStacksCount) {}
 
-size_t
-CombinedStacks::GetModuleCount() const {
-  return mModules.size();
-}
+size_t CombinedStacks::GetModuleCount() const { return mModules.size(); }
 
-const Telemetry::ProcessedStack::Module&
-CombinedStacks::GetModule(unsigned aIndex) const {
+const Telemetry::ProcessedStack::Module& CombinedStacks::GetModule(
+    unsigned aIndex) const {
   return mModules[aIndex];
 }
 
-size_t
-CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
+size_t CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
   size_t index = mNextIndex;
   // Advance the indices of the circular queue holding the stacks.
   mNextIndex = (mNextIndex + 1) % mMaxStacksCount;
@@ -56,9 +48,9 @@ CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
       modIndex = frame.mModIndex;
     } else {
       const Telemetry::ProcessedStack::Module& module =
-        aStack.GetModule(frame.mModIndex);
+          aStack.GetModule(frame.mModIndex);
       std::vector<Telemetry::ProcessedStack::Module>::iterator modIterator =
-        std::find(mModules.begin(), mModules.end(), module);
+          std::find(mModules.begin(), mModules.end(), module);
       if (modIterator == mModules.end()) {
         mModules.push_back(module);
         modIndex = mModules.size() - 1;
@@ -66,24 +58,19 @@ CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
         modIndex = modIterator - mModules.begin();
       }
     }
-    Telemetry::ProcessedStack::Frame adjustedFrame = { frame.mOffset, modIndex };
+    Telemetry::ProcessedStack::Frame adjustedFrame = {frame.mOffset, modIndex};
     adjustedStack.push_back(adjustedFrame);
   }
   return index;
 }
 
-const CombinedStacks::Stack&
-CombinedStacks::GetStack(unsigned aIndex) const {
+const CombinedStacks::Stack& CombinedStacks::GetStack(unsigned aIndex) const {
   return mStacks[aIndex];
 }
 
-size_t
-CombinedStacks::GetStackCount() const {
-  return mStacks.size();
-}
+size_t CombinedStacks::GetStackCount() const { return mStacks.size(); }
 
-size_t
-CombinedStacks::SizeOfExcludingThis() const {
+size_t CombinedStacks::SizeOfExcludingThis() const {
   // This is a crude approximation. We would like to do something like
   // aMallocSizeOf(&mModules[0]), but on linux aMallocSizeOf will call
   // malloc_usable_size which is only safe on the pointers returned by malloc.
@@ -93,14 +80,13 @@ CombinedStacks::SizeOfExcludingThis() const {
   size_t n = 0;
   n += mModules.capacity() * sizeof(Telemetry::ProcessedStack::Module);
   n += mStacks.capacity() * sizeof(Stack);
-  for (const auto & s : mStacks) {
+  for (const auto& s : mStacks) {
     n += s.capacity() * sizeof(Telemetry::ProcessedStack::Frame);
   }
   return n;
 }
 
-void
-CombinedStacks::RemoveStack(unsigned aIndex) {
+void CombinedStacks::RemoveStack(unsigned aIndex) {
   MOZ_ASSERT(aIndex < mStacks.size());
 
   mStacks.erase(mStacks.begin() + aIndex);
@@ -119,16 +105,14 @@ CombinedStacks::RemoveStack(unsigned aIndex) {
 }
 
 #if defined(MOZ_GECKO_PROFILER)
-void
-CombinedStacks::Clear() {
+void CombinedStacks::Clear() {
   mNextIndex = 0;
   mStacks.clear();
   mModules.clear();
 }
 #endif
 
-JSObject *
-CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
+JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
   JS::Rooted<JSObject*> ret(cx, JS_NewPlainObject(cx));
   if (!ret) {
     return nullptr;
@@ -138,8 +122,8 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   if (!moduleArray) {
     return nullptr;
   }
-  bool ok = JS_DefineProperty(cx, ret, "memoryMap", moduleArray,
-                              JSPROP_ENUMERATE);
+  bool ok =
+      JS_DefineProperty(cx, ret, "memoryMap", moduleArray, JSPROP_ENUMERATE);
   if (!ok) {
     return nullptr;
   }
@@ -148,7 +132,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   for (size_t moduleIndex = 0; moduleIndex < moduleCount; ++moduleIndex) {
     // Current module
     const Telemetry::ProcessedStack::Module& module =
-      stacks.GetModule(moduleIndex);
+        stacks.GetModule(moduleIndex);
 
     JS::Rooted<JSObject*> moduleInfoArray(cx, JS_NewArrayObject(cx, 0));
     if (!moduleInfoArray) {
@@ -163,13 +147,16 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
 
     // Module name
     JS::Rooted<JSString*> str(cx, JS_NewUCStringCopyZ(cx, module.mName.get()));
-    if (!str || !JS_DefineElement(cx, moduleInfoArray, index++, str, JSPROP_ENUMERATE)) {
+    if (!str || !JS_DefineElement(cx, moduleInfoArray, index++, str,
+                                  JSPROP_ENUMERATE)) {
       return nullptr;
     }
 
     // Module breakpad identifier
-    JS::Rooted<JSString*> id(cx, JS_NewStringCopyZ(cx, module.mBreakpadId.get()));
-    if (!id || !JS_DefineElement(cx, moduleInfoArray, index, id, JSPROP_ENUMERATE)) {
+    JS::Rooted<JSString*> id(cx,
+                             JS_NewStringCopyZ(cx, module.mBreakpadId.get()));
+    if (!id ||
+        !JS_DefineElement(cx, moduleInfoArray, index, id, JSPROP_ENUMERATE)) {
       return nullptr;
     }
   }
@@ -203,16 +190,19 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       if (!framePair) {
         return nullptr;
       }
-      int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex) ?
-        -1 : frame.mModIndex;
+      int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex)
+                         ? -1
+                         : frame.mModIndex;
       if (!JS_DefineElement(cx, framePair, 0, modIndex, JSPROP_ENUMERATE)) {
         return nullptr;
       }
-      if (!JS_DefineElement(cx, framePair, 1, static_cast<double>(frame.mOffset),
+      if (!JS_DefineElement(cx, framePair, 1,
+                            static_cast<double>(frame.mOffset),
                             JSPROP_ENUMERATE)) {
         return nullptr;
       }
-      if (!JS_DefineElement(cx, pcArray, pcIndex, framePair, JSPROP_ENUMERATE)) {
+      if (!JS_DefineElement(cx, pcArray, pcIndex, framePair,
+                            JSPROP_ENUMERATE)) {
         return nullptr;
       }
     }
@@ -221,5 +211,5 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   return ret;
 }
 
-} // namespace Telemetry
-} // namespace mozilla
+}  // namespace Telemetry
+}  // namespace mozilla

@@ -16,39 +16,37 @@
 namespace mozilla {
 
 class GeckoScreenOrientation final
-    : public java::GeckoScreenOrientation::Natives<GeckoScreenOrientation>
-{
-    GeckoScreenOrientation() = delete;
+    : public java::GeckoScreenOrientation::Natives<GeckoScreenOrientation> {
+  GeckoScreenOrientation() = delete;
 
-public:
-    static void
-    OnOrientationChange(int16_t aOrientation, int16_t aAngle)
-    {
-        nsCOMPtr<nsIScreenManager> screenMgr =
-                do_GetService("@mozilla.org/gfx/screenmanager;1");
-        nsCOMPtr<nsIScreen> screen;
+ public:
+  static void OnOrientationChange(int16_t aOrientation, int16_t aAngle) {
+    nsCOMPtr<nsIScreenManager> screenMgr =
+        do_GetService("@mozilla.org/gfx/screenmanager;1");
+    nsCOMPtr<nsIScreen> screen;
 
-        if (!screenMgr || NS_FAILED(screenMgr->GetPrimaryScreen(
-                getter_AddRefs(screen))) || !screen) {
-            return;
-        }
-
-        nsIntRect rect;
-        int32_t colorDepth, pixelDepth;
-
-        if (NS_FAILED(screen->GetRect(&rect.x, &rect.y,
-                                      &rect.width, &rect.height)) ||
-                NS_FAILED(screen->GetColorDepth(&colorDepth)) ||
-                NS_FAILED(screen->GetPixelDepth(&pixelDepth))) {
-            return;
-        }
-
-        hal::NotifyScreenConfigurationChange(hal::ScreenConfiguration(
-                rect, static_cast<hal::ScreenOrientation>(aOrientation),
-                aAngle, colorDepth, pixelDepth));
+    if (!screenMgr ||
+        NS_FAILED(screenMgr->GetPrimaryScreen(getter_AddRefs(screen))) ||
+        !screen) {
+      return;
     }
+
+    nsIntRect rect;
+    int32_t colorDepth, pixelDepth;
+
+    if (NS_FAILED(
+            screen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height)) ||
+        NS_FAILED(screen->GetColorDepth(&colorDepth)) ||
+        NS_FAILED(screen->GetPixelDepth(&pixelDepth))) {
+      return;
+    }
+
+    hal::NotifyScreenConfigurationChange(hal::ScreenConfiguration(
+        rect, static_cast<hal::ScreenOrientation>(aOrientation), aAngle,
+        colorDepth, pixelDepth));
+  }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // GeckoScreenOrientation_h
+#endif  // GeckoScreenOrientation_h

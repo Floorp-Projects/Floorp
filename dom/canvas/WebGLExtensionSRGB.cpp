@@ -13,56 +13,49 @@
 namespace mozilla {
 
 WebGLExtensionSRGB::WebGLExtensionSRGB(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-    MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 
-    gl::GLContext* gl = webgl->GL();
-    if (!gl->IsGLES()) {
-        // Desktop OpenGL requires the following to be enabled in order to
-        // support sRGB operations on framebuffers.
-        gl->fEnable(LOCAL_GL_FRAMEBUFFER_SRGB_EXT);
-    }
+  gl::GLContext* gl = webgl->GL();
+  if (!gl->IsGLES()) {
+    // Desktop OpenGL requires the following to be enabled in order to
+    // support sRGB operations on framebuffers.
+    gl->fEnable(LOCAL_GL_FRAMEBUFFER_SRGB_EXT);
+  }
 
-    auto& fua = webgl->mFormatUsage;
+  auto& fua = webgl->mFormatUsage;
 
-    RefPtr<gl::GLContext> gl_ = gl; // Bug 1201275
-    const auto fnAdd = [&fua, &gl_](webgl::EffectiveFormat effFormat, GLenum format,
-                                    GLenum desktopUnpackFormat)
-    {
-        auto usage = fua->EditUsage(effFormat);
-        usage->isFilterable = true;
+  RefPtr<gl::GLContext> gl_ = gl;  // Bug 1201275
+  const auto fnAdd = [&fua, &gl_](webgl::EffectiveFormat effFormat,
+                                  GLenum format, GLenum desktopUnpackFormat) {
+    auto usage = fua->EditUsage(effFormat);
+    usage->isFilterable = true;
 
-        webgl::DriverUnpackInfo dui = {format, format, LOCAL_GL_UNSIGNED_BYTE};
-        const auto pi = dui.ToPacking();
+    webgl::DriverUnpackInfo dui = {format, format, LOCAL_GL_UNSIGNED_BYTE};
+    const auto pi = dui.ToPacking();
 
-        if (!gl_->IsGLES())
-            dui.unpackFormat = desktopUnpackFormat;
+    if (!gl_->IsGLES()) dui.unpackFormat = desktopUnpackFormat;
 
-        fua->AddTexUnpack(usage, pi, dui);
+    fua->AddTexUnpack(usage, pi, dui);
 
-        fua->AllowUnsizedTexFormat(pi, usage);
-    };
+    fua->AllowUnsizedTexFormat(pi, usage);
+  };
 
-    fnAdd(webgl::EffectiveFormat::SRGB8, LOCAL_GL_SRGB, LOCAL_GL_RGB);
-    fnAdd(webgl::EffectiveFormat::SRGB8_ALPHA8, LOCAL_GL_SRGB_ALPHA, LOCAL_GL_RGBA);
+  fnAdd(webgl::EffectiveFormat::SRGB8, LOCAL_GL_SRGB, LOCAL_GL_RGB);
+  fnAdd(webgl::EffectiveFormat::SRGB8_ALPHA8, LOCAL_GL_SRGB_ALPHA,
+        LOCAL_GL_RGBA);
 
-    auto usage = fua->EditUsage(webgl::EffectiveFormat::SRGB8_ALPHA8);
-    usage->SetRenderable();
-    fua->AllowRBFormat(LOCAL_GL_SRGB8_ALPHA8, usage);
+  auto usage = fua->EditUsage(webgl::EffectiveFormat::SRGB8_ALPHA8);
+  usage->SetRenderable();
+  fua->AllowRBFormat(LOCAL_GL_SRGB8_ALPHA8, usage);
 }
 
-WebGLExtensionSRGB::~WebGLExtensionSRGB()
-{
-}
+WebGLExtensionSRGB::~WebGLExtensionSRGB() {}
 
-bool
-WebGLExtensionSRGB::IsSupported(const WebGLContext* const webgl)
-{
-    return webgl->gl->IsSupported(gl::GLFeature::sRGB);
+bool WebGLExtensionSRGB::IsSupported(const WebGLContext* const webgl) {
+  return webgl->gl->IsSupported(gl::GLFeature::sRGB);
 }
-
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionSRGB, EXT_sRGB)
 
-} // namespace mozilla
+}  // namespace mozilla

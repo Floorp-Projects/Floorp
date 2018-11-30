@@ -44,8 +44,7 @@ class WorkerPrivate;
 // ClientSource is destroyed then client entry will be removed.  Code
 // that represents globals or browsing environments, such as nsGlobalWindow
 // or WorkerPrivate, should use ClientManager to create a ClientSource.
-class ClientSource final : public ClientThing<ClientSourceChild>
-{
+class ClientSource final : public ClientThing<ClientSourceChild> {
   friend class ClientManager;
 
   NS_DECL_OWNINGTHREAD
@@ -53,10 +52,9 @@ class ClientSource final : public ClientThing<ClientSourceChild>
   RefPtr<ClientManager> mManager;
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
-  Variant<Nothing,
-          RefPtr<nsPIDOMWindowInner>,
-          nsCOMPtr<nsIDocShell>,
-          WorkerPrivate*> mOwner;
+  Variant<Nothing, RefPtr<nsPIDOMWindowInner>, nsCOMPtr<nsIDocShell>,
+          WorkerPrivate*>
+      mOwner;
 
   ClientInfo mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
@@ -67,65 +65,48 @@ class ClientSource final : public ClientThing<ClientSourceChild>
   // there could be more.  We keep this list until the client is closed.
   AutoTArray<nsCString, 1> mRegisteringScopeList;
 
-  void
-  Shutdown();
+  void Shutdown();
 
-  void
-  ExecutionReady(const ClientSourceExecutionReadyArgs& aArgs);
+  void ExecutionReady(const ClientSourceExecutionReadyArgs& aArgs);
 
-  WorkerPrivate*
-  GetWorkerPrivate() const;
+  WorkerPrivate* GetWorkerPrivate() const;
 
-  nsIDocShell*
-  GetDocShell() const;
+  nsIDocShell* GetDocShell() const;
 
-  nsIGlobalObject*
-  GetGlobal() const;
+  nsIGlobalObject* GetGlobal() const;
 
-  void
-  MaybeCreateInitialDocument();
+  void MaybeCreateInitialDocument();
 
-  nsresult
-  SnapshotWindowState(ClientState* aStateOut);
+  nsresult SnapshotWindowState(ClientState* aStateOut);
 
   // Private methods called by ClientManager
-  ClientSource(ClientManager* aManager,
-               nsISerialEventTarget* aEventTarget,
+  ClientSource(ClientManager* aManager, nsISerialEventTarget* aEventTarget,
                const ClientSourceConstructorArgs& aArgs);
 
-  void
-  Activate(PClientManagerChild* aActor);
+  void Activate(PClientManagerChild* aActor);
 
-public:
+ public:
   ~ClientSource();
 
-  nsPIDOMWindowInner*
-  GetInnerWindow() const;
+  nsPIDOMWindowInner* GetInnerWindow() const;
 
-  void
-  WorkerExecutionReady(WorkerPrivate* aWorkerPrivate);
+  void WorkerExecutionReady(WorkerPrivate* aWorkerPrivate);
 
-  nsresult
-  WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow);
+  nsresult WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow);
 
-  nsresult
-  DocShellExecutionReady(nsIDocShell* aDocShell);
+  nsresult DocShellExecutionReady(nsIDocShell* aDocShell);
 
-  void
-  Freeze();
+  void Freeze();
 
-  void
-  Thaw();
+  void Thaw();
 
-  const ClientInfo&
-  Info() const;
+  const ClientInfo& Info() const;
 
   // Trigger a synchronous IPC ping to the parent process to confirm that
   // the ClientSource actor has been created.  This should only be used
   // by the WorkerPrivate startup code to deal with a ClientHandle::Control()
   // call racing on the main thread.  Do not call this in other circumstances!
-  void
-  WorkerSyncPing(WorkerPrivate* aWorkerPrivate);
+  void WorkerSyncPing(WorkerPrivate* aWorkerPrivate);
 
   // Synchronously mark the ClientSource as controlled by the given service
   // worker.  This can happen as a result of a remote operation or directly
@@ -135,78 +116,59 @@ public:
   //
   // Note, there is no way to clear the controlling service worker because
   // the specification does not allow that operation.
-  void
-  SetController(const ServiceWorkerDescriptor& aServiceWorker);
+  void SetController(const ServiceWorkerDescriptor& aServiceWorker);
 
   // Mark the ClientSource as controlled using the remote operation arguments.
   // This will in turn call SetController().
-  RefPtr<ClientOpPromise>
-  Control(const ClientControlledArgs& aArgs);
+  RefPtr<ClientOpPromise> Control(const ClientControlledArgs& aArgs);
 
   // Inherit the controller from a local parent client.  This requires both
   // setting our immediate controller field and also updating the parent-side
   // data structure.
-  void
-  InheritController(const ServiceWorkerDescriptor& aServiceWorker);
+  void InheritController(const ServiceWorkerDescriptor& aServiceWorker);
 
   // Get the ClientSource's current controlling service worker, if one has
   // been set.
-  const Maybe<ServiceWorkerDescriptor>&
-  GetController() const;
+  const Maybe<ServiceWorkerDescriptor>& GetController() const;
 
   // Note that the client has reached DOMContentLoaded.  Only applies to window
   // clients.
-  void
-  NoteDOMContentLoaded();
+  void NoteDOMContentLoaded();
 
-  RefPtr<ClientOpPromise>
-  Focus(const ClientFocusArgs& aArgs);
+  RefPtr<ClientOpPromise> Focus(const ClientFocusArgs& aArgs);
 
-  RefPtr<ClientOpPromise>
-  PostMessage(const ClientPostMessageArgs& aArgs);
+  RefPtr<ClientOpPromise> PostMessage(const ClientPostMessageArgs& aArgs);
 
-  RefPtr<ClientOpPromise>
-  Claim(const ClientClaimArgs& aArgs);
+  RefPtr<ClientOpPromise> Claim(const ClientClaimArgs& aArgs);
 
-  RefPtr<ClientOpPromise>
-  GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs);
+  RefPtr<ClientOpPromise> GetInfoAndState(
+      const ClientGetInfoAndStateArgs& aArgs);
 
-  nsresult
-  SnapshotState(ClientState* aStateOut);
+  nsresult SnapshotState(ClientState* aStateOut);
 
-  nsISerialEventTarget*
-  EventTarget() const;
+  nsISerialEventTarget* EventTarget() const;
 
-  void
-  Traverse(nsCycleCollectionTraversalCallback& aCallback,
-           const char* aName,
-           uint32_t aFlags);
+  void Traverse(nsCycleCollectionTraversalCallback& aCallback,
+                const char* aName, uint32_t aFlags);
 
-  void
-  NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
+  void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
-  bool
-  CalledRegisterForServiceWorkerScope(const nsACString& aScope);
+  bool CalledRegisterForServiceWorkerScope(const nsACString& aScope);
 };
 
-inline void
-ImplCycleCollectionUnlink(UniquePtr<ClientSource>& aField)
-{
+inline void ImplCycleCollectionUnlink(UniquePtr<ClientSource>& aField) {
   aField.reset();
 }
 
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            UniquePtr<ClientSource>& aField,
-                            const char* aName,
-                            uint32_t aFlags)
-{
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    UniquePtr<ClientSource>& aField, const char* aName, uint32_t aFlags) {
   if (aField) {
     aField->Traverse(aCallback, aName, aFlags);
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientSource_h
+#endif  // _mozilla_dom_ClientSource_h

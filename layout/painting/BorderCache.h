@@ -15,68 +15,54 @@
 namespace mozilla {
 // Cache for best overlap and best dashLength.
 
-struct FourFloats
-{
+struct FourFloats {
   typedef mozilla::gfx::Float Float;
 
   Float n[4];
 
-  FourFloats()
-  {
+  FourFloats() {
     n[0] = 0.0f;
     n[1] = 0.0f;
     n[2] = 0.0f;
     n[3] = 0.0f;
   }
 
-  FourFloats(Float a, Float b, Float c, Float d)
-  {
+  FourFloats(Float a, Float b, Float c, Float d) {
     n[0] = a;
     n[1] = b;
     n[2] = c;
     n[3] = d;
   }
 
-  bool operator==(const FourFloats& aOther) const
-  {
+  bool operator==(const FourFloats& aOther) const {
     return n[0] == aOther.n[0] && n[1] == aOther.n[1] && n[2] == aOther.n[2] &&
            n[3] == aOther.n[3];
   }
 };
 
-class FourFloatsHashKey : public PLDHashEntryHdr
-{
-public:
+class FourFloatsHashKey : public PLDHashEntryHdr {
+ public:
   typedef const FourFloats& KeyType;
   typedef const FourFloats* KeyTypePointer;
 
-  explicit FourFloatsHashKey(KeyTypePointer aKey)
-    : mValue(*aKey)
-  {
-  }
+  explicit FourFloatsHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
   FourFloatsHashKey(const FourFloatsHashKey& aToCopy)
-    : mValue(aToCopy.mValue)
-  {
-  }
+      : mValue(aToCopy.mValue) {}
   ~FourFloatsHashKey() = default;
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
     return HashBytes(aKey->n, sizeof(mozilla::gfx::Float) * 4);
   }
-  enum
-  {
-    ALLOW_MEMMOVE = true
-  };
+  enum { ALLOW_MEMMOVE = true };
 
-private:
+ private:
   const FourFloats mValue;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_BorderCache_h_ */

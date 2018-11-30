@@ -13,15 +13,14 @@
 namespace mozilla {
 namespace dom {
 
-class PresentationBuilderChild final: public PPresentationBuilderChild
-                                    , public nsIPresentationSessionTransportBuilderListener
-{
-public:
+class PresentationBuilderChild final
+    : public PPresentationBuilderChild,
+      public nsIPresentationSessionTransportBuilderListener {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTBUILDERLISTENER
 
-  explicit PresentationBuilderChild(const nsString& aSessionId,
-                                    uint8_t aRole);
+  explicit PresentationBuilderChild(const nsString& aSessionId, uint8_t aRole);
 
   nsresult Init();
 
@@ -31,9 +30,10 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvOnAnswer(const nsString& aSDP) override;
 
-  virtual mozilla::ipc::IPCResult RecvOnIceCandidate(const nsString& aCandidate) override;
+  virtual mozilla::ipc::IPCResult RecvOnIceCandidate(
+      const nsString& aCandidate) override;
 
-private:
+ private:
   virtual ~PresentationBuilderChild() = default;
 
   nsString mSessionId;
@@ -42,7 +42,7 @@ private:
   nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> mBuilder;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationBuilderChild_h
+#endif  // mozilla_dom_PresentationBuilderChild_h

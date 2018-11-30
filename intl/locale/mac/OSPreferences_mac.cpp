@@ -10,42 +10,31 @@
 
 using namespace mozilla::intl;
 
-static void
-LocaleChangedNotificationCallback(CFNotificationCenterRef center,
-                                  void *observer,
-                                  CFStringRef name,
-                                  const void *object,
-                                  CFDictionaryRef userInfo)
-{
+static void LocaleChangedNotificationCallback(CFNotificationCenterRef center,
+                                              void* observer, CFStringRef name,
+                                              const void* object,
+                                              CFDictionaryRef userInfo) {
   if (!::CFEqual(name, kCFLocaleCurrentLocaleDidChangeNotification)) {
     return;
   }
   static_cast<OSPreferences*>(observer)->Refresh();
 }
 
-OSPreferences::OSPreferences()
-{
+OSPreferences::OSPreferences() {
   ::CFNotificationCenterAddObserver(
-    ::CFNotificationCenterGetLocalCenter(),
-    this,
-    LocaleChangedNotificationCallback,
-    kCFLocaleCurrentLocaleDidChangeNotification,
-    0,
-    CFNotificationSuspensionBehaviorDeliverImmediately);
+      ::CFNotificationCenterGetLocalCenter(), this,
+      LocaleChangedNotificationCallback,
+      kCFLocaleCurrentLocaleDidChangeNotification, 0,
+      CFNotificationSuspensionBehaviorDeliverImmediately);
 }
 
-OSPreferences::~OSPreferences()
-{
+OSPreferences::~OSPreferences() {
   ::CFNotificationCenterRemoveObserver(
-    ::CFNotificationCenterGetLocalCenter(),
-    this,
-    kCTFontManagerRegisteredFontsChangedNotification,
-    0);
+      ::CFNotificationCenterGetLocalCenter(), this,
+      kCTFontManagerRegisteredFontsChangedNotification, 0);
 }
 
-bool
-OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
-{
+bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
   CFArrayRef langs = ::CFLocaleCopyPreferredLanguages();
@@ -73,17 +62,14 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
   return !aLocaleList.IsEmpty();
 }
 
-bool
-OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList)
-{
+bool OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList) {
   // For now we're just taking System Locales since we don't know of any better
   // API for regional prefs.
   return ReadSystemLocales(aLocaleList);
 }
 
-static CFDateFormatterStyle
-ToCFDateFormatterStyle(OSPreferences::DateTimeFormatStyle aFormatStyle)
-{
+static CFDateFormatterStyle ToCFDateFormatterStyle(
+    OSPreferences::DateTimeFormatStyle aFormatStyle) {
   switch (aFormatStyle) {
     case OSPreferences::DateTimeFormatStyle::None:
       return kCFDateFormatterNoStyle;
@@ -106,9 +92,7 @@ ToCFDateFormatterStyle(OSPreferences::DateTimeFormatStyle aFormatStyle)
 // May return null on failure.
 // Follows Core Foundation's Create rule, so the caller is responsible to
 // release the returned reference.
-static CFLocaleRef
-CreateCFLocaleFor(const nsACString& aLocale)
-{
+static CFLocaleRef CreateCFLocaleFor(const nsACString& aLocale) {
   nsAutoCString reqLocale;
   nsAutoCString systemLocale;
 
@@ -125,11 +109,9 @@ CreateCFLocaleFor(const nsACString& aLocale)
     return ::CFLocaleCopyCurrent();
   }
 
-  CFStringRef identifier =
-    CFStringCreateWithBytesNoCopy(kCFAllocatorDefault,
-                                  (const uint8_t*)reqLocale.BeginReading(),
-                                  reqLocale.Length(), kCFStringEncodingASCII,
-                                  false, kCFAllocatorNull);
+  CFStringRef identifier = CFStringCreateWithBytesNoCopy(
+      kCFAllocatorDefault, (const uint8_t*)reqLocale.BeginReading(),
+      reqLocale.Length(), kCFStringEncodingASCII, false, kCFAllocatorNull);
   if (!identifier) {
     return nullptr;
   }
@@ -146,20 +128,18 @@ CreateCFLocaleFor(const nsACString& aLocale)
  *
  * In all other cases it will return the default pattern for a given locale.
  */
-bool
-OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
-                                   DateTimeFormatStyle aTimeStyle,
-                                   const nsACString& aLocale, nsAString& aRetVal)
-{
+bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
+                                        DateTimeFormatStyle aTimeStyle,
+                                        const nsACString& aLocale,
+                                        nsAString& aRetVal) {
   CFLocaleRef locale = CreateCFLocaleFor(aLocale);
   if (!locale) {
     return false;
   }
 
-  CFDateFormatterRef formatter =
-    CFDateFormatterCreate(kCFAllocatorDefault, locale,
-                          ToCFDateFormatterStyle(aDateStyle),
-                          ToCFDateFormatterStyle(aTimeStyle));
+  CFDateFormatterRef formatter = CFDateFormatterCreate(
+      kCFAllocatorDefault, locale, ToCFDateFormatterStyle(aDateStyle),
+      ToCFDateFormatterStyle(aTimeStyle));
   if (!formatter) {
     return false;
   }

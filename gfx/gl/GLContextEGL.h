@@ -13,143 +13,125 @@
 namespace mozilla {
 namespace widget {
 class CompositorWidget;
-} // namespace widget
+}  // namespace widget
 namespace gl {
 
-class GLContextEGL : public GLContext
-{
-    friend class TextureImageEGL;
+class GLContextEGL : public GLContext {
+  friend class TextureImageEGL;
 
-    static already_AddRefed<GLContextEGL>
-    CreateGLContext(CreateContextFlags flags,
-                    const SurfaceCaps& caps,
-                    bool isOffscreen,
-                    EGLConfig config,
-                    EGLSurface surface,
-                    nsACString* const out_failureId);
+  static already_AddRefed<GLContextEGL> CreateGLContext(
+      CreateContextFlags flags, const SurfaceCaps& caps, bool isOffscreen,
+      EGLConfig config, EGLSurface surface, nsACString* const out_failureId);
 
-public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
-    GLContextEGL(CreateContextFlags flags,
-                 const SurfaceCaps& caps,
-                 bool isOffscreen,
-                 EGLConfig config,
-                 EGLSurface surface,
-                 EGLContext context);
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
+  GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
+               bool isOffscreen, EGLConfig config, EGLSurface surface,
+               EGLContext context);
 
-    ~GLContextEGL();
+  ~GLContextEGL();
 
-    virtual GLContextType GetContextType() const override { return GLContextType::EGL; }
+  virtual GLContextType GetContextType() const override {
+    return GLContextType::EGL;
+  }
 
-    static GLContextEGL* Cast(GLContext* gl) {
-        MOZ_ASSERT(gl->GetContextType() == GLContextType::EGL);
-        return static_cast<GLContextEGL*>(gl);
-    }
+  static GLContextEGL* Cast(GLContext* gl) {
+    MOZ_ASSERT(gl->GetContextType() == GLContextType::EGL);
+    return static_cast<GLContextEGL*>(gl);
+  }
 
-    bool Init() override;
+  bool Init() override;
 
-    virtual bool IsDoubleBuffered() const override {
-        return mIsDoubleBuffered;
-    }
+  virtual bool IsDoubleBuffered() const override { return mIsDoubleBuffered; }
 
-    void SetIsDoubleBuffered(bool aIsDB) {
-        mIsDoubleBuffered = aIsDB;
-    }
+  void SetIsDoubleBuffered(bool aIsDB) { mIsDoubleBuffered = aIsDB; }
 
-    virtual bool IsANGLE() const override {
-        return GLLibraryEGL::Get()->IsANGLE();
-    }
+  virtual bool IsANGLE() const override {
+    return GLLibraryEGL::Get()->IsANGLE();
+  }
 
-    virtual bool IsWARP() const override {
-        return GLLibraryEGL::Get()->IsWARP();
-    }
+  virtual bool IsWARP() const override { return GLLibraryEGL::Get()->IsWARP(); }
 
-    virtual bool BindTexImage() override;
+  virtual bool BindTexImage() override;
 
-    virtual bool ReleaseTexImage() override;
+  virtual bool ReleaseTexImage() override;
 
-    void SetEGLSurfaceOverride(EGLSurface surf);
-    EGLSurface GetEGLSurfaceOverride() {
-        return mSurfaceOverride;
-    }
+  void SetEGLSurfaceOverride(EGLSurface surf);
+  EGLSurface GetEGLSurfaceOverride() { return mSurfaceOverride; }
 
-    virtual bool MakeCurrentImpl() const override;
+  virtual bool MakeCurrentImpl() const override;
 
-    virtual bool IsCurrentImpl() const override;
+  virtual bool IsCurrentImpl() const override;
 
-    virtual bool RenewSurface(widget::CompositorWidget* aWidget) override;
+  virtual bool RenewSurface(widget::CompositorWidget* aWidget) override;
 
-    virtual void ReleaseSurface() override;
+  virtual void ReleaseSurface() override;
 
-    virtual bool SetupLookupFunction() override;
+  virtual bool SetupLookupFunction() override;
 
-    virtual bool SwapBuffers() override;
+  virtual bool SwapBuffers() override;
 
-    virtual void GetWSIInfo(nsCString* const out) const override;
+  virtual void GetWSIInfo(nsCString* const out) const override;
 
-    // hold a reference to the given surface
-    // for the lifetime of this context.
-    void HoldSurface(gfxASurface* aSurf);
+  // hold a reference to the given surface
+  // for the lifetime of this context.
+  void HoldSurface(gfxASurface* aSurf);
 
-    EGLSurface GetEGLSurface() const {
-        return mSurface;
-    }
+  EGLSurface GetEGLSurface() const { return mSurface; }
 
-    EGLDisplay GetEGLDisplay() const {
-        return GLLibraryEGL::Get()->Display();
-    }
+  EGLDisplay GetEGLDisplay() const { return GLLibraryEGL::Get()->Display(); }
 
-    bool BindTex2DOffscreen(GLContext* aOffscreen);
-    void UnbindTex2DOffscreen(GLContext* aOffscreen);
-    void BindOffscreenFramebuffer();
+  bool BindTex2DOffscreen(GLContext* aOffscreen);
+  void UnbindTex2DOffscreen(GLContext* aOffscreen);
+  void BindOffscreenFramebuffer();
 
-    void Destroy();
+  void Destroy();
 
-    static already_AddRefed<GLContextEGL>
-    CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
-                                     const gfx::IntSize& size,
-                                     const SurfaceCaps& minCaps,
-                                     nsACString* const out_FailureId);
+  static already_AddRefed<GLContextEGL> CreateEGLPBufferOffscreenContext(
+      CreateContextFlags flags, const gfx::IntSize& size,
+      const SurfaceCaps& minCaps, nsACString* const out_FailureId);
 
-protected:
-    friend class GLContextProviderEGL;
-    friend class GLContextEGLFactory;
+ protected:
+  friend class GLContextProviderEGL;
+  friend class GLContextEGLFactory;
 
-public:
-    const EGLConfig mConfig;
-protected:
-    const RefPtr<GLLibraryEGL> mEgl;
-    EGLSurface mSurface;
-    const EGLSurface mFallbackSurface;
-public:
-    const EGLContext mContext;
-protected:
-    EGLSurface mSurfaceOverride = EGL_NO_SURFACE;
-    RefPtr<gfxASurface> mThebesSurface;
-    bool mBound = false;
+ public:
+  const EGLConfig mConfig;
 
-    bool mIsPBuffer = false;
-    bool mIsDoubleBuffered = false;
-    bool mCanBindToTexture = false;
-    bool mShareWithEGLImage = false;
-    bool mOwnsContext = true;
+ protected:
+  const RefPtr<GLLibraryEGL> mEgl;
+  EGLSurface mSurface;
+  const EGLSurface mFallbackSurface;
 
-    static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
-                                                           EGLenum bindToTextureFormat,
-                                                           gfx::IntSize& pbsize);
+ public:
+  const EGLContext mContext;
+
+ protected:
+  EGLSurface mSurfaceOverride = EGL_NO_SURFACE;
+  RefPtr<gfxASurface> mThebesSurface;
+  bool mBound = false;
+
+  bool mIsPBuffer = false;
+  bool mIsDoubleBuffered = false;
+  bool mCanBindToTexture = false;
+  bool mShareWithEGLImage = false;
+  bool mOwnsContext = true;
+
+  static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(
+      EGLConfig config, EGLenum bindToTextureFormat, gfx::IntSize& pbsize);
 #if defined(MOZ_WAYLAND)
-    static EGLSurface CreateWaylandBufferSurface(EGLConfig config,
-                                                 gfx::IntSize& pbsize);
+  static EGLSurface CreateWaylandBufferSurface(EGLConfig config,
+                                               gfx::IntSize& pbsize);
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
-public:
-    EGLSurface CreateCompatibleSurface(void* aWindow);
-#endif // defined(MOZ_WIDGET_ANDROID)
+ public:
+  EGLSurface CreateCompatibleSurface(void* aWindow);
+#endif  // defined(MOZ_WIDGET_ANDROID)
 };
 
 bool CreateConfig(EGLConfig* config, int32_t depth, bool enableDepthBuffer);
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // GLCONTEXTEGL_H_
+#endif  // GLCONTEXTEGL_H_

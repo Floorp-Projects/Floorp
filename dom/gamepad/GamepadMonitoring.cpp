@@ -13,14 +13,12 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace dom {
 
-void
-MaybeStopGamepadMonitoring()
-{
+void MaybeStopGamepadMonitoring() {
   AssertIsOnBackgroundThread();
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
-  if(service->HasGamepadListeners()) {
+  if (service->HasGamepadListeners()) {
     return;
   }
   StopGamepadMonitoring();
@@ -28,5 +26,5 @@ MaybeStopGamepadMonitoring()
   service->MaybeShutdown();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

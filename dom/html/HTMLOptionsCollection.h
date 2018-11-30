@@ -29,33 +29,34 @@ class HTMLSelectElement;
  * The collection of options in the select (what you get back when you do
  * select.options in DOM)
  */
-class HTMLOptionsCollection final : public nsIHTMLCollection
-                                  , public nsWrapperCache
-{
+class HTMLOptionsCollection final : public nsIHTMLCollection,
+                                    public nsWrapperCache {
   typedef HTMLOptionElementOrHTMLOptGroupElement HTMLOptionOrOptGroupElement;
-public:
+
+ public:
   explicit HTMLOptionsCollection(HTMLSelectElement* aSelect);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsWrapperCache
-  using nsWrapperCache::GetWrapperPreserveColor;
   using nsWrapperCache::GetWrapper;
+  using nsWrapperCache::GetWrapperPreserveColor;
   using nsWrapperCache::PreserveWrapper;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-protected:
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+ protected:
   virtual ~HTMLOptionsCollection() = default;
 
-  virtual JSObject* GetWrapperPreserveColorInternal() override
-  {
+  virtual JSObject* GetWrapperPreserveColorInternal() override {
     return nsWrapperCache::GetWrapperPreserveColor();
   }
-  virtual void PreserveWrapperInternal(nsISupports* aScriptObjectHolder) override
-  {
+  virtual void PreserveWrapperInternal(
+      nsISupports* aScriptObjectHolder) override {
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
-public:
 
+ public:
   virtual uint32_t Length() override;
   virtual Element* GetElementAt(uint32_t aIndex) override;
   virtual nsINode* GetParentObject() override;
@@ -70,8 +71,8 @@ public:
    * @param aOption the option to insert
    * @param aIndex the index to insert at
    */
-  void InsertOptionAt(mozilla::dom::HTMLOptionElement* aOption, uint32_t aIndex)
-  {
+  void InsertOptionAt(mozilla::dom::HTMLOptionElement* aOption,
+                      uint32_t aIndex) {
     mElements.InsertElementAt(aIndex, aOption);
   }
 
@@ -79,34 +80,26 @@ public:
    * Remove an option
    * @param aIndex the index of the option to remove
    */
-  void RemoveOptionAt(uint32_t aIndex)
-  {
-    mElements.RemoveElementAt(aIndex);
-  }
+  void RemoveOptionAt(uint32_t aIndex) { mElements.RemoveElementAt(aIndex); }
 
   /**
    * Get the option at the index
    * @param aIndex the index
    * @param aReturn the option returned [OUT]
    */
-  mozilla::dom::HTMLOptionElement* ItemAsOption(uint32_t aIndex)
-  {
+  mozilla::dom::HTMLOptionElement* ItemAsOption(uint32_t aIndex) {
     return mElements.SafeElementAt(aIndex, nullptr);
   }
 
   /**
    * Clears out all options
    */
-  void Clear()
-  {
-    mElements.Clear();
-  }
+  void Clear() { mElements.Clear(); }
 
   /**
    * Append an option to end of array
    */
-  void AppendOption(mozilla::dom::HTMLOptionElement* aOption)
-  {
+  void AppendOption(mozilla::dom::HTMLOptionElement* aOption) {
     mElements.AppendElement(aOption);
   }
 
@@ -120,24 +113,20 @@ public:
    * @param aForward TRUE to look forward, FALSE to look backward
    * @return the option index
    */
-  nsresult GetOptionIndex(Element* aOption,
-                          int32_t aStartIndex, bool aForward,
+  nsresult GetOptionIndex(Element* aOption, int32_t aStartIndex, bool aForward,
                           int32_t* aIndex);
 
-  HTMLOptionElement* GetNamedItem(const nsAString& aName)
-  {
+  HTMLOptionElement* GetNamedItem(const nsAString& aName) {
     bool dummy;
     return NamedGetter(aName, dummy);
   }
   HTMLOptionElement* NamedGetter(const nsAString& aName, bool& aFound);
-  virtual Element*
-  GetFirstNamedElement(const nsAString& aName, bool& aFound) override
-  {
+  virtual Element* GetFirstNamedElement(const nsAString& aName,
+                                        bool& aFound) override {
     return NamedGetter(aName, aFound);
   }
   void Add(const HTMLOptionOrOptGroupElement& aElement,
-           const Nullable<HTMLElementOrLong>& aBefore,
-           ErrorResult& aError);
+           const Nullable<HTMLElementOrLong>& aBefore, ErrorResult& aError);
   void Remove(int32_t aIndex, ErrorResult& aError);
   int32_t GetSelectedIndex(ErrorResult& aError);
   void SetSelectedIndex(int32_t aSelectedIndex, ErrorResult& aError);
@@ -146,7 +135,7 @@ public:
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
   void SetLength(uint32_t aLength, ErrorResult& aError);
 
-private:
+ private:
   /** The list of options (holds strong references).  This is infallible, so
    * various members such as InsertOptionAt are also infallible. */
   nsTArray<RefPtr<mozilla::dom::HTMLOptionElement> > mElements;
@@ -154,7 +143,7 @@ private:
   RefPtr<HTMLSelectElement> mSelect;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLOptionsCollection_h
+#endif  // mozilla_dom_HTMLOptionsCollection_h

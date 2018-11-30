@@ -6,9 +6,8 @@
 
 extern "C" {
 
-nsresult
-rust_prepare_accept_languages(const nsACString* i_accept_languages,
-                              nsACString* o_accept_languages);
+nsresult rust_prepare_accept_languages(const nsACString* i_accept_languages,
+                                       nsACString* o_accept_languages);
 }
 
-#endif // RUST_NS_NET_HELPER
+#endif  // RUST_NS_NET_HELPER

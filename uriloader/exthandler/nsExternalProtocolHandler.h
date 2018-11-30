@@ -16,23 +16,23 @@
 
 class nsIURI;
 
-// protocol handlers need to support weak references if we want the netlib nsIOService to cache them.
-class nsExternalProtocolHandler final : public nsIExternalProtocolHandler, public nsSupportsWeakReference
-{
-public:
-	NS_DECL_THREADSAFE_ISUPPORTS
-	NS_DECL_NSIPROTOCOLHANDLER
-	NS_DECL_NSIEXTERNALPROTOCOLHANDLER
+// protocol handlers need to support weak references if we want the netlib
+// nsIOService to cache them.
+class nsExternalProtocolHandler final : public nsIExternalProtocolHandler,
+                                        public nsSupportsWeakReference {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIPROTOCOLHANDLER
+  NS_DECL_NSIEXTERNALPROTOCOLHANDLER
 
-	nsExternalProtocolHandler();
+  nsExternalProtocolHandler();
 
-protected:
+ protected:
   ~nsExternalProtocolHandler();
 
   // helper function
-  bool HaveExternalProtocolHandler(nsIURI * aURI);
-	nsCString	m_schemeName;
+  bool HaveExternalProtocolHandler(nsIURI* aURI);
+  nsCString m_schemeName;
 };
 
-#endif // nsExternalProtocolHandler_h___
-
+#endif  // nsExternalProtocolHandler_h___

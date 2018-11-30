@@ -33,30 +33,28 @@
 #ifndef VIDEO_TYPE_
 #define VIDEO_TYPE_
 
-namespace mozilla
-{
+namespace mozilla {
 /*
  * Enumeration for different video types supported by the
  * video-engine. If more types will be supported in the future
  * newer one shall be appended to the bottom of the list
  */
-enum VideoType
-{
-    kVideoI420     = 0,
-    kVideoYV12     = 1,
-    kVideoYUY2     = 2,
-    kVideoUYVY     = 3,
-    kVideoIYUV     = 4,
-    kVideoARGB     = 5,
-    kVideoRGB24    = 6,
-    kVideoRGB565   = 7,
-    kVideoARGB4444 = 8,
-    kVideoARGB1555 = 9,
-    kVideoMJPEG    = 10,
-    kVideoNV12     = 11,
-    kVideoNV21     = 12,
-    kVideoBGRA     = 13,
-    kVideoUnknown  = 99
+enum VideoType {
+  kVideoI420 = 0,
+  kVideoYV12 = 1,
+  kVideoYUY2 = 2,
+  kVideoUYVY = 3,
+  kVideoIYUV = 4,
+  kVideoARGB = 5,
+  kVideoRGB24 = 6,
+  kVideoRGB565 = 7,
+  kVideoARGB4444 = 8,
+  kVideoARGB1555 = 9,
+  kVideoMJPEG = 10,
+  kVideoNV12 = 11,
+  kVideoNV21 = 12,
+  kVideoBGRA = 13,
+  kVideoUnknown = 99
 };
-}
+}  // namespace mozilla
 #endif

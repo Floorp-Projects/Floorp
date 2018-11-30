@@ -25,45 +25,35 @@ extern "C" {
 #define STATUS_MORE_ENTRIES ((NTSTATUS)0x00000105L)
 #endif
 
-enum UndocSystemInformationClass
-{
-  SystemExtendedHandleInformation = 64
-};
+enum UndocSystemInformationClass { SystemExtendedHandleInformation = 64 };
 
-struct SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX
-{
-  PVOID       mObject;
-  ULONG_PTR   mPid;
-  ULONG_PTR   mHandle;
+struct SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX {
+  PVOID mObject;
+  ULONG_PTR mPid;
+  ULONG_PTR mHandle;
   ACCESS_MASK mGrantedAccess;
-  USHORT      mCreatorBackTraceIndex;
-  USHORT      mObjectTypeIndex;
-  ULONG       mAttributes;
-  ULONG       mReserved;
+  USHORT mCreatorBackTraceIndex;
+  USHORT mObjectTypeIndex;
+  ULONG mAttributes;
+  ULONG mReserved;
 };
 
-struct SYSTEM_HANDLE_INFORMATION_EX
-{
-  ULONG_PTR                         mHandleCount;
-  ULONG_PTR                         mReserved;
+struct SYSTEM_HANDLE_INFORMATION_EX {
+  ULONG_PTR mHandleCount;
+  ULONG_PTR mReserved;
   SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX mHandles[1];
 };
 
-enum UndocObjectInformationClass
-{
-  ObjectNameInformation = 1
-};
+enum UndocObjectInformationClass { ObjectNameInformation = 1 };
 
-struct OBJECT_NAME_INFORMATION
-{
-  UNICODE_STRING  mName;
+struct OBJECT_NAME_INFORMATION {
+  UNICODE_STRING mName;
 };
 
 // The following declarations are documented on MSDN but are not included in
 // public user-mode headers.
 
-enum DirectoryObjectAccessFlags
-{
+enum DirectoryObjectAccessFlags {
   DIRECTORY_QUERY = 0x0001,
   DIRECTORY_TRAVERSE = 0x0002,
   DIRECTORY_CREATE_OBJECT = 0x0004,
@@ -71,24 +61,23 @@ enum DirectoryObjectAccessFlags
   DIRECTORY_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED | 0x000F
 };
 
-NTSTATUS WINAPI
-NtOpenDirectoryObject(PHANDLE aDirectoryHandle, ACCESS_MASK aDesiredAccess,
-                      POBJECT_ATTRIBUTES aObjectAttributes);
+NTSTATUS WINAPI NtOpenDirectoryObject(PHANDLE aDirectoryHandle,
+                                      ACCESS_MASK aDesiredAccess,
+                                      POBJECT_ATTRIBUTES aObjectAttributes);
 
-struct OBJECT_DIRECTORY_INFORMATION
-{
-  UNICODE_STRING  mName;
-  UNICODE_STRING  mTypeName;
+struct OBJECT_DIRECTORY_INFORMATION {
+  UNICODE_STRING mName;
+  UNICODE_STRING mTypeName;
 };
 
-NTSTATUS WINAPI
-NtQueryDirectoryObject(HANDLE aDirectoryHandle, PVOID aOutBuffer,
-                       ULONG aBufferLength, BOOLEAN aReturnSingleEntry,
-                       BOOLEAN aRestartScan, PULONG aContext,
-                       PULONG aOutReturnLength);
+NTSTATUS WINAPI NtQueryDirectoryObject(HANDLE aDirectoryHandle,
+                                       PVOID aOutBuffer, ULONG aBufferLength,
+                                       BOOLEAN aReturnSingleEntry,
+                                       BOOLEAN aRestartScan, PULONG aContext,
+                                       PULONG aOutReturnLength);
 
 #if defined(__cplusplus)
-} // extern "C"
+}  // extern "C"
 #endif
 
-#endif // mozilla_NtUndoc_h
+#endif  // mozilla_NtUndoc_h

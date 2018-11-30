@@ -15,39 +15,33 @@ namespace gfx {
 DWORD __stdcall ThreadCallback(void* threadData);
 
 class WorkerThreadWin32 : public WorkerThread {
-public:
+ public:
   explicit WorkerThreadWin32(MultiThreadedJobQueue* aJobQueue)
-  : WorkerThread(aJobQueue)
-  {
-    mThread = ::CreateThread(nullptr, 0, ThreadCallback, static_cast<WorkerThread*>(this), 0, nullptr);
+      : WorkerThread(aJobQueue) {
+    mThread = ::CreateThread(nullptr, 0, ThreadCallback,
+                             static_cast<WorkerThread*>(this), 0, nullptr);
   }
 
-  ~WorkerThreadWin32()
-  {
+  ~WorkerThreadWin32() {
     ::WaitForSingleObject(mThread, INFINITE);
     ::CloseHandle(mThread);
   }
 
-protected:
+ protected:
   HANDLE mThread;
 };
 
-DWORD __stdcall ThreadCallback(void* threadData)
-{
+DWORD __stdcall ThreadCallback(void* threadData) {
   WorkerThread* thread = static_cast<WorkerThread*>(threadData);
   thread->Run();
   return 0;
 }
 
-WorkerThread*
-WorkerThread::Create(MultiThreadedJobQueue* aJobQueue)
-{
+WorkerThread* WorkerThread::Create(MultiThreadedJobQueue* aJobQueue) {
   return new WorkerThreadWin32(aJobQueue);
 }
 
-bool
-MultiThreadedJobQueue::PopJob(Job*& aOutJob, AccessType aAccess)
-{
+bool MultiThreadedJobQueue::PopJob(Job*& aOutJob, AccessType aAccess) {
   for (;;) {
     while (aAccess == BLOCKING && mJobs.empty()) {
       {
@@ -57,7 +51,7 @@ MultiThreadedJobQueue::PopJob(Job*& aOutJob, AccessType aAccess)
         }
       }
 
-      HANDLE handles[] = { mAvailableEvent, mShutdownEvent };
+      HANDLE handles[] = {mAvailableEvent, mShutdownEvent};
       ::WaitForMultipleObjects(2, handles, FALSE, INFINITE);
     }
 
@@ -88,18 +82,14 @@ MultiThreadedJobQueue::PopJob(Job*& aOutJob, AccessType aAccess)
   }
 }
 
-void
-MultiThreadedJobQueue::SubmitJob(Job* aJob)
-{
+void MultiThreadedJobQueue::SubmitJob(Job* aJob) {
   MOZ_ASSERT(aJob);
   CriticalSectionAutoEnter lock(&mSection);
   mJobs.push_back(aJob);
   ::SetEvent(mAvailableEvent);
 }
 
-void
-MultiThreadedJobQueue::ShutDown()
-{
+void MultiThreadedJobQueue::ShutDown() {
   {
     CriticalSectionAutoEnter lock(&mSection);
     mShuttingDown = true;
@@ -110,29 +100,19 @@ MultiThreadedJobQueue::ShutDown()
   }
 }
 
-size_t
-MultiThreadedJobQueue::NumJobs()
-{
+size_t MultiThreadedJobQueue::NumJobs() {
   CriticalSectionAutoEnter lock(&mSection);
   return mJobs.size();
 }
 
-bool
-MultiThreadedJobQueue::IsEmpty()
-{
+bool MultiThreadedJobQueue::IsEmpty() {
   CriticalSectionAutoEnter lock(&mSection);
   return mJobs.empty();
 }
 
-void
-MultiThreadedJobQueue::RegisterThread()
-{
-  mThreadsCount += 1;
-}
+void MultiThreadedJobQueue::RegisterThread() { mThreadsCount += 1; }
 
-void
-MultiThreadedJobQueue::UnregisterThread()
-{
+void MultiThreadedJobQueue::UnregisterThread() {
   mSection.Enter();
   mThreadsCount -= 1;
   bool finishShutdown = mThreadsCount == 0;
@@ -145,5 +125,5 @@ MultiThreadedJobQueue::UnregisterThread()
   }
 }
 
-} // namespace
-} // namespace
+}  // namespace gfx
+}  // namespace mozilla

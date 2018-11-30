@@ -25,65 +25,65 @@
 namespace js {
 namespace frontend {
 
-class BinASTParserBase : private JS::AutoGCRooter
-{
-  public:
-    BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                     HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript);
-    ~BinASTParserBase();
+class BinASTParserBase : private JS::AutoGCRooter {
+ public:
+  BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+                   HandleScriptSourceObject sourceObject,
+                   Handle<LazyScript*> lazyScript);
+  ~BinASTParserBase();
 
-  public:
-    // Names
+ public:
+  // Names
 
-    bool hasUsedName(HandlePropertyName name);
+  bool hasUsedName(HandlePropertyName name);
 
-    // --- GC.
+  // --- GC.
 
-    virtual void doTrace(JSTracer* trc) {}
+  virtual void doTrace(JSTracer* trc) {}
 
-    void trace(JSTracer* trc) {
-        TraceListNode::TraceList(trc, traceListHead_);
-        doTrace(trc);
-    }
+  void trace(JSTracer* trc) {
+    TraceListNode::TraceList(trc, traceListHead_);
+    doTrace(trc);
+  }
 
+ public:
+  ParseNode* allocParseNode(size_t size) {
+    MOZ_ASSERT(size == sizeof(ParseNode));
+    return static_cast<ParseNode*>(nodeAlloc_.allocNode());
+  }
 
-  public:
-    ParseNode* allocParseNode(size_t size) {
-        MOZ_ASSERT(size == sizeof(ParseNode));
-        return static_cast<ParseNode*>(nodeAlloc_.allocNode());
-    }
+  JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
-    JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
+  // Needs access to AutoGCRooter.
+  friend void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
-    // Needs access to AutoGCRooter.
-    friend void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
+ protected:
+  JSContext* cx_;
 
-  protected:
-    JSContext* cx_;
+  // ---- Memory-related stuff
+ protected:
+  LifoAlloc& alloc_;
+  TraceListNode* traceListHead_;
+  UsedNameTracker& usedNames_;
 
-    // ---- Memory-related stuff
-  protected:
-    LifoAlloc& alloc_;
-    TraceListNode* traceListHead_;
-    UsedNameTracker& usedNames_;
-  private:
-    LifoAlloc::Mark tempPoolMark_;
-    ParseNodeAllocator nodeAlloc_;
+ private:
+  LifoAlloc::Mark tempPoolMark_;
+  ParseNodeAllocator nodeAlloc_;
 
-    // ---- Parsing-related stuff
-  protected:
-    // Root atoms and objects allocated for the parse tree.
-    AutoKeepAtoms keepAtoms_;
+  // ---- Parsing-related stuff
+ protected:
+  // Root atoms and objects allocated for the parse tree.
+  AutoKeepAtoms keepAtoms_;
 
-    RootedScriptSourceObject sourceObject_;
-    Rooted<LazyScript*> lazyScript_;
-    ParseContext* parseContext_;
-    FullParseHandler factory_;
+  RootedScriptSourceObject sourceObject_;
+  Rooted<LazyScript*> lazyScript_;
+  ParseContext* parseContext_;
+  FullParseHandler factory_;
 
-    friend class BinParseContext;
+  friend class BinParseContext;
 };
 
-} // namespace frontend
-} // namespace js
+}  // namespace frontend
+}  // namespace js
 
-#endif // frontend_BinASTParserBase_h
+#endif  // frontend_BinASTParserBase_h

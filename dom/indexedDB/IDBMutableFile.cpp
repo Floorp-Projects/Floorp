@@ -38,15 +38,13 @@ using namespace mozilla::dom::quota;
 
 IDBMutableFile::IDBMutableFile(IDBDatabase* aDatabase,
                                BackgroundMutableFileChild* aActor,
-                               const nsAString& aName,
-                               const nsAString& aType)
-  : DOMEventTargetHelper(aDatabase)
-  , mDatabase(aDatabase)
-  , mBackgroundActor(aActor)
-  , mName(aName)
-  , mType(aType)
-  , mInvalidated(false)
-{
+                               const nsAString& aName, const nsAString& aType)
+    : DOMEventTargetHelper(aDatabase),
+      mDatabase(aDatabase),
+      mBackgroundActor(aActor),
+      mName(aName),
+      mType(aType),
+      mInvalidated(false) {
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
@@ -54,8 +52,7 @@ IDBMutableFile::IDBMutableFile(IDBDatabase* aDatabase,
   mDatabase->NoteLiveMutableFile(this);
 }
 
-IDBMutableFile::~IDBMutableFile()
-{
+IDBMutableFile::~IDBMutableFile() {
   AssertIsOnOwningThread();
 
   mDatabase->NoteFinishedMutableFile(this);
@@ -68,18 +65,14 @@ IDBMutableFile::~IDBMutableFile()
 
 #ifdef DEBUG
 
-void
-IDBMutableFile::AssertIsOnOwningThread() const
-{
+void IDBMutableFile::AssertIsOnOwningThread() const {
   MOZ_ASSERT(mDatabase);
   mDatabase->AssertIsOnOwningThread();
 }
 
-#endif // DEBUG
+#endif  // DEBUG
 
-int64_t
-IDBMutableFile::GetFileId() const
-{
+int64_t IDBMutableFile::GetFileId() const {
   AssertIsOnOwningThread();
 
   int64_t fileId;
@@ -91,9 +84,7 @@ IDBMutableFile::GetFileId() const
   return fileId;
 }
 
-void
-IDBMutableFile::Invalidate()
-{
+void IDBMutableFile::Invalidate() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mInvalidated);
 
@@ -102,9 +93,7 @@ IDBMutableFile::Invalidate()
   AbortFileHandles();
 }
 
-void
-IDBMutableFile::RegisterFileHandle(IDBFileHandle* aFileHandle)
-{
+void IDBMutableFile::RegisterFileHandle(IDBFileHandle* aFileHandle) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
@@ -113,9 +102,7 @@ IDBMutableFile::RegisterFileHandle(IDBFileHandle* aFileHandle)
   mFileHandles.PutEntry(aFileHandle);
 }
 
-void
-IDBMutableFile::UnregisterFileHandle(IDBFileHandle* aFileHandle)
-{
+void IDBMutableFile::UnregisterFileHandle(IDBFileHandle* aFileHandle) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
@@ -124,17 +111,13 @@ IDBMutableFile::UnregisterFileHandle(IDBFileHandle* aFileHandle)
   mFileHandles.RemoveEntry(aFileHandle);
 }
 
-void
-IDBMutableFile::AbortFileHandles()
-{
+void IDBMutableFile::AbortFileHandles() {
   AssertIsOnOwningThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static void
-    AbortFileHandles(nsTHashtable<nsPtrHashKey<IDBFileHandle>>& aTable)
-    {
+  class MOZ_STACK_CLASS Helper final {
+   public:
+    static void AbortFileHandles(
+        nsTHashtable<nsPtrHashKey<IDBFileHandle>>& aTable) {
       if (!aTable.Count()) {
         return;
       }
@@ -169,28 +152,22 @@ IDBMutableFile::AbortFileHandles()
   Helper::AbortFileHandles(mFileHandles);
 }
 
-IDBDatabase*
-IDBMutableFile::Database() const
-{
+IDBDatabase* IDBMutableFile::Database() const {
   AssertIsOnOwningThread();
 
   return mDatabase;
 }
 
-already_AddRefed<IDBFileHandle>
-IDBMutableFile::Open(FileMode aMode, ErrorResult& aError)
-{
+already_AddRefed<IDBFileHandle> IDBMutableFile::Open(FileMode aMode,
+                                                     ErrorResult& aError) {
   AssertIsOnOwningThread();
 
-  if (QuotaManager::IsShuttingDown() ||
-      mDatabase->IsClosed() ||
-      !GetOwner()) {
+  if (QuotaManager::IsShuttingDown() || mDatabase->IsClosed() || !GetOwner()) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
 
-  RefPtr<IDBFileHandle> fileHandle =
-    IDBFileHandle::Create(this, aMode);
+  RefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(this, aMode);
   if (NS_WARN_IF(!fileHandle)) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
@@ -199,16 +176,14 @@ IDBMutableFile::Open(FileMode aMode, ErrorResult& aError)
   BackgroundFileHandleChild* actor = new BackgroundFileHandleChild(fileHandle);
 
   MOZ_ALWAYS_TRUE(
-    mBackgroundActor->SendPBackgroundFileHandleConstructor(actor, aMode));
+      mBackgroundActor->SendPBackgroundFileHandleConstructor(actor, aMode));
 
   fileHandle->SetBackgroundActor(actor);
 
   return fileHandle.forget();
 }
 
-already_AddRefed<DOMRequest>
-IDBMutableFile::GetFile(ErrorResult& aError)
-{
+already_AddRefed<DOMRequest> IDBMutableFile::GetFile(ErrorResult& aError) {
   RefPtr<IDBFileHandle> fileHandle = Open(FileMode::Readonly, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return nullptr;
@@ -217,7 +192,7 @@ IDBMutableFile::GetFile(ErrorResult& aError)
   FileRequestGetFileParams params;
 
   RefPtr<IDBFileRequest> request =
-    IDBFileRequest::Create(fileHandle, /* aWrapAsDOMRequest */ true);
+      IDBFileRequest::Create(fileHandle, /* aWrapAsDOMRequest */ true);
 
   fileHandle->StartRequest(request, params);
 
@@ -245,11 +220,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBMutableFile,
   // Don't unlink mDatabase!
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-JSObject*
-IDBMutableFile::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* IDBMutableFile::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return IDBMutableFile_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

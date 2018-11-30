@@ -23,72 +23,67 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace docshell {
 
-class OfflineCacheUpdateChild : public nsIOfflineCacheUpdate
-                              , public POfflineCacheUpdateChild
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOFFLINECACHEUPDATE
+class OfflineCacheUpdateChild : public nsIOfflineCacheUpdate,
+                                public POfflineCacheUpdateChild {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOFFLINECACHEUPDATE
 
-    virtual mozilla::ipc::IPCResult
-    RecvNotifyStateEvent(const uint32_t& stateEvent,
-                         const uint64_t& byteProgress) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyStateEvent(
+      const uint32_t& stateEvent, const uint64_t& byteProgress) override;
 
-    virtual mozilla::ipc::IPCResult
-    RecvAssociateDocuments(
-            const nsCString& cacheGroupId,
-            const nsCString& cacheClientId) override;
+  virtual mozilla::ipc::IPCResult RecvAssociateDocuments(
+      const nsCString& cacheGroupId, const nsCString& cacheClientId) override;
 
-    virtual mozilla::ipc::IPCResult
-    RecvFinish(const bool& succeeded,
-               const bool& isUpgrade) override;
+  virtual mozilla::ipc::IPCResult RecvFinish(const bool& succeeded,
+                                             const bool& isUpgrade) override;
 
-    explicit OfflineCacheUpdateChild(nsPIDOMWindowInner* aWindow);
+  explicit OfflineCacheUpdateChild(nsPIDOMWindowInner* aWindow);
 
-    void SetDocument(nsIDocument *aDocument);
+  void SetDocument(nsIDocument* aDocument);
 
-private:
-    ~OfflineCacheUpdateChild();
+ private:
+  ~OfflineCacheUpdateChild();
 
-    nsresult AssociateDocument(nsIDocument *aDocument,
-                               nsIApplicationCache *aApplicationCache);
-    void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
-    nsresult Finish();
+  nsresult AssociateDocument(nsIDocument* aDocument,
+                             nsIApplicationCache* aApplicationCache);
+  void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver>& aObservers);
+  nsresult Finish();
 
-    enum {
-        STATE_UNINITIALIZED,
-        STATE_INITIALIZED,
-        STATE_CHECKING,
-        STATE_DOWNLOADING,
-        STATE_CANCELLED,
-        STATE_FINISHED
-    } mState;
+  enum {
+    STATE_UNINITIALIZED,
+    STATE_INITIALIZED,
+    STATE_CHECKING,
+    STATE_DOWNLOADING,
+    STATE_CANCELLED,
+    STATE_FINISHED
+  } mState;
 
-    bool mIsUpgrade;
-    bool mSucceeded;
+  bool mIsUpgrade;
+  bool mSucceeded;
 
-    nsCString mUpdateDomain;
-    nsCOMPtr<nsIURI> mManifestURI;
-    nsCOMPtr<nsIURI> mDocumentURI;
-    nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
+  nsCString mUpdateDomain;
+  nsCOMPtr<nsIURI> mManifestURI;
+  nsCOMPtr<nsIURI> mDocumentURI;
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 
-    nsCOMPtr<nsIObserverService> mObserverService;
+  nsCOMPtr<nsIObserverService> mObserverService;
 
-    /* Clients watching this update for changes */
-    nsCOMArray<nsIWeakReference> mWeakObservers;
-    nsCOMArray<nsIOfflineCacheUpdateObserver> mObservers;
+  /* Clients watching this update for changes */
+  nsCOMArray<nsIWeakReference> mWeakObservers;
+  nsCOMArray<nsIOfflineCacheUpdateObserver> mObservers;
 
-    /* Document that requested this update */
-    nsCOMPtr<nsIDocument> mDocument;
+  /* Document that requested this update */
+  nsCOMPtr<nsIDocument> mDocument;
 
-    /* Keep reference to the window that owns this update to call the
-       parent offline cache update construcor */
-    nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  /* Keep reference to the window that owns this update to call the
+     parent offline cache update construcor */
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
-    uint64_t mByteProgress;
+  uint64_t mByteProgress;
 };
 
-} // namespace docshell
-} // namespace mozilla
+}  // namespace docshell
+}  // namespace mozilla
 
 #endif

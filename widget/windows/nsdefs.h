@@ -9,15 +9,19 @@
 #include <windows.h>
 
 #ifdef _DEBUG
-  #define BREAK_TO_DEBUGGER           DebugBreak()
-#else   
-  #define BREAK_TO_DEBUGGER
-#endif  
+#define BREAK_TO_DEBUGGER DebugBreak()
+#else
+#define BREAK_TO_DEBUGGER
+#endif
 
 #ifdef _DEBUG
-  #define VERIFY(exp)                 if (!(exp)) { GetLastError(); BREAK_TO_DEBUGGER; }
-#else   // !_DEBUG
-  #define VERIFY(exp)                 (exp)
+#define VERIFY(exp)    \
+  if (!(exp)) {        \
+    GetLastError();    \
+    BREAK_TO_DEBUGGER; \
+  }
+#else  // !_DEBUG
+#define VERIFY(exp) (exp)
 #endif  // !_DEBUG
 
 // Win32 logging modules:
@@ -26,7 +30,7 @@
 // Logging can be changed at runtime without recompiling in the General
 // property page of Visual Studio under the "Environment" property.
 //
-// Two variables are of importance to be set: 
+// Two variables are of importance to be set:
 // MOZ_LOG and MOZ_LOG_FILE
 //
 // MOZ_LOG:
@@ -41,5 +45,3 @@
 // MOZ_LOG_FILE=                 (To stdout/stderr)
 
 #endif  // NSDEFS_H
-
-

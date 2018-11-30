@@ -8,7 +8,7 @@
 #define __mozilla_widget_nsShmImage_h__
 
 #if defined(MOZ_X11)
-#  define MOZ_HAVE_SHMIMAGE
+#define MOZ_HAVE_SHMIMAGE
 #endif
 
 #ifdef MOZ_HAVE_SHMIMAGE
@@ -21,23 +21,23 @@
 #include <xcb/shm.h>
 
 class nsShmImage {
-  // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
+  // bug 1168843, compositor thread may create shared memory instances that are
+  // destroyed by main thread on shutdown, so this must use thread-safe RC to
+  // avoid hitting assertion
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsShmImage)
 
-public:
+ public:
   static bool UseShm();
 
-  already_AddRefed<mozilla::gfx::DrawTarget>
-    CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion);
+  already_AddRefed<mozilla::gfx::DrawTarget> CreateDrawTarget(
+      const mozilla::LayoutDeviceIntRegion& aRegion);
 
   void Put(const mozilla::LayoutDeviceIntRegion& aRegion);
 
-  nsShmImage(Display* aDisplay,
-             Drawable aWindow,
-             Visual* aVisual,
+  nsShmImage(Display* aDisplay, Drawable aWindow, Visual* aVisual,
              unsigned int aDepth);
 
-private:
+ private:
   ~nsShmImage();
 
   bool InitExtension();
@@ -50,26 +50,26 @@ private:
 
   void WaitIfPendingReply();
 
-  Display*                     mDisplay;
-  xcb_connection_t*            mConnection;
-  Window                       mWindow;
-  Visual*                      mVisual;
-  unsigned int                 mDepth;
+  Display* mDisplay;
+  xcb_connection_t* mConnection;
+  Window mWindow;
+  Visual* mVisual;
+  unsigned int mDepth;
 
-  mozilla::gfx::SurfaceFormat  mFormat;
-  mozilla::gfx::IntSize        mSize;
-  int                          mStride;
+  mozilla::gfx::SurfaceFormat mFormat;
+  mozilla::gfx::IntSize mSize;
+  int mStride;
 
-  xcb_pixmap_t                 mPixmap;
-  xcb_gcontext_t               mGC;
+  xcb_pixmap_t mPixmap;
+  xcb_gcontext_t mGC;
   xcb_get_input_focus_cookie_t mSyncRequest;
-  bool                         mRequestPending;
+  bool mRequestPending;
 
-  xcb_shm_seg_t                mShmSeg;
-  int                          mShmId;
-  uint8_t*                     mShmAddr;
+  xcb_shm_seg_t mShmSeg;
+  int mShmId;
+  uint8_t* mShmAddr;
 };
 
-#endif // MOZ_HAVE_SHMIMAGE
+#endif  // MOZ_HAVE_SHMIMAGE
 
 #endif

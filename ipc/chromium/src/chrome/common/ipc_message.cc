@@ -22,8 +22,10 @@
 #ifdef MOZ_TASK_TRACER
 using namespace mozilla::tasktracer;
 
-#define MSG_HEADER_SZ (IsStartLogging() && GetOrCreateTraceInfo() == nullptr ? \
-                       sizeof(Header) : sizeof(HeaderTaskTracer))
+#define MSG_HEADER_SZ                                    \
+  (IsStartLogging() && GetOrCreateTraceInfo() == nullptr \
+       ? sizeof(Header)                                  \
+       : sizeof(HeaderTaskTracer))
 #else
 #define MSG_HEADER_SZ sizeof(Header)
 #endif
@@ -32,12 +34,9 @@ namespace IPC {
 
 //------------------------------------------------------------------------------
 
-Message::~Message() {
-  MOZ_COUNT_DTOR(IPC::Message);
-}
+Message::~Message() { MOZ_COUNT_DTOR(IPC::Message); }
 
-Message::Message()
-    : Pickle(MSG_HEADER_SZ) {
+Message::Message() : Pickle(MSG_HEADER_SZ) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = header()->type = 0;
 #if defined(OS_POSIX)
@@ -47,18 +46,14 @@ Message::Message()
   if (UseTaskTracerHeader()) {
     header()->flags.SetTaskTracer();
     HeaderTaskTracer* _header = static_cast<HeaderTaskTracer*>(header());
-    GetCurTraceInfo(&_header->source_event_id,
-                    &_header->parent_task_id,
+    GetCurTraceInfo(&_header->source_event_id, &_header->parent_task_id,
                     &_header->source_event_type);
   }
 #endif
 }
 
-Message::Message(int32_t routing_id,
-                 msgid_t type,
-                 uint32_t segment_capacity,
-                 HeaderFlags flags,
-                 bool recordWriteLatency)
+Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
+                 HeaderFlags flags, bool recordWriteLatency)
     : Pickle(MSG_HEADER_SZ, segment_capacity) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = routing_id;
@@ -77,8 +72,7 @@ Message::Message(int32_t routing_id,
   if (UseTaskTracerHeader()) {
     header()->flags.SetTaskTracer();
     HeaderTaskTracer* _header = static_cast<HeaderTaskTracer*>(header());
-    GetCurTraceInfo(&_header->source_event_id,
-                    &_header->parent_task_id,
+    GetCurTraceInfo(&_header->source_event_id, &_header->parent_task_id,
                     &_header->source_event_type);
   }
 #endif
@@ -90,14 +84,14 @@ Message::Message(int32_t routing_id,
 #ifndef MOZ_TASK_TRACER
 #define MSG_HEADER_SZ_DATA sizeof(Header)
 #else
-#define MSG_HEADER_SZ_DATA                                            \
-  (reinterpret_cast<const Header*>(data)->flags.IsTaskTracer() ? \
-   sizeof(HeaderTaskTracer) : sizeof(Header))
+#define MSG_HEADER_SZ_DATA                                     \
+  (reinterpret_cast<const Header*>(data)->flags.IsTaskTracer() \
+       ? sizeof(HeaderTaskTracer)                              \
+       : sizeof(Header))
 #endif
 
 Message::Message(const char* data, int data_len)
-  : Pickle(MSG_HEADER_SZ_DATA, data, data_len)
-{
+    : Pickle(MSG_HEADER_SZ_DATA, data, data_len) {
   MOZ_COUNT_CTOR(IPC::Message);
 }
 
@@ -108,17 +102,12 @@ Message::Message(Message&& other) : Pickle(std::move(other)) {
 #endif
 }
 
-/*static*/ Message*
-Message::IPDLMessage(int32_t routing_id,
-                     msgid_t type,
-                     HeaderFlags flags)
-{
+/*static*/ Message* Message::IPDLMessage(int32_t routing_id, msgid_t type,
+                                         HeaderFlags flags) {
   return new Message(routing_id, type, 0, flags, true);
 }
 
-/*static*/ Message*
-Message::ForSyncDispatchError(NestedLevel level)
-{
+/*static*/ Message* Message::ForSyncDispatchError(NestedLevel level) {
   auto* m = new Message(0, 0, 0, HeaderFlags(level));
   auto& flags = m->header()->flags;
   flags.SetSync();
@@ -127,9 +116,7 @@ Message::ForSyncDispatchError(NestedLevel level)
   return m;
 }
 
-/*static*/ Message*
-Message::ForInterruptDispatchError()
-{
+/*static*/ Message* Message::ForInterruptDispatchError() {
   auto* m = new Message();
   auto& flags = m->header()->flags;
   flags.SetInterrupt();
@@ -172,14 +159,12 @@ bool Message::WriteFileDescriptor(const base::FileDescriptor& descriptor) {
 }
 
 bool Message::ReadFileDescriptor(PickleIterator* iter,
-                                base::FileDescriptor* descriptor) const {
+                                 base::FileDescriptor* descriptor) const {
   int descriptor_index;
-  if (!ReadInt(iter, &descriptor_index))
-    return false;
+  if (!ReadInt(iter, &descriptor_index)) return false;
 
   FileDescriptorSet* file_descriptor_set = file_descriptor_set_.get();
-  if (!file_descriptor_set)
-    return false;
+  if (!file_descriptor_set) return false;
 
   descriptor->fd = file_descriptor_set->GetDescriptorAt(descriptor_index);
   descriptor->auto_close = false;
@@ -199,37 +184,26 @@ uint32_t Message::num_fds() const {
 #endif
 
 #ifdef MOZ_TASK_TRACER
-void *MessageTask() {
-  return reinterpret_cast<void*>(&MessageTask);
-}
+void* MessageTask() { return reinterpret_cast<void*>(&MessageTask); }
 
-void
-Message::TaskTracerDispatch() {
+void Message::TaskTracerDispatch() {
   if (header()->flags.IsTaskTracer()) {
     HeaderTaskTracer* _header = static_cast<HeaderTaskTracer*>(header());
     _header->task_id = GenNewUniqueTaskId();
     uintptr_t* vtab = reinterpret_cast<uintptr_t*>(&MessageTask);
-    LogVirtualTablePtr(_header->task_id,
-                       _header->source_event_id,
-                       vtab);
-    LogDispatch(_header->task_id,
-                _header->parent_task_id,
-                _header->source_event_id,
-                _header->source_event_type);
+    LogVirtualTablePtr(_header->task_id, _header->source_event_id, vtab);
+    LogDispatch(_header->task_id, _header->parent_task_id,
+                _header->source_event_id, _header->source_event_type);
   }
 }
 
 Message::AutoTaskTracerRun::AutoTaskTracerRun(Message& aMsg)
-  : mMsg(aMsg)
-  , mTaskId(0)
-  , mSourceEventId(0) {
+    : mMsg(aMsg), mTaskId(0), mSourceEventId(0) {
   if (mMsg.header()->flags.IsTaskTracer()) {
     const HeaderTaskTracer* _header =
-      static_cast<HeaderTaskTracer*>(mMsg.header());
-    LogBegin(_header->task_id,
-             _header->source_event_id);
-    SetCurTraceInfo(_header->source_event_id,
-                    _header->task_id,
+        static_cast<HeaderTaskTracer*>(mMsg.header());
+    LogBegin(_header->task_id, _header->source_event_id);
+    SetCurTraceInfo(_header->source_event_id, _header->task_id,
                     _header->source_event_type);
     mTaskId = _header->task_id;
     mSourceEventId = _header->source_event_id;

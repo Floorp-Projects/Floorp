@@ -11,23 +11,23 @@
 
 namespace mozilla {
 
-WebGLExtensionTextureHalfFloatLinear::WebGLExtensionTextureHalfFloatLinear(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-    MOZ_ASSERT(!webgl->IsWebGL2());
-    auto& fua = webgl->mFormatUsage;
+WebGLExtensionTextureHalfFloatLinear::WebGLExtensionTextureHalfFloatLinear(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(!webgl->IsWebGL2());
+  auto& fua = webgl->mFormatUsage;
 
-    fua->EditUsage(webgl::EffectiveFormat::RGBA16F)->isFilterable = true;
-    fua->EditUsage(webgl::EffectiveFormat::RGB16F)->isFilterable = true;
-    fua->EditUsage(webgl::EffectiveFormat::Luminance16FAlpha16F)->isFilterable = true;
-    fua->EditUsage(webgl::EffectiveFormat::Luminance16F)->isFilterable = true;
-    fua->EditUsage(webgl::EffectiveFormat::Alpha16F)->isFilterable = true;
+  fua->EditUsage(webgl::EffectiveFormat::RGBA16F)->isFilterable = true;
+  fua->EditUsage(webgl::EffectiveFormat::RGB16F)->isFilterable = true;
+  fua->EditUsage(webgl::EffectiveFormat::Luminance16FAlpha16F)->isFilterable =
+      true;
+  fua->EditUsage(webgl::EffectiveFormat::Luminance16F)->isFilterable = true;
+  fua->EditUsage(webgl::EffectiveFormat::Alpha16F)->isFilterable = true;
 }
 
-WebGLExtensionTextureHalfFloatLinear::~WebGLExtensionTextureHalfFloatLinear()
-{
-}
+WebGLExtensionTextureHalfFloatLinear::~WebGLExtensionTextureHalfFloatLinear() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureHalfFloatLinear, OES_texture_half_float_linear)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureHalfFloatLinear,
+                          OES_texture_half_float_linear)
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -15,16 +15,16 @@ namespace js {
 namespace frontend {
 
 struct BCEParserHandle {
-    virtual ErrorReporter& errorReporter() = 0;
-    virtual const ErrorReporter& errorReporter() const = 0;
+  virtual ErrorReporter& errorReporter() = 0;
+  virtual const ErrorReporter& errorReporter() const = 0;
 
-    virtual const JS::ReadOnlyCompileOptions& options() const = 0;
+  virtual const JS::ReadOnlyCompileOptions& options() const = 0;
 
-    virtual FullParseHandler& astGenerator() = 0;
-    virtual ObjectBox* newObjectBox(JSObject *obj) = 0;
+  virtual FullParseHandler& astGenerator() = 0;
+  virtual ObjectBox* newObjectBox(JSObject* obj) = 0;
 };
 
-} // namespace frontend
-} // namespace js
+}  // namespace frontend
+}  // namespace js
 
-#endif // frontend_BCEParserHandle_h
+#endif  // frontend_BCEParserHandle_h

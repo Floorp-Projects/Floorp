@@ -15,23 +15,17 @@
 using namespace mozilla;
 
 nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* aOwningDocShell)
-  : mDocShell(aOwningDocShell)
-  , mDetachedEditingState(nsIHTMLDocument::eOff)
-  , mMakeEditable(false)
-  , mIsDetached(false)
-  , mDetachedMakeEditable(false)
-{
+    : mDocShell(aOwningDocShell),
+      mDetachedEditingState(nsIHTMLDocument::eOff),
+      mMakeEditable(false),
+      mIsDetached(false),
+      mDetachedMakeEditable(false) {
   NS_ASSERTION(mDocShell, "Where is my docShell?");
 }
 
-nsDocShellEditorData::~nsDocShellEditorData()
-{
-  TearDownEditor();
-}
+nsDocShellEditorData::~nsDocShellEditorData() { TearDownEditor(); }
 
-void
-nsDocShellEditorData::TearDownEditor()
-{
+void nsDocShellEditorData::TearDownEditor() {
   if (mHTMLEditor) {
     RefPtr<HTMLEditor> htmlEditor = mHTMLEditor.forget();
     htmlEditor->PreDestroy(false);
@@ -40,9 +34,7 @@ nsDocShellEditorData::TearDownEditor()
   mIsDetached = false;
 }
 
-nsresult
-nsDocShellEditorData::MakeEditable(bool aInWaitForUriLoad)
-{
+nsresult nsDocShellEditorData::MakeEditable(bool aInWaitForUriLoad) {
   if (mMakeEditable) {
     return NS_OK;
   }
@@ -62,15 +54,11 @@ nsDocShellEditorData::MakeEditable(bool aInWaitForUriLoad)
   return NS_OK;
 }
 
-bool
-nsDocShellEditorData::GetEditable()
-{
+bool nsDocShellEditorData::GetEditable() {
   return mMakeEditable || (mHTMLEditor != nullptr);
 }
 
-nsresult
-nsDocShellEditorData::CreateEditor()
-{
+nsresult nsDocShellEditorData::CreateEditor() {
   nsCOMPtr<nsIEditingSession> editingSession;
   nsresult rv = GetEditingSession(getter_AddRefs(editingSession));
   if (NS_FAILED(rv)) {
@@ -78,7 +66,7 @@ nsDocShellEditorData::CreateEditor()
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> domWindow =
-    mDocShell ? mDocShell->GetWindow() : nullptr;
+      mDocShell ? mDocShell->GetWindow() : nullptr;
   rv = editingSession->SetupEditorOnWindow(domWindow);
   if (NS_FAILED(rv)) {
     return rv;
@@ -87,9 +75,7 @@ nsDocShellEditorData::CreateEditor()
   return NS_OK;
 }
 
-nsresult
-nsDocShellEditorData::GetEditingSession(nsIEditingSession** aResult)
-{
+nsresult nsDocShellEditorData::GetEditingSession(nsIEditingSession** aResult) {
   EnsureEditingSession();
 
   NS_ADDREF(*aResult = mEditingSession);
@@ -97,9 +83,7 @@ nsDocShellEditorData::GetEditingSession(nsIEditingSession** aResult)
   return NS_OK;
 }
 
-nsresult
-nsDocShellEditorData::SetHTMLEditor(HTMLEditor* aHTMLEditor)
-{
+nsresult nsDocShellEditorData::SetHTMLEditor(HTMLEditor* aHTMLEditor) {
   // destroy any editor that we have. Checks for equality are
   // necessary to ensure that assigment into the nsCOMPtr does
   // not temporarily reduce the refCount of the editor to zero
@@ -111,7 +95,7 @@ nsDocShellEditorData::SetHTMLEditor(HTMLEditor* aHTMLEditor)
     RefPtr<HTMLEditor> htmlEditor = mHTMLEditor.forget();
     htmlEditor->PreDestroy(false);
     MOZ_ASSERT(!mHTMLEditor,
-      "Nested call of nsDocShellEditorData::SetHTMLEditor() detected");
+               "Nested call of nsDocShellEditorData::SetHTMLEditor() detected");
   }
 
   mHTMLEditor = aHTMLEditor;  // owning addref
@@ -123,9 +107,7 @@ nsDocShellEditorData::SetHTMLEditor(HTMLEditor* aHTMLEditor)
 }
 
 // This creates the editing session on the content docShell that owns 'this'.
-void
-nsDocShellEditorData::EnsureEditingSession()
-{
+void nsDocShellEditorData::EnsureEditingSession() {
   NS_ASSERTION(mDocShell, "Should have docShell here");
   NS_ASSERTION(!mIsDetached, "This will stomp editing session!");
 
@@ -134,14 +116,12 @@ nsDocShellEditorData::EnsureEditingSession()
   }
 }
 
-nsresult
-nsDocShellEditorData::DetachFromWindow()
-{
+nsresult nsDocShellEditorData::DetachFromWindow() {
   NS_ASSERTION(mEditingSession,
                "Can't detach when we don't have a session to detach!");
 
   nsCOMPtr<nsPIDOMWindowOuter> domWindow =
-    mDocShell ? mDocShell->GetWindow() : nullptr;
+      mDocShell ? mDocShell->GetWindow() : nullptr;
   nsresult rv = mEditingSession->DetachFromWindow(domWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -160,13 +140,11 @@ nsDocShellEditorData::DetachFromWindow()
   return NS_OK;
 }
 
-nsresult
-nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell)
-{
+nsresult nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell) {
   mDocShell = aDocShell;
 
   nsCOMPtr<nsPIDOMWindowOuter> domWindow =
-    mDocShell ? mDocShell->GetWindow() : nullptr;
+      mDocShell ? mDocShell->GetWindow() : nullptr;
   nsresult rv = mEditingSession->ReattachToWindow(domWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -5,23 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LayerSorter.h"
-#include <math.h>                       // for fabs
-#include <stdint.h>                     // for uint32_t
-#include <stdio.h>                      // for fprintf, stderr, FILE
-#include <stdlib.h>                     // for getenv
-#include "DirectedGraph.h"              // for DirectedGraph
-#include "Layers.h"                     // for Layer
-#include "gfxEnv.h"                     // for gfxEnv
-#include "gfxLineSegment.h"             // for gfxLineSegment
-#include "gfxPoint.h"                   // for gfxPoint
-#include "gfxQuad.h"                    // for gfxQuad
-#include "gfxRect.h"                    // for gfxRect
-#include "gfxTypes.h"                   // for gfxFloat
-#include "gfxUtils.h"                   // for TransformToQuad
-#include "mozilla/gfx/BasePoint3D.h"    // for BasePoint3D
-#include "mozilla/Sprintf.h"            // for SprintfLiteral
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for nsTArray, etc
+#include <math.h>                     // for fabs
+#include <stdint.h>                   // for uint32_t
+#include <stdio.h>                    // for fprintf, stderr, FILE
+#include <stdlib.h>                   // for getenv
+#include "DirectedGraph.h"            // for DirectedGraph
+#include "Layers.h"                   // for Layer
+#include "gfxEnv.h"                   // for gfxEnv
+#include "gfxLineSegment.h"           // for gfxLineSegment
+#include "gfxPoint.h"                 // for gfxPoint
+#include "gfxQuad.h"                  // for gfxQuad
+#include "gfxRect.h"                  // for gfxRect
+#include "gfxTypes.h"                 // for gfxFloat
+#include "gfxUtils.h"                 // for TransformToQuad
+#include "mozilla/gfx/BasePoint3D.h"  // for BasePoint3D
+#include "mozilla/Sprintf.h"          // for SprintfLiteral
+#include "nsRegion.h"                 // for nsIntRegion
+#include "nsTArray.h"                 // for nsTArray, etc
 #include "limits.h"
 #include "mozilla/Assertions.h"
 
@@ -37,62 +37,66 @@ enum LayerSortOrder {
 };
 
 /**
- * Recover the z component from a 2d transformed point by finding the intersection
- * of a line through the point in the z direction and the transformed plane.
+ * Recover the z component from a 2d transformed point by finding the
+ * intersection of a line through the point in the z direction and the
+ * transformed plane.
  *
  * We want to solve:
  *
  * point = normal . (p0 - l0) / normal . l
  */
-static gfxFloat RecoverZDepth(const Matrix4x4& aTransform, const gfxPoint& aPoint)
-{
-    const Point3D l(0, 0, 1);
-    Point3D l0 = Point3D(aPoint.x, aPoint.y, 0);
-    Point3D p0 = aTransform.TransformPoint(Point3D(0, 0, 0));
-    Point3D normal = aTransform.GetNormalVector();
+static gfxFloat RecoverZDepth(const Matrix4x4& aTransform,
+                              const gfxPoint& aPoint) {
+  const Point3D l(0, 0, 1);
+  Point3D l0 = Point3D(aPoint.x, aPoint.y, 0);
+  Point3D p0 = aTransform.TransformPoint(Point3D(0, 0, 0));
+  Point3D normal = aTransform.GetNormalVector();
 
-    gfxFloat n = normal.DotProduct(p0 - l0); 
-    gfxFloat d = normal.DotProduct(l);
+  gfxFloat n = normal.DotProduct(p0 - l0);
+  gfxFloat d = normal.DotProduct(l);
 
-    if (!d) {
-        return 0;
-    }
+  if (!d) {
+    return 0;
+  }
 
-    return n/d;
+  return n / d;
 }
 
 /**
- * Determine if this transform layer should be drawn before another when they 
+ * Determine if this transform layer should be drawn before another when they
  * are both preserve-3d children.
  *
  * We want to find the relative z depths of the 2 layers at points where they
  * intersect when projected onto the 2d screen plane. Intersections are defined
- * as corners that are positioned within the other quad, as well as intersections
- * of the lines.
+ * as corners that are positioned within the other quad, as well as
+ * intersections of the lines.
  *
  * We then choose the intersection point with the greatest difference in Z
  * depths and use this point to determine an ordering for the two layers.
- * For layers that are intersecting in 3d space, this essentially guesses an 
+ * For layers that are intersecting in 3d space, this essentially guesses an
  * order. In a lot of cases we only intersect right at the edge point (3d cubes
  * in particular) and this generates the 'correct' looking ordering. For planes
  * that truely intersect, then there is no correct ordering and this remains
  * unsolved without changing our rendering code.
  */
 static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
-  gfxRect ourRect = ThebesRect(aOne->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
-  gfxRect otherRect = ThebesRect(aTwo->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
+  gfxRect ourRect =
+      ThebesRect(aOne->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
+  gfxRect otherRect =
+      ThebesRect(aTwo->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
 
   MOZ_ASSERT(aOne->GetParent() && aOne->GetParent()->Extend3DContext() &&
              aTwo->GetParent() && aTwo->GetParent()->Extend3DContext());
   // Effective transform of leaves may had been projected to 2D.
   Matrix4x4 ourTransform =
-    aOne->GetLocalTransform() * aOne->GetParent()->GetEffectiveTransform();
+      aOne->GetLocalTransform() * aOne->GetParent()->GetEffectiveTransform();
   Matrix4x4 otherTransform =
-    aTwo->GetLocalTransform() * aTwo->GetParent()->GetEffectiveTransform();
+      aTwo->GetLocalTransform() * aTwo->GetParent()->GetEffectiveTransform();
 
   // Transform both rectangles and project into 2d space.
   gfxQuad ourTransformedRect = gfxUtils::TransformToQuad(ourRect, ourTransform);
-  gfxQuad otherTransformedRect = gfxUtils::TransformToQuad(otherRect, otherTransform);
+  gfxQuad otherTransformedRect =
+      gfxUtils::TransformToQuad(otherRect, otherTransform);
 
   gfxRect ourBounds = ourTransformedRect.GetBounds();
   gfxRect otherBounds = otherTransformedRect.GetBounds();
@@ -114,7 +118,7 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
       points.AppendElement(ourTransformedRect.mPoints[i]);
     }
   }
-  
+
   // Look for intersections between lines (in 2d space) and use these as
   // depth testing points.
   for (uint32_t i = 0; i < 4; i++) {
@@ -135,7 +139,8 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
     return Undefined;
   }
 
-  // Find the relative Z depths of each intersection point and check that the layers are in the same order.
+  // Find the relative Z depths of each intersection point and check that the
+  // layers are in the same order.
   gfxFloat highest = 0;
   for (uint32_t i = 0; i < points.Length(); i++) {
     gfxFloat ourDepth = RecoverZDepth(ourTransform, points.ElementAt(i));
@@ -165,13 +170,13 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
 static const int XTERM_FOREGROUND_COLOR_OFFSET = 30;
 static const int XTERM_BACKGROUND_COLOR_OFFSET = 40;
 static const int BLACK = 0;
-//static const int RED = 1;
+// static const int RED = 1;
 static const int GREEN = 2;
-//static const int YELLOW = 3;
-//static const int BLUE = 4;
-//static const int MAGENTA = 5;
-//static const int CYAN = 6;
-//static const int WHITE = 7;
+// static const int YELLOW = 3;
+// static const int BLUE = 4;
+// static const int MAGENTA = 5;
+// static const int CYAN = 6;
+// static const int WHITE = 7;
 
 static const int RESET = 0;
 // static const int BRIGHT = 1;
@@ -181,8 +186,7 @@ static const int RESET = 0;
 // static const int REVERSE = 7;
 // static const int HIDDEN = 8;
 
-static void SetTextColor(uint32_t aColor)
-{
+static void SetTextColor(uint32_t aColor) {
   char command[13];
 
   /* Command is the control command to the terminal */
@@ -192,29 +196,26 @@ static void SetTextColor(uint32_t aColor)
   printf("%s", command);
 }
 
-static void print_layer_internal(FILE* aFile, Layer* aLayer, uint32_t aColor)
-{
+static void print_layer_internal(FILE* aFile, Layer* aLayer, uint32_t aColor) {
   SetTextColor(aColor);
   fprintf(aFile, "%p", aLayer);
   SetTextColor(GREEN);
 }
 #else
 
-const char *colors[] = { "Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White" };
+const char* colors[] = {"Black", "Red",     "Green", "Yellow",
+                        "Blue",  "Magenta", "Cyan",  "White"};
 
-static void print_layer_internal(FILE* aFile, Layer* aLayer, uint32_t aColor)
-{
+static void print_layer_internal(FILE* aFile, Layer* aLayer, uint32_t aColor) {
   fprintf(aFile, "%p(%s)", aLayer, colors[aColor]);
 }
 #endif
 
-static void print_layer(FILE* aFile, Layer* aLayer)
-{
+static void print_layer(FILE* aFile, Layer* aLayer) {
   print_layer_internal(aFile, aLayer, aLayer->GetDebugColorIndex());
 }
 
-static void DumpLayerList(nsTArray<Layer*>& aLayers)
-{
+static void DumpLayerList(nsTArray<Layer*>& aLayers) {
   for (uint32_t i = 0; i < aLayers.Length(); i++) {
     print_layer(stderr, aLayers.ElementAt(i));
     fprintf(stderr, " ");
@@ -222,10 +223,9 @@ static void DumpLayerList(nsTArray<Layer*>& aLayers)
   fprintf(stderr, "\n");
 }
 
-static void DumpEdgeList(DirectedGraph<Layer*>& aGraph)
-{
+static void DumpEdgeList(DirectedGraph<Layer*>& aGraph) {
   const nsTArray<DirectedGraph<Layer*>::Edge>& edges = aGraph.GetEdgeList();
-  
+
   for (uint32_t i = 0; i < edges.Length(); i++) {
     fprintf(stderr, "From: ");
     print_layer(stderr, edges.ElementAt(i).mFrom);
@@ -241,11 +241,9 @@ static void DumpEdgeList(DirectedGraph<Layer*>& aGraph)
 // depth buffering for the scene in this case.
 #define MAX_SORTABLE_LAYERS 100
 
-
 uint32_t gColorIndex = 1;
 
-void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
-{
+void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers) {
   uint32_t nodeCount = aLayers.Length();
   if (nodeCount > MAX_SORTABLE_LAYERS) {
     return;
@@ -306,7 +304,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
       uint32_t last = noIncoming.Length() - 1;
 
       Layer* layer = noIncoming.ElementAt(last);
-      MOZ_ASSERT(layer); // don't let null layer pointers sneak into sortedList
+      MOZ_ASSERT(layer);  // don't let null layer pointers sneak into sortedList
 
       noIncoming.RemoveElementAt(last);
       sortedList.AppendElement(layer);
@@ -359,5 +357,5 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
   aLayers.AppendElements(sortedList);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

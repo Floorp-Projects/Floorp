@@ -13,12 +13,10 @@
 namespace mozilla {
 namespace a11y {
 
-class ia2AccessibleValue: public IAccessibleValue
-{
-public:
-
+class ia2AccessibleValue : public IAccessibleValue {
+ public:
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
+  STDMETHODIMP QueryInterface(REFIID, void **);
 
   // IAccessibleValue
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_currentValue(
@@ -32,10 +30,9 @@ public:
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_minimumValue(
       /* [retval][out] */ VARIANT *minimumValue);
-
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

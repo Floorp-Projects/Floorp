@@ -18,34 +18,34 @@
 using namespace mozilla;
 using namespace mozilla::test;
 
-struct SymantecCertHost
-{
-  const char *mHostName;
-  const char *mCertName;
+struct SymantecCertHost {
+  const char* mHostName;
+  const char* mCertName;
 };
 
 // Hostname, cert nickname pairs.
-const SymantecCertHost sSymantecCertHosts[] =
-{
-  { "symantec-whitelist-after-cutoff.example.com", "ee-from-whitelist-after-cutoff" },
-  { "symantec-whitelist-before-cutoff.example.com", "ee-from-whitelist-before-cutoff" },
-  { "symantec-not-whitelisted-after-cutoff.example.com", "ee-not-whitelisted-after-cutoff" },
-  { "symantec-not-whitelisted-before-cutoff.example.com", "ee-not-whitelisted-before-cutoff" },
-  { "symantec-unaffected.example.com", "ee-unaffected" },
-  { nullptr, nullptr }
-};
+const SymantecCertHost sSymantecCertHosts[] = {
+    {"symantec-whitelist-after-cutoff.example.com",
+     "ee-from-whitelist-after-cutoff"},
+    {"symantec-whitelist-before-cutoff.example.com",
+     "ee-from-whitelist-before-cutoff"},
+    {"symantec-not-whitelisted-after-cutoff.example.com",
+     "ee-not-whitelisted-after-cutoff"},
+    {"symantec-not-whitelisted-before-cutoff.example.com",
+     "ee-not-whitelisted-before-cutoff"},
+    {"symantec-unaffected.example.com", "ee-unaffected"},
+    {nullptr, nullptr}};
 
-int32_t
-DoSNISocketConfigBySubjectCN(PRFileDesc* aFd, const SECItem* aSrvNameArr,
-                             uint32_t aSrvNameArrSize)
-{
+int32_t DoSNISocketConfigBySubjectCN(PRFileDesc* aFd,
+                                     const SECItem* aSrvNameArr,
+                                     uint32_t aSrvNameArrSize) {
   for (uint32_t i = 0; i < aSrvNameArrSize; i++) {
     UniquePORTString name(
-      static_cast<char*>(PORT_ZAlloc(aSrvNameArr[i].len + 1)));
+        static_cast<char*>(PORT_ZAlloc(aSrvNameArr[i].len + 1)));
     if (name) {
       PORT_Memcpy(name.get(), aSrvNameArr[i].data, aSrvNameArr[i].len);
-      if (ConfigSecureServerWithNamedCert(aFd, name.get(), nullptr, nullptr)
-            == SECSuccess) {
+      if (ConfigSecureServerWithNamedCert(aFd, name.get(), nullptr, nullptr) ==
+          SECSuccess) {
         return 0;
       }
     }
@@ -54,12 +54,10 @@ DoSNISocketConfigBySubjectCN(PRFileDesc* aFd, const SECItem* aSrvNameArr,
   return SSL_SNI_SEND_ALERT;
 }
 
-int32_t
-DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
-                  uint32_t aSrvNameArrSize, void* aArg)
-{
-  const SymantecCertHost* host = GetHostForSNI(aSrvNameArr, aSrvNameArrSize,
-                                               sSymantecCertHosts);
+int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
+                          uint32_t aSrvNameArrSize, void* aArg) {
+  const SymantecCertHost* host =
+      GetHostForSNI(aSrvNameArr, aSrvNameArrSize, sSymantecCertHosts);
   if (!host) {
     // No static cert <-> hostname mapping found. This happens when we use a
     // collection of certificates in a given directory and build a cert DB at
@@ -76,17 +74,15 @@ DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
 
   UniqueCERTCertificate cert;
   SSLKEAType certKEA;
-  if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, host->mCertName,
-                                                    &cert, &certKEA)) {
+  if (SECSuccess !=
+      ConfigSecureServerWithNamedCert(aFd, host->mCertName, &cert, &certKEA)) {
     return SSL_SNI_SEND_ALERT;
   }
 
   return 0;
 }
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
   if (argc != 2) {
     fprintf(stderr, "usage: %s <NSS DB directory>\n", argv[0]);
     return 1;

@@ -26,17 +26,18 @@ class nsIURI;
 class nsOfflineCacheDevice;
 class mozIStorageService;
 class nsILoadContextInfo;
-namespace mozilla { class OriginAttributesPattern; }
+namespace mozilla {
+class OriginAttributesPattern;
+}
 
-class nsApplicationCacheNamespace final : public nsIApplicationCacheNamespace
-{
-public:
+class nsApplicationCacheNamespace final : public nsIApplicationCacheNamespace {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPLICATIONCACHENAMESPACE
 
   nsApplicationCacheNamespace() : mItemType(0) {}
 
-private:
+ private:
   ~nsApplicationCacheNamespace() = default;
 
   uint32_t mItemType;
@@ -45,7 +46,7 @@ private:
 };
 
 class nsOfflineCacheEvictionFunction final : public mozIStorageFunction {
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -55,17 +56,15 @@ public:
   void Reset();
   void Apply();
 
-private:
+ private:
   ~nsOfflineCacheEvictionFunction() = default;
 
   nsOfflineCacheDevice *mDevice;
   bool mTLSInited;
 };
 
-class nsOfflineCacheDevice final : public nsCacheDevice
-                                 , public nsISupports
-{
-public:
+class nsOfflineCacheDevice final : public nsCacheDevice, public nsISupports {
+ public:
   nsOfflineCacheDevice();
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -74,134 +73,118 @@ public:
    * nsCacheDevice methods
    */
 
-  virtual nsresult        Init() override;
-  nsresult                InitWithSqlite(mozIStorageService * ss);
-  virtual nsresult        Shutdown() override;
+  virtual nsresult Init() override;
+  nsresult InitWithSqlite(mozIStorageService *ss);
+  virtual nsresult Shutdown() override;
 
-  virtual const char *    GetDeviceID(void) override;
-  virtual nsCacheEntry *  FindEntry(nsCString * key, bool *collision) override;
-  virtual nsresult        DeactivateEntry(nsCacheEntry * entry) override;
-  virtual nsresult        BindEntry(nsCacheEntry * entry) override;
-  virtual void            DoomEntry( nsCacheEntry * entry ) override;
+  virtual const char *GetDeviceID(void) override;
+  virtual nsCacheEntry *FindEntry(nsCString *key, bool *collision) override;
+  virtual nsresult DeactivateEntry(nsCacheEntry *entry) override;
+  virtual nsresult BindEntry(nsCacheEntry *entry) override;
+  virtual void DoomEntry(nsCacheEntry *entry) override;
 
-  virtual nsresult OpenInputStreamForEntry(nsCacheEntry *    entry,
+  virtual nsresult OpenInputStreamForEntry(nsCacheEntry *entry,
                                            nsCacheAccessMode mode,
-                                           uint32_t          offset,
-                                           nsIInputStream ** result) override;
+                                           uint32_t offset,
+                                           nsIInputStream **result) override;
 
-  virtual nsresult OpenOutputStreamForEntry(nsCacheEntry *     entry,
-                                            nsCacheAccessMode  mode,
-                                            uint32_t           offset,
-                                            nsIOutputStream ** result) override;
+  virtual nsresult OpenOutputStreamForEntry(nsCacheEntry *entry,
+                                            nsCacheAccessMode mode,
+                                            uint32_t offset,
+                                            nsIOutputStream **result) override;
 
-  virtual nsresult        GetFileForEntry(nsCacheEntry *    entry,
-                                          nsIFile **        result) override;
+  virtual nsresult GetFileForEntry(nsCacheEntry *entry,
+                                   nsIFile **result) override;
 
-  virtual nsresult        OnDataSizeChange(nsCacheEntry * entry, int32_t deltaSize) override;
+  virtual nsresult OnDataSizeChange(nsCacheEntry *entry,
+                                    int32_t deltaSize) override;
 
-  virtual nsresult        Visit(nsICacheVisitor * visitor) override;
+  virtual nsresult Visit(nsICacheVisitor *visitor) override;
 
-  virtual nsresult        EvictEntries(const char * clientID) override;
+  virtual nsresult EvictEntries(const char *clientID) override;
 
   /* Entry ownership */
-  nsresult                GetOwnerDomains(const char *        clientID,
-                                          uint32_t *          count,
-                                          char ***            domains);
-  nsresult                GetOwnerURIs(const char *           clientID,
-                                       const nsACString &     ownerDomain,
-                                       uint32_t *             count,
-                                       char ***               uris);
-  nsresult                SetOwnedKeys(const char *           clientID,
-                                       const nsACString &     ownerDomain,
-                                       const nsACString &     ownerUrl,
-                                       uint32_t               count,
-                                       const char **          keys);
-  nsresult                GetOwnedKeys(const char *           clientID,
-                                       const nsACString &     ownerDomain,
-                                       const nsACString &     ownerUrl,
-                                       uint32_t *             count,
-                                       char ***               keys);
-  nsresult                AddOwnedKey(const char *            clientID,
-                                      const nsACString &      ownerDomain,
-                                      const nsACString &      ownerURI,
-                                      const nsACString &      key);
-  nsresult                RemoveOwnedKey(const char *         clientID,
-                                         const nsACString &   ownerDomain,
-                                         const nsACString &   ownerURI,
-                                         const nsACString &   key);
-  nsresult                KeyIsOwned(const char *             clientID,
-                                     const nsACString &       ownerDomain,
-                                     const nsACString &       ownerURI,
-                                     const nsACString &       key,
-                                     bool *                 isOwned);
+  nsresult GetOwnerDomains(const char *clientID, uint32_t *count,
+                           char ***domains);
+  nsresult GetOwnerURIs(const char *clientID, const nsACString &ownerDomain,
+                        uint32_t *count, char ***uris);
+  nsresult SetOwnedKeys(const char *clientID, const nsACString &ownerDomain,
+                        const nsACString &ownerUrl, uint32_t count,
+                        const char **keys);
+  nsresult GetOwnedKeys(const char *clientID, const nsACString &ownerDomain,
+                        const nsACString &ownerUrl, uint32_t *count,
+                        char ***keys);
+  nsresult AddOwnedKey(const char *clientID, const nsACString &ownerDomain,
+                       const nsACString &ownerURI, const nsACString &key);
+  nsresult RemoveOwnedKey(const char *clientID, const nsACString &ownerDomain,
+                          const nsACString &ownerURI, const nsACString &key);
+  nsresult KeyIsOwned(const char *clientID, const nsACString &ownerDomain,
+                      const nsACString &ownerURI, const nsACString &key,
+                      bool *isOwned);
 
-  nsresult                ClearKeysOwnedByDomain(const char *clientID,
-                                                 const nsACString &ownerDomain);
-  nsresult                EvictUnownedEntries(const char *clientID);
+  nsresult ClearKeysOwnedByDomain(const char *clientID,
+                                  const nsACString &ownerDomain);
+  nsresult EvictUnownedEntries(const char *clientID);
 
-  static nsresult         BuildApplicationCacheGroupID(nsIURI *aManifestURL,
-                                                       nsACString const &aOriginSuffix,
-                                                       nsACString &_result);
+  static nsresult BuildApplicationCacheGroupID(nsIURI *aManifestURL,
+                                               nsACString const &aOriginSuffix,
+                                               nsACString &_result);
 
-  nsresult                ActivateCache(const nsACString& group,
-                                        const nsACString& clientID);
-  bool                    IsActiveCache(const nsACString& group,
-                                        const nsACString& clientID);
-  nsresult                CreateApplicationCache(const nsACString &group,
-                                                 nsIApplicationCache **out);
+  nsresult ActivateCache(const nsACString &group, const nsACString &clientID);
+  bool IsActiveCache(const nsACString &group, const nsACString &clientID);
+  nsresult CreateApplicationCache(const nsACString &group,
+                                  nsIApplicationCache **out);
 
-  nsresult                GetApplicationCache(const nsACString &clientID,
-                                              nsIApplicationCache **out);
-  nsresult                GetApplicationCache_Unlocked(const nsACString &clientID,
-                                                       nsIApplicationCache **out);
+  nsresult GetApplicationCache(const nsACString &clientID,
+                               nsIApplicationCache **out);
+  nsresult GetApplicationCache_Unlocked(const nsACString &clientID,
+                                        nsIApplicationCache **out);
 
-  nsresult                GetActiveCache(const nsACString &group,
-                                         nsIApplicationCache **out);
+  nsresult GetActiveCache(const nsACString &group, nsIApplicationCache **out);
 
-  nsresult                DeactivateGroup(const nsACString &group);
+  nsresult DeactivateGroup(const nsACString &group);
 
-  nsresult                ChooseApplicationCache(const nsACString &key,
-                                                 nsILoadContextInfo *loadContext,
-                                                 nsIApplicationCache **out);
+  nsresult ChooseApplicationCache(const nsACString &key,
+                                  nsILoadContextInfo *loadContext,
+                                  nsIApplicationCache **out);
 
-  nsresult                CacheOpportunistically(nsIApplicationCache* cache,
-                                                 const nsACString &key);
+  nsresult CacheOpportunistically(nsIApplicationCache *cache,
+                                  const nsACString &key);
 
-  nsresult                Evict(nsILoadContextInfo *aInfo);
-  nsresult                Evict(mozilla::OriginAttributesPattern const &aPattern);
+  nsresult Evict(nsILoadContextInfo *aInfo);
+  nsresult Evict(mozilla::OriginAttributesPattern const &aPattern);
 
-  nsresult                GetGroups(uint32_t *count,char ***keys);
+  nsresult GetGroups(uint32_t *count, char ***keys);
 
-  nsresult                GetGroupsTimeOrdered(uint32_t *count,
-                                               char ***keys);
+  nsresult GetGroupsTimeOrdered(uint32_t *count, char ***keys);
 
-  bool                    IsLocked(const nsACString &key);
-  void                    Lock(const nsACString &key);
-  void                    Unlock(const nsACString &key);
+  bool IsLocked(const nsACString &key);
+  void Lock(const nsACString &key);
+  void Unlock(const nsACString &key);
 
   /**
    * Preference accessors
    */
 
-  void                    SetCacheParentDirectory(nsIFile * parentDir);
-  void                    SetCapacity(uint32_t  capacity);
-  void                    SetAutoShutdown() { mAutoShutdown = true; }
-  bool                    AutoShutdown(nsIApplicationCache * aAppCache);
+  void SetCacheParentDirectory(nsIFile *parentDir);
+  void SetCapacity(uint32_t capacity);
+  void SetAutoShutdown() { mAutoShutdown = true; }
+  bool AutoShutdown(nsIApplicationCache *aAppCache);
 
-  nsIFile *               BaseDirectory() { return mBaseDirectory; }
-  nsIFile *               CacheDirectory() { return mCacheDirectory; }
-  uint32_t                CacheCapacity() { return mCacheCapacity; }
-  uint32_t                CacheSize();
-  uint32_t                EntryCount();
+  nsIFile *BaseDirectory() { return mBaseDirectory; }
+  nsIFile *CacheDirectory() { return mCacheDirectory; }
+  uint32_t CacheCapacity() { return mCacheCapacity; }
+  uint32_t CacheSize();
+  uint32_t EntryCount();
 
-private:
+ private:
   ~nsOfflineCacheDevice() = default;
 
   friend class nsApplicationCache;
 
   static bool GetStrictFileOriginPolicy();
 
-  bool     Initialized() { return mDB != nullptr; }
+  bool Initialized() { return mDB != nullptr; }
 
   nsresult InitActiveCaches();
   nsresult UpdateEntry(nsCacheEntry *entry);
@@ -211,73 +194,66 @@ private:
   nsresult EnableEvictionObserver();
   nsresult DisableEvictionObserver();
 
-  bool CanUseCache(nsIURI *keyURI, const nsACString &clientID, nsILoadContextInfo *loadContext);
+  bool CanUseCache(nsIURI *keyURI, const nsACString &clientID,
+                   nsILoadContextInfo *loadContext);
 
-  nsresult MarkEntry(const nsCString &clientID,
-                     const nsACString &key,
+  nsresult MarkEntry(const nsCString &clientID, const nsACString &key,
                      uint32_t typeBits);
-  nsresult UnmarkEntry(const nsCString &clientID,
-                       const nsACString &key,
+  nsresult UnmarkEntry(const nsCString &clientID, const nsACString &key,
                        uint32_t typeBits);
 
   nsresult CacheOpportunistically(const nsCString &clientID,
                                   const nsACString &key);
-  nsresult GetTypes(const nsCString &clientID,
-                    const nsACString &key,
+  nsresult GetTypes(const nsCString &clientID, const nsACString &key,
                     uint32_t *typeBits);
 
   nsresult GetMatchingNamespace(const nsCString &clientID,
                                 const nsACString &key,
                                 nsIApplicationCacheNamespace **out);
-  nsresult GatherEntries(const nsCString &clientID,
-                         uint32_t typeBits,
-                         uint32_t *count,
-                         char *** values);
+  nsresult GatherEntries(const nsCString &clientID, uint32_t typeBits,
+                         uint32_t *count, char ***values);
   nsresult AddNamespace(const nsCString &clientID,
                         nsIApplicationCacheNamespace *ns);
 
-  nsresult GetUsage(const nsACString &clientID,
-                    uint32_t *usage);
+  nsresult GetUsage(const nsACString &clientID, uint32_t *usage);
 
-  nsresult RunSimpleQuery(mozIStorageStatement *statment,
-                          uint32_t resultIndex,
-                          uint32_t * count,
-                          char *** values);
+  nsresult RunSimpleQuery(mozIStorageStatement *statment, uint32_t resultIndex,
+                          uint32_t *count, char ***values);
 
-  nsCOMPtr<mozIStorageConnection>          mDB;
+  nsCOMPtr<mozIStorageConnection> mDB;
   RefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
 
-  nsCOMPtr<mozIStorageStatement>  mStatement_CacheSize;
-  nsCOMPtr<mozIStorageStatement>  mStatement_ApplicationCacheSize;
-  nsCOMPtr<mozIStorageStatement>  mStatement_EntryCount;
-  nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntrySize;
-  nsCOMPtr<mozIStorageStatement>  mStatement_DeleteEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_FindEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_BindEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_ClearDomain;
-  nsCOMPtr<mozIStorageStatement>  mStatement_MarkEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_UnmarkEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_GetTypes;
-  nsCOMPtr<mozIStorageStatement>  mStatement_FindNamespaceEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_InsertNamespaceEntry;
-  nsCOMPtr<mozIStorageStatement>  mStatement_CleanupUnmarked;
-  nsCOMPtr<mozIStorageStatement>  mStatement_GatherEntries;
-  nsCOMPtr<mozIStorageStatement>  mStatement_ActivateClient;
-  nsCOMPtr<mozIStorageStatement>  mStatement_DeactivateGroup;
-  nsCOMPtr<mozIStorageStatement>  mStatement_FindClient;
-  nsCOMPtr<mozIStorageStatement>  mStatement_FindClientByNamespace;
-  nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateApps;
-  nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroups;
-  nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroupsTimeOrder;
+  nsCOMPtr<mozIStorageStatement> mStatement_CacheSize;
+  nsCOMPtr<mozIStorageStatement> mStatement_ApplicationCacheSize;
+  nsCOMPtr<mozIStorageStatement> mStatement_EntryCount;
+  nsCOMPtr<mozIStorageStatement> mStatement_UpdateEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_UpdateEntrySize;
+  nsCOMPtr<mozIStorageStatement> mStatement_DeleteEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_FindEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_BindEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_ClearDomain;
+  nsCOMPtr<mozIStorageStatement> mStatement_MarkEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_UnmarkEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_GetTypes;
+  nsCOMPtr<mozIStorageStatement> mStatement_FindNamespaceEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_InsertNamespaceEntry;
+  nsCOMPtr<mozIStorageStatement> mStatement_CleanupUnmarked;
+  nsCOMPtr<mozIStorageStatement> mStatement_GatherEntries;
+  nsCOMPtr<mozIStorageStatement> mStatement_ActivateClient;
+  nsCOMPtr<mozIStorageStatement> mStatement_DeactivateGroup;
+  nsCOMPtr<mozIStorageStatement> mStatement_FindClient;
+  nsCOMPtr<mozIStorageStatement> mStatement_FindClientByNamespace;
+  nsCOMPtr<mozIStorageStatement> mStatement_EnumerateApps;
+  nsCOMPtr<mozIStorageStatement> mStatement_EnumerateGroups;
+  nsCOMPtr<mozIStorageStatement> mStatement_EnumerateGroupsTimeOrder;
 
-  nsCOMPtr<nsIFile>               mBaseDirectory;
-  nsCOMPtr<nsIFile>               mCacheDirectory;
-  uint32_t                        mCacheCapacity; // in bytes
-  int32_t                         mDeltaCounter;
-  bool                            mAutoShutdown;
+  nsCOMPtr<nsIFile> mBaseDirectory;
+  nsCOMPtr<nsIFile> mCacheDirectory;
+  uint32_t mCacheCapacity;  // in bytes
+  int32_t mDeltaCounter;
+  bool mAutoShutdown;
 
-  mozilla::Mutex                  mLock;
+  mozilla::Mutex mLock;
 
   nsInterfaceHashtable<nsCStringHashKey, nsIWeakReference> mCaches;
   nsClassHashtable<nsCStringHashKey, nsCString> mActiveCachesByGroup;
@@ -287,4 +263,4 @@ private:
   nsCOMPtr<nsIEventTarget> mInitEventTarget;
 };
 
-#endif // nsOfflineCacheDevice_h__
+#endif  // nsOfflineCacheDevice_h__

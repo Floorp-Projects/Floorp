@@ -23,9 +23,7 @@ void HandleLauncherError(const LauncherError& aError);
 // the LauncherError from the provided LauncherResult and then forwards it to
 // the main implementation.
 template <typename T>
-inline void
-HandleLauncherError(const LauncherResult<T>& aResult)
-{
+inline void HandleLauncherError(const LauncherResult<T>& aResult) {
   MOZ_ASSERT(aResult.isErr());
   if (aResult.isOk()) {
     return;
@@ -36,13 +34,12 @@ HandleLauncherError(const LauncherResult<T>& aResult)
 
 // This function is simply a convenience overload that unwraps the provided
 // GenericErrorResult<LauncherError> and forwards it to the main implementation.
-inline void
-HandleLauncherError(const GenericErrorResult<LauncherError>& aResult)
-{
+inline void HandleLauncherError(
+    const GenericErrorResult<LauncherError>& aResult) {
   LauncherVoidResult r(aResult);
   HandleLauncherError(r);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif //  mozilla_ErrorHandler_h
+#endif  //  mozilla_ErrorHandler_h

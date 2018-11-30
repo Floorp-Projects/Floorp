@@ -10,23 +10,21 @@
 #include "mozilla/Attributes.h"
 #include "nsISMILType.h"
 
-class nsSMILFloatType : public nsISMILType
-{
-public:
+class nsSMILFloatType : public nsISMILType {
+ public:
   // Singleton for nsSMILValue objects to hold onto.
-  static nsSMILFloatType*
-  Singleton()
-  {
+  static nsSMILFloatType* Singleton() {
     static nsSMILFloatType sSingleton;
     return &sSingleton;
   }
 
-protected:
+ protected:
   // nsISMILType Methods
   // -------------------
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue& aValue) const override;
-  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const override;
+  virtual nsresult Assign(nsSMILValue& aDest,
+                          const nsSMILValue& aSrc) const override;
   virtual bool IsEqual(const nsSMILValue& aLeft,
                        const nsSMILValue& aRight) const override;
   virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
@@ -35,13 +33,12 @@ protected:
                                    const nsSMILValue& aTo,
                                    double& aDistance) const override;
   virtual nsresult Interpolate(const nsSMILValue& aStartVal,
-                               const nsSMILValue& aEndVal,
-                               double aUnitDistance,
+                               const nsSMILValue& aEndVal, double aUnitDistance,
                                nsSMILValue& aResult) const override;
 
-private:
+ private:
   // Private constructor: prevent instances beyond my singleton.
   constexpr nsSMILFloatType() {}
 };
 
-#endif // NS_SMILFLOATTYPE_H_
+#endif  // NS_SMILFLOATTYPE_H_

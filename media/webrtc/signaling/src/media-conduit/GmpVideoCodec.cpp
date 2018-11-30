@@ -15,4 +15,4 @@ WebrtcVideoDecoder* GmpVideoCodec::CreateDecoder() {
   return new WebrtcVideoDecoderProxy();
 }
 
-}
+}  // namespace mozilla

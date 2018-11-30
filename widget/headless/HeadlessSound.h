@@ -10,25 +10,22 @@
 #include "nsISound.h"
 #include "nsIStreamLoader.h"
 
-
 namespace mozilla {
 namespace widget {
 
-class HeadlessSound : public nsISound,
-                      public nsIStreamLoaderObserver
-{
-public:
+class HeadlessSound : public nsISound, public nsIStreamLoaderObserver {
+ public:
   HeadlessSound();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
   NS_DECL_NSISTREAMLOADEROBSERVER
 
-private:
+ private:
   virtual ~HeadlessSound();
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_widget_HeadlessSound_h
+#endif  // mozilla_widget_HeadlessSound_h

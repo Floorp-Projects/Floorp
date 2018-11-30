@@ -15,5 +15,5 @@ ShaderModule::~ShaderModule() = default;
 
 WEBGPU_IMPL_GOOP_0(ShaderModule)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

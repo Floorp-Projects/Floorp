@@ -12,59 +12,43 @@
 namespace mozilla {
 namespace dom {
 
-uint8_t*
-CryptoBuffer::Assign(const CryptoBuffer& aData)
-{
+uint8_t* CryptoBuffer::Assign(const CryptoBuffer& aData) {
   // Same as in nsTArray_Impl::operator=, but return the value
   // returned from ReplaceElementsAt to enable OOM detection
   return ReplaceElementsAt(0, Length(), aData.Elements(), aData.Length(),
                            fallible);
 }
 
-uint8_t*
-CryptoBuffer::Assign(const uint8_t* aData, uint32_t aLength)
-{
+uint8_t* CryptoBuffer::Assign(const uint8_t* aData, uint32_t aLength) {
   return ReplaceElementsAt(0, Length(), aData, aLength, fallible);
 }
 
-uint8_t*
-CryptoBuffer::Assign(const nsACString& aString)
-{
+uint8_t* CryptoBuffer::Assign(const nsACString& aString) {
   return Assign(reinterpret_cast<uint8_t const*>(aString.BeginReading()),
                 aString.Length());
 }
 
-uint8_t*
-CryptoBuffer::Assign(const SECItem* aItem)
-{
+uint8_t* CryptoBuffer::Assign(const SECItem* aItem) {
   MOZ_ASSERT(aItem);
   return Assign(aItem->data, aItem->len);
 }
 
-uint8_t*
-CryptoBuffer::Assign(const InfallibleTArray<uint8_t>& aData)
-{
+uint8_t* CryptoBuffer::Assign(const InfallibleTArray<uint8_t>& aData) {
   return ReplaceElementsAt(0, Length(), aData.Elements(), aData.Length(),
                            fallible);
 }
 
-uint8_t*
-CryptoBuffer::Assign(const ArrayBuffer& aData)
-{
+uint8_t* CryptoBuffer::Assign(const ArrayBuffer& aData) {
   aData.ComputeLengthAndData();
   return Assign(aData.Data(), aData.Length());
 }
 
-uint8_t*
-CryptoBuffer::Assign(const ArrayBufferView& aData)
-{
+uint8_t* CryptoBuffer::Assign(const ArrayBufferView& aData) {
   aData.ComputeLengthAndData();
   return Assign(aData.Data(), aData.Length());
 }
 
-uint8_t*
-CryptoBuffer::Assign(const ArrayBufferViewOrArrayBuffer& aData)
-{
+uint8_t* CryptoBuffer::Assign(const ArrayBufferViewOrArrayBuffer& aData) {
   if (aData.IsArrayBufferView()) {
     return Assign(aData.GetAsArrayBufferView());
   } else if (aData.IsArrayBuffer()) {
@@ -77,9 +61,7 @@ CryptoBuffer::Assign(const ArrayBufferViewOrArrayBuffer& aData)
   return nullptr;
 }
 
-uint8_t*
-CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData)
-{
+uint8_t* CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData) {
   if (aData.IsArrayBufferView()) {
     return Assign(aData.GetAsArrayBufferView());
   } else if (aData.IsArrayBuffer()) {
@@ -92,16 +74,12 @@ CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData)
   return nullptr;
 }
 
-uint8_t*
-CryptoBuffer::AppendSECItem(const SECItem* aItem)
-{
+uint8_t* CryptoBuffer::AppendSECItem(const SECItem* aItem) {
   MOZ_ASSERT(aItem);
   return AppendElements(aItem->data, aItem->len, fallible);
 }
 
-uint8_t*
-CryptoBuffer::AppendSECItem(const SECItem& aItem)
-{
+uint8_t* CryptoBuffer::AppendSECItem(const SECItem& aItem) {
   return AppendElements(aItem.data, aItem.len, fallible);
 }
 
@@ -109,23 +87,19 @@ CryptoBuffer::AppendSECItem(const SECItem& aItem)
 // * No whitespace
 // * No padding
 // * URL-safe character set
-nsresult
-CryptoBuffer::FromJwkBase64(const nsString& aBase64)
-{
+nsresult CryptoBuffer::FromJwkBase64(const nsString& aBase64) {
   NS_ConvertUTF16toUTF8 temp(aBase64);
   temp.StripWhitespace();
 
   // JWK prohibits padding per RFC 7515, section 2.
-  nsresult rv = Base64URLDecode(temp, Base64URLDecodePaddingPolicy::Reject,
-                                *this);
+  nsresult rv =
+      Base64URLDecode(temp, Base64URLDecodePaddingPolicy::Reject, *this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-nsresult
-CryptoBuffer::ToJwkBase64(nsString& aBase64) const
-{
+nsresult CryptoBuffer::ToJwkBase64(nsString& aBase64) const {
   // Shortcut for the empty octet string
   if (Length() == 0) {
     aBase64.Truncate();
@@ -141,9 +115,7 @@ CryptoBuffer::ToJwkBase64(nsString& aBase64) const
   return NS_OK;
 }
 
-bool
-CryptoBuffer::ToSECItem(PLArenaPool *aArena, SECItem* aItem) const
-{
+bool CryptoBuffer::ToSECItem(PLArenaPool* aArena, SECItem* aItem) const {
   aItem->type = siBuffer;
   aItem->data = nullptr;
 
@@ -155,21 +127,16 @@ CryptoBuffer::ToSECItem(PLArenaPool *aArena, SECItem* aItem) const
   return true;
 }
 
-JSObject*
-CryptoBuffer::ToUint8Array(JSContext* aCx) const
-{
+JSObject* CryptoBuffer::ToUint8Array(JSContext* aCx) const {
   return Uint8Array::Create(aCx, Length(), Elements());
 }
 
-JSObject*
-CryptoBuffer::ToArrayBuffer(JSContext* aCx) const
-{
+JSObject* CryptoBuffer::ToArrayBuffer(JSContext* aCx) const {
   return ArrayBuffer::Create(aCx, Length(), Elements());
 }
 
-bool
-CryptoBuffer::ToNewUnsignedBuffer(uint8_t** aBuf, uint32_t* aBufLen) const
-{
+bool CryptoBuffer::ToNewUnsignedBuffer(uint8_t** aBuf,
+                                       uint32_t* aBufLen) const {
   MOZ_ASSERT(aBuf);
   MOZ_ASSERT(aBufLen);
 
@@ -185,19 +152,17 @@ CryptoBuffer::ToNewUnsignedBuffer(uint8_t** aBuf, uint32_t* aBufLen) const
 // "BigInt" comes from the WebCrypto spec
 // ("unsigned long" isn't very "big", of course)
 // Likewise, the spec calls for big-endian ints
-bool
-CryptoBuffer::GetBigIntValue(unsigned long& aRetVal)
-{
+bool CryptoBuffer::GetBigIntValue(unsigned long& aRetVal) {
   if (Length() > sizeof(aRetVal)) {
     return false;
   }
 
   aRetVal = 0;
-  for (size_t i=0; i < Length(); ++i) {
+  for (size_t i = 0; i < Length(); ++i) {
     aRetVal = (aRetVal << 8) + ElementAt(i);
   }
   return true;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

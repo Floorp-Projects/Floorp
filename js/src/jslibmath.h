@@ -16,33 +16,29 @@
 
 namespace js {
 
-inline double
-NumberDiv(double a, double b)
-{
-    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
-    if (b == 0) {
-        if (a == 0 || mozilla::IsNaN(a)) {
-            return JS::GenericNaN();
-        }
-        if (mozilla::IsNegative(a) != mozilla::IsNegative(b)) {
-            return mozilla::NegativeInfinity<double>();
-        }
-        return mozilla::PositiveInfinity<double>();
+inline double NumberDiv(double a, double b) {
+  AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
+  if (b == 0) {
+    if (a == 0 || mozilla::IsNaN(a)) {
+      return JS::GenericNaN();
     }
+    if (mozilla::IsNegative(a) != mozilla::IsNegative(b)) {
+      return mozilla::NegativeInfinity<double>();
+    }
+    return mozilla::PositiveInfinity<double>();
+  }
 
-    return a / b;
+  return a / b;
 }
 
-inline double
-NumberMod(double a, double b)
-{
-    AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
-    if (b == 0) {
-        return JS::GenericNaN();
-    }
-    return fmod(a, b);
+inline double NumberMod(double a, double b) {
+  AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
+  if (b == 0) {
+    return JS::GenericNaN();
+  }
+  return fmod(a, b);
 }
 
-} // namespace js
+}  // namespace js
 
 #endif /* jslibmath_h */

@@ -7,9 +7,9 @@
 #ifndef mozilla_gfx_layers_mlgpu_MLGDevice_h
 #define mozilla_gfx_layers_mlgpu_MLGDevice_h
 
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
+#include "mozilla/RefPtr.h"  // for already_AddRefed, RefCounted
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/gfx/Types.h"
@@ -25,10 +25,10 @@ namespace mozilla {
 
 namespace widget {
 class CompositorWidget;
-} // namespace widget
+}  // namespace widget
 namespace gfx {
 class DrawTarget;
-} // namespace gfx
+}  // namespace gfx
 
 namespace layers {
 
@@ -48,9 +48,8 @@ class TextureSource;
 class VertexBufferSection;
 struct ClearRegionHelper;
 
-class MLGRenderTarget
-{
-public:
+class MLGRenderTarget {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MLGRenderTarget)
 
   virtual gfx::IntSize GetSize() const = 0;
@@ -60,21 +59,18 @@ public:
   virtual MLGTexture* GetTexture() = 0;
 
   bool HasDepthBuffer() const {
-    return (mFlags & MLGRenderTargetFlags::ZBuffer) == MLGRenderTargetFlags::ZBuffer;
+    return (mFlags & MLGRenderTargetFlags::ZBuffer) ==
+           MLGRenderTargetFlags::ZBuffer;
   }
 
-  int32_t GetLastDepthStart() const {
-    return mLastDepthStart;
-  }
-  void SetLastDepthStart(int32_t aDepthStart) {
-    mLastDepthStart = aDepthStart;
-  }
+  int32_t GetLastDepthStart() const { return mLastDepthStart; }
+  void SetLastDepthStart(int32_t aDepthStart) { mLastDepthStart = aDepthStart; }
 
-protected:
+ protected:
   explicit MLGRenderTarget(MLGRenderTargetFlags aFlags);
   virtual ~MLGRenderTarget() {}
 
-protected:
+ protected:
   MLGRenderTargetFlags mFlags;
 
   // When using a depth buffer, callers can track the range of depth values
@@ -82,12 +78,11 @@ protected:
   int32_t mLastDepthStart;
 };
 
-class MLGSwapChain
-{
-protected:
+class MLGSwapChain {
+ protected:
   virtual ~MLGSwapChain() {}
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MLGSwapChain)
 
   virtual RefPtr<MLGRenderTarget> AcquireBackBuffer() = 0;
@@ -97,11 +92,13 @@ public:
   // Present to the screen.
   virtual void Present() = 0;
 
-  // Force a present without waiting for the previous frame's present to complete.
+  // Force a present without waiting for the previous frame's present to
+  // complete.
   virtual void ForcePresent() = 0;
 
   // Copy an area of the backbuffer to a draw target.
-  virtual void CopyBackbuffer(gfx::DrawTarget* aTarget, const gfx::IntRect& aBounds) = 0;
+  virtual void CopyBackbuffer(gfx::DrawTarget* aTarget,
+                              const gfx::IntRect& aBounds) = 0;
 
   // Free any internal resources.
   virtual void Destroy() = 0;
@@ -112,16 +109,17 @@ public:
   //
   // The extra rect is used for the debug overlay, which is factored in
   // separately to avoid causing unnecessary composites.
-  bool ApplyNewInvalidRegion(nsIntRegion&& aRegion, const Maybe<gfx::IntRect>& aExtraRect);
+  bool ApplyNewInvalidRegion(nsIntRegion&& aRegion,
+                             const Maybe<gfx::IntRect>& aExtraRect);
 
   const nsIntRegion& GetBackBufferInvalidRegion() const {
     return mBackBufferInvalid;
   }
 
-protected:
+ protected:
   MLGSwapChain();
 
-protected:
+ protected:
   gfx::IntSize mLastPresentSize;
   // The swap chain tracks the invalid region of its buffers. After presenting,
   // the invalid region for the backbuffer is cleared. If using double
@@ -134,62 +132,43 @@ protected:
   bool mIsDoubleBuffered;
 };
 
-class MLGResource
-{
+class MLGResource {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MLGResource)
 
-public:
-  enum class Type {
-    Buffer,
-    Texture
-  };
+ public:
+  enum class Type { Buffer, Texture };
 
   virtual Type GetType() const = 0;
-  virtual MLGResourceD3D11* AsResourceD3D11() {
-    return nullptr;
-  }
+  virtual MLGResourceD3D11* AsResourceD3D11() { return nullptr; }
 
-protected:
+ protected:
   virtual ~MLGResource() {}
 };
 
 // A buffer for use as a shader input.
-class MLGBuffer : public MLGResource
-{
-public:
-  Type GetType() const override {
-    return Type::Buffer;
-  }
-  virtual MLGBufferD3D11* AsD3D11() {
-    return nullptr;
-  }
+class MLGBuffer : public MLGResource {
+ public:
+  Type GetType() const override { return Type::Buffer; }
+  virtual MLGBufferD3D11* AsD3D11() { return nullptr; }
   virtual size_t GetSize() const = 0;
 
-protected:
+ protected:
   ~MLGBuffer() override {}
 };
 
 // This is a lower-level resource than a TextureSource. It wraps
 // a 2D texture.
-class MLGTexture : public MLGResource
-{
-public:
-  Type GetType() const override {
-    return Type::Texture;
-  }
-  virtual MLGTextureD3D11* AsD3D11() {
-    return nullptr;
-  }
-  const gfx::IntSize& GetSize() const {
-    return mSize;
-  }
+class MLGTexture : public MLGResource {
+ public:
+  Type GetType() const override { return Type::Texture; }
+  virtual MLGTextureD3D11* AsD3D11() { return nullptr; }
+  const gfx::IntSize& GetSize() const { return mSize; }
 
-protected:
+ protected:
   gfx::IntSize mSize;
 };
 
-enum class VertexShaderID
-{
+enum class VertexShaderID {
   TexturedQuad,
   TexturedVertex,
   ColoredQuad,
@@ -201,8 +180,7 @@ enum class VertexShaderID
   MaxShaders
 };
 
-enum class PixelShaderID
-{
+enum class PixelShaderID {
   ColoredQuad,
   ColoredVertex,
   TexturedQuadRGB,
@@ -236,9 +214,8 @@ enum class PixelShaderID
   MaxShaders
 };
 
-class MLGDevice
-{
-public:
+class MLGDevice {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MLGDevice)
 
   MLGDevice();
@@ -249,7 +226,8 @@ public:
   virtual int32_t GetMaxTextureSize() const = 0;
   virtual LayersBackend GetLayersBackend() const = 0;
 
-  virtual RefPtr<MLGSwapChain> CreateSwapChainForWidget(widget::CompositorWidget* aWidget) = 0;
+  virtual RefPtr<MLGSwapChain> CreateSwapChainForWidget(
+      widget::CompositorWidget* aWidget) = 0;
 
   // Markers for when we start and finish issuing "normal" (i.e., non-
   // diagnostic) draw commands for the frame.
@@ -258,21 +236,18 @@ public:
   virtual void GetDiagnostics(GPUStats* aStats) = 0;
 
   // Layers interaction.
-  virtual RefPtr<DataTextureSource> CreateDataTextureSource(TextureFlags aFlags) = 0;
+  virtual RefPtr<DataTextureSource> CreateDataTextureSource(
+      TextureFlags aFlags) = 0;
 
   // Resource access
-  virtual bool Map(MLGResource* aResource, MLGMapType aType, MLGMappedResource* aMap) = 0;
+  virtual bool Map(MLGResource* aResource, MLGMapType aType,
+                   MLGMappedResource* aMap) = 0;
   virtual void Unmap(MLGResource* aResource) = 0;
-  virtual void UpdatePartialResource(
-    MLGResource* aResource,
-    const gfx::IntRect* aRect,
-    void* aData,
-    uint32_t aStride) = 0;
-  virtual void CopyTexture(
-    MLGTexture* aDest,
-    const gfx::IntPoint& aTarget,
-    MLGTexture* aSource,
-    const gfx::IntRect& aRect) = 0;
+  virtual void UpdatePartialResource(MLGResource* aResource,
+                                     const gfx::IntRect* aRect, void* aData,
+                                     uint32_t aStride) = 0;
+  virtual void CopyTexture(MLGTexture* aDest, const gfx::IntPoint& aTarget,
+                           MLGTexture* aSource, const gfx::IntRect& aRect) = 0;
 
   // Begin a frame. This clears and resets all shared buffers.
   virtual void BeginFrame();
@@ -287,17 +262,23 @@ public:
   virtual void SetPixelShader(PixelShaderID aPixelShader) = 0;
   virtual void SetSamplerMode(uint32_t aIndex, SamplerMode aSamplerMode) = 0;
   virtual void SetBlendState(MLGBlendState aBlendState) = 0;
-  virtual void SetVertexBuffer(uint32_t aSlot, MLGBuffer* aBuffer, uint32_t aStride, uint32_t aOffset = 0) = 0;
+  virtual void SetVertexBuffer(uint32_t aSlot, MLGBuffer* aBuffer,
+                               uint32_t aStride, uint32_t aOffset = 0) = 0;
   virtual void SetVSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer) = 0;
   virtual void SetPSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer) = 0;
-  virtual void SetPSTextures(uint32_t aSlot, uint32_t aNumTextures, TextureSource* const* aTextures) = 0;
+  virtual void SetPSTextures(uint32_t aSlot, uint32_t aNumTextures,
+                             TextureSource* const* aTextures) = 0;
   virtual void SetPSTexture(uint32_t aSlot, MLGTexture* aTexture) = 0;
   virtual void SetDepthTestMode(MLGDepthTestMode aMode) = 0;
 
   // If supported, bind constant buffers at a particular offset. These can only
   // be used if CanUseConstantBufferOffsetBinding returns true.
-  virtual void SetVSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer, uint32_t aFirstConstant, uint32_t aNumConstants) = 0;
-  virtual void SetPSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer, uint32_t aFirstConstant, uint32_t aNumConstants) = 0;
+  virtual void SetVSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer,
+                                   uint32_t aFirstConstant,
+                                   uint32_t aNumConstants) = 0;
+  virtual void SetPSConstantBuffer(uint32_t aSlot, MLGBuffer* aBuffer,
+                                   uint32_t aFirstConstant,
+                                   uint32_t aNumConstants) = 0;
 
   // Set the topology. No API call is made if the topology has not changed.
   // The UnitQuad topology implicity binds a unit quad triangle strip as
@@ -309,40 +290,35 @@ public:
   void SetPSTexturesYUV(uint32_t aSlot, TextureSource* aTexture);
 
   virtual RefPtr<MLGBuffer> CreateBuffer(
-    MLGBufferType aType,
-    uint32_t aSize,
-    MLGUsage aUsage,
-    const void* aInitialData = nullptr) = 0;
+      MLGBufferType aType, uint32_t aSize, MLGUsage aUsage,
+      const void* aInitialData = nullptr) = 0;
 
-  virtual RefPtr<MLGTexture> CreateTexture(
-    const gfx::IntSize& aSize,
-    gfx::SurfaceFormat aFormat,
-    MLGUsage aUsage,
-    MLGTextureFlags aFlags) = 0;
+  virtual RefPtr<MLGTexture> CreateTexture(const gfx::IntSize& aSize,
+                                           gfx::SurfaceFormat aFormat,
+                                           MLGUsage aUsage,
+                                           MLGTextureFlags aFlags) = 0;
 
   // Unwrap the underlying GPU texture in the given TextureSource, and re-wrap
   // it in an MLGTexture structure.
   virtual RefPtr<MLGTexture> CreateTexture(TextureSource* aSource) = 0;
 
   virtual RefPtr<MLGRenderTarget> CreateRenderTarget(
-    const gfx::IntSize& aSize,
-    MLGRenderTargetFlags aFlags = MLGRenderTargetFlags::Default) = 0;
+      const gfx::IntSize& aSize,
+      MLGRenderTargetFlags aFlags = MLGRenderTargetFlags::Default) = 0;
 
   // Clear a render target to the given color, or clear a depth buffer.
   virtual void Clear(MLGRenderTarget* aRT, const gfx::Color& aColor) = 0;
   virtual void ClearDepthBuffer(MLGRenderTarget* aRT) = 0;
 
   // This is only available if CanUseClearView() returns true.
-  virtual void ClearView(
-    MLGRenderTarget* aRT,
-    const gfx::Color& aColor,
-    const gfx::IntRect* aRects,
-    size_t aNumRects) = 0;
+  virtual void ClearView(MLGRenderTarget* aRT, const gfx::Color& aColor,
+                         const gfx::IntRect* aRects, size_t aNumRects) = 0;
 
   // Drawing Commands
   virtual void Draw(uint32_t aVertexCount, uint32_t aOffset) = 0;
-  virtual void DrawInstanced(uint32_t aVertexCountPerInstance, uint32_t aInstanceCount,
-                             uint32_t aVertexOffset, uint32_t aInstanceOffset) = 0;
+  virtual void DrawInstanced(uint32_t aVertexCountPerInstance,
+                             uint32_t aInstanceCount, uint32_t aVertexOffset,
+                             uint32_t aInstanceOffset) = 0;
   virtual void Flush() = 0;
 
   // This unlocks any textures that were implicitly locked during drawing.
@@ -352,8 +328,10 @@ public:
 
   // Helpers.
   void SetVertexBuffer(uint32_t aSlot, const VertexBufferSection* aSection);
-  void SetPSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection);
-  void SetVSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection);
+  void SetPSConstantBuffer(uint32_t aSlot,
+                           const ConstantBufferSection* aSection);
+  void SetVSConstantBuffer(uint32_t aSlot,
+                           const ConstantBufferSection* aSection);
   void SetPSTexture(uint32_t aSlot, TextureSource* aSource);
   void SetSamplerMode(uint32_t aIndex, gfx::SamplingFilter aFilter);
 
@@ -363,7 +341,7 @@ public:
   // This creates or returns a previously created constant buffer, containing
   // a YCbCrBitDepthConstants instance.
   RefPtr<MLGBuffer> GetBufferForColorDepthCoefficient(
-    gfx::ColorDepth aColorDepth);
+      gfx::ColorDepth aColorDepth);
 
   // A shared buffer that can be used to build VertexBufferSections.
   SharedVertexBuffer* GetSharedVertexBuffer() {
@@ -371,32 +349,21 @@ public:
   }
   // A shared buffer that can be used to build ConstantBufferSections. Intended
   // to be used with vertex shaders.
-  SharedConstantBuffer* GetSharedVSBuffer() {
-    return mSharedVSBuffer.get();
-  }
+  SharedConstantBuffer* GetSharedVSBuffer() { return mSharedVSBuffer.get(); }
   // A shared buffer that can be used to build ConstantBufferSections. Intended
   // to be used with pixel shaders.
-  SharedConstantBuffer* GetSharedPSBuffer() {
-    return mSharedPSBuffer.get();
-  }
-  // A cache for constant buffers, used when offset-based binding is not supported.
-  BufferCache* GetConstantBufferCache() {
-    return mConstantBufferCache.get();
-  }
+  SharedConstantBuffer* GetSharedPSBuffer() { return mSharedPSBuffer.get(); }
+  // A cache for constant buffers, used when offset-based binding is not
+  // supported.
+  BufferCache* GetConstantBufferCache() { return mConstantBufferCache.get(); }
 
   // Unmap and upload all shared buffers to the GPU.
   void FinishSharedBufferUse();
 
   // These are used to detect and report initialization failure.
-  virtual bool IsValid() const {
-    return mInitialized && mIsValid;
-  }
-  const nsCString& GetFailureId() const {
-    return mFailureId;
-  }
-  const nsCString& GetFailureMessage() const {
-    return mFailureMessage;
-  }
+  virtual bool IsValid() const { return mInitialized && mIsValid; }
+  const nsCString& GetFailureId() const { return mFailureId; }
+  const nsCString& GetFailureMessage() const { return mFailureMessage; }
 
   // Prepare a clear-region operation to be run at a later time.
   void PrepareClearRegion(ClearRegionHelper* aOut,
@@ -410,9 +377,7 @@ public:
   virtual bool Synchronize();
 
   // If this returns true, ClearView() can be called.
-  bool CanUseClearView() const {
-    return mCanUseClearView;
-  }
+  bool CanUseClearView() const { return mCanUseClearView; }
 
   // If this returns true, constant buffers can be bound at specific offsets for
   // a given run of bytes. This is only supported on Windows 8+ for Direct3D 11.
@@ -438,19 +403,18 @@ public:
   // Debugging helper function for dumping an MLGTexture to a file.
   void WriteAsPNG(MLGTexture* aTexture, const char* aPath);
 
-  // Debugging helper function for copying a texture for later dumping to a file.
+  // Debugging helper function for copying a texture for later dumping to a
+  // file.
   RefPtr<MLGTexture> CopyAndCreateReadbackTexture(MLGTexture* aTexture);
 
-protected:
+ protected:
   virtual ~MLGDevice();
 
   virtual void SetPrimitiveTopology(MLGPrimitiveTopology aTopology) = 0;
 
   // Optionally run a runtime test to determine if constant buffer offset
   // binding works.
-  virtual bool VerifyConstantBufferOffsetting() {
-    return true;
-  }
+  virtual bool VerifyConstantBufferOffsetting() { return true; }
 
   // Used during initialization to record failure reasons.
   bool Fail(const nsCString& aFailureId, const nsCString* aMessage);
@@ -459,8 +423,8 @@ protected:
   // MOZ_FORMAT_PRINTF macro does not work on this function, so we
   // disable the warning.
 #if defined(__GNUC__)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
 #endif
   template <typename... T>
   bool Fail(const char* aFailureId) {
@@ -468,21 +432,18 @@ protected:
     return Fail(failureId, nullptr);
   }
   template <typename... T>
-  bool Fail(const char* aFailureId,
-            const char* aMessage,
-            const T&... args)
-  {
+  bool Fail(const char* aFailureId, const char* aMessage, const T&... args) {
     nsCString failureId(aFailureId);
     nsPrintfCString message(aMessage, args...);
     return Fail(failureId, &message);
   }
 #if defined(__GNUC__)
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
   void UnmapSharedBuffers();
 
-private:
+ private:
   MLGPrimitiveTopology mTopology;
   UniquePtr<SharedVertexBuffer> mSharedVertexBuffer;
   UniquePtr<SharedConstantBuffer> mSharedVSBuffer;
@@ -493,12 +454,16 @@ private:
   nsCString mFailureMessage;
   bool mInitialized;
 
-  typedef EnumeratedArray<YUVColorSpace, YUVColorSpace::UNKNOWN, RefPtr<MLGBuffer>> ColorSpaceArray;
+  typedef EnumeratedArray<YUVColorSpace, YUVColorSpace::UNKNOWN,
+                          RefPtr<MLGBuffer>>
+      ColorSpaceArray;
   ColorSpaceArray mColorSpaceBuffers;
-  typedef EnumeratedArray<gfx::ColorDepth, gfx::ColorDepth::UNKNOWN, RefPtr<MLGBuffer>> ColorDepthArray;
+  typedef EnumeratedArray<gfx::ColorDepth, gfx::ColorDepth::UNKNOWN,
+                          RefPtr<MLGBuffer>>
+      ColorDepthArray;
   ColorDepthArray mColorDepthBuffers;
 
-protected:
+ protected:
   bool mIsValid;
   bool mCanUseClearView;
   bool mCanUseConstantBufferOffsetBinding;
@@ -507,7 +472,7 @@ protected:
   RefPtr<MLGRenderTarget> mCurrentRT;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_MLGDevice_h
+#endif  // mozilla_gfx_layers_mlgpu_MLGDevice_h

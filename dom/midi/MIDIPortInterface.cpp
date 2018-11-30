@@ -8,29 +8,20 @@
 #include "mozilla/dom/MIDIPlatformService.h"
 #include "mozilla/dom/MIDITypes.h"
 
-MIDIPortInterface::MIDIPortInterface(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) :
-  mId(aPortInfo.id()),
-  mName(aPortInfo.name()),
-  mManufacturer(aPortInfo.manufacturer()),
-  mVersion(aPortInfo.version()),
-  mSysexEnabled(aSysexEnabled),
-  mType((MIDIPortType)aPortInfo.type()),
-  // We'll never initialize a port object that's not connected
-  mDeviceState(MIDIPortDeviceState::Connected),
-  // Open everything on connection
-  mConnectionState(MIDIPortConnectionState::Open),
-  mShuttingDown(false)
-{
-}
+MIDIPortInterface::MIDIPortInterface(const MIDIPortInfo& aPortInfo,
+                                     bool aSysexEnabled)
+    : mId(aPortInfo.id()),
+      mName(aPortInfo.name()),
+      mManufacturer(aPortInfo.manufacturer()),
+      mVersion(aPortInfo.version()),
+      mSysexEnabled(aSysexEnabled),
+      mType((MIDIPortType)aPortInfo.type()),
+      // We'll never initialize a port object that's not connected
+      mDeviceState(MIDIPortDeviceState::Connected),
+      // Open everything on connection
+      mConnectionState(MIDIPortConnectionState::Open),
+      mShuttingDown(false) {}
 
-MIDIPortInterface::~MIDIPortInterface()
-{
-  Shutdown();
-}
+MIDIPortInterface::~MIDIPortInterface() { Shutdown(); }
 
-void
-MIDIPortInterface::Shutdown()
-{
-  mShuttingDown = true;
-}
-
+void MIDIPortInterface::Shutdown() { mShuttingDown = true; }

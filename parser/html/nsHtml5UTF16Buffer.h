@@ -54,13 +54,13 @@ class nsHtml5MetaScanner;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
-class nsHtml5UTF16Buffer
-{
-private:
+class nsHtml5UTF16Buffer {
+ private:
   char16_t* buffer;
   int32_t start;
   int32_t end;
-public:
+
+ public:
   int32_t getStart();
   void setStart(int32_t start);
   char16_t* getBuffer();

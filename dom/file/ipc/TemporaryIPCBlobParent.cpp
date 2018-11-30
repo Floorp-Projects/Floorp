@@ -14,21 +14,16 @@
 namespace mozilla {
 namespace dom {
 
-TemporaryIPCBlobParent::TemporaryIPCBlobParent()
-  : mActive(true)
-{}
+TemporaryIPCBlobParent::TemporaryIPCBlobParent() : mActive(true) {}
 
-TemporaryIPCBlobParent::~TemporaryIPCBlobParent()
-{
+TemporaryIPCBlobParent::~TemporaryIPCBlobParent() {
   // If we still have mFile, let's remove it.
   if (mFile) {
     mFile->Remove(false);
   }
 }
 
-mozilla::ipc::IPCResult
-TemporaryIPCBlobParent::CreateAndShareFile()
-{
+mozilla::ipc::IPCResult TemporaryIPCBlobParent::CreateAndShareFile() {
   MOZ_ASSERT(mActive);
   MOZ_ASSERT(!mFile);
 
@@ -43,8 +38,8 @@ TemporaryIPCBlobParent::CreateAndShareFile()
     return SendDeleteError(rv);
   }
 
-  FileDescriptor fdd =
-    FileDescriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(fd)));
+  FileDescriptor fdd = FileDescriptor(
+      FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(fd)));
 
   // The FileDescriptor object owns a duplicate of the file handle; we
   // must close the original (and clean up the NSPR descriptor).
@@ -54,9 +49,7 @@ TemporaryIPCBlobParent::CreateAndShareFile()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TemporaryIPCBlobParent::RecvOperationFailed()
-{
+mozilla::ipc::IPCResult TemporaryIPCBlobParent::RecvOperationFailed() {
   MOZ_ASSERT(mActive);
   mActive = false;
 
@@ -65,10 +58,8 @@ TemporaryIPCBlobParent::RecvOperationFailed()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TemporaryIPCBlobParent::RecvOperationDone(const nsCString& aContentType,
-                                          const FileDescriptor& aFD)
-{
+mozilla::ipc::IPCResult TemporaryIPCBlobParent::RecvOperationDone(
+    const nsCString& aContentType, const FileDescriptor& aFD) {
   MOZ_ASSERT(mActive);
   mActive = false;
 
@@ -82,7 +73,7 @@ TemporaryIPCBlobParent::RecvOperationDone(const nsCString& aContentType,
   nsCOMPtr<nsIFile> file = std::move(mFile);
 
   RefPtr<TemporaryFileBlobImpl> blobImpl =
-    new TemporaryFileBlobImpl(file, NS_ConvertUTF8toUTF16(aContentType));
+      new TemporaryFileBlobImpl(file, NS_ConvertUTF8toUTF16(aContentType));
 
   PR_Close(prfile);
 
@@ -97,15 +88,11 @@ TemporaryIPCBlobParent::RecvOperationDone(const nsCString& aContentType,
   return IPC_OK();
 }
 
-void
-TemporaryIPCBlobParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void TemporaryIPCBlobParent::ActorDestroy(ActorDestroyReason aWhy) {
   mActive = false;
 }
 
-mozilla::ipc::IPCResult
-TemporaryIPCBlobParent::SendDeleteError(nsresult aRv)
-{
+mozilla::ipc::IPCResult TemporaryIPCBlobParent::SendDeleteError(nsresult aRv) {
   MOZ_ASSERT(mActive);
   mActive = false;
 
@@ -113,6 +100,5 @@ TemporaryIPCBlobParent::SendDeleteError(nsresult aRv)
   return IPC_OK();
 }
 
-} // dom namespace
-} // mozilla namespace
-
+}  // namespace dom
+}  // namespace mozilla

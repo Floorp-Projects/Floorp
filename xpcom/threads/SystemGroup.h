@@ -17,8 +17,7 @@
 
 namespace mozilla {
 
-class SystemGroup
-{
+class SystemGroup {
  public:
   // This method is safe to use from any thread.
   static nsresult Dispatch(TaskCategory aCategory,
@@ -38,7 +37,6 @@ class SystemGroup
   static bool Initialized();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SystemGroup_h
-
+#endif  // mozilla_SystemGroup_h

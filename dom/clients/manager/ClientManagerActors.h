@@ -12,23 +12,17 @@ namespace dom {
 class PClientManagerChild;
 class PClientManagerParent;
 
-PClientManagerChild*
-AllocClientManagerChild();
+PClientManagerChild* AllocClientManagerChild();
 
-bool
-DeallocClientManagerChild(PClientManagerChild* aActor);
+bool DeallocClientManagerChild(PClientManagerChild* aActor);
 
-PClientManagerParent*
-AllocClientManagerParent();
+PClientManagerParent* AllocClientManagerParent();
 
-bool
-DeallocClientManagerParent(PClientManagerParent* aActor);
+bool DeallocClientManagerParent(PClientManagerParent* aActor);
 
-void
-InitClientManagerParent(PClientManagerParent* aActor);
+void InitClientManagerParent(PClientManagerParent* aActor);
 
+}  // namespace dom
+}  // namespace mozilla
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // _mozilla_dom_ClientManagerActors_h
+#endif  // _mozilla_dom_ClientManagerActors_h

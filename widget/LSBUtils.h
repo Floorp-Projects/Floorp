@@ -15,14 +15,11 @@ namespace lsb {
 
 // Fetches the LSB release data by parsing the lsb_release command.
 // Returns false if the lsb_release command was not found, or parsing failed.
-bool GetLSBRelease(nsACString& aDistributor,
-                   nsACString& aDescription,
-                   nsACString& aRelease,
-                   nsACString& aCodename);
-
+bool GetLSBRelease(nsACString& aDistributor, nsACString& aDescription,
+                   nsACString& aRelease, nsACString& aCodename);
 
 }  // namespace lsb
 }  // namespace widget
 }  // namespace mozilla
 
-#endif // _MOZILLA_WIDGET_LSB_UTILS_H
+#endif  // _MOZILLA_WIDGET_LSB_UTILS_H

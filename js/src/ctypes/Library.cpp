@@ -23,44 +23,34 @@ namespace ctypes {
 ** JSAPI function prototypes
 *******************************************************************************/
 
-namespace Library
-{
-  static void Finalize(JSFreeOp* fop, JSObject* obj);
+namespace Library {
+static void Finalize(JSFreeOp* fop, JSObject* obj);
 
-  static bool Close(JSContext* cx, unsigned argc, Value* vp);
-  static bool Declare(JSContext* cx, unsigned argc, Value* vp);
-} // namespace Library
+static bool Close(JSContext* cx, unsigned argc, Value* vp);
+static bool Declare(JSContext* cx, unsigned argc, Value* vp);
+}  // namespace Library
 
 /*******************************************************************************
 ** JSObject implementation
 *******************************************************************************/
 
-typedef Rooted<JSFlatString*>    RootedFlatString;
+typedef Rooted<JSFlatString*> RootedFlatString;
 
 static const JSClassOps sLibraryClassOps = {
-  nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, Library::Finalize
-};
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, Library::Finalize};
 
 static const JSClass sLibraryClass = {
-  "Library",
-  JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS) |
-  JSCLASS_FOREGROUND_FINALIZE,
-  &sLibraryClassOps
-};
+    "Library",
+    JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS) | JSCLASS_FOREGROUND_FINALIZE,
+    &sLibraryClassOps};
 
-#define CTYPESFN_FLAGS \
-  (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
+#define CTYPESFN_FLAGS (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)
 
 static const JSFunctionSpec sLibraryFunctions[] = {
-  JS_FN("close",   Library::Close,   0, CTYPESFN_FLAGS),
-  JS_FN("declare", Library::Declare, 0, CTYPESFN_FLAGS),
-  JS_FS_END
-};
+    JS_FN("close", Library::Close, 0, CTYPESFN_FLAGS),
+    JS_FN("declare", Library::Declare, 0, CTYPESFN_FLAGS), JS_FS_END};
 
-bool
-Library::Name(JSContext* cx, unsigned argc, Value* vp)
-{
+bool Library::Name(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
     JS_ReportErrorASCII(cx, "libraryName takes one argument");
@@ -85,7 +75,8 @@ Library::Name(JSContext* cx, unsigned argc, Value* vp)
   }
   auto resultStr = resultString.finish();
 
-  JSString* result = JS_NewUCStringCopyN(cx, resultStr.begin(), resultStr.length());
+  JSString* result =
+      JS_NewUCStringCopyN(cx, resultStr.begin(), resultStr.length());
   if (!result) {
     return false;
   }
@@ -94,9 +85,8 @@ Library::Name(JSContext* cx, unsigned argc, Value* vp)
   return true;
 }
 
-JSObject*
-Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callbacks)
-{
+JSObject* Library::Create(JSContext* cx, HandleValue path,
+                          const JSCTypesCallbacks* callbacks) {
   RootedObject libraryObj(cx, JS_NewObject(cx, &sLibraryClass));
   if (!libraryObj) {
     return nullptr;
@@ -159,8 +149,8 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
       return nullptr;
     }
 
-    JS::DeflateStringToUTF8Buffer(pathStr, mozilla::RangedPtr<char>(pathBytes.get(), nbytes),
-                                  &nbytes);
+    JS::DeflateStringToUTF8Buffer(
+        pathStr, mozilla::RangedPtr<char>(pathBytes.get(), nbytes), &nbytes);
     pathBytes[nbytes] = 0;
   }
 
@@ -181,11 +171,14 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
 
     if (JS::StringIsASCII(error)) {
       if (JS::UniqueChars pathCharsUTF8 = JS_EncodeStringToUTF8(cx, pathStr)) {
-        JS_ReportErrorUTF8(cx, "couldn't open library %s: %s", pathCharsUTF8.get(), error);
+        JS_ReportErrorUTF8(cx, "couldn't open library %s: %s",
+                           pathCharsUTF8.get(), error);
       }
     } else {
-      if (JS::UniqueChars pathCharsLatin1 = JS_EncodeStringToLatin1(cx, pathStr)) {
-        JS_ReportErrorLatin1(cx, "couldn't open library %s: %s", pathCharsLatin1.get(), error);
+      if (JS::UniqueChars pathCharsLatin1 =
+              JS_EncodeStringToLatin1(cx, pathStr)) {
+        JS_ReportErrorLatin1(cx, "couldn't open library %s: %s",
+                             pathCharsLatin1.get(), error);
       }
     }
     return nullptr;
@@ -197,39 +190,27 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
   return libraryObj;
 }
 
-bool
-Library::IsLibrary(JSObject* obj)
-{
+bool Library::IsLibrary(JSObject* obj) {
   return JS_GetClass(obj) == &sLibraryClass;
 }
 
-PRLibrary*
-Library::GetLibrary(JSObject* obj)
-{
+PRLibrary* Library::GetLibrary(JSObject* obj) {
   MOZ_ASSERT(IsLibrary(obj));
 
   Value slot = JS_GetReservedSlot(obj, SLOT_LIBRARY);
   return static_cast<PRLibrary*>(slot.toPrivate());
 }
 
-static void
-UnloadLibrary(JSObject* obj)
-{
+static void UnloadLibrary(JSObject* obj) {
   PRLibrary* library = Library::GetLibrary(obj);
   if (library) {
     PR_UnloadLibrary(library);
   }
 }
 
-void
-Library::Finalize(JSFreeOp* fop, JSObject* obj)
-{
-  UnloadLibrary(obj);
-}
+void Library::Finalize(JSFreeOp* fop, JSObject* obj) { UnloadLibrary(obj); }
 
-bool
-Library::Open(JSContext* cx, unsigned argc, Value* vp)
-{
+bool Library::Open(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   JSObject* ctypesObj = GetThisObject(cx, args, "ctypes.open");
   if (!ctypesObj) {
@@ -255,9 +236,7 @@ Library::Open(JSContext* cx, unsigned argc, Value* vp)
   return true;
 }
 
-bool
-Library::Close(JSContext* cx, unsigned argc, Value* vp)
-{
+bool Library::Close(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedObject obj(cx, GetThisObject(cx, args, "ctypes.close"));
@@ -283,9 +262,7 @@ Library::Close(JSContext* cx, unsigned argc, Value* vp)
   return true;
 }
 
-bool
-Library::Declare(JSContext* cx, unsigned argc, Value* vp)
-{
+bool Library::Declare(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedObject obj(cx, GetThisObject(cx, args, "ctypes.declare"));
@@ -330,8 +307,9 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
   if (isFunction) {
     // Case 1).
     // Create a FunctionType representing the function.
-    fnObj = FunctionType::CreateInternal(cx, args[1], args[2],
-                                         HandleValueArray::subarray(args, 3, args.length() - 3));
+    fnObj = FunctionType::CreateInternal(
+        cx, args[1], args[2],
+        HandleValueArray::subarray(args, 3, args.length() - 3));
     if (!fnObj) {
       return false;
     }
@@ -343,8 +321,7 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
     }
   } else {
     // Case 2).
-    if (args[1].isPrimitive() ||
-        !CType::IsCType(args[1].toObjectOrNull()) ||
+    if (args[1].isPrimitive() || !CType::IsCType(args[1].toObjectOrNull()) ||
         !CType::IsSizeDefined(args[1].toObjectOrNull())) {
       JS_ReportErrorASCII(cx, "second argument must be a type of defined size");
       return false;
@@ -416,6 +393,5 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
   return true;
 }
 
-} // namespace ctypes
-} // namespace js
-
+}  // namespace ctypes
+}  // namespace js

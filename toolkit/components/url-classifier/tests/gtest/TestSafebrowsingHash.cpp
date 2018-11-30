@@ -1,14 +1,13 @@
 #include "Entries.h"
 #include "mozilla/EndianUtils.h"
 
-TEST(UrlClassifierHash, ToFromUint32)
-{
+TEST(UrlClassifierHash, ToFromUint32) {
   using namespace mozilla::safebrowsing;
 
   // typedef SafebrowsingHash<PREFIX_SIZE, PrefixComparator> Prefix;
   // typedef nsTArray<Prefix> PrefixArray;
 
-  const char PREFIX_RAW[4] = { 0x1, 0x2, 0x3, 0x4 };
+  const char PREFIX_RAW[4] = {0x1, 0x2, 0x3, 0x4};
   uint32_t PREFIX_UINT32;
   memcpy(&PREFIX_UINT32, PREFIX_RAW, 4);
 
@@ -20,8 +19,7 @@ TEST(UrlClassifierHash, ToFromUint32)
   ASSERT_EQ(memcmp(PREFIX_RAW, p.buf, 4), 0);
 }
 
-TEST(UrlClassifierHash, Compare)
-{
+TEST(UrlClassifierHash, Compare) {
   using namespace mozilla;
   using namespace mozilla::safebrowsing;
 

@@ -8,16 +8,19 @@
 namespace mozilla {
 
 FuzzerRegistry& FuzzerRegistry::getInstance() {
-    static FuzzerRegistry instance;
-    return instance;
+  static FuzzerRegistry instance;
+  return instance;
 }
 
-void FuzzerRegistry::registerModule(std::string moduleName, FuzzerInitFunc initFunc, FuzzerTestingFunc testingFunc) {
-    moduleMap.insert(std::pair<std::string, FuzzerFunctions>(moduleName,FuzzerFunctions(initFunc, testingFunc)));
+void FuzzerRegistry::registerModule(std::string moduleName,
+                                    FuzzerInitFunc initFunc,
+                                    FuzzerTestingFunc testingFunc) {
+  moduleMap.insert(std::pair<std::string, FuzzerFunctions>(
+      moduleName, FuzzerFunctions(initFunc, testingFunc)));
 }
 
 FuzzerFunctions FuzzerRegistry::getModuleFunctions(std::string& moduleName) {
-    return moduleMap[moduleName];
+  return moduleMap[moduleName];
 }
 
-} // namespace mozilla
+}  // namespace mozilla

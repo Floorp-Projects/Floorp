@@ -22,141 +22,138 @@ namespace js {
  * TypedArrayObject).
  */
 
-class ArrayBufferViewObject : public NativeObject
-{
-  public:
-    // Underlying (Shared)ArrayBufferObject.
-    static constexpr size_t BUFFER_SLOT = 0;
-    static_assert(BUFFER_SLOT == JS_TYPEDARRAYLAYOUT_BUFFER_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right buffer slot");
+class ArrayBufferViewObject : public NativeObject {
+ public:
+  // Underlying (Shared)ArrayBufferObject.
+  static constexpr size_t BUFFER_SLOT = 0;
+  static_assert(BUFFER_SLOT == JS_TYPEDARRAYLAYOUT_BUFFER_SLOT,
+                "self-hosted code with burned-in constants must get the "
+                "right buffer slot");
 
-    // Slot containing length of the view in number of typed elements.
-    static constexpr size_t LENGTH_SLOT = 1;
-    static_assert(LENGTH_SLOT == JS_TYPEDARRAYLAYOUT_LENGTH_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right length slot");
+  // Slot containing length of the view in number of typed elements.
+  static constexpr size_t LENGTH_SLOT = 1;
+  static_assert(LENGTH_SLOT == JS_TYPEDARRAYLAYOUT_LENGTH_SLOT,
+                "self-hosted code with burned-in constants must get the "
+                "right length slot");
 
-    // Offset of view within underlying (Shared)ArrayBufferObject.
-    static constexpr size_t BYTEOFFSET_SLOT = 2;
-    static_assert(BYTEOFFSET_SLOT == JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT,
-                  "self-hosted code with burned-in constants must get the "
-                  "right byteOffset slot");
+  // Offset of view within underlying (Shared)ArrayBufferObject.
+  static constexpr size_t BYTEOFFSET_SLOT = 2;
+  static_assert(BYTEOFFSET_SLOT == JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT,
+                "self-hosted code with burned-in constants must get the "
+                "right byteOffset slot");
 
-    static constexpr size_t RESERVED_SLOTS = 3;
+  static constexpr size_t RESERVED_SLOTS = 3;
 
 #ifdef DEBUG
-    static const uint8_t ZeroLengthArrayData = 0x4A;
+  static const uint8_t ZeroLengthArrayData = 0x4A;
 #endif
 
-    // The raw pointer to the buffer memory, the "private" value.
+  // The raw pointer to the buffer memory, the "private" value.
+  //
+  // This offset is exposed for performance reasons - so that it
+  // need not be looked up on accesses.
+  static constexpr size_t DATA_SLOT = 3;
+
+ private:
+  void* dataPointerEither_() const {
+    // Note, do not check whether shared or not
+    // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
+    return static_cast<void*>(getPrivate(DATA_SLOT));
+  }
+
+ public:
+  MOZ_MUST_USE bool init(JSContext* cx, ArrayBufferObjectMaybeShared* buffer,
+                         uint32_t byteOffset, uint32_t length,
+                         uint32_t bytesPerElement);
+
+  static ArrayBufferObjectMaybeShared* bufferObject(
+      JSContext* cx, Handle<ArrayBufferViewObject*> obj);
+
+  void notifyBufferDetached(JSContext* cx, void* newData);
+
+  // By construction we only need unshared variants here.  See
+  // comments in ArrayBufferObject.cpp.
+  uint8_t* dataPointerUnshared(const JS::AutoRequireNoGC&);
+  void setDataPointerUnshared(uint8_t* data);
+
+  void initDataPointer(SharedMem<uint8_t*> viewData) {
+    // Install a pointer to the buffer location that corresponds
+    // to offset zero within the typed array.
     //
-    // This offset is exposed for performance reasons - so that it
-    // need not be looked up on accesses.
-    static constexpr size_t DATA_SLOT = 3;
+    // The following unwrap is safe because the DATA_SLOT is
+    // accessed only from jitted code and from the
+    // dataPointerEither_() accessor above; in neither case does the
+    // raw pointer escape untagged into C++ code.
+    initPrivate(viewData.unwrap(/*safe - see above*/));
+  }
 
-  private:
-    void* dataPointerEither_() const {
-        // Note, do not check whether shared or not
-        // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
-        return static_cast<void*>(getPrivate(DATA_SLOT));
+  SharedMem<void*> dataPointerShared() const {
+    return SharedMem<void*>::shared(dataPointerEither_());
+  }
+  SharedMem<void*> dataPointerEither() const {
+    if (isSharedMemory()) {
+      return SharedMem<void*>::shared(dataPointerEither_());
+    }
+    return SharedMem<void*>::unshared(dataPointerEither_());
+  }
+  void* dataPointerUnshared() const {
+    MOZ_ASSERT(!isSharedMemory());
+    return dataPointerEither_();
+  }
+
+  static Value bufferValue(const ArrayBufferViewObject* view) {
+    return view->getFixedSlot(BUFFER_SLOT);
+  }
+  bool hasBuffer() const { return bufferValue(this).isObject(); }
+
+  ArrayBufferObject* bufferUnshared() const {
+    MOZ_ASSERT(!isSharedMemory());
+    ArrayBufferObjectMaybeShared* obj = bufferEither();
+    if (!obj) {
+      return nullptr;
+    }
+    return &obj->as<ArrayBufferObject>();
+  }
+  SharedArrayBufferObject* bufferShared() const {
+    MOZ_ASSERT(isSharedMemory());
+    ArrayBufferObjectMaybeShared* obj = bufferEither();
+    if (!obj) {
+      return nullptr;
+    }
+    return &obj->as<SharedArrayBufferObject>();
+  }
+  ArrayBufferObjectMaybeShared* bufferEither() const {
+    JSObject* obj = bufferValue(this).toObjectOrNull();
+    if (!obj) {
+      return nullptr;
+    }
+    MOZ_ASSERT(isSharedMemory() ? obj->is<SharedArrayBufferObject>()
+                                : obj->is<ArrayBufferObject>());
+    return &obj->as<ArrayBufferObjectMaybeShared>();
+  }
+
+  bool hasDetachedBuffer() const {
+    // Shared buffers can't be detached.
+    if (isSharedMemory()) {
+      return false;
     }
 
-  public:
-    MOZ_MUST_USE bool init(JSContext* cx, ArrayBufferObjectMaybeShared* buffer,
-                           uint32_t byteOffset, uint32_t length, uint32_t bytesPerElement);
-
-    static ArrayBufferObjectMaybeShared* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
-
-    void notifyBufferDetached(JSContext* cx, void* newData);
-
-    // By construction we only need unshared variants here.  See
-    // comments in ArrayBufferObject.cpp.
-    uint8_t* dataPointerUnshared(const JS::AutoRequireNoGC&);
-    void setDataPointerUnshared(uint8_t* data);
-
-    void initDataPointer(SharedMem<uint8_t*> viewData) {
-        // Install a pointer to the buffer location that corresponds
-        // to offset zero within the typed array.
-        //
-        // The following unwrap is safe because the DATA_SLOT is
-        // accessed only from jitted code and from the
-        // dataPointerEither_() accessor above; in neither case does the
-        // raw pointer escape untagged into C++ code.
-        initPrivate(viewData.unwrap(/*safe - see above*/));
+    // A typed array with a null buffer has never had its buffer exposed to
+    // become detached.
+    ArrayBufferObject* buffer = bufferUnshared();
+    if (!buffer) {
+      return false;
     }
 
-    SharedMem<void*> dataPointerShared() const {
-        return SharedMem<void*>::shared(dataPointerEither_());
-    }
-    SharedMem<void*> dataPointerEither() const {
-        if (isSharedMemory()) {
-            return SharedMem<void*>::shared(dataPointerEither_());
-        }
-        return SharedMem<void*>::unshared(dataPointerEither_());
-    }
-    void* dataPointerUnshared() const {
-        MOZ_ASSERT(!isSharedMemory());
-        return dataPointerEither_();
-    }
+    return buffer->isDetached();
+  }
 
-    static Value bufferValue(const ArrayBufferViewObject* view) {
-        return view->getFixedSlot(BUFFER_SLOT);
-    }
-    bool hasBuffer() const {
-        return bufferValue(this).isObject();
-    }
-
-    ArrayBufferObject* bufferUnshared() const {
-        MOZ_ASSERT(!isSharedMemory());
-        ArrayBufferObjectMaybeShared* obj = bufferEither();
-        if (!obj) {
-            return nullptr;
-        }
-        return &obj->as<ArrayBufferObject>();
-    }
-    SharedArrayBufferObject* bufferShared() const {
-        MOZ_ASSERT(isSharedMemory());
-        ArrayBufferObjectMaybeShared* obj = bufferEither();
-        if (!obj) {
-            return nullptr;
-        }
-        return &obj->as<SharedArrayBufferObject>();
-    }
-    ArrayBufferObjectMaybeShared* bufferEither() const {
-        JSObject* obj = bufferValue(this).toObjectOrNull();
-        if (!obj) {
-            return nullptr;
-        }
-        MOZ_ASSERT(isSharedMemory()
-                   ? obj->is<SharedArrayBufferObject>()
-                   : obj->is<ArrayBufferObject>());
-        return &obj->as<ArrayBufferObjectMaybeShared>();
-    }
-
-    bool hasDetachedBuffer() const {
-        // Shared buffers can't be detached.
-        if (isSharedMemory()) {
-            return false;
-        }
-
-        // A typed array with a null buffer has never had its buffer exposed to
-        // become detached.
-        ArrayBufferObject* buffer = bufferUnshared();
-        if (!buffer) {
-            return false;
-        }
-
-        return buffer->isDetached();
-    }
-
-    static void trace(JSTracer* trc, JSObject* obj);
+  static void trace(JSTracer* trc, JSObject* obj);
 };
 
-} // namespace js
+}  // namespace js
 
 template <>
-bool
-JSObject::is<js::ArrayBufferViewObject>() const;
+bool JSObject::is<js::ArrayBufferViewObject>() const;
 
-#endif // vm_ArrayBufferViewObject_h
+#endif  // vm_ArrayBufferViewObject_h

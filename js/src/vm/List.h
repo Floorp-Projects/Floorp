@@ -30,40 +30,42 @@ namespace js {
  * ListObjects must not be exposed to content scripts.
  */
 class ListObject : public NativeObject {
-  public:
-    static const Class class_;
+ public:
+  static const Class class_;
 
-    inline static MOZ_MUST_USE ListObject* create(JSContext* cx);
+  inline static MOZ_MUST_USE ListObject* create(JSContext* cx);
 
-    uint32_t length() const { return getDenseInitializedLength(); }
+  uint32_t length() const { return getDenseInitializedLength(); }
 
-    const Value& get(uint32_t index) const { return getDenseElement(index); }
+  const Value& get(uint32_t index) const { return getDenseElement(index); }
 
-    template <class T>
-    T& getAs(uint32_t index) const { return get(index).toObject().as<T>(); }
+  template <class T>
+  T& getAs(uint32_t index) const {
+    return get(index).toObject().as<T>();
+  }
 
-    /**
-     * Add an element to the end of the list. Returns false on OOM.
-     */
-    inline MOZ_MUST_USE bool append(JSContext* cx, HandleValue value);
+  /**
+   * Add an element to the end of the list. Returns false on OOM.
+   */
+  inline MOZ_MUST_USE bool append(JSContext* cx, HandleValue value);
 
-    /**
-     * Remove and return the first element of the list.
-     *
-     * Precondition: This list is not empty.
-     */
-    inline JS::Value popFirst(JSContext* cx);
+  /**
+   * Remove and return the first element of the list.
+   *
+   * Precondition: This list is not empty.
+   */
+  inline JS::Value popFirst(JSContext* cx);
 
-    /**
-     * Remove and return the first element of the list.
-     *
-     * Precondition: This list is not empty, and the first element
-     * is an object of class T.
-     */
-    template <class T>
-    inline T& popFirstAs(JSContext* cx);
+  /**
+   * Remove and return the first element of the list.
+   *
+   * Precondition: This list is not empty, and the first element
+   * is an object of class T.
+   */
+  template <class T>
+  inline T& popFirstAs(JSContext* cx);
 };
 
-} // namespace js
+}  // namespace js
 
-#endif // vm_List_h
+#endif  // vm_List_h

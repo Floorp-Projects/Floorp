@@ -22,34 +22,22 @@ namespace dom {
 
 class EventTarget;
 
-class Touch final : public nsISupports
-                  , public nsWrapperCache
-                  , public WidgetPointerHelper
-{
-public:
+class Touch final : public nsISupports,
+                    public nsWrapperCache,
+                    public WidgetPointerHelper {
+ public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
 
   static already_AddRefed<Touch> Constructor(const GlobalObject& aGlobal,
                                              const TouchInit& aParam,
                                              ErrorResult& aRv);
 
-  Touch(EventTarget* aTarget,
-        int32_t aIdentifier,
-        int32_t aPageX,
-        int32_t aPageY,
-        int32_t aScreenX,
-        int32_t aScreenY,
-        int32_t aClientX,
-        int32_t aClientY,
-        int32_t aRadiusX,
-        int32_t aRadiusY,
-        float aRotationAngle,
-        float aForce);
-  Touch(int32_t aIdentifier,
-        LayoutDeviceIntPoint aPoint,
-        LayoutDeviceIntPoint aRadius,
-        float aRotationAngle,
-        float aForce);
+  Touch(EventTarget* aTarget, int32_t aIdentifier, int32_t aPageX,
+        int32_t aPageY, int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
+        int32_t aClientY, int32_t aRadiusX, int32_t aRadiusY,
+        float aRotationAngle, float aForce);
+  Touch(int32_t aIdentifier, LayoutDeviceIntPoint aPoint,
+        LayoutDeviceIntPoint aRadius, float aRotationAngle, float aForce);
   Touch(const Touch& aOther);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -62,7 +50,8 @@ public:
 
   bool Equals(Touch* aTouch);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   nsIGlobalObject* GetParentObject();
 
@@ -98,13 +87,14 @@ public:
   LayoutDeviceIntPoint mRadius;
   float mRotationAngle;
   float mForce;
-protected:
+
+ protected:
   ~Touch();
 
   bool mPointsInitialized;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Touch_h_
+#endif  // mozilla_dom_Touch_h_

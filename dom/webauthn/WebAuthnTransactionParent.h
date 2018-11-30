@@ -18,33 +18,31 @@
 namespace mozilla {
 namespace dom {
 
-class WebAuthnTransactionParent final : public PWebAuthnTransactionParent
-{
-public:
+class WebAuthnTransactionParent final : public PWebAuthnTransactionParent {
+ public:
   NS_INLINE_DECL_REFCOUNTING(WebAuthnTransactionParent);
   WebAuthnTransactionParent() = default;
 
-  virtual mozilla::ipc::IPCResult
-  RecvRequestRegister(const uint64_t& aTransactionId,
-                      const WebAuthnMakeCredentialInfo& aTransactionInfo) override;
+  virtual mozilla::ipc::IPCResult RecvRequestRegister(
+      const uint64_t& aTransactionId,
+      const WebAuthnMakeCredentialInfo& aTransactionInfo) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvRequestSign(const uint64_t& aTransactionId,
-                  const WebAuthnGetAssertionInfo& aTransactionInfo) override;
+  virtual mozilla::ipc::IPCResult RecvRequestSign(
+      const uint64_t& aTransactionId,
+      const WebAuthnGetAssertionInfo& aTransactionInfo) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvRequestCancel(const uint64_t& aTransactionId) override;
+  virtual mozilla::ipc::IPCResult RecvRequestCancel(
+      const uint64_t& aTransactionId) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvDestroyMe() override;
+  virtual mozilla::ipc::IPCResult RecvDestroyMe() override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   ~WebAuthnTransactionParent() = default;
 };
 
-}
-}
+}  // namespace dom
+}  // namespace mozilla
 
-#endif //mozilla_dom_WebAuthnTransactionParent_h
+#endif  // mozilla_dom_WebAuthnTransactionParent_h

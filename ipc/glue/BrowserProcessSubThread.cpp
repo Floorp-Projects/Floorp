@@ -19,58 +19,50 @@ namespace ipc {
 
 // Friendly names for the well-known threads.
 static const char* kBrowserThreadNames[BrowserProcessSubThread::ID_COUNT] = {
-  "Gecko_IOThread",  // IO
+    "Gecko_IOThread",  // IO
 //  "Chrome_FileThread",  // FILE
 //  "Chrome_DBThread",  // DB
 //  "Chrome_HistoryThread",  // HISTORY
 #if defined(OS_LINUX) || defined(OS_SOLARIS)
-  "Gecko_Background_X11Thread",  // BACKGROUND_X11
+    "Gecko_Background_X11Thread",  // BACKGROUND_X11
 #endif
 };
 
 /* static */ StaticMutex BrowserProcessSubThread::sLock;
 BrowserProcessSubThread* BrowserProcessSubThread::sBrowserThreads[ID_COUNT] = {
-  nullptr,  // IO
+    nullptr,  // IO
 //  nullptr,  // FILE
 //  nullptr,  // DB
 //  nullptr,  // HISTORY
 #if defined(OS_LINUX) || defined(OS_SOLARIS)
-  nullptr,  // BACKGROUND_X11
+    nullptr,  // BACKGROUND_X11
 #endif
 };
 
-BrowserProcessSubThread::BrowserProcessSubThread(ID aId) :
-  base::Thread(kBrowserThreadNames[aId]),
-  mIdentifier(aId)
-{
+BrowserProcessSubThread::BrowserProcessSubThread(ID aId)
+    : base::Thread(kBrowserThreadNames[aId]), mIdentifier(aId) {
   StaticMutexAutoLock lock(sLock);
   DCHECK(aId >= 0 && aId < ID_COUNT);
   DCHECK(sBrowserThreads[aId] == nullptr);
   sBrowserThreads[aId] = this;
 }
 
-BrowserProcessSubThread::~BrowserProcessSubThread()
-{
+BrowserProcessSubThread::~BrowserProcessSubThread() {
   Stop();
   {
     StaticMutexAutoLock lock(sLock);
     sBrowserThreads[mIdentifier] = nullptr;
   }
-
 }
 
-void
-BrowserProcessSubThread::Init()
-{
+void BrowserProcessSubThread::Init() {
 #if defined(OS_WIN)
   // Initializes the COM library on the current thread.
   CoInitialize(nullptr);
 #endif
 }
 
-void
-BrowserProcessSubThread::CleanUp()
-{
+void BrowserProcessSubThread::CleanUp() {
 #if defined(OS_WIN)
   // Closes the COM library on the current thread. CoInitialize must
   // be balanced by a corresponding call to CoUninitialize.
@@ -79,17 +71,14 @@ BrowserProcessSubThread::CleanUp()
 }
 
 // static
-MessageLoop*
-BrowserProcessSubThread::GetMessageLoop(ID aId)
-{
+MessageLoop* BrowserProcessSubThread::GetMessageLoop(ID aId) {
   StaticMutexAutoLock lock(sLock);
   DCHECK(aId >= 0 && aId < ID_COUNT);
 
-  if (sBrowserThreads[aId])
-    return sBrowserThreads[aId]->message_loop();
+  if (sBrowserThreads[aId]) return sBrowserThreads[aId]->message_loop();
 
   return nullptr;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

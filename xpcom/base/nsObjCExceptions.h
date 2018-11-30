@@ -40,17 +40,12 @@
 // See Mozilla bug 163260.
 // This file can only be included in an Objective-C context.
 
-__attribute__((unused))
-static void
-nsObjCExceptionLog(NSException* aException)
-{
-  NSLog(@"Mozilla has caught an Obj-C exception [%@: %@]",
-        [aException name], [aException reason]);
+__attribute__((unused)) static void nsObjCExceptionLog(NSException* aException) {
+  NSLog(@"Mozilla has caught an Obj-C exception [%@: %@]", [aException name], [aException reason]);
 
 #if defined(__cplusplus)
   // Attach exception info to the crash report.
-  nsCOMPtr<nsICrashReporter> crashReporter =
-    do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+  nsCOMPtr<nsICrashReporter> crashReporter = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   if (crashReporter) {
     crashReporter->AppendObjCExceptionInfoToAppNotes(static_cast<void*>(aException));
   }
@@ -62,8 +57,8 @@ nsObjCExceptionLog(NSException* aException)
     // info with the callStackReturnAddresses selector.
     NSArray* stackTrace = nil;
     if ([aException respondsToSelector:@selector(callStackReturnAddresses)]) {
-      NSArray* addresses = (NSArray*)
-        [aException performSelector:@selector(callStackReturnAddresses)];
+      NSArray* addresses =
+          (NSArray*)[aException performSelector:@selector(callStackReturnAddresses)];
       if ([addresses count]) {
         stackTrace = addresses;
       }
@@ -78,8 +73,7 @@ nsObjCExceptionLog(NSException* aException)
     if (stackTrace) {
       // The command line should look like this:
       //   /usr/bin/atos -p <pid> -printHeader <stack frame addresses>
-      NSMutableArray* args =
-        [NSMutableArray arrayWithCapacity:[stackTrace count] + 3];
+      NSMutableArray* args = [NSMutableArray arrayWithCapacity:[stackTrace count] + 3];
 
       [args addObject:@"-p"];
       int pid = [[NSProcessInfo processInfo] processIdentifier];
@@ -90,8 +84,7 @@ nsObjCExceptionLog(NSException* aException)
       unsigned int stackCount = [stackTrace count];
       unsigned int stackIndex = 0;
       for (; stackIndex < stackCount; stackIndex++) {
-        unsigned long address =
-          [[stackTrace objectAtIndex:stackIndex] unsignedLongValue];
+        unsigned long address = [[stackTrace objectAtIndex:stackIndex] unsignedLongValue];
         [args addObject:[NSString stringWithFormat:@"0x%lx", address]];
       }
 
@@ -112,10 +105,8 @@ nsObjCExceptionLog(NSException* aException)
       [task waitUntilExit];
       [task release];
 
-      NSData* outData =
-        [[outPipe fileHandleForReading] readDataToEndOfFile];
-      NSString* outString =
-        [[NSString alloc] initWithData:outData encoding:NSUTF8StringEncoding];
+      NSData* outData = [[outPipe fileHandleForReading] readDataToEndOfFile];
+      NSString* outString = [[NSString alloc] initWithData:outData encoding:NSUTF8StringEncoding];
 
       NSLog(@"Stack trace:\n%@", outString);
 
@@ -123,18 +114,13 @@ nsObjCExceptionLog(NSException* aException)
     } else {
       NSLog(@"<No stack information available for Obj-C exception>");
     }
-  }
-  @catch (NSException* exn) {
-    NSLog(@"Failed to generate stack trace for Obj-C exception [%@: %@]",
-          [exn name], [exn reason]);
+  } @catch (NSException* exn) {
+    NSLog(@"Failed to generate stack trace for Obj-C exception [%@: %@]", [exn name], [exn reason]);
   }
 #endif
 }
 
-__attribute__((unused))
-static void
-nsObjCExceptionAbort()
-{
+__attribute__((unused)) static void nsObjCExceptionAbort() {
   // We need to raise a mach-o signal here, the Mozilla crash reporter on
   // Mac OS X does not respond to POSIX signals. Raising mach-o signals directly
   // is tricky so we do it by just derefing a null pointer.
@@ -142,89 +128,98 @@ nsObjCExceptionAbort()
   *foo = 1;
 }
 
-__attribute__((unused))
-static void
-nsObjCExceptionLogAbort(NSException* aException)
-{
+__attribute__((unused)) static void nsObjCExceptionLogAbort(NSException* aException) {
   nsObjCExceptionLog(aException);
   nsObjCExceptionAbort();
 }
 
-#define NS_OBJC_TRY(_e, _fail)                     \
-@try { _e; }                                       \
-@catch(NSException *_exn) {                        \
-  nsObjCExceptionLog(_exn);                        \
-  _fail;                                           \
-}
+#define NS_OBJC_TRY(_e, _fail)    \
+  @try {                          \
+    _e;                           \
+  } @catch (NSException * _exn) { \
+    nsObjCExceptionLog(_exn);     \
+    _fail;                        \
+  }
 
-#define NS_OBJC_TRY_EXPR(_e, _fail)                \
-({                                                 \
-   typeof(_e) _tmp;                                \
-   @try { _tmp = (_e); }                           \
-   @catch(NSException *_exn) {                     \
-     nsObjCExceptionLog(_exn);                     \
-     _fail;                                        \
-   }                                               \
-   _tmp;                                           \
-})
+#define NS_OBJC_TRY_EXPR(_e, _fail) \
+  ({                                \
+    typeof(_e) _tmp;                \
+    @try {                          \
+      _tmp = (_e);                  \
+    } @catch (NSException * _exn) { \
+      nsObjCExceptionLog(_exn);     \
+      _fail;                        \
+    }                               \
+    _tmp;                           \
+  })
 
-#define NS_OBJC_TRY_EXPR_NULL(_e)                  \
-NS_OBJC_TRY_EXPR(_e, 0)
+#define NS_OBJC_TRY_EXPR_NULL(_e) NS_OBJC_TRY_EXPR(_e, 0)
 
-#define NS_OBJC_TRY_IGNORE(_e)                     \
-NS_OBJC_TRY(_e, )
+#define NS_OBJC_TRY_IGNORE(_e) NS_OBJC_TRY(_e, )
 
 // To reduce code size the abort versions do not reuse above macros. This allows
 // catch blocks to only contain one call.
 
-#define NS_OBJC_TRY_ABORT(_e)                      \
-@try { _e; }                                       \
-@catch(NSException *_exn) {                        \
-  nsObjCExceptionLog(_exn);                        \
-}
+#define NS_OBJC_TRY_ABORT(_e)     \
+  @try {                          \
+    _e;                           \
+  } @catch (NSException * _exn) { \
+    nsObjCExceptionLog(_exn);     \
+  }
 
-#define NS_OBJC_TRY_EXPR_ABORT(_e)                 \
-({                                                 \
-   typeof(_e) _tmp;                                \
-   @try { _tmp = (_e); }                           \
-   @catch(NSException *_exn) {                     \
-     nsObjCExceptionLog(_exn);                     \
-   }                                               \
-   _tmp;                                           \
-})
+#define NS_OBJC_TRY_EXPR_ABORT(_e)  \
+  ({                                \
+    typeof(_e) _tmp;                \
+    @try {                          \
+      _tmp = (_e);                  \
+    } @catch (NSException * _exn) { \
+      nsObjCExceptionLog(_exn);     \
+    }                               \
+    _tmp;                           \
+  })
 
 // For wrapping blocks of Obj-C calls. Does not actually terminate.
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK   } @catch(NSException *_exn) {             \
-                                        nsObjCExceptionLog(_exn);               \
-                                      }
+#define NS_OBJC_END_TRY_ABORT_BLOCK \
+  }                                 \
+  @catch (NSException * _exn) {     \
+    nsObjCExceptionLog(_exn);       \
+  }
 
 // Same as above ABORT_BLOCK but returns a value after the try/catch block to
 // suppress compiler warnings. This allows us to avoid having to refactor code
 // to get scoping right when wrapping an entire method.
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NIL   } @catch(NSException *_exn) {         \
-                                            nsObjCExceptionLog(_exn);           \
-                                          }                                     \
-                                          return nil;
+#define NS_OBJC_END_TRY_ABORT_BLOCK_NIL \
+  }                                     \
+  @catch (NSException * _exn) {         \
+    nsObjCExceptionLog(_exn);           \
+  }                                     \
+  return nil;
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL   } @catch(NSException *_exn) {      \
-                                               nsObjCExceptionLog(_exn);        \
-                                             }                                  \
-                                             return nullptr;
+#define NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL \
+  }                                        \
+  @catch (NSException * _exn) {            \
+    nsObjCExceptionLog(_exn);              \
+  }                                        \
+  return nullptr;
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT   } @catch(NSException *_exn) {    \
-                                                 nsObjCExceptionLog(_exn);      \
-                                               }                                \
-                                               return NS_ERROR_FAILURE;
+#define NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT \
+  }                                          \
+  @catch (NSException * _exn) {              \
+    nsObjCExceptionLog(_exn);                \
+  }                                          \
+  return NS_ERROR_FAILURE;
 
-#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN    @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(_rv) } @catch(NSException *_exn) {   \
-                                                  nsObjCExceptionLog(_exn);\
-                                                }                               \
-                                                return _rv;
+#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN @try {
+#define NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(_rv) \
+  }                                             \
+  @catch (NSException * _exn) {                 \
+    nsObjCExceptionLog(_exn);                   \
+  }                                             \
+  return _rv;
 
-#endif // nsObjCExceptions_h_
+#endif  // nsObjCExceptions_h_

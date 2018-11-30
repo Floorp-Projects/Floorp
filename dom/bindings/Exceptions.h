@@ -26,40 +26,37 @@ class Exception;
 
 // If we're throwing a DOMException and message is empty, the default
 // message for the nsresult in question will be used.
-bool
-Throw(JSContext* cx, nsresult rv, const nsACString& message = EmptyCString());
+bool Throw(JSContext* cx, nsresult rv,
+           const nsACString& message = EmptyCString());
 
 // Create, throw and report an exception to a given window.
-void
-ThrowAndReport(nsPIDOMWindowInner* aWindow, nsresult aRv);
+void ThrowAndReport(nsPIDOMWindowInner* aWindow, nsresult aRv);
 
 // Both signatures of ThrowExceptionObject guarantee that an exception is set on
 // aCx before they return.
-void
-ThrowExceptionObject(JSContext* aCx, Exception* aException);
+void ThrowExceptionObject(JSContext* aCx, Exception* aException);
 
 // Create an exception object for the given nsresult and message. If we're
 // throwing a DOMException and aMessage is empty, the default message for the
 // nsresult in question will be used.
 //
 // This never returns null.
-already_AddRefed<Exception>
-CreateException(nsresult aRv, const nsACString& aMessage = EmptyCString());
+already_AddRefed<Exception> CreateException(
+    nsresult aRv, const nsACString& aMessage = EmptyCString());
 
 // aMaxDepth can be used to define a maximal depth for the stack trace. If the
 // value is -1, a default maximal depth will be selected.  Will return null if
 // there is no JS stack right now.
-already_AddRefed<nsIStackFrame>
-GetCurrentJSStack(int32_t aMaxDepth = -1);
+already_AddRefed<nsIStackFrame> GetCurrentJSStack(int32_t aMaxDepth = -1);
 
 // Internal stuff not intended to be widely used.
 namespace exceptions {
 
-already_AddRefed<nsIStackFrame>
-CreateStack(JSContext* aCx, JS::StackCapture&& aCaptureMode);
+already_AddRefed<nsIStackFrame> CreateStack(JSContext* aCx,
+                                            JS::StackCapture&& aCaptureMode);
 
-} // namespace exceptions
-} // namespace dom
-} // namespace mozilla
+}  // namespace exceptions
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

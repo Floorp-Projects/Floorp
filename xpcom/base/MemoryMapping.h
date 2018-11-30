@@ -21,45 +21,42 @@
 
 namespace mozilla {
 
-enum class VMFlag : uint8_t
-{
-  Readable,      // rd  - readable
-  Writable,      // wr  - writable
-  Executable,    // ex  - executable
-  Shared,        // sh  - shared
-  MayRead,       // mr  - may read
-  MayWrite,      // mw  - may write
-  MayExecute,    // me  - may execute
-  MayShare,      // ms  - may share
-  GrowsDown,     // gd  - stack segment grows down
-  PurePFN,       // pf  - pure PFN range
-  DisabledWrite, // dw  - disabled write to the mapped file
-  Locked,        // lo  - pages are locked in memory
-  IO,            // io  - memory mapped I/O area
-  Sequential,    // sr  - sequential read advise provided
-  Random,        // rr  - random read advise provided
-  NoFork,        // dc  - do not copy area on fork
-  NoExpand,      // de  - do not expand area on remapping
-  Accountable,   // ac  - area is accountable
-  NotReserved,   // nr  - swap space is not reserved for the area
-  HugeTLB,       // ht  - area uses huge tlb pages
-  NonLinear,     // nl  - non-linear mapping
-  ArchSpecific,  // ar  - architecture specific flag
-  NoCore,        // dd  - do not include area into core dump
-  SoftDirty,     // sd  - soft-dirty flag
-  MixedMap,      // mm  - mixed map area
-  HugePage,      // hg  - huge page advise flag
-  NoHugePage,    // nh  - no-huge page advise flag
-  Mergeable,     // mg  - mergeable advise flag
+enum class VMFlag : uint8_t {
+  Readable,       // rd  - readable
+  Writable,       // wr  - writable
+  Executable,     // ex  - executable
+  Shared,         // sh  - shared
+  MayRead,        // mr  - may read
+  MayWrite,       // mw  - may write
+  MayExecute,     // me  - may execute
+  MayShare,       // ms  - may share
+  GrowsDown,      // gd  - stack segment grows down
+  PurePFN,        // pf  - pure PFN range
+  DisabledWrite,  // dw  - disabled write to the mapped file
+  Locked,         // lo  - pages are locked in memory
+  IO,             // io  - memory mapped I/O area
+  Sequential,     // sr  - sequential read advise provided
+  Random,         // rr  - random read advise provided
+  NoFork,         // dc  - do not copy area on fork
+  NoExpand,       // de  - do not expand area on remapping
+  Accountable,    // ac  - area is accountable
+  NotReserved,    // nr  - swap space is not reserved for the area
+  HugeTLB,        // ht  - area uses huge tlb pages
+  NonLinear,      // nl  - non-linear mapping
+  ArchSpecific,   // ar  - architecture specific flag
+  NoCore,         // dd  - do not include area into core dump
+  SoftDirty,      // sd  - soft-dirty flag
+  MixedMap,       // mm  - mixed map area
+  HugePage,       // hg  - huge page advise flag
+  NoHugePage,     // nh  - no-huge page advise flag
+  Mergeable,      // mg  - mergeable advise flag
 };
 
 using VMFlagSet = EnumSet<VMFlag, uint32_t>;
 
-class MemoryMapping final
-{
-public:
-  enum class Perm : uint8_t
-  {
+class MemoryMapping final {
+ public:
+  enum class Perm : uint8_t {
     Read,
     Write,
     Execute,
@@ -69,23 +66,20 @@ public:
 
   using PermSet = EnumSet<Perm>;
 
-  MemoryMapping(uintptr_t aStart, uintptr_t aEnd,
-                PermSet aPerms, size_t aOffset,
-                const char* aName)
-    : mStart(aStart)
-    , mEnd(aEnd)
-    , mOffset(aOffset)
-    , mName(aName)
-    , mPerms(aPerms)
-  {}
+  MemoryMapping(uintptr_t aStart, uintptr_t aEnd, PermSet aPerms,
+                size_t aOffset, const char* aName)
+      : mStart(aStart),
+        mEnd(aEnd),
+        mOffset(aOffset),
+        mName(aName),
+        mPerms(aPerms) {}
 
   const nsCString& Name() const { return mName; }
 
   uintptr_t Start() const { return mStart; }
   uintptr_t End() const { return mEnd; }
 
-  bool Includes(const void* aPtr) const
-  {
+  bool Includes(const void* aPtr) const {
     auto ptr = uintptr_t(aPtr);
     return ptr >= mStart && ptr < mEnd;
   }
@@ -126,7 +120,7 @@ public:
   bool operator==(const void* aPtr) const { return Includes(aPtr); }
   bool operator<(const void* aPtr) const { return mStart < uintptr_t(aPtr); }
 
-private:
+ private:
   friend nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings);
 
   uintptr_t mStart = 0;
@@ -164,27 +158,24 @@ private:
   // Contains the name and offset of one of the above size_t fields, for use in
   // parsing in dumping. The below helpers contain a list of the fields, and map
   // Field entries to the appropriate member in a class instance.
-  struct Field
-  {
+  struct Field {
     const char* mName;
     size_t mOffset;
   };
 
   static const Field sFields[20];
 
-  size_t& ValueForField(const Field& aField)
-  {
+  size_t& ValueForField(const Field& aField) {
     char* fieldPtr = reinterpret_cast<char*>(this) + aField.mOffset;
     return reinterpret_cast<size_t*>(fieldPtr)[0];
   }
-  size_t ValueForField(const Field& aField) const
-  {
+  size_t ValueForField(const Field& aField) const {
     return const_cast<MemoryMapping*>(this)->ValueForField(aField);
   }
 };
 
 nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_MemoryMapping_h
+#endif  // mozilla_MemoryMapping_h

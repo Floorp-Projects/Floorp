@@ -16,20 +16,20 @@
 
 namespace IPC {
 
-  template<>
-  struct ParamTraits<mozilla::dom::ServiceWorkerState> :
-    public ContiguousEnumSerializer<mozilla::dom::ServiceWorkerState,
-                                    mozilla::dom::ServiceWorkerState::Parsed,
-                                    mozilla::dom::ServiceWorkerState::EndGuard_>
-  {};
+template <>
+struct ParamTraits<mozilla::dom::ServiceWorkerState>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::ServiceWorkerState,
+          mozilla::dom::ServiceWorkerState::Parsed,
+          mozilla::dom::ServiceWorkerState::EndGuard_> {};
 
-  template<>
-  struct ParamTraits<mozilla::dom::ServiceWorkerUpdateViaCache> :
-    public ContiguousEnumSerializer<mozilla::dom::ServiceWorkerUpdateViaCache,
-                                    mozilla::dom::ServiceWorkerUpdateViaCache::Imports,
-                                    mozilla::dom::ServiceWorkerUpdateViaCache::EndGuard_>
-  {};
+template <>
+struct ParamTraits<mozilla::dom::ServiceWorkerUpdateViaCache>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::ServiceWorkerUpdateViaCache,
+          mozilla::dom::ServiceWorkerUpdateViaCache::Imports,
+          mozilla::dom::ServiceWorkerUpdateViaCache::EndGuard_> {};
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // _mozilla_dom_ServiceWorkerIPCUtils_h
+#endif  // _mozilla_dom_ServiceWorkerIPCUtils_h

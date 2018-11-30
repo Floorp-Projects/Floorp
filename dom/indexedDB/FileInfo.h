@@ -15,8 +15,7 @@ namespace indexedDB {
 
 class FileManager;
 
-class FileInfo
-{
+class FileInfo {
   friend class FileManager;
 
   ThreadSafeAutoRefCnt mRefCnt;
@@ -25,82 +24,57 @@ class FileInfo
 
   RefPtr<FileManager> mFileManager;
 
-public:
+ public:
   class CustomCleanupCallback;
 
-  static
-  FileInfo* Create(FileManager* aFileManager, int64_t aId);
+  static FileInfo* Create(FileManager* aFileManager, int64_t aId);
 
   explicit FileInfo(FileManager* aFileManager);
 
-  void
-  AddRef()
-  {
-    UpdateReferences(mRefCnt, 1);
-  }
+  void AddRef() { UpdateReferences(mRefCnt, 1); }
 
-  void
-  Release(CustomCleanupCallback* aCustomCleanupCallback = nullptr)
-  {
+  void Release(CustomCleanupCallback* aCustomCleanupCallback = nullptr) {
     UpdateReferences(mRefCnt, -1, aCustomCleanupCallback);
   }
 
-  void
-  UpdateDBRefs(int32_t aDelta)
-  {
-    UpdateReferences(mDBRefCnt, aDelta);
-  }
+  void UpdateDBRefs(int32_t aDelta) { UpdateReferences(mDBRefCnt, aDelta); }
 
-  void
-  UpdateSliceRefs(int32_t aDelta)
-  {
+  void UpdateSliceRefs(int32_t aDelta) {
     UpdateReferences(mSliceRefCnt, aDelta);
   }
 
-  void
-  GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt, int32_t* aSliceRefCnt);
+  void GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt,
+                     int32_t* aSliceRefCnt);
 
-  FileManager*
-  Manager() const
-  {
-    return mFileManager;
-  }
+  FileManager* Manager() const { return mFileManager; }
 
-  virtual int64_t
-  Id() const = 0;
+  virtual int64_t Id() const = 0;
 
-  static already_AddRefed<nsIFile>
-  GetFileForFileInfo(FileInfo* aFileInfo);
+  static already_AddRefed<nsIFile> GetFileForFileInfo(FileInfo* aFileInfo);
 
-protected:
+ protected:
   virtual ~FileInfo();
 
-private:
-  void
-  UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
-                   int32_t aDelta,
-                   CustomCleanupCallback* aCustomCleanupCallback = nullptr);
+ private:
+  void UpdateReferences(
+      ThreadSafeAutoRefCnt& aRefCount, int32_t aDelta,
+      CustomCleanupCallback* aCustomCleanupCallback = nullptr);
 
-  bool
-  LockedClearDBRefs();
+  bool LockedClearDBRefs();
 
-  void
-  Cleanup();
+  void Cleanup();
 };
 
-class NS_NO_VTABLE FileInfo::CustomCleanupCallback
-{
-public:
-  virtual nsresult
-  Cleanup(FileManager* aFileManager, int64_t aId) = 0;
+class NS_NO_VTABLE FileInfo::CustomCleanupCallback {
+ public:
+  virtual nsresult Cleanup(FileManager* aFileManager, int64_t aId) = 0;
 
-protected:
-  CustomCleanupCallback()
-  { }
+ protected:
+  CustomCleanupCallback() {}
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_fileinfo_h__
+#endif  // mozilla_dom_indexeddb_fileinfo_h__

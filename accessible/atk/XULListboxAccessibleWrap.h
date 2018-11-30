@@ -14,7 +14,7 @@ namespace a11y {
 
 typedef class XULListboxAccessible XULListboxAccessibleWrap;
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

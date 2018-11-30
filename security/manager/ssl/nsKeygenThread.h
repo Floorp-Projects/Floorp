@@ -16,9 +16,8 @@
 
 class nsIRunnable;
 
-class nsKeygenThread : public nsIKeygenThread
-{
-private:
+class nsKeygenThread : public nsIKeygenThread {
+ private:
   mozilla::Mutex mutex;
 
   nsCOMPtr<nsIRunnable> mNotifyObserver;
@@ -41,32 +40,27 @@ private:
 
   PRThread *threadHandle;
 
-protected:
+ protected:
   virtual ~nsKeygenThread();
 
-public:
+ public:
   nsKeygenThread();
 
   NS_DECL_NSIKEYGENTHREAD
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  void SetParams(
-    PK11SlotInfo *a_slot,
-    PK11AttrFlags a_flags,
-    PK11SlotInfo *a_alternative_slot,
-    PK11AttrFlags a_alternative_flags,
-    uint32_t a_keyGenMechanism,
-    void *a_params,
-    void *a_wincx );
+  void SetParams(PK11SlotInfo *a_slot, PK11AttrFlags a_flags,
+                 PK11SlotInfo *a_alternative_slot,
+                 PK11AttrFlags a_alternative_flags, uint32_t a_keyGenMechanism,
+                 void *a_params, void *a_wincx);
 
-  nsresult ConsumeResult(
-    PK11SlotInfo **a_used_slot,
-    SECKEYPrivateKey **a_privateKey,
-    SECKEYPublicKey **a_publicKey);
+  nsresult ConsumeResult(PK11SlotInfo **a_used_slot,
+                         SECKEYPrivateKey **a_privateKey,
+                         SECKEYPublicKey **a_publicKey);
 
   void Join(void);
 
   void Run(void);
 };
 
-#endif //_NSKEYGENTHREAD_H_
+#endif  //_NSKEYGENTHREAD_H_

@@ -14,79 +14,45 @@
 
 BEGIN_QUOTA_NAMESPACE
 
-class UsageInfo
-{
-public:
-  UsageInfo()
-    : mDatabaseUsage(0)
-    , mFileUsage(0)
-    , mLimit(0)
-  { }
+class UsageInfo {
+ public:
+  UsageInfo() : mDatabaseUsage(0), mFileUsage(0), mLimit(0) {}
 
-  virtual ~UsageInfo()
-  { }
+  virtual ~UsageInfo() {}
 
-  void
-  Append(const UsageInfo& aUsageInfo)
-  {
+  void Append(const UsageInfo& aUsageInfo) {
     IncrementUsage(&mDatabaseUsage, aUsageInfo.mDatabaseUsage);
     IncrementUsage(&mFileUsage, aUsageInfo.mFileUsage);
   }
 
-  void
-  AppendToDatabaseUsage(uint64_t aUsage)
-  {
+  void AppendToDatabaseUsage(uint64_t aUsage) {
     IncrementUsage(&mDatabaseUsage, aUsage);
   }
 
-  void
-  AppendToFileUsage(uint64_t aUsage)
-  {
+  void AppendToFileUsage(uint64_t aUsage) {
     IncrementUsage(&mFileUsage, aUsage);
   }
 
-  void
-  SetLimit(uint64_t aLimit)
-  {
-    mLimit = aLimit;
-  }
+  void SetLimit(uint64_t aLimit) { mLimit = aLimit; }
 
-  uint64_t
-  DatabaseUsage()
-  {
-    return mDatabaseUsage;
-  }
+  uint64_t DatabaseUsage() { return mDatabaseUsage; }
 
-  uint64_t
-  FileUsage()
-  {
-    return mFileUsage;
-  }
+  uint64_t FileUsage() { return mFileUsage; }
 
-  uint64_t
-  Limit()
-  {
-    return mLimit;
-  }
+  uint64_t Limit() { return mLimit; }
 
-  uint64_t
-  TotalUsage()
-  {
+  uint64_t TotalUsage() {
     uint64_t totalUsage = mDatabaseUsage;
     IncrementUsage(&totalUsage, mFileUsage);
     return totalUsage;
   }
 
-  void
-  ResetUsage()
-  {
+  void ResetUsage() {
     mDatabaseUsage = 0;
     mFileUsage = 0;
   }
 
-  static void
-  IncrementUsage(uint64_t* aUsage, uint64_t aDelta)
-  {
+  static void IncrementUsage(uint64_t* aUsage, uint64_t aDelta) {
     MOZ_ASSERT(aUsage);
     CheckedUint64 value = *aUsage;
     value += aDelta;
@@ -97,7 +63,7 @@ public:
     }
   }
 
-private:
+ private:
   uint64_t mDatabaseUsage;
   uint64_t mFileUsage;
   uint64_t mLimit;
@@ -105,4 +71,4 @@ private:
 
 END_QUOTA_NAMESPACE
 
-#endif // mozilla_dom_quota_usageinfo_h__
+#endif  // mozilla_dom_quota_usageinfo_h__

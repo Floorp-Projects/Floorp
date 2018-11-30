@@ -10,16 +10,14 @@
 
 #include "AsyncPanZoomController.h"
 #include "FrameMetrics.h"
-#include "mozilla/Telemetry.h"                  // for Telemetry
+#include "mozilla/Telemetry.h"  // for Telemetry
 
 namespace mozilla {
 namespace layers {
 
 // Helper function for AutoscrollAnimation::DoSample().
 // Basically copied as-is from toolkit/content/browser-content.js.
-static float
-Accelerate(ScreenCoord curr, ScreenCoord start)
-{
+static float Accelerate(ScreenCoord curr, ScreenCoord start) {
   static const int speed = 12;
   float val = (curr - start) / speed;
   if (val > 1) {
@@ -33,14 +31,10 @@ Accelerate(ScreenCoord curr, ScreenCoord start)
 
 AutoscrollAnimation::AutoscrollAnimation(AsyncPanZoomController& aApzc,
                                          const ScreenPoint& aAnchorLocation)
-  : mApzc(aApzc)
-  , mAnchorLocation(aAnchorLocation)
-{
-}
+    : mApzc(aApzc), mAnchorLocation(aAnchorLocation) {}
 
-bool
-AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta)
-{
+bool AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
+                                   const TimeDuration& aDelta) {
   APZCTreeManager* treeManager = mApzc.GetApzcTreeManager();
   if (!treeManager) {
     return false;
@@ -69,9 +63,8 @@ AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& a
   //     its output is interpreted as CSS coordinates. This is intentional,
   //     insofar as autoscrollLoop() does the same thing.
   CSSPoint scrollDelta{
-    Accelerate(mouseLocation.x, mAnchorLocation.x) * timeCompensation,
-    Accelerate(mouseLocation.y, mAnchorLocation.y) * timeCompensation
-  };
+      Accelerate(mouseLocation.x, mAnchorLocation.x) * timeCompensation,
+      Accelerate(mouseLocation.y, mAnchorLocation.y) * timeCompensation};
 
   mApzc.ScrollByAndClamp(scrollDelta);
 
@@ -82,19 +75,18 @@ AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& a
   return true;
 }
 
-void
-AutoscrollAnimation::Cancel(CancelAnimationFlags aFlags)
-{
+void AutoscrollAnimation::Cancel(CancelAnimationFlags aFlags) {
   // The cancellation was initiated by browser.xml, so there's no need to
   // notify it.
   if (aFlags & TriggeredExternally) {
     return;
   }
 
-  if (RefPtr<GeckoContentController> controller = mApzc.GetGeckoContentController()) {
+  if (RefPtr<GeckoContentController> controller =
+          mApzc.GetGeckoContentController()) {
     controller->CancelAutoscroll(mApzc.GetGuid());
   }
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

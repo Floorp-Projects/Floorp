@@ -19,58 +19,46 @@ class nsIFile;
 namespace mozilla {
 namespace dom {
 
-class FilePickerParent : public PFilePickerParent
-{
+class FilePickerParent : public PFilePickerParent {
  public:
-  FilePickerParent(const nsString& aTitle,
-                   const int16_t& aMode)
-  : mTitle(aTitle)
-  , mMode(aMode)
-  , mResult(nsIFilePicker::returnOK)
-  {}
+  FilePickerParent(const nsString& aTitle, const int16_t& aMode)
+      : mTitle(aTitle), mMode(aMode), mResult(nsIFilePicker::returnOK) {}
 
   virtual ~FilePickerParent();
 
   void Done(int16_t aResult);
 
-  struct BlobImplOrString
-  {
+  struct BlobImplOrString {
     RefPtr<BlobImpl> mBlobImpl;
     nsString mDirectoryPath;
 
-    enum {
-      eBlobImpl,
-      eDirectoryPath
-    } mType;
+    enum { eBlobImpl, eDirectoryPath } mType;
   };
 
   void SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData);
 
-  virtual mozilla::ipc::IPCResult RecvOpen(const int16_t& aSelectedType,
-                                           const bool& aAddToRecentDocs,
-                                           const nsString& aDefaultFile,
-                                           const nsString& aDefaultExtension,
-                                           InfallibleTArray<nsString>&& aFilters,
-                                           InfallibleTArray<nsString>&& aFilterNames,
-                                           const nsString& aDisplayDirectory,
-                                           const nsString& aDisplaySpecialDirectory,
-                                           const nsString& aOkButtonLabel) override;
+  virtual mozilla::ipc::IPCResult RecvOpen(
+      const int16_t& aSelectedType, const bool& aAddToRecentDocs,
+      const nsString& aDefaultFile, const nsString& aDefaultExtension,
+      InfallibleTArray<nsString>&& aFilters,
+      InfallibleTArray<nsString>&& aFilterNames,
+      const nsString& aDisplayDirectory,
+      const nsString& aDisplaySpecialDirectory,
+      const nsString& aOkButtonLabel) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  class FilePickerShownCallback : public nsIFilePickerShownCallback
-  {
-  public:
+  class FilePickerShownCallback : public nsIFilePickerShownCallback {
+   public:
     explicit FilePickerShownCallback(FilePickerParent* aFilePickerParent)
-      : mFilePickerParent(aFilePickerParent)
-    { }
+        : mFilePickerParent(aFilePickerParent) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFILEPICKERSHOWNCALLBACK
 
     void Destroy();
 
-  private:
+   private:
     virtual ~FilePickerShownCallback() {}
     FilePickerParent* mFilePickerParent;
   };
@@ -79,17 +67,15 @@ class FilePickerParent : public PFilePickerParent
   bool CreateFilePicker();
 
   // This runnable is used to do some I/O operation on a separate thread.
-  class IORunnable : public Runnable
-  {
+  class IORunnable : public Runnable {
     FilePickerParent* mFilePickerParent;
     nsTArray<nsCOMPtr<nsIFile>> mFiles;
     nsTArray<BlobImplOrString> mResults;
     nsCOMPtr<nsIEventTarget> mEventTarget;
     bool mIsDirectory;
 
-  public:
-    IORunnable(FilePickerParent *aFPParent,
-               nsTArray<nsCOMPtr<nsIFile>>& aFiles,
+   public:
+    IORunnable(FilePickerParent* aFPParent, nsTArray<nsCOMPtr<nsIFile>>& aFiles,
                bool aIsDirectory);
 
     bool Dispatch();
@@ -106,7 +92,7 @@ class FilePickerParent : public PFilePickerParent
   int16_t mResult;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FilePickerParent_h
+#endif  // mozilla_dom_FilePickerParent_h

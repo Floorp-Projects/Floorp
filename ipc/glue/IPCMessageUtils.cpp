@@ -9,9 +9,8 @@
 
 namespace IPC {
 
-bool
-ByteLengthIsValid(uint32_t aNumElements, size_t aElementSize, int* aByteLength)
-{
+bool ByteLengthIsValid(uint32_t aNumElements, size_t aElementSize,
+                       int* aByteLength) {
   auto length = mozilla::CheckedInt<int>(aNumElements) * aElementSize;
   if (!length.isValid()) {
     return false;
@@ -20,4 +19,4 @@ ByteLengthIsValid(uint32_t aNumElements, size_t aElementSize, int* aByteLength)
   return true;
 }
 
-} // namespace IPC
+}  // namespace IPC

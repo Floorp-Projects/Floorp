@@ -14,17 +14,15 @@
 namespace mozilla {
 
 class GeckoBatteryManager final
-    : public java::GeckoBatteryManager::Natives<GeckoBatteryManager>
-{
-public:
-    static void
-    OnBatteryChange(double aLevel, bool aCharging, double aRemainingTime)
-    {
-        hal::NotifyBatteryChange(
-                hal::BatteryInformation(aLevel, aCharging, aRemainingTime));
-    }
+    : public java::GeckoBatteryManager::Natives<GeckoBatteryManager> {
+ public:
+  static void OnBatteryChange(double aLevel, bool aCharging,
+                              double aRemainingTime) {
+    hal::NotifyBatteryChange(
+        hal::BatteryInformation(aLevel, aCharging, aRemainingTime));
+  }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // GeckoBatteryManager_h
+#endif  // GeckoBatteryManager_h

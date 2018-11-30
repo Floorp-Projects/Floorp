@@ -8,7 +8,7 @@
 #include "nsNetUtil.h"
 
 #include "mtransport/nricectx.h"
-#include "mtransport/nricemediastream.h" // needed only for including nricectx.h
+#include "mtransport/nricemediastream.h"  // needed only for including nricectx.h
 #include "mtransport/nricestunaddr.h"
 
 using namespace mozilla::ipc;
@@ -16,9 +16,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-StunAddrsRequestParent::StunAddrsRequestParent()
-  : mIPCClosed(false)
-{
+StunAddrsRequestParent::StunAddrsRequestParent() : mIPCClosed(false) {
   NS_GetMainThread(getter_AddRefs(mMainThread));
 
   nsresult res;
@@ -26,9 +24,7 @@ StunAddrsRequestParent::StunAddrsRequestParent()
   MOZ_ASSERT(mSTSThread);
 }
 
-mozilla::ipc::IPCResult
-StunAddrsRequestParent::RecvGetStunAddrs()
-{
+mozilla::ipc::IPCResult StunAddrsRequestParent::RecvGetStunAddrs() {
   ASSERT_ON_THREAD(mMainThread);
 
   if (mIPCClosed) {
@@ -43,17 +39,13 @@ StunAddrsRequestParent::RecvGetStunAddrs()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-StunAddrsRequestParent::Recv__delete__()
-{
+mozilla::ipc::IPCResult StunAddrsRequestParent::Recv__delete__() {
   // see note below in ActorDestroy
   mIPCClosed = true;
   return IPC_OK();
 }
 
-void
-StunAddrsRequestParent::ActorDestroy(ActorDestroyReason why)
-{
+void StunAddrsRequestParent::ActorDestroy(ActorDestroyReason why) {
   // We may still have refcount>0 if we haven't made it through
   // GetStunAddrs_s and SendStunAddrs_m yet, but child process
   // has crashed.  We must not send any more msgs to child, or
@@ -61,9 +53,7 @@ StunAddrsRequestParent::ActorDestroy(ActorDestroyReason why)
   mIPCClosed = true;
 }
 
-void
-StunAddrsRequestParent::GetStunAddrs_s()
-{
+void StunAddrsRequestParent::GetStunAddrs_s() {
   ASSERT_ON_THREAD(mSTSThread);
 
   // get the stun addresses while on STS thread
@@ -74,16 +64,14 @@ StunAddrsRequestParent::GetStunAddrs_s()
   }
 
   // in order to return the result over IPC, we need to be on main thread
-  RUN_ON_THREAD(mMainThread,
-                WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
-                             &StunAddrsRequestParent::SendStunAddrs_m,
-                             std::move(addrs)),
-                NS_DISPATCH_NORMAL);
+  RUN_ON_THREAD(
+      mMainThread,
+      WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
+                   &StunAddrsRequestParent::SendStunAddrs_m, std::move(addrs)),
+      NS_DISPATCH_NORMAL);
 }
 
-void
-StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs)
-{
+void StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs) {
   ASSERT_ON_THREAD(mMainThread);
 
   if (mIPCClosed) {
@@ -99,5 +87,5 @@ StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs)
 NS_IMPL_ADDREF(StunAddrsRequestParent)
 NS_IMPL_RELEASE(StunAddrsRequestParent)
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

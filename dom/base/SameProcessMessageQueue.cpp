@@ -12,12 +12,9 @@ using namespace mozilla::dom;
 
 SameProcessMessageQueue* SameProcessMessageQueue::sSingleton;
 
-SameProcessMessageQueue::SameProcessMessageQueue()
-{
-}
+SameProcessMessageQueue::SameProcessMessageQueue() {}
 
-SameProcessMessageQueue::~SameProcessMessageQueue()
-{
+SameProcessMessageQueue::~SameProcessMessageQueue() {
   // This code should run during shutdown, and we should already have pumped the
   // event loop. So we should only see messages here if someone is sending
   // messages pretty late in shutdown.
@@ -26,16 +23,12 @@ SameProcessMessageQueue::~SameProcessMessageQueue()
   sSingleton = nullptr;
 }
 
-void
-SameProcessMessageQueue::Push(Runnable* aRunnable)
-{
+void SameProcessMessageQueue::Push(Runnable* aRunnable) {
   mQueue.AppendElement(aRunnable);
   NS_DispatchToCurrentThread(aRunnable);
 }
 
-void
-SameProcessMessageQueue::Flush()
-{
+void SameProcessMessageQueue::Flush() {
   nsTArray<RefPtr<Runnable>> queue;
   mQueue.SwapElements(queue);
   for (size_t i = 0; i < queue.Length(); i++) {
@@ -43,25 +36,18 @@ SameProcessMessageQueue::Flush()
   }
 }
 
-/* static */ SameProcessMessageQueue*
-SameProcessMessageQueue::Get()
-{
+/* static */ SameProcessMessageQueue* SameProcessMessageQueue::Get() {
   if (!sSingleton) {
     sSingleton = new SameProcessMessageQueue();
   }
   return sSingleton;
 }
 
-SameProcessMessageQueue::Runnable::Runnable()
- : mDispatched(false)
-{
-}
+SameProcessMessageQueue::Runnable::Runnable() : mDispatched(false) {}
 
 NS_IMPL_ISUPPORTS(SameProcessMessageQueue::Runnable, nsIRunnable)
 
-nsresult
-SameProcessMessageQueue::Runnable::Run()
-{
+nsresult SameProcessMessageQueue::Runnable::Run() {
   if (mDispatched) {
     return NS_OK;
   }

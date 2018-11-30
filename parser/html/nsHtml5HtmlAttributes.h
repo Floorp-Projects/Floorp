@@ -50,17 +50,16 @@ class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
-class nsHtml5HtmlAttributes
-{
-public:
+class nsHtml5HtmlAttributes {
+ public:
   static nsHtml5HtmlAttributes* EMPTY_ATTRIBUTES;
 
-private:
+ private:
   AutoTArray<nsHtml5AttributeEntry, 5> mStorage;
   int32_t mMode;
   void AddEntry(nsHtml5AttributeEntry&& aEntry);
 
-public:
+ public:
   explicit nsHtml5HtmlAttributes(int32_t aMode);
   ~nsHtml5HtmlAttributes();
 
@@ -75,11 +74,9 @@ public:
   nsHtml5String getValueNoBoundsCheck(int32_t aIndex);
   nsHtml5AttributeName* getAttributeNameNoBoundsCheck(int32_t aIndex);
   int32_t getLineNoBoundsCheck(int32_t aIndex);
-  void addAttribute(nsHtml5AttributeName* aName,
-                    nsHtml5String aValue,
+  void addAttribute(nsHtml5AttributeName* aName, nsHtml5String aValue,
                     int32_t aLine);
-  void AddAttributeWithLocal(nsAtom* aName,
-                             nsHtml5String aValue,
+  void AddAttributeWithLocal(nsAtom* aName, nsHtml5String aValue,
                              int32_t aLine);
   void clear(int32_t aMode);
   void releaseValue(int32_t aIndex);

@@ -8,9 +8,7 @@
 
 #include "mozilla/dom/HTMLInputElement.h"
 
-bool
-FileInputType::IsValueMissing() const
-{
+bool FileInputType::IsValueMissing() const {
   if (!mInputElement->IsRequired()) {
     return false;
   }
@@ -22,10 +20,7 @@ FileInputType::IsValueMissing() const
   return mInputElement->GetFilesOrDirectoriesInternal().IsEmpty();
 }
 
-nsresult
-FileInputType::GetValueMissingMessage(nsAString& aMessage)
-{
-  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                            "FormValidationFileMissing",
-                                            aMessage);
+nsresult FileInputType::GetValueMissingMessage(nsAString& aMessage) {
+  return nsContentUtils::GetLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationFileMissing", aMessage);
 }

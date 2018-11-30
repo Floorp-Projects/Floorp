@@ -18,9 +18,7 @@
 
 using namespace mozilla;
 
-nsIFrame*
-NS_NewLegendFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewLegendFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
 #ifdef DEBUG
   const nsStyleDisplay* disp = aStyle->StyleDisplay();
   NS_ASSERTION(!disp->IsAbsolutelyPositionedStyle() && !disp->IsFloatingStyle(),
@@ -34,35 +32,31 @@ NS_NewLegendFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLegendFrame)
 
-void
-nsLegendFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
+void nsLegendFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                PostDestroyData& aPostDestroyData) {
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 NS_QUERYFRAME_HEAD(nsLegendFrame)
-  NS_QUERYFRAME_ENTRY(nsLegendFrame)
+NS_QUERYFRAME_ENTRY(nsLegendFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-void
-nsLegendFrame::Reflow(nsPresContext*          aPresContext,
-                     ReflowOutput&     aDesiredSize,
-                     const ReflowInput& aReflowInput,
-                     nsReflowStatus&          aStatus)
-{
+void nsLegendFrame::Reflow(nsPresContext* aPresContext,
+                           ReflowOutput& aDesiredSize,
+                           const ReflowInput& aReflowInput,
+                           nsReflowStatus& aStatus) {
   DO_GLOBAL_REFLOW_COUNT("nsLegendFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   if (mState & NS_FRAME_FIRST_REFLOW) {
     nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
-  return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
+  return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput,
+                              aStatus);
 }
 
-int32_t
-nsLegendFrame::GetLogicalAlign(WritingMode aCBWM)
-{
+int32_t nsLegendFrame::GetLogicalAlign(WritingMode aCBWM) {
   int32_t intValue = NS_STYLE_TEXT_ALIGN_START;
   nsGenericHTMLElement* content = nsGenericHTMLElement::FromNode(mContent);
   if (content) {
@@ -85,9 +79,7 @@ nsLegendFrame::GetLogicalAlign(WritingMode aCBWM)
 }
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsLegendFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsLegendFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("Legend"), aResult);
 }
 #endif

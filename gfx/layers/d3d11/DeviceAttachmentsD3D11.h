@@ -20,28 +20,27 @@ namespace layers {
 
 struct ShaderBytes;
 
-class DeviceAttachmentsD3D11
-{
+class DeviceAttachmentsD3D11 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceAttachmentsD3D11);
 
-public:
+ public:
   static RefPtr<DeviceAttachmentsD3D11> Create(ID3D11Device* aDevice);
 
   bool InitBlendShaders();
   bool EnsureTriangleBuffer(size_t aNumTriangles);
 
-  bool IsValid() const {
-    return mInitialized;
-  }
+  bool IsValid() const { return mInitialized; }
   const nsCString& GetFailureId() const {
     MOZ_ASSERT(!IsValid());
     return mInitFailureId;
   }
 
-  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11VertexShader>>
-          VertexShaderArray;
-  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11PixelShader>>
-          PixelShaderArray;
+  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes,
+                          RefPtr<ID3D11VertexShader>>
+      VertexShaderArray;
+  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes,
+                          RefPtr<ID3D11PixelShader>>
+      PixelShaderArray;
 
   RefPtr<ID3D11InputLayout> mInputLayout;
   RefPtr<ID3D11InputLayout> mDynamicInputLayout;
@@ -75,14 +74,10 @@ public:
 
   RefPtr<SyncObjectHost> mSyncObject;
 
-  void SetDeviceReset() {
-    mDeviceReset = true;
-  }
-  bool IsDeviceReset() const {
-    return mDeviceReset;
-  }
+  void SetDeviceReset() { mDeviceReset = true; }
+  bool IsDeviceReset() const { return mDeviceReset; }
 
-private:
+ private:
   explicit DeviceAttachmentsD3D11(ID3D11Device* device);
   ~DeviceAttachmentsD3D11();
 
@@ -90,10 +85,12 @@ private:
   bool CreateShaders();
   bool InitSyncObject();
 
-  void InitVertexShader(const ShaderBytes& aShader, VertexShaderArray& aArray, MaskType aMaskType) {
+  void InitVertexShader(const ShaderBytes& aShader, VertexShaderArray& aArray,
+                        MaskType aMaskType) {
     InitVertexShader(aShader, getter_AddRefs(aArray[aMaskType]));
   }
-  void InitPixelShader(const ShaderBytes& aShader, PixelShaderArray& aArray, MaskType aMaskType) {
+  void InitPixelShader(const ShaderBytes& aShader, PixelShaderArray& aArray,
+                       MaskType aMaskType) {
     InitPixelShader(aShader, getter_AddRefs(aArray[aMaskType]));
   }
 
@@ -102,7 +99,7 @@ private:
 
   bool Failed(HRESULT hr, const char* aContext);
 
-private:
+ private:
   size_t mMaximumTriangles;
 
   // Only used during initialization.
@@ -113,7 +110,7 @@ private:
   nsCString mInitFailureId;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_d3d11_DeviceAttachmentsD3D11_h
+#endif  // mozilla_gfx_layers_d3d11_DeviceAttachmentsD3D11_h

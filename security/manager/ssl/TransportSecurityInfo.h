@@ -7,7 +7,7 @@
 #ifndef TransportSecurityInfo_h
 #define TransportSecurityInfo_h
 
-#include "CertVerifier.h" // For CertificateTransparencyInfo
+#include "CertVerifier.h"  // For CertificateTransparencyInfo
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "mozilla/Assertions.h"
@@ -22,21 +22,22 @@
 #include "nsString.h"
 #include "mozpkix/pkixtypes.h"
 
-namespace mozilla { namespace psm {
+namespace mozilla {
+namespace psm {
 
 enum class EVStatus {
   NotEV = 0,
   EV = 1,
 };
 
-class TransportSecurityInfo : public nsITransportSecurityInfo
-                            , public nsIInterfaceRequestor
-                            , public nsISerializable
-                            , public nsIClassInfo
-{
-protected:
+class TransportSecurityInfo : public nsITransportSecurityInfo,
+                              public nsIInterfaceRequestor,
+                              public nsISerializable,
+                              public nsIClassInfo {
+ protected:
   virtual ~TransportSecurityInfo() {}
-public:
+
+ public:
   TransportSecurityInfo();
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -47,15 +48,14 @@ public:
 
   void SetSecurityState(uint32_t aState);
 
-  inline int32_t GetErrorCode()
-  {
+  inline int32_t GetErrorCode() {
     int32_t result;
     mozilla::DebugOnly<nsresult> rv = GetErrorCode(&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }
 
-  const nsACString & GetHostName() const { return mHostName; }
+  const nsACString& GetHostName() const { return mHostName; }
 
   void SetHostName(const char* host);
 
@@ -78,12 +78,10 @@ public:
 
   nsresult SetSucceededCertChain(mozilla::UniqueCERTCertList certList);
 
-  bool HasServerCert() {
-    return mServerCert != nullptr;
-  }
+  bool HasServerCert() { return mServerCert != nullptr; }
 
   void SetCertificateTransparencyInfo(
-    const mozilla::psm::CertificateTransparencyInfo& info);
+      const mozilla::psm::CertificateTransparencyInfo& info);
 
   uint16_t mCipherSuite;
   uint16_t mProtocolVersion;
@@ -103,7 +101,7 @@ public:
      connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
   bool mHaveCertErrorBits;
 
-private:
+ private:
   // True if SetCanceled has been called (or if this was deserialized with a
   // non-zero mErrorCode, which can only be the case if SetCanceled was called
   // on the original TransportSecurityInfo).
@@ -111,10 +109,10 @@ private:
 
   mutable ::mozilla::Mutex mMutex;
 
-protected:
+ protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
-private:
+ private:
   uint32_t mSecurityState;
 
   PRErrorCode mErrorCode;
@@ -132,51 +130,49 @@ private:
   nsresult ReadSSLStatus(nsIObjectInputStream* aStream);
 };
 
-class RememberCertErrorsTable
-{
-private:
+class RememberCertErrorsTable {
+ private:
   RememberCertErrorsTable();
 
-  struct CertStateBits
-  {
+  struct CertStateBits {
     bool mIsDomainMismatch;
     bool mIsNotValidAtThisTime;
     bool mIsUntrusted;
   };
   nsDataHashtable<nsCStringHashKey, CertStateBits> mErrorHosts;
 
-public:
+ public:
   void RememberCertHasError(TransportSecurityInfo* infoObject,
                             SECStatus certVerificationResult);
   void LookupCertErrorBits(TransportSecurityInfo* infoObject);
 
-  static void Init()
-  {
-    sInstance = new RememberCertErrorsTable();
-  }
+  static void Init() { sInstance = new RememberCertErrorsTable(); }
 
-  static RememberCertErrorsTable & GetInstance()
-  {
+  static RememberCertErrorsTable& GetInstance() {
     MOZ_ASSERT(sInstance);
     return *sInstance;
   }
 
-  static void Cleanup()
-  {
+  static void Cleanup() {
     delete sInstance;
     sInstance = nullptr;
   }
-private:
+
+ private:
   Mutex mMutex;
 
-  static RememberCertErrorsTable * sInstance;
+  static RememberCertErrorsTable* sInstance;
 };
 
-} } // namespace mozilla::psm
+}  // namespace psm
+}  // namespace mozilla
 
 // 16786594-0296-4471-8096-8f84497ca428
-#define TRANSPORTSECURITYINFO_CID \
-{ 0x16786594, 0x0296, 0x4471, \
-    { 0x80, 0x96, 0x8f, 0x84, 0x49, 0x7c, 0xa4, 0x28 } }
+#define TRANSPORTSECURITYINFO_CID                    \
+  {                                                  \
+    0x16786594, 0x0296, 0x4471, {                    \
+      0x80, 0x96, 0x8f, 0x84, 0x49, 0x7c, 0xa4, 0x28 \
+    }                                                \
+  }
 
-#endif // TransportSecurityInfo_h
+#endif  // TransportSecurityInfo_h

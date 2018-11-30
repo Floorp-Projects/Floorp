@@ -12,42 +12,40 @@
 namespace mozilla {
 namespace dom {
 
-class FileSystemRootDirectoryEntry final : public FileSystemDirectoryEntry
-{
-public:
+class FileSystemRootDirectoryEntry final : public FileSystemDirectoryEntry {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemRootDirectoryEntry, FileSystemDirectoryEntry)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemRootDirectoryEntry,
+                                           FileSystemDirectoryEntry)
 
-  FileSystemRootDirectoryEntry(nsIGlobalObject* aGlobalObject,
-                               const Sequence<RefPtr<FileSystemEntry>>& aEntries,
-                               FileSystem* aFileSystem);
+  FileSystemRootDirectoryEntry(
+      nsIGlobalObject* aGlobalObject,
+      const Sequence<RefPtr<FileSystemEntry>>& aEntries,
+      FileSystem* aFileSystem);
 
-  virtual void
-  GetName(nsAString& aName, ErrorResult& aRv) const override;
+  virtual void GetName(nsAString& aName, ErrorResult& aRv) const override;
 
-  virtual void
-  GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
+  virtual void GetFullPath(nsAString& aFullPath,
+                           ErrorResult& aRv) const override;
 
-  virtual already_AddRefed<FileSystemDirectoryReader>
-  CreateReader() override;
+  virtual already_AddRefed<FileSystemDirectoryReader> CreateReader() override;
 
-private:
+ private:
   ~FileSystemRootDirectoryEntry();
 
-  virtual void
-  GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
-              const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-              GetInternalType aType) override;
+  virtual void GetInternal(
+      const nsAString& aPath, const FileSystemFlags& aFlag,
+      const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+      GetInternalType aType) override;
 
-  void
-  Error(const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-        nsresult aError) const;
+  void Error(const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+             nsresult aError) const;
 
   Sequence<RefPtr<FileSystemEntry>> mEntries;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileSystemRootDirectoryEntry_h
+#endif  // mozilla_dom_FileSystemRootDirectoryEntry_h

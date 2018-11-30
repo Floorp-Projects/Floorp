@@ -20,34 +20,30 @@ namespace dom {
  * This class is for error handling.
  * All methods in this class are static.
  */
-class FileSystemUtils
-{
-public:
+class FileSystemUtils {
+ public:
   /*
    * Return true if aDescendantPath is a descendant of aPath.
    */
-  static bool
-  IsDescendantPath(const nsAString& aPath,
-                   const nsAString& aDescendantPath);
+  static bool IsDescendantPath(const nsAString& aPath,
+                               const nsAString& aDescendantPath);
 
   /**
    * Return true if this is valid DOMPath. It also splits the path in
    * subdirectories and stores them in aParts.
    */
-  static bool
-  IsValidRelativeDOMPath(const nsAString& aPath,
-                         nsTArray<nsString>& aParts);
+  static bool IsValidRelativeDOMPath(const nsAString& aPath,
+                                     nsTArray<nsString>& aParts);
 
   /**
    * Helper method. If aGlobal is null, the SystemGroup EventTarget will be
    * used.
    */
-  static nsresult
-  DispatchRunnable(nsIGlobalObject* aGlobal,
-                   already_AddRefed<nsIRunnable>&& aRunnable);
+  static nsresult DispatchRunnable(nsIGlobalObject* aGlobal,
+                                   already_AddRefed<nsIRunnable>&& aRunnable);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileSystemUtils_h
+#endif  // mozilla_dom_FileSystemUtils_h

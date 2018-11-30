@@ -16,10 +16,8 @@ class LSSnapshotChild;
 class LSSnapshotInitInfo;
 class LSWriteInfo;
 
-class LSSnapshot final
-  : public nsIRunnable
-{
-public:
+class LSSnapshot final : public nsIRunnable {
+ public:
   /**
    * The LoadState expresses what subset of information a snapshot has from the
    * authoritative Datastore in the parent process.  The initial snapshot is
@@ -37,8 +35,7 @@ public:
    * The state AllUnorderedItems can only be reached by code getting items one
    * by one.
    */
-  enum class LoadState
-  {
+  enum class LoadState {
     /**
      * Class constructed, Init(LSSnapshotInitInfo) has not been invoked yet.
      */
@@ -68,7 +65,7 @@ public:
     EndGuard
   };
 
-private:
+ private:
   RefPtr<LSSnapshot> mSelfRef;
 
   RefPtr<LSDatabase> mDatabase;
@@ -99,106 +96,71 @@ private:
   bool mSentFinish;
 #endif
 
-public:
+ public:
   explicit LSSnapshot(LSDatabase* aDatabase);
 
-  void
-  AssertIsOnOwningThread() const
-  {
-    NS_ASSERT_OWNINGTHREAD(LSSnapshot);
-  }
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(LSSnapshot); }
 
-  void
-  SetActor(LSSnapshotChild* aActor);
+  void SetActor(LSSnapshotChild* aActor);
 
-  void
-  ClearActor()
-  {
+  void ClearActor() {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mActor);
 
     mActor = nullptr;
   }
 
-  bool
-  Explicit() const
-  {
-    return mExplicit;
-  }
+  bool Explicit() const { return mExplicit; }
 
-  nsresult
-  Init(const LSSnapshotInitInfo& aInitInfo,
-       bool aExplicit);
+  nsresult Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit);
 
-  nsresult
-  GetLength(uint32_t* aResult);
+  nsresult GetLength(uint32_t* aResult);
 
-  nsresult
-  GetKey(uint32_t aIndex,
-         nsAString& aResult);
+  nsresult GetKey(uint32_t aIndex, nsAString& aResult);
 
-  nsresult
-  GetItem(const nsAString& aKey,
-          nsAString& aResult);
+  nsresult GetItem(const nsAString& aKey, nsAString& aResult);
 
-  nsresult
-  GetKeys(nsTArray<nsString>& aKeys);
+  nsresult GetKeys(nsTArray<nsString>& aKeys);
 
-  nsresult
-  SetItem(const nsAString& aKey,
-          const nsAString& aValue,
-          LSNotifyInfo& aNotifyInfo);
+  nsresult SetItem(const nsAString& aKey, const nsAString& aValue,
+                   LSNotifyInfo& aNotifyInfo);
 
-  nsresult
-  RemoveItem(const nsAString& aKey,
-             LSNotifyInfo& aNotifyInfo);
+  nsresult RemoveItem(const nsAString& aKey, LSNotifyInfo& aNotifyInfo);
 
-  nsresult
-  Clear(LSNotifyInfo& aNotifyInfo);
+  nsresult Clear(LSNotifyInfo& aNotifyInfo);
 
-  void
-  MarkDirty();
+  void MarkDirty();
 
-  nsresult
-  End();
+  nsresult End();
 
-private:
+ private:
   ~LSSnapshot();
 
-  void
-  ScheduleStableStateCallback();
+  void ScheduleStableStateCallback();
 
-  void
-  MaybeScheduleStableStateCallback();
+  void MaybeScheduleStableStateCallback();
 
-  nsresult
-  GetItemInternal(const nsAString& aKey,
-                  const Optional<nsString>& aValue,
-                  nsAString& aResult);
+  nsresult GetItemInternal(const nsAString& aKey,
+                           const Optional<nsString>& aValue,
+                           nsAString& aResult);
 
-  nsresult
-  EnsureAllKeys();
+  nsresult EnsureAllKeys();
 
-  nsresult
-  UpdateUsage(int64_t aDelta);
+  nsresult UpdateUsage(int64_t aDelta);
 
-  nsresult
-  Checkpoint();
+  nsresult Checkpoint();
 
-  nsresult
-  Finish();
+  nsresult Finish();
 
-  void
-  CancelTimer();
+  void CancelTimer();
 
-  static void
-  TimerCallback(nsITimer* aTimer, void* aClosure);
+  static void TimerCallback(nsITimer* aTimer, void* aClosure);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_localstorage_LSSnapshot_h
+#endif  // mozilla_dom_localstorage_LSSnapshot_h

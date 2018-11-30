@@ -16,41 +16,39 @@
 class nsAtom;
 class nsIContent;
 
-nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
-                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGTextPathElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 // textPath side types
-static const uint16_t TEXTPATH_SIDETYPE_LEFT    = 1;
-static const uint16_t TEXTPATH_SIDETYPE_RIGHT   = 2;
+static const uint16_t TEXTPATH_SIDETYPE_LEFT = 1;
+static const uint16_t TEXTPATH_SIDETYPE_RIGHT = 2;
 
 typedef SVGTextContentElement SVGTextPathElementBase;
 
-class SVGTextPathElement final : public SVGTextPathElementBase
-{
-friend class ::SVGTextFrame;
+class SVGTextPathElement final : public SVGTextPathElementBase {
+  friend class ::SVGTextFrame;
 
-protected:
-  friend nsresult (::NS_NewSVGTextPathElement(nsIContent **aResult,
-                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGTextPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+ protected:
+  friend nsresult(::NS_NewSVGTextPathElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  explicit SVGTextPathElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-public:
+ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  SVGAnimatedPathSegList* GetAnimPathSegList() override {
-    return &mPath;
-  }
+  SVGAnimatedPathSegList* GetAnimPathSegList() override { return &mPath; }
 
-  nsStaticAtom* GetPathDataAttrName() const override {
-    return nsGkAtoms::path;
-  }
+  nsStaticAtom* GetPathDataAttrName() const override { return nsGkAtoms::path; }
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> StartOffset();
@@ -62,21 +60,20 @@ public:
   void HrefAsString(nsAString& aHref);
 
  protected:
-
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { /* TEXTLENGTH, */ STARTOFFSET = 1 };
   nsSVGLength2 mLengthAttributes[2];
-  virtual nsSVGLength2* LengthAttributes() override
-    { return mLengthAttributes; }
+  virtual nsSVGLength2* LengthAttributes() override {
+    return mLengthAttributes;
+  }
   static LengthInfo sLengthInfo[2];
 
   enum { /* LENGTHADJUST, */ METHOD = 1, SPACING, SIDE };
   nsSVGEnum mEnumAttributes[4];
-  virtual nsSVGEnum* EnumAttributes() override
-    { return mEnumAttributes; }
+  virtual nsSVGEnum* EnumAttributes() override { return mEnumAttributes; }
   static nsSVGEnumMapping sMethodMap[];
   static nsSVGEnumMapping sSpacingMap[];
   static nsSVGEnumMapping sSideMap[];
@@ -89,7 +86,7 @@ public:
   SVGAnimatedPathSegList mPath;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGTextPathElement_h
+#endif  // mozilla_dom_SVGTextPathElement_h

@@ -9,7 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "mozilla/Move.h"
-#include "nsContentUtils.h" // NS_ENSURE_FINITE
+#include "nsContentUtils.h"  // NS_ENSURE_FINITE
 #include "nsSMILValue.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsTextFormatter.h"
@@ -22,37 +22,25 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::SVGAngle_Binding;
 using namespace mozilla::dom::SVGMarkerElement_Binding;
 
-static const nsStaticAtom* const unitMap[] =
-{
-  nullptr, /* SVG_ANGLETYPE_UNKNOWN */
-  nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
-  nsGkAtoms::deg,
-  nsGkAtoms::rad,
-  nsGkAtoms::grad
-};
+static const nsStaticAtom* const unitMap[] = {
+    nullptr, /* SVG_ANGLETYPE_UNKNOWN */
+    nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
+    nsGkAtoms::deg, nsGkAtoms::rad, nsGkAtoms::grad};
 
 static nsSVGAttrTearoffTable<nsSVGAngle, SVGAnimatedAngle>
-  sSVGAnimatedAngleTearoffTable;
-static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle>
-  sBaseSVGAngleTearoffTable;
-static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle>
-  sAnimSVGAngleTearoffTable;
+    sSVGAnimatedAngleTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle> sBaseSVGAngleTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGAngle, SVGAngle> sAnimSVGAngleTearoffTable;
 
 /* Helper functions */
 
-static bool
-IsValidUnitType(uint16_t unit)
-{
-  if (unit > SVG_ANGLETYPE_UNKNOWN &&
-      unit <= SVG_ANGLETYPE_GRAD)
-    return true;
+static bool IsValidUnitType(uint16_t unit) {
+  if (unit > SVG_ANGLETYPE_UNKNOWN && unit <= SVG_ANGLETYPE_GRAD) return true;
 
   return false;
 }
 
-static void
-GetUnitString(nsAString& unit, uint16_t unitType)
-{
+static void GetUnitString(nsAString& unit, uint16_t unitType) {
   if (IsValidUnitType(unitType)) {
     if (unitMap[unitType]) {
       unitMap[unitType]->ToString(unit);
@@ -63,16 +51,13 @@ GetUnitString(nsAString& unit, uint16_t unitType)
   MOZ_ASSERT_UNREACHABLE("Unknown unit type");
 }
 
-static uint16_t
-GetUnitTypeForString(const nsAString& unitStr)
-{
-  if (unitStr.IsEmpty())
-    return SVG_ANGLETYPE_UNSPECIFIED;
+static uint16_t GetUnitTypeForString(const nsAString& unitStr) {
+  if (unitStr.IsEmpty()) return SVG_ANGLETYPE_UNSPECIFIED;
 
   nsStaticAtom* unitAtom = NS_GetStaticAtom(unitStr);
 
   if (unitAtom) {
-    for (uint32_t i = 0 ; i < ArrayLength(unitMap) ; i++) {
+    for (uint32_t i = 0; i < ArrayLength(unitMap); i++) {
       if (unitMap[i] == unitAtom) {
         return i;
       }
@@ -82,9 +67,8 @@ GetUnitTypeForString(const nsAString& unitStr)
   return SVG_ANGLETYPE_UNKNOWN;
 }
 
-static void
-GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
-{
+static void GetValueString(nsAString& aValueAsString, float aValue,
+                           uint16_t aUnitType) {
   nsTextFormatter::ssprintf(aValueAsString, u"%g", (double)aValue);
 
   nsAutoString unitString;
@@ -92,15 +76,12 @@ GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
   aValueAsString.Append(unitString);
 }
 
-/* static */ bool
-nsSVGAngle::GetValueFromString(const nsAString& aString,
-                               float& aValue,
-                               uint16_t* aUnitType)
-{
-  RangedPtr<const char16_t> iter =
-    SVGContentUtils::GetStartRangedPtr(aString);
+/* static */ bool nsSVGAngle::GetValueFromString(const nsAString& aString,
+                                                 float& aValue,
+                                                 uint16_t* aUnitType) {
+  RangedPtr<const char16_t> iter = SVGContentUtils::GetStartRangedPtr(aString);
   const RangedPtr<const char16_t> end =
-    SVGContentUtils::GetEndRangedPtr(aString);
+      SVGContentUtils::GetEndRangedPtr(aString);
 
   if (!SVGContentUtils::ParseNumber(iter, end, aValue)) {
     return false;
@@ -111,27 +92,23 @@ nsSVGAngle::GetValueFromString(const nsAString& aString,
   return IsValidUnitType(*aUnitType);
 }
 
-/* static */ float
-nsSVGAngle::GetDegreesPerUnit(uint8_t aUnit)
-{
+/* static */ float nsSVGAngle::GetDegreesPerUnit(uint8_t aUnit) {
   switch (aUnit) {
-  case SVG_ANGLETYPE_UNSPECIFIED:
-  case SVG_ANGLETYPE_DEG:
-    return 1;
-  case SVG_ANGLETYPE_RAD:
-    return static_cast<float>(180.0 / M_PI);
-  case SVG_ANGLETYPE_GRAD:
-    return 90.0f / 100.0f;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unknown unit type");
-    return 0;
+    case SVG_ANGLETYPE_UNSPECIFIED:
+    case SVG_ANGLETYPE_DEG:
+      return 1;
+    case SVG_ANGLETYPE_RAD:
+      return static_cast<float>(180.0 / M_PI);
+    case SVG_ANGLETYPE_GRAD:
+      return 90.0f / 100.0f;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown unit type");
+      return 0;
   }
 }
 
-void
-nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
-                                         nsSVGElement *aSVGElement)
-{
+void nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
+                                              nsSVGElement* aSVGElement) {
   if (mBaseVal == aValue) {
     return;
   }
@@ -140,22 +117,17 @@ nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
   mBaseVal = aValue;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  }
-  else {
+  } else {
     aSVGElement->AnimationNeedsResample();
   }
   aSVGElement->DidChangeAngle(mAttrEnum, emptyOrOldValue);
 }
 
-nsresult
-nsSVGAngle::ConvertToSpecifiedUnits(uint16_t unitType,
-                                    nsSVGElement *aSVGElement)
-{
-  if (!IsValidUnitType(unitType))
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+nsresult nsSVGAngle::ConvertToSpecifiedUnits(uint16_t unitType,
+                                             nsSVGElement* aSVGElement) {
+  if (!IsValidUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  if (mBaseValUnit == uint8_t(unitType))
-    return NS_OK;
+  if (mBaseValUnit == uint8_t(unitType)) return NS_OK;
 
   nsAttrValue emptyOrOldValue;
   if (aSVGElement) {
@@ -174,15 +146,12 @@ nsSVGAngle::ConvertToSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-nsresult
-nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
-                                   float valueInSpecifiedUnits,
-                                   nsSVGElement *aSVGElement)
-{
+nsresult nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
+                                            float valueInSpecifiedUnits,
+                                            nsSVGElement* aSVGElement) {
   NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
-  if (!IsValidUnitType(unitType))
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (!IsValidUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   if (mBaseVal == valueInSpecifiedUnits && mBaseValUnit == uint8_t(unitType))
     return NS_OK;
@@ -196,8 +165,7 @@ nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
     mAnimValUnit = mBaseValUnit;
-  }
-  else {
+  } else {
     aSVGElement->AnimationNeedsResample();
   }
   if (aSVGElement) {
@@ -206,11 +174,8 @@ nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-already_AddRefed<SVGAngle>
-nsSVGAngle::ToDOMBaseVal(nsSVGElement *aSVGElement)
-{
-  RefPtr<SVGAngle> domBaseVal =
-    sBaseSVGAngleTearoffTable.GetTearoff(this);
+already_AddRefed<SVGAngle> nsSVGAngle::ToDOMBaseVal(nsSVGElement* aSVGElement) {
+  RefPtr<SVGAngle> domBaseVal = sBaseSVGAngleTearoffTable.GetTearoff(this);
   if (!domBaseVal) {
     domBaseVal = new SVGAngle(this, aSVGElement, SVGAngle::BaseValue);
     sBaseSVGAngleTearoffTable.AddTearoff(this, domBaseVal);
@@ -219,11 +184,8 @@ nsSVGAngle::ToDOMBaseVal(nsSVGElement *aSVGElement)
   return domBaseVal.forget();
 }
 
-already_AddRefed<SVGAngle>
-nsSVGAngle::ToDOMAnimVal(nsSVGElement *aSVGElement)
-{
-  RefPtr<SVGAngle> domAnimVal =
-    sAnimSVGAngleTearoffTable.GetTearoff(this);
+already_AddRefed<SVGAngle> nsSVGAngle::ToDOMAnimVal(nsSVGElement* aSVGElement) {
+  RefPtr<SVGAngle> domAnimVal = sAnimSVGAngleTearoffTable.GetTearoff(this);
   if (!domAnimVal) {
     domAnimVal = new SVGAngle(this, aSVGElement, SVGAngle::AnimValue);
     sAnimSVGAngleTearoffTable.AddTearoff(this, domAnimVal);
@@ -232,8 +194,7 @@ nsSVGAngle::ToDOMAnimVal(nsSVGElement *aSVGElement)
   return domAnimVal.forget();
 }
 
-SVGAngle::~SVGAngle()
-{
+SVGAngle::~SVGAngle() {
   if (mType == BaseValue) {
     sBaseSVGAngleTearoffTable.RemoveTearoff(mVal);
   } else if (mType == AnimValue) {
@@ -245,16 +206,14 @@ SVGAngle::~SVGAngle()
 
 /* Implementation */
 
-nsresult
-nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
-                               nsSVGElement *aSVGElement,
-                               bool aDoSetAttr)
-{
+nsresult nsSVGAngle::SetBaseValueString(const nsAString& aValueAsString,
+                                        nsSVGElement* aSVGElement,
+                                        bool aDoSetAttr) {
   float value;
   uint16_t unitType;
 
   if (!GetValueFromString(aValueAsString, value, &unitType)) {
-     return NS_ERROR_DOM_SYNTAX_ERR;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
   if (mBaseVal == value && mBaseValUnit == uint8_t(unitType)) {
     return NS_OK;
@@ -269,8 +228,7 @@ nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
     mAnimValUnit = mBaseValUnit;
-  }
-  else {
+  } else {
     aSVGElement->AnimationNeedsResample();
   }
 
@@ -280,22 +238,16 @@ nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
   return NS_OK;
 }
 
-void
-nsSVGAngle::GetBaseValueString(nsAString & aValueAsString) const
-{
+void nsSVGAngle::GetBaseValueString(nsAString& aValueAsString) const {
   GetValueString(aValueAsString, mBaseVal, mBaseValUnit);
 }
 
-void
-nsSVGAngle::GetAnimValueString(nsAString & aValueAsString) const
-{
+void nsSVGAngle::GetAnimValueString(nsAString& aValueAsString) const {
   GetValueString(aValueAsString, mAnimVal, mAnimValUnit);
 }
 
-void
-nsSVGAngle::SetBaseValue(float aValue, uint8_t aUnit,
-                         nsSVGElement *aSVGElement, bool aDoSetAttr)
-{
+void nsSVGAngle::SetBaseValue(float aValue, uint8_t aUnit,
+                              nsSVGElement* aSVGElement, bool aDoSetAttr) {
   float valueInSpecifiedUnits = aValue / GetDegreesPerUnit(aUnit);
   if (aUnit == mBaseValUnit && mBaseVal == valueInSpecifiedUnits) {
     return;
@@ -309,8 +261,7 @@ nsSVGAngle::SetBaseValue(float aValue, uint8_t aUnit,
   mBaseVal = valueInSpecifiedUnits;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  }
-  else {
+  } else {
     aSVGElement->AnimationNeedsResample();
   }
   if (aSVGElement && aDoSetAttr) {
@@ -318,9 +269,8 @@ nsSVGAngle::SetBaseValue(float aValue, uint8_t aUnit,
   }
 }
 
-void
-nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement)
-{
+void nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit,
+                              nsSVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal == aValue && mAnimValUnit == aUnit) {
     return;
   }
@@ -330,11 +280,10 @@ nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateAngle(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedAngle>
-nsSVGAngle::ToDOMAnimatedAngle(nsSVGElement *aSVGElement)
-{
+already_AddRefed<SVGAnimatedAngle> nsSVGAngle::ToDOMAnimatedAngle(
+    nsSVGElement* aSVGElement) {
   RefPtr<SVGAnimatedAngle> domAnimatedAngle =
-    sSVGAnimatedAngleTearoffTable.GetTearoff(this);
+      sSVGAnimatedAngleTearoffTable.GetTearoff(this);
   if (!domAnimatedAngle) {
     domAnimatedAngle = new SVGAnimatedAngle(this, aSVGElement);
     sSVGAnimatedAngleTearoffTable.AddTearoff(this, domAnimatedAngle);
@@ -343,16 +292,13 @@ nsSVGAngle::ToDOMAnimatedAngle(nsSVGElement *aSVGElement)
   return domAnimatedAngle.forget();
 }
 
-SVGAnimatedAngle::~SVGAnimatedAngle()
-{
+SVGAnimatedAngle::~SVGAnimatedAngle() {
   sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<nsISMILAttr>
-nsSVGAngle::ToSMILAttr(nsSVGElement *aSVGElement)
-{
+UniquePtr<nsISMILAttr> nsSVGAngle::ToSMILAttr(nsSVGElement* aSVGElement) {
   if (aSVGElement->NodeInfo()->Equals(nsGkAtoms::marker, kNameSpaceID_SVG)) {
-    SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(aSVGElement);
+    SVGMarkerElement* marker = static_cast<SVGMarkerElement*>(aSVGElement);
     return MakeUnique<SMILOrient>(marker->GetOrientType(), this, aSVGElement);
   }
   // SMILOrient would not be useful for general angle attributes (also,
@@ -361,12 +307,9 @@ nsSVGAngle::ToSMILAttr(nsSVGElement *aSVGElement)
   return nullptr;
 }
 
-nsresult
-nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
-                                        const SVGAnimationElement* /*aSrcElement*/,
-                                        nsSMILValue& aValue,
-                                        bool& aPreventCachingOfSandwich) const
-{
+nsresult nsSVGAngle::SMILOrient::ValueFromString(
+    const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
+    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   nsSMILValue val(&SVGOrientSMILType::sSingleton);
   if (aStr.EqualsLiteral("auto")) {
     val.mU.mOrient.mOrientType = SVG_MARKER_ORIENT_AUTO;
@@ -388,9 +331,7 @@ nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
   return NS_OK;
 }
 
-nsSMILValue
-nsSVGAngle::SMILOrient::GetBaseValue() const
-{
+nsSMILValue nsSVGAngle::SMILOrient::GetBaseValue() const {
   nsSMILValue val(&SVGOrientSMILType::sSingleton);
   val.mU.mOrient.mAngle = mAngle->GetBaseValInSpecifiedUnits();
   val.mU.mOrient.mUnit = mAngle->GetBaseValueUnit();
@@ -398,9 +339,7 @@ nsSVGAngle::SMILOrient::GetBaseValue() const
   return val;
 }
 
-void
-nsSVGAngle::SMILOrient::ClearAnimValue()
-{
+void nsSVGAngle::SMILOrient::ClearAnimValue() {
   if (mAngle->mIsAnimated) {
     mOrientType->SetAnimValue(mOrientType->GetBaseValue());
     mAngle->mIsAnimated = false;
@@ -410,9 +349,7 @@ nsSVGAngle::SMILOrient::ClearAnimValue()
   }
 }
 
-nsresult
-nsSVGAngle::SMILOrient::SetAnimValue(const nsSMILValue& aValue)
-{
+nsresult nsSVGAngle::SMILOrient::SetAnimValue(const nsSMILValue& aValue) {
   NS_ASSERTION(aValue.mType == &SVGOrientSMILType::sSingleton,
                "Unexpected type to assign animated value");
 
@@ -422,7 +359,8 @@ nsSVGAngle::SMILOrient::SetAnimValue(const nsSMILValue& aValue)
         aValue.mU.mOrient.mOrientType == SVG_MARKER_ORIENT_AUTO_START_REVERSE) {
       mAngle->SetAnimValue(0.0f, SVG_ANGLETYPE_UNSPECIFIED, mSVGElement);
     } else {
-      mAngle->SetAnimValue(aValue.mU.mOrient.mAngle, aValue.mU.mOrient.mUnit, mSVGElement);
+      mAngle->SetAnimValue(aValue.mU.mOrient.mAngle, aValue.mU.mOrient.mUnit,
+                           mSVGElement);
     }
   }
   return NS_OK;

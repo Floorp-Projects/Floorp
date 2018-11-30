@@ -13,7 +13,6 @@
 #include "nsThreadUtils.h"
 #include "mozilla/TimeStamp.h"
 
-
 /*
  * This topic publishes the new canonical time according to Fuzzyfox,
  * in microseconds since the epoch. If code needs to know the current time,
@@ -21,7 +20,7 @@
  * so as to respect Fuzzyfox and be in sync with the rest of the browser's
  * timekeeping.
  */
-#define FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC   "fuzzyfox-update-clocks"
+#define FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC "fuzzyfox-update-clocks"
 
 /*
  * For Fuzzyfox's security guarentees to hold, the browser must not execute
@@ -29,12 +28,12 @@
  * so actions that occur on other threads should be queued until the browser
  * unpaused (and moreso than unpauses: until it reaches a downtick.)
  * This topic indicates when any queued outbound events should be delivered.
- * TODO: Bug 1484300 and 1484299 would apply this to other communication channels
+ * TODO: Bug 1484300 and 1484299 would apply this to other communication
+ * channels
  */
-#define FUZZYFOX_FIREOUTBOUND_OBSERVER_TOPIC  "fuzzyfox-fire-outbound"
+#define FUZZYFOX_FIREOUTBOUND_OBSERVER_TOPIC "fuzzyfox-fire-outbound"
 
 namespace mozilla {
-
 
 /*
  * Fuzzyfox is an implementation of the Fermata concept presented in
@@ -74,45 +73,35 @@ namespace mozilla {
  *   1991, T. F. Lunt and J. McLean, Eds. IEEE Computer
  *   Society, May 1991, pp. 8–20.
  */
-class Fuzzyfox final : public Runnable, public nsIObserver
-{
-public:
+class Fuzzyfox final : public Runnable, public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
 
-  static void
-  Start();
+  static void Start();
 
   NS_IMETHOD
   Run() override;
 
-private:
+ private:
   Fuzzyfox();
   ~Fuzzyfox();
 
-  uint64_t
-  ActualTime();
+  uint64_t ActualTime();
 
-  uint64_t
-  PickDuration();
+  uint64_t PickDuration();
 
-  void
-  UpdateClocks(uint64_t aNewTime, TimeStamp aNewTimeStamp);
+  void UpdateClocks(uint64_t aNewTime, TimeStamp aNewTimeStamp);
 
-  uint64_t
-  GetClockGrain();
+  uint64_t GetClockGrain();
 
-  uint64_t
-  FloorToGrain(uint64_t aValue);
+  uint64_t FloorToGrain(uint64_t aValue);
 
-  TimeStamp
-  FloorToGrain(TimeStamp aValue);
+  TimeStamp FloorToGrain(TimeStamp aValue);
 
-  uint64_t
-  CeilToGrain(uint64_t aValue);
+  uint64_t CeilToGrain(uint64_t aValue);
 
-  TimeStamp
-  CeilToGrain(TimeStamp aValue);
+  TimeStamp CeilToGrain(TimeStamp aValue);
 
   bool mSanityCheck;
   uint64_t mStartTime;
@@ -132,6 +121,6 @@ private:
   static Atomic<uint32_t, Relaxed> sFuzzyfoxClockGrain;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
 #endif /* mozilla_Fuzzyfox_h */

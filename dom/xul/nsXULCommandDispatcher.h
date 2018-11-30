@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /*
 
    This is the focus manager for XUL documents.
@@ -25,58 +24,55 @@ class nsPIWindowRoot;
 namespace mozilla {
 namespace dom {
 class Element;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
-                               public nsSupportsWeakReference
-{
-public:
-    explicit nsXULCommandDispatcher(nsIDocument* aDocument);
+                               public nsSupportsWeakReference {
+ public:
+  explicit nsXULCommandDispatcher(nsIDocument* aDocument);
 
-    // nsISupports
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULCommandDispatcher,
-                                             nsIDOMXULCommandDispatcher)
+  // nsISupports
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULCommandDispatcher,
+                                           nsIDOMXULCommandDispatcher)
 
-    // nsIDOMXULCommandDispatcher interface
-    NS_DECL_NSIDOMXULCOMMANDDISPATCHER
+  // nsIDOMXULCommandDispatcher interface
+  NS_DECL_NSIDOMXULCOMMANDDISPATCHER
 
-    void Disconnect();
-protected:
-    virtual ~nsXULCommandDispatcher();
+  void Disconnect();
 
-    already_AddRefed<nsPIWindowRoot> GetWindowRoot();
+ protected:
+  virtual ~nsXULCommandDispatcher();
 
-    mozilla::dom::Element*
-      GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow);
+  already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-    nsCOMPtr<nsIDocument> mDocument;
+  mozilla::dom::Element* GetRootFocusedContentAndWindow(
+      nsPIDOMWindowOuter** aWindow);
 
-    class Updater {
-    public:
-      Updater(mozilla::dom::Element* aElement,
-              const nsAString& aEvents,
-              const nsAString& aTargets)
-          : mElement(aElement),
-            mEvents(aEvents),
-            mTargets(aTargets),
-            mNext(nullptr)
-      {}
+  nsCOMPtr<nsIDocument> mDocument;
 
-      RefPtr<mozilla::dom::Element> mElement;
-      nsString                mEvents;
-      nsString                mTargets;
-      Updater*                mNext;
-    };
+  class Updater {
+   public:
+    Updater(mozilla::dom::Element* aElement, const nsAString& aEvents,
+            const nsAString& aTargets)
+        : mElement(aElement),
+          mEvents(aEvents),
+          mTargets(aTargets),
+          mNext(nullptr) {}
 
-    Updater* mUpdaters;
+    RefPtr<mozilla::dom::Element> mElement;
+    nsString mEvents;
+    nsString mTargets;
+    Updater* mNext;
+  };
 
-    bool Matches(const nsString& aList,
-                   const nsAString& aElement);
+  Updater* mUpdaters;
 
-    bool mLocked;
-    nsTArray<nsString> mPendingUpdates;
+  bool Matches(const nsString& aList, const nsAString& aElement);
+
+  bool mLocked;
+  nsTArray<nsString> mPendingUpdates;
 };
 
-#endif // nsXULCommandDispatcher_h__
+#endif  // nsXULCommandDispatcher_h__

@@ -24,10 +24,9 @@
  *   testing or troubleshooting.
  * @return TRUE if the binary matches any of the allowed certificates.
  */
-BOOL
-DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
-                                   BOOL allowFallbackKeySkip)
-{
+BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
+                                        LPCWSTR filePath,
+                                        BOOL allowFallbackKeySkip) {
   WCHAR maintenanceServiceKey[MAX_PATH + 1];
   if (!CalculateRegistryPathFromFilePath(basePathForUpdate,
                                          maintenanceServiceKey)) {
@@ -41,24 +40,23 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
   // force the non redirected registry under Wow6432Node.
   // This flag is ignored on 32bit systems.
   HKEY baseKey;
-  LONG retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                               maintenanceServiceKey, 0,
+  LONG retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, maintenanceServiceKey, 0,
                                KEY_READ | KEY_WOW64_64KEY, &baseKey);
   if (retCode != ERROR_SUCCESS) {
     LOG_WARN(("Could not open key.  (%d)", retCode));
     // Our tests run with a different apply directory for each test.
     // We use this registry key on our test slaves to store the
     // allowed name/issuers.
-    retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                            TEST_ONLY_FALLBACK_KEY_PATH, 0,
+    retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, TEST_ONLY_FALLBACK_KEY_PATH, 0,
                             KEY_READ | KEY_WOW64_64KEY, &baseKey);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not open fallback key.  (%d)", retCode));
       return FALSE;
     } else if (allowFallbackKeySkip) {
-      LOG_WARN(("Fallback key present, skipping VerifyCertificateTrustForFile "
-                "check and the certificate attribute registry matching "
-                "check."));
+      LOG_WARN(
+          ("Fallback key present, skipping VerifyCertificateTrustForFile "
+           "check and the certificate attribute registry matching "
+           "check."));
       RegCloseKey(baseKey);
       return TRUE;
     }
@@ -79,9 +77,8 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
   for (DWORD i = 0; i < subkeyCount; i++) {
     WCHAR subkeyBuffer[MAX_KEY_LENGTH];
     DWORD subkeyBufferCount = MAX_KEY_LENGTH;
-    retCode = RegEnumKeyExW(baseKey, i, subkeyBuffer,
-                            &subkeyBufferCount, nullptr,
-                            nullptr, nullptr, nullptr);
+    retCode = RegEnumKeyExW(baseKey, i, subkeyBuffer, &subkeyBufferCount,
+                            nullptr, nullptr, nullptr, nullptr);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not enum certs.  (%d)", retCode));
       RegCloseKey(baseKey);
@@ -90,57 +87,54 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
 
     // Open the subkey for the current certificate
     HKEY subKey;
-    retCode = RegOpenKeyExW(baseKey,
-                            subkeyBuffer,
-                            0,
-                            KEY_READ | KEY_WOW64_64KEY,
-                            &subKey);
+    retCode = RegOpenKeyExW(baseKey, subkeyBuffer, 0,
+                            KEY_READ | KEY_WOW64_64KEY, &subKey);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not open subkey.  (%d)", retCode));
-      continue; // Try the next subkey
+      continue;  // Try the next subkey
     }
 
     const int MAX_CHAR_COUNT = 256;
     DWORD valueBufSize = MAX_CHAR_COUNT * sizeof(WCHAR);
-    WCHAR name[MAX_CHAR_COUNT] = { L'\0' };
-    WCHAR issuer[MAX_CHAR_COUNT] = { L'\0' };
+    WCHAR name[MAX_CHAR_COUNT] = {L'\0'};
+    WCHAR issuer[MAX_CHAR_COUNT] = {L'\0'};
 
     // Get the name from the registry
-    retCode = RegQueryValueExW(subKey, L"name", 0, nullptr,
-                               (LPBYTE)name, &valueBufSize);
+    retCode = RegQueryValueExW(subKey, L"name", 0, nullptr, (LPBYTE)name,
+                               &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not obtain name from registry.  (%d)", retCode));
       RegCloseKey(subKey);
-      continue; // Try the next subkey
+      continue;  // Try the next subkey
     }
 
     // Get the issuer from the registry
     valueBufSize = MAX_CHAR_COUNT * sizeof(WCHAR);
-    retCode = RegQueryValueExW(subKey, L"issuer", 0, nullptr,
-                               (LPBYTE)issuer, &valueBufSize);
+    retCode = RegQueryValueExW(subKey, L"issuer", 0, nullptr, (LPBYTE)issuer,
+                               &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not obtain issuer from registry.  (%d)", retCode));
       RegCloseKey(subKey);
-      continue; // Try the next subkey
+      continue;  // Try the next subkey
     }
 
     CertificateCheckInfo allowedCertificate = {
-      name,
-      issuer,
+        name,
+        issuer,
     };
 
     retCode = CheckCertificateForPEFile(filePath, allowedCertificate);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Error on certificate check.  (%d)", retCode));
       RegCloseKey(subKey);
-      continue; // Try the next subkey
+      continue;  // Try the next subkey
     }
 
     retCode = VerifyCertificateTrustForFile(filePath);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Error on certificate trust check.  (%d)", retCode));
       RegCloseKey(subKey);
-      continue; // Try the next subkey
+      continue;  // Try the next subkey
     }
 
     RegCloseKey(baseKey);

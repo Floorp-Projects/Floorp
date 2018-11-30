@@ -7,8 +7,8 @@
 #ifndef GFX_LAYER_TREE_INVALIDATION_H
 #define GFX_LAYER_TREE_INVALIDATION_H
 
-#include "nsRegion.h"                   // for nsIntRegion
-#include "mozilla/UniquePtr.h"          // for UniquePtr
+#include "nsRegion.h"           // for nsIntRegion
+#include "mozilla/UniquePtr.h"  // for UniquePtr
 #include "mozilla/gfx/Point.h"
 
 namespace mozilla {
@@ -31,22 +31,21 @@ typedef void (*NotifySubDocInvalidationFunc)(ContainerLayer* aLayer,
  * A set of cached layer properties (including those of child layers),
  * used for comparing differences in layer trees.
  */
-struct LayerProperties
-{
-protected:
+struct LayerProperties {
+ protected:
   LayerProperties() {}
 
   LayerProperties(const LayerProperties& a) = delete;
   LayerProperties& operator=(const LayerProperties& a) = delete;
 
-public:
+ public:
   virtual ~LayerProperties() {}
 
   /**
    * Copies the current layer tree properties into
    * a new LayerProperties object.
    *
-   * @param Layer tree to copy, or nullptr if we have no 
+   * @param Layer tree to copy, or nullptr if we have no
    * initial layer tree.
    */
   static UniquePtr<LayerProperties> CloneFrom(Layer* aRoot);
@@ -61,20 +60,20 @@ public:
    * tree and generates the changed rectangle.
    *
    * @param aRoot Root layer of the layer tree to compare against.
-   * @param aOutRegion Outparam that will contain the painted area changed by the layer tree changes.
+   * @param aOutRegion Outparam that will contain the painted area changed by
+   * the layer tree changes.
    * @param aCallback If specified, callback to call when ContainerLayers
    * are invalidated.
    * @return True on success, false if a calculation overflowed and the entire
    *         layer tree area should be considered invalidated.
    */
-  virtual bool ComputeDifferences(Layer* aRoot,
-                                  nsIntRegion& aOutRegion,
+  virtual bool ComputeDifferences(Layer* aRoot, nsIntRegion& aOutRegion,
                                   NotifySubDocInvalidationFunc aCallback) = 0;
 
   virtual void MoveBy(const gfx::IntPoint& aOffset) = 0;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_LAYER_TREE_INVALIDATON_H */

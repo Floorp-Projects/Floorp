@@ -21,34 +21,30 @@ class Accessible;
  * XPCOM nsIAccessibleSelectable inteface implementation, used by
  * xpcAccessibleGeneric class.
  */
-class xpcAccessibleSelectable : public nsIAccessibleSelectable
-{
-public:
+class xpcAccessibleSelectable : public nsIAccessibleSelectable {
+ public:
   // nsIAccessibleSelectable
   NS_IMETHOD GetSelectedItems(nsIArray** aSelectedItems) final;
-  NS_IMETHOD GetSelectedItemCount(uint32_t* aSelectedItemCount)
-    final;
-  NS_IMETHOD GetSelectedItemAt(uint32_t aIndex, nsIAccessible** aItem)
-    final;
-  NS_IMETHOD IsItemSelected(uint32_t aIndex, bool* aIsSelected)
-    final;
+  NS_IMETHOD GetSelectedItemCount(uint32_t* aSelectedItemCount) final;
+  NS_IMETHOD GetSelectedItemAt(uint32_t aIndex, nsIAccessible** aItem) final;
+  NS_IMETHOD IsItemSelected(uint32_t aIndex, bool* aIsSelected) final;
   NS_IMETHOD AddItemToSelection(uint32_t aIndex) final;
   NS_IMETHOD RemoveItemFromSelection(uint32_t aIndex) final;
   NS_IMETHOD SelectAll(bool* aIsMultiSelect) final;
   NS_IMETHOD UnselectAll() final;
 
-protected:
-  xpcAccessibleSelectable() { }
+ protected:
+  xpcAccessibleSelectable() {}
   virtual ~xpcAccessibleSelectable() {}
 
-private:
+ private:
   xpcAccessibleSelectable(const xpcAccessibleSelectable&) = delete;
-  xpcAccessibleSelectable& operator =(const xpcAccessibleSelectable&) = delete;
+  xpcAccessibleSelectable& operator=(const xpcAccessibleSelectable&) = delete;
 
   Accessible* Intl();
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

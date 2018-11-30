@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /**
  * IOInterposeObserver recording statistics of main-thread I/O during execution,
  * aimed at consumption by TelemetryImpl
@@ -25,40 +24,31 @@
 namespace mozilla {
 namespace Telemetry {
 
-class TelemetryIOInterposeObserver : public IOInterposeObserver
-{
+class TelemetryIOInterposeObserver : public IOInterposeObserver {
   /** File-level statistics structure */
   struct FileStats {
     FileStats()
-      : creates(0)
-      , reads(0)
-      , writes(0)
-      , fsyncs(0)
-      , stats(0)
-      , totalTime(0)
-    {}
-    uint32_t  creates;      /** Number of create/open operations */
-    uint32_t  reads;        /** Number of read operations */
-    uint32_t  writes;       /** Number of write operations */
-    uint32_t  fsyncs;       /** Number of fsync operations */
-    uint32_t  stats;        /** Number of stat operations */
-    double    totalTime;    /** Accumulated duration of all operations */
+        : creates(0), reads(0), writes(0), fsyncs(0), stats(0), totalTime(0) {}
+    uint32_t creates; /** Number of create/open operations */
+    uint32_t reads;   /** Number of read operations */
+    uint32_t writes;  /** Number of write operations */
+    uint32_t fsyncs;  /** Number of fsync operations */
+    uint32_t stats;   /** Number of stat operations */
+    double totalTime; /** Accumulated duration of all operations */
   };
 
   struct SafeDir {
     SafeDir(const nsAString& aPath, const nsAString& aSubstName)
-      : mPath(aPath)
-      , mSubstName(aSubstName)
-    {}
+        : mPath(aPath), mSubstName(aSubstName) {}
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
       return mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
              mSubstName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
     }
-    nsString  mPath;        /** Path to the directory */
-    nsString  mSubstName;   /** Name to substitute with */
+    nsString mPath;      /** Path to the directory */
+    nsString mSubstName; /** Name to substitute with */
   };
 
-public:
+ public:
   explicit TelemetryIOInterposeObserver(nsIFile* aXreDir);
 
   /**
@@ -70,7 +60,7 @@ public:
   /**
    * Reflect recorded file IO statistics into Javascript
    */
-  bool ReflectIntoJS(JSContext *cx, JS::Handle<JSObject*> rootObj);
+  bool ReflectIntoJS(JSContext* cx, JS::Handle<JSObject*> rootObj);
 
   /**
    * Adds a path for inclusion in main thread I/O report.
@@ -86,16 +76,9 @@ public:
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
-  enum Stage
-  {
-    STAGE_STARTUP = 0,
-    STAGE_NORMAL,
-    STAGE_SHUTDOWN,
-    NUM_STAGES
-  };
-  static inline Stage NextStage(Stage aStage)
-  {
+ private:
+  enum Stage { STAGE_STARTUP = 0, STAGE_NORMAL, STAGE_SHUTDOWN, NUM_STAGES };
+  static inline Stage NextStage(Stage aStage) {
     switch (aStage) {
       case STAGE_STARTUP:
         return STAGE_NORMAL;
@@ -108,8 +91,7 @@ private:
     }
   }
 
-  struct FileStatsByStage
-  {
+  struct FileStatsByStage {
     FileStats mStats[NUM_STAGES];
   };
   typedef nsBaseHashtableET<nsStringHashKey, FileStatsByStage> FileIOEntryType;
@@ -118,18 +100,18 @@ private:
   Common::AutoHashtable<FileIOEntryType> mFileStats;
   // Container for whitelisted directories
   nsTArray<SafeDir> mSafeDirs;
-  Stage             mCurStage;
+  Stage mCurStage;
 
   /**
    * Reflect a FileIOEntryType object to a Javascript property on obj with
    * filename as key containing array:
    * [totalTime, creates, reads, writes, fsyncs, stats]
    */
-  static bool ReflectFileStats(FileIOEntryType* entry, JSContext *cx,
+  static bool ReflectFileStats(FileIOEntryType* entry, JSContext* cx,
                                JS::Handle<JSObject*> obj);
 };
 
-} // namespace Telemetry
-} // namespace mozilla
+}  // namespace Telemetry
+}  // namespace mozilla
 
-#endif // TelemetryIOInterposeObserver_h__
+#endif  // TelemetryIOInterposeObserver_h__

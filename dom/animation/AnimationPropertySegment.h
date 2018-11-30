@@ -9,13 +9,12 @@
 
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/StyleAnimationValue.h" // For AnimationValue
-#include "mozilla/dom/BaseKeyframeTypesBinding.h" // For CompositeOperation
+#include "mozilla/StyleAnimationValue.h"           // For AnimationValue
+#include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For CompositeOperation
 
 namespace mozilla {
 
-struct AnimationPropertySegment
-{
+struct AnimationPropertySegment {
   float mFromKey, mToKey;
   // NOTE: In the case that no keyframe for 0 or 1 offset is specified
   // the unit of mFromValue or mToValue is eUnit_Null.
@@ -25,39 +24,32 @@ struct AnimationPropertySegment
   dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
   dom::CompositeOperation mToComposite = dom::CompositeOperation::Replace;
 
-  bool HasReplaceableValues() const
-  {
+  bool HasReplaceableValues() const {
     return HasReplaceableFromValue() && HasReplaceableToValue();
   }
 
-  bool HasReplaceableFromValue() const
-  {
+  bool HasReplaceableFromValue() const {
     return !mFromValue.IsNull() &&
            mFromComposite == dom::CompositeOperation::Replace;
   }
 
-  bool HasReplaceableToValue() const
-  {
+  bool HasReplaceableToValue() const {
     return !mToValue.IsNull() &&
            mToComposite == dom::CompositeOperation::Replace;
   }
 
-  bool operator==(const AnimationPropertySegment& aOther) const
-  {
-    return mFromKey == aOther.mFromKey &&
-           mToKey == aOther.mToKey &&
-           mFromValue == aOther.mFromValue &&
-           mToValue == aOther.mToValue &&
+  bool operator==(const AnimationPropertySegment& aOther) const {
+    return mFromKey == aOther.mFromKey && mToKey == aOther.mToKey &&
+           mFromValue == aOther.mFromValue && mToValue == aOther.mToValue &&
            mTimingFunction == aOther.mTimingFunction &&
            mFromComposite == aOther.mFromComposite &&
            mToComposite == aOther.mToComposite;
   }
-  bool operator!=(const AnimationPropertySegment& aOther) const
-  {
+  bool operator!=(const AnimationPropertySegment& aOther) const {
     return !(*this == aOther);
   }
 };
 
-}
+}  // namespace mozilla
 
-#endif // mozilla_dom_AnimationPropertySegment_h
+#endif  // mozilla_dom_AnimationPropertySegment_h

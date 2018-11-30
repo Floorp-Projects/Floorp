@@ -8,10 +8,10 @@
 #define mozilla_glue_UntrustedDllsHandler_h
 
 #include <windows.h>
-#include <winternl.h> // For PUNICODE_STRING
+#include <winternl.h>  // For PUNICODE_STRING
 
 #include "mozilla/Attributes.h"
-#include "mozilla/glue/WindowsDllServices.h" // For ModuleLoadEvent
+#include "mozilla/glue/WindowsDllServices.h"  // For ModuleLoadEvent
 #include "mozilla/Vector.h"
 
 namespace mozilla {
@@ -21,14 +21,13 @@ namespace glue {
 // glue::ModuleLoadEvent, and stores them for consumption by the caller.
 // In the process, we capture data about the event that is later used to
 // evaluate trustworthiness of the module.
-class UntrustedDllsHandler
-{
-public:
+class UntrustedDllsHandler {
+ public:
   static void Init();
 
 #ifdef DEBUG
   static void Shutdown();
-#endif // DEBUG
+#endif  // DEBUG
 
   /**
    * To prevent issues with re-entrancy, we only capture module load events at
@@ -64,12 +63,11 @@ public:
    * @param  aOut [out] Receives a list of events.
    * @return true if aOut now contains elements.
    */
-  static bool
-  TakePendingEvents(Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy>& aOut);
+  static bool TakePendingEvents(
+      Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy>& aOut);
 };
 
-} // namespace glue
-} // namespace mozilla
+}  // namespace glue
+}  // namespace mozilla
 
-#endif // mozilla_glue_UntrustedDllsHandler_h
-
+#endif  // mozilla_glue_UntrustedDllsHandler_h

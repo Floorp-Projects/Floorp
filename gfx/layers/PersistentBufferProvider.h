@@ -7,8 +7,8 @@
 #ifndef MOZILLA_GFX_PersistentBUFFERPROVIDER_H
 #define MOZILLA_GFX_PersistentBUFFERPROVIDER_H
 
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed, etc
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
+#include "mozilla/RefPtr.h"      // for RefPtr, already_AddRefed, etc
 #include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefCounted.h"
@@ -18,9 +18,9 @@
 namespace mozilla {
 
 namespace gfx {
-  class SourceSurface;
-  class DrawTarget;
-}
+class SourceSurface;
+class DrawTarget;
+}  // namespace gfx
 
 namespace layers {
 
@@ -34,12 +34,11 @@ class TextureClient;
  * from the provider again, the provider will guarantee the contents of the
  * previously returned DrawTarget is persisted into the one newly returned.
  */
-class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>
-{
-public:
+class PersistentBufferProvider : public RefCounted<PersistentBufferProvider> {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProvider)
 
-  virtual ~PersistentBufferProvider() { }
+  virtual ~PersistentBufferProvider() {}
 
   virtual LayersBackend GetType() { return LayersBackend::LAYERS_NONE; }
 
@@ -50,7 +49,8 @@ public:
    *                       to have remained the same since the call to
    *                       ReturnDrawTarget.
    */
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(const gfx::IntRect& aPersistedRect) = 0;
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
+      const gfx::IntRect& aPersistedRect) = 0;
 
   /**
    * Return a DrawTarget to the PersistentBufferProvider and indicate the
@@ -61,84 +61,93 @@ public:
 
   virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() = 0;
 
-  virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) = 0;
+  virtual void ReturnSnapshot(
+      already_AddRefed<gfx::SourceSurface> aSnapshot) = 0;
 
   virtual TextureClient* GetTextureClient() { return nullptr; }
 
   virtual void OnShutdown() {}
 
-  virtual bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor) { return true; }
+  virtual bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor) {
+    return true;
+  }
 
   virtual void ClearCachedResources() {}
 
   /**
-   * Return true if this provider preserves the drawing state (clips, transforms,
-   * etc.) across frames. In practice this means users of the provider can skip
-   * popping all of the clips at the end of the frames and pushing them back at
-   * the beginning of the following frames, which can be costly (cf. bug 1294351).
+   * Return true if this provider preserves the drawing state (clips,
+   * transforms, etc.) across frames. In practice this means users of the
+   * provider can skip popping all of the clips at the end of the frames and
+   * pushing them back at the beginning of the following frames, which can be
+   * costly (cf. bug 1294351).
    */
   virtual bool PreservesDrawingState() const = 0;
 };
 
+class PersistentBufferProviderBasic : public PersistentBufferProvider {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderBasic,
+                                          override)
 
-class PersistentBufferProviderBasic : public PersistentBufferProvider
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderBasic, override)
-
-  static already_AddRefed<PersistentBufferProviderBasic>
-  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, gfx::BackendType aBackend);
+  static already_AddRefed<PersistentBufferProviderBasic> Create(
+      gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+      gfx::BackendType aBackend);
 
   explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget);
 
-  virtual LayersBackend GetType() override { return LayersBackend::LAYERS_BASIC; }
+  virtual LayersBackend GetType() override {
+    return LayersBackend::LAYERS_BASIC;
+  }
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(const gfx::IntRect& aPersistedRect) override;
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
+      const gfx::IntRect& aPersistedRect) override;
 
   virtual bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
 
   virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
 
-  virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
+  virtual void ReturnSnapshot(
+      already_AddRefed<gfx::SourceSurface> aSnapshot) override;
 
   virtual bool PreservesDrawingState() const override { return true; }
 
   virtual void OnShutdown() override { Destroy(); }
 
-protected:
+ protected:
   void Destroy();
 
-private:
+ private:
   ~PersistentBufferProviderBasic();
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
 };
 
-
 /**
  * Provides access to a buffer which can be sent to the compositor without
  * requiring a copy.
  */
-class PersistentBufferProviderShared : public PersistentBufferProvider
-                                     , public ActiveResource
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderShared, override)
+class PersistentBufferProviderShared : public PersistentBufferProvider,
+                                       public ActiveResource {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderShared,
+                                          override)
 
-  static already_AddRefed<PersistentBufferProviderShared>
-  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-         KnowsCompositor* aKnowsCompositor);
+  static already_AddRefed<PersistentBufferProviderShared> Create(
+      gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+      KnowsCompositor* aKnowsCompositor);
 
   virtual LayersBackend GetType() override;
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(const gfx::IntRect& aPersistedRect) override;
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
+      const gfx::IntRect& aPersistedRect) override;
 
   virtual bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
 
   virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
 
-  virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
+  virtual void ReturnSnapshot(
+      already_AddRefed<gfx::SourceSurface> aSnapshot) override;
 
   virtual TextureClient* GetTextureClient() override;
 
@@ -151,7 +160,8 @@ public:
   virtual void ClearCachedResources() override;
 
   virtual bool PreservesDrawingState() const override { return false; }
-protected:
+
+ protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  KnowsCompositor* aKnowsCompositor,
                                  RefPtr<TextureClient>& aTexture);
@@ -173,28 +183,25 @@ protected:
   Maybe<uint32_t> mFront;
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
-  RefPtr<gfx::SourceSurface > mSnapshot;
+  RefPtr<gfx::SourceSurface> mSnapshot;
 };
 
-struct AutoReturnSnapshot
-{
+struct AutoReturnSnapshot {
   PersistentBufferProvider* mBufferProvider;
   RefPtr<gfx::SourceSurface>* mSnapshot;
 
   explicit AutoReturnSnapshot(PersistentBufferProvider* aProvider = nullptr)
-  : mBufferProvider(aProvider)
-  , mSnapshot(nullptr)
-  {}
+      : mBufferProvider(aProvider), mSnapshot(nullptr) {}
 
-  ~AutoReturnSnapshot()
-  {
+  ~AutoReturnSnapshot() {
     if (mBufferProvider) {
-      mBufferProvider->ReturnSnapshot(mSnapshot ? mSnapshot->forget() : nullptr);
+      mBufferProvider->ReturnSnapshot(mSnapshot ? mSnapshot->forget()
+                                                : nullptr);
     }
   }
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

@@ -8,13 +8,15 @@
 
 #include "nsISupports.h"
 
-#define NS_ITIMEOUTHANDLER_IID \
-{ 0xb071a1d3, 0xfd54, 0x40a8,  \
- { 0x91, 0x9f, 0xc8, 0xf3, 0x3e, 0xb8, 0x3c, 0xfe } }
+#define NS_ITIMEOUTHANDLER_IID                       \
+  {                                                  \
+    0xb071a1d3, 0xfd54, 0x40a8, {                    \
+      0x91, 0x9f, 0xc8, 0xf3, 0x3e, 0xb8, 0x3c, 0xfe \
+    }                                                \
+  }
 
-class nsITimeoutHandler : public nsISupports
-{
-public:
+class nsITimeoutHandler : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITIMEOUTHANDLER_IID)
 
   virtual nsresult Call() = 0;
@@ -25,7 +27,6 @@ public:
   virtual void MarkForCC() = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsITimeoutHandler,
-                              NS_ITIMEOUTHANDLER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITimeoutHandler, NS_ITIMEOUTHANDLER_IID)
 
-#endif // nsITimeoutHandler_h___
+#endif  // nsITimeoutHandler_h___

@@ -40,9 +40,8 @@
 #include <errno.h>
 #include <stdio.h>
 
-gboolean save_to_stdout(const gchar *buf, gsize count,
-                        GError **error, gpointer data)
-{
+gboolean save_to_stdout(const gchar* buf, gsize count, GError** error,
+                        gpointer data) {
   size_t written = fwrite(buf, 1, count, stdout);
   if (written != count) {
     g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(errno),
@@ -53,15 +52,14 @@ gboolean save_to_stdout(const gchar *buf, gsize count,
   return TRUE;
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   gdk_init(&argc, &argv);
 
   GdkPixbuf* screenshot = nullptr;
   GdkWindow* window = gdk_get_default_root_window();
-  screenshot = gdk_pixbuf_get_from_window(window, 0, 0,
-                                          gdk_window_get_width(window),
-                                          gdk_window_get_height(window));
+  screenshot =
+      gdk_pixbuf_get_from_window(window, 0, 0, gdk_window_get_width(window),
+                                 gdk_window_get_height(window));
   if (!screenshot) {
     fprintf(stderr, "%s: failed to create screenshot GdkPixbuf\n", argv[0]);
     return 1;
@@ -71,12 +69,12 @@ int main(int argc, char** argv)
   if (argc > 1) {
     gdk_pixbuf_save(screenshot, argv[1], "png", &error, nullptr);
   } else {
-    gdk_pixbuf_save_to_callback(screenshot, save_to_stdout, nullptr,
-                                "png", &error, nullptr);
+    gdk_pixbuf_save_to_callback(screenshot, save_to_stdout, nullptr, "png",
+                                &error, nullptr);
   }
   if (error) {
-    fprintf(stderr, "%s: failed to write screenshot as png: %s\n",
-            argv[0], error->message);
+    fprintf(stderr, "%s: failed to write screenshot as png: %s\n", argv[0],
+            error->message);
     return error->code;
   }
 
@@ -85,8 +83,7 @@ int main(int argc, char** argv)
 
 // These options are copied from mozglue/build/AsanOptions.cpp
 #ifdef MOZ_ASAN
-extern "C"
-const char* __asan_default_options() {
+extern "C" const char* __asan_default_options() {
   return "allow_user_segv_handler=1:alloc_dealloc_mismatch=0:detect_leaks=0";
 }
 #endif

@@ -17,12 +17,11 @@ namespace mozilla {
 
 namespace dom {
 class ContentParent;
-} // namespace dom
+}  // namespace dom
 
 namespace gfx {
 
-enum class DriverInitStatus
-{
+enum class DriverInitStatus {
   // Drivers have not been initialized yet.
   Unknown,
 
@@ -36,8 +35,7 @@ enum class DriverInitStatus
   Crashed
 };
 
-enum class CrashGuardType : uint32_t
-{
+enum class CrashGuardType : uint32_t {
   D3D11Layers,
   D3D9Video,
   GLContext,
@@ -50,7 +48,7 @@ enum class CrashGuardType : uint32_t
 };
 
 // DriverCrashGuard is used to detect crashes at graphics driver callsites.
-// 
+//
 // If the graphics environment is unrecognized or has changed since the last
 // session, the crash guard will activate and will detect any crashes within
 // the scope of the guard object.
@@ -58,9 +56,8 @@ enum class CrashGuardType : uint32_t
 // If a callsite has a previously encountered crash, and the environment has
 // not changed since the last session, then the guard will set a status flag
 // indicating that the driver should not be used.
-class DriverCrashGuard
-{
-public:
+class DriverCrashGuard {
+ public:
   DriverCrashGuard(CrashGuardType aType, dom::ContentParent* aContentParent);
   virtual ~DriverCrashGuard();
 
@@ -85,22 +82,23 @@ public:
   };
 
   typedef std::function<void(const char* aName, const char* aPrefName)>
-    CrashGuardCallback;
+      CrashGuardCallback;
   static void ForEachActiveCrashGuard(const CrashGuardCallback& aCallback);
 
-protected:
+ protected:
   virtual void Initialize();
   virtual bool UpdateEnvironment() = 0;
   virtual void LogCrashRecovery() = 0;
   virtual void LogFeatureDisabled() = 0;
 
   // Helper functions.
-  bool FeatureEnabled(int aFeature, bool aDefault=true);
-  bool CheckAndUpdatePref(const char* aPrefName, const nsAString& aCurrentValue);
+  bool FeatureEnabled(int aFeature, bool aDefault = true);
+  bool CheckAndUpdatePref(const char* aPrefName,
+                          const nsAString& aCurrentValue);
   bool CheckAndUpdateBoolPref(const char* aPrefName, bool aCurrentValue);
   std::string GetFullPrefName(const char* aPref);
 
-private:
+ private:
   // Either process.
   void InitializeIfNeeded();
   bool CheckOrRefreshEnvironment();
@@ -114,7 +112,7 @@ private:
   void FlushPreferences();
   void SetStatus(DriverInitStatus aStatus);
 
-private:
+ private:
   CrashGuardType mType;
   Mode mMode;
   bool mInitialized;
@@ -122,13 +120,12 @@ private:
   bool mCrashDetected;
   nsCOMPtr<nsIFile> mGuardFile;
 
-protected:
+ protected:
   nsCString mStatusPref;
   nsCOMPtr<nsIGfxInfo> mGfxInfo;
 };
 
-class D3D11LayersCrashGuard final : public DriverCrashGuard
-{
+class D3D11LayersCrashGuard final : public DriverCrashGuard {
  public:
   explicit D3D11LayersCrashGuard(dom::ContentParent* aContentParent = nullptr);
 
@@ -142,8 +139,7 @@ class D3D11LayersCrashGuard final : public DriverCrashGuard
   void RecordTelemetry(TelemetryState aState);
 };
 
-class D3D9VideoCrashGuard final : public DriverCrashGuard
-{
+class D3D9VideoCrashGuard final : public DriverCrashGuard {
  public:
   explicit D3D9VideoCrashGuard(dom::ContentParent* aContentParent = nullptr);
 
@@ -153,8 +149,7 @@ class D3D9VideoCrashGuard final : public DriverCrashGuard
   void LogFeatureDisabled() override;
 };
 
-class D3D11VideoCrashGuard final : public DriverCrashGuard
-{
+class D3D11VideoCrashGuard final : public DriverCrashGuard {
  public:
   explicit D3D11VideoCrashGuard(dom::ContentParent* aContentParent = nullptr);
 
@@ -164,8 +159,7 @@ class D3D11VideoCrashGuard final : public DriverCrashGuard
   void LogFeatureDisabled() override;
 };
 
-class GLContextCrashGuard final : public DriverCrashGuard
-{
+class GLContextCrashGuard final : public DriverCrashGuard {
  public:
   explicit GLContextCrashGuard(dom::ContentParent* aContentParent = nullptr);
   void Initialize() override;
@@ -176,8 +170,7 @@ class GLContextCrashGuard final : public DriverCrashGuard
   void LogFeatureDisabled() override;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // gfx_src_DriverCrashGuard_h__
-
+#endif  // gfx_src_DriverCrashGuard_h__

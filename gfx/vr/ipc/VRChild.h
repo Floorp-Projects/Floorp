@@ -17,11 +17,8 @@ namespace gfx {
 class VRProcessParent;
 class VRChild;
 
-class VRChild final
- : public PVRChild,
-   public gfxVarReceiver {
-
-public:
+class VRChild final : public PVRChild, public gfxVarReceiver {
+ public:
   explicit VRChild(VRProcessParent* aHost);
   ~VRChild() = default;
 
@@ -29,14 +26,14 @@ public:
   void Init();
   virtual void OnVarChanged(const GfxVarUpdate& aVar) override;
 
-protected:
+ protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   VRProcessParent* mHost;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif  // GFX_VR_CHILD_H

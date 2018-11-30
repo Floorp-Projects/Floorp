@@ -14,28 +14,24 @@ namespace dom {
 
 class ClientManagerService;
 
-class ClientManagerOpParent final : public PClientManagerOpParent
-{
+class ClientManagerOpParent final : public PClientManagerOpParent {
   RefPtr<ClientManagerService> mService;
   MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
 
   template <typename Method, typename... Args>
-  void
-  DoServiceOp(Method aMethod, Args&&... aArgs);
+  void DoServiceOp(Method aMethod, Args&&... aArgs);
 
   // PClientManagerOpParent interface
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-public:
+ public:
   explicit ClientManagerOpParent(ClientManagerService* aService);
   ~ClientManagerOpParent() = default;
 
-  void
-  Init(const ClientOpConstructorArgs& aArgs);
+  void Init(const ClientOpConstructorArgs& aArgs);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientManagerOpParent_h
+#endif  // _mozilla_dom_ClientManagerOpParent_h

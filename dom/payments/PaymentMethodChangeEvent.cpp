@@ -36,12 +36,9 @@ NS_INTERFACE_MAP_END_INHERITING(PaymentRequestUpdateEvent)
 
 already_AddRefed<PaymentMethodChangeEvent>
 PaymentMethodChangeEvent::Constructor(
-  mozilla::dom::EventTarget* aOwner,
-  const nsAString& aType,
-  const PaymentRequestUpdateEventInit& aEventInitDict,
-  const nsAString& aMethodName,
-  const ChangeDetails& aMethodDetails)
-{
+    mozilla::dom::EventTarget* aOwner, const nsAString& aType,
+    const PaymentRequestUpdateEventInit& aEventInitDict,
+    const nsAString& aMethodName, const ChangeDetails& aMethodDetails) {
   RefPtr<PaymentMethodChangeEvent> e = new PaymentMethodChangeEvent(aOwner);
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
@@ -54,13 +51,10 @@ PaymentMethodChangeEvent::Constructor(
 
 already_AddRefed<PaymentMethodChangeEvent>
 PaymentMethodChangeEvent::Constructor(
-  const GlobalObject& aGlobal,
-  const nsAString& aType,
-  const PaymentMethodChangeEventInit& aEventInitDict,
-  ErrorResult& aRv)
-{
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const PaymentMethodChangeEventInit& aEventInitDict, ErrorResult& aRv) {
   nsCOMPtr<mozilla::dom::EventTarget> owner =
-    do_QueryInterface(aGlobal.GetAsSupports());
+      do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<PaymentMethodChangeEvent> e = new PaymentMethodChangeEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
@@ -71,35 +65,27 @@ PaymentMethodChangeEvent::Constructor(
 }
 
 PaymentMethodChangeEvent::PaymentMethodChangeEvent(EventTarget* aOwner)
-  : PaymentRequestUpdateEvent(aOwner)
-{
+    : PaymentRequestUpdateEvent(aOwner) {
   MOZ_ASSERT(aOwner);
   mozilla::HoldJSObjects(this);
 }
 
-void
-PaymentMethodChangeEvent::init(const PaymentMethodChangeEventInit& aEventInitDict)
-{
+void PaymentMethodChangeEvent::init(
+    const PaymentMethodChangeEventInit& aEventInitDict) {
   mMethodName.Assign(aEventInitDict.mMethodName);
   mMethodDetails = aEventInitDict.mMethodDetails;
 }
 
-void
-PaymentMethodChangeEvent::GetMethodName(nsAString& aMethodName)
-{
+void PaymentMethodChangeEvent::GetMethodName(nsAString& aMethodName) {
   aMethodName.Assign(mMethodName);
 }
 
-void
-PaymentMethodChangeEvent::SetMethodName(const nsAString& aMethodName)
-{
+void PaymentMethodChangeEvent::SetMethodName(const nsAString& aMethodName) {
   mMethodName = aMethodName;
 }
 
-void
-PaymentMethodChangeEvent::GetMethodDetails(JSContext* aCx,
-                                           JS::MutableHandle<JSObject*> aRetVal)
-{
+void PaymentMethodChangeEvent::GetMethodDetails(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   MOZ_ASSERT(aCx);
 
   if (mMethodDetails) {
@@ -110,7 +96,7 @@ PaymentMethodChangeEvent::GetMethodDetails(JSContext* aCx,
   RefPtr<BasicCardService> service = BasicCardService::GetService();
   MOZ_ASSERT(service);
   aRetVal.set(nullptr);
-  switch(mInternalDetails.type()) {
+  switch (mInternalDetails.type()) {
     case ChangeDetails::GeneralMethodDetails: {
       const GeneralDetails& rawDetails = mInternalDetails.generalDetails();
       DeserializeToJSObject(rawDetails.details, aCx, aRetVal);
@@ -133,21 +119,21 @@ PaymentMethodChangeEvent::GetMethodDetails(JSContext* aCx,
             !rawDetails.billingAddress.organization.IsEmpty() ||
             !rawDetails.billingAddress.recipient.IsEmpty() ||
             !rawDetails.billingAddress.phone.IsEmpty()) {
-          nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
+          nsCOMPtr<nsPIDOMWindowInner> window =
+              do_QueryInterface(GetParentObject());
           basicCardDetails.mBillingAddress.Construct();
           basicCardDetails.mBillingAddress.Value() =
-            new PaymentAddress(window,
-                               rawDetails.billingAddress.country,
-                               rawDetails.billingAddress.addressLine,
-                               rawDetails.billingAddress.region,
-                               rawDetails.billingAddress.regionCode,
-                               rawDetails.billingAddress.city,
-                               rawDetails.billingAddress.dependentLocality,
-                               rawDetails.billingAddress.postalCode,
-                               rawDetails.billingAddress.sortingCode,
-                               rawDetails.billingAddress.organization,
-                               rawDetails.billingAddress.recipient,
-                               rawDetails.billingAddress.phone);
+              new PaymentAddress(window, rawDetails.billingAddress.country,
+                                 rawDetails.billingAddress.addressLine,
+                                 rawDetails.billingAddress.region,
+                                 rawDetails.billingAddress.regionCode,
+                                 rawDetails.billingAddress.city,
+                                 rawDetails.billingAddress.dependentLocality,
+                                 rawDetails.billingAddress.postalCode,
+                                 rawDetails.billingAddress.sortingCode,
+                                 rawDetails.billingAddress.organization,
+                                 rawDetails.billingAddress.recipient,
+                                 rawDetails.billingAddress.phone);
         }
       }
       MOZ_ASSERT(aCx);
@@ -158,29 +144,23 @@ PaymentMethodChangeEvent::GetMethodDetails(JSContext* aCx,
       aRetVal.set(&value.toObject());
       break;
     }
-    default: {
-      break;
-    }
+    default: { break; }
   }
 }
 
-void
-PaymentMethodChangeEvent::SetMethodDetails(const ChangeDetails& aMethodDetails)
-{
+void PaymentMethodChangeEvent::SetMethodDetails(
+    const ChangeDetails& aMethodDetails) {
   mInternalDetails = aMethodDetails;
 }
 
-PaymentMethodChangeEvent::~PaymentMethodChangeEvent()
-{
+PaymentMethodChangeEvent::~PaymentMethodChangeEvent() {
   mozilla::DropJSObjects(this);
 }
 
-JSObject*
-PaymentMethodChangeEvent::WrapObjectInternal(JSContext* aCx,
-                                             JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PaymentMethodChangeEvent::WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return PaymentMethodChangeEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -11,9 +11,8 @@
 
 #include "mozilla/PlatformMutex.h"
 
-struct mozilla::detail::MutexImpl::PlatformData
-{
+struct mozilla::detail::MutexImpl::PlatformData {
   SRWLOCK lock;
 };
 
-#endif // MutexPlatformData_windows_h
+#endif  // MutexPlatformData_windows_h

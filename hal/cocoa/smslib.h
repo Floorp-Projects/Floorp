@@ -56,15 +56,15 @@
 // Structure for specifying a 3-axis acceleration. 0.0 means "zero gravities",
 // 1.0 means "one gravity".
 typedef struct sms_acceleration {
-	float x;		// Right-left acceleration (positive is rightwards)
-	float y;		// Front-rear acceleration (positive is rearwards)
-	float z;		// Up-down acceleration (positive is upwards)
+  float x;  // Right-left acceleration (positive is rightwards)
+  float y;  // Front-rear acceleration (positive is rearwards)
+  float z;  // Up-down acceleration (positive is upwards)
 } sms_acceleration;
 
 // Structure for specifying a calibration.
 typedef struct sms_calibration {
-	float zeros[3];	// Zero points for three axes (X, Y, Z)
-	float onegs[3];	// One gravity values for three axes
+  float zeros[3];  // Zero points for three axes (X, Y, Z)
+  float onegs[3];  // One gravity values for three axes
 } sms_calibration;
 
 #pragma mark Return value definitions
@@ -74,24 +74,24 @@ typedef struct sms_calibration {
 // the accelerometer failed. The higher the value, the further along the
 // software progressed before failing. The options are:
 //	- Didn't match model name
-#define SMS_FAIL_MODEL			(-7)
+#define SMS_FAIL_MODEL (-7)
 //	- Failure getting dictionary matching desired services
-#define SMS_FAIL_DICTIONARY		(-6)
+#define SMS_FAIL_DICTIONARY (-6)
 //	- Failure getting list of services
-#define SMS_FAIL_LIST_SERVICES	(-5)
+#define SMS_FAIL_LIST_SERVICES (-5)
 //	- Failure if list of services is empty. The process generally fails
 //		here if run on a machine without a Sudden Motion Sensor.
-#define SMS_FAIL_NO_SERVICES	(-4)
+#define SMS_FAIL_NO_SERVICES (-4)
 //	- Failure if error opening device.
-#define SMS_FAIL_OPENING		(-3)
+#define SMS_FAIL_OPENING (-3)
 //	- Failure if opened, but didn't get a connection
-#define SMS_FAIL_CONNECTION		(-2)
+#define SMS_FAIL_CONNECTION (-2)
 //	- Failure if couldn't access connction using given function and size. This
 //		is where the process would probably fail with a change in Apple's API.
 //		Driver problems often also cause failures here.
-#define SMS_FAIL_ACCESS			(-1)
+#define SMS_FAIL_ACCESS (-1)
 //	- Success!
-#define SMS_SUCCESS				(0)
+#define SMS_SUCCESS (0)
 
 #pragma mark Function declarations
 
@@ -156,4 +156,3 @@ NSString *smsGetCalibrationDescription(void);
 
 // Shuts down the accelerometer.
 void smsShutdown(void);
-

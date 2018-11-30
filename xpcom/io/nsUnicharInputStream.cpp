@@ -23,11 +23,10 @@
 
 #define STRING_BUFFER_SIZE 8192
 
-class StringUnicharInputStream final : public nsIUnicharInputStream
-{
-public:
-  explicit StringUnicharInputStream(const nsAString& aString) :
-    mString(aString), mPos(0), mLen(aString.Length()) { }
+class StringUnicharInputStream final : public nsIUnicharInputStream {
+ public:
+  explicit StringUnicharInputStream(const nsAString& aString)
+      : mString(aString), mPos(0), mLen(aString.Length()) {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUNICHARINPUTSTREAM
@@ -36,15 +35,13 @@ public:
   uint32_t mPos;
   uint32_t mLen;
 
-private:
-  ~StringUnicharInputStream() { }
+ private:
+  ~StringUnicharInputStream() {}
 };
 
 NS_IMETHODIMP
-StringUnicharInputStream::Read(char16_t* aBuf,
-                               uint32_t aCount,
-                               uint32_t* aReadCount)
-{
+StringUnicharInputStream::Read(char16_t* aBuf, uint32_t aCount,
+                               uint32_t* aReadCount) {
   if (mPos >= mLen) {
     *aReadCount = 0;
     return NS_OK;
@@ -64,9 +61,8 @@ StringUnicharInputStream::Read(char16_t* aBuf,
 
 NS_IMETHODIMP
 StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
-                                       void* aClosure,
-                                       uint32_t aCount, uint32_t* aReadCount)
-{
+                                       void* aClosure, uint32_t aCount,
+                                       uint32_t* aReadCount) {
   uint32_t bytesWritten;
   uint32_t totalBytesWritten = 0;
 
@@ -77,8 +73,8 @@ StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
   mString.BeginReading(iter);
 
   while (aCount) {
-    rv = aWriter(this, aClosure, iter.get() + mPos,
-                 totalBytesWritten, aCount, &bytesWritten);
+    rv = aWriter(this, aClosure, iter.get() + mPos, totalBytesWritten, aCount,
+                 &bytesWritten);
 
     if (NS_FAILED(rv)) {
       // don't propagate errors to the caller
@@ -97,8 +93,7 @@ StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
 
 NS_IMETHODIMP
 StringUnicharInputStream::ReadString(uint32_t aCount, nsAString& aString,
-                                     uint32_t* aReadCount)
-{
+                                     uint32_t* aReadCount) {
   if (mPos >= mLen) {
     *aReadCount = 0;
     return NS_OK;
@@ -113,9 +108,7 @@ StringUnicharInputStream::ReadString(uint32_t aCount, nsAString& aString,
   return NS_OK;
 }
 
-nsresult
-StringUnicharInputStream::Close()
-{
+nsresult StringUnicharInputStream::Close() {
   mPos = mLen;
   return NS_OK;
 }
@@ -124,19 +117,14 @@ NS_IMPL_ISUPPORTS(StringUnicharInputStream, nsIUnicharInputStream)
 
 //----------------------------------------------------------------------
 
-nsresult
-NS_NewUnicharInputStream(nsIInputStream* aStreamToWrap,
-                         nsIUnicharInputStream** aResult)
-{
+nsresult NS_NewUnicharInputStream(nsIInputStream* aStreamToWrap,
+                                  nsIUnicharInputStream** aResult) {
   *aResult = nullptr;
 
   // Create converter input stream
   RefPtr<nsConverterInputStream> it = new nsConverterInputStream();
-  nsresult rv =
-    it->Init(aStreamToWrap,
-             "UTF-8",
-             STRING_BUFFER_SIZE,
-             nsIConverterInputStream::ERRORS_ARE_FATAL);
+  nsresult rv = it->Init(aStreamToWrap, "UTF-8", STRING_BUFFER_SIZE,
+                         nsIConverterInputStream::ERRORS_ARE_FATAL);
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -18,9 +18,7 @@
 
 NS_IMPL_ISUPPORTS(nsMacUtilsImpl, nsIMacUtils)
 
-nsresult
-nsMacUtilsImpl::GetArchString(nsAString& aArchString)
-{
+nsresult nsMacUtilsImpl::GetArchString(nsAString& aArchString) {
   if (!mBinaryArchs.IsEmpty()) {
     aArchString.Assign(mBinaryArchs);
     return NS_OK;
@@ -28,9 +26,7 @@ nsMacUtilsImpl::GetArchString(nsAString& aArchString)
 
   aArchString.Truncate();
 
-  bool foundPPC = false,
-       foundX86 = false,
-       foundPPC64 = false,
+  bool foundPPC = false, foundX86 = false, foundPPC64 = false,
        foundX86_64 = false;
 
   CFBundleRef mainBundle = ::CFBundleGetMainBundle();
@@ -46,7 +42,7 @@ nsMacUtilsImpl::GetArchString(nsAString& aArchString)
   CFIndex archCount = ::CFArrayGetCount(archList);
   for (CFIndex i = 0; i < archCount; i++) {
     CFNumberRef arch =
-      static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archList, i));
+        static_cast<CFNumberRef>(::CFArrayGetValueAtIndex(archList, i));
 
     int archInt = 0;
     if (!::CFNumberGetValue(arch, kCFNumberIntType, &archInt)) {
@@ -99,19 +95,16 @@ nsMacUtilsImpl::GetArchString(nsAString& aArchString)
   return (aArchString.IsEmpty() ? NS_ERROR_FAILURE : NS_OK);
 }
 
-
 NS_IMETHODIMP
-nsMacUtilsImpl::GetArchitecturesInBinary(nsAString& aArchString)
-{
+nsMacUtilsImpl::GetArchitecturesInBinary(nsAString& aArchString) {
   return GetArchString(aArchString);
 }
 
 // True when running under binary translation (Rosetta).
 NS_IMETHODIMP
-nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated)
-{
+nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated) {
 #ifdef __ppc__
-  static bool    sInitialized = false;
+  static bool sInitialized = false;
 
   // Initialize sIsNative to 1.  If the sysctl fails because it doesn't
   // exist, then translation is not possible, so the process must not be
@@ -138,12 +131,10 @@ nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated)
 // Get the path to the .app directory for the parent process. When executing
 // in the child process, this is the outer .app (such as Firefox.app) and not
 // the inner .app containing the child process executable.
-bool
-nsMacUtilsImpl::GetAppPath(nsCString &aAppPath)
-{
+bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
   nsAutoCString appPath;
   nsAutoCString appBinaryPath(
-    (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
+      (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
 
   auto pattern = NS_LITERAL_CSTRING(".app/Contents/MacOS/");
   nsAutoCString::const_iterator start, end;
@@ -164,15 +155,18 @@ nsMacUtilsImpl::GetAppPath(nsCString &aAppPath)
       }
     }
 
-    ++end; ++end; ++end; ++end;
+    ++end;
+    ++end;
+    ++end;
+    ++end;
     appPath.Assign(Substring(start, end));
   } else {
     return false;
   }
 
   nsCOMPtr<nsIFile> app;
-  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appPath),
-                                true, getter_AddRefs(app));
+  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appPath), true,
+                                getter_AddRefs(app));
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -188,12 +182,9 @@ nsMacUtilsImpl::GetAppPath(nsCString &aAppPath)
 
 #if defined(DEBUG)
 // Given a path to a file, return the directory which contains it.
-nsAutoCString
-nsMacUtilsImpl::GetDirectoryPath(const char *aPath)
-{
+nsAutoCString nsMacUtilsImpl::GetDirectoryPath(const char* aPath) {
   nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  if (!file ||
-      NS_FAILED(file->InitWithNativePath(nsDependentCString(aPath)))) {
+  if (!file || NS_FAILED(file->InitWithNativePath(nsDependentCString(aPath)))) {
     MOZ_CRASH("Failed to create or init an nsIFile");
   }
   nsCOMPtr<nsIFile> directoryFile;

@@ -10,10 +10,8 @@
 
 namespace mozilla {
 
-const DisplayItemClipChain*
-DisplayListClipState::GetCurrentCombinedClipChain(
-  nsDisplayListBuilder* aBuilder)
-{
+const DisplayItemClipChain* DisplayListClipState::GetCurrentCombinedClipChain(
+    nsDisplayListBuilder* aBuilder) {
   if (mCurrentCombinedClipChainIsValid) {
     return mCurrentCombinedClipChain;
   }
@@ -23,20 +21,17 @@ DisplayListClipState::GetCurrentCombinedClipChain(
     return nullptr;
   }
 
-  mCurrentCombinedClipChain =
-    aBuilder->CreateClipChainIntersection(mCurrentCombinedClipChain,
-                                          mClipChainContentDescendants,
-                                          mClipChainContainingBlockDescendants);
+  mCurrentCombinedClipChain = aBuilder->CreateClipChainIntersection(
+      mCurrentCombinedClipChain, mClipChainContentDescendants,
+      mClipChainContainingBlockDescendants);
   mCurrentCombinedClipChainIsValid = true;
   return mCurrentCombinedClipChain;
 }
 
-static void
-ApplyClip(nsDisplayListBuilder* aBuilder,
-          const DisplayItemClipChain*& aClipToModify,
-          const ActiveScrolledRoot* aASR,
-          DisplayItemClipChain& aClipChainOnStack)
-{
+static void ApplyClip(nsDisplayListBuilder* aBuilder,
+                      const DisplayItemClipChain*& aClipToModify,
+                      const ActiveScrolledRoot* aASR,
+                      DisplayItemClipChain& aClipChainOnStack) {
   aClipChainOnStack.mASR = aASR;
   if (aClipToModify && aClipToModify->mASR == aASR) {
     // Intersect with aClipToModify and replace the clip chain item.
@@ -63,35 +58,27 @@ ApplyClip(nsDisplayListBuilder* aBuilder,
     ancestorSC = aBuilder->CopyWholeChain(ancestorSC);
     aClipChainOnStack.mParent = nullptr;
     aClipToModify = aBuilder->CreateClipChainIntersection(
-      ancestorSC, aClipToModify, &aClipChainOnStack);
+        ancestorSC, aClipToModify, &aClipChainOnStack);
   }
 }
 
-void
-DisplayListClipState::ClipContainingBlockDescendants(
-  nsDisplayListBuilder* aBuilder,
-  const nsRect& aRect,
-  const nscoord* aRadii,
-  DisplayItemClipChain& aClipChainOnStack)
-{
+void DisplayListClipState::ClipContainingBlockDescendants(
+    nsDisplayListBuilder* aBuilder, const nsRect& aRect, const nscoord* aRadii,
+    DisplayItemClipChain& aClipChainOnStack) {
   if (aRadii) {
     aClipChainOnStack.mClip.SetTo(aRect, aRadii);
   } else {
     aClipChainOnStack.mClip.SetTo(aRect);
   }
   const ActiveScrolledRoot* asr = aBuilder->CurrentActiveScrolledRoot();
-  ApplyClip(
-    aBuilder, mClipChainContainingBlockDescendants, asr, aClipChainOnStack);
+  ApplyClip(aBuilder, mClipChainContainingBlockDescendants, asr,
+            aClipChainOnStack);
   InvalidateCurrentCombinedClipChain(asr);
 }
 
-void
-DisplayListClipState::ClipContentDescendants(
-  nsDisplayListBuilder* aBuilder,
-  const nsRect& aRect,
-  const nscoord* aRadii,
-  DisplayItemClipChain& aClipChainOnStack)
-{
+void DisplayListClipState::ClipContentDescendants(
+    nsDisplayListBuilder* aBuilder, const nsRect& aRect, const nscoord* aRadii,
+    DisplayItemClipChain& aClipChainOnStack) {
   if (aRadii) {
     aClipChainOnStack.mClip.SetTo(aRect, aRadii);
   } else {
@@ -102,14 +89,10 @@ DisplayListClipState::ClipContentDescendants(
   InvalidateCurrentCombinedClipChain(asr);
 }
 
-void
-DisplayListClipState::ClipContentDescendants(
-  nsDisplayListBuilder* aBuilder,
-  const nsRect& aRect,
-  const nsRect& aRoundedRect,
-  const nscoord* aRadii,
-  DisplayItemClipChain& aClipChainOnStack)
-{
+void DisplayListClipState::ClipContentDescendants(
+    nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+    const nsRect& aRoundedRect, const nscoord* aRadii,
+    DisplayItemClipChain& aClipChainOnStack) {
   if (aRadii) {
     aClipChainOnStack.mClip.SetTo(aRect, aRoundedRect, aRadii);
   } else {
@@ -121,10 +104,8 @@ DisplayListClipState::ClipContentDescendants(
   InvalidateCurrentCombinedClipChain(asr);
 }
 
-void
-DisplayListClipState::InvalidateCurrentCombinedClipChain(
-  const ActiveScrolledRoot* aInvalidateUpTo)
-{
+void DisplayListClipState::InvalidateCurrentCombinedClipChain(
+    const ActiveScrolledRoot* aInvalidateUpTo) {
   mCurrentCombinedClipChainIsValid = false;
   while (mCurrentCombinedClipChain &&
          ActiveScrolledRoot::IsAncestor(aInvalidateUpTo,
@@ -133,13 +114,9 @@ DisplayListClipState::InvalidateCurrentCombinedClipChain(
   }
 }
 
-void
-DisplayListClipState::ClipContainingBlockDescendantsToContentBox(
-  nsDisplayListBuilder* aBuilder,
-  nsIFrame* aFrame,
-  DisplayItemClipChain& aClipChainOnStack,
-  uint32_t aFlags)
-{
+void DisplayListClipState::ClipContainingBlockDescendantsToContentBox(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+    DisplayItemClipChain& aClipChainOnStack, uint32_t aFlags) {
   nscoord radii[8];
   bool hasBorderRadius = aFrame->GetContentBoxBorderRadii(radii);
   if (!hasBorderRadius &&
@@ -147,24 +124,25 @@ DisplayListClipState::ClipContainingBlockDescendantsToContentBox(
     return;
   }
 
-  nsRect clipRect =
-    aFrame->GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(aFrame);
+  nsRect clipRect = aFrame->GetContentRectRelativeToSelf() +
+                    aBuilder->ToReferenceFrame(aFrame);
   // If we have a border-radius, we have to clip our content to that
   // radius.
   ClipContainingBlockDescendants(
-    aBuilder, clipRect, hasBorderRadius ? radii : nullptr, aClipChainOnStack);
+      aBuilder, clipRect, hasBorderRadius ? radii : nullptr, aClipChainOnStack);
 }
 
 DisplayListClipState::AutoSaveRestore::AutoSaveRestore(
-  nsDisplayListBuilder* aBuilder)
-  : mBuilder(aBuilder)
-  , mState(aBuilder->ClipState())
-  , mSavedState(aBuilder->ClipState())
+    nsDisplayListBuilder* aBuilder)
+    : mBuilder(aBuilder),
+      mState(aBuilder->ClipState()),
+      mSavedState(aBuilder->ClipState())
 #ifdef DEBUG
-  , mClipUsed(false)
-  , mRestored(false)
+      ,
+      mClipUsed(false),
+      mRestored(false)
 #endif
 {
 }
 
-} // namespace mozilla
+}  // namespace mozilla

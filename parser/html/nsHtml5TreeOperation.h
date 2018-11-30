@@ -18,11 +18,10 @@ class Encoding;
 
 namespace dom {
 class Text;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-enum eHtml5TreeOperation
-{
+enum eHtml5TreeOperation {
   eTreeOpUninitialized,
   // main HTML5 ops
   eTreeOpAppend,
@@ -72,52 +71,44 @@ enum eHtml5TreeOperation
   eTreeOpEnableEncodingMenu
 };
 
-class nsHtml5TreeOperationStringPair
-{
-private:
+class nsHtml5TreeOperationStringPair {
+ private:
   nsString mPublicId;
   nsString mSystemId;
 
-public:
+ public:
   nsHtml5TreeOperationStringPair(const nsAString& aPublicId,
                                  const nsAString& aSystemId)
-    : mPublicId(aPublicId)
-    , mSystemId(aSystemId)
-  {
+      : mPublicId(aPublicId), mSystemId(aSystemId) {
     MOZ_COUNT_CTOR(nsHtml5TreeOperationStringPair);
   }
 
-  ~nsHtml5TreeOperationStringPair()
-  {
+  ~nsHtml5TreeOperationStringPair() {
     MOZ_COUNT_DTOR(nsHtml5TreeOperationStringPair);
   }
 
-  inline void Get(nsAString& aPublicId, nsAString& aSystemId)
-  {
+  inline void Get(nsAString& aPublicId, nsAString& aSystemId) {
     aPublicId.Assign(mPublicId);
     aSystemId.Assign(mSystemId);
   }
 };
 
-class nsHtml5TreeOperation final
-{
-  template<typename T>
+class nsHtml5TreeOperation final {
+  template <typename T>
   using NotNull = mozilla::NotNull<T>;
   using Encoding = mozilla::Encoding;
 
-public:
+ public:
   static nsresult AppendTextToTextNode(const char16_t* aBuffer,
                                        uint32_t aLength,
                                        mozilla::dom::Text* aTextNode,
                                        nsHtml5DocumentBuilder* aBuilder);
 
-  static nsresult AppendText(const char16_t* aBuffer,
-                             uint32_t aLength,
+  static nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
                              nsIContent* aParent,
                              nsHtml5DocumentBuilder* aBuilder);
 
-  static nsresult Append(nsIContent* aNode,
-                         nsIContent* aParent,
+  static nsresult Append(nsIContent* aNode, nsIContent* aParent,
                          nsHtml5DocumentBuilder* aBuilder);
 
   static nsresult AppendToDocument(nsIContent* aNode,
@@ -129,8 +120,7 @@ public:
                                             nsIContent* aParent,
                                             nsHtml5DocumentBuilder* aBuilder);
 
-  static nsresult FosterParent(nsIContent* aNode,
-                               nsIContent* aParent,
+  static nsresult FosterParent(nsIContent* aNode, nsIContent* aParent,
                                nsIContent* aTable,
                                nsHtml5DocumentBuilder* aBuilder);
 
@@ -143,20 +133,16 @@ public:
                                        nsHtml5HtmlAttributes* aAttributes);
 
   static nsIContent* CreateHTMLElement(
-    nsAtom* aName,
-    nsHtml5HtmlAttributes* aAttributes,
-    mozilla::dom::FromParser aFromParser,
-    nsNodeInfoManager* aNodeInfoManager,
-    nsHtml5DocumentBuilder* aBuilder,
-    mozilla::dom::HTMLContentCreatorFunction aCreator);
+      nsAtom* aName, nsHtml5HtmlAttributes* aAttributes,
+      mozilla::dom::FromParser aFromParser, nsNodeInfoManager* aNodeInfoManager,
+      nsHtml5DocumentBuilder* aBuilder,
+      mozilla::dom::HTMLContentCreatorFunction aCreator);
 
   static nsIContent* CreateSVGElement(
-    nsAtom* aName,
-    nsHtml5HtmlAttributes* aAttributes,
-    mozilla::dom::FromParser aFromParser,
-    nsNodeInfoManager* aNodeInfoManager,
-    nsHtml5DocumentBuilder* aBuilder,
-    mozilla::dom::SVGContentCreatorFunction aCreator);
+      nsAtom* aName, nsHtml5HtmlAttributes* aAttributes,
+      mozilla::dom::FromParser aFromParser, nsNodeInfoManager* aNodeInfoManager,
+      nsHtml5DocumentBuilder* aBuilder,
+      mozilla::dom::SVGContentCreatorFunction aCreator);
 
   static nsIContent* CreateMathMLElement(nsAtom* aName,
                                          nsHtml5HtmlAttributes* aAttributes,
@@ -168,19 +154,15 @@ public:
   static nsresult AppendIsindexPrompt(nsIContent* parent,
                                       nsHtml5DocumentBuilder* aBuilder);
 
-  static nsresult FosterParentText(nsIContent* aStackParent,
-                                   char16_t* aBuffer,
-                                   uint32_t aLength,
-                                   nsIContent* aTable,
+  static nsresult FosterParentText(nsIContent* aStackParent, char16_t* aBuffer,
+                                   uint32_t aLength, nsIContent* aTable,
                                    nsHtml5DocumentBuilder* aBuilder);
 
-  static nsresult AppendComment(nsIContent* aParent,
-                                char16_t* aBuffer,
+  static nsresult AppendComment(nsIContent* aParent, char16_t* aBuffer,
                                 int32_t aLength,
                                 nsHtml5DocumentBuilder* aBuilder);
 
-  static nsresult AppendCommentToDocument(char16_t* aBuffer,
-                                          int32_t aLength,
+  static nsresult AppendCommentToDocument(char16_t* aBuffer, int32_t aLength,
                                           nsHtml5DocumentBuilder* aBuilder);
 
   static nsresult AppendDoctypeToDocument(nsAtom* aName,
@@ -207,15 +189,13 @@ public:
 
   ~nsHtml5TreeOperation();
 
-  inline void Init(eHtml5TreeOperation aOpCode)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     mOpCode = aOpCode;
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode, nsIContentHandle* aNode)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, nsIContentHandle* aNode) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aNode, "Initialized tree op with null node.");
@@ -223,10 +203,8 @@ public:
     mOne.node = static_cast<nsIContent**>(aNode);
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   nsIContentHandle* aNode,
-                   nsIContentHandle* aParent)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, nsIContentHandle* aNode,
+                   nsIContentHandle* aParent) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aNode, "Initialized tree op with null node.");
@@ -236,10 +214,8 @@ public:
     mTwo.node = static_cast<nsIContent**>(aParent);
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   const nsACString& aString,
-                   int32_t aInt32)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, const nsACString& aString,
+                   int32_t aInt32) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
 
@@ -256,19 +232,14 @@ public:
     mFour.integer = aInt32;
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   const nsACString& aString,
-                   int32_t aInt32,
-                   int32_t aLineNumber)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, const nsACString& aString,
+                   int32_t aInt32, int32_t aLineNumber) {
     Init(aOpCode, aString, aInt32);
     mTwo.integer = aLineNumber;
   }
 
   inline void Init(eHtml5TreeOperation aOpCode,
-                   NotNull<const Encoding*> aEncoding,
-                   int32_t aInt32)
-  {
+                   NotNull<const Encoding*> aEncoding, int32_t aInt32) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
 
@@ -278,19 +249,14 @@ public:
   }
 
   inline void Init(eHtml5TreeOperation aOpCode,
-                   NotNull<const Encoding*> aEncoding,
-                   int32_t aInt32,
-                   int32_t aLineNumber)
-  {
+                   NotNull<const Encoding*> aEncoding, int32_t aInt32,
+                   int32_t aLineNumber) {
     Init(aOpCode, aEncoding, aInt32);
     mTwo.integer = aLineNumber;
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   nsIContentHandle* aNode,
-                   nsIContentHandle* aParent,
-                   nsIContentHandle* aTable)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, nsIContentHandle* aNode,
+                   nsIContentHandle* aParent, nsIContentHandle* aTable) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aNode, "Initialized tree op with null node.");
@@ -302,16 +268,14 @@ public:
     mThree.node = static_cast<nsIContent**>(aTable);
   }
 
-  inline void Init(nsHtml5DocumentMode aMode)
-  {
+  inline void Init(nsHtml5DocumentMode aMode) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     mOpCode = eTreeOpDocumentMode;
     mOne.mode = aMode;
   }
 
-  inline void InitScript(nsIContentHandle* aNode)
-  {
+  inline void InitScript(nsIContentHandle* aNode) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aNode, "Initialized tree op with null node.");
@@ -320,14 +284,10 @@ public:
     mTwo.state = nullptr;
   }
 
-  inline void Init(int32_t aNamespace,
-                   nsAtom* aName,
+  inline void Init(int32_t aNamespace, nsAtom* aName,
                    nsHtml5HtmlAttributes* aAttributes,
-                   nsIContentHandle* aTarget,
-                   nsIContentHandle* aIntendedParent,
-                   bool aFromNetwork,
-                   nsHtml5ContentCreatorFunction aCreator)
-  {
+                   nsIContentHandle* aTarget, nsIContentHandle* aIntendedParent,
+                   bool aFromNetwork, nsHtml5ContentCreatorFunction aCreator) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aName, "Initialized tree op with null name.");
@@ -356,12 +316,9 @@ public:
     }
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   char16_t* aBuffer,
-                   int32_t aLength,
-                   nsIContentHandle* aStackParent,
-                   nsIContentHandle* aTable)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, char16_t* aBuffer,
+                   int32_t aLength, nsIContentHandle* aStackParent,
+                   nsIContentHandle* aTable) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aBuffer, "Initialized tree op with null buffer.");
@@ -372,11 +329,8 @@ public:
     mFour.integer = aLength;
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   char16_t* aBuffer,
-                   int32_t aLength,
-                   nsIContentHandle* aParent)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, char16_t* aBuffer,
+                   int32_t aLength, nsIContentHandle* aParent) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aBuffer, "Initialized tree op with null buffer.");
@@ -386,10 +340,8 @@ public:
     mFour.integer = aLength;
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   char16_t* aBuffer,
-                   int32_t aLength)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, char16_t* aBuffer,
+                   int32_t aLength) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aBuffer, "Initialized tree op with null buffer.");
@@ -399,8 +351,7 @@ public:
   }
 
   inline void Init(nsIContentHandle* aElement,
-                   nsHtml5HtmlAttributes* aAttributes)
-  {
+                   nsHtml5HtmlAttributes* aAttributes) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aElement, "Initialized tree op with null element.");
@@ -409,10 +360,8 @@ public:
     mTwo.attributes = aAttributes;
   }
 
-  inline void Init(nsAtom* aName,
-                   const nsAString& aPublicId,
-                   const nsAString& aSystemId)
-  {
+  inline void Init(nsAtom* aName, const nsAString& aPublicId,
+                   const nsAString& aSystemId) {
     MOZ_ASSERT(aName);
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
@@ -422,11 +371,8 @@ public:
     mTwo.stringPair = new nsHtml5TreeOperationStringPair(aPublicId, aSystemId);
   }
 
-  inline void Init(nsIContentHandle* aElement,
-                   const char* aMsgId,
-                   nsAtom* aAtom,
-                   nsAtom* aOtherAtom)
-  {
+  inline void Init(nsIContentHandle* aElement, const char* aMsgId,
+                   nsAtom* aAtom, nsAtom* aOtherAtom) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     mOpCode = eTreeOpAddError;
@@ -442,20 +388,16 @@ public:
     }
   }
 
-  inline void Init(nsIContentHandle* aElement,
-                   const char* aMsgId,
-                   nsAtom* aAtom)
-  {
+  inline void Init(nsIContentHandle* aElement, const char* aMsgId,
+                   nsAtom* aAtom) {
     Init(aElement, aMsgId, aAtom, nullptr);
   }
 
-  inline void Init(nsIContentHandle* aElement, const char* aMsgId)
-  {
+  inline void Init(nsIContentHandle* aElement, const char* aMsgId) {
     Init(aElement, aMsgId, nullptr, nullptr);
   }
 
-  inline void Init(const char* aMsgId, bool aError, int32_t aLineNumber)
-  {
+  inline void Init(const char* aMsgId, bool aError, int32_t aLineNumber) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     mOpCode = eTreeOpMaybeComplainAboutCharset;
@@ -464,8 +406,7 @@ public:
     mThree.integer = aLineNumber;
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode, const nsAString& aString)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, const nsAString& aString) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
 
@@ -474,10 +415,8 @@ public:
     mOne.unicharPtr = str;
   }
 
-  inline void Init(eHtml5TreeOperation aOpCode,
-                   nsIContentHandle* aNode,
-                   int32_t aInt)
-  {
+  inline void Init(eHtml5TreeOperation aOpCode, nsIContentHandle* aNode,
+                   int32_t aInt) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aNode, "Initialized tree op with null node.");
@@ -486,8 +425,7 @@ public:
     mFour.integer = aInt;
   }
 
-  inline void Init(nsresult aRv)
-  {
+  inline void Init(nsresult aRv) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(NS_FAILED(aRv), "Initialized tree op with non-failure.");
@@ -495,8 +433,7 @@ public:
     mOne.result = aRv;
   }
 
-  inline void InitAddClass(nsIContentHandle* aNode, const char16_t* aClass)
-  {
+  inline void InitAddClass(nsIContentHandle* aNode, const char16_t* aClass) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aNode, "Initialized tree op with null node.");
@@ -508,8 +445,7 @@ public:
   }
 
   inline void InitAddLineNumberId(nsIContentHandle* aNode,
-                                  const int32_t aLineNumber)
-  {
+                                  const int32_t aLineNumber) {
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     MOZ_ASSERT(aNode, "Initialized tree op with null node.");
@@ -524,22 +460,19 @@ public:
 
   inline bool IsMarkAsBroken() { return mOpCode == eTreeOpMarkAsBroken; }
 
-  inline void SetSnapshot(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine)
-  {
+  inline void SetSnapshot(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine) {
     NS_ASSERTION(
-      IsRunScript(),
-      "Setting a snapshot for a tree operation other than eTreeOpRunScript!");
+        IsRunScript(),
+        "Setting a snapshot for a tree operation other than eTreeOpRunScript!");
     MOZ_ASSERT(aSnapshot, "Initialized tree op with null snapshot.");
     mTwo.state = aSnapshot;
     mFour.integer = aLine;
   }
 
-  nsresult Perform(nsHtml5TreeOpExecutor* aBuilder,
-                   nsIContent** aScriptElement,
-                   bool* aInterrupted,
-                   bool* aStreamEnded);
+  nsresult Perform(nsHtml5TreeOpExecutor* aBuilder, nsIContent** aScriptElement,
+                   bool* aInterrupted, bool* aStreamEnded);
 
-private:
+ private:
   nsHtml5TreeOperation(const nsHtml5TreeOperation&) = delete;
   nsHtml5TreeOperation& operator=(const nsHtml5TreeOperation&) = delete;
 
@@ -564,4 +497,4 @@ private:
   } mOne, mTwo, mThree, mFour, mFive;
 };
 
-#endif // nsHtml5TreeOperation_h
+#endif  // nsHtml5TreeOperation_h

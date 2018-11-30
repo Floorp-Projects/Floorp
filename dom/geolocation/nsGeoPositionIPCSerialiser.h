@@ -14,11 +14,9 @@
 namespace IPC {
 
 template <>
-struct ParamTraits<nsIDOMGeoPositionCoords>
-{
+struct ParamTraits<nsIDOMGeoPositionCoords> {
   // Function to serialize a geoposition
-  static void Write(Message *aMsg, nsIDOMGeoPositionCoords* aParam)
-  {
+  static void Write(Message* aMsg, nsIDOMGeoPositionCoords* aParam) {
     bool isNull = !aParam;
     WriteParam(aMsg, isNull);
     // If it is a null object, then we are done
@@ -50,8 +48,7 @@ struct ParamTraits<nsIDOMGeoPositionCoords>
 
   // Function to de-serialize a geoposition
   static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<nsIDOMGeoPositionCoords>* aResult)
-  {
+                   RefPtr<nsIDOMGeoPositionCoords>* aResult) {
     // Check if it is the null pointer we have transfered
     bool isNull;
     if (!ReadParam(aMsg, aIter, &isNull)) return false;
@@ -70,13 +67,13 @@ struct ParamTraits<nsIDOMGeoPositionCoords>
     double speed;
 
     // It's not important to us where it fails, but rather if it fails
-    if (!(   ReadParam(aMsg, aIter, &latitude         )
-          && ReadParam(aMsg, aIter, &longitude        )
-          && ReadParam(aMsg, aIter, &altitude         )
-          && ReadParam(aMsg, aIter, &accuracy         )
-          && ReadParam(aMsg, aIter, &altitudeAccuracy )
-          && ReadParam(aMsg, aIter, &heading          )
-          && ReadParam(aMsg, aIter, &speed            ))) return false;
+    if (!(ReadParam(aMsg, aIter, &latitude) &&
+          ReadParam(aMsg, aIter, &longitude) &&
+          ReadParam(aMsg, aIter, &altitude) &&
+          ReadParam(aMsg, aIter, &accuracy) &&
+          ReadParam(aMsg, aIter, &altitudeAccuracy) &&
+          ReadParam(aMsg, aIter, &heading) && ReadParam(aMsg, aIter, &speed)))
+      return false;
 
     // We now have all the data
     *aResult = new nsGeoPositionCoords(latitude,         /* aLat     */
@@ -86,18 +83,15 @@ struct ParamTraits<nsIDOMGeoPositionCoords>
                                        altitudeAccuracy, /* aVError  */
                                        heading,          /* aHeading */
                                        speed             /* aSpeed   */
-                                      );
+    );
     return true;
   }
-
 };
 
 template <>
-struct ParamTraits<nsIDOMGeoPosition>
-{
+struct ParamTraits<nsIDOMGeoPosition> {
   // Function to serialize a geoposition
-  static void Write(Message *aMsg, nsIDOMGeoPosition* aParam)
-  {
+  static void Write(Message* aMsg, nsIDOMGeoPosition* aParam) {
     bool isNull = !aParam;
     WriteParam(aMsg, isNull);
     // If it is a null object, then we are done
@@ -114,8 +108,7 @@ struct ParamTraits<nsIDOMGeoPosition>
 
   // Function to de-serialize a geoposition
   static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<nsIDOMGeoPosition>* aResult)
-  {
+                   RefPtr<nsIDOMGeoPosition>* aResult) {
     // Check if it is the null pointer we have transfered
     bool isNull;
     if (!ReadParam(aMsg, aIter, &isNull)) return false;
@@ -138,9 +131,8 @@ struct ParamTraits<nsIDOMGeoPosition>
 
     return true;
   };
-
 };
 
-} // namespace IPC
+}  // namespace IPC
 
 #endif

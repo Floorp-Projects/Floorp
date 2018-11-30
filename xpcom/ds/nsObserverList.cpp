@@ -11,34 +11,26 @@
 #include "nsCOMArray.h"
 #include "xpcpublic.h"
 
-nsresult
-nsObserverList::AddObserver(nsIObserver* anObserver, bool ownsWeak)
-{
+nsresult nsObserverList::AddObserver(nsIObserver* anObserver, bool ownsWeak) {
   NS_ASSERTION(anObserver, "Null input");
 
   MOZ_TRY(mObservers.AppendWeakElement(anObserver, ownsWeak));
   return NS_OK;
 }
 
-nsresult
-nsObserverList::RemoveObserver(nsIObserver* anObserver)
-{
+nsresult nsObserverList::RemoveObserver(nsIObserver* anObserver) {
   NS_ASSERTION(anObserver, "Null input");
 
   MOZ_TRY(mObservers.RemoveWeakElement(anObserver));
   return NS_OK;
 }
 
-void
-nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
-{
+void nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator) {
   RefPtr<nsObserverEnumerator> e(new nsObserverEnumerator(this));
   e.forget(anEnumerator);
 }
 
-void
-nsObserverList::FillObserverArray(nsCOMArray<nsIObserver>& aArray)
-{
+void nsObserverList::FillObserverArray(nsCOMArray<nsIObserver>& aArray) {
   aArray.SetCapacity(mObservers.Length());
 
   nsMaybeWeakPtrArray<nsIObserver> observers(mObservers);
@@ -54,9 +46,7 @@ nsObserverList::FillObserverArray(nsCOMArray<nsIObserver>& aArray)
   }
 }
 
-void
-nsObserverList::AppendStrongObservers(nsCOMArray<nsIObserver>& aArray)
-{
+void nsObserverList::AppendStrongObservers(nsCOMArray<nsIObserver>& aArray) {
   aArray.SetCapacity(aArray.Length() + mObservers.Length());
 
   for (int32_t i = mObservers.Length() - 1; i >= 0; --i) {
@@ -67,11 +57,8 @@ nsObserverList::AppendStrongObservers(nsCOMArray<nsIObserver>& aArray)
   }
 }
 
-void
-nsObserverList::NotifyObservers(nsISupports* aSubject,
-                                const char* aTopic,
-                                const char16_t* someData)
-{
+void nsObserverList::NotifyObservers(nsISupports* aSubject, const char* aTopic,
+                                     const char16_t* someData) {
   nsCOMArray<nsIObserver> observers;
   FillObserverArray(observers);
 
@@ -81,21 +68,18 @@ nsObserverList::NotifyObservers(nsISupports* aSubject,
 }
 
 nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
-  : mIndex(0)
-{
+    : mIndex(0) {
   aObserverList->FillObserverArray(mObservers);
 }
 
 NS_IMETHODIMP
-nsObserverEnumerator::HasMoreElements(bool* aResult)
-{
+nsObserverEnumerator::HasMoreElements(bool* aResult) {
   *aResult = (mIndex < mObservers.Count());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsObserverEnumerator::GetNext(nsISupports** aResult)
-{
+nsObserverEnumerator::GetNext(nsISupports** aResult) {
   if (mIndex == mObservers.Count()) {
     return NS_ERROR_FAILURE;
   }

@@ -29,40 +29,26 @@ NS_INTERFACE_MAP_END
 StructuredCloneTester::StructuredCloneTester(nsISupports* aParent,
                                              const bool aSerializable,
                                              const bool aDeserializable)
-  : mParent(aParent),
-    mSerializable(aSerializable),
-    mDeserializable(aDeserializable)
-{
-}
+    : mParent(aParent),
+      mSerializable(aSerializable),
+      mDeserializable(aDeserializable) {}
 
 /* static */ already_AddRefed<StructuredCloneTester>
 StructuredCloneTester::Constructor(const GlobalObject& aGlobal,
                                    const bool aSerializable,
                                    const bool aDeserializable,
-                                   ErrorResult& aRv)
-{
-  RefPtr<StructuredCloneTester> sct = new StructuredCloneTester(aGlobal.GetAsSupports(),
-                                                                aSerializable,
-                                                                aDeserializable);
+                                   ErrorResult& aRv) {
+  RefPtr<StructuredCloneTester> sct = new StructuredCloneTester(
+      aGlobal.GetAsSupports(), aSerializable, aDeserializable);
   return sct.forget();
 }
 
-bool
-StructuredCloneTester::Serializable() const
-{
-  return mSerializable;
-}
+bool StructuredCloneTester::Serializable() const { return mSerializable; }
 
-bool
-StructuredCloneTester::Deserializable() const
-{
-  return mDeserializable;
-}
+bool StructuredCloneTester::Deserializable() const { return mDeserializable; }
 
-/* static */ JSObject*
-StructuredCloneTester::ReadStructuredClone(JSContext* aCx,
-                                           JSStructuredCloneReader* aReader)
-{
+/* static */ JSObject* StructuredCloneTester::ReadStructuredClone(
+    JSContext* aCx, JSStructuredCloneReader* aReader) {
   uint32_t serializable = 0;
   uint32_t deserializable = 0;
 
@@ -79,11 +65,9 @@ StructuredCloneTester::ReadStructuredClone(JSContext* aCx,
   // Prevent the return value from being trashed by a GC during ~RefPtr
   JS::Rooted<JSObject*> result(aCx);
   {
-    RefPtr<StructuredCloneTester> sct = new StructuredCloneTester(
-      global,
-      static_cast<bool>(serializable),
-      static_cast<bool>(deserializable)
-    );
+    RefPtr<StructuredCloneTester> sct =
+        new StructuredCloneTester(global, static_cast<bool>(serializable),
+                                  static_cast<bool>(deserializable));
 
     // "Fail" deserialization
     if (!sct->Deserializable()) {
@@ -97,26 +81,19 @@ StructuredCloneTester::ReadStructuredClone(JSContext* aCx,
   return result;
 }
 
-bool
-StructuredCloneTester::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
-{
+bool StructuredCloneTester::WriteStructuredClone(
+    JSStructuredCloneWriter* aWriter) const {
   return JS_WriteUint32Pair(aWriter, SCTAG_DOM_STRUCTURED_CLONE_TESTER, 0) &&
          JS_WriteUint32Pair(aWriter, static_cast<uint32_t>(Serializable()),
                             static_cast<uint32_t>(Deserializable()));
 }
 
-nsISupports*
-StructuredCloneTester::GetParentObject() const
-{
-  return mParent;
-}
+nsISupports* StructuredCloneTester::GetParentObject() const { return mParent; }
 
-JSObject*
-StructuredCloneTester::WrapObject(JSContext* aCx,
-                                  JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* StructuredCloneTester::WrapObject(JSContext* aCx,
+                                            JS::Handle<JSObject*> aGivenProto) {
   return StructuredCloneTester_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

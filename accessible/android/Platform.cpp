@@ -15,19 +15,11 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-void
-a11y::PlatformInit()
-{
-}
+void a11y::PlatformInit() {}
 
-void
-a11y::PlatformShutdown()
-{
-}
+void a11y::PlatformShutdown() {}
 
-void
-a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces)
-{
+void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
   AccessibleWrap* wrapper = nullptr;
   if (aProxy->IsDoc()) {
     wrapper = new DocProxyAccessibleWrap(aProxy->AsDoc());
@@ -39,11 +31,9 @@ a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces)
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
 }
 
-void
-a11y::ProxyDestroyed(ProxyAccessible* aProxy)
-{
+void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
   AccessibleWrap* wrapper =
-    reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
+      reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 
   // If aProxy is a document that was created, but
   // RecvPDocAccessibleConstructor failed then aProxy->GetWrapper() will be
@@ -57,11 +47,9 @@ a11y::ProxyDestroyed(ProxyAccessible* aProxy)
   wrapper->Release();
 }
 
-void
-a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
-{
+void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
   SessionAccessibility* sessionAcc =
-    SessionAccessibility::GetInstanceFor(aTarget);
+      SessionAccessibility::GetInstanceFor(aTarget);
   if (!sessionAcc) {
     return;
   }
@@ -73,13 +61,10 @@ a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
   }
 }
 
-void
-a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget,
-                            uint64_t aState,
-                            bool aEnabled)
-{
+void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
+                                 bool aEnabled) {
   SessionAccessibility* sessionAcc =
-    SessionAccessibility::GetInstanceFor(aTarget);
+      SessionAccessibility::GetInstanceFor(aTarget);
 
   if (!sessionAcc) {
     return;
@@ -98,70 +83,51 @@ a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget,
   }
 }
 
-void
-a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
-{
+void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset) {
   SessionAccessibility* sessionAcc =
-    SessionAccessibility::GetInstanceFor(aTarget);
+      SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
     sessionAcc->SendTextSelectionChangedEvent(WrapperFor(aTarget), aOffset);
   }
 }
 
-void
-a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget,
-                           const nsString& aStr,
-                           int32_t aStart,
-                           uint32_t aLen,
-                           bool aIsInsert,
-                           bool aFromUser)
-{
+void a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
+                                int32_t aStart, uint32_t aLen, bool aIsInsert,
+                                bool aFromUser) {
   SessionAccessibility* sessionAcc =
-    SessionAccessibility::GetInstanceFor(aTarget);
+      SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
-    sessionAcc->SendTextChangedEvent(
-      WrapperFor(aTarget), aStr, aStart, aLen, aIsInsert, aFromUser);
+    sessionAcc->SendTextChangedEvent(WrapperFor(aTarget), aStr, aStart, aLen,
+                                     aIsInsert, aFromUser);
   }
 }
 
-void
-a11y::ProxyShowHideEvent(ProxyAccessible* aTarget,
-                         ProxyAccessible* aParent,
-                         bool aInsert,
-                         bool aFromUser)
-{
+void a11y::ProxyShowHideEvent(ProxyAccessible* aTarget,
+                              ProxyAccessible* aParent, bool aInsert,
+                              bool aFromUser) {
   SessionAccessibility* sessionAcc =
-    SessionAccessibility::GetInstanceFor(aTarget);
+      SessionAccessibility::GetInstanceFor(aTarget);
   if (sessionAcc) {
     sessionAcc->SendWindowContentChangedEvent(WrapperFor(aParent));
   }
 }
 
-void
-a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
-{
-}
+void a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t) {}
 
-void
-a11y::ProxyVirtualCursorChangeEvent(ProxyAccessible* aTarget,
-                                    ProxyAccessible* aOldPosition,
-                                    int32_t aOldStartOffset,
-                                    int32_t aOldEndOffset,
-                                    ProxyAccessible* aNewPosition,
-                                    int32_t aNewStartOffset,
-                                    int32_t aNewEndOffset,
-                                    int16_t aReason,
-                                    int16_t aBoundaryType,
-                                    bool aFromUser)
-{
+void a11y::ProxyVirtualCursorChangeEvent(
+    ProxyAccessible* aTarget, ProxyAccessible* aOldPosition,
+    int32_t aOldStartOffset, int32_t aOldEndOffset,
+    ProxyAccessible* aNewPosition, int32_t aNewStartOffset,
+    int32_t aNewEndOffset, int16_t aReason, int16_t aBoundaryType,
+    bool aFromUser) {
   if (!aNewPosition) {
     return;
   }
 
   SessionAccessibility* sessionAcc =
-    SessionAccessibility::GetInstanceFor(aTarget);
+      SessionAccessibility::GetInstanceFor(aTarget);
 
   if (!sessionAcc) {
     return;
@@ -176,38 +142,30 @@ a11y::ProxyVirtualCursorChangeEvent(ProxyAccessible* aTarget,
   }
 
   if (aBoundaryType != nsIAccessiblePivot::NO_BOUNDARY) {
-    sessionAcc->SendTextTraversedEvent(
-      WrapperFor(aNewPosition), aNewStartOffset, aNewEndOffset);
+    sessionAcc->SendTextTraversedEvent(WrapperFor(aNewPosition),
+                                       aNewStartOffset, aNewEndOffset);
   }
 }
 
-void
-a11y::ProxyScrollingEvent(ProxyAccessible* aTarget,
-                          uint32_t aEventType,
-                          uint32_t aScrollX,
-                          uint32_t aScrollY,
-                          uint32_t aMaxScrollX,
-                          uint32_t aMaxScrollY)
-{
+void a11y::ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
+                               uint32_t aScrollX, uint32_t aScrollY,
+                               uint32_t aMaxScrollX, uint32_t aMaxScrollY) {
   if (aEventType == nsIAccessibleEvent::EVENT_SCROLLING) {
     SessionAccessibility* sessionAcc =
-      SessionAccessibility::GetInstanceFor(aTarget);
+        SessionAccessibility::GetInstanceFor(aTarget);
 
     if (sessionAcc) {
-      sessionAcc->SendScrollingEvent(
-        WrapperFor(aTarget), aScrollX, aScrollY, aMaxScrollX, aMaxScrollY);
+      sessionAcc->SendScrollingEvent(WrapperFor(aTarget), aScrollX, aScrollY,
+                                     aMaxScrollX, aMaxScrollY);
     }
   }
 }
 
-void
-a11y::ProxyBatch(ProxyAccessible* aDocument,
-                 const uint64_t aBatchType,
-                 const nsTArray<ProxyAccessible*>& aAccessibles,
-                 const nsTArray<BatchData>& aData)
-{
+void a11y::ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
+                      const nsTArray<ProxyAccessible*>& aAccessibles,
+                      const nsTArray<BatchData>& aData) {
   SessionAccessibility* sessionAcc =
-    SessionAccessibility::GetInstanceFor(aDocument);
+      SessionAccessibility::GetInstanceFor(aDocument);
   if (!sessionAcc) {
     return;
   }

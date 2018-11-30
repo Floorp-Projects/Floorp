@@ -14,10 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-class CSSRuleList : public nsISupports
-                  , public nsWrapperCache
-{
-public:
+class CSSRuleList : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CSSRuleList)
 
@@ -25,8 +23,7 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
   // WebIDL API
-  css::Rule* Item(uint32_t aIndex)
-  {
+  css::Rule* Item(uint32_t aIndex) {
     bool unused;
     return IndexedGetter(aIndex, unused);
   }
@@ -34,11 +31,11 @@ public:
   virtual css::Rule* IndexedGetter(uint32_t aIndex, bool& aFound) = 0;
   virtual uint32_t Length() = 0;
 
-protected:
+ protected:
   virtual ~CSSRuleList() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_CSSRuleList_h */

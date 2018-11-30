@@ -19,70 +19,46 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Area)
 namespace mozilla {
 namespace dom {
 
-HTMLAreaElement::HTMLAreaElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo))
-  , Link(this)
-{
-}
+HTMLAreaElement::HTMLAreaElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)), Link(this) {}
 
-HTMLAreaElement::~HTMLAreaElement()
-{
-}
+HTMLAreaElement::~HTMLAreaElement() {}
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
-                                             nsGenericHTMLElement,
-                                             Link)
+                                             nsGenericHTMLElement, Link)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
-                                   nsGenericHTMLElement,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLAreaElement, nsGenericHTMLElement,
                                    mRelList)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAreaElement)
 
-int32_t
-HTMLAreaElement::TabIndexDefault()
-{
-  return 0;
-}
+int32_t HTMLAreaElement::TabIndexDefault() { return 0; }
 
-void
-HTMLAreaElement::GetTarget(DOMString& aValue)
-{
+void HTMLAreaElement::GetTarget(DOMString& aValue) {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
 }
 
-void
-HTMLAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
-{
+void HTMLAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   GetEventTargetParentForAnchors(aVisitor);
 }
 
-nsresult
-HTMLAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
-{
+nsresult HTMLAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
 
-bool
-HTMLAreaElement::IsLink(nsIURI** aURI) const
-{
-  return IsHTMLLink(aURI);
-}
+bool HTMLAreaElement::IsLink(nsIURI** aURI) const { return IsHTMLLink(aURI); }
 
-void
-HTMLAreaElement::GetLinkTarget(nsAString& aTarget)
-{
+void HTMLAreaElement::GetLinkTarget(nsAString& aTarget) {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
     GetBaseTarget(aTarget);
   }
 }
 
-nsDOMTokenList*
-HTMLAreaElement::RelList()
-{
+nsDOMTokenList* HTMLAreaElement::RelList() {
   if (!mRelList) {
     mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,
                                   HTMLAnchorElement::sSupportedRelValues);
@@ -90,13 +66,12 @@ HTMLAreaElement::RelList()
   return mRelList;
 }
 
-nsresult
-HTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                            nsIContent* aBindingParent)
-{
+nsresult HTMLAreaElement::BindToTree(nsIDocument* aDocument,
+                                     nsIContent* aParent,
+                                     nsIContent* aBindingParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
-  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent);
+  nsresult rv =
+      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIDocument* doc = GetComposedDoc();
@@ -106,9 +81,7 @@ HTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void
-HTMLAreaElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
+void HTMLAreaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
@@ -116,13 +89,11 @@ HTMLAreaElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-nsresult
-HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                              const nsAttrValue* aValue,
-                              const nsAttrValue* aOldValue,
-                              nsIPrincipal* aSubjectPrincipal,
-                              bool aNotify)
-{
+nsresult HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                       const nsAttrValue* aValue,
+                                       const nsAttrValue* aOldValue,
+                                       nsIPrincipal* aSubjectPrincipal,
+                                       bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     // This must happen after the attribute is set. We will need the updated
     // attribute value because notifying the document that content states have
@@ -133,41 +104,30 @@ HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     }
   }
 
-  return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName, aValue,
-                                            aOldValue, aSubjectPrincipal, aNotify);
+  return nsGenericHTMLElement::AfterSetAttr(
+      aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-void
-HTMLAreaElement::ToString(nsAString& aSource)
-{
-  GetHref(aSource);
-}
+void HTMLAreaElement::ToString(nsAString& aSource) { GetHref(aSource); }
 
-already_AddRefed<nsIURI>
-HTMLAreaElement::GetHrefURI() const
-{
+already_AddRefed<nsIURI> HTMLAreaElement::GetHrefURI() const {
   return GetHrefURIForAnchors();
 }
 
-EventStates
-HTMLAreaElement::IntrinsicState() const
-{
+EventStates HTMLAreaElement::IntrinsicState() const {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 
-void
-HTMLAreaElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
-                                        size_t* aNodeSize) const
-{
+void HTMLAreaElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
+                                             size_t* aNodeSize) const {
   nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
   *aNodeSize += Link::SizeOfExcludingThis(aSizes.mState);
 }
 
-JSObject*
-HTMLAreaElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLAreaElement::WrapNode(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return HTMLAreaElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

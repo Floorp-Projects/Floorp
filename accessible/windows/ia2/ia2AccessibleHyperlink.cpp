@@ -18,18 +18,16 @@ using namespace mozilla::a11y;
 // IUnknown
 
 STDMETHODIMP
-ia2AccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
-{
-  if (!ppv)
-    return E_INVALIDARG;
+ia2AccessibleHyperlink::QueryInterface(REFIID iid, void** ppv) {
+  if (!ppv) return E_INVALIDARG;
 
   *ppv = nullptr;
 
   if (IID_IAccessibleHyperlink == iid) {
     auto accWrap = static_cast<AccessibleWrap*>(this);
-    if (accWrap->IsProxy() ?
-        !(accWrap->ProxyInterfaces() & Interfaces::HYPERLINK) :
-        !accWrap->IsLink())
+    if (accWrap->IsProxy()
+            ? !(accWrap->ProxyInterfaces() & Interfaces::HYPERLINK)
+            : !accWrap->IsLink())
       return E_NOINTERFACE;
 
     *ppv = static_cast<IAccessibleHyperlink*>(this);
@@ -43,34 +41,28 @@ ia2AccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleHyperlink
 
 STDMETHODIMP
-ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor)
-{
-  if (!aAnchor)
-    return E_INVALIDARG;
+ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor) {
+  if (!aAnchor) return E_INVALIDARG;
 
   VariantInit(aAnchor);
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
   MOZ_ASSERT(!thisObj->IsProxy());
 
-  if (thisObj->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (thisObj->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
     return E_INVALIDARG;
 
-  if (!thisObj->IsLink())
-    return S_FALSE;
+  if (!thisObj->IsLink()) return S_FALSE;
 
   AccessibleWrap* anchor =
-    static_cast<AccessibleWrap*>(thisObj->AnchorAt(aIndex));
-  if (!anchor)
-    return S_FALSE;
+      static_cast<AccessibleWrap*>(thisObj->AnchorAt(aIndex));
+  if (!anchor) return S_FALSE;
 
   void* instancePtr = nullptr;
   HRESULT result = anchor->QueryInterface(IID_IUnknown, &instancePtr);
-  if (FAILED(result))
-    return result;
+  if (FAILED(result)) return result;
 
   aAnchor->punkVal = static_cast<IUnknown*>(instancePtr);
   aAnchor->vt = VT_UNKNOWN;
@@ -78,8 +70,7 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor)
 }
 
 STDMETHODIMP
-ia2AccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT* aAnchorTarget)
-{
+ia2AccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT* aAnchorTarget) {
   if (!aAnchorTarget) {
     return E_INVALIDARG;
   }
@@ -115,71 +106,58 @@ ia2AccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT* aAnchorTarget)
   AppendUTF8toUTF16(uriStr, stringURI);
 
   aAnchorTarget->vt = VT_BSTR;
-  aAnchorTarget->bstrVal = ::SysAllocStringLen(stringURI.get(),
-                                               stringURI.Length());
+  aAnchorTarget->bstrVal =
+      ::SysAllocStringLen(stringURI.get(), stringURI.Length());
   return aAnchorTarget->bstrVal ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
-ia2AccessibleHyperlink::get_startIndex(long* aIndex)
-{
-  if (!aIndex)
-    return E_INVALIDARG;
+ia2AccessibleHyperlink::get_startIndex(long* aIndex) {
+  if (!aIndex) return E_INVALIDARG;
 
   *aIndex = 0;
 
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
-  if (thisObj->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (thisObj->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  if (!thisObj->IsLink())
-    return S_FALSE;
+  if (!thisObj->IsLink()) return S_FALSE;
 
   *aIndex = thisObj->StartOffset();
   return S_OK;
 }
 
 STDMETHODIMP
-ia2AccessibleHyperlink::get_endIndex(long* aIndex)
-{
-  if (!aIndex)
-    return E_INVALIDARG;
+ia2AccessibleHyperlink::get_endIndex(long* aIndex) {
+  if (!aIndex) return E_INVALIDARG;
 
   *aIndex = 0;
 
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
-  if (thisObj->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (thisObj->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  if (!thisObj->IsLink())
-    return S_FALSE;
+  if (!thisObj->IsLink()) return S_FALSE;
 
   *aIndex = thisObj->EndOffset();
   return S_OK;
 }
 
 STDMETHODIMP
-ia2AccessibleHyperlink::get_valid(boolean* aValid)
-{
-  if (!aValid)
-    return E_INVALIDARG;
+ia2AccessibleHyperlink::get_valid(boolean* aValid) {
+  if (!aValid) return E_INVALIDARG;
 
   *aValid = false;
 
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
-  if (thisObj->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (thisObj->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  if (!thisObj->IsLink())
-    return S_FALSE;
+  if (!thisObj->IsLink()) return S_FALSE;
 
   *aValid = thisObj->IsLinkValid();
   return S_OK;
 }
-

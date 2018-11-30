@@ -14,21 +14,16 @@ namespace net {
 NS_IMPL_ISUPPORTS0(AltDataOutputStreamParent)
 
 AltDataOutputStreamParent::AltDataOutputStreamParent(nsIOutputStream* aStream)
-  : mOutputStream(aStream)
-  , mStatus(NS_OK)
-  , mIPCOpen(true)
-{
+    : mOutputStream(aStream), mStatus(NS_OK), mIPCOpen(true) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 }
 
-AltDataOutputStreamParent::~AltDataOutputStreamParent()
-{
+AltDataOutputStreamParent::~AltDataOutputStreamParent() {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 }
 
-mozilla::ipc::IPCResult
-AltDataOutputStreamParent::RecvWriteData(const nsCString& data)
-{
+mozilla::ipc::IPCResult AltDataOutputStreamParent::RecvWriteData(
+    const nsCString& data) {
   if (NS_FAILED(mStatus)) {
     if (mIPCOpen) {
       Unused << SendError(mStatus);
@@ -47,9 +42,7 @@ AltDataOutputStreamParent::RecvWriteData(const nsCString& data)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-AltDataOutputStreamParent::RecvClose()
-{
+mozilla::ipc::IPCResult AltDataOutputStreamParent::RecvClose() {
   if (NS_FAILED(mStatus)) {
     if (mIPCOpen) {
       Unused << SendError(mStatus);
@@ -67,19 +60,15 @@ AltDataOutputStreamParent::RecvClose()
   return IPC_OK();
 }
 
-void
-AltDataOutputStreamParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void AltDataOutputStreamParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }
 
-mozilla::ipc::IPCResult
-AltDataOutputStreamParent::RecvDeleteSelf()
-{
+mozilla::ipc::IPCResult AltDataOutputStreamParent::RecvDeleteSelf() {
   mIPCOpen = false;
   Unused << SendDeleteSelf();
   return IPC_OK();
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

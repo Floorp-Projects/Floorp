@@ -14,50 +14,36 @@
 namespace mozilla {
 
 WebGLExtensionVertexArray::WebGLExtensionVertexArray(WebGLContext* webgl)
-  : WebGLExtensionBase(webgl)
-{
-}
+    : WebGLExtensionBase(webgl) {}
 
-WebGLExtensionVertexArray::~WebGLExtensionVertexArray()
-{
-}
+WebGLExtensionVertexArray::~WebGLExtensionVertexArray() {}
 
 already_AddRefed<WebGLVertexArray>
-WebGLExtensionVertexArray::CreateVertexArrayOES()
-{
-    if (mIsLost)
-        return nullptr;
+WebGLExtensionVertexArray::CreateVertexArrayOES() {
+  if (mIsLost) return nullptr;
 
-    return mContext->CreateVertexArray();
+  return mContext->CreateVertexArray();
 }
 
-void
-WebGLExtensionVertexArray::DeleteVertexArrayOES(WebGLVertexArray* array)
-{
-    if (mIsLost)
-        return;
+void WebGLExtensionVertexArray::DeleteVertexArrayOES(WebGLVertexArray* array) {
+  if (mIsLost) return;
 
-    mContext->DeleteVertexArray(array);
+  mContext->DeleteVertexArray(array);
 }
 
-bool
-WebGLExtensionVertexArray::IsVertexArrayOES(const WebGLVertexArray* array)
-{
-    if (mIsLost)
-        return false;
+bool WebGLExtensionVertexArray::IsVertexArrayOES(
+    const WebGLVertexArray* array) {
+  if (mIsLost) return false;
 
-    return mContext->IsVertexArray(array);
+  return mContext->IsVertexArray(array);
 }
 
-void
-WebGLExtensionVertexArray::BindVertexArrayOES(WebGLVertexArray* array)
-{
-    if (mIsLost)
-        return;
+void WebGLExtensionVertexArray::BindVertexArrayOES(WebGLVertexArray* array) {
+  if (mIsLost) return;
 
-    mContext->BindVertexArray(array);
+  mContext->BindVertexArray(array);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionVertexArray, OES_vertex_array_object)
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -42,10 +42,7 @@ class Channel {
     virtual void GetQueuedMessages(std::queue<Message>& queue) {}
   };
 
-  enum Mode {
-    MODE_SERVER,
-    MODE_CLIENT
-  };
+  enum Mode { MODE_SERVER, MODE_CLIENT };
 
   enum {
     // The maximum message size in bytes. Attempting to receive a
@@ -73,15 +70,15 @@ class Channel {
 
   // XXX it would nice not to have yet more platform-specific code in
   // here but it's just not worth the trouble.
-# if defined(OS_POSIX)
+#if defined(OS_POSIX)
   // Connect to a pre-created channel |fd| as |mode|.
   Channel(int fd, Mode mode, Listener* listener);
-# elif defined(OS_WIN)
+#elif defined(OS_WIN)
   // Connect to a pre-created channel as |mode|.  Clients connect to
   // the pre-existing server pipe, and servers take over |server_pipe|.
-  Channel(const std::wstring& channel_id, void* server_pipe,
-          Mode mode, Listener* listener);
-# endif
+  Channel(const std::wstring& channel_id, void* server_pipe, Mode mode,
+          Listener* listener);
+#endif
 
   ~Channel();
 
@@ -122,7 +119,7 @@ class Channel {
   // If the kTestingChannelID flag is specified on the command line then
   // a named FIFO is used as the channel transport mechanism rather than a
   // socketpair() in which case this method returns -1 for both parameters.
-  void GetClientFileDescriptorMapping(int *src_fd, int *dest_fd) const;
+  void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
 
   // Return the file descriptor for communication with the peer.
   int GetFileDescriptor() const;
@@ -143,20 +140,21 @@ class Channel {
 
   // Generates a channel ID that, if passed to the client as a shared secret,
   // will validate that the client's authenticity. On platforms that do not
-  // require additional validation this is simply calls GenerateUniqueRandomChannelID().
-  // For portability the prefix should not include the \ character.
+  // require additional validation this is simply calls
+  // GenerateUniqueRandomChannelID(). For portability the prefix should not
+  // include the \ character.
   static std::wstring GenerateVerifiedChannelID(const std::wstring& prefix);
 
 #if defined(MOZ_WIDGET_ANDROID)
-  // Used to set the first IPC file descriptor in the child process on Android. See
-  // ipc_channel_posix.cc for further details on how this is used.
+  // Used to set the first IPC file descriptor in the child process on Android.
+  // See ipc_channel_posix.cc for further details on how this is used.
   static void SetClientChannelFd(int fd);
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
  private:
   // PIMPL to which all channel calls are delegated.
   class ChannelImpl;
-  ChannelImpl *channel_impl_;
+  ChannelImpl* channel_impl_;
 
   enum {
 #if defined(OS_MACOSX)
@@ -173,10 +171,10 @@ class Channel {
     // by the peer when the channel is connected.  The message contains
     // just the process id (pid).  The message has a special routing_id
     // (MSG_ROUTING_NONE) and type (HELLO_MESSAGE_TYPE).
-    HELLO_MESSAGE_TYPE = kuint16max  // Maximum value of message type (uint16_t),
-                                     // to avoid conflicting with normal
-                                     // message types, which are enumeration
-                                     // constants starting from 0.
+    HELLO_MESSAGE_TYPE = kuint16max  // Maximum value of message type
+                                     // (uint16_t), to avoid conflicting with
+                                     // normal message types, which are
+                                     // enumeration constants starting from 0.
   };
 };
 

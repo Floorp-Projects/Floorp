@@ -2,8 +2,7 @@
 
 #include "structures.h"
 
-void test()
-{
+void test() {
   char dest[3];
-  strncat(dest, "***", sizeof(dest)); // warning : potential buffer overflow
+  strncat(dest, "***", sizeof(dest));  // warning : potential buffer overflow
 }

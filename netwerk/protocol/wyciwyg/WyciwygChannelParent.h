@@ -15,16 +15,15 @@
 
 namespace mozilla {
 namespace dom {
-  class PBrowserParent;
-} // namespace dom
+class PBrowserParent;
+}  // namespace dom
 
 namespace net {
 
-class WyciwygChannelParent : public PWyciwygChannelParent
-                           , public nsIStreamListener
-                           , public nsIInterfaceRequestor
-{
-public:
+class WyciwygChannelParent : public PWyciwygChannelParent,
+                             public nsIStreamListener,
+                             public nsIInterfaceRequestor {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
@@ -32,32 +31,37 @@ public:
 
   WyciwygChannelParent();
 
-protected:
+ protected:
   virtual ~WyciwygChannelParent() = default;
 
-  virtual mozilla::ipc::IPCResult RecvInit(const URIParams&          uri,
-                                           const ipc::PrincipalInfo& aRequestingPrincipalInfo,
-                                           const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
-                                           const ipc::PrincipalInfo& aPrincipalToInheritInfo,
-                                           const uint32_t&           aSecurityFlags,
-                                           const uint32_t&           aContentPolicyType) override;
-  virtual mozilla::ipc::IPCResult RecvAsyncOpen(const URIParams& original,
-                                                const uint32_t& loadFlags,
-                                                const IPC::SerializedLoadContext& loadContext,
-                                                const PBrowserOrId &parent) override;
-  virtual mozilla::ipc::IPCResult RecvWriteToCacheEntry(const nsDependentSubstring& data) override;
-  virtual mozilla::ipc::IPCResult RecvCloseCacheEntry(const nsresult& reason) override;
-  virtual mozilla::ipc::IPCResult RecvSetCharsetAndSource(const int32_t& source,
-                                                          const nsCString& charset) override;
-  virtual mozilla::ipc::IPCResult RecvSetSecurityInfo(const nsCString& securityInfo) override;
-  virtual mozilla::ipc::IPCResult RecvCancel(const nsresult& statusCode) override;
-  virtual mozilla::ipc::IPCResult RecvAppData(const IPC::SerializedLoadContext& loadContext,
-                                              const PBrowserOrId &parent) override;
+  virtual mozilla::ipc::IPCResult RecvInit(
+      const URIParams& uri, const ipc::PrincipalInfo& aRequestingPrincipalInfo,
+      const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
+      const ipc::PrincipalInfo& aPrincipalToInheritInfo,
+      const uint32_t& aSecurityFlags,
+      const uint32_t& aContentPolicyType) override;
+  virtual mozilla::ipc::IPCResult RecvAsyncOpen(
+      const URIParams& original, const uint32_t& loadFlags,
+      const IPC::SerializedLoadContext& loadContext,
+      const PBrowserOrId& parent) override;
+  virtual mozilla::ipc::IPCResult RecvWriteToCacheEntry(
+      const nsDependentSubstring& data) override;
+  virtual mozilla::ipc::IPCResult RecvCloseCacheEntry(
+      const nsresult& reason) override;
+  virtual mozilla::ipc::IPCResult RecvSetCharsetAndSource(
+      const int32_t& source, const nsCString& charset) override;
+  virtual mozilla::ipc::IPCResult RecvSetSecurityInfo(
+      const nsCString& securityInfo) override;
+  virtual mozilla::ipc::IPCResult RecvCancel(
+      const nsresult& statusCode) override;
+  virtual mozilla::ipc::IPCResult RecvAppData(
+      const IPC::SerializedLoadContext& loadContext,
+      const PBrowserOrId& parent) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   bool SetupAppData(const IPC::SerializedLoadContext& loadContext,
-                    const PBrowserOrId &aParent);
+                    const PBrowserOrId& aParent);
 
   nsCOMPtr<nsIWyciwygChannel> mChannel;
   bool mIPCClosed;
@@ -65,7 +69,7 @@ protected:
   nsCOMPtr<nsILoadContext> mLoadContext;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_WyciwygChannelParent_h
+#endif  // mozilla_net_WyciwygChannelParent_h

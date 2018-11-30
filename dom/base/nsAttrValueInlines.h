@@ -16,8 +16,7 @@
 
 struct MiscContainer;
 
-struct MiscContainer final
-{
+struct MiscContainer final {
   typedef nsAttrValue::ValueType ValueType;
 
   ValueType mType;
@@ -64,22 +63,18 @@ struct MiscContainer final
     double mDoubleValue;
   };
 
-  MiscContainer()
-    : mType(nsAttrValue::eColor),
-      mStringBits(0)
-  {
+  MiscContainer() : mType(nsAttrValue::eColor), mStringBits(0) {
     MOZ_COUNT_CTOR(MiscContainer);
     mValue.mColor = 0;
     mValue.mRefCount = 0;
     mValue.mCached = 0;
   }
 
-protected:
+ protected:
   // Only nsAttrValue should be able to delete us.
   friend class nsAttrValue;
 
-  ~MiscContainer()
-  {
+  ~MiscContainer() {
     if (IsRefCounted()) {
       MOZ_ASSERT(mValue.mRefCount == 0);
       MOZ_ASSERT(!mValue.mCached);
@@ -87,11 +82,10 @@ protected:
     MOZ_COUNT_DTOR(MiscContainer);
   }
 
-public:
+ public:
   bool GetString(nsAString& aString) const;
 
-  void SetStringBitsMainThread(uintptr_t aBits)
-  {
+  void SetStringBitsMainThread(uintptr_t aBits) {
     // mStringBits is atomic, but the callers of this function are
     // single-threaded so they don't have to worry about it.
     MOZ_ASSERT(!mozilla::IsInServoTraversal());
@@ -99,8 +93,7 @@ public:
     mStringBits = aBits;
   }
 
-  inline bool IsRefCounted() const
-  {
+  inline bool IsRefCounted() const {
     // Nothing stops us from refcounting (and sharing) other types of
     // MiscContainer (except eDoubleValue types) but there's no compelling
     // reason to.
@@ -125,86 +118,62 @@ public:
  * Implementation of inline methods
  */
 
-inline int32_t
-nsAttrValue::GetIntegerValue() const
-{
+inline int32_t nsAttrValue::GetIntegerValue() const {
   MOZ_ASSERT(Type() == eInteger, "wrong type");
-  return (BaseType() == eIntegerBase)
-         ? GetIntInternal()
-         : GetMiscContainer()->mValue.mInteger;
+  return (BaseType() == eIntegerBase) ? GetIntInternal()
+                                      : GetMiscContainer()->mValue.mInteger;
 }
 
-inline int16_t
-nsAttrValue::GetEnumValue() const
-{
+inline int16_t nsAttrValue::GetEnumValue() const {
   MOZ_ASSERT(Type() == eEnum, "wrong type");
   // We don't need to worry about sign extension here since we're
   // returning an int16_t which will cut away the top bits.
-  return static_cast<int16_t>((
-    (BaseType() == eIntegerBase)
-    ? static_cast<uint32_t>(GetIntInternal())
-    : GetMiscContainer()->mValue.mEnumValue)
-      >> NS_ATTRVALUE_ENUMTABLEINDEX_BITS);
+  return static_cast<int16_t>(((BaseType() == eIntegerBase)
+                                   ? static_cast<uint32_t>(GetIntInternal())
+                                   : GetMiscContainer()->mValue.mEnumValue) >>
+                              NS_ATTRVALUE_ENUMTABLEINDEX_BITS);
 }
 
-inline float
-nsAttrValue::GetPercentValue() const
-{
+inline float nsAttrValue::GetPercentValue() const {
   MOZ_ASSERT(Type() == ePercent, "wrong type");
-  return ((BaseType() == eIntegerBase)
-          ? GetIntInternal()
-          : GetMiscContainer()->mValue.mPercent)
-            / 100.0f;
+  return ((BaseType() == eIntegerBase) ? GetIntInternal()
+                                       : GetMiscContainer()->mValue.mPercent) /
+         100.0f;
 }
 
-inline mozilla::AtomArray*
-nsAttrValue::GetAtomArrayValue() const
-{
+inline mozilla::AtomArray* nsAttrValue::GetAtomArrayValue() const {
   MOZ_ASSERT(Type() == eAtomArray, "wrong type");
   return GetMiscContainer()->mValue.mAtomArray;
 }
 
-inline mozilla::DeclarationBlock*
-nsAttrValue::GetCSSDeclarationValue() const
-{
+inline mozilla::DeclarationBlock* nsAttrValue::GetCSSDeclarationValue() const {
   MOZ_ASSERT(Type() == eCSSDeclaration, "wrong type");
   return GetMiscContainer()->mValue.mCSSDeclaration;
 }
 
-inline nsIURI*
-nsAttrValue::GetURLValue() const
-{
+inline nsIURI* nsAttrValue::GetURLValue() const {
   MOZ_ASSERT(Type() == eURL, "wrong type");
   return GetMiscContainer()->mValue.mURL;
 }
 
-inline double
-nsAttrValue::GetDoubleValue() const
-{
+inline double nsAttrValue::GetDoubleValue() const {
   MOZ_ASSERT(Type() == eDoubleValue, "wrong type");
   return GetMiscContainer()->mDoubleValue;
 }
 
-inline bool
-nsAttrValue::GetIntMarginValue(nsIntMargin& aMargin) const
-{
+inline bool nsAttrValue::GetIntMarginValue(nsIntMargin& aMargin) const {
   MOZ_ASSERT(Type() == eIntMarginValue, "wrong type");
   nsIntMargin* m = GetMiscContainer()->mValue.mIntMargin;
-  if (!m)
-    return false;
+  if (!m) return false;
   aMargin = *m;
   return true;
 }
 
-inline bool
-nsAttrValue::IsSVGType(ValueType aType) const
-{
+inline bool nsAttrValue::IsSVGType(ValueType aType) const {
   return aType >= eSVGTypesBegin && aType <= eSVGTypesEnd;
 }
 
-inline bool
-nsAttrValue::StoresOwnData() const
-{
+inline bool nsAttrValue::StoresOwnData() const {
   if (BaseType() != eOtherBase) {
     return true;
   }
@@ -212,34 +181,25 @@ nsAttrValue::StoresOwnData() const
   return t != eCSSDeclaration && !IsSVGType(t);
 }
 
-inline void
-nsAttrValue::SetPtrValueAndType(void* aValue, ValueBaseType aType)
-{
+inline void nsAttrValue::SetPtrValueAndType(void* aValue, ValueBaseType aType) {
   NS_ASSERTION(!(NS_PTR_TO_INT32(aValue) & ~NS_ATTRVALUE_POINTERVALUE_MASK),
                "pointer not properly aligned, this will crash");
   mBits = reinterpret_cast<intptr_t>(aValue) | aType;
 }
 
-inline void
-nsAttrValue::ResetIfSet()
-{
+inline void nsAttrValue::ResetIfSet() {
   if (mBits) {
     Reset();
   }
 }
 
-inline MiscContainer*
-nsAttrValue::GetMiscContainer() const
-{
+inline MiscContainer* nsAttrValue::GetMiscContainer() const {
   NS_ASSERTION(BaseType() == eOtherBase, "wrong type");
   return static_cast<MiscContainer*>(GetPtr());
 }
 
-inline int32_t
-nsAttrValue::GetIntInternal() const
-{
-  NS_ASSERTION(BaseType() == eIntegerBase,
-               "getting integer from non-integer");
+inline int32_t nsAttrValue::GetIntInternal() const {
+  NS_ASSERTION(BaseType() == eIntegerBase, "getting integer from non-integer");
   // Make sure we get a signed value.
   // Lets hope the optimizer optimizes this into a shift. Unfortunatly signed
   // bitshift right is implementaion dependant.
@@ -247,56 +207,42 @@ nsAttrValue::GetIntInternal() const
          NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER;
 }
 
-inline nsAttrValue::ValueType
-nsAttrValue::Type() const
-{
+inline nsAttrValue::ValueType nsAttrValue::Type() const {
   switch (BaseType()) {
-    case eIntegerBase:
-    {
+    case eIntegerBase: {
       return static_cast<ValueType>(mBits & NS_ATTRVALUE_INTEGERTYPE_MASK);
     }
-    case eOtherBase:
-    {
+    case eOtherBase: {
       return GetMiscContainer()->mType;
     }
-    default:
-    {
+    default: {
       return static_cast<ValueType>(static_cast<uint16_t>(BaseType()));
     }
   }
 }
 
-inline nsAtom*
-nsAttrValue::GetAtomValue() const
-{
+inline nsAtom* nsAttrValue::GetAtomValue() const {
   MOZ_ASSERT(Type() == eAtom, "wrong type");
   return reinterpret_cast<nsAtom*>(GetPtr());
 }
 
-inline void
-nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const
-{
+inline void nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const {
   switch (Type()) {
-    case eString:
-    {
+    case eString: {
       nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
         aResult.SetKnownLiveStringBuffer(
-          str, str->StorageSize()/sizeof(char16_t) - 1);
+            str, str->StorageSize() / sizeof(char16_t) - 1);
       }
       // else aResult is already empty
       return;
     }
-    case eAtom:
-    {
-      nsAtom *atom = static_cast<nsAtom*>(GetPtr());
+    case eAtom: {
+      nsAtom* atom = static_cast<nsAtom*>(GetPtr());
       aResult.SetKnownLiveAtom(atom, mozilla::dom::DOMString::eNullNotExpected);
       break;
     }
-    default:
-    {
-      ToString(aResult.AsAString());
-    }
+    default: { ToString(aResult.AsAString()); }
   }
 }
 

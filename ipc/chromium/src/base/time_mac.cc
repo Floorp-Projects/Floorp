@@ -51,7 +51,8 @@ Time Time::NowFromSystemTime() {
 // static
 Time Time::FromExploded(bool is_local, const Exploded& exploded) {
   CFGregorianDate date;
-  date.second = exploded.second +
+  date.second =
+      exploded.second +
       exploded.millisecond / static_cast<double>(kMillisecondsPerSecond);
   date.minute = exploded.minute;
   date.hour = exploded.hour;
@@ -59,20 +60,19 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
   date.month = exploded.month;
   date.year = exploded.year;
 
-  scoped_cftyperef<CFTimeZoneRef>
-      time_zone(is_local ? CFTimeZoneCopySystem() : NULL);
+  scoped_cftyperef<CFTimeZoneRef> time_zone(is_local ? CFTimeZoneCopySystem()
+                                                     : NULL);
   CFAbsoluteTime seconds = CFGregorianDateGetAbsoluteTime(date, time_zone) +
-      kCFAbsoluteTimeIntervalSince1970;
+                           kCFAbsoluteTimeIntervalSince1970;
   return Time(static_cast<int64_t>(seconds * kMicrosecondsPerSecond));
 }
 
 void Time::Explode(bool is_local, Exploded* exploded) const {
-  CFAbsoluteTime seconds =
-      (static_cast<double>(us_) / kMicrosecondsPerSecond) -
-      kCFAbsoluteTimeIntervalSince1970;
+  CFAbsoluteTime seconds = (static_cast<double>(us_) / kMicrosecondsPerSecond) -
+                           kCFAbsoluteTimeIntervalSince1970;
 
-  scoped_cftyperef<CFTimeZoneRef>
-      time_zone(is_local ? CFTimeZoneCopySystem() : NULL);
+  scoped_cftyperef<CFTimeZoneRef> time_zone(is_local ? CFTimeZoneCopySystem()
+                                                     : NULL);
   CFGregorianDate date = CFAbsoluteTimeGetGregorianDate(seconds, time_zone);
 
   exploded->year = date.year;
@@ -81,7 +81,7 @@ void Time::Explode(bool is_local, Exploded* exploded) const {
   exploded->hour = date.hour;
   exploded->minute = date.minute;
   exploded->second = date.second;
-  exploded->millisecond  =
+  exploded->millisecond =
       static_cast<int>(date.second * kMillisecondsPerSecond) %
       kMillisecondsPerSecond;
 }

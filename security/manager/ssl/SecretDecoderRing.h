@@ -12,23 +12,26 @@
 
 #define NS_SECRETDECODERRING_CONTRACTID "@mozilla.org/security/sdr;1"
 
-#define NS_SECRETDECODERRING_CID \
-  { 0x0c4f1ddc, 0x1dd2, 0x11b2, { 0x9d, 0x95, 0xf2, 0xfd, 0xf1, 0x13, 0x04, 0x4b } }
+#define NS_SECRETDECODERRING_CID                     \
+  {                                                  \
+    0x0c4f1ddc, 0x1dd2, 0x11b2, {                    \
+      0x9d, 0x95, 0xf2, 0xfd, 0xf1, 0x13, 0x04, 0x4b \
+    }                                                \
+  }
 
-class SecretDecoderRing : public nsISecretDecoderRing
-{
-public:
+class SecretDecoderRing : public nsISecretDecoderRing {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISECRETDECODERRING
 
   SecretDecoderRing() {}
 
-protected:
+ protected:
   virtual ~SecretDecoderRing() {}
 
-private:
+ private:
   nsresult Encrypt(const nsACString& data, /*out*/ nsACString& result);
   nsresult Decrypt(const nsACString& data, /*out*/ nsACString& result);
 };
 
-#endif // SecretDecoderRing_h
+#endif  // SecretDecoderRing_h

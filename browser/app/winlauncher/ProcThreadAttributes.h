@@ -17,25 +17,19 @@
 
 namespace mozilla {
 
-class MOZ_RAII ProcThreadAttributes final
-{
-  struct ProcThreadAttributeListDeleter
-  {
-    void operator()(LPPROC_THREAD_ATTRIBUTE_LIST aList)
-    {
+class MOZ_RAII ProcThreadAttributes final {
+  struct ProcThreadAttributeListDeleter {
+    void operator()(LPPROC_THREAD_ATTRIBUTE_LIST aList) {
       ::DeleteProcThreadAttributeList(aList);
       delete[] reinterpret_cast<char*>(aList);
     }
   };
 
   using ProcThreadAttributeListPtr =
-    UniquePtr<_PROC_THREAD_ATTRIBUTE_LIST, ProcThreadAttributeListDeleter>;
+      UniquePtr<_PROC_THREAD_ATTRIBUTE_LIST, ProcThreadAttributeListDeleter>;
 
-public:
-  ProcThreadAttributes()
-    : mMitigationPolicies(0)
-  {
-  }
+ public:
+  ProcThreadAttributes() : mMitigationPolicies(0) {}
 
   ~ProcThreadAttributes() = default;
 
@@ -44,13 +38,9 @@ public:
   ProcThreadAttributes& operator=(const ProcThreadAttributes&) = delete;
   ProcThreadAttributes& operator=(ProcThreadAttributes&&) = delete;
 
-  void AddMitigationPolicy(DWORD64 aPolicy)
-  {
-    mMitigationPolicies |= aPolicy;
-  }
+  void AddMitigationPolicy(DWORD64 aPolicy) { mMitigationPolicies |= aPolicy; }
 
-  bool AddInheritableHandle(HANDLE aHandle)
-  {
+  bool AddInheritableHandle(HANDLE aHandle) {
     DWORD type = ::GetFileType(aHandle);
     if (type != FILE_TYPE_DISK && type != FILE_TYPE_PIPE) {
       return false;
@@ -65,8 +55,7 @@ public:
   }
 
   template <size_t N>
-  bool AddInheritableHandles(HANDLE (&aHandles)[N])
-  {
+  bool AddInheritableHandles(HANDLE (&aHandles)[N]) {
     bool ok = true;
     for (auto handle : aHandles) {
       ok &= AddInheritableHandle(handle);
@@ -75,15 +64,9 @@ public:
     return ok;
   }
 
-  bool HasMitigationPolicies() const
-  {
-    return !!mMitigationPolicies;
-  }
+  bool HasMitigationPolicies() const { return !!mMitigationPolicies; }
 
-  bool HasInheritableHandles() const
-  {
-    return !mInheritableHandles.empty();
-  }
+  bool HasInheritableHandles() const { return !mInheritableHandles.empty(); }
 
   /**
    * @return false if the STARTUPINFOEXW::lpAttributeList was set to null
@@ -91,8 +74,7 @@ public:
    *         true  if the STARTUPINFOEXW::lpAttributeList was set to
    *               non-null;
    */
-  LauncherResult<bool> AssignTo(STARTUPINFOEXW& aSiex)
-  {
+  LauncherResult<bool> AssignTo(STARTUPINFOEXW& aSiex) {
     ZeroMemory(&aSiex, sizeof(STARTUPINFOEXW));
 
     // We'll set the size to sizeof(STARTUPINFOW) until we determine whether the
@@ -124,7 +106,7 @@ public:
     auto buf = MakeUnique<char[]>(listSize);
 
     LPPROC_THREAD_ATTRIBUTE_LIST tmpList =
-      reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(buf.get());
+        reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(buf.get());
 
     if (!::InitializeProcThreadAttributeList(tmpList, numAttributes, 0,
                                              &listSize)) {
@@ -135,25 +117,24 @@ public:
     // initialized, we are no longer dealing with a plain old char array. We
     // must now deinitialize the attribute list before deallocating the
     // underlying buffer.
-    ProcThreadAttributeListPtr
-      attrList(reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(buf.release()));
+    ProcThreadAttributeListPtr attrList(
+        reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(buf.release()));
 
     if (mMitigationPolicies) {
-      if (!::UpdateProcThreadAttribute(attrList.get(), 0,
-                                       PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY,
-                                       &mMitigationPolicies,
-                                       sizeof(mMitigationPolicies), nullptr,
-                                       nullptr)) {
+      if (!::UpdateProcThreadAttribute(
+              attrList.get(), 0, PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY,
+              &mMitigationPolicies, sizeof(mMitigationPolicies), nullptr,
+              nullptr)) {
         return LAUNCHER_ERROR_FROM_LAST();
       }
     }
 
     if (!mInheritableHandles.empty()) {
-      if (!::UpdateProcThreadAttribute(attrList.get(), 0,
-                                       PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-                                       mInheritableHandles.begin(),
-                                       mInheritableHandles.length() * sizeof(HANDLE),
-                                       nullptr, nullptr)) {
+      if (!::UpdateProcThreadAttribute(
+              attrList.get(), 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+              mInheritableHandles.begin(),
+              mInheritableHandles.length() * sizeof(HANDLE), nullptr,
+              nullptr)) {
         return LAUNCHER_ERROR_FROM_LAST();
       }
     }
@@ -164,15 +145,14 @@ public:
     return true;
   }
 
-private:
-  static const uint32_t kNumInline = 3; // Inline storage for the std handles
+ private:
+  static const uint32_t kNumInline = 3;  // Inline storage for the std handles
 
-  DWORD64                     mMitigationPolicies;
-  Vector<HANDLE, kNumInline>  mInheritableHandles;
-  ProcThreadAttributeListPtr  mAttrList;
+  DWORD64 mMitigationPolicies;
+  Vector<HANDLE, kNumInline> mInheritableHandles;
+  ProcThreadAttributeListPtr mAttrList;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ProcThreadAttributes_h
-
+#endif  // mozilla_ProcThreadAttributes_h

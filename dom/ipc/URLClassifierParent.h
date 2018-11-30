@@ -14,35 +14,30 @@
 namespace mozilla {
 namespace dom {
 
-template<typename BaseProtocol>
+template <typename BaseProtocol>
 class URLClassifierParentBase : public nsIURIClassifierCallback,
-                                public BaseProtocol
-{
-public:
+                                public BaseProtocol {
+ public:
   // nsIURIClassifierCallback.
-  NS_IMETHOD OnClassifyComplete(nsresult aErrorCode,
-                                const nsACString& aList,
+  NS_IMETHOD OnClassifyComplete(nsresult aErrorCode, const nsACString& aList,
                                 const nsACString& aProvider,
-                                const nsACString& aFullHash) override
-  {
+                                const nsACString& aFullHash) override {
     if (mIPCOpen) {
-      ClassifierInfo info = ClassifierInfo(nsCString(aList),
-                                           nsCString(aProvider),
-                                           nsCString(aFullHash));
+      ClassifierInfo info = ClassifierInfo(
+          nsCString(aList), nsCString(aProvider), nsCString(aFullHash));
       Unused << BaseProtocol::Send__delete__(this, info, aErrorCode);
     }
     return NS_OK;
   }
 
   // Custom.
-  void ClassificationFailed()
-  {
+  void ClassificationFailed() {
     if (mIPCOpen) {
       Unused << BaseProtocol::Send__delete__(this, void_t(), NS_ERROR_FAILURE);
     }
   }
 
-protected:
+ protected:
   ~URLClassifierParentBase() = default;
   bool mIPCOpen = true;
 };
@@ -50,15 +45,16 @@ protected:
 //////////////////////////////////////////////////////////////
 // URLClassifierParent
 
-class URLClassifierParent : public URLClassifierParentBase<PURLClassifierParent>
-{
-public:
+class URLClassifierParent
+    : public URLClassifierParentBase<PURLClassifierParent> {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   mozilla::ipc::IPCResult StartClassify(nsIPrincipal* aPrincipal,
                                         bool aUseTrackingProtection,
                                         bool* aSuccess);
-private:
+
+ private:
   ~URLClassifierParent() = default;
 
   // Override PURLClassifierParent::ActorDestroy. We seem to unable to
@@ -69,21 +65,22 @@ private:
 //////////////////////////////////////////////////////////////
 // URLClassifierLocalParent
 
-class URLClassifierLocalParent : public URLClassifierParentBase<PURLClassifierLocalParent>
-{
-public:
+class URLClassifierLocalParent
+    : public URLClassifierParentBase<PURLClassifierLocalParent> {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  mozilla::ipc::IPCResult StartClassify(nsIURI* aURI, const nsACString& aTables);
+  mozilla::ipc::IPCResult StartClassify(nsIURI* aURI,
+                                        const nsACString& aTables);
 
-private:
+ private:
   ~URLClassifierLocalParent() = default;
 
   // Override PURLClassifierParent::ActorDestroy.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_URLClassifierParent_h
+#endif  // mozilla_dom_URLClassifierParent_h

@@ -12,7 +12,7 @@
 #if defined(OS_MACOSX)
 #if defined(__OBJC__)
 @class NSAutoreleasePool;
-#else  // __OBJC__
+#else   // __OBJC__
 class NSAutoreleasePool;
 #endif  // __OBJC__
 #endif  // OS_MACOSX
@@ -31,8 +31,8 @@ class ScopedNSAutoreleasePool {
  public:
 #if !defined(OS_MACOSX)
   ScopedNSAutoreleasePool() {}
-  void Recycle() { }
-#else  // OS_MACOSX
+  void Recycle() {}
+#else   // OS_MACOSX
   ScopedNSAutoreleasePool();
   ~ScopedNSAutoreleasePool();
 
@@ -41,6 +41,7 @@ class ScopedNSAutoreleasePool {
   // Only use then when you're certain the items currently in the pool are
   // no longer needed.
   void Recycle();
+
  private:
   NSAutoreleasePool* autorelease_pool_;
 #endif  // OS_MACOSX

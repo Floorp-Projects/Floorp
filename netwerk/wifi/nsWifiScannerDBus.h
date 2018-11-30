@@ -15,15 +15,14 @@ class nsWifiAccessPoint;
 
 namespace mozilla {
 
-class nsWifiScannerDBus final
-{
-public:
+class nsWifiScannerDBus final {
+ public:
   explicit nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint>* aAccessPoints);
   ~nsWifiScannerDBus();
 
   nsresult Scan();
 
-private:
+ private:
   nsresult SendGetDevices();
   nsresult SendGetDeviceType(const char* aPath);
   nsresult SendGetAccessPoints(const char* aPath);
@@ -40,6 +39,6 @@ private:
   nsCOMArray<nsWifiAccessPoint>* mAccessPoints;
 };
 
-} // mozilla
+}  // namespace mozilla
 
-#endif // NSWIFIAPSCANNERDBUS_H_
+#endif  // NSWIFIAPSCANNERDBUS_H_

@@ -11,7 +11,8 @@
 #include "mozpkix/Result.h"
 #include "SignedCertificateTimestamp.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Obtains a PrecertChain log entry for |leafCertificate|, a DER-encoded
 // X.509v3 certificate that contains an X.509v3 extension with the
@@ -38,6 +39,7 @@ pkix::Result GetPrecertLogEntry(pkix::Input leafCertificate,
 // You might want to validate it first using pkix::BuildCertChain or similar.
 void GetX509LogEntry(pkix::Input leafCertificate, LogEntry& output);
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
 #endif  // CTObjectsExtractor_h

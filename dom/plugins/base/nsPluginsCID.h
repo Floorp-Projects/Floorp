@@ -6,8 +6,11 @@
 #ifndef nsPluginsCID_h_
 #define nsPluginsCID_h_
 
-#define NS_PLUGIN_HOST_CID \
-{ 0x23E8FD98, 0xA625, 0x4B08, \
-{ 0xBE, 0x1A, 0xF7, 0xCC, 0x18, 0xA5, 0xB1, 0x06 } }
+#define NS_PLUGIN_HOST_CID                           \
+  {                                                  \
+    0x23E8FD98, 0xA625, 0x4B08, {                    \
+      0xBE, 0x1A, 0xF7, 0xCC, 0x18, 0xA5, 0xB1, 0x06 \
+    }                                                \
+  }
 
-#endif // nsPluginsCID_h_
+#endif  // nsPluginsCID_h_

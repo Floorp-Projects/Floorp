@@ -21,10 +21,8 @@ namespace dom {
  * attribute and the children of the class affect what script to execute.
  */
 
-class ScriptElement : public nsIScriptElement,
-                      public nsStubMutationObserver
-{
-public:
+class ScriptElement : public nsIScriptElement, public nsStubMutationObserver {
+ public:
   // nsIScriptLoaderObserver
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
@@ -35,13 +33,11 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
 
   explicit ScriptElement(FromParser aFromParser)
-    : nsIScriptElement(aFromParser)
-  {
-  }
+      : nsIScriptElement(aFromParser) {}
 
   virtual nsresult FireErrorEvent() override;
 
-protected:
+ protected:
   // Internal methods
 
   /**
@@ -52,7 +48,7 @@ protected:
   virtual bool MaybeProcessScript() override;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ScriptElement_h
+#endif  // mozilla_dom_ScriptElement_h

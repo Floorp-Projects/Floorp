@@ -30,34 +30,24 @@
 //   hfile.Close();
 class ScopedHandle {
  public:
-  ScopedHandle() : handle_(NULL) {
-  }
+  ScopedHandle() : handle_(NULL) {}
 
-  explicit ScopedHandle(HANDLE h) : handle_(NULL) {
-    Set(h);
-  }
+  explicit ScopedHandle(HANDLE h) : handle_(NULL) { Set(h); }
 
-  ~ScopedHandle() {
-    Close();
-  }
+  ~ScopedHandle() { Close(); }
 
   // Use this instead of comparing to INVALID_HANDLE_VALUE to pick up our NULL
   // usage for errors.
-  bool IsValid() const {
-    return handle_ != NULL;
-  }
+  bool IsValid() const { return handle_ != NULL; }
 
   void Set(HANDLE new_handle) {
     Close();
 
     // Windows is inconsistent about invalid handles, so we always use NULL
-    if (new_handle != INVALID_HANDLE_VALUE)
-      handle_ = new_handle;
+    if (new_handle != INVALID_HANDLE_VALUE) handle_ = new_handle;
   }
 
-  HANDLE Get() {
-    return handle_;
-  }
+  HANDLE Get() { return handle_; }
 
   operator HANDLE() { return handle_; }
 
@@ -87,13 +77,11 @@ class ScopedFindFileHandle {
  public:
   explicit ScopedFindFileHandle(HANDLE handle) : handle_(handle) {
     // Windows is inconsistent about invalid handles, so we always use NULL
-    if (handle_ == INVALID_HANDLE_VALUE)
-      handle_ = NULL;
+    if (handle_ == INVALID_HANDLE_VALUE) handle_ = NULL;
   }
 
   ~ScopedFindFileHandle() {
-    if (handle_)
-      FindClose(handle_);
+    if (handle_) FindClose(handle_);
   }
 
   // Use this instead of comparing to INVALID_HANDLE_VALUE to pick up our NULL
@@ -112,16 +100,12 @@ class ScopedFindFileHandle {
 // CreateCompatibleDC.  For an HDC returned by GetDC, use ReleaseDC instead.
 class ScopedHDC {
  public:
-  ScopedHDC() : hdc_(NULL) { }
-  explicit ScopedHDC(HDC h) : hdc_(h) { }
+  ScopedHDC() : hdc_(NULL) {}
+  explicit ScopedHDC(HDC h) : hdc_(h) {}
 
-  ~ScopedHDC() {
-    Close();
-  }
+  ~ScopedHDC() { Close(); }
 
-  HDC Get() {
-    return hdc_;
-  }
+  HDC Get() { return hdc_; }
 
   void Set(HDC h) {
     Close();
@@ -135,8 +119,7 @@ class ScopedHDC {
 #ifdef NOGDI
     assert(false);
 #else
-    if (hdc_)
-      DeleteDC(hdc_);
+    if (hdc_) DeleteDC(hdc_);
 #endif  // NOGDI
   }
 
@@ -145,23 +128,18 @@ class ScopedHDC {
 };
 
 // Like ScopedHandle but for GDI objects.
-template<class T>
+template <class T>
 class ScopedGDIObject {
  public:
   ScopedGDIObject() : object_(NULL) {}
   explicit ScopedGDIObject(T object) : object_(object) {}
 
-  ~ScopedGDIObject() {
-    Close();
-  }
+  ~ScopedGDIObject() { Close(); }
 
-  T Get() {
-    return object_;
-  }
+  T Get() { return object_; }
 
   void Set(T object) {
-    if (object_ && object != object_)
-      Close();
+    if (object_ && object != object_) Close();
     object_ = object;
   }
 
@@ -174,8 +152,7 @@ class ScopedGDIObject {
 
  private:
   void Close() {
-    if (object_)
-      DeleteObject(object_);
+    if (object_) DeleteObject(object_);
   }
 
   T object_;
@@ -187,23 +164,20 @@ typedef ScopedGDIObject<HBITMAP> ScopedBitmap;
 typedef ScopedGDIObject<HRGN> ScopedHRGN;
 typedef ScopedGDIObject<HFONT> ScopedHFONT;
 
-
 // Like ScopedHandle except for HGLOBAL.
-template<class T>
+template <class T>
 class ScopedHGlobal {
  public:
   explicit ScopedHGlobal(HGLOBAL glob) : glob_(glob) {
     data_ = static_cast<T*>(GlobalLock(glob_));
   }
-  ~ScopedHGlobal() {
-    GlobalUnlock(glob_);
-  }
+  ~ScopedHGlobal() { GlobalUnlock(glob_); }
 
   T* get() { return data_; }
 
   size_t Size() const { return GlobalSize(glob_); }
 
-  T* operator->() const  {
+  T* operator->() const {
     assert(data_ != 0);
     return data_;
   }
@@ -216,4 +190,4 @@ class ScopedHGlobal {
   DISALLOW_EVIL_CONSTRUCTORS(ScopedHGlobal);
 };
 
-#endif // BASE_SCOPED_HANDLE_WIN_H_
+#endif  // BASE_SCOPED_HANDLE_WIN_H_

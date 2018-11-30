@@ -20,19 +20,16 @@ class nsIInterfaceRequestor;
  * be null, and will be released on the main thread when the aggregator is
  * destroyed.
  */
-extern nsresult
-NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor* aFirst,
-                                    nsIInterfaceRequestor* aSecond,
-                                    nsIInterfaceRequestor** aResult);
+extern nsresult NS_NewInterfaceRequestorAggregation(
+    nsIInterfaceRequestor* aFirst, nsIInterfaceRequestor* aSecond,
+    nsIInterfaceRequestor** aResult);
 
 /**
  * Like the previous method, but aFirst and aSecond will be released on the
  * provided target thread.
  */
-extern nsresult
-NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor* aFirst,
-                                    nsIInterfaceRequestor* aSecond,
-                                    nsIEventTarget* aTarget,
-                                    nsIInterfaceRequestor** aResult);
+extern nsresult NS_NewInterfaceRequestorAggregation(
+    nsIInterfaceRequestor* aFirst, nsIInterfaceRequestor* aSecond,
+    nsIEventTarget* aTarget, nsIInterfaceRequestor** aResult);
 
-#endif // !defined( nsInterfaceRequestorAgg_h__ )
+#endif  // !defined( nsInterfaceRequestorAgg_h__ )

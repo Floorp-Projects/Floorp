@@ -13,13 +13,11 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(SnappyUncompressInputStream,
-                  nsIInputStream);
+NS_IMPL_ISUPPORTS(SnappyUncompressInputStream, nsIInputStream);
 
 // Putting kCompressedBufferLength inside a function avoids a static
 // constructor.
-static size_t CompressedBufferLength()
-{
+static size_t CompressedBufferLength() {
   static size_t kCompressedBufferLength =
       detail::SnappyFrameUtils::MaxCompressedBufferLength(snappy::kBlockSize);
 
@@ -27,14 +25,14 @@ static size_t CompressedBufferLength()
   return kCompressedBufferLength;
 }
 
-SnappyUncompressInputStream::SnappyUncompressInputStream(nsIInputStream* aBaseStream)
-  : mBaseStream(aBaseStream)
-  , mUncompressedBytes(0)
-  , mNextByte(0)
-  , mNextChunkType(Unknown)
-  , mNextChunkDataLength(0)
-  , mNeedFirstStreamIdentifier(true)
-{
+SnappyUncompressInputStream::SnappyUncompressInputStream(
+    nsIInputStream* aBaseStream)
+    : mBaseStream(aBaseStream),
+      mUncompressedBytes(0),
+      mNextByte(0),
+      mNextChunkType(Unknown),
+      mNextChunkDataLength(0),
+      mNeedFirstStreamIdentifier(true) {
   // This implementation only supports sync base streams.  Verify this in debug
   // builds.  Note, this is a bit complicated because the streams we support
   // advertise different capabilities:
@@ -53,8 +51,7 @@ SnappyUncompressInputStream::SnappyUncompressInputStream(nsIInputStream* aBaseSt
 }
 
 NS_IMETHODIMP
-SnappyUncompressInputStream::Close()
-{
+SnappyUncompressInputStream::Close() {
   if (!mBaseStream) {
     return NS_OK;
   }
@@ -69,8 +66,7 @@ SnappyUncompressInputStream::Close()
 }
 
 NS_IMETHODIMP
-SnappyUncompressInputStream::Available(uint64_t* aLengthOut)
-{
+SnappyUncompressInputStream::Available(uint64_t* aLengthOut) {
   if (!mBaseStream) {
     return NS_BASE_STREAM_CLOSED;
   }
@@ -87,25 +83,25 @@ SnappyUncompressInputStream::Available(uint64_t* aLengthOut)
   uint32_t bytesRead;
   do {
     nsresult rv = ParseNextChunk(&bytesRead);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     *aLengthOut = UncompressedLength();
-  } while(*aLengthOut == 0 && bytesRead);
+  } while (*aLengthOut == 0 && bytesRead);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SnappyUncompressInputStream::Read(char* aBuf, uint32_t aCount,
-                                  uint32_t* aBytesReadOut)
-{
+                                  uint32_t* aBytesReadOut) {
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, aBytesReadOut);
 }
 
 NS_IMETHODIMP
 SnappyUncompressInputStream::ReadSegments(nsWriteSegmentFun aWriter,
                                           void* aClosure, uint32_t aCount,
-                                          uint32_t* aBytesReadOut)
-{
+                                          uint32_t* aBytesReadOut) {
   *aBytesReadOut = 0;
 
   if (!mBaseStream) {
@@ -127,8 +123,8 @@ SnappyUncompressInputStream::ReadSegments(nsWriteSegmentFun aWriter,
       uint32_t remaining = UncompressedLength();
       uint32_t numToWrite = std::min(aCount, remaining);
       uint32_t numWritten;
-      rv = aWriter(this, aClosure, &mUncompressedBuffer[mNextByte], *aBytesReadOut,
-                   numToWrite, &numWritten);
+      rv = aWriter(this, aClosure, &mUncompressedBuffer[mNextByte],
+                   *aBytesReadOut, numToWrite, &numWritten);
 
       // As defined in nsIInputputStream.idl, do not pass writer func errors.
       if (NS_FAILED(rv)) {
@@ -158,7 +154,9 @@ SnappyUncompressInputStream::ReadSegments(nsWriteSegmentFun aWriter,
     // will set mUncompressedBytes which we check at the top of the loop.
     uint32_t bytesRead;
     rv = ParseNextChunk(&bytesRead);
-    if (NS_FAILED(rv)) { return rv; }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     // If we couldn't read anything and there is no more data to provide
     // to the caller, then this is eof.
@@ -171,20 +169,14 @@ SnappyUncompressInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-SnappyUncompressInputStream::IsNonBlocking(bool* aNonBlockingOut)
-{
+SnappyUncompressInputStream::IsNonBlocking(bool* aNonBlockingOut) {
   *aNonBlockingOut = false;
   return NS_OK;
 }
 
-SnappyUncompressInputStream::~SnappyUncompressInputStream()
-{
-  Close();
-}
+SnappyUncompressInputStream::~SnappyUncompressInputStream() { Close(); }
 
-nsresult
-SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
-{
+nsresult SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut) {
   // There must not be any uncompressed data already in mUncompressedBuffer.
   MOZ_ASSERT(mUncompressedBytes == 0);
   MOZ_ASSERT(mNextByte == 0);
@@ -213,18 +205,21 @@ SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
   // yet. Read and validate the StreamIdentifier chunk.  Also read the next
   // header to determine the size of the first real data chunk.
   if (mNeedFirstStreamIdentifier) {
-    const uint32_t firstReadLength = kHeaderLength +
-                                     kStreamIdentifierDataLength +
-                                     kHeaderLength;
+    const uint32_t firstReadLength =
+        kHeaderLength + kStreamIdentifierDataLength + kHeaderLength;
     MOZ_ASSERT(firstReadLength <= CompressedBufferLength());
 
     rv = ReadAll(mCompressedBuffer.get(), firstReadLength, firstReadLength,
                  aBytesReadOut);
-    if (NS_WARN_IF(NS_FAILED(rv)) || *aBytesReadOut == 0) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv)) || *aBytesReadOut == 0) {
+      return rv;
+    }
 
-    rv = ParseHeader(mCompressedBuffer.get(), kHeaderLength,
-                     &mNextChunkType, &mNextChunkDataLength);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    rv = ParseHeader(mCompressedBuffer.get(), kHeaderLength, &mNextChunkType,
+                     &mNextChunkDataLength);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     if (NS_WARN_IF(mNextChunkType != StreamIdentifier ||
                    mNextChunkDataLength != kStreamIdentifierDataLength)) {
       return NS_ERROR_CORRUPTED_CONTENT;
@@ -235,17 +230,21 @@ SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
 
     size_t numRead;
     size_t numWritten;
-    rv = ParseData(mUncompressedBuffer.get(), snappy::kBlockSize, mNextChunkType,
-                   &mCompressedBuffer[offset],
+    rv = ParseData(mUncompressedBuffer.get(), snappy::kBlockSize,
+                   mNextChunkType, &mCompressedBuffer[offset],
                    mNextChunkDataLength, &numWritten, &numRead);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     MOZ_ASSERT(numWritten == 0);
     MOZ_ASSERT(numRead == mNextChunkDataLength);
     offset += numRead;
 
     rv = ParseHeader(&mCompressedBuffer[offset], *aBytesReadOut - offset,
                      &mNextChunkType, &mNextChunkDataLength);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     return NS_OK;
   }
@@ -257,11 +256,15 @@ SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
   if (mNextChunkType == Unknown) {
     rv = ReadAll(mCompressedBuffer.get(), kHeaderLength, kHeaderLength,
                  aBytesReadOut);
-    if (NS_WARN_IF(NS_FAILED(rv)) || *aBytesReadOut == 0) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv)) || *aBytesReadOut == 0) {
+      return rv;
+    }
 
-    rv = ParseHeader(mCompressedBuffer.get(), kHeaderLength,
-                     &mNextChunkType, &mNextChunkDataLength);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    rv = ParseHeader(mCompressedBuffer.get(), kHeaderLength, &mNextChunkType,
+                     &mNextChunkDataLength);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     return NS_OK;
   }
@@ -275,7 +278,9 @@ SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
   // chunk header.  This helps optimize the stream by avoiding many small reads.
   uint64_t avail;
   rv = mBaseStream->Available(&avail);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   if (avail >= (readLength + kHeaderLength)) {
     readLength += kHeaderLength;
     MOZ_ASSERT(readLength <= CompressedBufferLength());
@@ -283,14 +288,18 @@ SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
 
   rv = ReadAll(mCompressedBuffer.get(), readLength, mNextChunkDataLength,
                aBytesReadOut);
-  if (NS_WARN_IF(NS_FAILED(rv)) || *aBytesReadOut == 0) { return rv; }
+  if (NS_WARN_IF(NS_FAILED(rv)) || *aBytesReadOut == 0) {
+    return rv;
+  }
 
   size_t numRead;
   size_t numWritten;
   rv = ParseData(mUncompressedBuffer.get(), snappy::kBlockSize, mNextChunkType,
-                 mCompressedBuffer.get(), mNextChunkDataLength,
-                 &numWritten, &numRead);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+                 mCompressedBuffer.get(), mNextChunkDataLength, &numWritten,
+                 &numRead);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   MOZ_ASSERT(numRead == mNextChunkDataLength);
 
   mUncompressedBytes = numWritten;
@@ -308,16 +317,16 @@ SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
   // next call into this method.
   rv = ParseHeader(&mCompressedBuffer[numRead], *aBytesReadOut - numRead,
                    &mNextChunkType, &mNextChunkDataLength);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
 
-nsresult
-SnappyUncompressInputStream::ReadAll(char* aBuf, uint32_t aCount,
-                                     uint32_t aMinValidCount,
-                                     uint32_t* aBytesReadOut)
-{
+nsresult SnappyUncompressInputStream::ReadAll(char* aBuf, uint32_t aCount,
+                                              uint32_t aMinValidCount,
+                                              uint32_t* aBytesReadOut) {
   MOZ_ASSERT(aCount >= aMinValidCount);
 
   *aBytesReadOut = 0;
@@ -330,7 +339,9 @@ SnappyUncompressInputStream::ReadAll(char* aBuf, uint32_t aCount,
   while (aCount > 0) {
     uint32_t bytesRead = 0;
     nsresult rv = mBaseStream->Read(aBuf + offset, aCount, &bytesRead);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // EOF, but don't immediately return.  We need to validate min read bytes
     // below.
@@ -352,11 +363,9 @@ SnappyUncompressInputStream::ReadAll(char* aBuf, uint32_t aCount,
   return NS_OK;
 }
 
-size_t
-SnappyUncompressInputStream::UncompressedLength() const
-{
+size_t SnappyUncompressInputStream::UncompressedLength() const {
   MOZ_ASSERT(mNextByte <= mUncompressedBytes);
   return mUncompressedBytes - mNextByte;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

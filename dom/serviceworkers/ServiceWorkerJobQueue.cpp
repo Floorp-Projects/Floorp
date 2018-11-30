@@ -13,25 +13,20 @@
 namespace mozilla {
 namespace dom {
 
-class ServiceWorkerJobQueue::Callback final : public ServiceWorkerJob::Callback
-{
+class ServiceWorkerJobQueue::Callback final
+    : public ServiceWorkerJob::Callback {
   RefPtr<ServiceWorkerJobQueue> mQueue;
 
-  ~Callback()
-  {
-  }
+  ~Callback() {}
 
-public:
-  explicit Callback(ServiceWorkerJobQueue* aQueue)
-    : mQueue(aQueue)
-  {
+ public:
+  explicit Callback(ServiceWorkerJobQueue* aQueue) : mQueue(aQueue) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mQueue);
   }
 
-  virtual void
-  JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) override
-  {
+  virtual void JobFinished(ServiceWorkerJob* aJob,
+                           ErrorResult& aStatus) override {
     MOZ_ASSERT(NS_IsMainThread());
     mQueue->JobFinished(aJob);
   }
@@ -39,15 +34,12 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue::Callback, override)
 };
 
-ServiceWorkerJobQueue::~ServiceWorkerJobQueue()
-{
+ServiceWorkerJobQueue::~ServiceWorkerJobQueue() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mJobList.IsEmpty());
 }
 
-void
-ServiceWorkerJobQueue::JobFinished(ServiceWorkerJob* aJob)
-{
+void ServiceWorkerJobQueue::JobFinished(ServiceWorkerJob* aJob) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
 
@@ -71,9 +63,7 @@ ServiceWorkerJobQueue::JobFinished(ServiceWorkerJob* aJob)
   RunJob();
 }
 
-void
-ServiceWorkerJobQueue::RunJob()
-{
+void ServiceWorkerJobQueue::RunJob() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mJobList.IsEmpty());
   MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob::State::Initial);
@@ -82,14 +72,11 @@ ServiceWorkerJobQueue::RunJob()
   mJobList[0]->Start(callback);
 }
 
-ServiceWorkerJobQueue::ServiceWorkerJobQueue()
-{
+ServiceWorkerJobQueue::ServiceWorkerJobQueue() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-void
-ServiceWorkerJobQueue::ScheduleJob(ServiceWorkerJob* aJob)
-{
+void ServiceWorkerJobQueue::ScheduleJob(ServiceWorkerJob* aJob) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
   MOZ_ASSERT(!mJobList.Contains(aJob));
@@ -111,9 +98,7 @@ ServiceWorkerJobQueue::ScheduleJob(ServiceWorkerJob* aJob)
   mJobList.AppendElement(aJob);
 }
 
-void
-ServiceWorkerJobQueue::CancelAll()
-{
+void ServiceWorkerJobQueue::CancelAll() {
   MOZ_ASSERT(NS_IsMainThread());
 
   for (RefPtr<ServiceWorkerJob>& job : mJobList) {
@@ -129,5 +114,5 @@ ServiceWorkerJobQueue::CancelAll()
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

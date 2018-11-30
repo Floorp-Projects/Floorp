@@ -9,41 +9,49 @@
 #include "InputUtils.h"
 
 class APZScrollHandoffTester : public APZCTreeManagerTester {
-protected:
+ protected:
   UniquePtr<ScopedLayerTreeRegistration> registration;
   TestAsyncPanZoomController* rootApzc;
 
   void CreateScrollHandoffLayerTree1() {
     const char* layerTreeSyntax = "c(t)";
-    nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
-      nsIntRegion(IntRect(0, 50, 100, 50))
-    };
-    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+    nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
+                                        nsIntRegion(IntRect(0, 50, 100, 50))};
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm,
+                           layers);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                              CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1],
+                              ScrollableLayerGuid::START_SCROLL_ID + 1,
+                              CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[1], root);
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
+                                                           root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
-    rootApzc->GetFrameMetrics().SetIsRootContent(true);  // make root APZC zoomable
+    rootApzc->GetFrameMetrics().SetIsRootContent(
+        true);  // make root APZC zoomable
   }
 
   void CreateScrollHandoffLayerTree2() {
     const char* layerTreeSyntax = "c(c(t))";
-    nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
-      nsIntRegion(IntRect(0, 0, 100, 100)),
-      nsIntRegion(IntRect(0, 50, 100, 50))
-    };
-    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 2, CSSRect(-100, -100, 200, 200));
-    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+    nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
+                                        nsIntRegion(IntRect(0, 0, 100, 100)),
+                                        nsIntRegion(IntRect(0, 50, 100, 50))};
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm,
+                           layers);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                              CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1],
+                              ScrollableLayerGuid::START_SCROLL_ID + 2,
+                              CSSRect(-100, -100, 200, 200));
+    SetScrollableFrameMetrics(layers[2],
+                              ScrollableLayerGuid::START_SCROLL_ID + 1,
+                              CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[1], root);
     SetScrollHandoff(layers[2], layers[1]);
-    // No ScopedLayerTreeRegistration as that just needs to be done once per test
-    // and this is the second layer tree for a particular test.
+    // No ScopedLayerTreeRegistration as that just needs to be done once per
+    // test and this is the second layer tree for a particular test.
     MOZ_ASSERT(registration);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
@@ -52,23 +60,34 @@ protected:
   void CreateScrollHandoffLayerTree3() {
     const char* layerTreeSyntax = "c(c(t)c(t))";
     nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),  // root
-      nsIntRegion(IntRect(0, 0, 100, 50)),   // scrolling parent 1
-      nsIntRegion(IntRect(0, 0, 100, 50)),   // scrolling child 1
-      nsIntRegion(IntRect(0, 50, 100, 50)),  // scrolling parent 2
-      nsIntRegion(IntRect(0, 50, 100, 50))   // scrolling child 2
+        nsIntRegion(IntRect(0, 0, 100, 100)),  // root
+        nsIntRegion(IntRect(0, 0, 100, 50)),   // scrolling parent 1
+        nsIntRegion(IntRect(0, 0, 100, 50)),   // scrolling child 1
+        nsIntRegion(IntRect(0, 50, 100, 50)),  // scrolling parent 2
+        nsIntRegion(IntRect(0, 50, 100, 50))   // scrolling child 2
     };
-    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 100, 100));
-    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
-    SetScrollableFrameMetrics(layers[2], ScrollableLayerGuid::START_SCROLL_ID + 2, CSSRect(0, 0, 100, 100));
-    SetScrollableFrameMetrics(layers[3], ScrollableLayerGuid::START_SCROLL_ID + 3, CSSRect(0, 50, 100, 100));
-    SetScrollableFrameMetrics(layers[4], ScrollableLayerGuid::START_SCROLL_ID + 4, CSSRect(0, 50, 100, 100));
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm,
+                           layers);
+    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,
+                              CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[1],
+                              ScrollableLayerGuid::START_SCROLL_ID + 1,
+                              CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[2],
+                              ScrollableLayerGuid::START_SCROLL_ID + 2,
+                              CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[3],
+                              ScrollableLayerGuid::START_SCROLL_ID + 3,
+                              CSSRect(0, 50, 100, 100));
+    SetScrollableFrameMetrics(layers[4],
+                              ScrollableLayerGuid::START_SCROLL_ID + 4,
+                              CSSRect(0, 50, 100, 100));
     SetScrollHandoff(layers[1], layers[0]);
     SetScrollHandoff(layers[3], layers[0]);
     SetScrollHandoff(layers[2], layers[1]);
     SetScrollHandoff(layers[4], layers[3]);
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
+                                                           root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   }
 
@@ -76,15 +95,18 @@ protected:
   // horizontally, and a child layer that is only scrollable vertically.
   void CreateScrollHandoffLayerTree4() {
     const char* layerTreeSyntax = "c(t)";
-    nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
-      nsIntRegion(IntRect(0, 0, 100, 100))
-    };
-    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
-    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 200, 100));
-    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
+    nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
+                                        nsIntRegion(IntRect(0, 0, 100, 100))};
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm,
+                           layers);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                              CSSRect(0, 0, 200, 100));
+    SetScrollableFrameMetrics(layers[1],
+                              ScrollableLayerGuid::START_SCROLL_ID + 1,
+                              CSSRect(0, 0, 100, 200));
     SetScrollHandoff(layers[1], root);
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
+                                                           root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
@@ -92,15 +114,20 @@ protected:
   void CreateScrollgrabLayerTree(bool makeParentScrollable = true) {
     const char* layerTreeSyntax = "c(t)";
     nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),  // scroll-grabbing parent
-      nsIntRegion(IntRect(0, 20, 100, 80))   // child
+        nsIntRegion(IntRect(0, 0, 100, 100)),  // scroll-grabbing parent
+        nsIntRegion(IntRect(0, 20, 100, 80))   // child
     };
-    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm,
+                           layers);
     float parentHeight = makeParentScrollable ? 120 : 100;
-    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID, CSSRect(0, 0, 100, parentHeight));
-    SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 200));
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                              CSSRect(0, 0, 100, parentHeight));
+    SetScrollableFrameMetrics(layers[1],
+                              ScrollableLayerGuid::START_SCROLL_ID + 1,
+                              CSSRect(0, 0, 100, 200));
     SetScrollHandoff(layers[1], root);
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
+                                                           root, mcc);
     manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
     rootApzc->GetScrollMetadata().SetHasScrollgrab(true);
@@ -252,10 +279,14 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
   // Put a second finger down.
-  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
-  // Use the same touch identifier for the first touch (0) as Pan(). (A bit hacky.)
-  secondFingerDown.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, 40), ScreenSize(0, 0), 0, 0));
-  secondFingerDown.mTouches.AppendElement(SingleTouchData(1, ScreenIntPoint(30, 20), ScreenSize(0, 0), 0, 0));
+  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0,
+                                   TimeStamp(), 0);
+  // Use the same touch identifier for the first touch (0) as Pan(). (A bit
+  // hacky.)
+  secondFingerDown.mTouches.AppendElement(
+      SingleTouchData(0, ScreenIntPoint(10, 40), ScreenSize(0, 0), 0, 0));
+  secondFingerDown.mTouches.AppendElement(
+      SingleTouchData(1, ScreenIntPoint(30, 20), ScreenSize(0, 0), 0, 0));
   manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
 
   // Release the fingers.
@@ -291,10 +322,14 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
   // Put a second finger down.
-  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
-  // Use the same touch identifier for the first touch (0) as Pan(). (A bit hacky.)
-  secondFingerDown.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, 40), ScreenSize(0, 0), 0, 0));
-  secondFingerDown.mTouches.AppendElement(SingleTouchData(1, ScreenIntPoint(30, 20), ScreenSize(0, 0), 0, 0));
+  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0,
+                                   TimeStamp(), 0);
+  // Use the same touch identifier for the first touch (0) as Pan(). (A bit
+  // hacky.)
+  secondFingerDown.mTouches.AppendElement(
+      SingleTouchData(0, ScreenIntPoint(10, 40), ScreenSize(0, 0), 0, 0));
+  secondFingerDown.mTouches.AppendElement(
+      SingleTouchData(1, ScreenIntPoint(30, 20), ScreenSize(0, 0), 0, 0));
   manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
 
   // Release the fingers.
@@ -370,10 +405,14 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
   // the "are we panned into overscroll" check will fail and we
   // will not ignore the second finger, instead entering the
   // PINCHING state.
-  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
-  // Use the same touch identifier for the first touch (0) as TouchDown(). (A bit hacky.)
-  secondFingerDown.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, 90), ScreenSize(0, 0), 0, 0));
-  secondFingerDown.mTouches.AppendElement(SingleTouchData(1, ScreenIntPoint(10, 80), ScreenSize(0, 0), 0, 0));
+  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0,
+                                   TimeStamp(), 0);
+  // Use the same touch identifier for the first touch (0) as TouchDown(). (A
+  // bit hacky.)
+  secondFingerDown.mTouches.AppendElement(
+      SingleTouchData(0, ScreenIntPoint(10, 90), ScreenSize(0, 0), 0, 0));
+  secondFingerDown.mTouches.AppendElement(
+      SingleTouchData(1, ScreenIntPoint(10, 80), ScreenSize(0, 0), 0, 0));
   manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
 
   // Release the fingers.
@@ -401,7 +440,7 @@ TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
   // Pan, causing the child APZC to overscroll.
   Pan(childApzc, 50, 60);
 
-  //Make sure only the child is overscrolled.
+  // Make sure only the child is overscrolled.
   EXPECT_TRUE(childApzc->IsOverscrolled());
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
@@ -558,7 +597,8 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
   // The first comparison needs to be an ASSERT_NEAR because the fling
   // computations are such that the final scroll position can be within
   // COORDINATE_EPSILON of the end rather than right at the end.
-  ASSERT_NEAR(50, childApzc->GetFrameMetrics().GetScrollOffset().y, COORDINATE_EPSILON);
+  ASSERT_NEAR(50, childApzc->GetFrameMetrics().GetScrollOffset().y,
+              COORDINATE_EPSILON);
   EXPECT_EQ(0, parentApzc->GetFrameMetrics().GetScrollOffset().y);
 
   // Pan again on the child. This time, since the child was scrolled to

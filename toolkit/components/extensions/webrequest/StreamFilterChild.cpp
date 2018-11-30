@@ -20,21 +20,19 @@ using mozilla::ipc::IPCResult;
  * Initialization and cleanup
  *****************************************************************************/
 
-void
-StreamFilterChild::Cleanup()
-{
+void StreamFilterChild::Cleanup() {
   switch (mState) {
-  case State::Closing:
-  case State::Closed:
-  case State::Error:
-  case State::Disconnecting:
-  case State::Disconnected:
-    break;
+    case State::Closing:
+    case State::Closed:
+    case State::Error:
+    case State::Disconnecting:
+    case State::Disconnected:
+      break;
 
-  default:
-    ErrorResult rv;
-    Disconnect(rv);
-    break;
+    default:
+      ErrorResult rv;
+      Disconnect(rv);
+      break;
   }
 }
 
@@ -42,155 +40,147 @@ StreamFilterChild::Cleanup()
  * State change methods
  *****************************************************************************/
 
-void
-StreamFilterChild::Suspend(ErrorResult& aRv)
-{
+void StreamFilterChild::Suspend(ErrorResult& aRv) {
   switch (mState) {
-  case State::TransferringData:
-    mState = State::Suspending;
-    mNextState = State::Suspended;
-
-    SendSuspend();
-    break;
-
-  case State::Suspending:
-    switch (mNextState) {
-    case State::Suspended:
-    case State::Resuming:
-      mNextState = State::Suspended;
-      break;
-
-    default:
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-    break;
-
-  case State::Resuming:
-    switch (mNextState) {
     case State::TransferringData:
+      mState = State::Suspending;
+      mNextState = State::Suspended;
+
+      SendSuspend();
+      break;
+
     case State::Suspending:
-      mNextState = State::Suspending;
+      switch (mNextState) {
+        case State::Suspended:
+        case State::Resuming:
+          mNextState = State::Suspended;
+          break;
+
+        default:
+          aRv.Throw(NS_ERROR_FAILURE);
+          return;
+      }
+      break;
+
+    case State::Resuming:
+      switch (mNextState) {
+        case State::TransferringData:
+        case State::Suspending:
+          mNextState = State::Suspending;
+          break;
+
+        default:
+          aRv.Throw(NS_ERROR_FAILURE);
+          return;
+      }
+      break;
+
+    case State::Suspended:
       break;
 
     default:
       aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-    break;
-
-  case State::Suspended:
-    break;
-
-  default:
-    aRv.Throw(NS_ERROR_FAILURE);
-    break;
+      break;
   }
 }
 
-void
-StreamFilterChild::Resume(ErrorResult& aRv)
-{
+void StreamFilterChild::Resume(ErrorResult& aRv) {
   switch (mState) {
-  case State::Suspended:
-    mState = State::Resuming;
-    mNextState = State::TransferringData;
-
-    SendResume();
-    break;
-
-  case State::Suspending:
-    switch (mNextState) {
     case State::Suspended:
+      mState = State::Resuming;
+      mNextState = State::TransferringData;
+
+      SendResume();
+      break;
+
+    case State::Suspending:
+      switch (mNextState) {
+        case State::Suspended:
+        case State::Resuming:
+          mNextState = State::Resuming;
+          break;
+
+        default:
+          aRv.Throw(NS_ERROR_FAILURE);
+          return;
+      }
+      break;
+
     case State::Resuming:
-      mNextState = State::Resuming;
+    case State::TransferringData:
       break;
 
     default:
       aRv.Throw(NS_ERROR_FAILURE);
       return;
-    }
-    break;
-
-  case State::Resuming:
-  case State::TransferringData:
-    break;
-
-  default:
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
   }
 
   FlushBufferedData();
 }
 
-void
-StreamFilterChild::Disconnect(ErrorResult& aRv)
-{
+void StreamFilterChild::Disconnect(ErrorResult& aRv) {
   switch (mState) {
-  case State::Suspended:
-  case State::TransferringData:
-  case State::FinishedTransferringData:
-    mState = State::Disconnecting;
-    mNextState = State::Disconnected;
-
-    WriteBufferedData();
-    SendDisconnect();
-    break;
-
-  case State::Suspending:
-  case State::Resuming:
-    switch (mNextState) {
     case State::Suspended:
+    case State::TransferringData:
+    case State::FinishedTransferringData:
+      mState = State::Disconnecting;
+      mNextState = State::Disconnected;
+
+      WriteBufferedData();
+      SendDisconnect();
+      break;
+
+    case State::Suspending:
     case State::Resuming:
+      switch (mNextState) {
+        case State::Suspended:
+        case State::Resuming:
+        case State::Disconnecting:
+          mNextState = State::Disconnecting;
+          break;
+
+        default:
+          aRv.Throw(NS_ERROR_FAILURE);
+          return;
+      }
+      break;
+
     case State::Disconnecting:
-      mNextState = State::Disconnecting;
+    case State::Disconnected:
       break;
 
     default:
       aRv.Throw(NS_ERROR_FAILURE);
       return;
-    }
-    break;
-
-  case State::Disconnecting:
-  case State::Disconnected:
-    break;
-
-  default:
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
   }
 }
 
-void
-StreamFilterChild::Close(ErrorResult& aRv)
-{
+void StreamFilterChild::Close(ErrorResult& aRv) {
   switch (mState) {
-  case State::Suspended:
-  case State::TransferringData:
-  case State::FinishedTransferringData:
-    mState = State::Closing;
-    mNextState = State::Closed;
+    case State::Suspended:
+    case State::TransferringData:
+    case State::FinishedTransferringData:
+      mState = State::Closing;
+      mNextState = State::Closed;
 
-    SendClose();
-    break;
+      SendClose();
+      break;
 
-  case State::Suspending:
-  case State::Resuming:
-    mNextState = State::Closing;
-    break;
+    case State::Suspending:
+    case State::Resuming:
+      mNextState = State::Closing;
+      break;
 
-  case State::Closing:
-    MOZ_DIAGNOSTIC_ASSERT(mNextState == State::Closed);
-    break;
+    case State::Closing:
+      MOZ_DIAGNOSTIC_ASSERT(mNextState == State::Closed);
+      break;
 
-  case State::Closed:
-    break;
+    case State::Closed:
+      break;
 
-  default:
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
+    default:
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
   }
 
   mBufferedData.clear();
@@ -200,59 +190,56 @@ StreamFilterChild::Close(ErrorResult& aRv)
  * Internal state management
  *****************************************************************************/
 
-void
-StreamFilterChild::SetNextState()
-{
+void StreamFilterChild::SetNextState() {
   mState = mNextState;
 
   switch (mNextState) {
-  case State::Suspending:
-    mNextState = State::Suspended;
-    SendSuspend();
-    break;
+    case State::Suspending:
+      mNextState = State::Suspended;
+      SendSuspend();
+      break;
 
-  case State::Resuming:
-    mNextState = State::TransferringData;
-    SendResume();
-    break;
+    case State::Resuming:
+      mNextState = State::TransferringData;
+      SendResume();
+      break;
 
-  case State::Closing:
-    mNextState = State::Closed;
-    SendClose();
-    break;
+    case State::Closing:
+      mNextState = State::Closed;
+      SendClose();
+      break;
 
-  case State::Disconnecting:
-    mNextState = State::Disconnected;
-    SendDisconnect();
-    break;
+    case State::Disconnecting:
+      mNextState = State::Disconnected;
+      SendDisconnect();
+      break;
 
-  case State::FinishedTransferringData:
-    if (mStreamFilter) {
-      mStreamFilter->FireEvent(NS_LITERAL_STRING("stop"));
-      // We don't need access to the stream filter after this point, so break our
-      // reference cycle, so that it can be collected if we're the last reference.
+    case State::FinishedTransferringData:
+      if (mStreamFilter) {
+        mStreamFilter->FireEvent(NS_LITERAL_STRING("stop"));
+        // We don't need access to the stream filter after this point, so break
+        // our reference cycle, so that it can be collected if we're the last
+        // reference.
+        mStreamFilter = nullptr;
+      }
+      break;
+
+    case State::TransferringData:
+      FlushBufferedData();
+      break;
+
+    case State::Closed:
+    case State::Disconnected:
+    case State::Error:
       mStreamFilter = nullptr;
-    }
-    break;
+      break;
 
-  case State::TransferringData:
-    FlushBufferedData();
-    break;
-
-  case State::Closed:
-  case State::Disconnected:
-  case State::Error:
-    mStreamFilter = nullptr;
-    break;
-
-  default:
-    break;
+    default:
+      break;
   }
 }
 
-void
-StreamFilterChild::MaybeStopRequest()
-{
+void StreamFilterChild::MaybeStopRequest() {
   if (!mReceivedOnStop || !mBufferedData.isEmpty()) {
     return;
   }
@@ -262,25 +249,26 @@ StreamFilterChild::MaybeStopRequest()
   }
 
   switch (mState) {
-  case State::Suspending:
-  case State::Resuming:
-    mNextState = State::FinishedTransferringData;
-    return;
+    case State::Suspending:
+    case State::Resuming:
+      mNextState = State::FinishedTransferringData;
+      return;
 
-  case State::Disconnecting:
-  case State::Closing:
-  case State::Closed:
-    break;
+    case State::Disconnecting:
+    case State::Closing:
+    case State::Closed:
+      break;
 
-  default:
-    mState = State::FinishedTransferringData;
-    if (mStreamFilter) {
-      mStreamFilter->FireEvent(NS_LITERAL_STRING("stop"));
-      // We don't need access to the stream filter after this point, so break our
-      // reference cycle, so that it can be collected if we're the last reference.
-      mStreamFilter = nullptr;
-    }
-    break;
+    default:
+      mState = State::FinishedTransferringData;
+      if (mStreamFilter) {
+        mStreamFilter->FireEvent(NS_LITERAL_STRING("stop"));
+        // We don't need access to the stream filter after this point, so break
+        // our reference cycle, so that it can be collected if we're the last
+        // reference.
+        mStreamFilter = nullptr;
+      }
+      break;
   }
 }
 
@@ -288,9 +276,7 @@ StreamFilterChild::MaybeStopRequest()
  * State change acknowledgment callbacks
  *****************************************************************************/
 
-void
-StreamFilterChild::RecvInitialized(bool aSuccess)
-{
+void StreamFilterChild::RecvInitialized(bool aSuccess) {
   MOZ_ASSERT(mState == State::Uninitialized);
 
   if (aSuccess) {
@@ -304,9 +290,7 @@ StreamFilterChild::RecvInitialized(bool aSuccess)
   }
 }
 
-IPCResult
-StreamFilterChild::RecvError(const nsCString& aError)
-{
+IPCResult StreamFilterChild::RecvError(const nsCString& aError) {
   mState = State::Error;
   if (mStreamFilter) {
     mStreamFilter->FireErrorEvent(NS_ConvertUTF8toUTF16(aError));
@@ -316,32 +300,28 @@ StreamFilterChild::RecvError(const nsCString& aError)
   return IPC_OK();
 }
 
-IPCResult
-StreamFilterChild::RecvClosed() {
+IPCResult StreamFilterChild::RecvClosed() {
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Closing);
 
   SetNextState();
   return IPC_OK();
 }
 
-IPCResult
-StreamFilterChild::RecvSuspended() {
+IPCResult StreamFilterChild::RecvSuspended() {
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Suspending);
 
   SetNextState();
   return IPC_OK();
 }
 
-IPCResult
-StreamFilterChild::RecvResumed() {
+IPCResult StreamFilterChild::RecvResumed() {
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Resuming);
 
   SetNextState();
   return IPC_OK();
 }
 
-IPCResult
-StreamFilterChild::RecvFlushData() {
+IPCResult StreamFilterChild::RecvFlushData() {
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Disconnecting);
 
   SendFlushedData();
@@ -353,86 +333,82 @@ StreamFilterChild::RecvFlushData() {
  * Other binding methods
  *****************************************************************************/
 
-void
-StreamFilterChild::Write(Data&& aData, ErrorResult& aRv)
-{
+void StreamFilterChild::Write(Data&& aData, ErrorResult& aRv) {
   switch (mState) {
-  case State::Suspending:
-  case State::Resuming:
-    switch (mNextState) {
+    case State::Suspending:
+    case State::Resuming:
+      switch (mNextState) {
+        case State::Suspended:
+        case State::TransferringData:
+          break;
+
+        default:
+          aRv.Throw(NS_ERROR_FAILURE);
+          return;
+      }
+      break;
+
     case State::Suspended:
     case State::TransferringData:
+    case State::FinishedTransferringData:
       break;
 
     default:
       aRv.Throw(NS_ERROR_FAILURE);
       return;
-    }
-    break;
-
-  case State::Suspended:
-  case State::TransferringData:
-  case State::FinishedTransferringData:
-    break;
-
-  default:
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
   }
 
   SendWrite(std::move(aData));
 }
 
-StreamFilterStatus
-StreamFilterChild::Status() const
-{
+StreamFilterStatus StreamFilterChild::Status() const {
   switch (mState) {
-  case State::Uninitialized:
-  case State::Initialized:
-    return StreamFilterStatus::Uninitialized;
+    case State::Uninitialized:
+    case State::Initialized:
+      return StreamFilterStatus::Uninitialized;
 
-  case State::TransferringData:
-    return StreamFilterStatus::Transferringdata;
-
-  case State::Suspended:
-    return StreamFilterStatus::Suspended;
-
-  case State::FinishedTransferringData:
-    return StreamFilterStatus::Finishedtransferringdata;
-
-  case State::Resuming:
-  case State::Suspending:
-    switch (mNextState) {
     case State::TransferringData:
-    case State::Resuming:
       return StreamFilterStatus::Transferringdata;
 
     case State::Suspended:
-    case State::Suspending:
       return StreamFilterStatus::Suspended;
 
+    case State::FinishedTransferringData:
+      return StreamFilterStatus::Finishedtransferringdata;
+
+    case State::Resuming:
+    case State::Suspending:
+      switch (mNextState) {
+        case State::TransferringData:
+        case State::Resuming:
+          return StreamFilterStatus::Transferringdata;
+
+        case State::Suspended:
+        case State::Suspending:
+          return StreamFilterStatus::Suspended;
+
+        case State::Closing:
+          return StreamFilterStatus::Closed;
+
+        case State::Disconnecting:
+          return StreamFilterStatus::Disconnected;
+
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unexpected next state");
+          return StreamFilterStatus::Suspended;
+      }
+      break;
+
     case State::Closing:
+    case State::Closed:
       return StreamFilterStatus::Closed;
 
     case State::Disconnecting:
+    case State::Disconnected:
       return StreamFilterStatus::Disconnected;
 
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected next state");
-      return StreamFilterStatus::Suspended;
-    }
-    break;
-
-  case State::Closing:
-  case State::Closed:
-    return StreamFilterStatus::Closed;
-
-  case State::Disconnecting:
-  case State::Disconnected:
-    return StreamFilterStatus::Disconnected;
-
-  case State::Error:
-    return StreamFilterStatus::Failed;
+    case State::Error:
+      return StreamFilterStatus::Failed;
   };
 
   MOZ_ASSERT_UNREACHABLE("Not reached");
@@ -443,9 +419,7 @@ StreamFilterChild::Status() const
  * Request state notifications
  *****************************************************************************/
 
-IPCResult
-StreamFilterChild::RecvStartRequest()
-{
+IPCResult StreamFilterChild::RecvStartRequest() {
   MOZ_ASSERT(mState == State::Initialized);
 
   mState = State::TransferringData;
@@ -457,9 +431,7 @@ StreamFilterChild::RecvStartRequest()
   return IPC_OK();
 }
 
-IPCResult
-StreamFilterChild::RecvStopRequest(const nsresult& aStatus)
-{
+IPCResult StreamFilterChild::RecvStopRequest(const nsresult& aStatus) {
   mReceivedOnStop = true;
   MaybeStopRequest();
   return IPC_OK();
@@ -469,9 +441,7 @@ StreamFilterChild::RecvStopRequest(const nsresult& aStatus)
  * Incoming request data handling
  *****************************************************************************/
 
-void
-StreamFilterChild::EmitData(const Data& aData)
-{
+void StreamFilterChild::EmitData(const Data& aData) {
   MOZ_ASSERT(CanFlushData());
   if (mStreamFilter) {
     mStreamFilter->FireDataEvent(aData);
@@ -480,9 +450,7 @@ StreamFilterChild::EmitData(const Data& aData)
   MaybeStopRequest();
 }
 
-void
-StreamFilterChild::FlushBufferedData()
-{
+void StreamFilterChild::FlushBufferedData() {
   while (!mBufferedData.isEmpty() && CanFlushData()) {
     UniquePtr<BufferedData> data(mBufferedData.popFirst());
 
@@ -490,9 +458,7 @@ StreamFilterChild::FlushBufferedData()
   }
 }
 
-void
-StreamFilterChild::WriteBufferedData()
-{
+void StreamFilterChild::WriteBufferedData() {
   while (!mBufferedData.isEmpty()) {
     UniquePtr<BufferedData> data(mBufferedData.popFirst());
 
@@ -500,9 +466,7 @@ StreamFilterChild::WriteBufferedData()
   }
 }
 
-IPCResult
-StreamFilterChild::RecvData(Data&& aData)
-{
+IPCResult StreamFilterChild::RecvData(Data&& aData) {
   MOZ_ASSERT(!mReceivedOnStop);
 
   if (mStreamFilter) {
@@ -510,31 +474,31 @@ StreamFilterChild::RecvData(Data&& aData)
   }
 
   switch (mState) {
-  case State::TransferringData:
-  case State::Resuming:
-    EmitData(aData);
-    break;
+    case State::TransferringData:
+    case State::Resuming:
+      EmitData(aData);
+      break;
 
-  case State::FinishedTransferringData:
-    MOZ_ASSERT_UNREACHABLE("Received data in unexpected state");
-    EmitData(aData);
-    break;
+    case State::FinishedTransferringData:
+      MOZ_ASSERT_UNREACHABLE("Received data in unexpected state");
+      EmitData(aData);
+      break;
 
-  case State::Suspending:
-  case State::Suspended:
-    BufferData(std::move(aData));
-    break;
+    case State::Suspending:
+    case State::Suspended:
+      BufferData(std::move(aData));
+      break;
 
-  case State::Disconnecting:
-    SendWrite(std::move(aData));
-    break;
+    case State::Disconnecting:
+      SendWrite(std::move(aData));
+      break;
 
-  case State::Closing:
-    break;
+    case State::Closing:
+      break;
 
-  default:
-    MOZ_ASSERT_UNREACHABLE("Received data in unexpected state");
-    return IPC_FAIL_NO_REASON(this);
+    default:
+      MOZ_ASSERT_UNREACHABLE("Received data in unexpected state");
+      return IPC_FAIL_NO_REASON(this);
   }
 
   return IPC_OK();
@@ -544,17 +508,13 @@ StreamFilterChild::RecvData(Data&& aData)
  * Glue
  *****************************************************************************/
 
-void
-StreamFilterChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void StreamFilterChild::ActorDestroy(ActorDestroyReason aWhy) {
   mStreamFilter = nullptr;
 }
 
-void
-StreamFilterChild::DeallocPStreamFilterChild()
-{
+void StreamFilterChild::DeallocPStreamFilterChild() {
   RefPtr<StreamFilterChild> self = dont_AddRef(this);
 }
 
-} // namespace extensions
-} // namespace mozilla
+}  // namespace extensions
+}  // namespace mozilla

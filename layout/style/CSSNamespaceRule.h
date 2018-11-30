@@ -16,22 +16,15 @@ class nsAtom;
 namespace mozilla {
 namespace dom {
 
-class CSSNamespaceRule final : public css::Rule
-{
-public:
+class CSSNamespaceRule final : public css::Rule {
+ public:
   CSSNamespaceRule(already_AddRefed<RawServoNamespaceRule> aRule,
-                   StyleSheet* aSheet,
-                   css::Rule* aParentRule,
-                   uint32_t aLine,
+                   StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
                    uint32_t aColumn)
-    : css::Rule(aSheet, aParentRule, aLine, aColumn)
-    , mRawRule(std::move(aRule))
-  {
-  }
+      : css::Rule(aSheet, aParentRule, aLine, aColumn),
+        mRawRule(std::move(aRule)) {}
 
-  bool IsCCLeaf() const final {
-    return Rule::IsCCLeaf();
-  }
+  bool IsCCLeaf() const final { return Rule::IsCCLeaf(); }
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
@@ -46,9 +39,7 @@ public:
   // WebIDL interfaces
   uint16_t Type() const final { return CSSRule_Binding::NAMESPACE_RULE; }
 
-  void GetNamespaceURI(nsString& aNamespaceURI) {
-    GetURLSpec(aNamespaceURI);
-  }
+  void GetNamespaceURI(nsString& aNamespaceURI) { GetURLSpec(aNamespaceURI); }
 
   void GetPrefix(DOMString& aPrefix) {
     aPrefix.SetKnownLiveAtom(GetPrefix(), DOMString::eTreatNullAsEmpty);
@@ -61,12 +52,12 @@ public:
     return CSSNamespaceRule_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-private:
+ private:
   ~CSSNamespaceRule();
   RefPtr<RawServoNamespaceRule> mRawRule;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSNamespaceRule_h
+#endif  // mozilla_dom_CSSNamespaceRule_h

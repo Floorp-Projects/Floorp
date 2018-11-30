@@ -20,8 +20,7 @@ class TargetServices;
 /**
  * Data needed to start a child process.
  */
-struct XREChildData
-{
+struct XREChildData {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   /**
    * Chromium sandbox TargetServices.
@@ -35,4 +34,4 @@ struct XREChildData
 #endif
 };
 
-#endif // XREChildData_h
+#endif  // XREChildData_h

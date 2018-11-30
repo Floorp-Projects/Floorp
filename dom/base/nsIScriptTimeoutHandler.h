@@ -14,21 +14,23 @@
 namespace mozilla {
 namespace dom {
 class Function;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#define NS_ISCRIPTTIMEOUTHANDLER_IID \
-{ 0x53c8e80e, 0xcc78, 0x48bc, \
- { 0xba, 0x63, 0x0c, 0xb9, 0xdb, 0xf7, 0x06, 0x34 } }
+#define NS_ISCRIPTTIMEOUTHANDLER_IID                 \
+  {                                                  \
+    0x53c8e80e, 0xcc78, 0x48bc, {                    \
+      0xba, 0x63, 0x0c, 0xb9, 0xdb, 0xf7, 0x06, 0x34 \
+    }                                                \
+  }
 
 /**
  * Abstraction of the script objects etc required to do timeouts in a
  * language agnostic way.
  */
 
-class nsIScriptTimeoutHandler : public nsITimeoutHandler
-{
-public:
+class nsIScriptTimeoutHandler : public nsITimeoutHandler {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTTIMEOUTHANDLER_IID)
 
   // Get the Function to call.  If this returns nullptr, GetHandlerText() will
@@ -49,4 +51,4 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptTimeoutHandler,
                               NS_ISCRIPTTIMEOUTHANDLER_IID)
 
-#endif // nsIScriptTimeoutHandler_h___
+#endif  // nsIScriptTimeoutHandler_h___

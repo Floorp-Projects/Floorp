@@ -26,127 +26,117 @@
 using namespace js;
 using namespace wasm;
 
-wasm::Realm::Realm(JSRuntime* rt)
-  : runtime_(rt)
-{}
+wasm::Realm::Realm(JSRuntime* rt) : runtime_(rt) {}
 
-wasm::Realm::~Realm()
-{
-    MOZ_ASSERT(instances_.empty());
-}
+wasm::Realm::~Realm() { MOZ_ASSERT(instances_.empty()); }
 
-struct InstanceComparator
-{
-    const Instance& target;
-    explicit InstanceComparator(const Instance& target) : target(target) {}
+struct InstanceComparator {
+  const Instance& target;
+  explicit InstanceComparator(const Instance& target) : target(target) {}
 
-    int operator()(const Instance* instance) const {
-        if (instance == &target) {
-            return 0;
-        }
-
-        // Instances can share code, so the segments can be equal (though they
-        // can't partially overlap).  If the codeBases are equal, we sort by
-        // Instance address.  Thus a Code may map to many instances.
-
-        // Compare by the first tier, always.
-
-        Tier instanceTier = instance->code().stableTier();
-        Tier targetTier = target.code().stableTier();
-
-        if (instance->codeBase(instanceTier) == target.codeBase(targetTier)) {
-            return instance < &target ? -1 : 1;
-        }
-
-        return target.codeBase(targetTier) < instance->codeBase(instanceTier) ? -1 : 1;
+  int operator()(const Instance* instance) const {
+    if (instance == &target) {
+      return 0;
     }
+
+    // Instances can share code, so the segments can be equal (though they
+    // can't partially overlap).  If the codeBases are equal, we sort by
+    // Instance address.  Thus a Code may map to many instances.
+
+    // Compare by the first tier, always.
+
+    Tier instanceTier = instance->code().stableTier();
+    Tier targetTier = target.code().stableTier();
+
+    if (instance->codeBase(instanceTier) == target.codeBase(targetTier)) {
+      return instance < &target ? -1 : 1;
+    }
+
+    return target.codeBase(targetTier) < instance->codeBase(instanceTier) ? -1
+                                                                          : 1;
+  }
 };
 
-bool
-wasm::Realm::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
-{
-    MOZ_ASSERT(runtime_ == cx->runtime());
+bool wasm::Realm::registerInstance(JSContext* cx,
+                                   HandleWasmInstanceObject instanceObj) {
+  MOZ_ASSERT(runtime_ == cx->runtime());
 
-    Instance& instance = instanceObj->instance();
-    MOZ_ASSERT(this == &instance.realm()->wasm);
+  Instance& instance = instanceObj->instance();
+  MOZ_ASSERT(this == &instance.realm()->wasm);
 
-    instance.ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
+  instance.ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
-    if (instance.debugEnabled() && instance.realm()->debuggerObservesAllExecution()) {
-        instance.debug().ensureEnterFrameTrapsState(cx, true);
+  if (instance.debugEnabled() &&
+      instance.realm()->debuggerObservesAllExecution()) {
+    instance.debug().ensureEnterFrameTrapsState(cx, true);
+  }
+
+  {
+    if (!instances_.reserve(instances_.length() + 1)) {
+      return false;
     }
 
-    {
-        if (!instances_.reserve(instances_.length() + 1)) {
-            return false;
-        }
-
-        auto runtimeInstances = cx->runtime()->wasmInstances.lock();
-        if (!runtimeInstances->reserve(runtimeInstances->length() + 1)) {
-            return false;
-        }
-
-        // To avoid implementing rollback, do not fail after mutations start.
-
-        InstanceComparator cmp(instance);
-        size_t index;
-
-        MOZ_ALWAYS_FALSE(BinarySearchIf(instances_, 0, instances_.length(), cmp, &index));
-        MOZ_ALWAYS_TRUE(instances_.insert(instances_.begin() + index, &instance));
-
-        MOZ_ALWAYS_FALSE(BinarySearchIf(runtimeInstances.get(), 0, runtimeInstances->length(), cmp, &index));
-        MOZ_ALWAYS_TRUE(runtimeInstances->insert(runtimeInstances->begin() + index, &instance));
+    auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+    if (!runtimeInstances->reserve(runtimeInstances->length() + 1)) {
+      return false;
     }
 
-    // Notify the debugger after wasmInstances is unlocked.
-    Debugger::onNewWasmInstance(cx, instanceObj);
-    return true;
-}
+    // To avoid implementing rollback, do not fail after mutations start.
 
-void
-wasm::Realm::unregisterInstance(Instance& instance)
-{
     InstanceComparator cmp(instance);
     size_t index;
 
-    if (BinarySearchIf(instances_, 0, instances_.length(), cmp, &index)) {
-        instances_.erase(instances_.begin() + index);
-    }
+    MOZ_ALWAYS_FALSE(
+        BinarySearchIf(instances_, 0, instances_.length(), cmp, &index));
+    MOZ_ALWAYS_TRUE(instances_.insert(instances_.begin() + index, &instance));
 
-    auto runtimeInstances = runtime_->wasmInstances.lock();
-    if (BinarySearchIf(runtimeInstances.get(), 0, runtimeInstances->length(), cmp, &index)) {
-        runtimeInstances->erase(runtimeInstances->begin() + index);
-    }
+    MOZ_ALWAYS_FALSE(BinarySearchIf(runtimeInstances.get(), 0,
+                                    runtimeInstances->length(), cmp, &index));
+    MOZ_ALWAYS_TRUE(
+        runtimeInstances->insert(runtimeInstances->begin() + index, &instance));
+  }
+
+  // Notify the debugger after wasmInstances is unlocked.
+  Debugger::onNewWasmInstance(cx, instanceObj);
+  return true;
 }
 
-void
-wasm::Realm::ensureProfilingLabels(bool profilingEnabled)
-{
-    for (Instance* instance : instances_) {
-        instance->ensureProfilingLabels(profilingEnabled);
-    }
+void wasm::Realm::unregisterInstance(Instance& instance) {
+  InstanceComparator cmp(instance);
+  size_t index;
+
+  if (BinarySearchIf(instances_, 0, instances_.length(), cmp, &index)) {
+    instances_.erase(instances_.begin() + index);
+  }
+
+  auto runtimeInstances = runtime_->wasmInstances.lock();
+  if (BinarySearchIf(runtimeInstances.get(), 0, runtimeInstances->length(), cmp,
+                     &index)) {
+    runtimeInstances->erase(runtimeInstances->begin() + index);
+  }
 }
 
-void
-wasm::Realm::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf, size_t* realmTables)
-{
-    *realmTables += instances_.sizeOfExcludingThis(mallocSizeOf);
+void wasm::Realm::ensureProfilingLabels(bool profilingEnabled) {
+  for (Instance* instance : instances_) {
+    instance->ensureProfilingLabels(profilingEnabled);
+  }
 }
 
-void
-wasm::InterruptRunningCode(JSContext* cx)
-{
-    auto runtimeInstances = cx->runtime()->wasmInstances.lock();
-    for (Instance* instance : runtimeInstances.get()) {
-        instance->tlsData()->setInterrupt();
-    }
+void wasm::Realm::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf,
+                                         size_t* realmTables) {
+  *realmTables += instances_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-void
-wasm::ResetInterruptState(JSContext* cx)
-{
-    auto runtimeInstances = cx->runtime()->wasmInstances.lock();
-    for (Instance* instance : runtimeInstances.get()) {
-        instance->tlsData()->resetInterrupt(cx);
-    }
+void wasm::InterruptRunningCode(JSContext* cx) {
+  auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+  for (Instance* instance : runtimeInstances.get()) {
+    instance->tlsData()->setInterrupt();
+  }
+}
+
+void wasm::ResetInterruptState(JSContext* cx) {
+  auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+  for (Instance* instance : runtimeInstances.get()) {
+    instance->tlsData()->resetInterrupt(cx);
+  }
 }

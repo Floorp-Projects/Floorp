@@ -14,25 +14,21 @@ namespace dom {
 
 class WorkerPrivate;
 
-class PerformanceWorker final : public Performance
-{
-public:
+class PerformanceWorker final : public Performance {
+ public:
   explicit PerformanceWorker(WorkerPrivate* aWorkerPrivate);
 
-  PerformanceStorage* AsPerformanceStorage() override
-  {
+  PerformanceStorage* AsPerformanceStorage() override {
     MOZ_CRASH("This should not be called on workers.");
     return nullptr;
   }
 
-  virtual PerformanceTiming* Timing() override
-  {
+  virtual PerformanceTiming* Timing() override {
     MOZ_CRASH("This should not be called on workers.");
     return nullptr;
   }
 
-  virtual PerformanceNavigation* Navigation() override
-  {
+  virtual PerformanceNavigation* Navigation() override {
     MOZ_CRASH("This should not be called on workers.");
     return nullptr;
   }
@@ -41,46 +37,41 @@ public:
 
   DOMHighResTimeStamp CreationTime() const override;
 
-  virtual void GetMozMemory(JSContext *aCx,
-                            JS::MutableHandle<JSObject*> aObj) override
-  {
+  virtual void GetMozMemory(JSContext* aCx,
+                            JS::MutableHandle<JSObject*> aObj) override {
     MOZ_CRASH("This should not be called on workers.");
   }
 
-  virtual nsDOMNavigationTiming* GetDOMTiming() const override
-  {
+  virtual nsDOMNavigationTiming* GetDOMTiming() const override {
     MOZ_CRASH("This should not be called on workers.");
     return nullptr;
   }
 
   virtual uint64_t GetRandomTimelineSeed() override;
 
-  virtual nsITimedChannel* GetChannel() const override
-  {
+  virtual nsITimedChannel* GetChannel() const override {
     MOZ_CRASH("This should not be called on workers.");
     return nullptr;
   }
 
-  void QueueNavigationTimingEntry() override
-  {
+  void QueueNavigationTimingEntry() override {
     MOZ_CRASH("This should not be called on workers.");
   }
 
-protected:
+ protected:
   ~PerformanceWorker();
 
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
-  void DispatchBufferFullEvent() override
-  {
+  void DispatchBufferFullEvent() override {
     // Nothing to do here. See bug 1432758.
   }
 
-private:
+ private:
   WorkerPrivate* mWorkerPrivate;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PerformanceWorker_h
+#endif  // mozilla_dom_PerformanceWorker_h

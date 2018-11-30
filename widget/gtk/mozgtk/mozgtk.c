@@ -1,7 +1,8 @@
 #include "mozilla/Types.h"
 #include "mozilla/Assertions.h"
 
-#define STUB(symbol) MOZ_EXPORT void symbol (void) { MOZ_CRASH(); }
+#define STUB(symbol) \
+  MOZ_EXPORT void symbol(void) { MOZ_CRASH(); }
 
 #ifdef COMMON_SYMBOLS
 STUB(gdk_atom_intern)
@@ -656,9 +657,5 @@ STUB(gtk_object_get_type)
 // So we define our own stub that always indicates XShm not being present.
 // mozgtk loads before libXext/libcairo and so this stub will take priority.
 // Our tree usage goes through xcb and remains unaffected by this.
-MOZ_EXPORT Bool
-XShmQueryExtension(Display* aDisplay)
-{
-  return False;
-}
+MOZ_EXPORT Bool XShmQueryExtension(Display* aDisplay) { return False; }
 #endif

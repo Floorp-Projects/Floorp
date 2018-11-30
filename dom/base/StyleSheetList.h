@@ -19,10 +19,9 @@ class StyleSheet;
 
 namespace dom {
 
-class StyleSheetList final : public nsStubMutationObserver
-                           , public nsWrapperCache
-{
-public:
+class StyleSheetList final : public nsStubMutationObserver,
+                             public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheetList)
 
@@ -32,18 +31,15 @@ public:
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-  nsINode* GetParentObject() const
-  {
+  nsINode* GetParentObject() const {
     return mDocumentOrShadowRoot ? &mDocumentOrShadowRoot->AsNode() : nullptr;
   }
 
-  uint32_t Length() const
-  {
+  uint32_t Length() const {
     return mDocumentOrShadowRoot ? mDocumentOrShadowRoot->SheetCount() : 0;
   }
 
-  StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) const
-  {
+  StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) const {
     if (!mDocumentOrShadowRoot) {
       aFound = false;
       return nullptr;
@@ -54,19 +50,19 @@ public:
     return sheet;
   }
 
-  StyleSheet* Item(uint32_t aIndex) const
-  {
+  StyleSheet* Item(uint32_t aIndex) const {
     bool dummy = false;
     return IndexedGetter(aIndex, dummy);
   }
 
-protected:
+ protected:
   virtual ~StyleSheetList();
 
-  DocumentOrShadowRoot* mDocumentOrShadowRoot; // Weak, cleared on "NodeWillBeDestroyed".
+  DocumentOrShadowRoot*
+      mDocumentOrShadowRoot;  // Weak, cleared on "NodeWillBeDestroyed".
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_StyleSheetList_h
+#endif  // mozilla_dom_StyleSheetList_h

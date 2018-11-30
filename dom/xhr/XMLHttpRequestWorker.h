@@ -20,11 +20,9 @@ class SendRunnable;
 class StrongWorkerRef;
 class WorkerPrivate;
 
-class XMLHttpRequestWorker final : public XMLHttpRequest
-{
-public:
-  struct StateData
-  {
+class XMLHttpRequestWorker final : public XMLHttpRequest {
+ public:
+  struct StateData {
     XMLHttpRequestStringSnapshot mResponseText;
     nsString mResponseURL;
     uint32_t mStatus;
@@ -37,15 +35,18 @@ public:
     nsresult mResponseResult;
 
     StateData()
-    : mStatus(0), mReadyState(0), mFlagSend(false),
-      mResponse(JS::UndefinedValue()), mResponseTextResult(NS_OK),
-      mStatusResult(NS_OK), mResponseResult(NS_OK)
-    { }
+        : mStatus(0),
+          mReadyState(0),
+          mFlagSend(false),
+          mResponse(JS::UndefinedValue()),
+          mResponseTextResult(NS_OK),
+          mStatusResult(NS_OK),
+          mResponseResult(NS_OK) {}
 
     void trace(JSTracer* trc);
   };
 
-private:
+ private:
   RefPtr<XMLHttpRequestUpload> mUpload;
   WorkerPrivate* mWorkerPrivate;
   RefPtr<StrongWorkerRef> mWorkerRef;
@@ -62,39 +63,30 @@ private:
   bool mMozAnon;
   bool mMozSystem;
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequestWorker,
                                                          XMLHttpRequest)
 
+  static already_AddRefed<XMLHttpRequest> Construct(
+      const GlobalObject& aGlobal, const MozXMLHttpRequestParameters& aParams,
+      ErrorResult& aRv);
 
-  static already_AddRefed<XMLHttpRequest>
-  Construct(const GlobalObject& aGlobal,
-            const MozXMLHttpRequestParameters& aParams,
-            ErrorResult& aRv);
+  void Unpin();
 
-  void
-  Unpin();
-
-  virtual uint16_t
-  ReadyState() const override
-  {
+  virtual uint16_t ReadyState() const override {
     return mStateData.mReadyState;
   }
 
-  virtual void
-  Open(const nsACString& aMethod, const nsAString& aUrl,
-       ErrorResult& aRv) override
-  {
-    Open(aMethod, aUrl, true, Optional<nsAString>(),
-         Optional<nsAString>(), aRv);
+  virtual void Open(const nsACString& aMethod, const nsAString& aUrl,
+                    ErrorResult& aRv) override {
+    Open(aMethod, aUrl, true, Optional<nsAString>(), Optional<nsAString>(),
+         aRv);
   }
 
-  virtual void
-  Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
-       const nsAString& aUsername, const nsAString& aPassword,
-       ErrorResult& aRv) override
-  {
+  virtual void Open(const nsACString& aMethod, const nsAString& aUrl,
+                    bool aAsync, const nsAString& aUsername,
+                    const nsAString& aPassword, ErrorResult& aRv) override {
     Optional<nsAString> username;
     username = &aUsername;
     Optional<nsAString> password;
@@ -102,198 +94,145 @@ public:
     Open(aMethod, aUrl, aAsync, username, password, aRv);
   }
 
-  void
-  Open(const nsACString& aMethod, const nsAString& aUrl,
-       bool aAsync, const Optional<nsAString>& aUser,
-       const Optional<nsAString>& aPassword, ErrorResult& aRv);
+  void Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
+            const Optional<nsAString>& aUser,
+            const Optional<nsAString>& aPassword, ErrorResult& aRv);
 
-  virtual void
-  SetRequestHeader(const nsACString& aHeader, const nsACString& aValue,
-                   ErrorResult& aRv) override;
+  virtual void SetRequestHeader(const nsACString& aHeader,
+                                const nsACString& aValue,
+                                ErrorResult& aRv) override;
 
-  virtual uint32_t
-  Timeout() const override
-  {
-    return mTimeout;
-  }
+  virtual uint32_t Timeout() const override { return mTimeout; }
 
-  virtual void
-  SetTimeout(uint32_t aTimeout, ErrorResult& aRv) override;
+  virtual void SetTimeout(uint32_t aTimeout, ErrorResult& aRv) override;
 
-  virtual bool
-  WithCredentials() const override
-  {
-    return mWithCredentials;
-  }
+  virtual bool WithCredentials() const override { return mWithCredentials; }
 
-  virtual void
-  SetWithCredentials(bool aWithCredentials, ErrorResult& aRv) override;
+  virtual void SetWithCredentials(bool aWithCredentials,
+                                  ErrorResult& aRv) override;
 
-  virtual bool
-  MozBackgroundRequest() const override
-  {
+  virtual bool MozBackgroundRequest() const override {
     return mBackgroundRequest;
   }
 
-  virtual void
-  SetMozBackgroundRequest(bool aBackgroundRequest, ErrorResult& aRv) override;
+  virtual void SetMozBackgroundRequest(bool aBackgroundRequest,
+                                       ErrorResult& aRv) override;
 
-  virtual nsIChannel*
-  GetChannel() const override
-  {
+  virtual nsIChannel* GetChannel() const override {
     MOZ_CRASH("This method cannot be called on workers.");
   }
 
-  virtual XMLHttpRequestUpload*
-  GetUpload(ErrorResult& aRv) override;
+  virtual XMLHttpRequestUpload* GetUpload(ErrorResult& aRv) override;
 
-  virtual void
-  Send(JSContext* aCx,
-       const Nullable<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>& aData,
-       ErrorResult& aRv) override;
+  virtual void Send(
+      JSContext* aCx,
+      const Nullable<
+          DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
+          aData,
+      ErrorResult& aRv) override;
 
-  virtual void
-  SendInputStream(nsIInputStream* aInputStream, ErrorResult& aRv) override
-  {
+  virtual void SendInputStream(nsIInputStream* aInputStream,
+                               ErrorResult& aRv) override {
     MOZ_CRASH("nsIInputStream is not a valid argument for XHR in workers.");
   }
 
-  virtual void
-  Abort(ErrorResult& aRv) override;
+  virtual void Abort(ErrorResult& aRv) override;
 
-  virtual void
-  GetResponseURL(nsAString& aUrl) override
-  {
+  virtual void GetResponseURL(nsAString& aUrl) override {
     aUrl = mStateData.mResponseURL;
   }
 
-  uint32_t
-  GetStatus(ErrorResult& aRv) override
-  {
+  uint32_t GetStatus(ErrorResult& aRv) override {
     aRv = mStateData.mStatusResult;
     return mStateData.mStatus;
   }
 
-  virtual void
-  GetStatusText(nsACString& aStatusText, ErrorResult& aRv) override
-  {
+  virtual void GetStatusText(nsACString& aStatusText,
+                             ErrorResult& aRv) override {
     aStatusText = mStateData.mStatusText;
   }
 
-  virtual void
-  GetResponseHeader(const nsACString& aHeader, nsACString& aResponseHeader,
-                    ErrorResult& aRv) override;
+  virtual void GetResponseHeader(const nsACString& aHeader,
+                                 nsACString& aResponseHeader,
+                                 ErrorResult& aRv) override;
 
-  virtual void
-  GetAllResponseHeaders(nsACString& aResponseHeaders,
-                        ErrorResult& aRv) override;
+  virtual void GetAllResponseHeaders(nsACString& aResponseHeaders,
+                                     ErrorResult& aRv) override;
 
-  virtual void
-  OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv) override;
+  virtual void OverrideMimeType(const nsAString& aMimeType,
+                                ErrorResult& aRv) override;
 
-  virtual XMLHttpRequestResponseType
-  ResponseType() const override
-  {
+  virtual XMLHttpRequestResponseType ResponseType() const override {
     return mResponseType;
   }
 
-  virtual void
-  SetResponseType(XMLHttpRequestResponseType aResponseType,
-                  ErrorResult& aRv) override;
+  virtual void SetResponseType(XMLHttpRequestResponseType aResponseType,
+                               ErrorResult& aRv) override;
 
-  virtual void
-  GetResponse(JSContext* /* unused */, JS::MutableHandle<JS::Value> aResponse,
-              ErrorResult& aRv) override;
+  virtual void GetResponse(JSContext* /* unused */,
+                           JS::MutableHandle<JS::Value> aResponse,
+                           ErrorResult& aRv) override;
 
-  virtual void
-  GetResponseText(DOMString& aResponseText, ErrorResult& aRv) override;
+  virtual void GetResponseText(DOMString& aResponseText,
+                               ErrorResult& aRv) override;
 
-  virtual nsIDocument*
-  GetResponseXML(ErrorResult& aRv) override
-  {
+  virtual nsIDocument* GetResponseXML(ErrorResult& aRv) override {
     MOZ_CRASH("This method should not be called.");
   }
 
-  virtual void
-  GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
-               JS::MutableHandle<JS::Value> aRetval,
-               ErrorResult& aRv) override
-  {
+  virtual void GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
+                            JS::MutableHandle<JS::Value> aRetval,
+                            ErrorResult& aRv) override {
     aRv.Throw(NS_ERROR_FAILURE);
   }
 
-  virtual void
-  SetOriginAttributes(const mozilla::dom::OriginAttributesDictionary& aAttrs) override
-  {
+  virtual void SetOriginAttributes(
+      const mozilla::dom::OriginAttributesDictionary& aAttrs) override {
     MOZ_CRASH("This method cannot be called on workers.");
   }
 
-  XMLHttpRequestUpload*
-  GetUploadObjectNoCreate() const
-  {
-    return mUpload;
-  }
+  XMLHttpRequestUpload* GetUploadObjectNoCreate() const { return mUpload; }
 
-  void
-  UpdateState(const StateData& aStateData, bool aUseCachedArrayBufferResponse);
+  void UpdateState(const StateData& aStateData,
+                   bool aUseCachedArrayBufferResponse);
 
-  void
-  NullResponseText()
-  {
+  void NullResponseText() {
     mStateData.mResponseText.SetVoid();
     mStateData.mResponse.setNull();
   }
 
-  virtual uint16_t ErrorCode() const override
-  {
-    return 0; // eOK
+  virtual uint16_t ErrorCode() const override {
+    return 0;  // eOK
   }
 
-  virtual bool MozAnon() const override
-  {
-    return mMozAnon;
-  }
+  virtual bool MozAnon() const override { return mMozAnon; }
 
-  virtual bool MozSystem() const override
-  {
-    return mMozSystem;
-  }
+  virtual bool MozSystem() const override { return mMozSystem; }
 
-  bool
-  SendInProgress() const
-  {
-    return !!mWorkerRef;
-  }
+  bool SendInProgress() const { return !!mWorkerRef; }
 
-private:
+ private:
   explicit XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate);
   ~XMLHttpRequestWorker();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };
 
-  void
-  ReleaseProxy(ReleaseType aType = Default);
+  void ReleaseProxy(ReleaseType aType = Default);
 
-  void
-  MaybePin(ErrorResult& aRv);
+  void MaybePin(ErrorResult& aRv);
 
-  void
-  MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
+  void MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
 
-  void
-  DispatchPrematureAbortEvent(EventTarget* aTarget,
-                              const nsAString& aEventType, bool aUploadTarget,
-                              ErrorResult& aRv);
+  void DispatchPrematureAbortEvent(EventTarget* aTarget,
+                                   const nsAString& aEventType,
+                                   bool aUploadTarget, ErrorResult& aRv);
 
-  void
-  Send(JSContext* aCx, JS::Handle<JSObject*> aBody, ErrorResult& aRv);
+  void Send(JSContext* aCx, JS::Handle<JSObject*> aBody, ErrorResult& aRv);
 
-  void
-  SendInternal(SendRunnable* aRunnable,
-               ErrorResult& aRv);
+  void SendInternal(SendRunnable* aRunnable, ErrorResult& aRv);
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_xmlhttprequest_h__
+#endif  // mozilla_dom_workers_xmlhttprequest_h__

@@ -16,16 +16,15 @@ namespace gfx {
 
 class DrawTargetCaptureImpl;
 
-class SourceSurfaceCapture : public SourceSurface
-{
+class SourceSurfaceCapture : public SourceSurface {
   friend class DrawTargetCaptureImpl;
-public:
+
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCapture, override)
 
   explicit SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner);
   explicit SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
-                                LuminanceType aLuminanceType,
-                                float aOpacity);
+                                LuminanceType aLuminanceType, float aOpacity);
   ~SourceSurfaceCapture();
 
   SurfaceType GetType() const override { return SurfaceType::CAPTURE; }
@@ -39,12 +38,12 @@ public:
   // the resulting type if needed.
   RefPtr<SourceSurface> Resolve(BackendType aBackendType = BackendType::NONE);
 
-protected:
+ protected:
   RefPtr<SourceSurface> ResolveImpl(BackendType aBackendType);
   void DrawTargetWillDestroy();
   void DrawTargetWillChange();
 
-private:
+ private:
   IntSize mSize;
   SurfaceFormat mFormat;
   int32_t mStride;
@@ -65,7 +64,7 @@ private:
   RefPtr<SourceSurface> mResolved;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_2d_SourceSurfaceCapture_h
+#endif  // mozilla_gfx_2d_SourceSurfaceCapture_h

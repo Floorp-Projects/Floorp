@@ -14,35 +14,38 @@
 
 namespace js {
 
-/* static */ inline bool
-StringObject::init(JSContext* cx, Handle<StringObject*> obj, HandleString str)
-{
-    MOZ_ASSERT(obj->numFixedSlots() == 2);
+/* static */ inline bool StringObject::init(JSContext* cx,
+                                            Handle<StringObject*> obj,
+                                            HandleString str) {
+  MOZ_ASSERT(obj->numFixedSlots() == 2);
 
-    if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, obj)) {
-        return false;
-    }
+  if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, obj)) {
+    return false;
+  }
 
-    MOZ_ASSERT(obj->lookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
+  MOZ_ASSERT(obj->lookup(cx, NameToId(cx->names().length))->slot() ==
+             LENGTH_SLOT);
 
-    obj->setStringThis(str);
+  obj->setStringThis(str);
 
-    return true;
+  return true;
 }
 
-/* static */ inline StringObject*
-StringObject::create(JSContext* cx, HandleString str, HandleObject proto, NewObjectKind newKind)
-{
-    Rooted<StringObject*> obj(cx, NewObjectWithClassProto<StringObject>(cx, proto, newKind));
-    if (!obj) {
-        return nullptr;
-    }
-    if (!StringObject::init(cx, obj, str)) {
-        return nullptr;
-    }
-    return obj;
+/* static */ inline StringObject* StringObject::create(JSContext* cx,
+                                                       HandleString str,
+                                                       HandleObject proto,
+                                                       NewObjectKind newKind) {
+  Rooted<StringObject*> obj(
+      cx, NewObjectWithClassProto<StringObject>(cx, proto, newKind));
+  if (!obj) {
+    return nullptr;
+  }
+  if (!StringObject::init(cx, obj, str)) {
+    return nullptr;
+  }
+  return obj;
 }
 
-} // namespace js
+}  // namespace js
 
 #endif /* vm_StringObject_inl_h */

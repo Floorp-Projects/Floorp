@@ -16,22 +16,17 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
-TextureClient*
-MacIOSurfaceImage::GetTextureClient(KnowsCompositor* aForwarder)
-{
+TextureClient* MacIOSurfaceImage::GetTextureClient(
+    KnowsCompositor* aForwarder) {
   if (!mTextureClient) {
     BackendType backend = BackendType::NONE;
     mTextureClient = TextureClient::CreateWithData(
-      MacIOSurfaceTextureData::Create(mSurface, backend),
-      TextureFlags::DEFAULT,
-      aForwarder->GetTextureForwarder()
-    );
+        MacIOSurfaceTextureData::Create(mSurface, backend),
+        TextureFlags::DEFAULT, aForwarder->GetTextureForwarder());
   }
   return mTextureClient;
 }
 
-already_AddRefed<SourceSurface>
-MacIOSurfaceImage::GetAsSourceSurface()
-{
+already_AddRefed<SourceSurface> MacIOSurfaceImage::GetAsSourceSurface() {
   return CreateSourceSurfaceFromMacIOSurface(mSurface);
 }

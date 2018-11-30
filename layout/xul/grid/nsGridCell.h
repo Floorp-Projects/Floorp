@@ -22,33 +22,31 @@ class nsIFrame;
 
 /*
  * Grid cell is what makes up the cellmap in the grid. Each GridCell contains
- * 2 pointers. One to the matching box in the columns and one to the matching box
- * in the rows. Remember that you can put content in both rows and columns.
+ * 2 pointers. One to the matching box in the columns and one to the matching
+ * box in the rows. Remember that you can put content in both rows and columns.
  * When asked for preferred/min/max sizes it works like a stack and takes the
  * biggest sizes.
  */
 
-class nsGridCell final
-{
-public:
-    nsGridCell();
-    ~nsGridCell();
+class nsGridCell final {
+ public:
+  nsGridCell();
+  ~nsGridCell();
 
-    nsSize      GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState);
-    nsSize      GetXULMinSize(nsBoxLayoutState& aBoxLayoutState);
-    nsSize      GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState);
-    bool        IsXULCollapsed();
+  nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState);
+  nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState);
+  nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState);
+  bool IsXULCollapsed();
 
-// accessors
-    nsIFrame*   GetBoxInColumn()               { return mBoxInColumn; }
-    nsIFrame*   GetBoxInRow()                  { return mBoxInRow; }
-    void        SetBoxInRow(nsIFrame* aBox)    { mBoxInRow = aBox; }
-    void        SetBoxInColumn(nsIFrame* aBox) { mBoxInColumn = aBox; }
+  // accessors
+  nsIFrame* GetBoxInColumn() { return mBoxInColumn; }
+  nsIFrame* GetBoxInRow() { return mBoxInRow; }
+  void SetBoxInRow(nsIFrame* aBox) { mBoxInRow = aBox; }
+  void SetBoxInColumn(nsIFrame* aBox) { mBoxInColumn = aBox; }
 
-private:
-    nsIFrame* mBoxInColumn;
-    nsIFrame* mBoxInRow;
+ private:
+  nsIFrame* mBoxInColumn;
+  nsIFrame* mBoxInRow;
 };
 
 #endif
-

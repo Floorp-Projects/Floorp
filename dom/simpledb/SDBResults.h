@@ -13,23 +13,20 @@
 namespace mozilla {
 namespace dom {
 
-class SDBResult
-  : public nsISDBResult
-{
+class SDBResult : public nsISDBResult {
   nsCString mData;
 
-public:
+ public:
   explicit SDBResult(const nsACString& aData);
 
-private:
-  virtual ~SDBResult()
-  { }
+ private:
+  virtual ~SDBResult() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISDBRESULT
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_simpledb_SDBResults_h
+#endif  // mozilla_dom_simpledb_SDBResults_h

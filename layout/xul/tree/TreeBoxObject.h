@@ -22,10 +22,8 @@ struct TreeCellInfo;
 class DOMRect;
 enum class CallerType : uint32_t;
 
-class TreeBoxObject final : public BoxObject,
-                            public nsITreeBoxObject
-{
-public:
+class TreeBoxObject final : public BoxObject, public nsITreeBoxObject {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TreeBoxObject, BoxObject)
   NS_DECL_NSITREEBOXOBJECT
@@ -35,19 +33,19 @@ public:
   nsTreeBodyFrame* GetTreeBodyFrame(bool aFlushLayout = false);
   nsTreeBodyFrame* GetCachedTreeBodyFrame() { return mTreeBody; }
 
-  //NS_PIBOXOBJECT interfaces
+  // NS_PIBOXOBJECT interfaces
   virtual void Clear() override;
   virtual void ClearCachedValues() override;
 
   // WebIDL
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<nsTreeColumns> GetColumns();
 
   already_AddRefed<nsITreeView> GetView(CallerType /* unused */);
 
-  void SetView(nsITreeView* arg, CallerType aCallerType,
-               ErrorResult& aRv);
+  void SetView(nsITreeView* arg, CallerType aCallerType, ErrorResult& aRv);
 
   bool Focused();
 
@@ -77,8 +75,7 @@ public:
 
   void GetCellAt(int32_t x, int32_t y, TreeCellInfo& aRetVal, ErrorResult& aRv);
 
-  already_AddRefed<DOMRect> GetCoordsForCellItem(int32_t row,
-                                                 nsTreeColumn& col,
+  already_AddRefed<DOMRect> GetCoordsForCellItem(int32_t row, nsTreeColumn& col,
                                                  const nsAString& element,
                                                  ErrorResult& aRv);
 
@@ -87,22 +84,16 @@ public:
   void RemoveImageCacheEntry(int32_t row, nsTreeColumn& col, ErrorResult& aRv);
 
   // Deprecated APIs from old IDL
-  void GetCellAt(JSContext* cx,
-                 int32_t x, int32_t y,
-                 JS::Handle<JSObject*> rowOut,
-                 JS::Handle<JSObject*> colOut,
-                 JS::Handle<JSObject*> childEltOut,
-                 ErrorResult& aRv);
+  void GetCellAt(JSContext* cx, int32_t x, int32_t y,
+                 JS::Handle<JSObject*> rowOut, JS::Handle<JSObject*> colOut,
+                 JS::Handle<JSObject*> childEltOut, ErrorResult& aRv);
 
-  void GetCoordsForCellItem(JSContext* cx,
-                            int32_t row,
-                            nsTreeColumn& col,
+  void GetCoordsForCellItem(JSContext* cx, int32_t row, nsTreeColumn& col,
                             const nsAString& element,
                             JS::Handle<JSObject*> xOut,
                             JS::Handle<JSObject*> yOut,
                             JS::Handle<JSObject*> widthOut,
-                            JS::Handle<JSObject*> heightOut,
-                            ErrorResult& aRv);
+                            JS::Handle<JSObject*> heightOut, ErrorResult& aRv);
 
   // Same signature (except for nsresult return type) as the XPIDL impls
   // void Invalidate();
@@ -117,15 +108,15 @@ public:
   // void InvalidateRange(int32_t startIndex, int32_t endIndex);
   // void RowCountChanged(int32_t index, int32_t count);
 
-protected:
+ protected:
   nsTreeBodyFrame* mTreeBody;
   nsCOMPtr<nsITreeView> mView;
 
-private:
+ private:
   ~TreeBoxObject();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

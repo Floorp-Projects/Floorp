@@ -7,71 +7,46 @@
 #include "mozilla/Move.h"
 
 txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer)
-    : txAExprResult(nullptr),
-      mBuffer(std::move(aBuffer))
-{
+    : txAExprResult(nullptr), mBuffer(std::move(aBuffer)) {}
+
+short txResultTreeFragment::getResultType() { return RESULT_TREE_FRAGMENT; }
+
+void txResultTreeFragment::stringValue(nsString& aResult) {
+  if (!mBuffer) {
+    return;
+  }
+
+  aResult.Append(mBuffer->mStringValue);
 }
 
-short txResultTreeFragment::getResultType()
-{
-    return RESULT_TREE_FRAGMENT;
+const nsString* txResultTreeFragment::stringValuePointer() {
+  return mBuffer ? &mBuffer->mStringValue : nullptr;
 }
 
-void
-txResultTreeFragment::stringValue(nsString& aResult)
-{
-    if (!mBuffer) {
-        return;
-    }
+bool txResultTreeFragment::booleanValue() { return true; }
 
-    aResult.Append(mBuffer->mStringValue);
+double txResultTreeFragment::numberValue() {
+  if (!mBuffer) {
+    return 0;
+  }
+
+  return txDouble::toDouble(mBuffer->mStringValue);
 }
 
-const nsString*
-txResultTreeFragment::stringValuePointer()
-{
-    return mBuffer ? &mBuffer->mStringValue : nullptr;
+nsresult txResultTreeFragment::flushToHandler(txAXMLEventHandler* aHandler) {
+  if (!mBuffer) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mBuffer->flushToHandler(aHandler);
 }
 
-bool txResultTreeFragment::booleanValue()
-{
-    return true;
+nsresult txRtfHandler::getAsRTF(txAExprResult** aResult) {
+  *aResult = new txResultTreeFragment(std::move(mBuffer));
+  NS_ADDREF(*aResult);
+  return NS_OK;
 }
 
-double txResultTreeFragment::numberValue()
-{
-    if (!mBuffer) {
-        return 0;
-    }
+nsresult txRtfHandler::endDocument(nsresult aResult) { return NS_OK; }
 
-    return txDouble::toDouble(mBuffer->mStringValue);
-}
-
-nsresult txResultTreeFragment::flushToHandler(txAXMLEventHandler* aHandler)
-{
-    if (!mBuffer) {
-        return NS_ERROR_FAILURE;
-    }
-
-    return mBuffer->flushToHandler(aHandler);
-}
-
-nsresult
-txRtfHandler::getAsRTF(txAExprResult** aResult)
-{
-    *aResult = new txResultTreeFragment(std::move(mBuffer));
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-nsresult
-txRtfHandler::endDocument(nsresult aResult)
-{
-    return NS_OK;
-}
-
-nsresult
-txRtfHandler::startDocument()
-{
-    return NS_OK;
-}
+nsresult txRtfHandler::startDocument() { return NS_OK; }

@@ -18,9 +18,8 @@
 
 namespace mozilla {
 
-class RecursiveMutex : public BlockingResourceBase
-{
-public:
+class RecursiveMutex : public BlockingResourceBase {
+ public:
   explicit RecursiveMutex(const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~RecursiveMutex();
 
@@ -40,16 +39,15 @@ public:
   /**
    * AssertNotCurrentThreadIn
    **/
-  void AssertNotCurrentThreadIn()
-  {
-    //Not currently implemented. See bug 476536 for discussion.
+  void AssertNotCurrentThreadIn() {
+    // Not currently implemented. See bug 476536 for discussion.
   }
 #else
   void AssertCurrentThreadIn() {}
   void AssertNotCurrentThreadIn() {}
 #endif
 
-private:
+ private:
   RecursiveMutex() = delete;
   RecursiveMutex(const RecursiveMutex&) = delete;
   RecursiveMutex& operator=(const RecursiveMutex&) = delete;
@@ -73,24 +71,19 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class MOZ_RAII RecursiveMutexAutoLock
-{
-public:
-  explicit RecursiveMutexAutoLock(RecursiveMutex& aRecursiveMutex
-                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mRecursiveMutex(&aRecursiveMutex)
-  {
+class MOZ_RAII RecursiveMutexAutoLock {
+ public:
+  explicit RecursiveMutexAutoLock(
+      RecursiveMutex& aRecursiveMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mRecursiveMutex(&aRecursiveMutex) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     NS_ASSERTION(mRecursiveMutex, "null mutex");
     mRecursiveMutex->Lock();
   }
 
-  ~RecursiveMutexAutoLock(void)
-  {
-    mRecursiveMutex->Unlock();
-  }
+  ~RecursiveMutexAutoLock(void) { mRecursiveMutex->Unlock(); }
 
-private:
+ private:
   RecursiveMutexAutoLock() = delete;
   RecursiveMutexAutoLock(const RecursiveMutexAutoLock&) = delete;
   RecursiveMutexAutoLock& operator=(const RecursiveMutexAutoLock&) = delete;
@@ -100,24 +93,19 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class MOZ_RAII RecursiveMutexAutoUnlock
-{
-public:
-  explicit RecursiveMutexAutoUnlock(RecursiveMutex& aRecursiveMutex
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mRecursiveMutex(&aRecursiveMutex)
-  {
+class MOZ_RAII RecursiveMutexAutoUnlock {
+ public:
+  explicit RecursiveMutexAutoUnlock(
+      RecursiveMutex& aRecursiveMutex MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mRecursiveMutex(&aRecursiveMutex) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     NS_ASSERTION(mRecursiveMutex, "null mutex");
     mRecursiveMutex->Unlock();
   }
 
-  ~RecursiveMutexAutoUnlock(void)
-  {
-    mRecursiveMutex->Lock();
-  }
+  ~RecursiveMutexAutoUnlock(void) { mRecursiveMutex->Lock(); }
 
-private:
+ private:
   RecursiveMutexAutoUnlock() = delete;
   RecursiveMutexAutoUnlock(const RecursiveMutexAutoUnlock&) = delete;
   RecursiveMutexAutoUnlock& operator=(const RecursiveMutexAutoUnlock&) = delete;
@@ -127,6 +115,6 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_RecursiveMutex_h
+#endif  // mozilla_RecursiveMutex_h

@@ -10,4 +10,4 @@ namespace mozilla {
 
 int PaintTracker::gPaintTracker;
 
-} // namespace mozilla
+}  // namespace mozilla

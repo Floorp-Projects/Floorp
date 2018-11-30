@@ -14,30 +14,27 @@
 #include "nsUniversalDetector.h"
 
 //=====================================================================
-class nsXPCOMDetector :
-      public nsUniversalDetector,
-      public nsICharsetDetector
-{
+class nsXPCOMDetector : public nsUniversalDetector, public nsICharsetDetector {
   NS_DECL_ISUPPORTS
-  public:
-    nsXPCOMDetector();
-    NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver) override;
-    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe) override;
-    NS_IMETHOD Done() override;
-  protected:
-    virtual ~nsXPCOMDetector();
-    virtual void Report(const char* aCharset) override;
-  private:
-    nsCOMPtr<nsICharsetDetectionObserver> mObserver;
+ public:
+  nsXPCOMDetector();
+  NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver) override;
+  NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool* oDontFeedMe) override;
+  NS_IMETHOD Done() override;
+
+ protected:
+  virtual ~nsXPCOMDetector();
+  virtual void Report(const char* aCharset) override;
+
+ private:
+  nsCOMPtr<nsICharsetDetectionObserver> mObserver;
 };
 
 //=====================================================================
 
-class nsJAPSMDetector final : public nsXPCOMDetector
-{
-public:
-  nsJAPSMDetector()
-    : nsXPCOMDetector() {}
+class nsJAPSMDetector final : public nsXPCOMDetector {
+ public:
+  nsJAPSMDetector() : nsXPCOMDetector() {}
 };
 
-#endif //_nsUdetXPCOMWrapper_h__
+#endif  //_nsUdetXPCOMWrapper_h__

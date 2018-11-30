@@ -23,24 +23,19 @@ namespace gfx {
  * should be wrapped in a temporary SourceSurfaceRawData with a ScopedMap
  * closure.
  */
-class SourceSurfaceVolatileData : public DataSourceSurface
-{
-public:
+class SourceSurfaceVolatileData : public DataSourceSurface {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceVolatileData, override)
 
   SourceSurfaceVolatileData()
-    : mMutex("SourceSurfaceVolatileData")
-    , mStride(0)
-    , mFormat(SurfaceFormat::UNKNOWN)
-    , mWasPurged(false)
-  {
-  }
+      : mMutex("SourceSurfaceVolatileData"),
+        mStride(0),
+        mFormat(SurfaceFormat::UNKNOWN),
+        mWasPurged(false) {}
 
-  bool Init(const IntSize &aSize,
-            int32_t aStride,
-            SurfaceFormat aFormat);
+  bool Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat);
 
-  uint8_t *GetData() override { return mVBufPtr; }
+  uint8_t* GetData() override { return mVBufPtr; }
   int32_t Stride() override { return mStride; }
 
   SurfaceType GetType() const override { return SurfaceType::DATA; }
@@ -49,16 +44,11 @@ public:
 
   void GuaranteePersistance() override;
 
-  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                              size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut,
-                              size_t& aExtHandlesOut,
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
+                              size_t& aNonHeapSizeOut, size_t& aExtHandlesOut,
                               uint64_t& aExtIdOut) const override;
 
-  bool OnHeap() const override
-  {
-    return mVBuf->OnHeap();
-  }
+  bool OnHeap() const override { return mVBuf->OnHeap(); }
 
   // Althought Map (and Moz2D in general) isn't normally threadsafe,
   // we want to allow it for SourceSurfaceVolatileData since it should
@@ -66,8 +56,7 @@ public:
   //
   // This is the same as the base class implementation except using
   // mMapCount instead of mIsMapped since that breaks for multithread.
-  bool Map(MapType, MappedSurface *aMappedSurface) override
-  {
+  bool Map(MapType, MappedSurface* aMappedSurface) override {
     MutexAutoLock lock(mMutex);
     if (mWasPurged) {
       return false;
@@ -85,8 +74,7 @@ public:
     return true;
   }
 
-  void Unmap() override
-  {
+  void Unmap() override {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mMapCount > 0);
     MOZ_ASSERT(!mWasPurged);
@@ -95,10 +83,8 @@ public:
     }
   }
 
-private:
-  ~SourceSurfaceVolatileData() override
-  {
-  }
+ private:
+  ~SourceSurfaceVolatileData() override {}
 
   Mutex mMutex;
   int32_t mStride;
@@ -109,7 +95,7 @@ private:
   bool mWasPurged;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACEVOLATILEDATA_H_ */

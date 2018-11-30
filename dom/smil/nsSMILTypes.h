@@ -23,4 +23,4 @@
 //
 typedef int64_t nsSMILTime;
 
-#endif // NS_SMILTYPES_H_
+#endif  // NS_SMILTYPES_H_

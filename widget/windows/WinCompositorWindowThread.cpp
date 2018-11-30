@@ -16,24 +16,15 @@ namespace widget {
 static StaticRefPtr<WinCompositorWindowThread> sWinCompositorWindowThread;
 
 WinCompositorWindowThread::WinCompositorWindowThread(base::Thread* aThread)
-  : mThread(aThread)
-{
-}
+    : mThread(aThread) {}
 
-WinCompositorWindowThread::~WinCompositorWindowThread()
-{
-  delete mThread;
-}
+WinCompositorWindowThread::~WinCompositorWindowThread() { delete mThread; }
 
-/* static */ WinCompositorWindowThread*
-WinCompositorWindowThread::Get()
-{
+/* static */ WinCompositorWindowThread* WinCompositorWindowThread::Get() {
   return sWinCompositorWindowThread;
 }
 
-/* static */ void
-WinCompositorWindowThread::Start()
-{
+/* static */ void WinCompositorWindowThread::Start() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sWinCompositorWindowThread);
 
@@ -51,40 +42,35 @@ WinCompositorWindowThread::Start()
   sWinCompositorWindowThread = new WinCompositorWindowThread(thread);
 }
 
-/* static */ void
-WinCompositorWindowThread::ShutDown()
-{
+/* static */ void WinCompositorWindowThread::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sWinCompositorWindowThread);
 
   layers::SynchronousTask task("WinCompositorWindowThread");
   RefPtr<Runnable> runnable = WrapRunnable(
-    RefPtr<WinCompositorWindowThread>(sWinCompositorWindowThread.get()),
-    &WinCompositorWindowThread::ShutDownTask,
-    &task);
+      RefPtr<WinCompositorWindowThread>(sWinCompositorWindowThread.get()),
+      &WinCompositorWindowThread::ShutDownTask, &task);
   sWinCompositorWindowThread->Loop()->PostTask(runnable.forget());
   task.Wait();
 
   sWinCompositorWindowThread = nullptr;
 }
 
-void
-WinCompositorWindowThread::ShutDownTask(layers::SynchronousTask* aTask)
-{
+void WinCompositorWindowThread::ShutDownTask(layers::SynchronousTask* aTask) {
   layers::AutoCompleteTask complete(aTask);
   MOZ_ASSERT(IsInCompositorWindowThread());
 }
 
-/* static */ MessageLoop*
-WinCompositorWindowThread::Loop()
-{
-  return sWinCompositorWindowThread ? sWinCompositorWindowThread->mThread->message_loop() : nullptr;
+/* static */ MessageLoop* WinCompositorWindowThread::Loop() {
+  return sWinCompositorWindowThread
+             ? sWinCompositorWindowThread->mThread->message_loop()
+             : nullptr;
 }
 
-/* static */ bool
-WinCompositorWindowThread::IsInCompositorWindowThread()
-{
-  return sWinCompositorWindowThread && sWinCompositorWindowThread->mThread->thread_id() == PlatformThread::CurrentId();
+/* static */ bool WinCompositorWindowThread::IsInCompositorWindowThread() {
+  return sWinCompositorWindowThread &&
+         sWinCompositorWindowThread->mThread->thread_id() ==
+             PlatformThread::CurrentId();
 }
 
 const wchar_t kClassNameCompositor[] = L"MozillaCompositorWindowClass";
@@ -93,28 +79,26 @@ ATOM g_compositor_window_class;
 
 // This runs on the window owner thread.
 void InitializeWindowClass() {
-
   if (g_compositor_window_class) {
     return;
   }
 
   WNDCLASSW wc;
-  wc.style         = CS_OWNDC;
-  wc.lpfnWndProc   = ::DefWindowProcW;
-  wc.cbClsExtra    = 0;
-  wc.cbWndExtra    = 0;
-  wc.hInstance     = GetModuleHandle(nullptr);
-  wc.hIcon         = nullptr;
-  wc.hCursor       = nullptr;
+  wc.style = CS_OWNDC;
+  wc.lpfnWndProc = ::DefWindowProcW;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  wc.hInstance = GetModuleHandle(nullptr);
+  wc.hIcon = nullptr;
+  wc.hCursor = nullptr;
   wc.hbrBackground = nullptr;
-  wc.lpszMenuName  = nullptr;
+  wc.lpszMenuName = nullptr;
   wc.lpszClassName = kClassNameCompositor;
   g_compositor_window_class = ::RegisterClassW(&wc);
 }
 
-/* static */ HWND
-WinCompositorWindowThread::CreateCompositorWindow(HWND aParentWnd)
-{
+/* static */ HWND WinCompositorWindowThread::CreateCompositorWindow(
+    HWND aParentWnd) {
   MOZ_ASSERT(Loop());
   MOZ_ASSERT(aParentWnd);
 
@@ -126,20 +110,17 @@ WinCompositorWindowThread::CreateCompositorWindow(HWND aParentWnd)
 
   HWND compositorWnd = nullptr;
 
-  RefPtr<Runnable> runnable =
-    NS_NewRunnableFunction("WinCompositorWindowThread::CreateCompositorWindow::Runnable", [&]() {
-      layers::AutoCompleteTask complete(&task);
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "WinCompositorWindowThread::CreateCompositorWindow::Runnable", [&]() {
+        layers::AutoCompleteTask complete(&task);
 
-      InitializeWindowClass();
+        InitializeWindowClass();
 
-      compositorWnd =
-        ::CreateWindowEx(WS_EX_NOPARENTNOTIFY,
-                         kClassNameCompositor,
-                         nullptr,
-                         WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE,
-                         0, 0, 1, 1,
-                         aParentWnd, 0, GetModuleHandle(nullptr), 0);
-    });
+        compositorWnd = ::CreateWindowEx(
+            WS_EX_NOPARENTNOTIFY, kClassNameCompositor, nullptr,
+            WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE, 0, 0, 1, 1, aParentWnd,
+            0, GetModuleHandle(nullptr), 0);
+      });
 
   Loop()->PostTask(runnable.forget());
 
@@ -148,9 +129,8 @@ WinCompositorWindowThread::CreateCompositorWindow(HWND aParentWnd)
   return compositorWnd;
 }
 
-/* static */ void
-WinCompositorWindowThread::DestroyCompositorWindow(HWND aWnd)
-{
+/* static */ void WinCompositorWindowThread::DestroyCompositorWindow(
+    HWND aWnd) {
   MOZ_ASSERT(aWnd);
   MOZ_ASSERT(Loop());
 
@@ -158,13 +138,12 @@ WinCompositorWindowThread::DestroyCompositorWindow(HWND aWnd)
     return;
   }
 
-  RefPtr<Runnable> runnable =
-    NS_NewRunnableFunction("WinCompositorWidget::CreateNativeWindow::Runnable", [aWnd]() {
-      ::DestroyWindow(aWnd);
-  });
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "WinCompositorWidget::CreateNativeWindow::Runnable",
+      [aWnd]() { ::DestroyWindow(aWnd); });
 
   Loop()->PostTask(runnable.forget());
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

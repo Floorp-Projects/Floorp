@@ -19,8 +19,7 @@ using mozilla::SyncRunnable;
 
 LazyLogModule gNSSKeyStoreLog("nsskeystore");
 
-NSSKeyStore::NSSKeyStore()
-{
+NSSKeyStore::NSSKeyStore() {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!XRE_IsParentProcess()) {
     // This shouldn't happen as this is only initialised when creating the
@@ -32,30 +31,24 @@ NSSKeyStore::NSSKeyStore()
 }
 NSSKeyStore::~NSSKeyStore() {}
 
-nsresult
-NSSKeyStore::InitToken()
-{
+nsresult NSSKeyStore::InitToken() {
   if (!mSlot) {
     mSlot = UniquePK11SlotInfo(PK11_GetInternalKeySlot());
     if (!mSlot) {
-      MOZ_LOG(
-        gNSSKeyStoreLog, LogLevel::Debug, ("Error getting internal key slot"));
+      MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug,
+              ("Error getting internal key slot"));
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
   return NS_OK;
 }
 
-nsresult
-NSSKeyStoreMainThreadLock(PK11SlotInfo* aSlot)
-{
+nsresult NSSKeyStoreMainThreadLock(PK11SlotInfo* aSlot) {
   nsCOMPtr<nsIPK11Token> token = new nsPK11Token(aSlot);
   return token->LogoutSimple();
 }
 
-nsresult
-NSSKeyStore::Lock()
-{
+nsresult NSSKeyStore::Lock() {
   NS_ENSURE_STATE(mSlot);
 
   if (!NS_IsMainThread()) {
@@ -67,10 +60,10 @@ NSSKeyStore::Lock()
 
     // Forward to the main thread synchronously.
     SyncRunnable::DispatchToThread(
-      mainThread,
-      new SyncRunnable(NS_NewRunnableFunction(
-        "NSSKeyStoreMainThreadLock",
-        [slot = mSlot.get()]() { NSSKeyStoreMainThreadLock(slot); })));
+        mainThread, new SyncRunnable(NS_NewRunnableFunction(
+                        "NSSKeyStoreMainThreadLock", [slot = mSlot.get()]() {
+                          NSSKeyStoreMainThreadLock(slot);
+                        })));
 
     return NS_OK;
   }
@@ -78,16 +71,12 @@ NSSKeyStore::Lock()
   return NSSKeyStoreMainThreadLock(mSlot.get());
 }
 
-nsresult
-NSSKeyStoreMainThreadUnlock(PK11SlotInfo* aSlot)
-{
+nsresult NSSKeyStoreMainThreadUnlock(PK11SlotInfo* aSlot) {
   nsCOMPtr<nsIPK11Token> token = new nsPK11Token(aSlot);
   return token->Login(false /* force */);
 }
 
-nsresult
-NSSKeyStore::Unlock()
-{
+nsresult NSSKeyStore::Unlock() {
   NS_ENSURE_STATE(mSlot);
 
   if (!NS_IsMainThread()) {
@@ -99,10 +88,10 @@ NSSKeyStore::Unlock()
 
     // Forward to the main thread synchronously.
     SyncRunnable::DispatchToThread(
-      mainThread,
-      new SyncRunnable(NS_NewRunnableFunction(
-        "NSSKeyStoreMainThreadUnlock",
-        [slot = mSlot.get()]() { NSSKeyStoreMainThreadUnlock(slot); })));
+        mainThread, new SyncRunnable(NS_NewRunnableFunction(
+                        "NSSKeyStoreMainThreadUnlock", [slot = mSlot.get()]() {
+                          NSSKeyStoreMainThreadUnlock(slot);
+                        })));
 
     return NS_OK;
   }
@@ -110,9 +99,8 @@ NSSKeyStore::Unlock()
   return NSSKeyStoreMainThreadUnlock(mSlot.get());
 }
 
-nsresult
-NSSKeyStore::StoreSecret(const nsACString& aSecret, const nsACString& aLabel)
-{
+nsresult NSSKeyStore::StoreSecret(const nsACString& aSecret,
+                                  const nsACString& aLabel) {
   NS_ENSURE_STATE(mSlot);
   if (NS_FAILED(Unlock())) {
     MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error unlocking NSS key db"));
@@ -127,25 +115,22 @@ NSSKeyStore::StoreSecret(const nsACString& aSecret, const nsACString& aLabel)
   key->type = siBuffer;
   memcpy(key->data, p, aSecret.Length());
   key->len = aSecret.Length();
-  UniquePK11SymKey symKey(PK11_ImportSymKey(mSlot.get(),
-                                            CKM_AES_GCM,
-                                            PK11_OriginUnwrap,
-                                            CKA_DECRYPT | CKA_ENCRYPT,
-                                            key.get(),
-                                            nullptr));
+  UniquePK11SymKey symKey(
+      PK11_ImportSymKey(mSlot.get(), CKM_AES_GCM, PK11_OriginUnwrap,
+                        CKA_DECRYPT | CKA_ENCRYPT, key.get(), nullptr));
   if (!symKey) {
     MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error creating NSS SymKey"));
     return NS_ERROR_FAILURE;
   }
   UniquePK11SymKey storedKey(
-    PK11_ConvertSessionSymKeyToTokenSymKey(symKey.get(), nullptr));
+      PK11_ConvertSessionSymKeyToTokenSymKey(symKey.get(), nullptr));
   if (!storedKey) {
-    MOZ_LOG(
-      gNSSKeyStoreLog, LogLevel::Debug, ("Error storing NSS SymKey in DB"));
+    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug,
+            ("Error storing NSS SymKey in DB"));
     return NS_ERROR_FAILURE;
   }
   SECStatus srv =
-    PK11_SetSymKeyNickname(storedKey.get(), PromiseFlatCString(aLabel).get());
+      PK11_SetSymKeyNickname(storedKey.get(), PromiseFlatCString(aLabel).get());
   if (srv != SECSuccess) {
     MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error naming NSS SymKey"));
     (void)PK11_DeleteTokenSymKey(storedKey.get());
@@ -155,9 +140,7 @@ NSSKeyStore::StoreSecret(const nsACString& aSecret, const nsACString& aLabel)
   return NS_OK;
 }
 
-nsresult
-NSSKeyStore::DeleteSecret(const nsACString& aLabel)
-{
+nsresult NSSKeyStore::DeleteSecret(const nsACString& aLabel) {
   NS_ENSURE_STATE(mSlot);
   if (NS_FAILED(Unlock())) {
     MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error unlocking NSS key db"));
@@ -165,7 +148,8 @@ NSSKeyStore::DeleteSecret(const nsACString& aLabel)
   }
 
   UniquePK11SymKey symKey(PK11_ListFixedKeysInSlot(
-    mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()), nullptr));
+      mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()),
+      nullptr));
   if (!symKey) {
     // Couldn't find the key or something is wrong. Be nice.
     return NS_OK;
@@ -180,9 +164,7 @@ NSSKeyStore::DeleteSecret(const nsACString& aLabel)
   return NS_OK;
 }
 
-bool
-NSSKeyStore::SecretAvailable(const nsACString& aLabel)
-{
+bool NSSKeyStore::SecretAvailable(const nsACString& aLabel) {
   if (!mSlot) {
     return false;
   }
@@ -192,19 +174,18 @@ NSSKeyStore::SecretAvailable(const nsACString& aLabel)
   }
 
   UniquePK11SymKey symKey(PK11_ListFixedKeysInSlot(
-    mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()), nullptr));
+      mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()),
+      nullptr));
   if (!symKey) {
     return false;
   }
   return true;
 }
 
-nsresult
-NSSKeyStore::EncryptDecrypt(const nsACString& aLabel,
-                            const std::vector<uint8_t>& inBytes,
-                            std::vector<uint8_t>& outBytes,
-                            bool encrypt)
-{
+nsresult NSSKeyStore::EncryptDecrypt(const nsACString& aLabel,
+                                     const std::vector<uint8_t>& inBytes,
+                                     std::vector<uint8_t>& outBytes,
+                                     bool encrypt) {
   NS_ENSURE_STATE(mSlot);
   if (NS_FAILED(Unlock())) {
     MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error unlocking NSS key db"));
@@ -212,10 +193,11 @@ NSSKeyStore::EncryptDecrypt(const nsACString& aLabel,
   }
 
   UniquePK11SymKey symKey(PK11_ListFixedKeysInSlot(
-    mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()), nullptr));
+      mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()),
+      nullptr));
   if (!symKey) {
-    MOZ_LOG(
-      gNSSKeyStoreLog, LogLevel::Debug, ("Error finding key for given label"));
+    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug,
+            ("Error finding key for given label"));
     return NS_ERROR_FAILURE;
   }
   return DoCipher(symKey, inBytes, outBytes, encrypt);
@@ -223,9 +205,7 @@ NSSKeyStore::EncryptDecrypt(const nsACString& aLabel,
 
 // Because NSSKeyStore overrides AbstractOSKeyStore's EncryptDecrypt and
 // SecretAvailable functions, this isn't necessary.
-nsresult
-NSSKeyStore::RetrieveSecret(const nsACString& aLabel,
-                  /* out */ nsACString& aSecret)
-{
+nsresult NSSKeyStore::RetrieveSecret(const nsACString& aLabel,
+                                     /* out */ nsACString& aSecret) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

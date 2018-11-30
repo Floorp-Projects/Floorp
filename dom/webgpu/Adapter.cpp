@@ -13,25 +13,18 @@ namespace webgpu {
 
 Adapter::~Adapter() = default;
 
-void
-Adapter::Extensions(dom::WebGPUExtensions& out) const
-{
-    MOZ_CRASH("todo");
+void Adapter::Extensions(dom::WebGPUExtensions& out) const {
+  MOZ_CRASH("todo");
 }
 
-void
-Adapter::Features(dom::WebGPUFeatures& out) const
-{
-    MOZ_CRASH("todo");
-}
+void Adapter::Features(dom::WebGPUFeatures& out) const { MOZ_CRASH("todo"); }
 
-already_AddRefed<Device>
-Adapter::CreateDevice(const dom::WebGPUDeviceDescriptor& desc) const
-{
-    MOZ_CRASH("todo");
+already_AddRefed<Device> Adapter::CreateDevice(
+    const dom::WebGPUDeviceDescriptor& desc) const {
+  MOZ_CRASH("todo");
 }
 
 WEBGPU_IMPL_GOOP_0(Adapter)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

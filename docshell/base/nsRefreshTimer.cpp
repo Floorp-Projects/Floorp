@@ -20,37 +20,34 @@ NS_INTERFACE_MAP_BEGIN(nsRefreshTimer)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END
 
-nsRefreshTimer::nsRefreshTimer(nsDocShell* aDocShell,
-                               nsIURI* aURI,
-                               nsIPrincipal* aPrincipal,
-                               int32_t aDelay, bool aRepeat, bool aMetaRefresh)
-  : mDocShell(aDocShell), mURI(aURI), mPrincipal(aPrincipal),
-    mDelay(aDelay), mRepeat(aRepeat),
-    mMetaRefresh(aMetaRefresh)
-{
-}
+nsRefreshTimer::nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI,
+                               nsIPrincipal* aPrincipal, int32_t aDelay,
+                               bool aRepeat, bool aMetaRefresh)
+    : mDocShell(aDocShell),
+      mURI(aURI),
+      mPrincipal(aPrincipal),
+      mDelay(aDelay),
+      mRepeat(aRepeat),
+      mMetaRefresh(aMetaRefresh) {}
 
-nsRefreshTimer::~nsRefreshTimer()
-{
-}
+nsRefreshTimer::~nsRefreshTimer() {}
 
 NS_IMETHODIMP
-nsRefreshTimer::Notify(nsITimer* aTimer)
-{
+nsRefreshTimer::Notify(nsITimer* aTimer) {
   NS_ASSERTION(mDocShell, "DocShell is somehow null");
 
   if (mDocShell && aTimer) {
     // Get the delay count to determine load type
     uint32_t delay = 0;
     aTimer->GetDelay(&delay);
-    mDocShell->ForceRefreshURIFromTimer(mURI, mPrincipal, delay, mMetaRefresh, aTimer);
+    mDocShell->ForceRefreshURIFromTimer(mURI, mPrincipal, delay, mMetaRefresh,
+                                        aTimer);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRefreshTimer::GetName(nsACString& aName)
-{
+nsRefreshTimer::GetName(nsACString& aName) {
   aName.AssignLiteral("nsRefreshTimer");
   return NS_OK;
 }

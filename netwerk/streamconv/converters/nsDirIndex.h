@@ -11,23 +11,22 @@
 #include "mozilla/Attributes.h"
 
 class nsDirIndex final : public nsIDirIndex {
+ private:
+  ~nsDirIndex() = default;
 
-private:
-    ~nsDirIndex() = default;
+ public:
+  nsDirIndex();
 
-public:
-    nsDirIndex();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDIRINDEX
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDIRINDEX
-
-protected:
-    uint32_t mType;
-    nsCString mContentType;
-    nsCString mLocation;
-    nsString mDescription;
-    int64_t mSize;
-    PRTime mLastModified;
+ protected:
+  uint32_t mType;
+  nsCString mContentType;
+  nsCString mLocation;
+  nsString mDescription;
+  int64_t mSize;
+  PRTime mLastModified;
 };
 
 #endif

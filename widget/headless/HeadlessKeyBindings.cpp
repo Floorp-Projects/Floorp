@@ -9,9 +9,7 @@
 namespace mozilla {
 namespace widget {
 
-HeadlessKeyBindings&
-HeadlessKeyBindings::GetInstance()
-{
+HeadlessKeyBindings& HeadlessKeyBindings::GetInstance() {
   static UniquePtr<HeadlessKeyBindings> sInstance;
   if (!sInstance) {
     sInstance.reset(new HeadlessKeyBindings());
@@ -20,20 +18,17 @@ HeadlessKeyBindings::GetInstance()
   return *sInstance;
 }
 
-nsresult
-HeadlessKeyBindings::AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent)
-{
+nsresult HeadlessKeyBindings::AttachNativeKeyEvent(
+    WidgetKeyboardEvent& aEvent) {
   // Stub for non-mac platforms.
   return NS_OK;
 }
 
-void
-HeadlessKeyBindings::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
-                                     const WidgetKeyboardEvent& aEvent,
-                                     nsTArray<CommandInt>& aCommands)
-{
+void HeadlessKeyBindings::GetEditCommands(
+    nsIWidget::NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
+    nsTArray<CommandInt>& aCommands) {
   // Stub for non-mac platforms.
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

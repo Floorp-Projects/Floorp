@@ -24,15 +24,15 @@ struct InfoHeaderLength {
     WIN_V5 = 124,
 
     // OS2_V1 is omitted; it's the same as WIN_V2.
-    OS2_V2_MIN = 16,    // Minimum allowed value for OS2v2.
-    OS2_V2_MAX = 64,    // Maximum allowed value for OS2v2.
+    OS2_V2_MIN = 16,  // Minimum allowed value for OS2v2.
+    OS2_V2_MAX = 64,  // Maximum allowed value for OS2v2.
 
     WIN_ICO = WIN_V3,
   };
 };
 
-} // namespace bmp
-} // namespace image
-} // namespace mozilla
+}  // namespace bmp
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_BMPHeaders_h
+#endif  // mozilla_image_BMPHeaders_h

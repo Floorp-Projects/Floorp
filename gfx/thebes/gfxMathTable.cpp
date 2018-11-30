@@ -12,8 +12,7 @@
 
 using namespace mozilla;
 
-gfxMathTable::gfxMathTable(hb_face_t *aFace, gfxFloat aSize)
-{
+gfxMathTable::gfxMathTable(hb_face_t *aFace, gfxFloat aSize) {
   mMathVariantCache.vertical = false;
   mHBFont = hb_font_create(aFace);
   if (mHBFont) {
@@ -26,17 +25,15 @@ gfxMathTable::gfxMathTable(hb_face_t *aFace, gfxFloat aSize)
   ClearCache();
 }
 
-gfxMathTable::~gfxMathTable()
-{
+gfxMathTable::~gfxMathTable() {
   if (mHBFont) {
-      hb_font_destroy(mHBFont);
+    hb_font_destroy(mHBFont);
   }
 }
 
-gfxFloat
-gfxMathTable::Constant(MathConstant aConstant) const
-{
-  int32_t value = hb_ot_math_get_constant(mHBFont, static_cast<hb_ot_math_constant_t>(aConstant));
+gfxFloat gfxMathTable::Constant(MathConstant aConstant) const {
+  int32_t value = hb_ot_math_get_constant(
+      mHBFont, static_cast<hb_ot_math_constant_t>(aConstant));
   if (aConstant == ScriptPercentScaleDown ||
       aConstant == ScriptScriptPercentScaleDown ||
       aConstant == RadicalDegreeBottomRaisePercent) {
@@ -45,16 +42,13 @@ gfxMathTable::Constant(MathConstant aConstant) const
   return FixedToFloat(value);
 }
 
-gfxFloat
-gfxMathTable::ItalicsCorrection(uint32_t aGlyphID) const
-{
-  return FixedToFloat(hb_ot_math_get_glyph_italics_correction(mHBFont, aGlyphID));
+gfxFloat gfxMathTable::ItalicsCorrection(uint32_t aGlyphID) const {
+  return FixedToFloat(
+      hb_ot_math_get_glyph_italics_correction(mHBFont, aGlyphID));
 }
 
-uint32_t
-gfxMathTable::VariantsSize(uint32_t aGlyphID, bool aVertical,
-                           uint16_t aSize) const
-{
+uint32_t gfxMathTable::VariantsSize(uint32_t aGlyphID, bool aVertical,
+                                    uint16_t aSize) const {
   UpdateMathVariantCache(aGlyphID, aVertical);
   if (aSize < kMaxCachedSizeCount) {
     return mMathVariantCache.sizes[aSize];
@@ -70,26 +64,21 @@ gfxMathTable::VariantsSize(uint32_t aGlyphID, bool aVertical,
   return count > 0 ? variant.glyph : 0;
 }
 
-bool
-gfxMathTable::VariantsParts(uint32_t aGlyphID, bool aVertical,
-                            uint32_t aGlyphs[4]) const
-{
+bool gfxMathTable::VariantsParts(uint32_t aGlyphID, bool aVertical,
+                                 uint32_t aGlyphs[4]) const {
   UpdateMathVariantCache(aGlyphID, aVertical);
   memcpy(aGlyphs, mMathVariantCache.parts, sizeof(mMathVariantCache.parts));
   return mMathVariantCache.arePartsValid;
 }
 
-void
-gfxMathTable::ClearCache() const
-{
+void gfxMathTable::ClearCache() const {
   memset(mMathVariantCache.sizes, 0, sizeof(mMathVariantCache.sizes));
   memset(mMathVariantCache.parts, 0, sizeof(mMathVariantCache.parts));
   mMathVariantCache.arePartsValid = false;
 }
 
-void
-gfxMathTable::UpdateMathVariantCache(uint32_t aGlyphID, bool aVertical) const
-{
+void gfxMathTable::UpdateMathVariantCache(uint32_t aGlyphID,
+                                          bool aVertical) const {
   if (aGlyphID == mMathVariantCache.glyphID &&
       aVertical == mMathVariantCache.vertical)
     return;
@@ -123,10 +112,11 @@ gfxMathTable::UpdateMathVariantCache(uint32_t aGlyphID, bool aVertical) const
   hb_ot_math_glyph_part_t parts[5];
   count = MOZ_ARRAY_LENGTH(parts);
   unsigned int offset = 0;
-  if (hb_ot_math_get_glyph_assembly(mHBFont, aGlyphID, direction, offset, &count, parts, NULL) > MOZ_ARRAY_LENGTH(parts))
-    return; // Not supported: Too many pieces.
-  if (count <= 0)
-    return; // Not supported: No pieces.
+  if (hb_ot_math_get_glyph_assembly(mHBFont, aGlyphID, direction, offset,
+                                    &count, parts,
+                                    NULL) > MOZ_ARRAY_LENGTH(parts))
+    return;                // Not supported: Too many pieces.
+  if (count <= 0) return;  // Not supported: No pieces.
 
   // Count the number of non extender pieces
   uint16_t nonExtenderCount = 0;
@@ -154,7 +144,6 @@ gfxMathTable::UpdateMathVariantCache(uint32_t aGlyphID, bool aVertical) const
   uint32_t extenderChar = 0;
 
   for (uint16_t i = 0; i < count; i++) {
-
     bool isExtender = parts[i].flags & HB_MATH_GLYPH_PART_FLAG_EXTENDER;
     uint32_t glyph = parts[i].glyph;
 
@@ -167,15 +156,15 @@ gfxMathTable::UpdateMathVariantCache(uint32_t aGlyphID, bool aVertical) const
       if (!extenderChar) {
         extenderChar = glyph;
         mMathVariantCache.parts[3] = extenderChar;
-      } else if (extenderChar != glyph)  {
+      } else if (extenderChar != glyph) {
         // Not supported: different extenders
         return;
       }
 
-      if (state == 0) { // or state == 1
+      if (state == 0) {  // or state == 1
         // ignore left/bottom piece and multiple successive extenders
         state = 1;
-      } else if (state == 2) { // or state == 3
+      } else if (state == 2) {  // or state == 3
         // ignore middle piece and multiple successive extenders
         state = 3;
       } else if (state >= 4) {
@@ -205,7 +194,6 @@ gfxMathTable::UpdateMathVariantCache(uint32_t aGlyphID, bool aVertical) const
       mMathVariantCache.parts[aVertical ? 0 : 2] = glyph;
       state = 5;
     }
-
   }
 
   mMathVariantCache.arePartsValid = true;

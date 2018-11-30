@@ -7,8 +7,8 @@
 #ifndef __mozilla_layers_AutoDirWheelDeltaAdjuster_h__
 #define __mozilla_layers_AutoDirWheelDeltaAdjuster_h__
 
-#include "Axis.h"                        // for AxisX, AxisY, Side
-#include "mozilla/WheelHandlingHelper.h" // for AutoDirWheelDeltaAdjuster
+#include "Axis.h"                         // for AxisX, AxisY, Side
+#include "mozilla/WheelHandlingHelper.h"  // for AutoDirWheelDeltaAdjuster
 
 namespace mozilla {
 namespace layers {
@@ -25,9 +25,8 @@ namespace layers {
  * This is the APZ implementation of AutoDirWheelDeltaAdjuster.
  */
 class MOZ_STACK_CLASS APZAutoDirWheelDeltaAdjuster final
-                        : public AutoDirWheelDeltaAdjuster
-{
-public:
+    : public AutoDirWheelDeltaAdjuster {
+ public:
   /**
    * @param aDeltaX            DeltaX for a wheel event whose delta values will
    *                           be adjusted upon calling adjust() when
@@ -48,46 +47,35 @@ public:
    *                           IsHorizontalContentRightToLeft() in
    *                           the base class AutoDirWheelDeltaAdjuster.
    */
-  explicit
-  APZAutoDirWheelDeltaAdjuster(double& aDeltaX,
-                               double& aDeltaY,
-                               const AxisX& aAxisX,
-                               const AxisY& aAxisY,
-                               bool aIsHorizontalContentRightToLeft)
-    : AutoDirWheelDeltaAdjuster(aDeltaX, aDeltaY)
-    , mAxisX(aAxisX)
-    , mAxisY(aAxisY)
-    , mIsHorizontalContentRightToLeft(aIsHorizontalContentRightToLeft)
-  {
-  }
+  explicit APZAutoDirWheelDeltaAdjuster(double& aDeltaX, double& aDeltaY,
+                                        const AxisX& aAxisX,
+                                        const AxisY& aAxisY,
+                                        bool aIsHorizontalContentRightToLeft)
+      : AutoDirWheelDeltaAdjuster(aDeltaX, aDeltaY),
+        mAxisX(aAxisX),
+        mAxisY(aAxisY),
+        mIsHorizontalContentRightToLeft(aIsHorizontalContentRightToLeft) {}
 
-private:
-  virtual bool CanScrollAlongXAxis() const override
-  {
+ private:
+  virtual bool CanScrollAlongXAxis() const override {
     return mAxisX.CanScroll();
   }
-  virtual bool CanScrollAlongYAxis() const override
-  {
+  virtual bool CanScrollAlongYAxis() const override {
     return mAxisY.CanScroll();
   }
-  virtual bool CanScrollUpwards() const override
-  {
+  virtual bool CanScrollUpwards() const override {
     return mAxisY.CanScrollTo(eSideTop);
   }
-  virtual bool CanScrollDownwards() const override
-  {
+  virtual bool CanScrollDownwards() const override {
     return mAxisY.CanScrollTo(eSideBottom);
   }
-  virtual bool CanScrollLeftwards() const override
-  {
+  virtual bool CanScrollLeftwards() const override {
     return mAxisX.CanScrollTo(eSideLeft);
   }
-  virtual bool CanScrollRightwards() const override
-  {
+  virtual bool CanScrollRightwards() const override {
     return mAxisX.CanScrollTo(eSideRight);
   }
-  virtual bool IsHorizontalContentRightToLeft() const override
-  {
+  virtual bool IsHorizontalContentRightToLeft() const override {
     return mIsHorizontalContentRightToLeft;
   }
 
@@ -96,7 +84,7 @@ private:
   bool mIsHorizontalContentRightToLeft;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // __mozilla_layers_AutoDirWheelDeltaAdjuster_h__
+#endif  // __mozilla_layers_AutoDirWheelDeltaAdjuster_h__

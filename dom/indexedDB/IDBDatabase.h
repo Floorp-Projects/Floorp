@@ -38,18 +38,17 @@ struct IDBObjectStoreParameters;
 class IDBOpenDBRequest;
 class IDBRequest;
 class IDBTransaction;
-template <class> class Optional;
+template <class>
+class Optional;
 class StringOrStringSequence;
 
 namespace indexedDB {
 class BackgroundDatabaseChild;
 class DatabaseSpec;
 class PBackgroundIDBDatabaseFileChild;
-}
+}  // namespace indexedDB
 
-class IDBDatabase final
-  : public IDBWrapperCache
-{
+class IDBDatabase final : public IDBWrapperCache {
   typedef mozilla::dom::indexedDB::DatabaseSpec DatabaseSpec;
   typedef mozilla::dom::StorageType StorageType;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
@@ -74,8 +73,9 @@ class IDBDatabase final
 
   nsTHashtable<nsPtrHashKey<IDBTransaction>> mTransactions;
 
-  nsDataHashtable<nsISupportsHashKey, indexedDB::PBackgroundIDBDatabaseFileChild*>
-    mFileActors;
+  nsDataHashtable<nsISupportsHashKey,
+                  indexedDB::PBackgroundIDBDatabaseFileChild*>
+      mFileActors;
 
   RefPtr<Observer> mObserver;
 
@@ -88,187 +88,135 @@ class IDBDatabase final
   bool mQuotaExceeded;
   bool mIncreasedActiveDatabaseCount;
 
-public:
-  static already_AddRefed<IDBDatabase>
-  Create(IDBOpenDBRequest* aRequest,
-         IDBFactory* aFactory,
-         indexedDB::BackgroundDatabaseChild* aActor,
-         DatabaseSpec* aSpec);
+ public:
+  static already_AddRefed<IDBDatabase> Create(
+      IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
+      indexedDB::BackgroundDatabaseChild* aActor, DatabaseSpec* aSpec);
 
-  void
-  AssertIsOnOwningThread() const
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-  nsIEventTarget*
-  EventTarget() const;
+  nsIEventTarget* EventTarget() const;
 
-  const nsString&
-  Name() const;
+  const nsString& Name() const;
 
-  void
-  GetName(nsAString& aName) const
-  {
+  void GetName(nsAString& aName) const {
     AssertIsOnOwningThread();
 
     aName = Name();
   }
 
-  uint64_t
-  Version() const;
+  uint64_t Version() const;
 
-  already_AddRefed<nsIDocument>
-  GetOwnerDocument() const;
+  already_AddRefed<nsIDocument> GetOwnerDocument() const;
 
-  void
-  Close()
-  {
+  void Close() {
     AssertIsOnOwningThread();
 
     CloseInternal();
   }
 
-  bool
-  IsClosed() const
-  {
+  bool IsClosed() const {
     AssertIsOnOwningThread();
 
     return mClosed;
   }
 
-  void
-  Invalidate();
+  void Invalidate();
 
   // Whether or not the database has been invalidated. If it has then no further
   // transactions for this database will be allowed to run.
-  bool
-  IsInvalidated() const
-  {
+  bool IsInvalidated() const {
     AssertIsOnOwningThread();
 
     return mInvalidated;
   }
 
-  void
-  SetQuotaExceeded()
-  {
-    mQuotaExceeded = true;
-  }
+  void SetQuotaExceeded() { mQuotaExceeded = true; }
 
-  void
-  EnterSetVersionTransaction(uint64_t aNewVersion);
+  void EnterSetVersionTransaction(uint64_t aNewVersion);
 
-  void
-  ExitSetVersionTransaction();
+  void ExitSetVersionTransaction();
 
   // Called when a versionchange transaction is aborted to reset the
   // DatabaseInfo.
-  void
-  RevertToPreviousState();
+  void RevertToPreviousState();
 
-  IDBFactory*
-  Factory() const
-  {
+  IDBFactory* Factory() const {
     AssertIsOnOwningThread();
 
     return mFactory;
   }
 
-  void
-  RegisterTransaction(IDBTransaction* aTransaction);
+  void RegisterTransaction(IDBTransaction* aTransaction);
 
-  void
-  UnregisterTransaction(IDBTransaction* aTransaction);
+  void UnregisterTransaction(IDBTransaction* aTransaction);
 
-  void
-  AbortTransactions(bool aShouldWarn);
+  void AbortTransactions(bool aShouldWarn);
 
-  indexedDB::PBackgroundIDBDatabaseFileChild*
-  GetOrCreateFileActorForBlob(Blob* aBlob);
+  indexedDB::PBackgroundIDBDatabaseFileChild* GetOrCreateFileActorForBlob(
+      Blob* aBlob);
 
-  void
-  NoteFinishedFileActor(indexedDB::PBackgroundIDBDatabaseFileChild* aFileActor);
+  void NoteFinishedFileActor(
+      indexedDB::PBackgroundIDBDatabaseFileChild* aFileActor);
 
-  void
-  NoteActiveTransaction();
+  void NoteActiveTransaction();
 
-  void
-  NoteInactiveTransaction();
+  void NoteInactiveTransaction();
 
   // XXX This doesn't really belong here... It's only needed for IDBMutableFile
   //     serialization and should be removed or fixed someday.
-  nsresult
-  GetQuotaInfo(nsACString& aOrigin, PersistenceType* aPersistenceType);
+  nsresult GetQuotaInfo(nsACString& aOrigin, PersistenceType* aPersistenceType);
 
-  bool
-  IsFileHandleDisabled() const
-  {
-    return mFileHandleDisabled;
-  }
+  bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
-  void
-  NoteLiveMutableFile(IDBMutableFile* aMutableFile);
+  void NoteLiveMutableFile(IDBMutableFile* aMutableFile);
 
-  void
-  NoteFinishedMutableFile(IDBMutableFile* aMutableFile);
+  void NoteFinishedMutableFile(IDBMutableFile* aMutableFile);
 
-  nsPIDOMWindowInner*
-  GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
-  already_AddRefed<DOMStringList>
-  ObjectStoreNames() const;
+  already_AddRefed<DOMStringList> ObjectStoreNames() const;
 
-  already_AddRefed<IDBObjectStore>
-  CreateObjectStore(const nsAString& aName,
-                    const IDBObjectStoreParameters& aOptionalParameters,
-                    ErrorResult& aRv);
+  already_AddRefed<IDBObjectStore> CreateObjectStore(
+      const nsAString& aName,
+      const IDBObjectStoreParameters& aOptionalParameters, ErrorResult& aRv);
 
-  void
-  DeleteObjectStore(const nsAString& name, ErrorResult& aRv);
+  void DeleteObjectStore(const nsAString& name, ErrorResult& aRv);
 
   // This will be called from the DOM.
-  already_AddRefed<IDBTransaction>
-  Transaction(JSContext* aCx,
-              const StringOrStringSequence& aStoreNames,
-              IDBTransactionMode aMode,
-              ErrorResult& aRv);
+  already_AddRefed<IDBTransaction> Transaction(
+      JSContext* aCx, const StringOrStringSequence& aStoreNames,
+      IDBTransactionMode aMode, ErrorResult& aRv);
 
   // This can be called from C++ to avoid JS exception.
-  nsresult
-  Transaction(JSContext* aCx,
-              const StringOrStringSequence& aStoreNames,
-              IDBTransactionMode aMode,
-              IDBTransaction** aTransaction);
+  nsresult Transaction(JSContext* aCx,
+                       const StringOrStringSequence& aStoreNames,
+                       IDBTransactionMode aMode, IDBTransaction** aTransaction);
 
-  StorageType
-  Storage() const;
+  StorageType Storage() const;
 
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(close)
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(versionchange)
 
-  already_AddRefed<IDBRequest>
-  CreateMutableFile(JSContext* aCx,
-                    const nsAString& aName,
-                    const Optional<nsAString>& aType,
-                    ErrorResult& aRv);
+  already_AddRefed<IDBRequest> CreateMutableFile(
+      JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
+      ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  MozCreateFileHandle(JSContext* aCx,
-                      const nsAString& aName,
-                      const Optional<nsAString>& aType,
-                      ErrorResult& aRv)
-  {
+  already_AddRefed<IDBRequest> MozCreateFileHandle(
+      JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
+      ErrorResult& aRv) {
     return CreateMutableFile(aCx, aName, aType, aRv);
   }
 
-  void
-  ClearBackgroundActor()
-  {
+  void ClearBackgroundActor() {
     AssertIsOnOwningThread();
 
     // Decrease the number of active databases if it was not done in
@@ -278,85 +226,62 @@ public:
     mBackgroundActor = nullptr;
   }
 
-  const DatabaseSpec*
-  Spec() const
-  {
-    return mSpec;
-  }
+  const DatabaseSpec* Spec() const { return mSpec; }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase, IDBWrapperCache)
 
   // DOMEventTargetHelper
-  void
-  DisconnectFromOwner() override;
+  void DisconnectFromOwner() override;
 
-  virtual void
-  LastRelease() override;
+  virtual void LastRelease() override;
 
-  virtual nsresult
-  PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
-  IDBDatabase(IDBOpenDBRequest* aRequest,
-              IDBFactory* aFactory,
-              indexedDB::BackgroundDatabaseChild* aActor,
-              DatabaseSpec* aSpec);
+ private:
+  IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
+              indexedDB::BackgroundDatabaseChild* aActor, DatabaseSpec* aSpec);
 
   ~IDBDatabase();
 
-  void
-  CloseInternal();
+  void CloseInternal();
 
-  void
-  InvalidateInternal();
+  void InvalidateInternal();
 
-  bool
-  RunningVersionChangeTransaction() const
-  {
+  bool RunningVersionChangeTransaction() const {
     AssertIsOnOwningThread();
 
     return !!mPreviousSpec;
   }
 
-  void
-  RefreshSpec(bool aMayDelete);
+  void RefreshSpec(bool aMayDelete);
 
-  void
-  ExpireFileActors(bool aExpireAll);
+  void ExpireFileActors(bool aExpireAll);
 
-  void
-  InvalidateMutableFiles();
+  void InvalidateMutableFiles();
 
-  void
-  NoteInactiveTransactionDelayed();
+  void NoteInactiveTransactionDelayed();
 
-  void
-  LogWarning(const char* aMessageName,
-             const nsAString& aFilename,
-             uint32_t aLineNumber,
-             uint32_t aColumnNumber);
+  void LogWarning(const char* aMessageName, const nsAString& aFilename,
+                  uint32_t aLineNumber, uint32_t aColumnNumber);
 
   // Only accessed by IDBObjectStore.
-  nsresult
-  RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName);
+  nsresult RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName);
 
   // Only accessed by IDBIndex.
-  nsresult
-  RenameIndex(int64_t aObjectStoreId, int64_t aIndexId, const nsAString& aName);
+  nsresult RenameIndex(int64_t aObjectStoreId, int64_t aIndexId,
+                       const nsAString& aName);
 
-  void
-  IncreaseActiveDatabaseCount();
+  void IncreaseActiveDatabaseCount();
 
-  void
-  MaybeDecreaseActiveDatabaseCount();
+  void MaybeDecreaseActiveDatabaseCount();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbdatabase_h__
+#endif  // mozilla_dom_idbdatabase_h__

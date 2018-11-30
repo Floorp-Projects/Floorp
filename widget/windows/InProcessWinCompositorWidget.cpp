@@ -14,67 +14,55 @@
 namespace mozilla {
 namespace widget {
 
-/* static */ RefPtr<CompositorWidget>
-CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData,
-                              const layers::CompositorOptions& aOptions,
-                              nsIWidget* aWidget)
-{
-  if (aInitData.type() == CompositorWidgetInitData::THeadlessCompositorWidgetInitData) {
-    return new HeadlessCompositorWidget(aInitData.get_HeadlessCompositorWidgetInitData(),
-                                        aOptions, static_cast<HeadlessWidget*>(aWidget));
+/* static */ RefPtr<CompositorWidget> CompositorWidget::CreateLocal(
+    const CompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions, nsIWidget* aWidget) {
+  if (aInitData.type() ==
+      CompositorWidgetInitData::THeadlessCompositorWidgetInitData) {
+    return new HeadlessCompositorWidget(
+        aInitData.get_HeadlessCompositorWidgetInitData(), aOptions,
+        static_cast<HeadlessWidget*>(aWidget));
   } else {
-    return new InProcessWinCompositorWidget(aInitData.get_WinCompositorWidgetInitData(),
-                                            aOptions, static_cast<nsWindow*>(aWidget));
+    return new InProcessWinCompositorWidget(
+        aInitData.get_WinCompositorWidgetInitData(), aOptions,
+        static_cast<nsWindow*>(aWidget));
   }
 }
 
-InProcessWinCompositorWidget::InProcessWinCompositorWidget(const WinCompositorWidgetInitData& aInitData,
-                                                           const layers::CompositorOptions& aOptions,
-                                                           nsWindow* aWindow)
- : WinCompositorWidget(aInitData, aOptions),
-   mWindow(aWindow)
-{
+InProcessWinCompositorWidget::InProcessWinCompositorWidget(
+    const WinCompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions, nsWindow* aWindow)
+    : WinCompositorWidget(aInitData, aOptions), mWindow(aWindow) {
   MOZ_ASSERT(mWindow);
 }
 
-void
-InProcessWinCompositorWidget::OnDestroyWindow()
-{
+void InProcessWinCompositorWidget::OnDestroyWindow() {
   EnterPresentLock();
   WinCompositorWidget::OnDestroyWindow();
   LeavePresentLock();
 }
 
-void
-InProcessWinCompositorWidget::UpdateTransparency(nsTransparencyMode aMode)
-{
+void InProcessWinCompositorWidget::UpdateTransparency(
+    nsTransparencyMode aMode) {
   EnterPresentLock();
   WinCompositorWidget::UpdateTransparency(aMode);
   LeavePresentLock();
 }
 
-void
-InProcessWinCompositorWidget::ClearTransparentWindow()
-{
+void InProcessWinCompositorWidget::ClearTransparentWindow() {
   EnterPresentLock();
   WinCompositorWidget::ClearTransparentWindow();
   LeavePresentLock();
 }
 
+nsIWidget* InProcessWinCompositorWidget::RealWidget() { return mWindow; }
 
-nsIWidget*
-InProcessWinCompositorWidget::RealWidget()
-{
-  return mWindow;
-}
-
-void
-InProcessWinCompositorWidget::ObserveVsync(VsyncObserver* aObserver)
-{
-  if (RefPtr<CompositorVsyncDispatcher> cvd = mWindow->GetCompositorVsyncDispatcher()) {
+void InProcessWinCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
+  if (RefPtr<CompositorVsyncDispatcher> cvd =
+          mWindow->GetCompositorVsyncDispatcher()) {
     cvd->SetCompositorVsyncObserver(aObserver);
   }
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

@@ -9,37 +9,30 @@
 #include "nsNetUtil.h"
 #include "nsStringFwd.h"
 
-static int
-LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
-{
+static int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   nsresult ret;
   nsCOMPtr<nsIURI> selfURI;
   ret = NS_NewURI(getter_AddRefs(selfURI), "http://selfuri.com");
-  if (ret != NS_OK)
-    return 0;
+  if (ret != NS_OK) return 0;
 
   mozilla::OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> selfURIPrincipal =
-    mozilla::BasePrincipal::CreateCodebasePrincipal(selfURI, attrs);
-  if (!selfURIPrincipal)
-    return 0;
+      mozilla::BasePrincipal::CreateCodebasePrincipal(selfURI, attrs);
+  if (!selfURIPrincipal) return 0;
 
   nsCOMPtr<nsIContentSecurityPolicy> csp =
-    do_CreateInstance(NS_CSPCONTEXT_CONTRACTID, &ret);
-  if (ret != NS_OK)
-    return 0;
+      do_CreateInstance(NS_CSPCONTEXT_CONTRACTID, &ret);
+  if (ret != NS_OK) return 0;
 
   ret = csp->SetRequestContext(nullptr, selfURIPrincipal);
-  if (ret != NS_OK)
-    return 0;
+  if (ret != NS_OK) return 0;
 
   NS_ConvertASCIItoUTF16 policy(reinterpret_cast<const char*>(data), size);
-  if (!policy.get())
-    return 0;
+  if (!policy.get()) return 0;
   csp->AppendPolicy(policy, false, false);
 
   return 0;
 }
 
-MOZ_FUZZING_INTERFACE_RAW(nullptr, LLVMFuzzerTestOneInput, ContentSecurityPolicyParser);
-
+MOZ_FUZZING_INTERFACE_RAW(nullptr, LLVMFuzzerTestOneInput,
+                          ContentSecurityPolicyParser);

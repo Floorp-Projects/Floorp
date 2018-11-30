@@ -13,26 +13,21 @@ namespace mozilla {
 namespace dom {
 
 ParentProcessMessageManager::ParentProcessMessageManager()
-  : MessageBroadcaster(nullptr,
-                       MessageManagerFlags::MM_CHROME |
-                       MessageManagerFlags::MM_PROCESSMANAGER)
-{
+    : MessageBroadcaster(nullptr, MessageManagerFlags::MM_CHROME |
+                                      MessageManagerFlags::MM_PROCESSMANAGER) {
   mozilla::HoldJSObjects(this);
 }
 
-ParentProcessMessageManager::~ParentProcessMessageManager()
-{
+ParentProcessMessageManager::~ParentProcessMessageManager() {
   mozilla::DropJSObjects(this);
 }
 
-JSObject*
-ParentProcessMessageManager::WrapObject(JSContext* aCx,
-                                        JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ParentProcessMessageManager::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
 
   return ParentProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

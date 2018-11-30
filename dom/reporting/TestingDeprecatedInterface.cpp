@@ -21,39 +21,28 @@ NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<TestingDeprecatedInterface>
 TestingDeprecatedInterface::Constructor(const GlobalObject& aGlobal,
-                                        ErrorResult& aRv)
-{
+                                        ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
 
   RefPtr<TestingDeprecatedInterface> obj =
-    new TestingDeprecatedInterface(global);
+      new TestingDeprecatedInterface(global);
   return obj.forget();
 }
 
 TestingDeprecatedInterface::TestingDeprecatedInterface(nsIGlobalObject* aGlobal)
-  : mGlobal(aGlobal)
-{}
-
+    : mGlobal(aGlobal) {}
 
 TestingDeprecatedInterface::~TestingDeprecatedInterface() = default;
 
-JSObject*
-TestingDeprecatedInterface::WrapObject(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* TestingDeprecatedInterface::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return TestingDeprecatedInterface_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-TestingDeprecatedInterface::DeprecatedMethod() const
-{}
+void TestingDeprecatedInterface::DeprecatedMethod() const {}
 
-bool
-TestingDeprecatedInterface::DeprecatedAttribute() const
-{
-  return true;
-}
+bool TestingDeprecatedInterface::DeprecatedAttribute() const { return true; }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

@@ -56,22 +56,25 @@
 #include "LulCommonExt.h"
 #include "LulDwarfInt.h"
 
-
 // Set this to 1 for verbose logging
 #define DEBUG_DWARF 0
-
 
 namespace lul {
 
 using std::string;
 
 ByteReader::ByteReader(enum Endianness endian)
-    :offset_reader_(NULL), address_reader_(NULL), endian_(endian),
-     address_size_(0), offset_size_(0),
-     have_section_base_(), have_text_base_(), have_data_base_(),
-     have_function_base_() { }
+    : offset_reader_(NULL),
+      address_reader_(NULL),
+      endian_(endian),
+      address_size_(0),
+      offset_size_(0),
+      have_section_base_(),
+      have_text_base_(),
+      have_data_base_(),
+      have_function_base_() {}
 
-ByteReader::~ByteReader() { }
+ByteReader::~ByteReader() {}
 
 void ByteReader::SetOffsetSize(uint8 size) {
   offset_size_ = size;
@@ -93,7 +96,7 @@ void ByteReader::SetAddressSize(uint8 size) {
   }
 }
 
-uint64 ByteReader::ReadInitialLength(const char* start, size_t* len) {
+uint64 ByteReader::ReadInitialLength(const char *start, size_t *len) {
   const uint64 initial_length = ReadFourBytes(start);
   start += 4;
 
@@ -113,21 +116,25 @@ uint64 ByteReader::ReadInitialLength(const char* start, size_t* len) {
 bool ByteReader::ValidEncoding(DwarfPointerEncoding encoding) const {
   if (encoding == DW_EH_PE_omit) return true;
   if (encoding == DW_EH_PE_aligned) return true;
-  if ((encoding & 0x7) > DW_EH_PE_udata8)
-    return false;
-  if ((encoding & 0x70) > DW_EH_PE_funcrel)
-    return false;
+  if ((encoding & 0x7) > DW_EH_PE_udata8) return false;
+  if ((encoding & 0x70) > DW_EH_PE_funcrel) return false;
   return true;
 }
 
 bool ByteReader::UsableEncoding(DwarfPointerEncoding encoding) const {
   switch (encoding & 0x70) {
-    case DW_EH_PE_absptr:  return true;
-    case DW_EH_PE_pcrel:   return have_section_base_;
-    case DW_EH_PE_textrel: return have_text_base_;
-    case DW_EH_PE_datarel: return have_data_base_;
-    case DW_EH_PE_funcrel: return have_function_base_;
-    default:               return false;
+    case DW_EH_PE_absptr:
+      return true;
+    case DW_EH_PE_pcrel:
+      return have_section_base_;
+    case DW_EH_PE_textrel:
+      return have_text_base_;
+    case DW_EH_PE_datarel:
+      return have_data_base_;
+    case DW_EH_PE_funcrel:
+      return have_function_base_;
+    default:
+      return false;
   }
 }
 
@@ -273,7 +280,6 @@ uint64 ByteReader::ReadEncodedPointer(const char *buffer,
   return pointer;
 }
 
-
 // A DWARF rule for recovering the address or value of a register, or
 // computing the canonical frame address. There is one subclass of this for
 // each '*Rule' member function in CallFrameInfo::Handler.
@@ -290,7 +296,7 @@ uint64 ByteReader::ReadEncodedPointer(const char *buffer,
 // get horrendous.
 class CallFrameInfo::Rule {
  public:
-  virtual ~Rule() { }
+  virtual ~Rule() {}
 
   // Tell HANDLER that, at ADDRESS in the program, REG can be
   // recovered using this rule. If REG is kCFARegister, then this rule
@@ -302,18 +308,18 @@ class CallFrameInfo::Rule {
   // to report after a DW_CFA_restore_state instruction.
   virtual bool operator==(const Rule &rhs) const = 0;
 
-  bool operator!=(const Rule &rhs) const { return ! (*this == rhs); }
+  bool operator!=(const Rule &rhs) const { return !(*this == rhs); }
 
   // Return a pointer to a copy of this rule.
   virtual Rule *Copy() const = 0;
 
   // If this is a base+offset rule, change its base register to REG.
   // Otherwise, do nothing. (Ugly, but required for DW_CFA_def_cfa_register.)
-  virtual void SetBaseRegister(unsigned reg) { }
+  virtual void SetBaseRegister(unsigned reg) {}
 
   // If this is a base+offset rule, change its offset to OFFSET. Otherwise,
   // do nothing. (Ugly, but required for DW_CFA_def_cfa_offset.)
-  virtual void SetOffset(long long offset) { }
+  virtual void SetOffset(long long offset) {}
 
   // A RTTI workaround, to make it possible to implement equality
   // comparisons on classes derived from this one.
@@ -332,10 +338,10 @@ class CallFrameInfo::Rule {
 };
 
 // Rule: the value the register had in the caller cannot be recovered.
-class CallFrameInfo::UndefinedRule: public CallFrameInfo::Rule {
+class CallFrameInfo::UndefinedRule : public CallFrameInfo::Rule {
  public:
-  UndefinedRule() { }
-  ~UndefinedRule() { }
+  UndefinedRule() {}
+  ~UndefinedRule() {}
   CFIRTag getTag() const override { return CFIR_UNDEFINED_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const override {
     return handler->UndefinedRule(address, reg);
@@ -348,10 +354,10 @@ class CallFrameInfo::UndefinedRule: public CallFrameInfo::Rule {
 };
 
 // Rule: the register's value is the same as that it had in the caller.
-class CallFrameInfo::SameValueRule: public CallFrameInfo::Rule {
+class CallFrameInfo::SameValueRule : public CallFrameInfo::Rule {
  public:
-  SameValueRule() { }
-  ~SameValueRule() { }
+  SameValueRule() {}
+  ~SameValueRule() {}
   CFIRTag getTag() const override { return CFIR_SAME_VALUE_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const override {
     return handler->SameValueRule(address, reg);
@@ -365,11 +371,11 @@ class CallFrameInfo::SameValueRule: public CallFrameInfo::Rule {
 
 // Rule: the register is saved at OFFSET from BASE_REGISTER.  BASE_REGISTER
 // may be CallFrameInfo::Handler::kCFARegister.
-class CallFrameInfo::OffsetRule: public CallFrameInfo::Rule {
+class CallFrameInfo::OffsetRule : public CallFrameInfo::Rule {
  public:
   OffsetRule(int base_register, long offset)
-      : base_register_(base_register), offset_(offset) { }
-  ~OffsetRule() { }
+      : base_register_(base_register), offset_(offset) {}
+  ~OffsetRule() {}
   CFIRTag getTag() const override { return CFIR_OFFSET_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const override {
     return handler->OffsetRule(address, reg, base_register_, offset_);
@@ -393,11 +399,11 @@ class CallFrameInfo::OffsetRule: public CallFrameInfo::Rule {
 // Rule: the value the register had in the caller is the value of
 // BASE_REGISTER plus offset. BASE_REGISTER may be
 // CallFrameInfo::Handler::kCFARegister.
-class CallFrameInfo::ValOffsetRule: public CallFrameInfo::Rule {
+class CallFrameInfo::ValOffsetRule : public CallFrameInfo::Rule {
  public:
   ValOffsetRule(int base_register, long offset)
-      : base_register_(base_register), offset_(offset) { }
-  ~ValOffsetRule() { }
+      : base_register_(base_register), offset_(offset) {}
+  ~ValOffsetRule() {}
   CFIRTag getTag() const override { return CFIR_VAL_OFFSET_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const override {
     return handler->ValOffsetRule(address, reg, base_register_, offset_);
@@ -411,17 +417,18 @@ class CallFrameInfo::ValOffsetRule: public CallFrameInfo::Rule {
   Rule *Copy() const override { return new ValOffsetRule(*this); }
   void SetBaseRegister(unsigned reg) override { base_register_ = reg; }
   void SetOffset(long long offset) override { offset_ = offset; }
+
  private:
   int base_register_;
   long offset_;
 };
 
 // Rule: the register has been saved in another register REGISTER_NUMBER_.
-class CallFrameInfo::RegisterRule: public CallFrameInfo::Rule {
+class CallFrameInfo::RegisterRule : public CallFrameInfo::Rule {
  public:
   explicit RegisterRule(int register_number)
-      : register_number_(register_number) { }
-  ~RegisterRule() { }
+      : register_number_(register_number) {}
+  ~RegisterRule() {}
   CFIRTag getTag() const override { return CFIR_REGISTER_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const override {
     return handler->RegisterRule(address, reg, register_number_);
@@ -432,16 +439,16 @@ class CallFrameInfo::RegisterRule: public CallFrameInfo::Rule {
     return (register_number_ == our_rhs->register_number_);
   }
   Rule *Copy() const override { return new RegisterRule(*this); }
+
  private:
   int register_number_;
 };
 
 // Rule: EXPRESSION evaluates to the address at which the register is saved.
-class CallFrameInfo::ExpressionRule: public CallFrameInfo::Rule {
+class CallFrameInfo::ExpressionRule : public CallFrameInfo::Rule {
  public:
-  explicit ExpressionRule(const string &expression)
-      : expression_(expression) { }
-  ~ExpressionRule() { }
+  explicit ExpressionRule(const string &expression) : expression_(expression) {}
+  ~ExpressionRule() {}
   CFIRTag getTag() const override { return CFIR_EXPRESSION_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const override {
     return handler->ExpressionRule(address, reg, expression_);
@@ -452,16 +459,17 @@ class CallFrameInfo::ExpressionRule: public CallFrameInfo::Rule {
     return (expression_ == our_rhs->expression_);
   }
   Rule *Copy() const override { return new ExpressionRule(*this); }
+
  private:
   string expression_;
 };
 
 // Rule: EXPRESSION evaluates to the previous value of the register.
-class CallFrameInfo::ValExpressionRule: public CallFrameInfo::Rule {
+class CallFrameInfo::ValExpressionRule : public CallFrameInfo::Rule {
  public:
   explicit ValExpressionRule(const string &expression)
-      : expression_(expression) { }
-  ~ValExpressionRule() { }
+      : expression_(expression) {}
+  ~ValExpressionRule() {}
   CFIRTag getTag() const override { return CFIR_VAL_EXPRESSION_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const override {
     return handler->ValExpressionRule(address, reg, expression_);
@@ -473,6 +481,7 @@ class CallFrameInfo::ValExpressionRule: public CallFrameInfo::Rule {
     return (expression_ == our_rhs->expression_);
   }
   Rule *Copy() const override { return new ValExpressionRule(*this); }
+
  private:
   string expression_;
 };
@@ -480,14 +489,17 @@ class CallFrameInfo::ValExpressionRule: public CallFrameInfo::Rule {
 // A map from register numbers to rules.
 class CallFrameInfo::RuleMap {
  public:
-  RuleMap() : cfa_rule_(NULL) { }
+  RuleMap() : cfa_rule_(NULL) {}
   RuleMap(const RuleMap &rhs) : cfa_rule_(NULL) { *this = rhs; }
   ~RuleMap() { Clear(); }
 
   RuleMap &operator=(const RuleMap &rhs);
 
   // Set the rule for computing the CFA to RULE. Take ownership of RULE.
-  void SetCFARule(Rule *rule) { delete cfa_rule_; cfa_rule_ = rule; }
+  void SetCFARule(Rule *rule) {
+    delete cfa_rule_;
+    cfa_rule_ = rule;
+  }
 
   // Return the current CFA rule. Unlike RegisterRule, this RuleMap retains
   // ownership of the rule. We use this for DW_CFA_def_cfa_offset and
@@ -553,9 +565,7 @@ void CallFrameInfo::RuleMap::SetRegisterRule(int reg, Rule *rule) {
 }
 
 bool CallFrameInfo::RuleMap::HandleTransitionTo(
-    Handler *handler,
-    uint64 address,
-    const RuleMap &new_rules) const {
+    Handler *handler, uint64 address, const RuleMap &new_rules) const {
   // Transition from cfa_rule_ to new_rules.cfa_rule_.
   if (cfa_rule_ && new_rules.cfa_rule_) {
     if (*cfa_rule_ != *new_rules.cfa_rule_ &&
@@ -587,8 +597,7 @@ bool CallFrameInfo::RuleMap::HandleTransitionTo(
       // only mentions callee-saves registers, and GCC's convention for
       // callee-saves registers is that they are unchanged, it's a good
       // approximation.
-      if (!handler->SameValueRule(address, old_it->first))
-        return false;
+      if (!handler->SameValueRule(address, old_it->first)) return false;
       old_it++;
     } else if (old_it->first > new_it->first) {
       // NEW_RULES has entry for new_it->first, but this RuleMap
@@ -601,13 +610,13 @@ bool CallFrameInfo::RuleMap::HandleTransitionTo(
       if (*old_it->second != *new_it->second &&
           !new_it->second->Handle(handler, address, new_it->first))
         return false;
-      new_it++; old_it++;
+      new_it++;
+      old_it++;
     }
   }
   // Finish off entries from this RuleMap with no counterparts in new_rules.
   while (old_it != registers_.end()) {
-    if (!handler->SameValueRule(address, old_it->first))
-      return false;
+    if (!handler->SameValueRule(address, old_it->first)) return false;
     old_it++;
   }
   // Since we only make transitions from a rule set to some previously
@@ -622,8 +631,8 @@ bool CallFrameInfo::RuleMap::HandleTransitionTo(
 void CallFrameInfo::RuleMap::Clear() {
   delete cfa_rule_;
   cfa_rule_ = NULL;
-  for (RuleByNumber::iterator it = registers_.begin();
-       it != registers_.end(); it++)
+  for (RuleByNumber::iterator it = registers_.begin(); it != registers_.end();
+       it++)
     delete it->second;
   registers_.clear();
 }
@@ -636,13 +645,16 @@ class CallFrameInfo::State {
   // reporter, reader, handler, and initial call frame info address.
   State(ByteReader *reader, Handler *handler, Reporter *reporter,
         uint64 address)
-      : reader_(reader), handler_(handler), reporter_(reporter),
-        address_(address), entry_(NULL), cursor_(NULL),
-        saved_rules_(NULL) { }
+      : reader_(reader),
+        handler_(handler),
+        reporter_(reporter),
+        address_(address),
+        entry_(NULL),
+        cursor_(NULL),
+        saved_rules_(NULL) {}
 
   ~State() {
-    if (saved_rules_)
-      delete saved_rules_;
+    if (saved_rules_) delete saved_rules_;
   }
 
   // Interpret instructions from CIE, save the resulting rule set for
@@ -761,15 +773,14 @@ class CallFrameInfo::State {
 
   // A stack of saved states, for DW_CFA_remember_state and
   // DW_CFA_restore_state.
-  std::stack<RuleMap>* saved_rules_;
+  std::stack<RuleMap> *saved_rules_;
 };
 
 bool CallFrameInfo::State::InterpretCIE(const CIE &cie) {
   entry_ = &cie;
   cursor_ = entry_->instructions;
   while (cursor_ < entry_->end)
-    if (!DoInstruction())
-      return false;
+    if (!DoInstruction()) return false;
   // Note the rules established by the CIE, for use by DW_CFA_restore
   // and DW_CFA_restore_extended.
   cie_rules_ = rules_;
@@ -780,8 +791,7 @@ bool CallFrameInfo::State::InterpretFDE(const FDE &fde) {
   entry_ = &fde;
   cursor_ = entry_->instructions;
   while (cursor_ < entry_->end)
-    if (!DoInstruction())
-      return false;
+    if (!DoInstruction()) return false;
   return true;
 }
 
@@ -812,9 +822,8 @@ bool CallFrameInfo::State::ParseOperands(const char *format,
         break;
 
       case 'a':
-        operands->offset =
-          reader_->ReadEncodedPointer(cursor_, entry_->cie->pointer_encoding,
-                                      &len);
+        operands->offset = reader_->ReadEncodedPointer(
+            cursor_, entry_->cie->pointer_encoding, &len);
         if (len > bytes_left) return ReportIncomplete();
         cursor_ += len;
         break;
@@ -964,8 +973,7 @@ bool CallFrameInfo::State::DoInstruction() {
 
     // Change the offset used to compute the CFA.
     case DW_CFA_def_cfa_offset:
-      if (!ParseOperands("o", &ops) ||
-          !DoDefCFAOffset(ops.offset))
+      if (!ParseOperands("o", &ops) || !DoDefCFAOffset(ops.offset))
         return false;
       break;
 
@@ -978,8 +986,7 @@ bool CallFrameInfo::State::DoInstruction() {
 
     // Specify an expression whose value is the CFA.
     case DW_CFA_def_cfa_expression: {
-      if (!ParseOperands("e", &ops))
-        return false;
+      if (!ParseOperands("e", &ops)) return false;
       Rule *rule = new ValExpressionRule(ops.expression);
       rules_.SetCFARule(rule);
       if (!rule->Handle(handler_, address_, Handler::kCFARegister))
@@ -1069,8 +1076,7 @@ bool CallFrameInfo::State::DoInstruction() {
 
     // Restore the rule established for a register by the CIE.
     case DW_CFA_restore_extended:
-      if (!ParseOperands("r", &ops) ||
-          !DoRestore( ops.register_number))
+      if (!ParseOperands("r", &ops) || !DoRestore(ops.register_number))
         return false;
       break;
 
@@ -1113,8 +1119,7 @@ bool CallFrameInfo::State::DoInstruction() {
     case DW_CFA_GNU_window_save: {
       // Save %o0-%o7 in %i0-%i7.
       for (int i = 8; i < 16; i++)
-        if (!DoRule(i, new RegisterRule(i + 16)))
-          return false;
+        if (!DoRule(i, new RegisterRule(i + 16))) return false;
       // Save %l0-%l7 and %i0-%i7 at the CFA.
       for (int i = 16; i < 32; i++)
         // Assume that the byte reader's address size is the same as
@@ -1166,8 +1171,7 @@ bool CallFrameInfo::State::DoOffset(unsigned reg, long offset) {
     reporter_->NoCFARule(entry_->offset, entry_->kind, CursorOffset());
     return false;
   }
-  return DoRule(reg,
-                new OffsetRule(Handler::kCFARegister, offset));
+  return DoRule(reg, new OffsetRule(Handler::kCFARegister, offset));
 }
 
 bool CallFrameInfo::State::DoValOffset(unsigned reg, long offset) {
@@ -1175,8 +1179,7 @@ bool CallFrameInfo::State::DoValOffset(unsigned reg, long offset) {
     reporter_->NoCFARule(entry_->offset, entry_->kind, CursorOffset());
     return false;
   }
-  return DoRule(reg,
-                new ValOffsetRule(Handler::kCFARegister, offset));
+  return DoRule(reg, new ValOffsetRule(Handler::kCFARegister, offset));
 }
 
 bool CallFrameInfo::State::DoRestore(unsigned reg) {
@@ -1208,8 +1211,7 @@ bool CallFrameInfo::ReadEntryPrologue(const char *cursor, Entry *entry) {
   // Read the initial length. This sets reader_'s offset size.
   size_t length_size;
   uint64 length = reader_->ReadInitialLength(cursor, &length_size);
-  if (length_size > size_t(buffer_end - cursor))
-    return ReportIncomplete(entry);
+  if (length_size > size_t(buffer_end - cursor)) return ReportIncomplete(entry);
   cursor += length_size;
 
   // In a .eh_frame section, a length of zero marks the end of the series
@@ -1221,8 +1223,7 @@ bool CallFrameInfo::ReadEntryPrologue(const char *cursor, Entry *entry) {
   }
 
   // Validate the length.
-  if (length > size_t(buffer_end - cursor))
-    return ReportIncomplete(entry);
+  if (length > size_t(buffer_end - cursor)) return ReportIncomplete(entry);
 
   // The length is the number of bytes after the initial length field;
   // we have that position handy at this point, so compute the end
@@ -1264,7 +1265,7 @@ bool CallFrameInfo::ReadEntryPrologue(const char *cursor, Entry *entry) {
   }
 
   // Now advance cursor past the id.
-   cursor += offset_size;
+  cursor += offset_size;
 
   // The fields specific to this kind of entry start here.
   entry->fields = cursor;
@@ -1291,8 +1292,7 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
   cie->instructions = 0;
 
   // Parse the version number.
-  if (cie->end - cursor < 1)
-    return ReportIncomplete(cie);
+  if (cie->end - cursor < 1) return ReportIncomplete(cie);
   cie->version = reader_->ReadOneByte(cursor);
   cursor++;
 
@@ -1309,10 +1309,9 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
   const char *augmentation_start = cursor;
   const void *augmentation_end =
       memchr(augmentation_start, '\0', cie->end - augmentation_start);
-  if (! augmentation_end) return ReportIncomplete(cie);
+  if (!augmentation_end) return ReportIncomplete(cie);
   cursor = static_cast<const char *>(augmentation_end);
-  cie->augmentation = string(augmentation_start,
-                                  cursor - augmentation_start);
+  cie->augmentation = string(augmentation_start, cursor - augmentation_start);
   // Skip the terminating '\0'.
   cursor++;
 
@@ -1337,7 +1336,7 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
     }
     uint8_t address_size = reader_->ReadOneByte(cursor);
     cursor++;
-    if (address_size != sizeof(void*)) {
+    if (address_size != sizeof(void *)) {
       // This is not per-se invalid CFI.  But we can reasonably expect to
       // be running on a target of the same word size as the CFI is for,
       // so we reject this case.
@@ -1435,11 +1434,9 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
             return false;
           }
           // Fetch the personality routine's pointer itself from the data.
-          cie->personality_address =
-            reader_->ReadEncodedPointer(data, cie->personality_encoding,
-                                        &len);
-          if (len > size_t(data_end - data))
-            return ReportIncomplete(cie);
+          cie->personality_address = reader_->ReadEncodedPointer(
+              data, cie->personality_encoding, &len);
+          if (len > size_t(data_end - data)) return ReportIncomplete(cie);
           data += len;
           break;
 
@@ -1489,20 +1486,18 @@ bool CallFrameInfo::ReadFDEFields(FDE *fde) {
   // changed to allow non-zero |segment_size| CIEs then we will have to read
   // the segment_selector value at this point.
 
-  fde->address = reader_->ReadEncodedPointer(cursor, fde->cie->pointer_encoding,
-                                             &size);
-  if (size > size_t(fde->end - cursor))
-    return ReportIncomplete(fde);
+  fde->address =
+      reader_->ReadEncodedPointer(cursor, fde->cie->pointer_encoding, &size);
+  if (size > size_t(fde->end - cursor)) return ReportIncomplete(fde);
   cursor += size;
   reader_->SetFunctionBase(fde->address);
 
   // For the length, we strip off the upper nybble of the encoding used for
   // the starting address.
   DwarfPointerEncoding length_encoding =
-    DwarfPointerEncoding(fde->cie->pointer_encoding & 0x0f);
+      DwarfPointerEncoding(fde->cie->pointer_encoding & 0x0f);
   fde->size = reader_->ReadEncodedPointer(cursor, length_encoding, &size);
-  if (size > size_t(fde->end - cursor))
-    return ReportIncomplete(fde);
+  if (size > size_t(fde->end - cursor)) return ReportIncomplete(fde);
   cursor += size;
 
   // If the CIE has a 'z' augmentation string, then augmentation data
@@ -1535,9 +1530,8 @@ bool CallFrameInfo::ReadFDEFields(FDE *fde) {
       }
 
       fde->lsda_address =
-        reader_->ReadEncodedPointer(cursor, fde->cie->lsda_encoding, &size);
-      if (size > data_size)
-        return ReportIncomplete(fde);
+          reader_->ReadEncodedPointer(cursor, fde->cie->lsda_encoding, &size);
+      if (size > data_size) return ReportIncomplete(fde);
       // Ideally, we would also complain here if there were unconsumed
       // augmentation data.
     }
@@ -1611,28 +1605,24 @@ bool CallFrameInfo::Start() {
     CIE cie;
 
     // Parse this FDE's CIE header.
-    if (!ReadEntryPrologue(buffer_ + fde.id, &cie))
-      continue;
+    if (!ReadEntryPrologue(buffer_ + fde.id, &cie)) continue;
     // This had better be an actual CIE.
     if (cie.kind != kCIE) {
       reporter_->BadCIEId(fde.offset, fde.id);
       continue;
     }
-    if (!ReadCIEFields(&cie))
-      continue;
+    if (!ReadCIEFields(&cie)) continue;
 
     // We now have the values that govern both the CIE and the FDE.
     cie.cie = &cie;
     fde.cie = &cie;
 
     // Parse the FDE's header.
-    if (!ReadFDEFields(&fde))
-      continue;
+    if (!ReadFDEFields(&fde)) continue;
 
     // Call Entry to ask the consumer if they're interested.
-    if (!handler_->Entry(fde.offset, fde.address, fde.size,
-                         cie.version, cie.augmentation,
-                         cie.return_address_register)) {
+    if (!handler_->Entry(fde.offset, fde.address, fde.size, cie.version,
+                         cie.augmentation, cie.return_address_register)) {
       // The handler isn't interested in this entry. That's not an error.
       ok = true;
       continue;
@@ -1641,24 +1631,22 @@ bool CallFrameInfo::Start() {
     if (cie.has_z_augmentation) {
       // Report the personality routine address, if we have one.
       if (cie.has_z_personality) {
-        if (!handler_
-            ->PersonalityRoutine(cie.personality_address,
-                                 IsIndirectEncoding(cie.personality_encoding)))
+        if (!handler_->PersonalityRoutine(
+                cie.personality_address,
+                IsIndirectEncoding(cie.personality_encoding)))
           continue;
       }
 
       // Report the language-specific data area address, if we have one.
       if (cie.has_z_lsda) {
-        if (!handler_
-            ->LanguageSpecificDataArea(fde.lsda_address,
-                                       IsIndirectEncoding(cie.lsda_encoding)))
+        if (!handler_->LanguageSpecificDataArea(
+                fde.lsda_address, IsIndirectEncoding(cie.lsda_encoding)))
           continue;
       }
 
       // If this is a signal-handling frame, report that.
       if (cie.has_z_signal_frame) {
-        if (!handler_->SignalHandler())
-          continue;
+        if (!handler_->SignalHandler()) continue;
       }
     }
 
@@ -1685,7 +1673,7 @@ const char *CallFrameInfo::KindName(EntryKind kind) {
   else if (kind == CallFrameInfo::kFDE)
     return "frame description entry";
   else {
-    MOZ_ASSERT (kind == CallFrameInfo::kTerminator);
+    MOZ_ASSERT(kind == CallFrameInfo::kTerminator);
     return ".eh_frame sequence terminator";
   }
 }
@@ -1698,8 +1686,7 @@ bool CallFrameInfo::ReportIncomplete(Entry *entry) {
 void CallFrameInfo::Reporter::Incomplete(uint64 offset,
                                          CallFrameInfo::EntryKind kind) {
   char buf[300];
-  SprintfLiteral(buf,
-                 "%s: CFI %s at offset 0x%llx in '%s': entry ends early\n",
+  SprintfLiteral(buf, "%s: CFI %s at offset 0x%llx in '%s': entry ends early\n",
                  filename_.c_str(), CallFrameInfo::KindName(kind), offset,
                  section_.c_str());
   log_(buf);
@@ -1753,8 +1740,8 @@ void CallFrameInfo::Reporter::UnrecognizedAugmentation(uint64 offset,
 }
 
 void CallFrameInfo::Reporter::InvalidDwarf4Artefact(uint64 offset,
-                                                    const char* what) {
-  char* what_safe = strndup(what, 100);
+                                                    const char *what) {
+  char *what_safe = strndup(what, 100);
   char buf[300];
   SprintfLiteral(buf,
                  "%s: CFI frame description entry at offset 0x%llx in '%s':"
@@ -1803,8 +1790,8 @@ void CallFrameInfo::Reporter::BadInstruction(uint64 offset,
   SprintfLiteral(buf,
                  "%s: CFI %s at offset 0x%llx in section '%s':"
                  " the instruction at offset 0x%llx is unrecognized\n",
-                 filename_.c_str(), CallFrameInfo::KindName(kind),
-                 offset, section_.c_str(), insn_offset);
+                 filename_.c_str(), CallFrameInfo::KindName(kind), offset,
+                 section_.c_str(), insn_offset);
   log_(buf);
 }
 
@@ -1847,7 +1834,6 @@ void CallFrameInfo::Reporter::ClearingCFARule(uint64 offset,
                  section_.c_str(), insn_offset);
   log_(buf);
 }
-
 
 unsigned int DwarfCFIToModule::RegisterNames::I386() {
   /*
@@ -1937,12 +1923,10 @@ unsigned int DwarfCFIToModule::RegisterNames::MIPS() {
 }
 
 // See prototype for comments.
-int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
-                       string expr, bool debug,
-                       bool pushCfaAtStart, bool derefAtEnd)
-{
-  const char* cursor = expr.c_str();
-  const char* end1   = cursor + expr.length();
+int32_t parseDwarfExpr(Summariser *summ, const ByteReader *reader, string expr,
+                       bool debug, bool pushCfaAtStart, bool derefAtEnd) {
+  const char *cursor = expr.c_str();
+  const char *end1 = cursor + expr.length();
 
   char buf[100];
   if (debug) {
@@ -1954,27 +1938,25 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
   // Add a marker for the start of this expression.  In it, indicate
   // whether or not the CFA should be pushed onto the stack prior to
   // evaluation.
-  int32_t start_ix
-    = summ->AddPfxInstr(PfxInstr(PX_Start, pushCfaAtStart ? 1 : 0));
+  int32_t start_ix =
+      summ->AddPfxInstr(PfxInstr(PX_Start, pushCfaAtStart ? 1 : 0));
   MOZ_ASSERT(start_ix >= 0);
 
   while (cursor < end1) {
-
     uint8 opc = reader->ReadOneByte(cursor);
     cursor++;
 
-    const char* nm   = nullptr;
-    PfxExprOp   pxop = PX_End;
+    const char *nm = nullptr;
+    PfxExprOp pxop = PX_End;
 
     switch (opc) {
-
       case DW_OP_lit0 ... DW_OP_lit31: {
         int32_t simm32 = (int32_t)(opc - DW_OP_lit0);
         if (debug) {
           SprintfLiteral(buf, "LUL.DW   DW_OP_lit%d\n", (int)simm32);
           summ->Log(buf);
         }
-        (void) summ->AddPfxInstr(PfxInstr(PX_SImm32, simm32));
+        (void)summ->AddPfxInstr(PfxInstr(PX_SImm32, simm32));
         break;
       }
 
@@ -1984,17 +1966,16 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
         cursor += len;
         DW_REG_NUMBER reg = (DW_REG_NUMBER)(opc - DW_OP_breg0);
         if (debug) {
-          SprintfLiteral(buf, "LUL.DW   DW_OP_breg%d %lld\n",
-                         (int)reg, (long long int)n);
+          SprintfLiteral(buf, "LUL.DW   DW_OP_breg%d %lld\n", (int)reg,
+                         (long long int)n);
           summ->Log(buf);
         }
         // PfxInstr only allows a 32 bit signed offset.  So we
         // must fail if the immediate is out of range.
-        if (n < INT32_MIN || INT32_MAX < n)
-          goto fail;
-        (void) summ->AddPfxInstr(PfxInstr(PX_DwReg, reg));
-        (void) summ->AddPfxInstr(PfxInstr(PX_SImm32, (int32_t)n));
-        (void) summ->AddPfxInstr(PfxInstr(PX_Add));
+        if (n < INT32_MIN || INT32_MAX < n) goto fail;
+        (void)summ->AddPfxInstr(PfxInstr(PX_DwReg, reg));
+        (void)summ->AddPfxInstr(PfxInstr(PX_SImm32, (int32_t)n));
+        (void)summ->AddPfxInstr(PfxInstr(PX_Add));
         break;
       }
 
@@ -2004,28 +1985,46 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
         // u64 is guaranteed by |ReadFourBytes| to be in the
         // range 0 .. FFFFFFFF inclusive.  But to be safe:
         uint32_t u32 = (uint32_t)(u64 & 0xFFFFFFFF);
-        int32_t  s32 = (int32_t)u32;
+        int32_t s32 = (int32_t)u32;
         if (debug) {
           SprintfLiteral(buf, "LUL.DW   DW_OP_const4s %d\n", (int)s32);
           summ->Log(buf);
         }
-        (void) summ->AddPfxInstr(PfxInstr(PX_SImm32, s32));
+        (void)summ->AddPfxInstr(PfxInstr(PX_SImm32, s32));
         break;
       }
 
-      case DW_OP_deref: nm = "deref"; pxop = PX_Deref;  goto no_operands;
-      case DW_OP_and:   nm = "and";   pxop = PX_And;    goto no_operands;
-      case DW_OP_plus:  nm = "plus";  pxop = PX_Add;    goto no_operands;
-      case DW_OP_minus: nm = "minus"; pxop = PX_Sub;    goto no_operands;
-      case DW_OP_shl:   nm = "shl";   pxop = PX_Shl;    goto no_operands;
-      case DW_OP_ge:    nm = "ge";    pxop = PX_CmpGES; goto no_operands;
+      case DW_OP_deref:
+        nm = "deref";
+        pxop = PX_Deref;
+        goto no_operands;
+      case DW_OP_and:
+        nm = "and";
+        pxop = PX_And;
+        goto no_operands;
+      case DW_OP_plus:
+        nm = "plus";
+        pxop = PX_Add;
+        goto no_operands;
+      case DW_OP_minus:
+        nm = "minus";
+        pxop = PX_Sub;
+        goto no_operands;
+      case DW_OP_shl:
+        nm = "shl";
+        pxop = PX_Shl;
+        goto no_operands;
+      case DW_OP_ge:
+        nm = "ge";
+        pxop = PX_CmpGES;
+        goto no_operands;
       no_operands:
         MOZ_ASSERT(nm && pxop != PX_End);
         if (debug) {
           SprintfLiteral(buf, "LUL.DW   DW_OP_%s\n", nm);
           summ->Log(buf);
         }
-        (void) summ->AddPfxInstr(PfxInstr(pxop));
+        (void)summ->AddPfxInstr(PfxInstr(pxop));
         break;
 
       default:
@@ -2035,9 +2034,9 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
         }
         goto fail;
 
-    } // switch (opc)
+    }  // switch (opc)
 
-  } // while (cursor < end1)
+  }  // while (cursor < end1)
 
   MOZ_ASSERT(cursor >= end1);
 
@@ -2051,27 +2050,28 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
   // may therefore request one last dereference before the end marker is
   // inserted.
   if (derefAtEnd) {
-    (void) summ->AddPfxInstr(PfxInstr(PX_Deref));
+    (void)summ->AddPfxInstr(PfxInstr(PX_Deref));
   }
 
   // Insert an end marker, and declare success.
-  (void) summ->AddPfxInstr(PfxInstr(PX_End));
+  (void)summ->AddPfxInstr(PfxInstr(PX_End));
   if (debug) {
-    SprintfLiteral(buf, "LUL.DW   conversion of dwarf expression succeeded, "
-                        "ix = %d\n", (int)start_ix);
+    SprintfLiteral(buf,
+                   "LUL.DW   conversion of dwarf expression succeeded, "
+                   "ix = %d\n",
+                   (int)start_ix);
     summ->Log(buf);
     summ->Log("LUL.DW  >>\n");
   }
   return start_ix;
 
- fail:
+fail:
   if (debug) {
     summ->Log("LUL.DW   conversion of dwarf expression failed\n");
     summ->Log("LUL.DW  >>\n");
   }
   return -1;
 }
-
 
 bool DwarfCFIToModule::Entry(size_t offset, uint64 address, uint64 length,
                              uint8 version, const string &augmentation,
@@ -2104,14 +2104,13 @@ bool DwarfCFIToModule::Entry(size_t offset, uint64 address, uint64 length,
   return true;
 }
 
-const UniqueString* DwarfCFIToModule::RegisterName(int i) {
+const UniqueString *DwarfCFIToModule::RegisterName(int i) {
   if (i < 0) {
     MOZ_ASSERT(i == kCFARegister);
     return usu_->ToUniqueString(".cfa");
   }
   unsigned reg = i;
-  if (reg == return_address_)
-    return usu_->ToUniqueString(".ra");
+  if (reg == return_address_) return usu_->ToUniqueString(".ra");
 
   char buf[30];
   SprintfLiteral(buf, "dwarf_reg_%u", reg);
@@ -2135,12 +2134,12 @@ bool DwarfCFIToModule::SameValueRule(uint64 address, int reg) {
   return true;
 }
 
-bool DwarfCFIToModule::OffsetRule(uint64 address, int reg,
-                                  int base_register, long offset) {
+bool DwarfCFIToModule::OffsetRule(uint64 address, int reg, int base_register,
+                                  long offset) {
   if (DEBUG_DWARF) {
     char buf[100];
-    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = *(r%d + %ld)\n",
-                   address, reg, base_register, offset);
+    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = *(r%d + %ld)\n", address,
+                   reg, base_register, offset);
     summ_->Log(buf);
   }
   // *(base_register + offset)
@@ -2148,12 +2147,12 @@ bool DwarfCFIToModule::OffsetRule(uint64 address, int reg,
   return true;
 }
 
-bool DwarfCFIToModule::ValOffsetRule(uint64 address, int reg,
-                                     int base_register, long offset) {
+bool DwarfCFIToModule::ValOffsetRule(uint64 address, int reg, int base_register,
+                                     long offset) {
   if (DEBUG_DWARF) {
     char buf[100];
-    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = r%d + %ld\n",
-                   address, reg, base_register, offset);
+    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = r%d + %ld\n", address, reg,
+                   base_register, offset);
     summ_->Log(buf);
   }
   // base_register + offset
@@ -2165,8 +2164,8 @@ bool DwarfCFIToModule::RegisterRule(uint64 address, int reg,
                                     int base_register) {
   if (DEBUG_DWARF) {
     char buf[100];
-    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = r%d\n",
-                   address, reg, base_register);
+    SprintfLiteral(buf, "LUL.DW  0x%llx: old r%d = r%d\n", address, reg,
+                   base_register);
     summ_->Log(buf);
   }
   // base_register + 0
@@ -2175,12 +2174,11 @@ bool DwarfCFIToModule::RegisterRule(uint64 address, int reg,
 }
 
 bool DwarfCFIToModule::ExpressionRule(uint64 address, int reg,
-                                      const string &expression)
-{
+                                      const string &expression) {
   bool debug = !!DEBUG_DWARF;
-  int32_t start_ix = parseDwarfExpr(summ_, reader_, expression, debug,
-                                    true/*pushCfaAtStart*/,
-                                    true/*derefAtEnd*/);
+  int32_t start_ix =
+      parseDwarfExpr(summ_, reader_, expression, debug, true /*pushCfaAtStart*/,
+                     true /*derefAtEnd*/);
   if (start_ix >= 0) {
     summ_->Rule(address, reg, PFXEXPR, 0, start_ix);
   } else {
@@ -2192,12 +2190,11 @@ bool DwarfCFIToModule::ExpressionRule(uint64 address, int reg,
 }
 
 bool DwarfCFIToModule::ValExpressionRule(uint64 address, int reg,
-                                         const string &expression)
-{
+                                         const string &expression) {
   bool debug = !!DEBUG_DWARF;
-  int32_t start_ix = parseDwarfExpr(summ_, reader_, expression, debug,
-                                    true/*pushCfaAtStart*/,
-                                    false/*!derefAtEnd*/);
+  int32_t start_ix =
+      parseDwarfExpr(summ_, reader_, expression, debug, true /*pushCfaAtStart*/,
+                     false /*!derefAtEnd*/);
   if (start_ix >= 0) {
     summ_->Rule(address, reg, PFXEXPR, 0, start_ix);
   } else {
@@ -2209,7 +2206,7 @@ bool DwarfCFIToModule::ValExpressionRule(uint64 address, int reg,
 }
 
 bool DwarfCFIToModule::End() {
-  //module_->AddStackFrameEntry(entry_);
+  // module_->AddStackFrameEntry(entry_);
   if (DEBUG_DWARF) {
     summ_->Log("LUL.DW DwarfCFIToModule::End()\n");
   }
@@ -2218,12 +2215,11 @@ bool DwarfCFIToModule::End() {
 }
 
 void DwarfCFIToModule::Reporter::UndefinedNotSupported(
-    size_t offset,
-    const UniqueString* reg) {
+    size_t offset, const UniqueString *reg) {
   char buf[300];
   SprintfLiteral(buf, "DwarfCFIToModule::Reporter::UndefinedNotSupported()\n");
   log_(buf);
-  //BPLOG(INFO) << file_ << ", section '" << section_
+  // BPLOG(INFO) << file_ << ", section '" << section_
   //  << "': the call frame entry at offset 0x"
   //  << std::setbase(16) << offset << std::setbase(10)
   //  << " sets the rule for register '" << FromUniqueString(reg)
@@ -2232,23 +2228,19 @@ void DwarfCFIToModule::Reporter::UndefinedNotSupported(
 }
 
 // FIXME: move this somewhere sensible
-static bool is_power_of_2(uint64_t n)
-{
+static bool is_power_of_2(uint64_t n) {
   int i, nSetBits = 0;
-  for (i = 0; i < 8*(int)sizeof(n); i++) {
-    if ((n & ((uint64_t)1) << i) != 0)
-      nSetBits++;
+  for (i = 0; i < 8 * (int)sizeof(n); i++) {
+    if ((n & ((uint64_t)1) << i) != 0) nSetBits++;
   }
   return nSetBits <= 1;
 }
 
 void DwarfCFIToModule::Reporter::ExpressionCouldNotBeSummarised(
-    size_t offset,
-    const UniqueString* reg) {
-  static uint64_t n_complaints = 0; // This isn't threadsafe
+    size_t offset, const UniqueString *reg) {
+  static uint64_t n_complaints = 0;  // This isn't threadsafe
   n_complaints++;
-  if (!is_power_of_2(n_complaints))
-    return;
+  if (!is_power_of_2(n_complaints)) return;
   char buf[300];
   SprintfLiteral(buf,
                  "DwarfCFIToModule::Reporter::"
@@ -2257,4 +2249,4 @@ void DwarfCFIToModule::Reporter::ExpressionCouldNotBeSummarised(
   log_(buf);
 }
 
-} // namespace lul
+}  // namespace lul

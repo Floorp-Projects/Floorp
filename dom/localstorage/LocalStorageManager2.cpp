@@ -14,66 +14,50 @@ namespace dom {
 
 namespace {
 
-class RequestResolver final
-  : public LSRequestChildCallback
-{
+class RequestResolver final : public LSRequestChildCallback {
   RefPtr<Promise> mPromise;
 
-public:
-  explicit RequestResolver(Promise* aPromise)
-    : mPromise(aPromise)
-  { }
+ public:
+  explicit RequestResolver(Promise* aPromise) : mPromise(aPromise) {}
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::RequestResolver, override);
 
-private:
+ private:
   ~RequestResolver() = default;
 
-  void
-  HandleResponse(nsresult aResponse);
+  void HandleResponse(nsresult aResponse);
 
-  void
-  HandleResponse(const NullableDatastoreId& aDatastoreId);
+  void HandleResponse(const NullableDatastoreId& aDatastoreId);
 
   // LSRequestChildCallback
-  void
-  OnResponse(const LSRequestResponse& aResponse) override;
+  void OnResponse(const LSRequestResponse& aResponse) override;
 };
 
-class SimpleRequestResolver final
-  : public LSSimpleRequestChildCallback
-{
+class SimpleRequestResolver final : public LSSimpleRequestChildCallback {
   RefPtr<Promise> mPromise;
 
-public:
-  explicit SimpleRequestResolver(Promise* aPromise)
-    : mPromise(aPromise)
-  { }
+ public:
+  explicit SimpleRequestResolver(Promise* aPromise) : mPromise(aPromise) {}
 
   NS_INLINE_DECL_REFCOUNTING(SimpleRequestResolver, override);
 
-private:
+ private:
   ~SimpleRequestResolver() = default;
 
-  void
-  HandleResponse(nsresult aResponse);
+  void HandleResponse(nsresult aResponse);
 
-  void
-  HandleResponse(bool aResponse);
+  void HandleResponse(bool aResponse);
 
   // LSRequestChildCallback
-  void
-  OnResponse(const LSSimpleRequestResponse& aResponse) override;
+  void OnResponse(const LSSimpleRequestResponse& aResponse) override;
 };
 
-nsresult
-CreatePromise(JSContext* aContext, Promise** aPromise)
-{
+nsresult CreatePromise(JSContext* aContext, Promise** aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aContext);
 
   nsIGlobalObject* global =
-    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
+      xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
   if (NS_WARN_IF(!global)) {
     return NS_ERROR_FAILURE;
   }
@@ -88,10 +72,8 @@ CreatePromise(JSContext* aContext, Promise** aPromise)
   return NS_OK;
 }
 
-nsresult
-CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
-                                PrincipalInfo& aPrincipalInfo)
-{
+nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
+                                         PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
@@ -108,27 +90,21 @@ CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-} // namespace
+}  // namespace
 
-LocalStorageManager2::LocalStorageManager2()
-{
+LocalStorageManager2::LocalStorageManager2() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(NextGenLocalStorageEnabled());
 }
 
-LocalStorageManager2::~LocalStorageManager2()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-}
+LocalStorageManager2::~LocalStorageManager2() { MOZ_ASSERT(NS_IsMainThread()); }
 
-NS_IMPL_ISUPPORTS(LocalStorageManager2,
-                  nsIDOMStorageManager,
+NS_IMPL_ISUPPORTS(LocalStorageManager2, nsIDOMStorageManager,
                   nsILocalStorageManager)
 
 NS_IMETHODIMP
 LocalStorageManager2::PrecacheStorage(nsIPrincipal* aPrincipal,
-                                      Storage** _retval)
-{
+                                      Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
@@ -145,9 +121,7 @@ NS_IMETHODIMP
 LocalStorageManager2::CreateStorage(mozIDOMWindow* aWindow,
                                     nsIPrincipal* aPrincipal,
                                     const nsAString& aDocumentURI,
-                                    bool aPrivate,
-                                    Storage** _retval)
-{
+                                    bool aPrivate, Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
@@ -155,11 +129,8 @@ LocalStorageManager2::CreateStorage(mozIDOMWindow* aWindow,
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
   RefPtr<LSObject> object;
-  nsresult rv = LSObject::CreateForPrincipal(inner,
-                                             aPrincipal,
-                                             aDocumentURI,
-                                             aPrivate,
-                                             getter_AddRefs(object));
+  nsresult rv = LSObject::CreateForPrincipal(inner, aPrincipal, aDocumentURI,
+                                             aPrivate, getter_AddRefs(object));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -170,10 +141,8 @@ LocalStorageManager2::CreateStorage(mozIDOMWindow* aWindow,
 
 NS_IMETHODIMP
 LocalStorageManager2::GetStorage(mozIDOMWindow* aWindow,
-                                 nsIPrincipal* aPrincipal,
-                                 bool aPrivate,
-                                 Storage** _retval)
-{
+                                 nsIPrincipal* aPrincipal, bool aPrivate,
+                                 Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
@@ -182,8 +151,7 @@ LocalStorageManager2::GetStorage(mozIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-LocalStorageManager2::CloneStorage(Storage* aStorageToCloneFrom)
-{
+LocalStorageManager2::CloneStorage(Storage* aStorageToCloneFrom) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aStorageToCloneFrom);
 
@@ -193,10 +161,8 @@ LocalStorageManager2::CloneStorage(Storage* aStorageToCloneFrom)
 }
 
 NS_IMETHODIMP
-LocalStorageManager2::CheckStorage(nsIPrincipal* aPrincipal,
-                                   Storage *aStorage,
-                                   bool* _retval)
-{
+LocalStorageManager2::CheckStorage(nsIPrincipal* aPrincipal, Storage* aStorage,
+                                   bool* _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aStorage);
@@ -207,8 +173,7 @@ LocalStorageManager2::CheckStorage(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-LocalStorageManager2::GetNextGenLocalStorageEnabled(bool* aResult)
-{
+LocalStorageManager2::GetNextGenLocalStorageEnabled(bool* aResult) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aResult);
 
@@ -217,10 +182,8 @@ LocalStorageManager2::GetNextGenLocalStorageEnabled(bool* aResult)
 }
 
 NS_IMETHODIMP
-LocalStorageManager2::Preload(nsIPrincipal* aPrincipal,
-                              JSContext* aContext,
-                              nsISupports** _retval)
-{
+LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
+                              nsISupports** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
@@ -239,8 +202,7 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal,
   LSRequestPrepareDatastoreParams params;
   params.createIfNotExists() = false;
 
-  rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
-                                       params.principalInfo());
+  rv = CheckedPrincipalToPrincipalInfo(aPrincipal, params.principalInfo());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -255,10 +217,8 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal,
-                                  JSContext* aContext,
-                                  nsISupports** _retval)
-{
+LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal, JSContext* aContext,
+                                  nsISupports** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
@@ -271,8 +231,7 @@ LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal,
 
   LSSimpleRequestPreloadedParams params;
 
-  rv = CheckedPrincipalToPrincipalInfo(aPrincipal,
-                                       params.principalInfo());
+  rv = CheckedPrincipalToPrincipalInfo(aPrincipal, params.principalInfo());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -286,14 +245,12 @@ LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-nsresult
-LocalStorageManager2::StartRequest(Promise* aPromise,
-                                   const LSRequestParams& aParams)
-{
+nsresult LocalStorageManager2::StartRequest(Promise* aPromise,
+                                            const LSRequestParams& aParams) {
   MOZ_ASSERT(NS_IsMainThread());
 
   PBackgroundChild* backgroundActor =
-    BackgroundChild::GetOrCreateForCurrentThread();
+      BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return NS_ERROR_FAILURE;
   }
@@ -309,15 +266,13 @@ LocalStorageManager2::StartRequest(Promise* aPromise,
   return NS_OK;
 }
 
-nsresult
-LocalStorageManager2::StartSimpleRequest(Promise* aPromise,
-                                         const LSSimpleRequestParams& aParams)
-{
+nsresult LocalStorageManager2::StartSimpleRequest(
+    Promise* aPromise, const LSSimpleRequestParams& aParams) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPromise);
 
   PBackgroundChild* backgroundActor =
-    BackgroundChild::GetOrCreateForCurrentThread();
+      BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return NS_ERROR_FAILURE;
   }
@@ -334,9 +289,7 @@ LocalStorageManager2::StartSimpleRequest(Promise* aPromise,
   return NS_OK;
 }
 
-void
-RequestResolver::HandleResponse(nsresult aResponse)
-{
+void RequestResolver::HandleResponse(nsresult aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mPromise) {
@@ -346,9 +299,7 @@ RequestResolver::HandleResponse(nsresult aResponse)
   mPromise->MaybeReject(aResponse);
 }
 
-void
-RequestResolver::HandleResponse(const NullableDatastoreId& aDatastoreId)
-{
+void RequestResolver::HandleResponse(const NullableDatastoreId& aDatastoreId) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mPromise) {
@@ -364,14 +315,12 @@ RequestResolver::HandleResponse(const NullableDatastoreId& aDatastoreId)
       mPromise->MaybeResolve(aDatastoreId.get_uint64_t());
       break;
 
-   default:
+    default:
       MOZ_CRASH("Unknown datastore id type!");
   }
 }
 
-void
-RequestResolver::OnResponse(const LSRequestResponse& aResponse)
-{
+void RequestResolver::OnResponse(const LSRequestResponse& aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aResponse.type()) {
@@ -381,34 +330,29 @@ RequestResolver::OnResponse(const LSRequestResponse& aResponse)
 
     case LSRequestResponse::TLSRequestPrepareDatastoreResponse:
       HandleResponse(
-        aResponse.get_LSRequestPrepareDatastoreResponse().datastoreId());
+          aResponse.get_LSRequestPrepareDatastoreResponse().datastoreId());
       break;
-   default:
+    default:
       MOZ_CRASH("Unknown response type!");
   }
 }
 
-void
-SimpleRequestResolver::HandleResponse(nsresult aResponse)
-{
+void SimpleRequestResolver::HandleResponse(nsresult aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPromise);
 
   mPromise->MaybeReject(aResponse);
 }
 
-void
-SimpleRequestResolver::HandleResponse(bool aResponse)
-{
+void SimpleRequestResolver::HandleResponse(bool aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPromise);
 
   mPromise->MaybeResolve(aResponse);
 }
 
-void
-SimpleRequestResolver::OnResponse(const LSSimpleRequestResponse& aResponse)
-{
+void SimpleRequestResolver::OnResponse(
+    const LSSimpleRequestResponse& aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aResponse.type()) {
@@ -418,13 +362,13 @@ SimpleRequestResolver::OnResponse(const LSSimpleRequestResponse& aResponse)
 
     case LSSimpleRequestResponse::TLSSimpleRequestPreloadedResponse:
       HandleResponse(
-        aResponse.get_LSSimpleRequestPreloadedResponse().preloaded());
+          aResponse.get_LSSimpleRequestPreloadedResponse().preloaded());
       break;
 
-   default:
+    default:
       MOZ_CRASH("Unknown response type!");
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

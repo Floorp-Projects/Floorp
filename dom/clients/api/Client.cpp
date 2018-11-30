@@ -32,69 +32,49 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(mozilla::dom::Client)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-void
-Client::EnsureHandle()
-{
+void Client::EnsureHandle() {
   NS_ASSERT_OWNINGTHREAD(mozilla::dom::Client);
   if (!mHandle) {
-    mHandle = ClientManager::CreateHandle(ClientInfo(mData->info()),
-                                          mGlobal->EventTargetFor(TaskCategory::Other));
+    mHandle = ClientManager::CreateHandle(
+        ClientInfo(mData->info()),
+        mGlobal->EventTargetFor(TaskCategory::Other));
   }
 }
 
 Client::Client(nsIGlobalObject* aGlobal, const ClientInfoAndState& aData)
-  : mGlobal(aGlobal)
-  , mData(MakeUnique<ClientInfoAndState>(aData))
-{
+    : mGlobal(aGlobal), mData(MakeUnique<ClientInfoAndState>(aData)) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
 }
 
-TimeStamp
-Client::CreationTime() const
-{
-  return mData->info().creationTime();
-}
+TimeStamp Client::CreationTime() const { return mData->info().creationTime(); }
 
-TimeStamp
-Client::LastFocusTime() const
-{
+TimeStamp Client::LastFocusTime() const {
   if (mData->info().type() != ClientType::Window) {
     return TimeStamp();
   }
   return mData->state().get_IPCClientWindowState().lastFocusTime();
 }
 
-nsContentUtils::StorageAccess
-Client::GetStorageAccess() const
-{
+nsContentUtils::StorageAccess Client::GetStorageAccess() const {
   ClientState state(ClientState::FromIPC(mData->state()));
   return state.GetStorageAccess();
 }
 
-JSObject*
-Client::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Client::WrapObject(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) {
   if (mData->info().type() == ClientType::Window) {
     return WindowClient_Binding::Wrap(aCx, this, aGivenProto);
   }
   return Client_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsIGlobalObject*
-Client::GetParentObject() const
-{
-  return mGlobal;
-}
+nsIGlobalObject* Client::GetParentObject() const { return mGlobal; }
 
-void
-Client::GetUrl(nsAString& aUrlOut) const
-{
+void Client::GetUrl(nsAString& aUrlOut) const {
   CopyUTF8toUTF16(mData->info().url(), aUrlOut);
 }
 
-void
-Client::GetId(nsAString& aIdOut) const
-{
+void Client::GetId(nsAString& aIdOut) const {
   char buf[NSID_LENGTH];
   mData->info().id().ToProvidedString(buf);
   NS_ConvertASCIItoUTF16 uuid(buf);
@@ -103,23 +83,13 @@ Client::GetId(nsAString& aIdOut) const
   aIdOut.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
 }
 
-ClientType
-Client::Type() const
-{
-  return mData->info().type();
-}
+ClientType Client::Type() const { return mData->info().type(); }
 
-FrameType
-Client::GetFrameType() const
-{
-  return mData->info().frameType();
-}
+FrameType Client::GetFrameType() const { return mData->info().frameType(); }
 
-void
-Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                    const Sequence<JSObject*>& aTransferable,
-                    ErrorResult& aRv)
-{
+void Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                         const Sequence<JSObject*>& aTransferable,
+                         ErrorResult& aRv) {
   MOZ_ASSERT(!NS_IsMainThread());
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
@@ -143,29 +113,20 @@ Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   mHandle->PostMessage(data, workerPrivate->GetServiceWorkerDescriptor());
 }
 
-void
-Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                    const PostMessageOptions& aOptions,
-                    ErrorResult& aRv)
-{
+void Client::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                         const PostMessageOptions& aOptions, ErrorResult& aRv) {
   PostMessage(aCx, aMessage, aOptions.mTransfer, aRv);
 }
 
-VisibilityState
-Client::GetVisibilityState() const
-{
+VisibilityState Client::GetVisibilityState() const {
   return mData->state().get_IPCClientWindowState().visibilityState();
 }
 
-bool
-Client::Focused() const
-{
+bool Client::Focused() const {
   return mData->state().get_IPCClientWindowState().focused();
 }
 
-already_AddRefed<Promise>
-Client::Focus(ErrorResult& aRv)
-{
+already_AddRefed<Promise> Client::Focus(ErrorResult& aRv) {
   MOZ_ASSERT(!NS_IsMainThread());
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
@@ -185,27 +146,30 @@ Client::Focus(ErrorResult& aRv)
   EnsureHandle();
 
   IPCClientInfo ipcClientInfo(mData->info());
-  auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<ClientStatePromise>>(mGlobal);
+  auto holder =
+      MakeRefPtr<DOMMozPromiseRequestHolder<ClientStatePromise>>(mGlobal);
 
-  mHandle->Focus()->Then(mGlobal->EventTargetFor(TaskCategory::Other), __func__,
-    [ipcClientInfo, holder, outerPromise] (const ClientState& aResult) {
-      holder->Complete();
-      NS_ENSURE_TRUE_VOID(holder->GetParentObject());
-      RefPtr<Client> newClient = new Client(holder->GetParentObject(),
-                                            ClientInfoAndState(ipcClientInfo,
-                                                               aResult.ToIPC()));
-      outerPromise->MaybeResolve(newClient);
-    }, [holder, outerPromise] (nsresult aResult) {
-      holder->Complete();
-      outerPromise->MaybeReject(aResult);
-    })->Track(*holder);
+  mHandle->Focus()
+      ->Then(mGlobal->EventTargetFor(TaskCategory::Other), __func__,
+             [ipcClientInfo, holder, outerPromise](const ClientState& aResult) {
+               holder->Complete();
+               NS_ENSURE_TRUE_VOID(holder->GetParentObject());
+               RefPtr<Client> newClient = new Client(
+                   holder->GetParentObject(),
+                   ClientInfoAndState(ipcClientInfo, aResult.ToIPC()));
+               outerPromise->MaybeResolve(newClient);
+             },
+             [holder, outerPromise](nsresult aResult) {
+               holder->Complete();
+               outerPromise->MaybeReject(aResult);
+             })
+      ->Track(*holder);
 
   return outerPromise.forget();
 }
 
-already_AddRefed<Promise>
-Client::Navigate(const nsAString& aURL, ErrorResult& aRv)
-{
+already_AddRefed<Promise> Client::Navigate(const nsAString& aURL,
+                                           ErrorResult& aRv) {
   MOZ_ASSERT(!NS_IsMainThread());
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
@@ -221,23 +185,25 @@ Client::Navigate(const nsAString& aURL, ErrorResult& aRv)
                           workerPrivate->GetLocationInfo().mHref);
   RefPtr<Client> self = this;
 
-  StartClientManagerOp(&ClientManager::Navigate, args, mGlobal,
-    [self, outerPromise] (const ClientOpResult& aResult) {
-      if (aResult.type() != ClientOpResult::TClientInfoAndState) {
-        outerPromise->MaybeResolve(JS::NullHandleValue);
-        return;
-      }
-      RefPtr<Client> newClient =
-        new Client(self->mGlobal, aResult.get_ClientInfoAndState());
-      outerPromise->MaybeResolve(newClient);
-    }, [self, outerPromise] (nsresult aResult) {
-      // TODO: Improve this error in bug 1412856.  Ideally we should throw
-      //       the TypeError in the child process and pass it back to here.
-      outerPromise->MaybeReject(NS_ERROR_TYPE_ERR);
-    });
+  StartClientManagerOp(
+      &ClientManager::Navigate, args, mGlobal,
+      [self, outerPromise](const ClientOpResult& aResult) {
+        if (aResult.type() != ClientOpResult::TClientInfoAndState) {
+          outerPromise->MaybeResolve(JS::NullHandleValue);
+          return;
+        }
+        RefPtr<Client> newClient =
+            new Client(self->mGlobal, aResult.get_ClientInfoAndState());
+        outerPromise->MaybeResolve(newClient);
+      },
+      [self, outerPromise](nsresult aResult) {
+        // TODO: Improve this error in bug 1412856.  Ideally we should throw
+        //       the TypeError in the child process and pass it back to here.
+        outerPromise->MaybeReject(NS_ERROR_TYPE_ERR);
+      });
 
   return outerPromise.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -1,6 +1,6 @@
 struct B {
   B() {}
-  B(const B&) {}
+  B(const B &) {}
   B(B &&) {}
 };
 

@@ -4,8 +4,7 @@
 
 #include "jsapi-tests/tests.h"
 
-BEGIN_TEST(test_GetPropertyDescriptor)
-{
+BEGIN_TEST(test_GetPropertyDescriptor) {
   JS::RootedValue v(cx);
   EVAL("({ somename : 123 })", &v);
   CHECK(v.isObject());

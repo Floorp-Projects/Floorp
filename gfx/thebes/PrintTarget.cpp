@@ -27,11 +27,12 @@ namespace mozilla {
 namespace gfx {
 
 PrintTarget::PrintTarget(cairo_surface_t* aCairoSurface, const IntSize& aSize)
-  : mCairoSurface(aCairoSurface)
-  , mSize(aSize)
-  , mIsFinished(false)
+    : mCairoSurface(aCairoSurface),
+      mSize(aSize),
+      mIsFinished(false)
 #ifdef DEBUG
-  , mHasActivePage(false)
+      ,
+      mHasActivePage(false)
 #endif
 
 {
@@ -50,23 +51,20 @@ PrintTarget::PrintTarget(cairo_surface_t* aCairoSurface, const IntSize& aSize)
 #ifdef MOZ_TREE_CAIRO
   if (mCairoSurface &&
       cairo_surface_get_content(mCairoSurface) != CAIRO_CONTENT_COLOR) {
-    cairo_surface_set_subpixel_antialiasing(mCairoSurface,
-                                            CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
+    cairo_surface_set_subpixel_antialiasing(
+        mCairoSurface, CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
   }
 #endif
 }
 
-PrintTarget::~PrintTarget()
-{
+PrintTarget::~PrintTarget() {
   // null surfaces are allowed here
   cairo_surface_destroy(mCairoSurface);
   mCairoSurface = nullptr;
 }
 
-already_AddRefed<DrawTarget>
-PrintTarget::MakeDrawTarget(const IntSize& aSize,
-                            DrawEventRecorder* aRecorder)
-{
+already_AddRefed<DrawTarget> PrintTarget::MakeDrawTarget(
+    const IntSize& aSize, DrawEventRecorder* aRecorder) {
   MOZ_ASSERT(mCairoSurface,
              "We shouldn't have been constructed without a cairo surface");
 
@@ -82,7 +80,7 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
   // See the comments in our header.  If the sizes are different a clip will
   // be applied to mCairoSurface.
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForCairoSurface(mCairoSurface, aSize);
+      Factory::CreateDrawTargetForCairoSurface(mCairoSurface, aSize);
   if (!dt || !dt->IsValid()) {
     return nullptr;
   }
@@ -97,33 +95,31 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
   return dt.forget();
 }
 
-already_AddRefed<DrawTarget>
-PrintTarget::GetReferenceDrawTarget()
-{
+already_AddRefed<DrawTarget> PrintTarget::GetReferenceDrawTarget() {
   if (!mRefDT) {
     const IntSize size(1, 1);
 
     cairo_surface_t* similar;
     switch (cairo_surface_get_type(mCairoSurface)) {
 #ifdef CAIRO_HAS_WIN32_SURFACE
-    case CAIRO_SURFACE_TYPE_WIN32:
-      similar = cairo_win32_surface_create_with_dib(
-        CairoContentToCairoFormat(cairo_surface_get_content(mCairoSurface)),
-        size.width, size.height);
-      break;
+      case CAIRO_SURFACE_TYPE_WIN32:
+        similar = cairo_win32_surface_create_with_dib(
+            CairoContentToCairoFormat(cairo_surface_get_content(mCairoSurface)),
+            size.width, size.height);
+        break;
 #endif
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
-    case CAIRO_SURFACE_TYPE_QUARTZ:
-      similar = cairo_quartz_surface_create_cg_layer(
-                  mCairoSurface, cairo_surface_get_content(mCairoSurface),
-                  size.width, size.height);
-      break;
+      case CAIRO_SURFACE_TYPE_QUARTZ:
+        similar = cairo_quartz_surface_create_cg_layer(
+            mCairoSurface, cairo_surface_get_content(mCairoSurface), size.width,
+            size.height);
+        break;
 #endif
-    default:
-      similar = cairo_surface_create_similar(
-                  mCairoSurface, cairo_surface_get_content(mCairoSurface),
-                  size.width, size.height);
-      break;
+      default:
+        similar = cairo_surface_create_similar(
+            mCairoSurface, cairo_surface_get_content(mCairoSurface), size.width,
+            size.height);
+        break;
     }
 
     if (cairo_surface_status(similar)) {
@@ -131,7 +127,7 @@ PrintTarget::GetReferenceDrawTarget()
     }
 
     RefPtr<DrawTarget> dt =
-      Factory::CreateDrawTargetForCairoSurface(similar, size);
+        Factory::CreateDrawTargetForCairoSurface(similar, size);
 
     // The DT addrefs the surface, so we need drop our own reference to it:
     cairo_surface_destroy(similar);
@@ -146,26 +142,21 @@ PrintTarget::GetReferenceDrawTarget()
 }
 
 /* static */
-void
-PrintTarget::AdjustPrintJobNameForIPP(const nsAString& aJobName,
-                                      nsCString& aAdjustedJobName)
-{
+void PrintTarget::AdjustPrintJobNameForIPP(const nsAString& aJobName,
+                                           nsCString& aAdjustedJobName) {
   CopyUTF16toUTF8(aJobName, aAdjustedJobName);
 
   if (aAdjustedJobName.Length() > IPP_JOB_NAME_LIMIT_LENGTH) {
-    uint32_t length =
-      RewindToPriorUTF8Codepoint(aAdjustedJobName.get(),
-                                 (IPP_JOB_NAME_LIMIT_LENGTH - 3U));
+    uint32_t length = RewindToPriorUTF8Codepoint(
+        aAdjustedJobName.get(), (IPP_JOB_NAME_LIMIT_LENGTH - 3U));
     aAdjustedJobName.SetLength(length);
     aAdjustedJobName.AppendLiteral("...");
   }
 }
 
 /* static */
-void
-PrintTarget::AdjustPrintJobNameForIPP(const nsAString& aJobName,
-                                      nsString& aAdjustedJobName)
-{
+void PrintTarget::AdjustPrintJobNameForIPP(const nsAString& aJobName,
+                                           nsString& aAdjustedJobName) {
   nsAutoCString jobName;
   AdjustPrintJobNameForIPP(aJobName, jobName);
 
@@ -174,8 +165,7 @@ PrintTarget::AdjustPrintJobNameForIPP(const nsAString& aJobName,
 
 /* static */ already_AddRefed<DrawTarget>
 PrintTarget::CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
-                                       DrawTarget* aDrawTarget)
-{
+                                           DrawTarget* aDrawTarget) {
   MOZ_ASSERT(aRecorder);
   MOZ_ASSERT(aDrawTarget);
 
@@ -188,16 +178,14 @@ PrintTarget::CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
 
   if (!dt || !dt->IsValid()) {
     gfxCriticalNote
-      << "Failed to create a recording DrawTarget for PrintTarget";
+        << "Failed to create a recording DrawTarget for PrintTarget";
     return nullptr;
   }
 
   return dt.forget();
 }
 
-void
-PrintTarget::Finish()
-{
+void PrintTarget::Finish() {
   if (mIsFinished) {
     return;
   }
@@ -207,18 +195,12 @@ PrintTarget::Finish()
   cairo_surface_finish(mCairoSurface);
 }
 
-void
-PrintTarget::RegisterPageDoneCallback(PageDoneCallback&& aCallback)
-{
+void PrintTarget::RegisterPageDoneCallback(PageDoneCallback&& aCallback) {
   MOZ_ASSERT(aCallback && !IsSyncPagePrinting());
   mPageDoneCallback = std::move(aCallback);
 }
 
-void
-PrintTarget::UnregisterPageDoneCallback()
-{
-  mPageDoneCallback = nullptr;
-}
+void PrintTarget::UnregisterPageDoneCallback() { mPageDoneCallback = nullptr; }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

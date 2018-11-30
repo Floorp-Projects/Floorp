@@ -8,11 +8,9 @@
 
 #include "nsIAppStartupNotifier.h"
 
-class nsAppStartupNotifier final
-{
-public:
+class nsAppStartupNotifier final {
+ public:
   static nsresult NotifyObservers(const char* aTopic);
 };
 
 #endif /* nsAppStartupNotifier_h___ */
-

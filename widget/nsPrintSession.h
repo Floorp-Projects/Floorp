@@ -6,7 +6,7 @@
 #ifndef nsPrintSession_h__
 #define nsPrintSession_h__
 
-#include "nsIPrintSession.h" 
+#include "nsIPrintSession.h"
 
 #include "mozilla/RefPtr.h"
 #include "nsWeakReference.h"
@@ -15,28 +15,25 @@ namespace mozilla {
 namespace layout {
 class RemotePrintJobChild;
 }
-}
-
+}  // namespace mozilla
 
 //*****************************************************************************
 //***    nsPrintSession
 //*****************************************************************************
 
-class nsPrintSession : public nsIPrintSession,
-                       public nsSupportsWeakReference
-{
+class nsPrintSession : public nsIPrintSession, public nsSupportsWeakReference {
   virtual ~nsPrintSession();
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTSESSION
 
   nsPrintSession();
-  
+
   virtual nsresult Init();
 
-private:
+ private:
   RefPtr<mozilla::layout::RemotePrintJobChild> mRemotePrintJob;
 };
 
-#endif // nsPrintSession_h__
+#endif  // nsPrintSession_h__

@@ -14,13 +14,10 @@ namespace mozilla {
 namespace dom {
 class FunctionStringCallback;
 
-class HTMLMarqueeElement final : public nsGenericHTMLElement
-{
-public:
+class HTMLMarqueeElement final : public nsGenericHTMLElement {
+ public:
   explicit HTMLMarqueeElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-  {
-  }
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -29,55 +26,43 @@ public:
 
   nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
-  void UnbindFromTree(bool aDeep = true,
-                      bool aNullParent = true) override;
+  void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;
 
   static const int kDefaultLoop = -1;
   static const int kDefaultScrollAmount = 6;
   static const int kDefaultScrollDelayMS = 85;
 
-  bool IsEventAttributeNameInternal(nsAtom *aName) override;
+  bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
   void SetStartStopCallback(FunctionStringCallback* aCallback);
 
   void GetBehavior(nsAString& aValue);
-  void SetBehavior(const nsAString& aValue, ErrorResult& aError)
-  {
+  void SetBehavior(const nsAString& aValue, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::behavior, aValue, aError);
   }
 
   void GetDirection(nsAString& aValue);
-  void SetDirection(const nsAString& aValue, ErrorResult& aError)
-  {
+  void SetDirection(const nsAString& aValue, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::direction, aValue, aError);
   }
 
-  void GetBgColor(DOMString& aBgColor)
-  {
+  void GetBgColor(DOMString& aBgColor) {
     GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
   }
-  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError)
-  {
+  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
-  void GetHeight(DOMString& aHeight)
-  {
+  void GetHeight(DOMString& aHeight) {
     GetHTMLAttr(nsGkAtoms::height, aHeight);
   }
-  void SetHeight(const nsAString& aHeight, ErrorResult& aError)
-  {
+  void SetHeight(const nsAString& aHeight, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::height, aHeight, aError);
   }
-  uint32_t Hspace()
-  {
-    return GetIntAttr(nsGkAtoms::hspace, 0);
-  }
-  void SetHspace(uint32_t aValue, ErrorResult& aError)
-  {
+  uint32_t Hspace() { return GetIntAttr(nsGkAtoms::hspace, 0); }
+  void SetHspace(uint32_t aValue, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, 0, aError);
   }
-  int32_t Loop()
-  {
+  int32_t Loop() {
     int loop = GetIntAttr(nsGkAtoms::loop, kDefaultLoop);
     if (loop <= 0) {
       loop = -1;
@@ -85,61 +70,45 @@ public:
 
     return loop;
   }
-  void SetLoop(int32_t aValue, ErrorResult& aError)
-  {
+  void SetLoop(int32_t aValue, ErrorResult& aError) {
     if (aValue == -1 || aValue > 0) {
       SetHTMLIntAttr(nsGkAtoms::loop, aValue, aError);
     }
   }
-  uint32_t ScrollAmount()
-  {
+  uint32_t ScrollAmount() {
     return GetUnsignedIntAttr(nsGkAtoms::scrollamount, kDefaultScrollAmount);
   }
-  void SetScrollAmount(uint32_t aValue, ErrorResult& aError)
-  {
-    SetUnsignedIntAttr(nsGkAtoms::scrollamount, aValue, kDefaultScrollAmount, aError);
+  void SetScrollAmount(uint32_t aValue, ErrorResult& aError) {
+    SetUnsignedIntAttr(nsGkAtoms::scrollamount, aValue, kDefaultScrollAmount,
+                       aError);
   }
-  uint32_t ScrollDelay()
-  {
+  uint32_t ScrollDelay() {
     return GetUnsignedIntAttr(nsGkAtoms::scrolldelay, kDefaultScrollDelayMS);
   }
-  void SetScrollDelay(uint32_t aValue, ErrorResult& aError)
-  {
-    SetUnsignedIntAttr(nsGkAtoms::scrolldelay, aValue, kDefaultScrollDelayMS, aError);
+  void SetScrollDelay(uint32_t aValue, ErrorResult& aError) {
+    SetUnsignedIntAttr(nsGkAtoms::scrolldelay, aValue, kDefaultScrollDelayMS,
+                       aError);
   }
-  bool TrueSpeed() const
-  {
-    return GetBoolAttr(nsGkAtoms::truespeed);
-  }
-  void SetTrueSpeed(bool aValue, ErrorResult& aError)
-  {
+  bool TrueSpeed() const { return GetBoolAttr(nsGkAtoms::truespeed); }
+  void SetTrueSpeed(bool aValue, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::truespeed, aValue, aError);
   }
-  void GetWidth(DOMString& aWidth)
-  {
-    GetHTMLAttr(nsGkAtoms::width, aWidth);
-  }
-  void SetWidth(const nsAString& aWidth, ErrorResult& aError)
-  {
+  void GetWidth(DOMString& aWidth) { GetHTMLAttr(nsGkAtoms::width, aWidth); }
+  void SetWidth(const nsAString& aWidth, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::width, aWidth, aError);
   }
-  uint32_t Vspace()
-  {
-    return GetIntAttr(nsGkAtoms::vspace, 0);
-  }
-  void SetVspace(uint32_t aValue, ErrorResult& aError)
-  {
+  uint32_t Vspace() { return GetIntAttr(nsGkAtoms::vspace, 0); }
+  void SetVspace(uint32_t aValue, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, 0, aError);
   }
 
   void Start();
   void Stop();
 
-  bool ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
@@ -150,12 +119,13 @@ public:
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-protected:
+ protected:
   virtual ~HTMLMarqueeElement();
 
-  JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   RefPtr<FunctionStringCallback> mStartStopCallback;
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
@@ -163,7 +133,7 @@ private:
   void DispatchEventToShadowRoot(const nsAString& aEventTypeArg);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* HTMLMarqueeElement_h___ */

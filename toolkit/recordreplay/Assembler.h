@@ -17,9 +17,8 @@ namespace recordreplay {
 // Assembler for x64 instructions. This is a simple assembler that is primarily
 // designed for use in copying instructions from a function that is being
 // redirected.
-class Assembler
-{
-public:
+class Assembler {
+ public:
   // Create an assembler that allocates its own instruction storage. Assembled
   // code will never be reclaimed by the system.
   Assembler();
@@ -37,9 +36,9 @@ public:
   // Get the address where the next assembled instruction will be placed.
   uint8_t* Current();
 
-///////////////////////////////////////////////////////////////////////////////
-// Routines for assembling instructions in new instruction storage
-///////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
+  // Routines for assembling instructions in new instruction storage
+  ///////////////////////////////////////////////////////////////////////////////
 
   // Jump to aTarget. If aTarget is in the range of instructions being copied,
   // the target will be the copy of aTarget instead.
@@ -98,9 +97,9 @@ public:
   // for unexpected registers.
   static /*ud_type*/ int NormalizeRegister(/*ud_type*/ int aRegister);
 
-///////////////////////////////////////////////////////////////////////////////
-// Routines for assembling instructions at arbitrary locations
-///////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
+  // Routines for assembling instructions at arbitrary locations
+  ///////////////////////////////////////////////////////////////////////////////
 
   // Return whether it is possible to patch a short jump to aTarget from aIp.
   static bool CanPatchShortJump(uint8_t* aIp, void* aTarget);
@@ -117,7 +116,7 @@ public:
   // Patch an int3 breakpoint instruction at Ip.
   static void PatchClobber(uint8_t* aIp);
 
-private:
+ private:
   // Patch a jump that doesn't clobber any instructions.
   static void PatchJump(uint8_t* aIp, void* aTarget);
 
@@ -160,13 +159,13 @@ private:
 
   // Association between the instruction original and copy pointers, for all
   // instructions that have been copied.
-  InfallibleVector<std::pair<uint8_t*,uint8_t*>> mCopiedInstructions;
+  InfallibleVector<std::pair<uint8_t*, uint8_t*>> mCopiedInstructions;
 
   // For jumps we have copied, association between the source (in generated
   // code) and target (in the original code) of the jump. These will be updated
   // to refer to their copy (if there is one) in generated code in the
   // assembler's destructor.
-  InfallibleVector<std::pair<uint8_t*,uint8_t*>> mJumps;
+  InfallibleVector<std::pair<uint8_t*, uint8_t*>> mJumps;
 };
 
 // The number of instruction bytes required for a short jump.
@@ -181,7 +180,7 @@ static const size_t MaximumInstructionLength = 15;
 // Make a region of memory RWX.
 void UnprotectExecutableMemory(uint8_t* aAddress, size_t aSize);
 
-} // recordreplay
-} // mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_Assembler_h
+#endif  // mozilla_recordreplay_Assembler_h

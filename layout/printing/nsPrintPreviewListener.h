@@ -16,8 +16,8 @@
 namespace mozilla {
 namespace dom {
 class EventTarget;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 //
 // class nsPrintPreviewListener
@@ -30,7 +30,7 @@ class EventTarget;
 class nsPrintPreviewListener final : public nsIDOMEventListener
 
 {
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
@@ -41,13 +41,11 @@ public:
   nsresult AddListeners();
   nsresult RemoveListeners();
 
-private:
+ private:
   ~nsPrintPreviewListener();
 
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
 
-}; // class nsPrintPreviewListener
-
-
+};  // class nsPrintPreviewListener
 
 #endif /* nsPrintPreviewListener_h__ */

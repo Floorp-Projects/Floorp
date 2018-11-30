@@ -15,9 +15,7 @@ namespace mozilla {
 namespace dom {
 namespace localstorage {
 
-void
-ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
-{
+void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   // Get leaf of file path
   for (const char* p = aFile; *p; ++p) {
     if (*p == '/' && *(p + 1)) {
@@ -26,11 +24,11 @@ ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
   }
 
   nsContentUtils::LogSimpleConsoleError(
-    NS_ConvertUTF8toUTF16(nsPrintfCString(
-                          "LocalStorage %s: %s:%" PRIu32, aStr, aFile, aLine)),
-    "localstorage", false);
+      NS_ConvertUTF8toUTF16(
+          nsPrintfCString("LocalStorage %s: %s:%" PRIu32, aStr, aFile, aLine)),
+      "localstorage", false);
 }
 
-} // namespace localstorage
-} // namespace dom
-} // namespace mozilla
+}  // namespace localstorage
+}  // namespace dom
+}  // namespace mozilla

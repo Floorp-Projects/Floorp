@@ -11,30 +11,25 @@
 using namespace mozilla;
 using namespace plugins;
 
-PluginBackgroundDestroyerParent::PluginBackgroundDestroyerParent(gfxASurface* aDyingBackground)
-  : mDyingBackground(aDyingBackground)
-{
-}
+PluginBackgroundDestroyerParent::PluginBackgroundDestroyerParent(
+    gfxASurface* aDyingBackground)
+    : mDyingBackground(aDyingBackground) {}
 
-PluginBackgroundDestroyerParent::~PluginBackgroundDestroyerParent()
-{
-}
+PluginBackgroundDestroyerParent::~PluginBackgroundDestroyerParent() {}
 
-void
-PluginBackgroundDestroyerParent::ActorDestroy(ActorDestroyReason why)
-{
-    switch(why) {
+void PluginBackgroundDestroyerParent::ActorDestroy(ActorDestroyReason why) {
+  switch (why) {
     case Deletion:
     case AncestorDeletion:
-        if (gfxSharedImageSurface::IsSharedImage(mDyingBackground)) {
-            gfxSharedImageSurface* s =
-                static_cast<gfxSharedImageSurface*>(mDyingBackground.get());
-            DeallocShmem(s->GetShmem());
-        }
-        break;
+      if (gfxSharedImageSurface::IsSharedImage(mDyingBackground)) {
+        gfxSharedImageSurface* s =
+            static_cast<gfxSharedImageSurface*>(mDyingBackground.get());
+        DeallocShmem(s->GetShmem());
+      }
+      break;
     default:
-        // We're shutting down or crashed, let automatic cleanup
-        // take care of our shmem, if we have one.
-        break;
-    }
+      // We're shutting down or crashed, let automatic cleanup
+      // take care of our shmem, if we have one.
+      break;
+  }
 }

@@ -21,8 +21,7 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(BackgroundChannelRegistrar, nsIBackgroundChannelRegistrar)
 
-BackgroundChannelRegistrar::BackgroundChannelRegistrar()
-{
+BackgroundChannelRegistrar::BackgroundChannelRegistrar() {
   // BackgroundChannelRegistrar is a main-thread-only object.
   // All the operations should be run on main thread.
   // It should be used on chrome process only.
@@ -30,15 +29,13 @@ BackgroundChannelRegistrar::BackgroundChannelRegistrar()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-BackgroundChannelRegistrar::~BackgroundChannelRegistrar()
-{
+BackgroundChannelRegistrar::~BackgroundChannelRegistrar() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 // static
 already_AddRefed<nsIBackgroundChannelRegistrar>
-BackgroundChannelRegistrar::GetOrCreate()
-{
+BackgroundChannelRegistrar::GetOrCreate() {
   if (!gSingleton) {
     gSingleton = new BackgroundChannelRegistrar();
   }
@@ -46,18 +43,13 @@ BackgroundChannelRegistrar::GetOrCreate()
 }
 
 // static
-void
-BackgroundChannelRegistrar::Shutdown()
-{
+void BackgroundChannelRegistrar::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   gSingleton = nullptr;
 }
 
-void
-BackgroundChannelRegistrar::NotifyChannelLinked(
-  HttpChannelParent* aChannelParent,
-  HttpBackgroundChannelParent* aBgParent)
-{
+void BackgroundChannelRegistrar::NotifyChannelLinked(
+    HttpChannelParent* aChannelParent, HttpBackgroundChannelParent* aBgParent) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChannelParent);
   MOZ_ASSERT(aBgParent);
@@ -67,20 +59,15 @@ BackgroundChannelRegistrar::NotifyChannelLinked(
 }
 
 // nsIBackgroundChannelRegistrar
-void
-BackgroundChannelRegistrar::DeleteChannel(uint64_t aKey)
-{
+void BackgroundChannelRegistrar::DeleteChannel(uint64_t aKey) {
   MOZ_ASSERT(NS_IsMainThread());
 
   mChannels.Remove(aKey);
   mBgChannels.Remove(aKey);
 }
 
-void
-BackgroundChannelRegistrar::LinkHttpChannel(
-  uint64_t aKey,
-  HttpChannelParent* aChannel)
-{
+void BackgroundChannelRegistrar::LinkHttpChannel(uint64_t aKey,
+                                                 HttpChannelParent* aChannel) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChannel);
 
@@ -96,11 +83,8 @@ BackgroundChannelRegistrar::LinkHttpChannel(
   NotifyChannelLinked(aChannel, bgParent);
 }
 
-void
-BackgroundChannelRegistrar::LinkBackgroundChannel(
-  uint64_t aKey,
-  HttpBackgroundChannelParent* aBgChannel)
-{
+void BackgroundChannelRegistrar::LinkBackgroundChannel(
+    uint64_t aKey, HttpBackgroundChannelParent* aBgChannel) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBgChannel);
 
@@ -116,5 +100,5 @@ BackgroundChannelRegistrar::LinkBackgroundChannel(
   NotifyChannelLinked(parent, aBgChannel);
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

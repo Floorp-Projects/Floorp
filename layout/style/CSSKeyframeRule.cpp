@@ -17,19 +17,16 @@ namespace dom {
 // CSSKeyframeDeclaration
 //
 
-class CSSKeyframeDeclaration : public nsDOMCSSDeclaration
-{
-public:
-  explicit CSSKeyframeDeclaration(CSSKeyframeRule* aRule)
-    : mRule(aRule)
-  {
-    mDecls = new DeclarationBlock(
-      Servo_Keyframe_GetStyle(aRule->Raw()).Consume());
+class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
+ public:
+  explicit CSSKeyframeDeclaration(CSSKeyframeRule* aRule) : mRule(aRule) {
+    mDecls =
+        new DeclarationBlock(Servo_Keyframe_GetStyle(aRule->Raw()).Consume());
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
-    CSSKeyframeDeclaration, nsICSSDeclaration)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CSSKeyframeDeclaration,
+                                                         nsICSSDeclaration)
 
   css::Rule* GetParentRule() final { return mRule; }
 
@@ -39,13 +36,11 @@ public:
   }
 
   DeclarationBlock* GetOrCreateCSSDeclaration(
-    Operation aOperation, DeclarationBlock** aCreated) final
-  {
+      Operation aOperation, DeclarationBlock** aCreated) final {
     return mDecls;
   }
   nsresult SetCSSDeclaration(DeclarationBlock* aDecls,
-                             MutationClosureData* aClosureData) final
-  {
+                             MutationClosureData* aClosureData) final {
     if (!mRule) {
       return NS_OK;
     }
@@ -60,25 +55,22 @@ public:
     return NS_OK;
   }
   ParsingEnvironment GetParsingEnvironment(
-      nsIPrincipal* aSubjectPrincipal) const final
-  {
+      nsIPrincipal* aSubjectPrincipal) const final {
     return GetParsingEnvironmentForRule(mRule);
   }
   nsIDocument* DocToUpdate() final { return nullptr; }
 
-  nsINode* GetParentObject() final
-  {
+  nsINode* GetParentObject() final {
     return mRule ? mRule->GetParentObject() : nullptr;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t n = aMallocSizeOf(this);
     // TODO we may want to add size of mDecls as well
     return n;
   }
 
-private:
+ private:
   virtual ~CSSKeyframeDeclaration() {
     MOZ_ASSERT(!mRule, "Backpointer should have been cleared");
   }
@@ -101,17 +93,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 //
 
 CSSKeyframeRule::CSSKeyframeRule(already_AddRefed<RawServoKeyframe> aRaw,
-                                 StyleSheet* aSheet,
-                                 css::Rule* aParentRule,
-                                 uint32_t aLine,
-                                 uint32_t aColumn)
-  : css::Rule(aSheet, aParentRule, aLine, aColumn)
-  , mRaw(aRaw)
-{
-}
+                                 StyleSheet* aSheet, css::Rule* aParentRule,
+                                 uint32_t aLine, uint32_t aColumn)
+    : css::Rule(aSheet, aParentRule, aLine, aColumn), mRaw(aRaw) {}
 
-CSSKeyframeRule::~CSSKeyframeRule()
-{
+CSSKeyframeRule::~CSSKeyframeRule() {
   if (mDeclaration) {
     mDeclaration->DropReference();
   }
@@ -126,28 +112,22 @@ NS_INTERFACE_MAP_END_INHERITING(css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CSSKeyframeRule)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSKeyframeRule,
-                                                css::Rule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSKeyframeRule, css::Rule)
   if (tmp->mDeclaration) {
     tmp->mDeclaration->DropReference();
     tmp->mDeclaration = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSKeyframeRule,
-                                                  css::Rule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSKeyframeRule, css::Rule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeclaration)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-bool
-CSSKeyframeRule::IsCCLeaf() const
-{
+bool CSSKeyframeRule::IsCCLeaf() const {
   return Rule::IsCCLeaf() && !mDeclaration;
 }
 
 #ifdef DEBUG
-/* virtual */ void
-CSSKeyframeRule::List(FILE* out, int32_t aIndent) const
-{
+/* virtual */ void CSSKeyframeRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -157,10 +137,8 @@ CSSKeyframeRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-template<typename Func>
-void
-CSSKeyframeRule::UpdateRule(Func aCallback)
-{
+template <typename Func>
+void CSSKeyframeRule::UpdateRule(Func aCallback) {
   aCallback();
 
   if (StyleSheet* sheet = GetStyleSheet()) {
@@ -168,39 +146,27 @@ CSSKeyframeRule::UpdateRule(Func aCallback)
   }
 }
 
-void
-CSSKeyframeRule::GetKeyText(nsAString& aKeyText)
-{
+void CSSKeyframeRule::GetKeyText(nsAString& aKeyText) {
   Servo_Keyframe_GetKeyText(mRaw, &aKeyText);
 }
 
-void
-CSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
-{
+void CSSKeyframeRule::SetKeyText(const nsAString& aKeyText) {
   NS_ConvertUTF16toUTF8 keyText(aKeyText);
-  UpdateRule([this, &keyText]() {
-    Servo_Keyframe_SetKeyText(mRaw, &keyText);
-  });
+  UpdateRule([this, &keyText]() { Servo_Keyframe_SetKeyText(mRaw, &keyText); });
 }
 
-void
-CSSKeyframeRule::GetCssText(nsAString& aCssText) const
-{
+void CSSKeyframeRule::GetCssText(nsAString& aCssText) const {
   Servo_Keyframe_GetCssText(mRaw, &aCssText);
 }
 
-nsICSSDeclaration*
-CSSKeyframeRule::Style()
-{
+nsICSSDeclaration* CSSKeyframeRule::Style() {
   if (!mDeclaration) {
     mDeclaration = new CSSKeyframeDeclaration(this);
   }
   return mDeclaration;
 }
 
-size_t
-CSSKeyframeRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t CSSKeyframeRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
   if (mDeclaration) {
     n += mDeclaration->SizeOfIncludingThis(aMallocSizeOf);
@@ -208,12 +174,10 @@ CSSKeyframeRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-/* virtual */ JSObject*
-CSSKeyframeRule::WrapObject(JSContext* aCx,
-                            JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* CSSKeyframeRule::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSKeyframeRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

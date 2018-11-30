@@ -20,31 +20,29 @@
 namespace mozilla {
 namespace net {
 
-class SimpleBufferPage : public LinkedListElement<SimpleBufferPage>
-{
-public:
+class SimpleBufferPage : public LinkedListElement<SimpleBufferPage> {
+ public:
   SimpleBufferPage() : mReadOffset(0), mWriteOffset(0) {}
   static const size_t kSimpleBufferPageSize = 32000;
 
-private:
+ private:
   friend class SimpleBuffer;
   char mBuffer[kSimpleBufferPageSize];
   size_t mReadOffset;
   size_t mWriteOffset;
 };
 
-class SimpleBuffer
-{
-public:
+class SimpleBuffer {
+ public:
   SimpleBuffer();
   ~SimpleBuffer() = default;
 
-  nsresult Write(char *stc, size_t len); // return OK or OUT_OF_MEMORY
-  size_t Read(char *dest, size_t maxLen); // return bytes read
+  nsresult Write(char *stc, size_t len);   // return OK or OUT_OF_MEMORY
+  size_t Read(char *dest, size_t maxLen);  // return bytes read
   size_t Available();
   void Clear();
 
-private:
+ private:
   NS_DECL_OWNINGTHREAD
 
   nsresult mStatus;
@@ -52,7 +50,7 @@ private:
   size_t mAvailable;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

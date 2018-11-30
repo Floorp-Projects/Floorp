@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h" // MOZ_ARRAY_LENGTH
+#include "mozilla/ArrayUtils.h"  // MOZ_ARRAY_LENGTH
 
 #include "SVGPathSegUtils.h"
 
@@ -18,14 +18,12 @@ using namespace mozilla::gfx;
 static const float PATH_SEG_LENGTH_TOLERANCE = 0.0000001f;
 static const uint32_t MAX_RECURSION = 10;
 
-
-/* static */ void
-SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
-{
+/* static */ void SVGPathSegUtils::GetValueAsString(const float* aSeg,
+                                                    nsAString& aValue) {
   // Adding new seg type? Is the formatting below acceptable for the new types?
-  static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
-                PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
-                "Update GetValueAsString for the new value.");
+  static_assert(
+      NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+      "Update GetValueAsString for the new value.");
   static_assert(NS_SVG_PATH_SEG_MAX_ARGS == 7,
                 "Add another case to the switch below.");
 
@@ -36,58 +34,49 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
   if (IsArcType(type)) {
     bool largeArcFlag = aSeg[4] != 0.0f;
     bool sweepFlag = aSeg[5] != 0.0f;
-    nsTextFormatter::ssprintf(aValue,
-                              u"%c%g,%g %g %d,%d %g,%g",
-                              typeAsChar, aSeg[1], aSeg[2], aSeg[3],
-                              largeArcFlag, sweepFlag, aSeg[6], aSeg[7]);
+    nsTextFormatter::ssprintf(aValue, u"%c%g,%g %g %d,%d %g,%g", typeAsChar,
+                              aSeg[1], aSeg[2], aSeg[3], largeArcFlag,
+                              sweepFlag, aSeg[6], aSeg[7]);
   } else {
-
     switch (ArgCountForType(type)) {
-    case 0:
-      aValue = typeAsChar;
-      break;
+      case 0:
+        aValue = typeAsChar;
+        break;
 
-    case 1:
-      nsTextFormatter::ssprintf(aValue, u"%c%g",
-                                typeAsChar, aSeg[1]);
-      break;
+      case 1:
+        nsTextFormatter::ssprintf(aValue, u"%c%g", typeAsChar, aSeg[1]);
+        break;
 
-    case 2:
-      nsTextFormatter::ssprintf(aValue, u"%c%g,%g",
-                                typeAsChar, aSeg[1], aSeg[2]);
-      break;
+      case 2:
+        nsTextFormatter::ssprintf(aValue, u"%c%g,%g", typeAsChar, aSeg[1],
+                                  aSeg[2]);
+        break;
 
-    case 4:
-      nsTextFormatter::ssprintf(aValue, u"%c%g,%g %g,%g",
-                                typeAsChar, aSeg[1], aSeg[2], aSeg[3], aSeg[4]);
-      break;
+      case 4:
+        nsTextFormatter::ssprintf(aValue, u"%c%g,%g %g,%g", typeAsChar, aSeg[1],
+                                  aSeg[2], aSeg[3], aSeg[4]);
+        break;
 
-    case 6:
-      nsTextFormatter::ssprintf(aValue,
-                                u"%c%g,%g %g,%g %g,%g",
-                                typeAsChar, aSeg[1], aSeg[2], aSeg[3], aSeg[4],
-                                aSeg[5], aSeg[6]);
-      break;
+      case 6:
+        nsTextFormatter::ssprintf(aValue, u"%c%g,%g %g,%g %g,%g", typeAsChar,
+                                  aSeg[1], aSeg[2], aSeg[3], aSeg[4], aSeg[5],
+                                  aSeg[6]);
+        break;
 
-    default:
-      MOZ_ASSERT(false, "Unknown segment type");
-      aValue = u"<unknown-segment-type>";
-      return;
+      default:
+        MOZ_ASSERT(false, "Unknown segment type");
+        aValue = u"<unknown-segment-type>";
+        return;
     }
   }
 }
 
-
-static float
-CalcDistanceBetweenPoints(const Point& aP1, const Point& aP2)
-{
+static float CalcDistanceBetweenPoints(const Point& aP1, const Point& aP2) {
   return NS_hypot(aP2.x - aP1.x, aP2.y - aP1.y);
 }
 
-
-static void
-SplitQuadraticBezier(const Point* aCurve, Point* aLeft, Point* aRight)
-{
+static void SplitQuadraticBezier(const Point* aCurve, Point* aLeft,
+                                 Point* aRight) {
   aLeft[0].x = aCurve[0].x;
   aLeft[0].y = aCurve[0].y;
   aRight[2].x = aCurve[2].x;
@@ -100,9 +89,7 @@ SplitQuadraticBezier(const Point* aCurve, Point* aLeft, Point* aRight)
   aLeft[2].y = aRight[0].y = (aLeft[1].y + aRight[1].y) / 2;
 }
 
-static void
-SplitCubicBezier(const Point* aCurve, Point* aLeft, Point* aRight)
-{
+static void SplitCubicBezier(const Point* aCurve, Point* aLeft, Point* aRight) {
   Point tmp;
   tmp.x = (aCurve[1].x + aCurve[2].x) / 4;
   tmp.y = (aCurve[1].y + aCurve[2].y) / 4;
@@ -122,16 +109,14 @@ SplitCubicBezier(const Point* aCurve, Point* aLeft, Point* aRight)
   aLeft[3].y = aRight[0].y = (aLeft[2].y + aRight[1].y) / 2;
 }
 
-static float
-CalcBezLengthHelper(const Point* aCurve, uint32_t aNumPts,
-                    uint32_t aRecursionCount,
-                    void (*aSplit)(const Point*, Point*, Point*))
-{
+static float CalcBezLengthHelper(const Point* aCurve, uint32_t aNumPts,
+                                 uint32_t aRecursionCount,
+                                 void (*aSplit)(const Point*, Point*, Point*)) {
   Point left[4];
   Point right[4];
   float length = 0, dist;
   for (uint32_t i = 0; i < aNumPts - 1; i++) {
-    length += CalcDistanceBetweenPoints(aCurve[i], aCurve[i+1]);
+    length += CalcDistanceBetweenPoints(aCurve[i], aCurve[i + 1]);
   }
   dist = CalcDistanceBetweenPoints(aCurve[0], aCurve[aNumPts - 1]);
   if (length - dist > PATH_SEG_LENGTH_TOLERANCE &&
@@ -144,26 +129,23 @@ CalcBezLengthHelper(const Point* aCurve, uint32_t aNumPts,
   return length;
 }
 
-static inline float
-CalcLengthOfCubicBezier(const Point& aPos, const Point &aCP1,
-                        const Point& aCP2, const Point &aTo)
-{
-  Point curve[4] = { aPos, aCP1, aCP2, aTo };
+static inline float CalcLengthOfCubicBezier(const Point& aPos,
+                                            const Point& aCP1,
+                                            const Point& aCP2,
+                                            const Point& aTo) {
+  Point curve[4] = {aPos, aCP1, aCP2, aTo};
   return CalcBezLengthHelper(curve, 4, 0, SplitCubicBezier);
 }
 
-static inline float
-CalcLengthOfQuadraticBezier(const Point& aPos, const Point& aCP,
-                            const Point& aTo)
-{
-  Point curve[3] = { aPos, aCP, aTo };
+static inline float CalcLengthOfQuadraticBezier(const Point& aPos,
+                                                const Point& aCP,
+                                                const Point& aTo) {
+  Point curve[3] = {aPos, aCP, aTo};
   return CalcBezLengthHelper(curve, 3, 0, SplitQuadraticBezier);
 }
 
-
-static void
-TraverseClosePath(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseClosePath(const float* aArgs,
+                              SVGPathTraversalState& aState) {
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     aState.length += CalcDistanceBetweenPoints(aState.pos, aState.start);
     aState.cp1 = aState.cp2 = aState.start;
@@ -171,9 +153,8 @@ TraverseClosePath(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = aState.start;
 }
 
-static void
-TraverseMovetoAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseMovetoAbs(const float* aArgs,
+                              SVGPathTraversalState& aState) {
   aState.start = aState.pos = Point(aArgs[0], aArgs[1]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     // aState.length is unchanged, since move commands don't affect path length.
@@ -181,9 +162,8 @@ TraverseMovetoAbs(const float* aArgs, SVGPathTraversalState& aState)
   }
 }
 
-static void
-TraverseMovetoRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseMovetoRel(const float* aArgs,
+                              SVGPathTraversalState& aState) {
   aState.start = aState.pos += Point(aArgs[0], aArgs[1]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     // aState.length is unchanged, since move commands don't affect path length.
@@ -191,9 +171,8 @@ TraverseMovetoRel(const float* aArgs, SVGPathTraversalState& aState)
   }
 }
 
-static void
-TraverseLinetoAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseLinetoAbs(const float* aArgs,
+                              SVGPathTraversalState& aState) {
   Point to(aArgs[0], aArgs[1]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     aState.length += CalcDistanceBetweenPoints(aState.pos, to);
@@ -202,9 +181,8 @@ TraverseLinetoAbs(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseLinetoRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseLinetoRel(const float* aArgs,
+                              SVGPathTraversalState& aState) {
   Point to = aState.pos + Point(aArgs[0], aArgs[1]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     aState.length += CalcDistanceBetweenPoints(aState.pos, to);
@@ -213,9 +191,8 @@ TraverseLinetoRel(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseLinetoHorizontalAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseLinetoHorizontalAbs(const float* aArgs,
+                                        SVGPathTraversalState& aState) {
   Point to(aArgs[0], aState.pos.y);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     aState.length += fabs(to.x - aState.pos.x);
@@ -224,9 +201,8 @@ TraverseLinetoHorizontalAbs(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseLinetoHorizontalRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseLinetoHorizontalRel(const float* aArgs,
+                                        SVGPathTraversalState& aState) {
   aState.pos.x += aArgs[0];
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     aState.length += fabs(aArgs[0]);
@@ -234,9 +210,8 @@ TraverseLinetoHorizontalRel(const float* aArgs, SVGPathTraversalState& aState)
   }
 }
 
-static void
-TraverseLinetoVerticalAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseLinetoVerticalAbs(const float* aArgs,
+                                      SVGPathTraversalState& aState) {
   Point to(aState.pos.x, aArgs[0]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     aState.length += fabs(to.y - aState.pos.y);
@@ -245,9 +220,8 @@ TraverseLinetoVerticalAbs(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseLinetoVerticalRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseLinetoVerticalRel(const float* aArgs,
+                                      SVGPathTraversalState& aState) {
   aState.pos.y += aArgs[0];
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     aState.length += fabs(aArgs[0]);
@@ -255,9 +229,8 @@ TraverseLinetoVerticalRel(const float* aArgs, SVGPathTraversalState& aState)
   }
 }
 
-static void
-TraverseCurvetoCubicAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoCubicAbs(const float* aArgs,
+                                    SVGPathTraversalState& aState) {
   Point to(aArgs[4], aArgs[5]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp1(aArgs[0], aArgs[1]);
@@ -269,9 +242,8 @@ TraverseCurvetoCubicAbs(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseCurvetoCubicSmoothAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoCubicSmoothAbs(const float* aArgs,
+                                          SVGPathTraversalState& aState) {
   Point to(aArgs[2], aArgs[3]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp1 = aState.pos - (aState.cp2 - aState.pos);
@@ -283,9 +255,8 @@ TraverseCurvetoCubicSmoothAbs(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseCurvetoCubicRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoCubicRel(const float* aArgs,
+                                    SVGPathTraversalState& aState) {
   Point to = aState.pos + Point(aArgs[4], aArgs[5]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp1 = aState.pos + Point(aArgs[0], aArgs[1]);
@@ -297,9 +268,8 @@ TraverseCurvetoCubicRel(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseCurvetoCubicSmoothRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoCubicSmoothRel(const float* aArgs,
+                                          SVGPathTraversalState& aState) {
   Point to = aState.pos + Point(aArgs[2], aArgs[3]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp1 = aState.pos - (aState.cp2 - aState.pos);
@@ -311,9 +281,8 @@ TraverseCurvetoCubicSmoothRel(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseCurvetoQuadraticAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoQuadraticAbs(const float* aArgs,
+                                        SVGPathTraversalState& aState) {
   Point to(aArgs[2], aArgs[3]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp(aArgs[0], aArgs[1]);
@@ -324,10 +293,8 @@ TraverseCurvetoQuadraticAbs(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseCurvetoQuadraticSmoothAbs(const float* aArgs,
-                                  SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoQuadraticSmoothAbs(const float* aArgs,
+                                              SVGPathTraversalState& aState) {
   Point to(aArgs[0], aArgs[1]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp = aState.pos - (aState.cp1 - aState.pos);
@@ -338,9 +305,8 @@ TraverseCurvetoQuadraticSmoothAbs(const float* aArgs,
   aState.pos = to;
 }
 
-static void
-TraverseCurvetoQuadraticRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoQuadraticRel(const float* aArgs,
+                                        SVGPathTraversalState& aState) {
   Point to = aState.pos + Point(aArgs[2], aArgs[3]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp = aState.pos + Point(aArgs[0], aArgs[1]);
@@ -351,10 +317,8 @@ TraverseCurvetoQuadraticRel(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseCurvetoQuadraticSmoothRel(const float* aArgs,
-                                  SVGPathTraversalState& aState)
-{
+static void TraverseCurvetoQuadraticSmoothRel(const float* aArgs,
+                                              SVGPathTraversalState& aState) {
   Point to = aState.pos + Point(aArgs[0], aArgs[1]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     Point cp = aState.pos - (aState.cp1 - aState.pos);
@@ -365,9 +329,7 @@ TraverseCurvetoQuadraticSmoothRel(const float* aArgs,
   aState.pos = to;
 }
 
-static void
-TraverseArcAbs(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseArcAbs(const float* aArgs, SVGPathTraversalState& aState) {
   Point to(aArgs[5], aArgs[6]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     float dist = 0;
@@ -375,7 +337,7 @@ TraverseArcAbs(const float* aArgs, SVGPathTraversalState& aState)
     if (radii.x == 0.0f || radii.y == 0.0f) {
       dist = CalcDistanceBetweenPoints(aState.pos, to);
     } else {
-      Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
+      Point bez[4] = {aState.pos, Point(0, 0), Point(0, 0), Point(0, 0)};
       nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
                                   aArgs[3] != 0, aArgs[4] != 0);
       while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
@@ -389,9 +351,7 @@ TraverseArcAbs(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-static void
-TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState)
-{
+static void TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState) {
   Point to = aState.pos + Point(aArgs[5], aArgs[6]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     float dist = 0;
@@ -399,7 +359,7 @@ TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState)
     if (radii.x == 0.0f || radii.y == 0.0f) {
       dist = CalcDistanceBetweenPoints(aState.pos, to);
     } else {
-      Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
+      Point bez[4] = {aState.pos, Point(0, 0), Point(0, 0), Point(0, 0)};
       nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
                                   aArgs[3] != 0, aArgs[4] != 0);
       while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
@@ -413,39 +373,35 @@ TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState)
   aState.pos = to;
 }
 
-
 typedef void (*TraverseFunc)(const float*, SVGPathTraversalState&);
 
 static TraverseFunc gTraverseFuncTable[NS_SVG_PATH_SEG_TYPE_COUNT] = {
-  nullptr, //  0 == PATHSEG_UNKNOWN
-  TraverseClosePath,
-  TraverseMovetoAbs,
-  TraverseMovetoRel,
-  TraverseLinetoAbs,
-  TraverseLinetoRel,
-  TraverseCurvetoCubicAbs,
-  TraverseCurvetoCubicRel,
-  TraverseCurvetoQuadraticAbs,
-  TraverseCurvetoQuadraticRel,
-  TraverseArcAbs,
-  TraverseArcRel,
-  TraverseLinetoHorizontalAbs,
-  TraverseLinetoHorizontalRel,
-  TraverseLinetoVerticalAbs,
-  TraverseLinetoVerticalRel,
-  TraverseCurvetoCubicSmoothAbs,
-  TraverseCurvetoCubicSmoothRel,
-  TraverseCurvetoQuadraticSmoothAbs,
-  TraverseCurvetoQuadraticSmoothRel
-};
+    nullptr,  //  0 == PATHSEG_UNKNOWN
+    TraverseClosePath,
+    TraverseMovetoAbs,
+    TraverseMovetoRel,
+    TraverseLinetoAbs,
+    TraverseLinetoRel,
+    TraverseCurvetoCubicAbs,
+    TraverseCurvetoCubicRel,
+    TraverseCurvetoQuadraticAbs,
+    TraverseCurvetoQuadraticRel,
+    TraverseArcAbs,
+    TraverseArcRel,
+    TraverseLinetoHorizontalAbs,
+    TraverseLinetoHorizontalRel,
+    TraverseLinetoVerticalAbs,
+    TraverseLinetoVerticalRel,
+    TraverseCurvetoCubicSmoothAbs,
+    TraverseCurvetoCubicSmoothRel,
+    TraverseCurvetoQuadraticSmoothAbs,
+    TraverseCurvetoQuadraticSmoothRel};
 
-/* static */ void
-SVGPathSegUtils::TraversePathSegment(const float* aData,
-                                     SVGPathTraversalState& aState)
-{
-  static_assert(MOZ_ARRAY_LENGTH(gTraverseFuncTable) ==
-                NS_SVG_PATH_SEG_TYPE_COUNT,
-                "gTraverseFuncTable is out of date");
+/* static */ void SVGPathSegUtils::TraversePathSegment(
+    const float* aData, SVGPathTraversalState& aState) {
+  static_assert(
+      MOZ_ARRAY_LENGTH(gTraverseFuncTable) == NS_SVG_PATH_SEG_TYPE_COUNT,
+      "gTraverseFuncTable is out of date");
   uint32_t type = DecodeType(aData[0]);
   gTraverseFuncTable[type](aData + 1, aState);
 }

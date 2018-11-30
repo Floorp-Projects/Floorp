@@ -11,6 +11,8 @@
 
 namespace mozilla {
 constexpr inline int32_t AppUnitsPerCSSPixel() { return 60; }
-constexpr inline int32_t AppUnitsPerCSSInch() { return 96 * AppUnitsPerCSSPixel(); }
-} // namespace mozilla
+constexpr inline int32_t AppUnitsPerCSSInch() {
+  return 96 * AppUnitsPerCSSPixel();
+}
+}  // namespace mozilla
 #endif /* _NS_APPUNITS_H_ */

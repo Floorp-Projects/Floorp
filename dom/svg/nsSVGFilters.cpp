@@ -51,36 +51,33 @@ using namespace mozilla::gfx;
 
 //--------------------Filter Element Base Class-----------------------
 
-nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
-{
-  { nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { nsGkAtoms::width, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { nsGkAtoms::height, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y }
-};
+nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] = {
+    {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::X},
+    {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::Y},
+    {nsGkAtoms::width, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::X},
+    {nsGkAtoms::height, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::Y}};
 
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFE,nsSVGFEBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFE,nsSVGFEBase)
+NS_IMPL_ADDREF_INHERITED(nsSVGFE, nsSVGFEBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFE, nsSVGFEBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGFE)
-   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsSVGFE)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(nsSVGFE)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEBase)
 
 //----------------------------------------------------------------------
 // Implementation
 
-void
-nsSVGFE::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
-{
-}
+void nsSVGFE::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) {}
 
-bool
-nsSVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
-                         nsIPrincipal* aReferencePrincipal)
-{
+bool nsSVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                              nsIPrincipal* aReferencePrincipal) {
   // This is the default implementation for OutputIsTainted.
   // Our output is tainted if we have at least one tainted input.
   for (uint32_t i = 0; i < aInputsAreTainted.Length(); i++) {
@@ -91,45 +88,31 @@ nsSVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
   return false;
 }
 
-bool
-nsSVGFE::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                   nsAtom* aAttribute) const
-{
+bool nsSVGFE::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                        nsAtom* aAttribute) const {
   return aNameSpaceID == kNameSpaceID_None &&
-         (aAttribute == nsGkAtoms::x ||
-          aAttribute == nsGkAtoms::y ||
-          aAttribute == nsGkAtoms::width ||
-          aAttribute == nsGkAtoms::height ||
+         (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y ||
+          aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
           aAttribute == nsGkAtoms::result);
 }
 
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::X()
-{
+already_AddRefed<SVGAnimatedLength> nsSVGFE::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::Y()
-{
+already_AddRefed<SVGAnimatedLength> nsSVGFE::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::Width()
-{
+already_AddRefed<SVGAnimatedLength> nsSVGFE::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::Height()
-{
+already_AddRefed<SVGAnimatedLength> nsSVGFE::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedString>
-nsSVGFE::Result()
-{
+already_AddRefed<SVGAnimatedString> nsSVGFE::Result() {
   return GetResultImageName().ToDOMAnimatedString(this);
 }
 
@@ -137,60 +120,46 @@ nsSVGFE::Result()
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-nsSVGFE::IsAttributeMapped(const nsAtom* name) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sFiltersMap
-  };
+nsSVGFE::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sFiltersMap};
 
   return FindAttributeDependence(name, map) ||
-    nsSVGFEBase::IsAttributeMapped(name);
+         nsSVGFEBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-
-bool
-nsSVGFE::StyleIsSetToSRGB()
-{
+bool nsSVGFE::StyleIsSetToSRGB() {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) return false;
 
   ComputedStyle* style = frame->Style();
   return style->StyleSVG()->mColorInterpolationFilters ==
-           NS_STYLE_COLOR_INTERPOLATION_SRGB;
+         NS_STYLE_COLOR_INTERPOLATION_SRGB;
 }
 
-/* virtual */ bool
-nsSVGFE::HasValidDimensions() const
-{
+/* virtual */ bool nsSVGFE::HasValidDimensions() const {
   return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
-           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
+          mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
          (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
-           mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
+          mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
-Size
-nsSVGFE::GetKernelUnitLength(nsSVGFilterInstance* aInstance,
-                             nsSVGNumberPair *aKernelUnitLength)
-{
+Size nsSVGFE::GetKernelUnitLength(nsSVGFilterInstance* aInstance,
+                                  nsSVGNumberPair* aKernelUnitLength) {
   if (!aKernelUnitLength->IsExplicitlySet()) {
     return Size(1, 1);
   }
 
-  float kernelX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,
-                                                aKernelUnitLength,
-                                                nsSVGNumberPair::eFirst);
-  float kernelY = aInstance->GetPrimitiveNumber(SVGContentUtils::Y,
-                                                aKernelUnitLength,
-                                                nsSVGNumberPair::eSecond);
+  float kernelX = aInstance->GetPrimitiveNumber(
+      SVGContentUtils::X, aKernelUnitLength, nsSVGNumberPair::eFirst);
+  float kernelY = aInstance->GetPrimitiveNumber(
+      SVGContentUtils::Y, aKernelUnitLength, nsSVGNumberPair::eSecond);
   return Size(kernelX, kernelY);
 }
 
-nsSVGElement::LengthAttributesInfo
-nsSVGFE::GetLengthInfo()
-{
+nsSVGElement::LengthAttributesInfo nsSVGFE::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -198,139 +167,116 @@ nsSVGFE::GetLengthInfo()
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberListInfo SVGComponentTransferFunctionElement::sNumberListInfo[1] =
-{
-  { nsGkAtoms::tableValues }
-};
+nsSVGElement::NumberListInfo
+    SVGComponentTransferFunctionElement::sNumberListInfo[1] = {
+        {nsGkAtoms::tableValues}};
 
-nsSVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] =
-{
-  { nsGkAtoms::slope,     1, false },
-  { nsGkAtoms::intercept, 0, false },
-  { nsGkAtoms::amplitude, 1, false },
-  { nsGkAtoms::exponent,  1, false },
-  { nsGkAtoms::offset,    0, false }
-};
+nsSVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] = {
+    {nsGkAtoms::slope, 1, false},
+    {nsGkAtoms::intercept, 0, false},
+    {nsGkAtoms::amplitude, 1, false},
+    {nsGkAtoms::exponent, 1, false},
+    {nsGkAtoms::offset, 0, false}};
 
 nsSVGEnumMapping SVGComponentTransferFunctionElement::sTypeMap[] = {
-  {nsGkAtoms::identity,
-   SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY},
-  {nsGkAtoms::table,
-   SVG_FECOMPONENTTRANSFER_TYPE_TABLE},
-  {nsGkAtoms::discrete,
-   SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE},
-  {nsGkAtoms::linear,
-   SVG_FECOMPONENTTRANSFER_TYPE_LINEAR},
-  {nsGkAtoms::gamma,
-   SVG_FECOMPONENTTRANSFER_TYPE_GAMMA},
-  {nullptr, 0}
-};
+    {nsGkAtoms::identity, SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY},
+    {nsGkAtoms::table, SVG_FECOMPONENTTRANSFER_TYPE_TABLE},
+    {nsGkAtoms::discrete, SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE},
+    {nsGkAtoms::linear, SVG_FECOMPONENTTRANSFER_TYPE_LINEAR},
+    {nsGkAtoms::gamma, SVG_FECOMPONENTTRANSFER_TYPE_GAMMA},
+    {nullptr, 0}};
 
-nsSVGElement::EnumInfo SVGComponentTransferFunctionElement::sEnumInfo[1] =
-{
-  { nsGkAtoms::type,
-    sTypeMap,
-    SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY
-  }
-};
+nsSVGElement::EnumInfo SVGComponentTransferFunctionElement::sEnumInfo[1] = {
+    {nsGkAtoms::type, sTypeMap, SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY}};
 
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(SVGComponentTransferFunctionElement,SVGComponentTransferFunctionElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGComponentTransferFunctionElement,SVGComponentTransferFunctionElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGComponentTransferFunctionElement,
+                         SVGComponentTransferFunctionElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGComponentTransferFunctionElement,
+                          SVGComponentTransferFunctionElementBase)
 
 NS_INTERFACE_MAP_BEGIN(SVGComponentTransferFunctionElement)
-   NS_INTERFACE_MAP_ENTRY_CONCRETE(SVGComponentTransferFunctionElement)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(SVGComponentTransferFunctionElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGComponentTransferFunctionElementBase)
-
 
 //----------------------------------------------------------------------
 // nsFEUnstyledElement methods
 
-bool
-SVGComponentTransferFunctionElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                               nsAtom* aAttribute) const
-{
+bool SVGComponentTransferFunctionElement::AttributeAffectsRendering(
+    int32_t aNameSpaceID, nsAtom* aAttribute) const {
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::tableValues ||
           aAttribute == nsGkAtoms::slope ||
           aAttribute == nsGkAtoms::intercept ||
           aAttribute == nsGkAtoms::amplitude ||
           aAttribute == nsGkAtoms::exponent ||
-          aAttribute == nsGkAtoms::offset ||
-          aAttribute == nsGkAtoms::type);
+          aAttribute == nsGkAtoms::offset || aAttribute == nsGkAtoms::type);
 }
 
 //----------------------------------------------------------------------
 
 already_AddRefed<SVGAnimatedEnumeration>
-SVGComponentTransferFunctionElement::Type()
-{
+SVGComponentTransferFunctionElement::Type() {
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumberList>
-SVGComponentTransferFunctionElement::TableValues()
-{
+SVGComponentTransferFunctionElement::TableValues() {
   return DOMSVGAnimatedNumberList::GetDOMWrapper(
-    &mNumberListAttributes[TABLEVALUES], this, TABLEVALUES);
+      &mNumberListAttributes[TABLEVALUES], this, TABLEVALUES);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGComponentTransferFunctionElement::Slope()
-{
+SVGComponentTransferFunctionElement::Slope() {
   return mNumberAttributes[SLOPE].ToDOMAnimatedNumber(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGComponentTransferFunctionElement::Intercept()
-{
+SVGComponentTransferFunctionElement::Intercept() {
   return mNumberAttributes[INTERCEPT].ToDOMAnimatedNumber(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGComponentTransferFunctionElement::Amplitude()
-{
+SVGComponentTransferFunctionElement::Amplitude() {
   return mNumberAttributes[AMPLITUDE].ToDOMAnimatedNumber(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGComponentTransferFunctionElement::Exponent()
-{
+SVGComponentTransferFunctionElement::Exponent() {
   return mNumberAttributes[EXPONENT].ToDOMAnimatedNumber(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGComponentTransferFunctionElement::Offset()
-{
+SVGComponentTransferFunctionElement::Offset() {
   return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(this);
 }
 
-void
-SVGComponentTransferFunctionElement::ComputeAttributes(int32_t aChannel,
-                                                       ComponentTransferAttributes& aAttributes)
-{
+void SVGComponentTransferFunctionElement::ComputeAttributes(
+    int32_t aChannel, ComponentTransferAttributes& aAttributes) {
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();
 
   float slope, intercept, amplitude, exponent, offset;
-  GetAnimatedNumberValues(&slope, &intercept, &amplitude,
-                          &exponent, &offset, nullptr);
+  GetAnimatedNumberValues(&slope, &intercept, &amplitude, &exponent, &offset,
+                          nullptr);
 
-  const SVGNumberList &tableValues =
-    mNumberListAttributes[TABLEVALUES].GetAnimValue();
+  const SVGNumberList& tableValues =
+      mNumberListAttributes[TABLEVALUES].GetAnimValue();
 
   aAttributes.mTypes[aChannel] = (uint8_t)type;
   switch (type) {
     case SVG_FECOMPONENTTRANSFER_TYPE_LINEAR: {
       aAttributes.mValues[aChannel].SetLength(2);
       aAttributes.mValues[aChannel][kComponentTransferSlopeIndex] = slope;
-      aAttributes.mValues[aChannel][kComponentTransferInterceptIndex] = intercept;
+      aAttributes.mValues[aChannel][kComponentTransferInterceptIndex] =
+          intercept;
       break;
     }
     case SVG_FECOMPONENTTRANSFER_TYPE_GAMMA: {
       aAttributes.mValues[aChannel].SetLength(3);
-      aAttributes.mValues[aChannel][kComponentTransferAmplitudeIndex] = amplitude;
+      aAttributes.mValues[aChannel][kComponentTransferAmplitudeIndex] =
+          amplitude;
       aAttributes.mValues[aChannel][kComponentTransferExponentIndex] = exponent;
       aAttributes.mValues[aChannel][kComponentTransferOffsetIndex] = offset;
       break;
@@ -350,34 +296,29 @@ SVGComponentTransferFunctionElement::ComputeAttributes(int32_t aChannel,
 // nsSVGElement methods
 
 nsSVGElement::NumberListAttributesInfo
-SVGComponentTransferFunctionElement::GetNumberListInfo()
-{
+SVGComponentTransferFunctionElement::GetNumberListInfo() {
   return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
                                   ArrayLength(sNumberListInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-SVGComponentTransferFunctionElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            ArrayLength(sEnumInfo));
+SVGComponentTransferFunctionElement::GetEnumInfo() {
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::NumberAttributesInfo
-SVGComponentTransferFunctionElement::GetNumberInfo()
-{
+SVGComponentTransferFunctionElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
-/* virtual */ JSObject*
-SVGFEFuncRElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* SVGFEFuncRElement::WrapNode(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGFEFuncRElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncR)
 
@@ -386,14 +327,13 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
 
-/* virtual */ JSObject*
-SVGFEFuncGElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* SVGFEFuncGElement::WrapNode(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGFEFuncGElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncG)
 
@@ -402,14 +342,13 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 
-/* virtual */ JSObject*
-SVGFEFuncBElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* SVGFEFuncBElement::WrapNode(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGFEFuncBElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncB)
 
@@ -418,14 +357,13 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
 
-/* virtual */ JSObject*
-SVGFEFuncAElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* SVGFEFuncAElement::WrapNode(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGFEFuncAElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFuncA)
 
@@ -434,74 +372,60 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncAElement)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 //--------------------------------------------------------------------
 //
-nsSVGElement::NumberInfo nsSVGFELightingElement::sNumberInfo[4] =
-{
-  { nsGkAtoms::surfaceScale, 1, false },
-  { nsGkAtoms::diffuseConstant, 1, false },
-  { nsGkAtoms::specularConstant, 1, false },
-  { nsGkAtoms::specularExponent, 1, false }
-};
+nsSVGElement::NumberInfo nsSVGFELightingElement::sNumberInfo[4] = {
+    {nsGkAtoms::surfaceScale, 1, false},
+    {nsGkAtoms::diffuseConstant, 1, false},
+    {nsGkAtoms::specularConstant, 1, false},
+    {nsGkAtoms::specularExponent, 1, false}};
 
-nsSVGElement::NumberPairInfo nsSVGFELightingElement::sNumberPairInfo[1] =
-{
-  { nsGkAtoms::kernelUnitLength, 0, 0 }
-};
+nsSVGElement::NumberPairInfo nsSVGFELightingElement::sNumberPairInfo[1] = {
+    {nsGkAtoms::kernelUnitLength, 0, 0}};
 
-nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] =
-{
-  { nsGkAtoms::result, kNameSpaceID_None, true },
-  { nsGkAtoms::in, kNameSpaceID_None, true }
-};
+nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] = {
+    {nsGkAtoms::result, kNameSpaceID_None, true},
+    {nsGkAtoms::in, kNameSpaceID_None, true}};
 
 //----------------------------------------------------------------------
 // Implementation
 
 NS_IMETHODIMP_(bool)
-nsSVGFELightingElement::IsAttributeMapped(const nsAtom* name) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sColorMap,
-    sLightingEffectsMap
-  };
+nsSVGFELightingElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sColorMap,
+                                                    sLightingEffectsMap};
 
   return FindAttributeDependence(name, map) ||
-    nsSVGFELightingElementBase::IsAttributeMapped(name);
+         nsSVGFELightingElementBase::IsAttributeMapped(name);
 }
 
-void
-nsSVGFELightingElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
-{
+void nsSVGFELightingElement::GetSourceImageNames(
+    nsTArray<nsSVGStringInfo>& aSources) {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
-LightType
-nsSVGFELightingElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance,
-                                               nsTArray<float>& aFloatAttributes)
-{
+LightType nsSVGFELightingElement::ComputeLightAttributes(
+    nsSVGFilterInstance* aInstance, nsTArray<float>& aFloatAttributes) {
   // find specified light
-  for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
-       child;
+  for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child->IsAnyOfSVGElements(nsGkAtoms::feDistantLight,
                                   nsGkAtoms::fePointLight,
                                   nsGkAtoms::feSpotLight)) {
-      return static_cast<SVGFELightElement*>(child.get())->ComputeLightAttributes(aInstance,
-                                                                                  aFloatAttributes);
+      return static_cast<SVGFELightElement*>(child.get())
+          ->ComputeLightAttributes(aInstance, aFloatAttributes);
     }
   }
 
   return LightType::None;
 }
 
-bool
-nsSVGFELightingElement::AddLightingAttributes(mozilla::gfx::DiffuseLightingAttributes* aAttributes,
-                                              nsSVGFilterInstance* aInstance)
-{
+bool nsSVGFELightingElement::AddLightingAttributes(
+    mozilla::gfx::DiffuseLightingAttributes* aAttributes,
+    nsSVGFilterInstance* aInstance) {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
     return false;
@@ -511,17 +435,18 @@ nsSVGFELightingElement::AddLightingAttributes(mozilla::gfx::DiffuseLightingAttri
   Color color(Color::FromABGR(styleSVGReset->mLightingColor.CalcColor(frame)));
   color.a = 1.f;
   float surfaceScale = mNumberAttributes[SURFACE_SCALE].GetAnimValue();
-  Size kernelUnitLength =
-    GetKernelUnitLength(aInstance, &mNumberPairAttributes[KERNEL_UNIT_LENGTH]);
+  Size kernelUnitLength = GetKernelUnitLength(
+      aInstance, &mNumberPairAttributes[KERNEL_UNIT_LENGTH]);
 
   if (kernelUnitLength.width <= 0 || kernelUnitLength.height <= 0) {
-    // According to spec, A negative or zero value is an error. See link below for details.
+    // According to spec, A negative or zero value is an error. See link below
+    // for details.
     // https://www.w3.org/TR/SVG/filters.html#feSpecularLightingKernelUnitLengthAttribute
     return false;
   }
 
   aAttributes->mLightType =
-    ComputeLightAttributes(aInstance, aAttributes->mLightValues);
+      ComputeLightAttributes(aInstance, aAttributes->mLightValues);
   aAttributes->mSurfaceScale = surfaceScale;
   aAttributes->mKernelUnitLength = kernelUnitLength;
   aAttributes->mColor = color;
@@ -529,11 +454,10 @@ nsSVGFELightingElement::AddLightingAttributes(mozilla::gfx::DiffuseLightingAttri
   return true;
 }
 
-bool
-nsSVGFELightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                  nsAtom* aAttribute) const
-{
-  return nsSVGFELightingElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+bool nsSVGFELightingElement::AttributeAffectsRendering(
+    int32_t aNameSpaceID, nsAtom* aAttribute) const {
+  return nsSVGFELightingElementBase::AttributeAffectsRendering(aNameSpaceID,
+                                                               aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::surfaceScale ||
@@ -543,23 +467,18 @@ nsSVGFELightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-nsSVGElement::NumberAttributesInfo
-nsSVGFELightingElement::GetNumberInfo()
-{
+nsSVGElement::NumberAttributesInfo nsSVGFELightingElement::GetNumberInfo() {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::NumberPairAttributesInfo
-nsSVGFELightingElement::GetNumberPairInfo()
-{
+nsSVGFELightingElement::GetNumberPairInfo() {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
-nsSVGElement::StringAttributesInfo
-nsSVGFELightingElement::GetStringInfo()
-{
+nsSVGElement::StringAttributesInfo nsSVGFELightingElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }

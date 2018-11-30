@@ -21,38 +21,33 @@ class nsIFrame;
 /**
  * The row (or column) data structure in the grid cellmap.
  */
-class nsGridRow
-{
-public:
-   nsGridRow();
-   ~nsGridRow();
+class nsGridRow {
+ public:
+  nsGridRow();
+  ~nsGridRow();
 
-   void Init(nsIFrame* aBox, bool aIsBogus);
+  void Init(nsIFrame* aBox, bool aIsBogus);
 
-// accessors
-   nsIFrame* GetBox()   { return mBox;          }
-   bool IsPrefSet() { return (mPref != -1); }
-   bool IsMinSet()  { return (mMin  != -1); }
-   bool IsMaxSet()  { return (mMax  != -1); }
-   bool IsFlexSet() { return (mFlex != -1); }
-   bool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
-   bool IsXULCollapsed();
+  // accessors
+  nsIFrame* GetBox() { return mBox; }
+  bool IsPrefSet() { return (mPref != -1); }
+  bool IsMinSet() { return (mMin != -1); }
+  bool IsMaxSet() { return (mMax != -1); }
+  bool IsFlexSet() { return (mFlex != -1); }
+  bool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
+  bool IsXULCollapsed();
 
-public:
-
-   bool    mIsBogus;
-   nsIFrame* mBox;
-   nscoord mFlex;
-   nscoord mPref;
-   nscoord mMin;
-   nscoord mMax;
-   nscoord mTop;
-   nscoord mBottom;
-   nscoord mTopMargin;
-   nscoord mBottomMargin;
-
+ public:
+  bool mIsBogus;
+  nsIFrame* mBox;
+  nscoord mFlex;
+  nscoord mPref;
+  nscoord mMin;
+  nscoord mMax;
+  nscoord mTop;
+  nscoord mBottom;
+  nscoord mTopMargin;
+  nscoord mBottomMargin;
 };
 
-
 #endif
-

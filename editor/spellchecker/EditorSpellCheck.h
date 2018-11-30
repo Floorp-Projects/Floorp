@@ -6,14 +6,13 @@
 #ifndef mozilla_EditorSpellCheck_h
 #define mozilla_EditorSpellCheck_h
 
-
-#include "nsCOMPtr.h"                   // for nsCOMPtr
+#include "nsCOMPtr.h"  // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
-#include "nsIEditorSpellCheck.h"        // for NS_DECL_NSIEDITORSPELLCHECK, etc
+#include "nsIEditorSpellCheck.h"  // for NS_DECL_NSIEDITORSPELLCHECK, etc
 #include "nsISupportsImpl.h"
-#include "nsString.h"                   // for nsString
-#include "nsTArray.h"                   // for nsTArray
-#include "nscore.h"                     // for nsresult
+#include "nsString.h"  // for nsString
+#include "nsTArray.h"  // for nsTArray
+#include "nscore.h"    // for nsresult
 
 class mozSpellChecker;
 class nsIEditor;
@@ -23,18 +22,16 @@ namespace mozilla {
 class DictionaryFetcher;
 class EditorBase;
 
-enum dictCompare
-{
+enum dictCompare {
   DICT_NORMAL_COMPARE,
   DICT_COMPARE_CASE_INSENSITIVE,
   DICT_COMPARE_DASHMATCH
 };
 
-class EditorSpellCheck final : public nsIEditorSpellCheck
-{
+class EditorSpellCheck final : public nsIEditorSpellCheck {
   friend class DictionaryFetcher;
 
-public:
+ public:
   EditorSpellCheck();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -45,7 +42,7 @@ public:
 
   mozSpellChecker* GetSpellChecker();
 
-protected:
+ protected:
   virtual ~EditorSpellCheck();
 
   RefPtr<mozSpellChecker> mSpellChecker;
@@ -55,7 +52,7 @@ protected:
 
   // these are the words in the current personal dictionary,
   // GetPersonalDictionary must be called to load them.
-  nsTArray<nsString>  mDictionaryList;
+  nsTArray<nsString> mDictionaryList;
 
   nsString mPreferredLang;
 
@@ -77,12 +74,11 @@ protected:
 
   void SetFallbackDictionary(DictionaryFetcher* aFetcher);
 
-
-public:
-  void BeginUpdateDictionary() { mUpdateDictionaryRunning = true ;}
-  void EndUpdateDictionary() { mUpdateDictionaryRunning = false ;}
+ public:
+  void BeginUpdateDictionary() { mUpdateDictionaryRunning = true; }
+  void EndUpdateDictionary() { mUpdateDictionaryRunning = false; }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_EditorSpellCheck_h
+#endif  // mozilla_EditorSpellCheck_h

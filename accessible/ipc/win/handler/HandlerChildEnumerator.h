@@ -6,7 +6,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #ifndef mozilla_a11y_HandlerChildEnumerator_h
 #define mozilla_a11y_HandlerChildEnumerator_h
@@ -18,9 +18,8 @@
 namespace mozilla {
 namespace a11y {
 
-class HandlerChildEnumerator final : public IEnumVARIANT
-{
-public:
+class HandlerChildEnumerator final : public IEnumVARIANT {
+ public:
   explicit HandlerChildEnumerator(AccessibleHandler* aHandler,
                                   IGeckoBackChannel* aGeckoBackChannel);
 
@@ -33,7 +32,7 @@ public:
   STDMETHODIMP Reset() override;
   STDMETHODIMP Skip(ULONG aCelt) override;
 
-private:
+ private:
   explicit HandlerChildEnumerator(const HandlerChildEnumerator& aEnumerator);
   ~HandlerChildEnumerator();
   void ClearCache();
@@ -46,7 +45,7 @@ private:
   ULONG mNextChild;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_HandlerChildEnumerator_h
+#endif  // mozilla_a11y_HandlerChildEnumerator_h

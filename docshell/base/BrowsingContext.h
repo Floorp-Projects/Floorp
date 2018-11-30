@@ -43,17 +43,11 @@ class ContentParent;
 // Trees of BrowsingContexts should only ever contain nodes of the
 // same BrowsingContext::Type. This is enforced by asserts in the
 // BrowsingContext::Create* methods.
-class BrowsingContext
-  : public nsWrapperCache
-  , public SupportsWeakPtr<BrowsingContext>
-  , public LinkedListElement<RefPtr<BrowsingContext>>
-{
-public:
-  enum class Type
-  {
-    Chrome,
-    Content
-  };
+class BrowsingContext : public nsWrapperCache,
+                        public SupportsWeakPtr<BrowsingContext>,
+                        public LinkedListElement<RefPtr<BrowsingContext>> {
+ public:
+  enum class Type { Chrome, Content };
 
   static void Init();
   static LogModule* GetLog();
@@ -70,11 +64,8 @@ public:
 
   // Create a BrowsingContext object from over IPC.
   static already_AddRefed<BrowsingContext> CreateFromIPC(
-    BrowsingContext* aParent,
-    BrowsingContext* aOpener,
-    const nsAString& aName,
-    uint64_t aId,
-    ContentParent* aOriginProcess);
+      BrowsingContext* aParent, BrowsingContext* aOpener,
+      const nsAString& aName, uint64_t aId, ContentParent* aOriginProcess);
 
   // Get the DocShell for this BrowsingContext if it is in-process, or
   // null if it's not.
@@ -113,15 +104,12 @@ public:
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
 
-  BrowsingContext* GetOpener()
-  {
-    return mOpener;
-  }
+  BrowsingContext* GetOpener() { return mOpener; }
 
   void SetOpener(BrowsingContext* aOpener);
 
   static void GetRootBrowsingContexts(
-    nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
+      nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
 
   nsISupports* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -133,21 +121,18 @@ public:
 
   using Children = AutoCleanLinkedList<RefPtr<BrowsingContext>>;
 
-protected:
+ protected:
   virtual ~BrowsingContext();
-  BrowsingContext(BrowsingContext* aParent,
-                  BrowsingContext* aOpener,
-                  const nsAString& aName,
-                  uint64_t aBrowsingContextId,
+  BrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
+                  const nsAString& aName, uint64_t aBrowsingContextId,
                   Type aType);
 
-private:
+ private:
   // Type of BrowsingContent
   const Type mType;
 
   // Unique id identifying BrowsingContext
   const uint64_t mBrowsingContextId;
-
 
   WeakPtr<BrowsingContext> mParent;
   Children mChildren;
@@ -156,6 +141,6 @@ private:
   nsString mName;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 #endif

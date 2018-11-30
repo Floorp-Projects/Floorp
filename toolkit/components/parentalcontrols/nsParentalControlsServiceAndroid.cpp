@@ -12,28 +12,22 @@ namespace java = mozilla::java;
 
 NS_IMPL_ISUPPORTS(nsParentalControlsService, nsIParentalControlsService)
 
-nsParentalControlsService::nsParentalControlsService() :
-  mEnabled(false)
-{
+nsParentalControlsService::nsParentalControlsService() : mEnabled(false) {
   if (mozilla::jni::IsFennec()) {
     mEnabled = java::Restrictions::IsUserRestricted();
   }
 }
 
-nsParentalControlsService::~nsParentalControlsService()
-{
-}
+nsParentalControlsService::~nsParentalControlsService() {}
 
 NS_IMETHODIMP
-nsParentalControlsService::GetParentalControlsEnabled(bool *aResult)
-{
+nsParentalControlsService::GetParentalControlsEnabled(bool *aResult) {
   *aResult = mEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::GetBlockFileDownloadsEnabled(bool *aResult)
-{
+nsParentalControlsService::GetBlockFileDownloadsEnabled(bool *aResult) {
   // NOTE: isAllowed returns the opposite intention, so we need to flip it
   bool res;
   IsAllowed(nsIParentalControlsService::DOWNLOAD, NULL, &res);
@@ -43,43 +37,33 @@ nsParentalControlsService::GetBlockFileDownloadsEnabled(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::GetLoggingEnabled(bool *aResult)
-{
+nsParentalControlsService::GetLoggingEnabled(bool *aResult) {
   // Android doesn't currently have any method of logging restricted actions.
   *aResult = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::Log(int16_t aEntryType,
-                               bool aBlocked,
-                               nsIURI *aSource,
-                               nsIFile *aTarget)
-{
+nsParentalControlsService::Log(int16_t aEntryType, bool aBlocked,
+                               nsIURI *aSource, nsIFile *aTarget) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::RequestURIOverride(nsIURI *aTarget,
-                                              nsIInterfaceRequestor *aWindowContext,
-                                              bool *_retval)
-{
+nsParentalControlsService::RequestURIOverride(
+    nsIURI *aTarget, nsIInterfaceRequestor *aWindowContext, bool *_retval) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::RequestURIOverrides(nsIArray *aTargets,
-                                               nsIInterfaceRequestor *aWindowContext,
-                                               bool *_retval)
-{
+nsParentalControlsService::RequestURIOverrides(
+    nsIArray *aTargets, nsIInterfaceRequestor *aWindowContext, bool *_retval) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::IsAllowed(int16_t aAction,
-                                     nsIURI *aUri,
-                                     bool *_retval)
-{
+nsParentalControlsService::IsAllowed(int16_t aAction, nsIURI *aUri,
+                                     bool *_retval) {
   nsresult rv = NS_OK;
   *_retval = true;
 
@@ -94,8 +78,8 @@ nsParentalControlsService::IsAllowed(int16_t aAction,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    *_retval = java::Restrictions::IsAllowed(aAction,
-                                             NS_ConvertUTF8toUTF16(url));
+    *_retval =
+        java::Restrictions::IsAllowed(aAction, NS_ConvertUTF8toUTF16(url));
     return rv;
   }
 

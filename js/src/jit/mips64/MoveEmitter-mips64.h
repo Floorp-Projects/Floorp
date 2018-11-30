@@ -12,23 +12,20 @@
 namespace js {
 namespace jit {
 
-class MoveEmitterMIPS64 : public MoveEmitterMIPSShared
-{
-    void emitDoubleMove(const MoveOperand& from, const MoveOperand& to);
-    void breakCycle(const MoveOperand& from, const MoveOperand& to,
-                    MoveOp::Type type, uint32_t slot);
-    void completeCycle(const MoveOperand& from, const MoveOperand& to,
-                       MoveOp::Type type, uint32_t slot);
+class MoveEmitterMIPS64 : public MoveEmitterMIPSShared {
+  void emitDoubleMove(const MoveOperand& from, const MoveOperand& to);
+  void breakCycle(const MoveOperand& from, const MoveOperand& to,
+                  MoveOp::Type type, uint32_t slot);
+  void completeCycle(const MoveOperand& from, const MoveOperand& to,
+                     MoveOp::Type type, uint32_t slot);
 
-  public:
-    MoveEmitterMIPS64(MacroAssembler& masm)
-      : MoveEmitterMIPSShared(masm)
-    { }
+ public:
+  MoveEmitterMIPS64(MacroAssembler& masm) : MoveEmitterMIPSShared(masm) {}
 };
 
 typedef MoveEmitterMIPS64 MoveEmitter;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_mips64_MoveEmitter_mips64_h */

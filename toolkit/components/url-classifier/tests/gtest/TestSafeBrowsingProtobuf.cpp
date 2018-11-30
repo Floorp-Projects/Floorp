@@ -1,8 +1,7 @@
 #include "safebrowsing.pb.h"
 #include "gtest/gtest.h"
 
-TEST(UrlClassifierProtobuf, Empty)
-{
+TEST(UrlClassifierProtobuf, Empty) {
   using namespace mozilla::safebrowsing;
 
   const std::string CLIENT_ID = "firefox";

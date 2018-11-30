@@ -15,20 +15,18 @@ namespace gfx {
 class VRDisplayClient;
 class VRLayerChild;
 
-class VRDisplayPresentation final
-{
+class VRDisplayPresentation final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRDisplayPresentation)
 
-public:
-  VRDisplayPresentation(VRDisplayClient *aDisplayClient,
-                        const nsTArray<dom::VRLayer>& aLayers,
-                        uint32_t aGroup);
+ public:
+  VRDisplayPresentation(VRDisplayClient* aDisplayClient,
+                        const nsTArray<dom::VRLayer>& aLayers, uint32_t aGroup);
   void UpdateLayers(const nsTArray<mozilla::dom::VRLayer>& aLayers);
   void SubmitFrame();
   void GetDOMLayers(nsTArray<dom::VRLayer>& result);
   uint32_t GetGroup() const;
 
-private:
+ private:
   ~VRDisplayPresentation();
   void CreateLayers();
   void DestroyLayers();
@@ -39,7 +37,7 @@ private:
   uint32_t mGroup;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* GFX_VR_DISPLAY_PRESENTAITON_H */

@@ -1,6 +1,6 @@
 #ifndef ALOG
 #if defined(DEBUG) || defined(FORCE_ALOG)
-#define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko" , ## args)
+#define ALOG(args...) __android_log_print(ANDROID_LOG_INFO, "Gecko", ##args)
 #else
 #define ALOG(args...) ((void)0)
 #endif

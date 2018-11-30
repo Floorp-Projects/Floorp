@@ -29,28 +29,25 @@
 #include <sys/types.h>
 
 #if defined(GP_OS_linux)
-# include <link.h>      // dl_phdr_info
+#include <link.h>  // dl_phdr_info
 #elif defined(GP_OS_android)
-# include "AutoObjectMapper.h"
-# include "ElfLoader.h" // dl_phdr_info
-extern "C" MOZ_EXPORT __attribute__((weak))
-int dl_iterate_phdr(
-          int (*callback)(struct dl_phdr_info *info, size_t size, void *data),
-          void *data);
+#include "AutoObjectMapper.h"
+#include "ElfLoader.h"  // dl_phdr_info
+extern "C" MOZ_EXPORT __attribute__((weak)) int dl_iterate_phdr(
+    int (*callback)(struct dl_phdr_info* info, size_t size, void* data),
+    void* data);
 #else
-# error "Unexpected configuration"
+#error "Unexpected configuration"
 #endif
 
-struct LoadedLibraryInfo
-{
+struct LoadedLibraryInfo {
   LoadedLibraryInfo(const char* aName, unsigned long aBaseAddress,
-                    unsigned long aFirstMappingStart, unsigned long aLastMappingEnd)
-    : mName(aName)
-    , mBaseAddress(aBaseAddress)
-    , mFirstMappingStart(aFirstMappingStart)
-    , mLastMappingEnd(aLastMappingEnd)
-  {
-  }
+                    unsigned long aFirstMappingStart,
+                    unsigned long aLastMappingEnd)
+      : mName(aName),
+        mBaseAddress(aBaseAddress),
+        mFirstMappingStart(aFirstMappingStart),
+        mLastMappingEnd(aLastMappingEnd) {}
 
   nsCString mName;
   unsigned long mBaseAddress;
@@ -59,16 +56,11 @@ struct LoadedLibraryInfo
 };
 
 #if defined(GP_OS_android)
-static void
-outputMapperLog(const char* aBuf)
-{
-  LOG("%s", aBuf);
-}
+static void outputMapperLog(const char* aBuf) { LOG("%s", aBuf); }
 #endif
 
-static nsCString
-IDtoUUIDString(const google_breakpad::wasteful_vector<uint8_t>& aIdentifier)
-{
+static nsCString IDtoUUIDString(
+    const google_breakpad::wasteful_vector<uint8_t>& aIdentifier) {
   using namespace google_breakpad;
 
   nsCString uuid;
@@ -80,9 +72,7 @@ IDtoUUIDString(const google_breakpad::wasteful_vector<uint8_t>& aIdentifier)
 }
 
 // Get the breakpad Id for the binary file pointed by bin_name
-static nsCString
-getId(const char *bin_name)
-{
+static nsCString getId(const char* bin_name) {
   using namespace google_breakpad;
 
   PageAllocator allocator;
@@ -109,14 +99,13 @@ getId(const char *bin_name)
   return EmptyCString();
 }
 
-static SharedLibrary
-SharedLibraryAtPath(const char* path, unsigned long libStart,
-                    unsigned long libEnd, unsigned long offset = 0)
-{
+static SharedLibrary SharedLibraryAtPath(const char* path,
+                                         unsigned long libStart,
+                                         unsigned long libEnd,
+                                         unsigned long offset = 0) {
   nsAutoString pathStr;
-  mozilla::Unused <<
-    NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path),
-                                                pathStr)));
+  mozilla::Unused << NS_WARN_IF(
+      NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), pathStr)));
 
   nsAutoString nameStr = pathStr;
   int32_t pos = nameStr.RFindChar('/');
@@ -124,18 +113,15 @@ SharedLibraryAtPath(const char* path, unsigned long libStart,
     nameStr.Cut(0, pos + 1);
   }
 
-  return SharedLibrary(libStart, libEnd, offset, getId(path),
-                       nameStr, pathStr, nameStr, pathStr,
-                       EmptyCString(), "");
+  return SharedLibrary(libStart, libEnd, offset, getId(path), nameStr, pathStr,
+                       nameStr, pathStr, EmptyCString(), "");
 }
 
-static int
-dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
-{
+static int dl_iterate_callback(struct dl_phdr_info* dl_info, size_t size,
+                               void* data) {
   auto libInfoList = reinterpret_cast<nsTArray<LoadedLibraryInfo>*>(data);
 
-  if (dl_info->dlpi_phnum <= 0)
-    return 0;
+  if (dl_info->dlpi_phnum <= 0) return 0;
 
   unsigned long baseAddress = dl_info->dlpi_addr;
   unsigned long firstMappingStart = -1;
@@ -155,14 +141,13 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
     }
   }
 
-  libInfoList->AppendElement(LoadedLibraryInfo(dl_info->dlpi_name, baseAddress,
-                                               firstMappingStart, lastMappingEnd));
+  libInfoList->AppendElement(LoadedLibraryInfo(
+      dl_info->dlpi_name, baseAddress, firstMappingStart, lastMappingEnd));
 
   return 0;
 }
 
-SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
-{
+SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   SharedLibraryInfo info;
 
 #if defined(GP_OS_linux)
@@ -232,8 +217,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     // Use /proc/pid/maps to get the dalvik-jit section since it has no
     // associated phdrs.
     if (0 == strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache")) {
-      info.AddSharedLibrary(SharedLibraryAtPath(modulePath, start, end,
-                                                offset));
+      info.AddSharedLibrary(
+          SharedLibraryAtPath(modulePath, start, end, offset));
       if (info.GetSize() > 10000) {
         LOG("SharedLibraryInfo::GetInfoForSelf(): "
             "implausibly large number of mappings acquired");
@@ -250,10 +235,9 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 
   for (const auto& libInfo : libInfoList) {
     info.AddSharedLibrary(
-      SharedLibraryAtPath(libInfo.mName.get(),
-                          libInfo.mFirstMappingStart,
-                          libInfo.mLastMappingEnd,
-                          libInfo.mFirstMappingStart - libInfo.mBaseAddress));
+        SharedLibraryAtPath(libInfo.mName.get(), libInfo.mFirstMappingStart,
+                            libInfo.mLastMappingEnd,
+                            libInfo.mFirstMappingStart - libInfo.mBaseAddress));
   }
 
 #if defined(GP_OS_linux)
@@ -276,8 +260,5 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   return info;
 }
 
-void
-SharedLibraryInfo::Initialize()
-{
-  /* do nothing */
+void SharedLibraryInfo::Initialize() { /* do nothing */
 }

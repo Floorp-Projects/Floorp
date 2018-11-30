@@ -15,12 +15,16 @@ namespace mozilla {
 namespace dom {
 extern mozilla::LazyLogModule gPresentationLog;
 }
-}
+}  // namespace mozilla
 
 #undef PRES_ERROR
-#define PRES_ERROR(...) MOZ_LOG(mozilla::dom::gPresentationLog, mozilla::LogLevel::Error, (__VA_ARGS__))
+#define PRES_ERROR(...)                                             \
+  MOZ_LOG(mozilla::dom::gPresentationLog, mozilla::LogLevel::Error, \
+          (__VA_ARGS__))
 
 #undef PRES_DEBUG
-#define PRES_DEBUG(...) MOZ_LOG(mozilla::dom::gPresentationLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define PRES_DEBUG(...)                                             \
+  MOZ_LOG(mozilla::dom::gPresentationLog, mozilla::LogLevel::Debug, \
+          (__VA_ARGS__))
 
-#endif // mozilla_dom_PresentationLog_h
+#endif  // mozilla_dom_PresentationLog_h

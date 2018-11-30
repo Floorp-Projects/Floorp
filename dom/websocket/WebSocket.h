@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/WebSocketBinding.h" // for BinaryType
+#include "mozilla/dom/WebSocketBinding.h"  // for BinaryType
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Mutex.h"
@@ -21,7 +21,7 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
-#define DEFAULT_WS_SCHEME_PORT  80
+#define DEFAULT_WS_SCHEME_PORT 80
 #define DEFAULT_WSS_SCHEME_PORT 443
 
 class nsIInputStream;
@@ -34,19 +34,13 @@ class Blob;
 
 class WebSocketImpl;
 
-class WebSocket final : public DOMEventTargetHelper
-{
+class WebSocket final : public DOMEventTargetHelper {
   friend class WebSocketImpl;
 
-public:
-  enum {
-    CONNECTING = 0,
-    OPEN       = 1,
-    CLOSING    = 2,
-    CLOSED     = 3
-  };
+ public:
+  enum { CONNECTING = 0, OPEN = 1, CLOSING = 2, CLOSED = 3 };
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WebSocket, DOMEventTargetHelper)
   virtual bool IsCertainlyAliveForCC() const override;
@@ -63,18 +57,18 @@ public:
   // nsWrapperCache
   nsPIDOMWindowInner* GetParentObject() { return GetOwner(); }
 
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // DOMEventTargetHelper
   void BindToOwner(nsIGlobalObject* aNew) override;
 
-public: // static helpers:
-
+ public:  // static helpers:
   // Determine if preferences allow WebSocket
-  static bool PrefEnabled(JSContext* aCx = nullptr, JSObject* aGlobal = nullptr);
+  static bool PrefEnabled(JSContext* aCx = nullptr,
+                          JSObject* aGlobal = nullptr);
 
-public: // WebIDL interface:
-
+ public:  // WebIDL interface:
   // Constructor:
   static already_AddRefed<WebSocket> Constructor(const GlobalObject& aGlobal,
                                                  const nsAString& aUrl,
@@ -85,24 +79,21 @@ public: // WebIDL interface:
                                                  const nsAString& aProtocol,
                                                  ErrorResult& rv);
 
-  static already_AddRefed<WebSocket> Constructor(const GlobalObject& aGlobal,
-                                                 const nsAString& aUrl,
-                                                 const Sequence<nsString>& aProtocols,
-                                                 ErrorResult& rv);
+  static already_AddRefed<WebSocket> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aUrl,
+      const Sequence<nsString>& aProtocols, ErrorResult& rv);
 
-  static already_AddRefed<WebSocket> CreateServerWebSocket(const GlobalObject& aGlobal,
-                                                           const nsAString& aUrl,
-                                                           const Sequence<nsString>& aProtocols,
-                                                           nsITransportProvider* aTransportProvider,
-                                                           const nsAString& aNegotiatedExtensions,
-                                                           ErrorResult& rv);
+  static already_AddRefed<WebSocket> CreateServerWebSocket(
+      const GlobalObject& aGlobal, const nsAString& aUrl,
+      const Sequence<nsString>& aProtocols,
+      nsITransportProvider* aTransportProvider,
+      const nsAString& aNegotiatedExtensions, ErrorResult& rv);
 
-  static already_AddRefed<WebSocket> ConstructorCommon(const GlobalObject& aGlobal,
-                                                       const nsAString& aUrl,
-                                                       const Sequence<nsString>& aProtocols,
-                                                       nsITransportProvider* aTransportProvider,
-                                                       const nsACString& aNegotiatedExtensions,
-                                                       ErrorResult& rv);
+  static already_AddRefed<WebSocket> ConstructorCommon(
+      const GlobalObject& aGlobal, const nsAString& aUrl,
+      const Sequence<nsString>& aProtocols,
+      nsITransportProvider* aTransportProvider,
+      const nsACString& aNegotiatedExtensions, ErrorResult& rv);
 
   // webIDL: readonly attribute DOMString url
   void GetUrl(nsAString& aResult);
@@ -131,8 +122,7 @@ public: // WebIDL interface:
   // webIDL: void close(optional unsigned short code,
   //                    optional DOMString reason):
   void Close(const Optional<uint16_t>& aCode,
-             const Optional<nsAString>& aReason,
-             ErrorResult& aRv);
+             const Optional<nsAString>& aReason, ErrorResult& aRv);
 
   // webIDL: attribute Function? onmessage;
   IMPL_EVENT_HANDLER(message)
@@ -142,16 +132,12 @@ public: // WebIDL interface:
   void SetBinaryType(dom::BinaryType aData);
 
   // webIDL: void send(DOMString|Blob|ArrayBufferView data);
-  void Send(const nsAString& aData,
-            ErrorResult& aRv);
-  void Send(Blob& aData,
-            ErrorResult& aRv);
-  void Send(const ArrayBuffer& aData,
-            ErrorResult& aRv);
-  void Send(const ArrayBufferView& aData,
-            ErrorResult& aRv);
+  void Send(const nsAString& aData, ErrorResult& aRv);
+  void Send(Blob& aData, ErrorResult& aRv);
+  void Send(const ArrayBuffer& aData, ErrorResult& aRv);
+  void Send(const ArrayBufferView& aData, ErrorResult& aRv);
 
-private: // constructor && destructor
+ private:  // constructor && destructor
   explicit WebSocket(nsPIDOMWindowInner* aOwnerWindow);
   virtual ~WebSocket();
 
@@ -161,8 +147,7 @@ private: // constructor && destructor
   nsresult CreateAndDispatchSimpleEvent(const nsAString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
                                          bool aIsBinary);
-  nsresult CreateAndDispatchCloseEvent(bool aWasClean,
-                                       uint16_t aCode,
+  nsresult CreateAndDispatchCloseEvent(bool aWasClean, uint16_t aCode,
                                        const nsAString& aReason);
 
   // if there are "strong event listeners" (see comment in WebSocket.cpp) or
@@ -173,15 +158,12 @@ private: // constructor && destructor
   // (and possibly collected).
   void DontKeepAliveAnyMore();
 
-private:
-  WebSocket(const WebSocket& x) = delete;   // prevent bad usage
+ private:
+  WebSocket(const WebSocket& x) = delete;  // prevent bad usage
   WebSocket& operator=(const WebSocket& x) = delete;
 
-  void Send(nsIInputStream* aMsgStream,
-            const nsACString& aMsgString,
-            uint32_t aMsgLength,
-            bool aIsBinary,
-            ErrorResult& aRv);
+  void Send(nsIInputStream* aMsgStream, const nsACString& aMsgString,
+            uint32_t aMsgLength, bool aIsBinary, ErrorResult& aRv);
 
   void AssertIsOnTargetThread() const;
 
@@ -198,7 +180,7 @@ private:
 
   // related to the WebSocket constructor steps
   nsString mURI;
-  nsString mEffectiveURL;   // after redirects
+  nsString mEffectiveURL;  // after redirects
   nsCString mEstablishedExtensions;
   nsCString mEstablishedProtocol;
 
@@ -212,7 +194,7 @@ private:
   uint16_t mReadyState;
 };
 
-} //namespace dom
-} //namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

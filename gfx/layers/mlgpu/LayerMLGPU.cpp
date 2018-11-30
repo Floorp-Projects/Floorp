@@ -18,28 +18,19 @@ using namespace gfx;
 uint64_t LayerMLGPU::sFrameKey = 0;
 
 LayerMLGPU::LayerMLGPU(LayerManagerMLGPU* aManager)
- : HostLayer(aManager),
-   mFrameKey(0),
-   mComputedOpacity(0.0),
-   mPrepared(false)
-{
-}
+    : HostLayer(aManager),
+      mFrameKey(0),
+      mComputedOpacity(0.0),
+      mPrepared(false) {}
 
-/* static */ void
-LayerMLGPU::BeginFrame()
-{
-  sFrameKey++;
-}
+/* static */ void LayerMLGPU::BeginFrame() { sFrameKey++; }
 
-LayerManagerMLGPU*
-LayerMLGPU::GetManager()
-{
+LayerManagerMLGPU* LayerMLGPU::GetManager() {
   return static_cast<LayerManagerMLGPU*>(mCompositorManager);
 }
 
-bool
-LayerMLGPU::PrepareToRender(FrameBuilder* aBuilder, const RenderTargetIntRect& aClipRect)
-{
+bool LayerMLGPU::PrepareToRender(FrameBuilder* aBuilder,
+                                 const RenderTargetIntRect& aClipRect) {
   if (mFrameKey == sFrameKey) {
     return mPrepared;
   }
@@ -74,35 +65,28 @@ LayerMLGPU::PrepareToRender(FrameBuilder* aBuilder, const RenderTargetIntRect& a
   return true;
 }
 
-void
-LayerMLGPU::AssignToView(FrameBuilder* aBuilder,
-                         RenderViewMLGPU* aView,
-                         Maybe<gfx::Polygon>&& aGeometry)
-{
+void LayerMLGPU::AssignToView(FrameBuilder* aBuilder, RenderViewMLGPU* aView,
+                              Maybe<gfx::Polygon>&& aGeometry) {
   AddBoundsToView(aBuilder, aView, std::move(aGeometry));
 }
 
-void
-LayerMLGPU::AddBoundsToView(FrameBuilder* aBuilder,
-                            RenderViewMLGPU* aView,
-                            Maybe<gfx::Polygon>&& aGeometry)
-{
+void LayerMLGPU::AddBoundsToView(FrameBuilder* aBuilder, RenderViewMLGPU* aView,
+                                 Maybe<gfx::Polygon>&& aGeometry) {
   IntRect bounds = GetClippedBoundingBox(aView, aGeometry);
   aView->AddItem(this, bounds, std::move(aGeometry));
 }
 
-IntRect
-LayerMLGPU::GetClippedBoundingBox(RenderViewMLGPU* aView,
-                                  const Maybe<gfx::Polygon>& aGeometry)
-{
+IntRect LayerMLGPU::GetClippedBoundingBox(
+    RenderViewMLGPU* aView, const Maybe<gfx::Polygon>& aGeometry) {
   MOZ_ASSERT(IsPrepared());
 
   Layer* layer = GetLayer();
   const Matrix4x4& transform = layer->GetEffectiveTransform();
 
-  Rect rect = aGeometry
-              ? aGeometry->BoundingBox()
-              : Rect(layer->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
+  Rect rect =
+      aGeometry
+          ? aGeometry->BoundingBox()
+          : Rect(layer->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
   rect = transform.TransformBounds(rect);
   rect.MoveBy(-aView->GetTargetOffset());
   rect = rect.Intersect(Rect(mComputedClipRect.ToUnknownRect()));
@@ -113,28 +97,18 @@ LayerMLGPU::GetClippedBoundingBox(RenderViewMLGPU* aView,
   return bounds;
 }
 
-void
-LayerMLGPU::MarkPrepared()
-{
+void LayerMLGPU::MarkPrepared() {
   mFrameKey = sFrameKey;
   mPrepared = true;
 }
 
-bool
-LayerMLGPU::IsContentOpaque()
-{
-  return GetLayer()->IsOpaque();
-}
+bool LayerMLGPU::IsContentOpaque() { return GetLayer()->IsOpaque(); }
 
-void
-LayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
-{
+void LayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion) {
   mRenderRegion = std::move(aRegion);
 }
 
-void
-LayerMLGPU::SetLayerManager(HostLayerManager* aManager)
-{
+void LayerMLGPU::SetLayerManager(HostLayerManager* aManager) {
   LayerManagerMLGPU* manager = aManager->AsLayerManagerMLGPU();
   MOZ_RELEASE_ASSERT(manager);
 
@@ -149,24 +123,15 @@ LayerMLGPU::SetLayerManager(HostLayerManager* aManager)
 }
 
 RefLayerMLGPU::RefLayerMLGPU(LayerManagerMLGPU* aManager)
-  : RefLayer(aManager, static_cast<HostLayer*>(this))
-  , LayerMLGPU(aManager)
-{
-}
+    : RefLayer(aManager, static_cast<HostLayer*>(this)), LayerMLGPU(aManager) {}
 
-RefLayerMLGPU::~RefLayerMLGPU()
-{
-}
+RefLayerMLGPU::~RefLayerMLGPU() {}
 
 ColorLayerMLGPU::ColorLayerMLGPU(LayerManagerMLGPU* aManager)
-  : ColorLayer(aManager, static_cast<HostLayer*>(this))
-  , LayerMLGPU(aManager)
-{
-}
+    : ColorLayer(aManager, static_cast<HostLayer*>(this)),
+      LayerMLGPU(aManager) {}
 
-ColorLayerMLGPU::~ColorLayerMLGPU()
-{
-}
+ColorLayerMLGPU::~ColorLayerMLGPU() {}
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

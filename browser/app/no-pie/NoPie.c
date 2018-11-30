@@ -9,8 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   // Ideally, we'd use mozilla::BinaryPath, but that pulls in stdc++compat,
   // and further causes trouble linking with LTO.
   char path[PATH_MAX + 4];

@@ -11,18 +11,14 @@ namespace dom {
 
 BorrowedAttrInfo::BorrowedAttrInfo(const nsAttrName* aName,
                                    const nsAttrValue* aValue)
-  : mName(aName)
-  , mValue(aValue)
-{
+    : mName(aName), mValue(aValue) {
   MOZ_ASSERT_IF(mName, mValue);
 }
 
 BorrowedAttrInfo::BorrowedAttrInfo(const BorrowedAttrInfo& aOther)
-  : mName(aOther.mName)
-  , mValue(aOther.mValue)
-{
+    : mName(aOther.mName), mValue(aOther.mValue) {
   MOZ_ASSERT_IF(mName, mValue);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

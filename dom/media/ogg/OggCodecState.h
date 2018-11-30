@@ -242,10 +242,9 @@ class OggCodecState {
   // to a metadata hash table. Most Ogg-encapsulated codecs
   // use the vorbis comment format for metadata.
   static bool AddVorbisComment(UniquePtr<MetadataTags>& aTags,
-                               const char* aComment,
-                               uint32_t aLength);
+                               const char* aComment, uint32_t aLength);
 
-protected:
+ protected:
   // Constructs a new OggCodecState. aActive denotes whether the stream is
   // active. For streams of unsupported or unknown types, aActive should be
   // false.

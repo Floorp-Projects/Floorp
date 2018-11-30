@@ -18,84 +18,75 @@ namespace dom {
 
 class PresentationIPCService;
 
-class PresentationChild final : public PPresentationChild
-{
-public:
+class PresentationChild final : public PPresentationChild {
+ public:
   explicit PresentationChild(PresentationIPCService* aService);
 
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PPresentationRequestChild*
-  AllocPPresentationRequestChild(const PresentationIPCRequest& aRequest) override;
+  virtual PPresentationRequestChild* AllocPPresentationRequestChild(
+      const PresentationIPCRequest& aRequest) override;
 
-  virtual bool
-  DeallocPPresentationRequestChild(PPresentationRequestChild* aActor) override;
+  virtual bool DeallocPPresentationRequestChild(
+      PPresentationRequestChild* aActor) override;
 
-  mozilla::ipc::IPCResult RecvPPresentationBuilderConstructor(PPresentationBuilderChild* aActor,
-                                                              const nsString& aSessionId,
-                                                              const uint8_t& aRole) override;
+  mozilla::ipc::IPCResult RecvPPresentationBuilderConstructor(
+      PPresentationBuilderChild* aActor, const nsString& aSessionId,
+      const uint8_t& aRole) override;
 
-  virtual PPresentationBuilderChild*
-  AllocPPresentationBuilderChild(const nsString& aSessionId, const uint8_t& aRole) override;
+  virtual PPresentationBuilderChild* AllocPPresentationBuilderChild(
+      const nsString& aSessionId, const uint8_t& aRole) override;
 
-  virtual bool
-  DeallocPPresentationBuilderChild(PPresentationBuilderChild* aActor) override;
+  virtual bool DeallocPPresentationBuilderChild(
+      PPresentationBuilderChild* aActor) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvNotifyAvailableChange(nsTArray<nsString>&& aAvailabilityUrls,
-                            const bool& aAvailable) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyAvailableChange(
+      nsTArray<nsString>&& aAvailabilityUrls, const bool& aAvailable) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvNotifySessionStateChange(const nsString& aSessionId,
-                               const uint16_t& aState,
-                               const nsresult& aReason) override;
+  virtual mozilla::ipc::IPCResult RecvNotifySessionStateChange(
+      const nsString& aSessionId, const uint16_t& aState,
+      const nsresult& aReason) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvNotifyMessage(const nsString& aSessionId,
-                    const nsCString& aData,
-                    const bool& aIsBinary) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyMessage(
+      const nsString& aSessionId, const nsCString& aData,
+      const bool& aIsBinary) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvNotifySessionConnect(const uint64_t& aWindowId,
-                           const nsString& aSessionId) override;
+  virtual mozilla::ipc::IPCResult RecvNotifySessionConnect(
+      const uint64_t& aWindowId, const nsString& aSessionId) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvNotifyCloseSessionTransport(const nsString& aSessionId,
-                                  const uint8_t& aRole,
-                                  const nsresult& aReason) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyCloseSessionTransport(
+      const nsString& aSessionId, const uint8_t& aRole,
+      const nsresult& aReason) override;
 
-private:
+ private:
   virtual ~PresentationChild();
 
   bool mActorDestroyed = false;
   RefPtr<PresentationIPCService> mService;
 };
 
-class PresentationRequestChild final : public PPresentationRequestChild
-{
+class PresentationRequestChild final : public PPresentationRequestChild {
   friend class PresentationChild;
 
-public:
+ public:
   explicit PresentationRequestChild(nsIPresentationServiceCallback* aCallback);
 
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult
-  Recv__delete__(const nsresult& aResult) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(
+      const nsresult& aResult) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvNotifyRequestUrlSelected(const nsString& aUrl) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyRequestUrlSelected(
+      const nsString& aUrl) override;
 
-private:
+ private:
   virtual ~PresentationRequestChild();
 
   bool mActorDestroyed = false;
   nsCOMPtr<nsIPresentationServiceCallback> mCallback;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationChild_h
+#endif  // mozilla_dom_PresentationChild_h

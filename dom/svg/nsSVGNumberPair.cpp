@@ -14,18 +14,17 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static nsSVGAttrTearoffTable<nsSVGNumberPair, nsSVGNumberPair::DOMAnimatedNumber>
-  sSVGFirstAnimatedNumberTearoffTable;
-static nsSVGAttrTearoffTable<nsSVGNumberPair, nsSVGNumberPair::DOMAnimatedNumber>
-  sSVGSecondAnimatedNumberTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGNumberPair,
+                             nsSVGNumberPair::DOMAnimatedNumber>
+    sSVGFirstAnimatedNumberTearoffTable;
+static nsSVGAttrTearoffTable<nsSVGNumberPair,
+                             nsSVGNumberPair::DOMAnimatedNumber>
+    sSVGSecondAnimatedNumberTearoffTable;
 
-static nsresult
-ParseNumberOptionalNumber(const nsAString& aValue,
-                          float aValues[2])
-{
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-    tokenizer(aValue, ',',
-              nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+static nsresult ParseNumberOptionalNumber(const nsAString& aValue,
+                                          float aValues[2]) {
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
+      aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
   if (tokenizer.whitespaceBeforeFirstToken()) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -50,10 +49,8 @@ ParseNumberOptionalNumber(const nsAString& aValue,
   return NS_OK;
 }
 
-nsresult
-nsSVGNumberPair::SetBaseValueString(const nsAString &aValueAsString,
-                                    nsSVGElement *aSVGElement)
-{
+nsresult nsSVGNumberPair::SetBaseValueString(const nsAString& aValueAsString,
+                                             nsSVGElement* aSVGElement) {
   float val[2];
 
   nsresult rv = ParseNumberOptionalNumber(aValueAsString, val);
@@ -67,8 +64,7 @@ nsSVGNumberPair::SetBaseValueString(const nsAString &aValueAsString,
   if (!mIsAnimated) {
     mAnimVal[0] = mBaseVal[0];
     mAnimVal[1] = mBaseVal[1];
-  }
-  else {
+  } else {
     aSVGElement->AnimationNeedsResample();
   }
 
@@ -78,9 +74,7 @@ nsSVGNumberPair::SetBaseValueString(const nsAString &aValueAsString,
   return NS_OK;
 }
 
-void
-nsSVGNumberPair::GetBaseValueString(nsAString &aValueAsString) const
-{
+void nsSVGNumberPair::GetBaseValueString(nsAString& aValueAsString) const {
   aValueAsString.Truncate();
   aValueAsString.AppendFloat(mBaseVal[0]);
   if (mBaseVal[0] != mBaseVal[1]) {
@@ -89,10 +83,8 @@ nsSVGNumberPair::GetBaseValueString(nsAString &aValueAsString) const
   }
 }
 
-void
-nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
-                              nsSVGElement *aSVGElement)
-{
+void nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
+                                   nsSVGElement* aSVGElement) {
   uint32_t index = (aPairIndex == eFirst ? 0 : 1);
   if (mIsBaseSet && mBaseVal[index] == aValue) {
     return;
@@ -102,17 +94,14 @@ nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[index] = aValue;
-  }
-  else {
+  } else {
     aSVGElement->AnimationNeedsResample();
   }
   aSVGElement->DidChangeNumberPair(mAttrEnum, emptyOrOldValue);
 }
 
-void
-nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
-                               nsSVGElement *aSVGElement)
-{
+void nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
+                                    nsSVGElement* aSVGElement) {
   if (mIsBaseSet && mBaseVal[0] == aValue1 && mBaseVal[1] == aValue2) {
     return;
   }
@@ -123,16 +112,14 @@ nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
   if (!mIsAnimated) {
     mAnimVal[0] = aValue1;
     mAnimVal[1] = aValue2;
-  }
-  else {
+  } else {
     aSVGElement->AnimationNeedsResample();
   }
   aSVGElement->DidChangeNumberPair(mAttrEnum, emptyOrOldValue);
 }
 
-void
-nsSVGNumberPair::SetAnimValue(const float aValue[2], nsSVGElement *aSVGElement)
-{
+void nsSVGNumberPair::SetAnimValue(const float aValue[2],
+                                   nsSVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal[0] == aValue[0] && mAnimVal[1] == aValue[1]) {
     return;
   }
@@ -142,13 +129,11 @@ nsSVGNumberPair::SetAnimValue(const float aValue[2], nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateNumberPair(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedNumber>
-nsSVGNumberPair::ToDOMAnimatedNumber(PairIndex aIndex,
-                                     nsSVGElement* aSVGElement)
-{
+already_AddRefed<SVGAnimatedNumber> nsSVGNumberPair::ToDOMAnimatedNumber(
+    PairIndex aIndex, nsSVGElement* aSVGElement) {
   RefPtr<DOMAnimatedNumber> domAnimatedNumber =
-    aIndex == eFirst ? sSVGFirstAnimatedNumberTearoffTable.GetTearoff(this) :
-                       sSVGSecondAnimatedNumberTearoffTable.GetTearoff(this);
+      aIndex == eFirst ? sSVGFirstAnimatedNumberTearoffTable.GetTearoff(this)
+                       : sSVGSecondAnimatedNumberTearoffTable.GetTearoff(this);
   if (!domAnimatedNumber) {
     domAnimatedNumber = new DOMAnimatedNumber(this, aIndex, aSVGElement);
     if (aIndex == eFirst) {
@@ -161,8 +146,7 @@ nsSVGNumberPair::ToDOMAnimatedNumber(PairIndex aIndex,
   return domAnimatedNumber.forget();
 }
 
-nsSVGNumberPair::DOMAnimatedNumber::~DOMAnimatedNumber()
-{
+nsSVGNumberPair::DOMAnimatedNumber::~DOMAnimatedNumber() {
   if (mIndex == eFirst) {
     sSVGFirstAnimatedNumberTearoffTable.RemoveTearoff(mVal);
   } else {
@@ -170,18 +154,13 @@ nsSVGNumberPair::DOMAnimatedNumber::~DOMAnimatedNumber()
   }
 }
 
-UniquePtr<nsISMILAttr>
-nsSVGNumberPair::ToSMILAttr(nsSVGElement *aSVGElement)
-{
+UniquePtr<nsISMILAttr> nsSVGNumberPair::ToSMILAttr(nsSVGElement* aSVGElement) {
   return MakeUnique<SMILNumberPair>(this, aSVGElement);
 }
 
-nsresult
-nsSVGNumberPair::SMILNumberPair::ValueFromString(const nsAString& aStr,
-                                                 const dom::SVGAnimationElement* /*aSrcElement*/,
-                                                 nsSMILValue& aValue,
-                                                 bool& aPreventCachingOfSandwich) const
-{
+nsresult nsSVGNumberPair::SMILNumberPair::ValueFromString(
+    const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
+    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   float values[2];
 
   nsresult rv = ParseNumberOptionalNumber(aStr, values);
@@ -198,18 +177,14 @@ nsSVGNumberPair::SMILNumberPair::ValueFromString(const nsAString& aStr,
   return NS_OK;
 }
 
-nsSMILValue
-nsSVGNumberPair::SMILNumberPair::GetBaseValue() const
-{
+nsSMILValue nsSVGNumberPair::SMILNumberPair::GetBaseValue() const {
   nsSMILValue val(&SVGNumberPairSMILType::sSingleton);
   val.mU.mNumberPair[0] = mVal->mBaseVal[0];
   val.mU.mNumberPair[1] = mVal->mBaseVal[1];
   return val;
 }
 
-void
-nsSVGNumberPair::SMILNumberPair::ClearAnimValue()
-{
+void nsSVGNumberPair::SMILNumberPair::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal[0] = mVal->mBaseVal[0];
@@ -218,9 +193,8 @@ nsSVGNumberPair::SMILNumberPair::ClearAnimValue()
   }
 }
 
-nsresult
-nsSVGNumberPair::SMILNumberPair::SetAnimValue(const nsSMILValue& aValue)
-{
+nsresult nsSVGNumberPair::SMILNumberPair::SetAnimValue(
+    const nsSMILValue& aValue) {
   NS_ASSERTION(aValue.mType == &SVGNumberPairSMILType::sSingleton,
                "Unexpected type to assign animated value");
   if (aValue.mType == &SVGNumberPairSMILType::sSingleton) {

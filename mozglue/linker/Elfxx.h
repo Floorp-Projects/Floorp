@@ -24,7 +24,7 @@
  * Generic ELF macros for the target system
  */
 #ifdef __LP64__
-#define Elf_(type) Elf64_ ## type
+#define Elf_(type) Elf64_##type
 #define ELFCLASS ELFCLASS64
 #define ELF_R_TYPE ELF64_R_TYPE
 #define ELF_R_SYM ELF64_R_SYM
@@ -32,7 +32,7 @@
 #define ELF_ST_BIND ELF64_ST_BIND
 #endif
 #else
-#define Elf_(type) Elf32_ ## type
+#define Elf_(type) Elf32_##type
 #define ELFCLASS ELFCLASS32
 #define ELF_R_TYPE ELF32_R_TYPE
 #define ELF_R_SYM ELF32_R_SYM
@@ -68,9 +68,9 @@
 #define R_GLOB_DAT R_386_GLOB_DAT
 #define R_JMP_SLOT R_386_JMP_SLOT
 #define R_RELATIVE R_386_RELATIVE
-#define RELOC(n) DT_REL ## n
-#define UNSUPPORTED_RELOC(n) DT_RELA ## n
-#define STR_RELOC(n) "DT_REL" # n
+#define RELOC(n) DT_REL##n
+#define UNSUPPORTED_RELOC(n) DT_RELA##n
+#define STR_RELOC(n) "DT_REL" #n
 #define Reloc Rel
 
 #elif defined(__x86_64__)
@@ -80,9 +80,9 @@
 #define R_GLOB_DAT R_X86_64_GLOB_DAT
 #define R_JMP_SLOT R_X86_64_JUMP_SLOT
 #define R_RELATIVE R_X86_64_RELATIVE
-#define RELOC(n) DT_RELA ## n
-#define UNSUPPORTED_RELOC(n) DT_REL ## n
-#define STR_RELOC(n) "DT_RELA" # n
+#define RELOC(n) DT_RELA##n
+#define UNSUPPORTED_RELOC(n) DT_REL##n
+#define STR_RELOC(n) "DT_RELA" #n
 #define Reloc Rela
 
 #elif defined(__arm__)
@@ -105,9 +105,9 @@
 #define R_GLOB_DAT R_ARM_GLOB_DAT
 #define R_JMP_SLOT R_ARM_JUMP_SLOT
 #define R_RELATIVE R_ARM_RELATIVE
-#define RELOC(n) DT_REL ## n
-#define UNSUPPORTED_RELOC(n) DT_RELA ## n
-#define STR_RELOC(n) "DT_REL" # n
+#define RELOC(n) DT_REL##n
+#define UNSUPPORTED_RELOC(n) DT_RELA##n
+#define STR_RELOC(n) "DT_REL" #n
 #define Reloc Rel
 
 #elif defined(__aarch64__)
@@ -117,9 +117,9 @@
 #define R_GLOB_DAT R_AARCH64_GLOB_DAT
 #define R_JMP_SLOT R_AARCH64_JUMP_SLOT
 #define R_RELATIVE R_AARCH64_RELATIVE
-#define RELOC(n) DT_RELA ## n
-#define UNSUPPORTED_RELOC(n) DT_REL ## n
-#define STR_RELOC(n) "DT_RELA" # n
+#define RELOC(n) DT_RELA##n
+#define UNSUPPORTED_RELOC(n) DT_REL##n
+#define STR_RELOC(n) "DT_RELA" #n
 #define Reloc Rela
 
 #else
@@ -193,8 +193,7 @@ typedef Elf_(Half) Half;
 /**
  * Helper class around the standard Elf header struct
  */
-struct Ehdr: public Elf_(Ehdr)
-{
+struct Ehdr : public Elf_(Ehdr) {
   /**
    * Equivalent to reinterpret_cast<const Ehdr *>(buf), but additionally
    * checking that this is indeed an Elf header and that the Elf type
@@ -206,14 +205,12 @@ struct Ehdr: public Elf_(Ehdr)
 /**
  * Elf String table
  */
-class Strtab: public UnsizedArray<const char>
-{
-public:
+class Strtab : public UnsizedArray<const char> {
+ public:
   /**
    * Returns the string at the given index in the table
    */
-  const char *GetStringAt(off_t index) const
-  {
+  const char *GetStringAt(off_t index) const {
     return &UnsizedArray<const char>::operator[](index);
   }
 };
@@ -221,31 +218,25 @@ public:
 /**
  * Helper class around Elf relocation.
  */
-struct Rel: public Elf_(Rel)
-{
+struct Rel : public Elf_(Rel) {
   /**
    * Returns the addend for the relocation, which is the value stored
    * at r_offset.
    */
-  Addr GetAddend(void *base) const
-  {
+  Addr GetAddend(void *base) const {
     return *(reinterpret_cast<const Addr *>(
-                   reinterpret_cast<const char *>(base) + r_offset));
+        reinterpret_cast<const char *>(base) + r_offset));
   }
 };
 
 /**
  * Helper class around Elf relocation with addend.
  */
-struct Rela: public Elf_(Rela)
-{
+struct Rela : public Elf_(Rela) {
   /**
    * Returns the addend for the relocation.
    */
-  Addr GetAddend(void *base) const
-  {
-    return r_addend;
-  }
+  Addr GetAddend(void *base) const { return r_addend; }
 };
 
 } /* namespace Elf */

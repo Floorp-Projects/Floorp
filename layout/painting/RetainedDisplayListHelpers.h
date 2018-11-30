@@ -9,10 +9,8 @@
 
 #include "PLDHashTable.h"
 
-struct DisplayItemKey
-{
-  bool operator==(const DisplayItemKey& aOther) const
-  {
+struct DisplayItemKey {
+  bool operator==(const DisplayItemKey& aOther) const {
     return mFrame == aOther.mFrame && mPerFrameKey == aOther.mPerFrameKey;
   }
 
@@ -20,16 +18,12 @@ struct DisplayItemKey
   uint32_t mPerFrameKey;
 };
 
-class DisplayItemHashEntry : public PLDHashEntryHdr
-{
-public:
+class DisplayItemHashEntry : public PLDHashEntryHdr {
+ public:
   typedef DisplayItemKey KeyType;
   typedef const DisplayItemKey* KeyTypePointer;
 
-  explicit DisplayItemHashEntry(KeyTypePointer aKey)
-    : mKey(*aKey)
-  {
-  }
+  explicit DisplayItemHashEntry(KeyTypePointer aKey) : mKey(*aKey) {}
   DisplayItemHashEntry(DisplayItemHashEntry&&) = default;
 
   ~DisplayItemHashEntry() = default;
@@ -38,25 +32,18 @@ public:
   bool KeyEquals(KeyTypePointer aKey) const { return mKey == *aKey; }
 
   static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
-    if (!aKey)
-      return 0;
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    if (!aKey) return 0;
 
     return mozilla::HashGeneric(aKey->mFrame, aKey->mPerFrameKey);
   }
-  enum
-  {
-    ALLOW_MEMMOVE = true
-  };
+  enum { ALLOW_MEMMOVE = true };
 
   DisplayItemKey mKey;
 };
 
-template<typename T>
-bool
-SpanContains(mozilla::Span<const T>& aSpan, T aItem)
-{
+template <typename T>
+bool SpanContains(mozilla::Span<const T>& aSpan, T aItem) {
   for (const T& i : aSpan) {
     if (i == aItem) {
       return true;
@@ -65,27 +52,15 @@ SpanContains(mozilla::Span<const T>& aSpan, T aItem)
   return false;
 }
 
-class OldListUnits
-{
-};
-class MergedListUnits
-{
-};
+class OldListUnits {};
+class MergedListUnits {};
 
-template<typename Units>
-struct Index
-{
-  Index()
-    : val(0)
-  {
-  }
-  explicit Index(size_t aVal)
-    : val(aVal)
-  {
-  }
+template <typename Units>
+struct Index {
+  Index() : val(0) {}
+  explicit Index(size_t aVal) : val(aVal) {}
 
-  bool operator==(const Index<Units>& aOther) const
-  {
+  bool operator==(const Index<Units>& aOther) const {
     return val == aOther.val;
   }
 
@@ -94,31 +69,26 @@ struct Index
 typedef Index<OldListUnits> OldListIndex;
 typedef Index<MergedListUnits> MergedListIndex;
 
-template<typename T>
-class DirectedAcyclicGraph
-{
-public:
+template <typename T>
+class DirectedAcyclicGraph {
+ public:
   DirectedAcyclicGraph() = default;
   DirectedAcyclicGraph(DirectedAcyclicGraph&& aOther)
-    : mNodesInfo(std::move(aOther.mNodesInfo))
-    , mDirectPredecessorList(std::move(aOther.mDirectPredecessorList))
-  {
-  }
+      : mNodesInfo(std::move(aOther.mNodesInfo)),
+        mDirectPredecessorList(std::move(aOther.mDirectPredecessorList)) {}
 
-  DirectedAcyclicGraph& operator=(DirectedAcyclicGraph&& aOther)
-  {
+  DirectedAcyclicGraph& operator=(DirectedAcyclicGraph&& aOther) {
     mNodesInfo = std::move(aOther.mNodesInfo);
     mDirectPredecessorList = std::move(aOther.mDirectPredecessorList);
     return *this;
   }
 
   Index<T> AddNode(
-    mozilla::Span<const Index<T>> aDirectPredecessors,
-    const mozilla::Maybe<Index<T>>& aExtraPredecessor = mozilla::Nothing())
-  {
+      mozilla::Span<const Index<T>> aDirectPredecessors,
+      const mozilla::Maybe<Index<T>>& aExtraPredecessor = mozilla::Nothing()) {
     size_t index = mNodesInfo.Length();
-    mNodesInfo.AppendElement(
-      NodeInfo(mDirectPredecessorList.Length(), aDirectPredecessors.Length()));
+    mNodesInfo.AppendElement(NodeInfo(mDirectPredecessorList.Length(),
+                                      aDirectPredecessors.Length()));
     if (aExtraPredecessor &&
         !SpanContains(aDirectPredecessors, aExtraPredecessor.value())) {
       mNodesInfo.LastElement().mDirectPredecessorCount++;
@@ -134,35 +104,29 @@ public:
 
   size_t Length() { return mNodesInfo.Length(); }
 
-  mozilla::Span<Index<T>> GetDirectPredecessors(Index<T> aNodeIndex)
-  {
+  mozilla::Span<Index<T>> GetDirectPredecessors(Index<T> aNodeIndex) {
     NodeInfo& node = mNodesInfo[aNodeIndex.val];
     return mozilla::MakeSpan(mDirectPredecessorList)
-      .Subspan(node.mIndexInDirectPredecessorList,
-               node.mDirectPredecessorCount);
+        .Subspan(node.mIndexInDirectPredecessorList,
+                 node.mDirectPredecessorCount);
   }
 
-  template<typename OtherUnits>
-  void EnsureCapacityFor(const DirectedAcyclicGraph<OtherUnits>& aOther)
-  {
+  template <typename OtherUnits>
+  void EnsureCapacityFor(const DirectedAcyclicGraph<OtherUnits>& aOther) {
     mNodesInfo.SetCapacity(aOther.mNodesInfo.Length());
     mDirectPredecessorList.SetCapacity(aOther.mDirectPredecessorList.Length());
   }
 
-  void Clear()
-  {
+  void Clear() {
     mNodesInfo.Clear();
     mDirectPredecessorList.Clear();
   }
 
-  struct NodeInfo
-  {
+  struct NodeInfo {
     NodeInfo(size_t aIndexInDirectPredecessorList,
              size_t aDirectPredecessorCount)
-      : mIndexInDirectPredecessorList(aIndexInDirectPredecessorList)
-      , mDirectPredecessorCount(aDirectPredecessorCount)
-    {
-    }
+        : mIndexInDirectPredecessorList(aIndexInDirectPredecessorList),
+          mDirectPredecessorCount(aDirectPredecessorCount) {}
     size_t mIndexInDirectPredecessorList;
     size_t mDirectPredecessorCount;
   };
@@ -174,17 +138,11 @@ public:
 struct RetainedDisplayListBuilder;
 class nsDisplayItem;
 
-struct OldItemInfo
-{
+struct OldItemInfo {
   explicit OldItemInfo(nsDisplayItem* aItem)
-    : mItem(aItem)
-    , mUsed(false)
-    , mDiscarded(false)
-  {
-  }
+      : mItem(aItem), mUsed(false), mDiscarded(false) {}
 
-  void AddedToMergedList(MergedListIndex aIndex)
-  {
+  void AddedToMergedList(MergedListIndex aIndex) {
     MOZ_ASSERT(!IsUsed());
     mUsed = true;
     mIndex = aIndex;
@@ -197,8 +155,7 @@ struct OldItemInfo
                nsTArray<MergedListIndex>&& aDirectPredecessors);
   bool IsUsed() { return mUsed; }
 
-  bool IsDiscarded()
-  {
+  bool IsDiscarded() {
     MOZ_ASSERT(IsUsed());
     return mDiscarded;
   }
@@ -212,4 +169,4 @@ struct OldItemInfo
   nsTArray<MergedListIndex> mDirectPredecessors;
 };
 
-#endif // RETAINEDDISPLAYLISTHELPERS_H_
+#endif  // RETAINEDDISPLAYLISTHELPERS_H_

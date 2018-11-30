@@ -14,17 +14,16 @@ namespace mozilla {
  * This class is the observer that calls into the profiler whenever
  * main thread I/O occurs.
  */
-class ProfilerIOInterposeObserver final : public IOInterposeObserver
-{
+class ProfilerIOInterposeObserver final : public IOInterposeObserver {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfilerIOInterposeObserver)
 
-public:
+ public:
   virtual void Observe(Observation& aObservation) override;
 
-protected:
+ protected:
   virtual ~ProfilerIOInterposeObserver() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // PROFILERIOINTERPOSEOBSERVER_H
+#endif  // PROFILERIOINTERPOSEOBSERVER_H

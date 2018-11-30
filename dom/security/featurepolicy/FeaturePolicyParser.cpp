@@ -18,57 +18,41 @@ namespace dom {
 
 namespace {
 
-void
-ReportToConsoleUnsupportedFeature(nsIDocument* aDocument,
-                                  const nsString& aFeatureName)
-{
-  const char16_t* params[] = { aFeatureName.get() };
+void ReportToConsoleUnsupportedFeature(nsIDocument* aDocument,
+                                       const nsString& aFeatureName) {
+  const char16_t* params[] = {aFeatureName.get()};
 
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Feature Policy"),
-                                  aDocument,
-                                  nsContentUtils::eSECURITY_PROPERTIES,
-                                  "FeaturePolicyUnsupportedFeatureName",
-                                  params, ArrayLength(params));
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Feature Policy"),
+      aDocument, nsContentUtils::eSECURITY_PROPERTIES,
+      "FeaturePolicyUnsupportedFeatureName", params, ArrayLength(params));
 }
 
-void
-ReportToConsoleInvalidEmptyAllowValue(nsIDocument* aDocument,
-                                      const nsString& aFeatureName)
-{
-  const char16_t* params[] = { aFeatureName.get() };
+void ReportToConsoleInvalidEmptyAllowValue(nsIDocument* aDocument,
+                                           const nsString& aFeatureName) {
+  const char16_t* params[] = {aFeatureName.get()};
 
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Feature Policy"),
-                                  aDocument,
-                                  nsContentUtils::eSECURITY_PROPERTIES,
-                                  "FeaturePolicyInvalidEmptyAllowValue",
-                                  params, ArrayLength(params));
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Feature Policy"),
+      aDocument, nsContentUtils::eSECURITY_PROPERTIES,
+      "FeaturePolicyInvalidEmptyAllowValue", params, ArrayLength(params));
 }
 
-void
-ReportToConsoleInvalidAllowValue(nsIDocument* aDocument,
-                                 const nsString& aValue)
-{
-  const char16_t* params[] = { aValue.get() };
+void ReportToConsoleInvalidAllowValue(nsIDocument* aDocument,
+                                      const nsString& aValue) {
+  const char16_t* params[] = {aValue.get()};
 
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Feature Policy"),
-                                  aDocument,
-                                  nsContentUtils::eSECURITY_PROPERTIES,
-                                  "FeaturePolicyInvalidAllowValue",
-                                  params, ArrayLength(params));
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Feature Policy"),
+      aDocument, nsContentUtils::eSECURITY_PROPERTIES,
+      "FeaturePolicyInvalidAllowValue", params, ArrayLength(params));
 }
 
-} // anonymous
+}  // namespace
 
-/* static */ bool
-FeaturePolicyParser::ParseString(const nsAString& aPolicy,
-                                 nsIDocument* aDocument,
-                                 nsIPrincipal* aSelfOrigin,
-                                 nsIPrincipal* aSrcOrigin,
-                                 nsTArray<Feature>& aParsedFeatures)
-{
+/* static */ bool FeaturePolicyParser::ParseString(
+    const nsAString& aPolicy, nsIDocument* aDocument, nsIPrincipal* aSelfOrigin,
+    nsIPrincipal* aSrcOrigin, nsTArray<Feature>& aParsedFeatures) {
   MOZ_ASSERT(aSelfOrigin);
 
   nsTArray<nsTArray<nsString>> tokens;
@@ -126,9 +110,8 @@ FeaturePolicyParser::ParseString(const nsAString& aPolicy,
           continue;
         }
 
-        nsCOMPtr<nsIPrincipal> origin =
-          BasePrincipal::CreateCodebasePrincipal(uri,
-                                                 BasePrincipal::Cast(aSelfOrigin)->OriginAttributesRef());
+        nsCOMPtr<nsIPrincipal> origin = BasePrincipal::CreateCodebasePrincipal(
+            uri, BasePrincipal::Cast(aSelfOrigin)->OriginAttributesRef());
         if (NS_WARN_IF(!origin)) {
           ReportToConsoleInvalidAllowValue(aDocument, curVal);
           continue;
@@ -156,5 +139,5 @@ FeaturePolicyParser::ParseString(const nsAString& aPolicy,
   return true;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

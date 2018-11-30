@@ -19,33 +19,31 @@ class nsISHEntry;
 namespace mozilla {
 
 class WebBrowserPersistLocalDocument final
-    : public nsIWebBrowserPersistDocument
-{
-public:
-    explicit WebBrowserPersistLocalDocument(nsIDocument* aDocument);
+    : public nsIWebBrowserPersistDocument {
+ public:
+  explicit WebBrowserPersistLocalDocument(nsIDocument* aDocument);
 
-    NotNull<const Encoding*> GetCharacterSet() const;
-    uint32_t GetPersistFlags() const;
-    already_AddRefed<nsIURI> GetBaseURI() const;
+  NotNull<const Encoding*> GetCharacterSet() const;
+  uint32_t GetPersistFlags() const;
+  already_AddRefed<nsIURI> GetBaseURI() const;
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_NSIWEBBROWSERPERSISTDOCUMENT
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIWEBBROWSERPERSISTDOCUMENT
 
-    NS_DECL_CYCLE_COLLECTION_CLASS(WebBrowserPersistLocalDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS(WebBrowserPersistLocalDocument)
 
-private:
-    nsCOMPtr<nsIDocument> mDocument;
-    uint32_t mPersistFlags;
+ private:
+  nsCOMPtr<nsIDocument> mDocument;
+  uint32_t mPersistFlags;
 
-    void DecideContentType(nsACString& aContentType);
-    nsresult GetDocEncoder(const nsACString& aContentType,
-                           uint32_t aEncoderFlags,
-                           nsIDocumentEncoder** aEncoder);
-    already_AddRefed<nsISHEntry> GetHistory();
+  void DecideContentType(nsACString& aContentType);
+  nsresult GetDocEncoder(const nsACString& aContentType, uint32_t aEncoderFlags,
+                         nsIDocumentEncoder** aEncoder);
+  already_AddRefed<nsISHEntry> GetHistory();
 
-    virtual ~WebBrowserPersistLocalDocument();
+  virtual ~WebBrowserPersistLocalDocument();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WebBrowserPersistLocalDocument_h__
+#endif  // WebBrowserPersistLocalDocument_h__

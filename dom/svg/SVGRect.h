@@ -17,76 +17,50 @@
 namespace mozilla {
 namespace dom {
 
-class SVGRect final : public SVGIRect
-{
-public:
-  explicit SVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f, float w=0.0f,
-                   float h=0.0f);
+class SVGRect final : public SVGIRect {
+ public:
+  explicit SVGRect(nsIContent* aParent, float x = 0.0f, float y = 0.0f,
+                   float w = 0.0f, float h = 0.0f);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGRect)
 
   // WebIDL
-  float X() const final
-  {
-    return mX;
-  }
+  float X() const final { return mX; }
 
-  void SetX(float aX, ErrorResult& aRv) final
-  {
-    mX = aX;
-  }
+  void SetX(float aX, ErrorResult& aRv) final { mX = aX; }
 
-  float Y() const final
-  {
-    return mY;
-  }
+  float Y() const final { return mY; }
 
-  void SetY(float aY, ErrorResult& aRv) final
-  {
-    mY = aY;
-  }
+  void SetY(float aY, ErrorResult& aRv) final { mY = aY; }
 
-  float Width() const final
-  {
-    return mWidth;
-  }
+  float Width() const final { return mWidth; }
 
-  void SetWidth(float aWidth, ErrorResult& aRv) final
-  {
-    mWidth = aWidth;
-  }
+  void SetWidth(float aWidth, ErrorResult& aRv) final { mWidth = aWidth; }
 
-  float Height() const final
-  {
-    return mHeight;
-  }
+  float Height() const final { return mHeight; }
 
-  void SetHeight(float aHeight, ErrorResult& aRv) final
-  {
-    mHeight = aHeight;
-  }
+  void SetHeight(float aHeight, ErrorResult& aRv) final { mHeight = aHeight; }
 
-  virtual nsIContent* GetParentObject() const override
-  {
-    return mParent;
-  }
+  virtual nsIContent* GetParentObject() const override { return mParent; }
 
-protected:
+ protected:
   ~SVGRect() {}
 
   nsCOMPtr<nsIContent> mParent;
   float mX, mY, mWidth, mHeight;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::SVGRect>
-NS_NewSVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f,
-              float width=0.0f, float height=0.0f);
+already_AddRefed<mozilla::dom::SVGRect> NS_NewSVGRect(nsIContent* aParent,
+                                                      float x = 0.0f,
+                                                      float y = 0.0f,
+                                                      float width = 0.0f,
+                                                      float height = 0.0f);
 
-already_AddRefed<mozilla::dom::SVGRect>
-NS_NewSVGRect(nsIContent* aParent, const mozilla::gfx::Rect& rect);
+already_AddRefed<mozilla::dom::SVGRect> NS_NewSVGRect(
+    nsIContent* aParent, const mozilla::gfx::Rect& rect);
 
-#endif //mozilla_dom_SVGRect_h
+#endif  // mozilla_dom_SVGRect_h

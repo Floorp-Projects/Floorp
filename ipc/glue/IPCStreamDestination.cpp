@@ -24,27 +24,23 @@ namespace ipc {
 // nsIInputStream, created by the nsIPipe, with this wrapper.
 
 class IPCStreamDestination::DelayedStartInputStream final
-  : public nsIAsyncInputStream
-  , public nsISearchableInputStream
-  , public nsICloneableInputStream
-  , public nsIBufferedInputStream
-{
-public:
+    : public nsIAsyncInputStream,
+      public nsISearchableInputStream,
+      public nsICloneableInputStream,
+      public nsIBufferedInputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   DelayedStartInputStream(IPCStreamDestination* aDestination,
                           already_AddRefed<nsIAsyncInputStream>&& aStream)
-    : mDestination(aDestination)
-    , mStream(aStream)
-    , mMutex("IPCStreamDestination::DelayedStartInputStream::mMutex")
-  {
+      : mDestination(aDestination),
+        mStream(aStream),
+        mMutex("IPCStreamDestination::DelayedStartInputStream::mMutex") {
     MOZ_ASSERT(mDestination);
     MOZ_ASSERT(mStream);
   }
 
-  void
-  DestinationShutdown()
-  {
+  void DestinationShutdown() {
     MutexAutoLock lock(mMutex);
     mDestination = nullptr;
   }
@@ -52,37 +48,32 @@ public:
   // nsIInputStream interface
 
   NS_IMETHOD
-  Close() override
-  {
+  Close() override {
     MaybeCloseDestination();
     return mStream->Close();
   }
 
   NS_IMETHOD
-  Available(uint64_t* aLength) override
-  {
+  Available(uint64_t* aLength) override {
     MaybeStartReading();
     return mStream->Available(aLength);
   }
 
   NS_IMETHOD
-  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override
-  {
+  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
     MaybeStartReading();
     return mStream->Read(aBuffer, aCount, aReadCount);
   }
 
   NS_IMETHOD
   ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
-               uint32_t *aResult) override
-  {
+               uint32_t* aResult) override {
     MaybeStartReading();
     return mStream->ReadSegments(aWriter, aClosure, aCount, aResult);
   }
 
   NS_IMETHOD
-  IsNonBlocking(bool* aNonBlocking) override
-  {
+  IsNonBlocking(bool* aNonBlocking) override {
     MaybeStartReading();
     return mStream->IsNonBlocking(aNonBlocking);
   }
@@ -90,35 +81,32 @@ public:
   // nsIAsyncInputStream interface
 
   NS_IMETHOD
-  CloseWithStatus(nsresult aReason) override
-  {
+  CloseWithStatus(nsresult aReason) override {
     MaybeCloseDestination();
     return mStream->CloseWithStatus(aReason);
   }
 
   NS_IMETHOD
   AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
-            uint32_t aRequestedCount, nsIEventTarget* aTarget) override
-  {
+            uint32_t aRequestedCount, nsIEventTarget* aTarget) override {
     MaybeStartReading();
     return mStream->AsyncWait(aCallback, aFlags, aRequestedCount, aTarget);
   }
 
   NS_IMETHOD
   Search(const char* aForString, bool aIgnoreCase, bool* aFound,
-         uint32_t* aOffsetSearchedTo) override
-  {
+         uint32_t* aOffsetSearchedTo) override {
     MaybeStartReading();
     nsCOMPtr<nsISearchableInputStream> searchable = do_QueryInterface(mStream);
     MOZ_ASSERT(searchable);
-    return searchable->Search(aForString, aIgnoreCase, aFound, aOffsetSearchedTo);
+    return searchable->Search(aForString, aIgnoreCase, aFound,
+                              aOffsetSearchedTo);
   }
 
   // nsICloneableInputStream interface
 
   NS_IMETHOD
-  GetCloneable(bool* aCloneable) override
-  {
+  GetCloneable(bool* aCloneable) override {
     MaybeStartReading();
     nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(mStream);
     MOZ_ASSERT(cloneable);
@@ -126,8 +114,7 @@ public:
   }
 
   NS_IMETHOD
-  Clone(nsIInputStream** aResult) override
-  {
+  Clone(nsIInputStream** aResult) override {
     MaybeStartReading();
     nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(mStream);
     MOZ_ASSERT(cloneable);
@@ -137,8 +124,7 @@ public:
   // nsIBufferedInputStream
 
   NS_IMETHOD
-  Init(nsIInputStream* aStream, uint32_t aBufferSize) override
-  {
+  Init(nsIInputStream* aStream, uint32_t aBufferSize) override {
     MaybeStartReading();
     nsCOMPtr<nsIBufferedInputStream> stream = do_QueryInterface(mStream);
     MOZ_ASSERT(stream);
@@ -146,18 +132,15 @@ public:
   }
 
   NS_IMETHODIMP
-  GetData(nsIInputStream **aResult) override
-  {
+  GetData(nsIInputStream** aResult) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  void
-  MaybeStartReading();
+  void MaybeStartReading();
 
-  void
-  MaybeCloseDestination();
+  void MaybeCloseDestination();
 
-private:
+ private:
   ~DelayedStartInputStream() = default;
 
   IPCStreamDestination* mDestination;
@@ -170,48 +153,45 @@ private:
 };
 
 class IPCStreamDestination::DelayedStartInputStream::HelperRunnable final
-  : public Runnable
-{
-public:
+    : public Runnable {
+ public:
   enum Op {
     eStartReading,
     eCloseDestination,
   };
 
   HelperRunnable(
-    IPCStreamDestination::DelayedStartInputStream* aDelayedStartInputStream,
-    Op aOp)
-    : Runnable(
-        "ipc::IPCStreamDestination::DelayedStartInputStream::HelperRunnable")
-    , mDelayedStartInputStream(aDelayedStartInputStream)
-    , mOp(aOp)
-  {
+      IPCStreamDestination::DelayedStartInputStream* aDelayedStartInputStream,
+      Op aOp)
+      : Runnable(
+            "ipc::IPCStreamDestination::DelayedStartInputStream::"
+            "HelperRunnable"),
+        mDelayedStartInputStream(aDelayedStartInputStream),
+        mOp(aOp) {
     MOZ_ASSERT(aDelayedStartInputStream);
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     switch (mOp) {
-    case eStartReading:
-      mDelayedStartInputStream->MaybeStartReading();
-      break;
-    case eCloseDestination:
-      mDelayedStartInputStream->MaybeCloseDestination();
-      break;
+      case eStartReading:
+        mDelayedStartInputStream->MaybeStartReading();
+        break;
+      case eCloseDestination:
+        mDelayedStartInputStream->MaybeCloseDestination();
+        break;
     }
 
     return NS_OK;
   }
 
-private:
-  RefPtr<IPCStreamDestination::DelayedStartInputStream> mDelayedStartInputStream;
+ private:
+  RefPtr<IPCStreamDestination::DelayedStartInputStream>
+      mDelayedStartInputStream;
   Op mOp;
 };
 
-void
-IPCStreamDestination::DelayedStartInputStream::MaybeStartReading()
-{
+void IPCStreamDestination::DelayedStartInputStream::MaybeStartReading() {
   MutexAutoLock lock(mMutex);
   if (!mDestination) {
     return;
@@ -224,13 +204,11 @@ IPCStreamDestination::DelayedStartInputStream::MaybeStartReading()
   }
 
   RefPtr<Runnable> runnable =
-    new HelperRunnable(this, HelperRunnable::eStartReading);
+      new HelperRunnable(this, HelperRunnable::eStartReading);
   mDestination->DispatchRunnable(runnable.forget());
 }
 
-void
-IPCStreamDestination::DelayedStartInputStream::MaybeCloseDestination()
-{
+void IPCStreamDestination::DelayedStartInputStream::MaybeCloseDestination() {
   MutexAutoLock lock(mMutex);
   if (!mDestination) {
     return;
@@ -243,7 +221,7 @@ IPCStreamDestination::DelayedStartInputStream::MaybeCloseDestination()
   }
 
   RefPtr<Runnable> runnable =
-    new HelperRunnable(this, HelperRunnable::eCloseDestination);
+      new HelperRunnable(this, HelperRunnable::eCloseDestination);
   mDestination->DispatchRunnable(runnable.forget());
 }
 
@@ -263,21 +241,18 @@ NS_INTERFACE_MAP_END
 // IPCStreamDestination
 
 IPCStreamDestination::IPCStreamDestination()
-  : mOwningThread(NS_GetCurrentThread())
-  , mDelayedStart(false)
+    : mOwningThread(NS_GetCurrentThread()),
+      mDelayedStart(false)
 #ifdef MOZ_DEBUG
-  , mLengthSet(false)
+      ,
+      mLengthSet(false)
 #endif
 {
 }
 
-IPCStreamDestination::~IPCStreamDestination()
-{
-}
+IPCStreamDestination::~IPCStreamDestination() {}
 
-nsresult
-IPCStreamDestination::Initialize()
-{
+nsresult IPCStreamDestination::Initialize() {
   MOZ_ASSERT(!mReader);
   MOZ_ASSERT(!mWriter);
 
@@ -288,8 +263,7 @@ IPCStreamDestination::Initialize()
   // Use an "infinite" pipe because we cannot apply back-pressure through
   // the async IPC layer at the moment.  Blocking the IPC worker thread
   // is not desirable, either.
-  nsresult rv = NS_NewPipe2(getter_AddRefs(mReader),
-                            getter_AddRefs(mWriter),
+  nsresult rv = NS_NewPipe2(getter_AddRefs(mReader), getter_AddRefs(mWriter),
                             true, true,   // non-blocking
                             0,            // segment size
                             UINT32_MAX);  // "infinite" pipe
@@ -300,15 +274,11 @@ IPCStreamDestination::Initialize()
   return NS_OK;
 }
 
-void
-IPCStreamDestination::SetDelayedStart(bool aDelayedStart)
-{
+void IPCStreamDestination::SetDelayedStart(bool aDelayedStart) {
   mDelayedStart = aDelayedStart;
 }
 
-void
-IPCStreamDestination::SetLength(int64_t aLength)
-{
+void IPCStreamDestination::SetLength(int64_t aLength) {
   MOZ_ASSERT(mReader);
   MOZ_ASSERT(!mLengthSet);
 
@@ -324,15 +294,13 @@ IPCStreamDestination::SetLength(int64_t aLength)
   }
 }
 
-already_AddRefed<nsIInputStream>
-IPCStreamDestination::TakeReader()
-{
+already_AddRefed<nsIInputStream> IPCStreamDestination::TakeReader() {
   MOZ_ASSERT(mReader);
   MOZ_ASSERT(!mDelayedStartInputStream);
 
   if (mDelayedStart) {
     mDelayedStartInputStream =
-      new DelayedStartInputStream(this, mReader.forget());
+        new DelayedStartInputStream(this, mReader.forget());
     RefPtr<nsIAsyncInputStream> inputStream = mDelayedStartInputStream;
     return inputStream.forget();
   }
@@ -340,22 +308,17 @@ IPCStreamDestination::TakeReader()
   return mReader.forget();
 }
 
-bool
-IPCStreamDestination::IsOnOwningThread() const
-{
+bool IPCStreamDestination::IsOnOwningThread() const {
   return mOwningThread == NS_GetCurrentThread();
 }
 
-void
-IPCStreamDestination::DispatchRunnable(already_AddRefed<nsIRunnable>&& aRunnable)
-{
+void IPCStreamDestination::DispatchRunnable(
+    already_AddRefed<nsIRunnable>&& aRunnable) {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
   mOwningThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 }
 
-void
-IPCStreamDestination::ActorDestroyed()
-{
+void IPCStreamDestination::ActorDestroyed() {
   MOZ_ASSERT(mWriter);
 
   // If we were gracefully closed we should have gotten RecvClose().  In
@@ -370,29 +333,24 @@ IPCStreamDestination::ActorDestroyed()
   }
 }
 
-void
-IPCStreamDestination::BufferReceived(const wr::ByteBuffer& aBuffer)
-{
+void IPCStreamDestination::BufferReceived(const wr::ByteBuffer& aBuffer) {
   MOZ_ASSERT(mWriter);
 
   uint32_t numWritten = 0;
 
   // This should only fail if we hit an OOM condition.
   nsresult rv = mWriter->Write(reinterpret_cast<char*>(aBuffer.mData),
-                               aBuffer.mLength,
-                               &numWritten);
+                               aBuffer.mLength, &numWritten);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     RequestClose(rv);
   }
 }
 
-void
-IPCStreamDestination::CloseReceived(nsresult aRv)
-{
+void IPCStreamDestination::CloseReceived(nsresult aRv) {
   MOZ_ASSERT(mWriter);
   mWriter->CloseWithStatus(aRv);
   TerminateDestination();
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

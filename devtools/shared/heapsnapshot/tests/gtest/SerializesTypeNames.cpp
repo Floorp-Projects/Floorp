@@ -11,20 +11,17 @@ using testing::Property;
 using testing::Return;
 
 DEF_TEST(SerializesTypeNames, {
-    FakeNode node;
+  FakeNode node;
 
-    ::testing::NiceMock<MockWriter> writer;
-    EXPECT_CALL(writer, writeNode(Property(&JS::ubi::Node::typeName,
-                                           UTF16StrEq(u"FakeNode")),
-                                  _))
+  ::testing::NiceMock<MockWriter> writer;
+  EXPECT_CALL(
+      writer,
+      writeNode(Property(&JS::ubi::Node::typeName, UTF16StrEq(u"FakeNode")), _))
       .Times(1)
       .WillOnce(Return(true));
 
-    JS::AutoCheckCannotGC noGC(cx);
-    ASSERT_TRUE(WriteHeapGraph(cx,
-                               JS::ubi::Node(&node),
-                               writer,
-                               /* wantNames = */ true,
-                               /* zones = */ nullptr,
-                               noGC));
-  });
+  JS::AutoCheckCannotGC noGC(cx);
+  ASSERT_TRUE(WriteHeapGraph(cx, JS::ubi::Node(&node), writer,
+                             /* wantNames = */ true,
+                             /* zones = */ nullptr, noGC));
+});

@@ -12,32 +12,30 @@
 namespace mozilla {
 namespace dom {
 
-ProcessMessageManager::ProcessMessageManager(ipc::MessageManagerCallback* aCallback,
-                                             ParentProcessMessageManager* aParentManager,
-                                             MessageManagerFlags aFlags)
-  : MessageSender(aCallback, aParentManager,
-                  aFlags | MessageManagerFlags::MM_CHROME |
-                           MessageManagerFlags::MM_PROCESSMANAGER)
-{
+ProcessMessageManager::ProcessMessageManager(
+    ipc::MessageManagerCallback* aCallback,
+    ParentProcessMessageManager* aParentManager, MessageManagerFlags aFlags)
+    : MessageSender(aCallback, aParentManager,
+                    aFlags | MessageManagerFlags::MM_CHROME |
+                        MessageManagerFlags::MM_PROCESSMANAGER) {
   MOZ_ASSERT(!(aFlags & ~(MessageManagerFlags::MM_GLOBAL |
                           MessageManagerFlags::MM_OWNSCALLBACK)));
 
-  // This is a bit hackish. We attach to the parent manager, but only if we have a
-  // callback (which is only for the in-process message manager). For other cases we wait
-  // until the child process is running (see MessageSender::InitWithCallback).
+  // This is a bit hackish. We attach to the parent manager, but only if we have
+  // a callback (which is only for the in-process message manager). For other
+  // cases we wait until the child process is running (see
+  // MessageSender::InitWithCallback).
   if (aParentManager && mCallback) {
     aParentManager->AddChildManager(this);
   }
 }
 
-JSObject*
-ProcessMessageManager::WrapObject(JSContext* aCx,
-                                  JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ProcessMessageManager::WrapObject(JSContext* aCx,
+                                            JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
 
   return ProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

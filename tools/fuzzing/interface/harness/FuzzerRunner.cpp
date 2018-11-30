@@ -18,10 +18,8 @@ namespace mozilla {
 // then fuzzerRunner will be set here indicating that
 // we want to call into either LibFuzzer's main or the AFL entrypoint.
 class _InitFuzzer {
-public:
-  _InitFuzzer() {
-    fuzzerRunner = new FuzzerRunner();
-  }
+ public:
+  _InitFuzzer() { fuzzerRunner = new FuzzerRunner(); }
 } InitLibFuzzer;
 
 int FuzzerRunner::Run(int* argc, char*** argv) {
@@ -31,16 +29,19 @@ int FuzzerRunner::Run(int* argc, char*** argv) {
   if (!fuzzerEnv) {
     fuzzerEnv = getenv("LIBFUZZER");
     if (fuzzerEnv) {
-      fprintf(stderr, "Fuzzer Interface: Warning: \
+      fprintf(stderr,
+              "Fuzzer Interface: Warning: \
         Using deprecated LIBFUZZER variable, use FUZZER instead\n");
     } else {
-      fprintf(stderr, "Must specify fuzzing target in FUZZER environment variable\n");
+      fprintf(stderr,
+              "Must specify fuzzing target in FUZZER environment variable\n");
       return 1;
     }
   }
 
   std::string moduleNameStr(fuzzerEnv);
-  FuzzerFunctions funcs = FuzzerRegistry::getInstance().getModuleFunctions(moduleNameStr);
+  FuzzerFunctions funcs =
+      FuzzerRegistry::getInstance().getModuleFunctions(moduleNameStr);
   FuzzerInitFunc initFunc = funcs.first;
   FuzzerTestingFunc testingFunc = funcs.second;
   if (initFunc) {
@@ -52,8 +53,8 @@ int FuzzerRunner::Run(int* argc, char*** argv) {
   }
 
   if (!testingFunc) {
-      fprintf(stderr, "Fuzzing Interface: Error: No testing callback found\n");
-      return 1;
+    fprintf(stderr, "Fuzzing Interface: Error: No testing callback found\n");
+    return 1;
   }
 
 #ifdef LIBFUZZER
@@ -70,4 +71,4 @@ void FuzzerRunner::setParams(LibFuzzerDriver aDriver) {
 }
 #endif
 
-} // namespace mozilla
+}  // namespace mozilla

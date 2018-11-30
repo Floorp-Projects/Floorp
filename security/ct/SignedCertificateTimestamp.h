@@ -12,17 +12,13 @@
 #include "mozpkix/Result.h"
 
 // Structures related to Certificate Transparency (RFC 6962).
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // LogEntry struct in RFC 6962, Section 3.1.
-struct LogEntry
-{
-
+struct LogEntry {
   // LogEntryType enum in RFC 6962, Section 3.1.
-  enum class Type {
-    X509 = 0,
-    Precert = 1
-  };
+  enum class Type { X509 = 0, Precert = 1 };
 
   void Reset();
 
@@ -38,8 +34,7 @@ struct LogEntry
 
 // Helper structure to represent Digitally Signed data, as described in
 // Sections 4.7 and 7.4.1.4.1 of RFC 5246.
-struct DigitallySigned
-{
+struct DigitallySigned {
   enum class HashAlgorithm {
     None = 0,
     MD5 = 1,
@@ -50,12 +45,7 @@ struct DigitallySigned
     SHA512 = 6,
   };
 
-  enum class SignatureAlgorithm {
-    Anonymous = 0,
-    RSA = 1,
-    DSA = 2,
-    ECDSA = 3
-  };
+  enum class SignatureAlgorithm { Anonymous = 0, RSA = 1, DSA = 2, ECDSA = 3 };
 
   // Returns true if |aHashAlgorithm| and |aSignatureAlgorithm|
   // match this DigitallySigned hash and signature algorithms.
@@ -69,8 +59,7 @@ struct DigitallySigned
 };
 
 // SignedCertificateTimestamp struct in RFC 6962, Section 3.2.
-struct SignedCertificateTimestamp
-{
+struct SignedCertificateTimestamp {
   // Version enum in RFC 6962, Section 3.2.
   enum class Version {
     V1 = 0,
@@ -85,20 +74,19 @@ struct SignedCertificateTimestamp
   DigitallySigned signature;
 };
 
-inline pkix::Result BufferToInput(const Buffer& buffer, pkix::Input& input)
-{
+inline pkix::Result BufferToInput(const Buffer& buffer, pkix::Input& input) {
   if (buffer.empty()) {
     return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   return input.Init(buffer.data(), buffer.size());
 }
 
-inline void InputToBuffer(pkix::Input input, Buffer& buffer)
-{
+inline void InputToBuffer(pkix::Input input, Buffer& buffer) {
   buffer.assign(input.UnsafeGetData(),
                 input.UnsafeGetData() + input.GetLength());
 }
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif // SignedCertificateTimestamp_h
+#endif  // SignedCertificateTimestamp_h

@@ -17,14 +17,14 @@ class nsILoadGroup;
 class nsIStreamListener;
 
 #define CONTENT_DLF_CONTRACTID "@mozilla.org/content/document-loader-factory;1"
-#define PLUGIN_DLF_CONTRACTID "@mozilla.org/content/plugin/document-loader-factory;1"
+#define PLUGIN_DLF_CONTRACTID \
+  "@mozilla.org/content/plugin/document-loader-factory;1"
 
-class nsContentDLF final : public nsIDocumentLoaderFactory
-{
-protected:
+class nsContentDLF final : public nsIDocumentLoaderFactory {
+ protected:
   virtual ~nsContentDLF();
 
-public:
+ public:
   nsContentDLF();
 
   NS_DECL_ISUPPORTS
@@ -33,18 +33,14 @@ public:
   nsresult InitUAStyleSheet();
 
   typedef already_AddRefed<nsIDocument> (*DocumentCreator)();
-  nsresult CreateDocument(const char* aCommand,
-                          nsIChannel* aChannel,
-                          nsILoadGroup* aLoadGroup,
-                          nsIDocShell* aContainer,
+  nsresult CreateDocument(const char* aCommand, nsIChannel* aChannel,
+                          nsILoadGroup* aLoadGroup, nsIDocShell* aContainer,
                           DocumentCreator aDocumentCreator,
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aContentViewer);
 
-  nsresult CreateXULDocument(const char* aCommand,
-                             nsIChannel* aChannel,
-                             nsILoadGroup* aLoadGroup,
-                             nsIDocShell* aContainer,
+  nsresult CreateXULDocument(const char* aCommand, nsIChannel* aChannel,
+                             nsILoadGroup* aLoadGroup, nsIDocShell* aContainer,
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aContentViewer);
@@ -54,18 +50,16 @@ public:
    * principal.  aPrincipal is allowed to be null, in which case the
    * new document will get the about:blank codebase principal.
    */
-  static already_AddRefed<nsIDocument>
-  CreateBlankDocument(nsILoadGroup* aLoadGroup,
-                      nsIPrincipal* aPrincipal,
-                      nsDocShell* aContainer);
+  static already_AddRefed<nsIDocument> CreateBlankDocument(
+      nsILoadGroup* aLoadGroup, nsIPrincipal* aPrincipal,
+      nsDocShell* aContainer);
 
-private:
+ private:
   static nsresult EnsureUAStyleSheet();
   static bool IsImageContentType(const char* aContentType);
 };
 
-nsresult
-NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
+nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 
 // clang-format off
 #ifdef MOZ_WEBM
@@ -104,4 +98,3 @@ NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 // clang-format on
 
 #endif
-

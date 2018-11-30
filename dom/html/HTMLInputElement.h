@@ -16,7 +16,7 @@
 #include "nsIConstraintValidation.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/HTMLFormElement.h" // for HasEverTriedInvalidSubmit()
+#include "mozilla/dom/HTMLFormElement.h"  // for HasEverTriedInvalidSubmit()
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -36,13 +36,13 @@
 #include "HiddenInputType.h"
 
 static constexpr size_t INPUT_TYPE_SIZE = sizeof(
-  mozilla::Variant<TextInputType, SearchInputType, TelInputType, URLInputType,
-                   EmailInputType, PasswordInputType, NumberInputType,
-                   RangeInputType, RadioInputType, CheckboxInputType,
-                   ButtonInputType, ImageInputType, ResetInputType,
-                   SubmitInputType, DateInputType, TimeInputType, WeekInputType,
-                   MonthInputType, DateTimeLocalInputType, FileInputType,
-                   ColorInputType, HiddenInputType> );
+    mozilla::Variant<TextInputType, SearchInputType, TelInputType, URLInputType,
+                     EmailInputType, PasswordInputType, NumberInputType,
+                     RangeInputType, RadioInputType, CheckboxInputType,
+                     ButtonInputType, ImageInputType, ResetInputType,
+                     SubmitInputType, DateInputType, TimeInputType,
+                     WeekInputType, MonthInputType, DateTimeLocalInputType,
+                     FileInputType, ColorInputType, HiddenInputType>);
 
 class InputType;
 struct DoNotDelete;
@@ -73,11 +73,10 @@ class GetFilesHelper;
  * persistently saved (saved across sessions) or not honors whether or not the
  * page is being viewed in private browsing.
  */
-class UploadLastDir final : public nsIObserver, public nsSupportsWeakReference
-{
+class UploadLastDir final : public nsIObserver, public nsSupportsWeakReference {
   ~UploadLastDir() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -89,9 +88,9 @@ public:
    * @param aFilePicker   the file picker to open
    * @param aFpCallback   the callback object to be run when the file is shown.
    */
-  nsresult FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
-                                          nsIFilePicker* aFilePicker,
-                                          nsIFilePickerShownCallback* aFpCallback);
+  nsresult FetchDirectoryAndDisplayPicker(
+      nsIDocument* aDoc, nsIFilePicker* aFilePicker,
+      nsIFilePickerShownCallback* aFpCallback);
 
   /**
    * Store the last used directory for this location using the
@@ -101,16 +100,13 @@ public:
    */
   nsresult StoreLastUsedDirectory(nsIDocument* aDoc, nsIFile* aDir);
 
-  class ContentPrefCallback final : public nsIContentPrefCallback2
-  {
-    virtual ~ContentPrefCallback()
-    { }
+  class ContentPrefCallback final : public nsIContentPrefCallback2 {
+    virtual ~ContentPrefCallback() {}
 
-  public:
-    ContentPrefCallback(nsIFilePicker* aFilePicker, nsIFilePickerShownCallback* aFpCallback)
-    : mFilePicker(aFilePicker)
-    , mFpCallback(aFpCallback)
-    { }
+   public:
+    ContentPrefCallback(nsIFilePicker* aFilePicker,
+                        nsIFilePickerShownCallback* aFpCallback)
+        : mFilePicker(aFilePicker), mFpCallback(aFpCallback) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTENTPREFCALLBACK2
@@ -124,16 +120,15 @@ public:
 class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
                                public nsImageLoadingContent,
                                public nsITextControlElement,
-                               public nsIConstraintValidation
-{
+                               public nsIConstraintValidation {
   friend class AfterSetFilesOrDirectoriesCallback;
   friend class DispatchChangeEventCallback;
   friend class ::InputType;
 
-public:
-  using nsIConstraintValidation::GetValidationMessage;
+ public:
   using nsGenericHTMLFormElementWithState::GetForm;
   using nsGenericHTMLFormElementWithState::GetFormAction;
+  using nsIConstraintValidation::GetValidationMessage;
 
   enum class FromClone { no, yes };
 
@@ -175,24 +170,24 @@ public:
   virtual void FieldSetDisabledChanged(bool aNotify) override;
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) override;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                               int32_t* aTabIndex) override;
 
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                nsAttrValue& aResult) override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
   virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                               int32_t aModType) const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult PreHandleEvent(EventChainVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) override;
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor);
   MOZ_CAN_RUN_SCRIPT
@@ -215,12 +210,11 @@ public:
   virtual EventStates IntrinsicState() const override;
 
   // Element
-private:
+ private:
   virtual void AddStates(EventStates aStates) override;
   virtual void RemoveStates(EventStates aStates) override;
 
-public:
-
+ public:
   // nsITextControlElement
   NS_IMETHOD SetValueChanged(bool aValueChanged) override;
   NS_IMETHOD_(bool) IsSingleLineTextControl() const override;
@@ -231,7 +225,8 @@ public:
   NS_IMETHOD_(int32_t) GetRows() override;
   NS_IMETHOD_(void) GetDefaultValueFromContent(nsAString& aValue) override;
   NS_IMETHOD_(bool) ValueChanged() const override;
-  NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const override;
+  NS_IMETHOD_(void)
+  GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const override;
   NS_IMETHOD_(mozilla::TextEditor*) GetTextEditor() override;
   NS_IMETHOD_(mozilla::TextEditor*) GetTextEditorWithoutCreation() override;
   NS_IMETHOD_(nsISelectionController*) GetSelectionController() override;
@@ -249,7 +244,8 @@ public:
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
   NS_IMETHOD_(bool) GetPreviewVisibility() override;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
-  NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
+  NS_IMETHOD_(void)
+  OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
@@ -264,25 +260,25 @@ public:
 
   const nsTArray<OwningFileOrDirectory>& GetFilesOrDirectoriesInternal() const;
 
-  void SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories,
-                             bool aSetValueChanged);
+  void SetFilesOrDirectories(
+      const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories,
+      bool aSetValueChanged);
   void SetFiles(FileList* aFiles, bool aSetValueChanged);
 
   // This method is used for test only. Onces the data is set, a 'change' event
   // is dispatched.
-  void MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirectory>& aSequence);
+  void MozSetDndFilesAndDirectories(
+      const nsTArray<OwningFileOrDirectory>& aSequence);
 
   // Called when a nsIFilePicker or a nsIColorPicker terminate.
   void PickerClosed();
 
   void SetCheckedChangedInternal(bool aCheckedChanged);
-  bool GetCheckedChanged() const {
-    return mCheckedChanged;
-  }
+  bool GetCheckedChanged() const { return mCheckedChanged; }
   void AddedToRadioGroup();
   void WillRemoveFromRadioGroup();
 
- /**
+  /**
    * Helper function returning the currently selected button in the radio group.
    * Returning null if the element is not a button or if there is no selectied
    * button in the group.
@@ -303,65 +299,58 @@ public:
   static void InitUploadLastDir();
   static void DestroyUploadLastDir();
 
-  //If the valueAsDate attribute should be enabled in webIDL
+  // If the valueAsDate attribute should be enabled in webIDL
   static bool ValueAsDateEnabled(JSContext* cx, JSObject* obj);
 
   void MaybeLoadImage();
 
-  void SetSelectionCached()
-  {
+  void SetSelectionCached() {
     MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
     mSelectionCached = true;
   }
-  bool IsSelectionCached() const
-  {
+  bool IsSelectionCached() const {
     MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
     return mSelectionCached;
   }
-  void ClearSelectionCached()
-  {
+  void ClearSelectionCached() {
     MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
     mSelectionCached = false;
   }
-  nsTextEditorState::SelectionProperties& GetSelectionProperties()
-  {
+  nsTextEditorState::SelectionProperties& GetSelectionProperties() {
     MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
     return mSelectionProperties;
   }
 
-  bool HasPatternAttribute() const
-  {
-    return mHasPatternAttribute;
-  }
+  bool HasPatternAttribute() const { return mHasPatternAttribute; }
 
   // nsIConstraintValidation
-  bool     IsTooLong();
-  bool     IsTooShort();
-  bool     IsValueMissing() const;
-  bool     HasTypeMismatch() const;
-  bool     HasPatternMismatch() const;
-  bool     IsRangeOverflow() const;
-  bool     IsRangeUnderflow() const;
-  bool     HasStepMismatch(bool aUseZeroIfValueNaN = false) const;
-  bool     HasBadInput() const;
-  void     UpdateTooLongValidityState();
-  void     UpdateTooShortValidityState();
-  void     UpdateValueMissingValidityState();
-  void     UpdateTypeMismatchValidityState();
-  void     UpdatePatternMismatchValidityState();
-  void     UpdateRangeOverflowValidityState();
-  void     UpdateRangeUnderflowValidityState();
-  void     UpdateStepMismatchValidityState();
-  void     UpdateBadInputValidityState();
+  bool IsTooLong();
+  bool IsTooShort();
+  bool IsValueMissing() const;
+  bool HasTypeMismatch() const;
+  bool HasPatternMismatch() const;
+  bool IsRangeOverflow() const;
+  bool IsRangeUnderflow() const;
+  bool HasStepMismatch(bool aUseZeroIfValueNaN = false) const;
+  bool HasBadInput() const;
+  void UpdateTooLongValidityState();
+  void UpdateTooShortValidityState();
+  void UpdateValueMissingValidityState();
+  void UpdateTypeMismatchValidityState();
+  void UpdatePatternMismatchValidityState();
+  void UpdateRangeOverflowValidityState();
+  void UpdateRangeUnderflowValidityState();
+  void UpdateStepMismatchValidityState();
+  void UpdateBadInputValidityState();
   // Update all our validity states and then update our element state
   // as needed.  aNotify controls whether the element state update
   // needs to notify.
-  void     UpdateAllValidityStates(bool aNotify);
+  void UpdateAllValidityStates(bool aNotify);
   // Update all our validity states without updating element state.
   // This should be called instead of UpdateAllValidityStates any time
   // we're guaranteed that element state will be updated anyway.
-  void     UpdateAllValidityStatesButNotElementState();
-  void     UpdateBarredFromConstraintValidation();
+  void UpdateAllValidityStatesButNotElementState();
+  void UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType) override;
 
@@ -377,7 +366,7 @@ public:
    * of the current radio should be ignored.
    * @note This method shouldn't be called if the radio element hasn't a group.
    */
-  void     UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf);
+  void UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf);
 
   /**
    * Set filters to the filePicker according to the accept attribute value.
@@ -450,149 +439,102 @@ public:
 
   // WebIDL
 
-  void GetAccept(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::accept, aValue);
-  }
-  void SetAccept(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetAccept(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::accept, aValue); }
+  void SetAccept(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::accept, aValue, aRv);
   }
 
-  void GetAlt(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::alt, aValue);
-  }
-  void SetAlt(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetAlt(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::alt, aValue); }
+  void SetAlt(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::alt, aValue, aRv);
   }
 
   void GetAutocomplete(nsAString& aValue);
-  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
 
   void GetAutocompleteInfo(Nullable<AutocompleteInfo>& aInfo);
 
-  bool Autofocus() const
-  {
-    return GetBoolAttr(nsGkAtoms::autofocus);
-  }
+  bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
 
-  void SetAutofocus(bool aValue, ErrorResult& aRv)
-  {
+  void SetAutofocus(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::autofocus, aValue, aRv);
   }
 
-  bool DefaultChecked() const
-  {
+  bool DefaultChecked() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
   }
 
-  void SetDefaultChecked(bool aValue, ErrorResult& aRv)
-  {
+  void SetDefaultChecked(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::checked, aValue, aRv);
   }
 
-  bool Checked() const
-  {
-    return mChecked;
-  }
+  bool Checked() const { return mChecked; }
   void SetChecked(bool aChecked);
 
-  bool Disabled() const
-  {
-    return GetBoolAttr(nsGkAtoms::disabled);
-  }
+  bool Disabled() const { return GetBoolAttr(nsGkAtoms::disabled); }
 
-  void SetDisabled(bool aValue, ErrorResult& aRv)
-  {
+  void SetDisabled(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aValue, aRv);
   }
 
   FileList* GetFiles();
   void SetFiles(FileList* aFiles);
 
-  void SetFormAction(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetFormAction(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::formaction, aValue, aRv);
   }
 
   void GetFormEnctype(nsAString& aValue);
-  void SetFormEnctype(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetFormEnctype(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::formenctype, aValue, aRv);
   }
 
   void GetFormMethod(nsAString& aValue);
-  void SetFormMethod(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetFormMethod(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::formmethod, aValue, aRv);
   }
 
-  bool FormNoValidate() const
-  {
-    return GetBoolAttr(nsGkAtoms::formnovalidate);
-  }
+  bool FormNoValidate() const { return GetBoolAttr(nsGkAtoms::formnovalidate); }
 
-  void SetFormNoValidate(bool aValue, ErrorResult& aRv)
-  {
+  void SetFormNoValidate(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::formnovalidate, aValue, aRv);
   }
 
-  void GetFormTarget(nsAString& aValue)
-  {
+  void GetFormTarget(nsAString& aValue) {
     GetHTMLAttr(nsGkAtoms::formtarget, aValue);
   }
-  void SetFormTarget(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetFormTarget(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::formtarget, aValue, aRv);
   }
 
   MOZ_CAN_RUN_SCRIPT uint32_t Height();
 
-  void SetHeight(uint32_t aValue, ErrorResult& aRv)
-  {
+  void SetHeight(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::height, aValue, 0, aRv);
   }
 
-  bool Indeterminate() const
-  {
-    return mIndeterminate;
-  }
+  bool Indeterminate() const { return mIndeterminate; }
 
-  bool IsDraggingRange() const
-  {
-    return mIsDraggingRange;
-  }
+  bool IsDraggingRange() const { return mIsDraggingRange; }
   void SetIndeterminate(bool aValue);
 
   void GetInputMode(nsAString& aValue);
-  void SetInputMode(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetInputMode(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::inputmode, aValue, aRv);
   }
 
   nsGenericHTMLElement* GetList() const;
 
-  void GetMax(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::max, aValue);
-  }
-  void SetMax(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetMax(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::max, aValue); }
+  void SetMax(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::max, aValue, aRv);
   }
 
-  int32_t MaxLength() const
-  {
-    return GetIntAttr(nsGkAtoms::maxlength, -1);
-  }
+  int32_t MaxLength() const { return GetIntAttr(nsGkAtoms::maxlength, -1); }
 
-  void SetMaxLength(int32_t aValue, ErrorResult& aRv)
-  {
+  void SetMaxLength(int32_t aValue, ErrorResult& aRv) {
     int32_t minLength = MinLength();
     if (aValue < 0 || (minLength >= 0 && aValue < minLength)) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -602,13 +544,9 @@ public:
     SetHTMLIntAttr(nsGkAtoms::maxlength, aValue, aRv);
   }
 
-  int32_t MinLength() const
-  {
-    return GetIntAttr(nsGkAtoms::minlength, -1);
-  }
+  int32_t MinLength() const { return GetIntAttr(nsGkAtoms::minlength, -1); }
 
-  void SetMinLength(int32_t aValue, ErrorResult& aRv)
-  {
+  void SetMinLength(int32_t aValue, ErrorResult& aRv) {
     int32_t maxLength = MaxLength();
     if (aValue < 0 || (maxLength >= 0 && aValue > maxLength)) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -618,79 +556,53 @@ public:
     SetHTMLIntAttr(nsGkAtoms::minlength, aValue, aRv);
   }
 
-  void GetMin(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::min, aValue);
-  }
-  void SetMin(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetMin(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::min, aValue); }
+  void SetMin(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::min, aValue, aRv);
   }
 
-  bool Multiple() const
-  {
-    return GetBoolAttr(nsGkAtoms::multiple);
-  }
+  bool Multiple() const { return GetBoolAttr(nsGkAtoms::multiple); }
 
-  void SetMultiple(bool aValue, ErrorResult& aRv)
-  {
+  void SetMultiple(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::multiple, aValue, aRv);
   }
 
-  void GetName(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::name, aValue);
-  }
-  void SetName(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetName(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::name, aValue); }
+  void SetName(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
   }
 
-  void GetPattern(nsAString& aValue)
-  {
+  void GetPattern(nsAString& aValue) {
     GetHTMLAttr(nsGkAtoms::pattern, aValue);
   }
-  void SetPattern(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetPattern(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::pattern, aValue, aRv);
   }
 
-  void GetPlaceholder(nsAString& aValue)
-  {
+  void GetPlaceholder(nsAString& aValue) {
     GetHTMLAttr(nsGkAtoms::placeholder, aValue);
   }
-  void SetPlaceholder(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetPlaceholder(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::placeholder, aValue, aRv);
   }
 
-  bool ReadOnly() const
-  {
-    return GetBoolAttr(nsGkAtoms::readonly);
-  }
+  bool ReadOnly() const { return GetBoolAttr(nsGkAtoms::readonly); }
 
-  void SetReadOnly(bool aValue, ErrorResult& aRv)
-  {
+  void SetReadOnly(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::readonly, aValue, aRv);
   }
 
-  bool Required() const
-  {
-    return GetBoolAttr(nsGkAtoms::required);
-  }
+  bool Required() const { return GetBoolAttr(nsGkAtoms::required); }
 
-  void SetRequired(bool aValue, ErrorResult& aRv)
-  {
+  void SetRequired(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::required, aValue, aRv);
   }
 
-  uint32_t Size() const
-  {
+  uint32_t Size() const {
     return GetUnsignedIntAttr(nsGkAtoms::size, DEFAULT_COLS);
   }
 
-  void SetSize(uint32_t aValue, ErrorResult& aRv)
-  {
+  void SetSize(uint32_t aValue, ErrorResult& aRv) {
     if (aValue == 0) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return;
@@ -699,36 +611,28 @@ public:
     SetUnsignedIntAttr(nsGkAtoms::size, aValue, DEFAULT_COLS, aRv);
   }
 
-  void GetSrc(nsAString& aValue)
-  {
+  void GetSrc(nsAString& aValue) {
     GetURIAttr(nsGkAtoms::src, nullptr, aValue);
   }
-  void SetSrc(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
-  {
+  void SetSrc(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal,
+              ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::src, aValue, aTriggeringPrincipal, aRv);
   }
 
-  void GetStep(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::step, aValue);
-  }
-  void SetStep(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetStep(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::step, aValue); }
+  void SetStep(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::step, aValue, aRv);
   }
 
   void GetType(nsAString& aValue);
-  void SetType(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetType(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
   }
 
-  void GetDefaultValue(nsAString& aValue)
-  {
+  void GetDefaultValue(nsAString& aValue) {
     GetHTMLAttr(nsGkAtoms::value, aValue);
   }
-  void SetDefaultValue(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetDefaultValue(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
   }
 
@@ -741,8 +645,7 @@ public:
 
   void SetValueAsDate(const Nullable<Date>& aDate, ErrorResult& aRv);
 
-  double ValueAsNumber() const
-  {
+  double ValueAsNumber() const {
     return DoesValueAsNumberApply() ? GetValueAsDecimal().toDouble()
                                     : UnspecifiedNaN<double>();
   }
@@ -751,20 +654,13 @@ public:
 
   MOZ_CAN_RUN_SCRIPT uint32_t Width();
 
-  void SetWidth(uint32_t aValue, ErrorResult& aRv)
-  {
+  void SetWidth(uint32_t aValue, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::width, aValue, 0, aRv);
   }
 
-  void StepUp(int32_t aN, ErrorResult& aRv)
-  {
-    aRv = ApplyStep(aN);
-  }
+  void StepUp(int32_t aN, ErrorResult& aRv) { aRv = ApplyStep(aN); }
 
-  void StepDown(int32_t aN, ErrorResult& aRv)
-  {
-    aRv = ApplyStep(-aN);
-  }
+  void StepDown(int32_t aN, ErrorResult& aRv) { aRv = ApplyStep(-aN); }
 
   /**
    * Returns the current step value.
@@ -788,32 +684,27 @@ public:
   void SetSelectionDirection(const nsAString& aValue, ErrorResult& aRv);
 
   void SetSelectionRange(uint32_t aStart, uint32_t aEnd,
-                         const Optional< nsAString >& direction,
+                         const Optional<nsAString>& direction,
                          ErrorResult& aRv);
 
   void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
 
   void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                    uint32_t aEnd, SelectionMode aSelectMode,
-                    ErrorResult& aRv);
+                    uint32_t aEnd, SelectionMode aSelectMode, ErrorResult& aRv);
 
-  bool Allowdirs() const
-  {
+  bool Allowdirs() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::allowdirs);
   }
 
-  void SetAllowdirs(bool aValue, ErrorResult& aRv)
-  {
+  void SetAllowdirs(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::allowdirs, aValue, aRv);
   }
 
-  bool WebkitDirectoryAttr() const
-  {
+  bool WebkitDirectoryAttr() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);
   }
 
-  void SetWebkitDirectoryAttr(bool aValue, ErrorResult& aRv)
-  {
+  void SetWebkitDirectoryAttr(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::webkitdirectory, aValue, aRv);
   }
 
@@ -827,21 +718,13 @@ public:
 
   void ChooseDirectory(ErrorResult& aRv);
 
-  void GetAlign(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::align, aValue);
-  }
-  void SetAlign(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetAlign(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::align, aValue); }
+  void SetAlign(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::align, aValue, aRv);
   }
 
-  void GetUseMap(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::usemap, aValue);
-  }
-  void SetUseMap(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void GetUseMap(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::usemap, aValue); }
+  void SetUseMap(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::usemap, aValue, aRv);
   }
 
@@ -853,7 +736,8 @@ public:
 
   void MozGetFileNameArray(nsTArray<nsString>& aFileNames, ErrorResult& aRv);
 
-  void MozSetFileNameArray(const Sequence< nsString >& aFileNames, ErrorResult& aRv);
+  void MozSetFileNameArray(const Sequence<nsString>& aFileNames,
+                           ErrorResult& aRv);
   void MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles);
   void MozSetDirectory(const nsAString& aDirectoryPath, ErrorResult& aRv);
 
@@ -901,12 +785,9 @@ public:
   HTMLInputElement* GetOwnerNumberControl();
 
   void StartNumberControlSpinnerSpin();
-  enum SpinnerStopState {
-    eAllowDispatchingEvents,
-    eDisallowDispatchingEvents
-  };
-  void StopNumberControlSpinnerSpin(SpinnerStopState aState =
-                                      eAllowDispatchingEvents);
+  enum SpinnerStopState { eAllowDispatchingEvents, eDisallowDispatchingEvents };
+  void StopNumberControlSpinnerSpin(
+      SpinnerStopState aState = eAllowDispatchingEvents);
   MOZ_CAN_RUN_SCRIPT
   void StepNumberControlForUserEvent(int32_t aDirection);
 
@@ -917,13 +798,11 @@ public:
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static void HandleNumberControlSpin(void* aData);
 
-  bool NumberSpinnerUpButtonIsDepressed() const
-  {
+  bool NumberSpinnerUpButtonIsDepressed() const {
     return mNumberControlSpinnerIsSpinning && mNumberControlSpinnerSpinsUp;
   }
 
-  bool NumberSpinnerDownButtonIsDepressed() const
-  {
+  bool NumberSpinnerDownButtonIsDepressed() const {
     return mNumberControlSpinnerIsSpinning && !mNumberControlSpinnerSpinsUp;
   }
 
@@ -934,14 +813,10 @@ public:
    */
   nsIEditor* GetEditor();
 
-  bool IsInputEventTarget() const
-  {
-    return IsSingleLineTextControl(false);
-  }
+  bool IsInputEventTarget() const { return IsSingleLineTextControl(false); }
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void SetUserInput(const nsAString& aInput,
-                    nsIPrincipal& aSubjectPrincipal);
+  void SetUserInput(const nsAString& aInput, nsIPrincipal& aSubjectPrincipal);
 
   /**
    * If aValue contains a valid floating-point number in the format specified
@@ -954,7 +829,8 @@ public:
    */
   static Decimal StringToDecimal(const nsAString& aValue);
 
-  void UpdateEntries(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories);
+  void UpdateEntries(
+      const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories);
 
   static void Shutdown();
 
@@ -969,15 +845,13 @@ public:
    * that @required attribute applies and the attribute is set; in contrast,
    * Required() returns true whenever @required attribute is set.
    */
-  bool IsRequired() const
-  {
-    return State().HasState(NS_EVENT_STATE_REQUIRED);
-  }
+  bool IsRequired() const { return State().HasState(NS_EVENT_STATE_REQUIRED); }
 
-protected:
+ protected:
   virtual ~HTMLInputElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
@@ -988,8 +862,7 @@ protected:
    *
    * See: http://dev.w3.org/html5/spec/forms.html#dom-input-value
    */
-  enum ValueModeType
-  {
+  enum ValueModeType {
     // On getting, returns the value.
     // On setting, sets value.
     VALUE_MODE_VALUE,
@@ -1014,7 +887,8 @@ protected:
    * number).
    * If the method returns true, |aResult| will contained the parsed number.
    *
-   * @param aValue  the string on which the sub-string will be extracted and parsed.
+   * @param aValue  the string on which the sub-string will be extracted and
+   * parsed.
    * @param aStart  the beginning of the sub-string in aValue.
    * @param aLen    the length of the sub-string.
    * @param aResult the parsed number.
@@ -1034,14 +908,11 @@ protected:
    * @param aFlags      See nsTextEditorState::SetValueFlags.
    */
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetValueInternal(const nsAString& aValue,
-                            const nsAString* aOldValue,
+  nsresult SetValueInternal(const nsAString& aValue, const nsAString* aOldValue,
                             uint32_t aFlags);
 
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetValueInternal(const nsAString& aValue,
-                            uint32_t aFlags)
-  {
+  nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags) {
     return SetValueInternal(aValue, nullptr, aFlags);
   }
 
@@ -1068,8 +939,7 @@ protected:
 
   void ClearFiles(bool aSetValueChanged);
 
-  void SetIndeterminateInternal(bool aValue,
-                                bool aShouldInvalidate);
+  void SetIndeterminateInternal(bool aValue, bool aShouldInvalidate);
 
   /**
    * Called when an attribute is about to be changed
@@ -1097,10 +967,9 @@ protected:
   bool DispatchSelectEvent(nsPresContext* aPresContext);
 
   void SelectAll(nsPresContext* aPresContext);
-  bool IsImage() const
-  {
-    return AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                       nsGkAtoms::image, eIgnoreCase);
+  bool IsImage() const {
+    return AttrValueIs(kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::image,
+                       eIgnoreCase);
   }
 
   /**
@@ -1200,7 +1069,7 @@ protected:
   bool DoesAutocompleteApply() const;
 
   void FreeData();
-  nsTextEditorState *GetEditorState() const;
+  nsTextEditorState* GetEditorState() const;
 
   mozilla::TextEditor* GetTextEditorFromState();
 
@@ -1212,7 +1081,8 @@ protected:
 
   /**
    * Sanitize the value of the element depending of its current type.
-   * See: http://www.whatwg.org/specs/web-apps/current-work/#value-sanitization-algorithm
+   * See:
+   * http://www.whatwg.org/specs/web-apps/current-work/#value-sanitization-algorithm
    */
   void SanitizeValue(nsAString& aValue);
 
@@ -1329,8 +1199,7 @@ protected:
    * @return the year and month in aYear and aMonth.
    * @return whether the parsing was successful.
    */
-  bool ParseMonth(const nsAString& aValue,
-                  uint32_t* aYear,
+  bool ParseMonth(const nsAString& aValue, uint32_t* aYear,
                   uint32_t* aMonth) const;
 
   /**
@@ -1340,8 +1209,7 @@ protected:
    * @return the year and week in aYear and aWeek.
    * @return whether the parsing was successful.
    */
-  bool ParseWeek(const nsAString& aValue,
-                 uint32_t* aYear,
+  bool ParseWeek(const nsAString& aValue, uint32_t* aYear,
                  uint32_t* aWeek) const;
   /**
    * Parse a date string of the form yyyy-mm-dd
@@ -1350,9 +1218,7 @@ protected:
    * @return the date in aYear, aMonth, aDay.
    * @return whether the parsing was successful.
    */
-  bool ParseDate(const nsAString& aValue,
-                 uint32_t* aYear,
-                 uint32_t* aMonth,
+  bool ParseDate(const nsAString& aValue, uint32_t* aYear, uint32_t* aMonth,
                  uint32_t* aDay) const;
 
   /**
@@ -1364,10 +1230,8 @@ protected:
    *         in aTime.
    * @return whether the parsing was successful.
    */
-  bool ParseDateTimeLocal(const nsAString& aValue,
-                          uint32_t* aYear,
-                          uint32_t* aMonth,
-                          uint32_t* aDay,
+  bool ParseDateTimeLocal(const nsAString& aValue, uint32_t* aYear,
+                          uint32_t* aMonth, uint32_t* aDay,
                           uint32_t* aTime) const;
 
   /**
@@ -1428,7 +1292,8 @@ protected:
    * Note: |aResult| can be null.
    *
    * @param aValue  the string to be parsed.
-   * @param aResult the time expressed in milliseconds representing the time [out]
+   * @param aResult the time expressed in milliseconds representing the time
+   * [out]
    * @return Whether the parsing was successful.
    */
   static bool ParseTime(const nsAString& aValue, uint32_t* aResult);
@@ -1445,11 +1310,11 @@ protected:
    */
   void UpdateHasRange();
 
-   /**
-    * Get the step scale value for the current type.
-    * See:
-    * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-input-element-attributes.html#concept-input-step-scale
-    */
+  /**
+   * Get the step scale value for the current type.
+   * See:
+   * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-input-element-attributes.html#concept-input-step-scale
+   */
   Decimal GetStepScaleFactor() const;
 
   /**
@@ -1466,10 +1331,7 @@ protected:
    */
   Decimal GetDefaultStep() const;
 
-  enum StepCallerType {
-    CALLED_FOR_USER_EVENT,
-    CALLED_FOR_SCRIPT
-  };
+  enum StepCallerType { CALLED_FOR_USER_EVENT, CALLED_FOR_SCRIPT };
 
   /**
    * Sets the aValue outparam to the value that this input would take if
@@ -1483,8 +1345,7 @@ protected:
    * was initiated by a stepUp()/stepDown() call from script under conditions
    * that such a call should throw.
    */
-  nsresult GetValueIfStepped(int32_t aStepCount,
-                             StepCallerType aCallerType,
+  nsresult GetValueIfStepped(int32_t aStepCount, StepCallerType aCallerType,
                              Decimal* aNextStep);
 
   /**
@@ -1525,10 +1386,7 @@ protected:
    */
   nsresult MaybeInitPickers(EventChainPostVisitor& aVisitor);
 
-  enum FilePickerType {
-    FILE_PICKER_FILE,
-    FILE_PICKER_DIRECTORY
-  };
+  enum FilePickerType { FILE_PICKER_FILE, FILE_PICKER_DIRECTORY };
   nsresult InitFilePicker(FilePickerType aType);
   nsresult InitColorPicker();
 
@@ -1561,8 +1419,7 @@ protected:
    * A helper to get the current selection range.  Will throw on the ErrorResult
    * if we have no editor state.
    */
-  void GetSelectionRange(uint32_t* aSelectionStart,
-                         uint32_t* aSelectionEnd,
+  void GetSelectionRange(uint32_t* aSelectionStart, uint32_t* aSelectionEnd,
                          ErrorResult& aRv);
 
   /**
@@ -1577,18 +1434,18 @@ protected:
    * true and mValue is used otherwise.  We have to be careful when handling it
    * on a type change.
    *
-   * Accessing the mState member should be done using the GetEditorState function,
-   * which returns null if the state is not present.
+   * Accessing the mState member should be done using the GetEditorState
+   * function, which returns null if the state is not present.
    */
   union InputData {
     /**
      * The current value of the input if it has been changed from the default
      */
-    char16_t*               mValue;
+    char16_t* mValue;
     /**
      * The state of the text editor associated with the text/password input
      */
-    nsTextEditorState*       mState;
+    nsTextEditorState* mState;
   } mInputData;
 
   struct FileData;
@@ -1673,40 +1530,38 @@ protected:
 
   nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
   nsContentUtils::AutocompleteAttrState mAutocompleteInfoState;
-  bool                     mDisabledChanged     : 1;
-  bool                     mValueChanged        : 1;
-  bool                     mLastValueChangeWasInteractive : 1;
-  bool                     mCheckedChanged      : 1;
-  bool                     mChecked             : 1;
-  bool                     mHandlingSelectEvent : 1;
-  bool                     mShouldInitChecked   : 1;
-  bool                     mDoneCreating        : 1;
-  bool                     mInInternalActivate  : 1;
-  bool                     mCheckedIsToggled    : 1;
-  bool                     mIndeterminate       : 1;
-  bool                     mInhibitRestoration  : 1;
-  bool                     mCanShowValidUI      : 1;
-  bool                     mCanShowInvalidUI    : 1;
-  bool                     mHasRange            : 1;
-  bool                     mIsDraggingRange     : 1;
-  bool                     mNumberControlSpinnerIsSpinning : 1;
-  bool                     mNumberControlSpinnerSpinsUp : 1;
-  bool                     mPickerRunning : 1;
-  bool                     mSelectionCached : 1;
-  bool                     mIsPreviewEnabled : 1;
-  bool                     mHasPatternAttribute : 1;
+  bool mDisabledChanged : 1;
+  bool mValueChanged : 1;
+  bool mLastValueChangeWasInteractive : 1;
+  bool mCheckedChanged : 1;
+  bool mChecked : 1;
+  bool mHandlingSelectEvent : 1;
+  bool mShouldInitChecked : 1;
+  bool mDoneCreating : 1;
+  bool mInInternalActivate : 1;
+  bool mCheckedIsToggled : 1;
+  bool mIndeterminate : 1;
+  bool mInhibitRestoration : 1;
+  bool mCanShowValidUI : 1;
+  bool mCanShowInvalidUI : 1;
+  bool mHasRange : 1;
+  bool mIsDraggingRange : 1;
+  bool mNumberControlSpinnerIsSpinning : 1;
+  bool mNumberControlSpinnerSpinsUp : 1;
+  bool mPickerRunning : 1;
+  bool mSelectionCached : 1;
+  bool mIsPreviewEnabled : 1;
+  bool mHasPatternAttribute : 1;
 
-private:
-  static void ImageInputMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                              MappedDeclarations&);
+ private:
+  static void ImageInputMapAttributesIntoRule(
+      const nsMappedAttributes* aAttributes, MappedDeclarations&);
 
   /**
    * Returns true if this input's type will fire a DOM "change" event when it
    * loses focus if its value has changed since it gained focus.
    */
-  bool MayFireChangeOnBlur() const {
-    return MayFireChangeOnBlur(mType);
-  }
+  bool MayFireChangeOnBlur() const { return MayFireChangeOnBlur(mType); }
 
   /**
    * Returns true if selection methods can be called on element
@@ -1719,71 +1574,60 @@ private:
 
   static bool MayFireChangeOnBlur(uint8_t aType) {
     return IsSingleLineTextControl(false, aType) ||
-           aType == NS_FORM_INPUT_RANGE ||
-           aType == NS_FORM_INPUT_NUMBER ||
-           aType == NS_FORM_INPUT_TIME ||
-           aType == NS_FORM_INPUT_DATE;
+           aType == NS_FORM_INPUT_RANGE || aType == NS_FORM_INPUT_NUMBER ||
+           aType == NS_FORM_INPUT_TIME || aType == NS_FORM_INPUT_DATE;
   }
 
   /**
-   * Checks if aDateTimeInputType should be supported based on "dom.forms.datetime",
-   * and "dom.experimental_forms".
+   * Checks if aDateTimeInputType should be supported based on
+   * "dom.forms.datetime", and "dom.experimental_forms".
    */
-  static bool
-  IsDateTimeTypeSupported(uint8_t aDateTimeInputType);
+  static bool IsDateTimeTypeSupported(uint8_t aDateTimeInputType);
 
   /**
    * Checks preference "dom.webkitBlink.filesystem.enabled" to determine if
    * webkitEntries should be supported.
    */
-  static bool
-  IsWebkitFileSystemEnabled();
+  static bool IsWebkitFileSystemEnabled();
 
   /**
    * Checks preference "dom.input.dirpicker" to determine if file and directory
    * entries API should be supported.
    */
-  static bool
-  IsDirPickerEnabled();
+  static bool IsDirPickerEnabled();
 
   /**
    * Checks preference "dom.experimental_forms" to determine if experimental
    * implementation of input element should be enabled.
    */
-  static bool
-  IsExperimentalFormsEnabled();
+  static bool IsExperimentalFormsEnabled();
 
   /**
    * Checks preference "dom.forms.datetime" to determine if input date and time
    * should be supported.
    */
-  static bool
-  IsInputDateTimeEnabled();
+  static bool IsInputDateTimeEnabled();
 
   /**
    * Checks preference "dom.forms.datetime.others" to determine if input week,
    * month and datetime-local should be supported.
    */
-  static bool
-  IsInputDateTimeOthersEnabled();
+  static bool IsInputDateTimeOthersEnabled();
 
   /**
    * Checks preference "dom.forms.color" to determine if date/time related
    * types should be supported.
    */
-  static bool
-  IsInputColorEnabled();
+  static bool IsInputColorEnabled();
 
   struct nsFilePickerFilter {
-    nsFilePickerFilter()
-      : mFilterMask(0) {}
+    nsFilePickerFilter() : mFilterMask(0) {}
 
     explicit nsFilePickerFilter(int32_t aFilterMask)
-      : mFilterMask(aFilterMask) {}
+        : mFilterMask(aFilterMask) {}
 
-    nsFilePickerFilter(const nsString& aTitle,
-                       const nsString& aFilter)
-      : mFilterMask(0), mTitle(aTitle), mFilter(aFilter) {}
+    nsFilePickerFilter(const nsString& aTitle, const nsString& aFilter)
+        : mFilterMask(0), mTitle(aTitle), mFilter(aFilter) {}
 
     nsFilePickerFilter(const nsFilePickerFilter& other) {
       mFilterMask = other.mFilterMask;
@@ -1791,7 +1635,7 @@ private:
       mFilter = other.mFilter;
     }
 
-    bool operator== (const nsFilePickerFilter& other) const {
+    bool operator==(const nsFilePickerFilter& other) const {
       if ((mFilter == other.mFilter) && (mFilterMask == other.mFilterMask)) {
         return true;
       } else {
@@ -1807,20 +1651,17 @@ private:
     nsString mFilter;
   };
 
-  class nsFilePickerShownCallback
-    : public nsIFilePickerShownCallback
-  {
-    virtual ~nsFilePickerShownCallback()
-    { }
+  class nsFilePickerShownCallback : public nsIFilePickerShownCallback {
+    virtual ~nsFilePickerShownCallback() {}
 
-  public:
+   public:
     nsFilePickerShownCallback(HTMLInputElement* aInput,
                               nsIFilePicker* aFilePicker);
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Done(int16_t aResult) override;
 
-  private:
+   private:
     nsCOMPtr<nsIFilePicker> mFilePicker;
     RefPtr<HTMLInputElement> mInput;
   };
@@ -1831,7 +1672,7 @@ private:
   static bool sShutdown;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

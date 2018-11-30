@@ -8,16 +8,13 @@
 #include "nsISocketProvider.h"
 #include "mozilla/Attributes.h"
 
-class nsUDPSocketProvider final : public nsISocketProvider
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSISOCKETPROVIDER
+class nsUDPSocketProvider final : public nsISocketProvider {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISOCKETPROVIDER
 
-private:
-    ~nsUDPSocketProvider() = default;
-
+ private:
+  ~nsUDPSocketProvider() = default;
 };
 
 #endif /* nsUDPSocketProvider_h__ */
-

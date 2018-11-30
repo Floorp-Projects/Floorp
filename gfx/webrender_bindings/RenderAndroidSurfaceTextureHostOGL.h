@@ -15,23 +15,20 @@ namespace mozilla {
 
 namespace wr {
 
-class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL
-{
-public:
-  explicit RenderAndroidSurfaceTextureHostOGL(const java::GeckoSurfaceTexture::GlobalRef& aSurfTex,
-                                              gfx::IntSize aSize,
-                                              gfx::SurfaceFormat aFormat,
-                                              bool aContinuousUpdate);
+class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
+ public:
+  explicit RenderAndroidSurfaceTextureHostOGL(
+      const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
+      gfx::SurfaceFormat aFormat, bool aContinuousUpdate);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex,
-                           gl::GLContext* aGL,
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
-private:
+ private:
   virtual ~RenderAndroidSurfaceTextureHostOGL();
   void DeleteTextureHandle();
 
@@ -43,7 +40,7 @@ private:
   RefPtr<gl::GLContext> mGL;
 };
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOSTOGL_H
+#endif  // MOZILLA_GFX_RENDERANDROIDSURFACETEXTUREHOSTOGL_H

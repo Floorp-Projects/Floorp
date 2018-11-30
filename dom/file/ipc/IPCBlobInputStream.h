@@ -20,32 +20,31 @@ namespace dom {
 
 class IPCBlobInputStreamChild;
 
-#define IPCBLOBINPUTSTREAM_IID \
-  { 0xbcfa38fc, 0x8b7f, 0x4d79, \
-    { 0xbe, 0x3a, 0x1e, 0x7b, 0xbe, 0x52, 0x38, 0xcd } }
+#define IPCBLOBINPUTSTREAM_IID                       \
+  {                                                  \
+    0xbcfa38fc, 0x8b7f, 0x4d79, {                    \
+      0xbe, 0x3a, 0x1e, 0x7b, 0xbe, 0x52, 0x38, 0xcd \
+    }                                                \
+  }
 
-class nsIIPCBlobInputStream : public nsISupports
-{
-public:
+class nsIIPCBlobInputStream : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(IPCBLOBINPUTSTREAM_IID)
 
-  virtual nsIInputStream*
-  GetInternalStream() const = 0;
+  virtual nsIInputStream* GetInternalStream() const = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCBlobInputStream,
-                              IPCBLOBINPUTSTREAM_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCBlobInputStream, IPCBLOBINPUTSTREAM_IID)
 
-class IPCBlobInputStream final : public nsIAsyncInputStream
-                               , public nsIInputStreamCallback
-                               , public nsICloneableInputStreamWithRange
-                               , public nsIIPCSerializableInputStream
-                               , public nsIAsyncFileMetadata
-                               , public nsIInputStreamLength
-                               , public nsIAsyncInputStreamLength
-                               , public nsIIPCBlobInputStream
-{
-public:
+class IPCBlobInputStream final : public nsIAsyncInputStream,
+                                 public nsIInputStreamCallback,
+                                 public nsICloneableInputStreamWithRange,
+                                 public nsIIPCSerializableInputStream,
+                                 public nsIAsyncFileMetadata,
+                                 public nsIInputStreamLength,
+                                 public nsIAsyncInputStreamLength,
+                                 public nsIIPCBlobInputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
@@ -60,18 +59,14 @@ public:
 
   explicit IPCBlobInputStream(IPCBlobInputStreamChild* aActor);
 
-  void
-  StreamReady(already_AddRefed<nsIInputStream> aInputStream);
+  void StreamReady(already_AddRefed<nsIInputStream> aInputStream);
 
-  void
-  LengthReady(int64_t aLength);
+  void LengthReady(int64_t aLength);
 
   // nsIIPCBlobInputStream
-  nsIInputStream*
-  GetInternalStream() const override
-  {
+  nsIInputStream* GetInternalStream() const override {
     if (mRemoteStream) {
-     return mRemoteStream;
+      return mRemoteStream;
     }
 
     if (mAsyncRemoteStream) {
@@ -81,15 +76,13 @@ public:
     return nullptr;
   }
 
-private:
+ private:
   ~IPCBlobInputStream();
 
-  nsresult
-  EnsureAsyncRemoteStream(const MutexAutoLock& aProofOfLock);
+  nsresult EnsureAsyncRemoteStream(const MutexAutoLock& aProofOfLock);
 
-  void
-  InitWithExistingRange(uint64_t aStart, uint64_t aLength,
-                        const MutexAutoLock& aProofOfLock);
+  void InitWithExistingRange(uint64_t aStart, uint64_t aLength,
+                             const MutexAutoLock& aProofOfLock);
 
   RefPtr<IPCBlobInputStreamChild> mActor;
 
@@ -141,7 +134,7 @@ private:
   Mutex mMutex;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ipc_IPCBlobInputStream_h
+#endif  // mozilla_dom_ipc_IPCBlobInputStream_h

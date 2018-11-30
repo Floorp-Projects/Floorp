@@ -17,16 +17,15 @@ namespace dom {
 class WorkerRef;
 class WorkerPrivate;
 
-class WorkerCSPEventListener final : public nsICSPEventListener
-{
-public:
+class WorkerCSPEventListener final : public nsICSPEventListener {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICSPEVENTLISTENER
 
-  static already_AddRefed<WorkerCSPEventListener>
-  Create(WorkerPrivate* aWorkerPrivate);
+  static already_AddRefed<WorkerCSPEventListener> Create(
+      WorkerPrivate* aWorkerPrivate);
 
-private:
+ private:
   WorkerCSPEventListener();
   ~WorkerCSPEventListener() = default;
 
@@ -36,7 +35,7 @@ private:
   RefPtr<WeakWorkerRef> mWorkerRef;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WorkerCSPEventListener_h
+#endif  // mozilla_dom_WorkerCSPEventListener_h

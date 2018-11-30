@@ -6,7 +6,7 @@
 #ifndef GFX_PREFS_H
 #define GFX_PREFS_H
 
-#include <cmath>                 // for M_PI
+#include <cmath>  // for M_PI
 #include <stdint.h>
 #include <string>
 #include "mozilla/Assertions.h"
@@ -64,21 +64,32 @@
 // processes will not affect the result in other processes. Changing gfxPrefs
 // values in the GPU process is not supported at all.
 
-#define DECL_GFX_PREF(Update, Prefname, Name, Type, Default)                  \
-public:                                                                       \
-static Type Name() { MOZ_ASSERT(SingletonExists()); return GetSingleton().mPref##Name.mValue; } \
-static void Set##Name(Type aVal) { MOZ_ASSERT(SingletonExists());             \
-    GetSingleton().mPref##Name.Set(UpdatePolicy::Update, Get##Name##PrefName(), aVal); } \
-static const char* Get##Name##PrefName() { return Prefname; }                 \
-static Type Get##Name##PrefDefault() { return Default; }                      \
-static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) {       \
-    MOZ_ASSERT(SingletonExists());                                            \
-    GetSingleton().mPref##Name.SetChangeCallback(aCallback); }                \
-private:                                                                      \
-PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
+#define DECL_GFX_PREF(Update, Prefname, Name, Type, Default)              \
+ public:                                                                  \
+  static Type Name() {                                                    \
+    MOZ_ASSERT(SingletonExists());                                        \
+    return GetSingleton().mPref##Name.mValue;                             \
+  }                                                                       \
+  static void Set##Name(Type aVal) {                                      \
+    MOZ_ASSERT(SingletonExists());                                        \
+    GetSingleton().mPref##Name.Set(UpdatePolicy::Update,                  \
+                                   Get##Name##PrefName(), aVal);          \
+  }                                                                       \
+  static const char* Get##Name##PrefName() { return Prefname; }           \
+  static Type Get##Name##PrefDefault() { return Default; }                \
+  static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) { \
+    MOZ_ASSERT(SingletonExists());                                        \
+    GetSingleton().mPref##Name.SetChangeCallback(aCallback);              \
+  }                                                                       \
+                                                                          \
+ private:                                                                 \
+  PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault,        \
+               Get##Name##PrefName>                                       \
+      mPref##Name
 
-// This declares an "override" pref, which is exposed as a "bool" pref by the API,
-// but is internally stored as a tri-state int pref with three possible values:
+// This declares an "override" pref, which is exposed as a "bool" pref by the
+// API, but is internally stored as a tri-state int pref with three possible
+// values:
 // - A value of 0 means that it has been force-disabled, and is exposed as a
 //   false-valued bool.
 // - A value of 1 means that it has been force-enabled, and is exposed as a
@@ -88,50 +99,56 @@ PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##Pref
 // If the prefs defined with this macro are listed in prefs files (e.g. all.js),
 // then they must be listed with an int value (default to 2, but you can use 0
 // or 1 if you want to force it on or off).
-#define DECL_OVERRIDE_PREF(Update, Prefname, Name, BaseValue)                 \
-public:                                                                       \
-static bool Name() { MOZ_ASSERT(SingletonExists());                           \
-    int32_t val = GetSingleton().mPref##Name.mValue;                          \
-    return val == 2 ? !!(BaseValue) : !!val; }                                  \
-static void Set##Name(bool aVal) { MOZ_ASSERT(SingletonExists());             \
-    GetSingleton().mPref##Name.Set(UpdatePolicy::Update, Get##Name##PrefName(), aVal ? 1 : 0); } \
-static const char* Get##Name##PrefName() { return Prefname; }                 \
-static int32_t Get##Name##PrefDefault() { return 2; }                         \
-static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) {       \
-    MOZ_ASSERT(SingletonExists());                                            \
-    GetSingleton().mPref##Name.SetChangeCallback(aCallback); }                \
-private:                                                                      \
-PrefTemplate<UpdatePolicy::Update, int32_t, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
+#define DECL_OVERRIDE_PREF(Update, Prefname, Name, BaseValue)             \
+ public:                                                                  \
+  static bool Name() {                                                    \
+    MOZ_ASSERT(SingletonExists());                                        \
+    int32_t val = GetSingleton().mPref##Name.mValue;                      \
+    return val == 2 ? !!(BaseValue) : !!val;                              \
+  }                                                                       \
+  static void Set##Name(bool aVal) {                                      \
+    MOZ_ASSERT(SingletonExists());                                        \
+    GetSingleton().mPref##Name.Set(UpdatePolicy::Update,                  \
+                                   Get##Name##PrefName(), aVal ? 1 : 0);  \
+  }                                                                       \
+  static const char* Get##Name##PrefName() { return Prefname; }           \
+  static int32_t Get##Name##PrefDefault() { return 2; }                   \
+  static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) { \
+    MOZ_ASSERT(SingletonExists());                                        \
+    GetSingleton().mPref##Name.SetChangeCallback(aCallback);              \
+  }                                                                       \
+                                                                          \
+ private:                                                                 \
+  PrefTemplate<UpdatePolicy::Update, int32_t, Get##Name##PrefDefault,     \
+               Get##Name##PrefName>                                       \
+      mPref##Name
 
 namespace mozilla {
 namespace gfx {
-class GfxPrefValue;   // defined in PGPU.ipdl
-} // namespace gfx
-} // namespace mozilla
+class GfxPrefValue;  // defined in PGPU.ipdl
+}  // namespace gfx
+}  // namespace mozilla
 
 class gfxPrefs;
-class gfxPrefs final
-{
+class gfxPrefs final {
   typedef mozilla::gfx::GfxPrefValue GfxPrefValue;
 
   typedef mozilla::Atomic<bool, mozilla::Relaxed> AtomicBool;
   typedef mozilla::Atomic<int32_t, mozilla::Relaxed> AtomicInt32;
   typedef mozilla::Atomic<uint32_t, mozilla::Relaxed> AtomicUint32;
 
-private:
+ private:
   // Enums for the update policy.
   enum class UpdatePolicy {
-    Skip, // Set the value to default, skip any Preferences calls
-    Once, // Evaluate the preference once, unchanged during the session
-    Live  // Evaluate the preference and set callback so it stays current/live
+    Skip,  // Set the value to default, skip any Preferences calls
+    Once,  // Evaluate the preference once, unchanged during the session
+    Live   // Evaluate the preference and set callback so it stays current/live
   };
 
-public:
-  class Pref
-  {
-  public:
-    Pref() : mChangeCallback(nullptr)
-    {
+ public:
+  class Pref {
+   public:
+    Pref() : mChangeCallback(nullptr) {
       mIndex = sGfxPrefList->Length();
       sGfxPrefList->AppendElement(this);
     }
@@ -156,28 +173,23 @@ public:
     // Change the cached value. GfxPrefValue must be a compatible type.
     virtual void SetCachedValue(const GfxPrefValue& aOutValue) = 0;
 
-  protected:
+   protected:
     void FireChangeCallback();
 
-  private:
+   private:
     size_t mIndex;
     ChangeCallback mChangeCallback;
   };
 
-  static const nsTArray<Pref*>& all() {
-    return *sGfxPrefList;
-  }
+  static const nsTArray<Pref*>& all() { return *sGfxPrefList; }
 
-private:
+ private:
   // We split out a base class to reduce the number of virtual function
   // instantiations that we do, which saves code size.
-  template<class T>
-  class TypedPref : public Pref
-  {
-  public:
-    explicit TypedPref(T aValue)
-      : mValue(aValue)
-    {}
+  template <class T>
+  class TypedPref : public Pref {
+   public:
+    explicit TypedPref(T aValue) : mValue(aValue) {}
 
     void GetCachedValue(GfxPrefValue* aOutValue) const override {
       CopyPrefValue(&mValue, aOutValue);
@@ -195,7 +207,7 @@ private:
       }
     }
 
-  protected:
+   protected:
     T GetLiveValueByName(const char* aPrefName) const {
       if (IsPrefsServiceAvailable()) {
         return PrefGet(aPrefName, mValue);
@@ -203,19 +215,18 @@ private:
       return mValue;
     }
 
-  public:
+   public:
     T mValue;
   };
 
   // Since we cannot use const char*, use a function that returns it.
-  template <UpdatePolicy Update, class T, T Default(void), const char* Prefname(void)>
-  class PrefTemplate final : public TypedPref<T>
-  {
+  template <UpdatePolicy Update, class T, T Default(void),
+            const char* Prefname(void)>
+  class PrefTemplate final : public TypedPref<T> {
     typedef TypedPref<T> BaseClass;
-  public:
-    PrefTemplate()
-      : BaseClass(Default())
-    {
+
+   public:
+    PrefTemplate() : BaseClass(Default()) {
       // If not using the Preferences service, values are synced over IPC, so
       // there's no need to register us as a Preferences observer.
       if (IsPrefsServiceAvailable()) {
@@ -232,8 +243,7 @@ private:
         UnwatchChanges(Prefname(), this);
       }
     }
-    void Register(UpdatePolicy aUpdate, const char* aPreference)
-    {
+    void Register(UpdatePolicy aUpdate, const char* aPreference) {
       AssertMainThread();
       switch (aUpdate) {
         case UpdatePolicy::Skip:
@@ -241,19 +251,16 @@ private:
         case UpdatePolicy::Once:
           this->mValue = PrefGet(aPreference, this->mValue);
           break;
-        case UpdatePolicy::Live:
-          {
-            nsCString pref;
-            pref.AssignLiteral(aPreference, strlen(aPreference));
-            PrefAddVarCache(&this->mValue, pref, this->mValue);
-          }
-          break;
+        case UpdatePolicy::Live: {
+          nsCString pref;
+          pref.AssignLiteral(aPreference, strlen(aPreference));
+          PrefAddVarCache(&this->mValue, pref, this->mValue);
+        } break;
         default:
           MOZ_CRASH("Incomplete switch");
       }
     }
-    void Set(UpdatePolicy aUpdate, const char* aPref, T aValue)
-    {
+    void Set(UpdatePolicy aUpdate, const char* aPref, T aValue) {
       AssertMainThread();
       PrefSet(aPref, aValue);
       switch (aUpdate) {
@@ -267,9 +274,7 @@ private:
           MOZ_CRASH("Incomplete switch");
       }
     }
-    const char *Name() const override {
-      return Prefname();
-    }
+    const char* Name() const override { return Prefname(); }
     void GetLiveValue(GfxPrefValue* aOutValue) const override {
       T value = GetLiveValue();
       CopyPrefValue(&value, aOutValue);
@@ -277,12 +282,8 @@ private:
     // When using the Preferences service, the change callback can be triggered
     // *before* our cached value is updated, so we expose a method to grab the
     // true live value.
-    T GetLiveValue() const {
-      return BaseClass::GetLiveValueByName(Prefname());
-    }
-    bool HasDefaultValue() const override {
-      return this->mValue == Default();
-    }
+    T GetLiveValue() const { return BaseClass::GetLiveValueByName(Prefname()); }
+    bool HasDefaultValue() const override { return this->mValue == Default(); }
   };
 
   // clang-format off
@@ -822,26 +823,25 @@ private:
 
   // clang-format on
 
-public:
+ public:
   // Manage the singleton:
-  static gfxPrefs& GetSingleton()
-  {
+  static gfxPrefs& GetSingleton() {
     return sInstance ? *sInstance : CreateAndInitializeSingleton();
   }
   static void DestroySingleton();
   static bool SingletonExists();
 
-private:
+ private:
   static gfxPrefs& CreateAndInitializeSingleton();
 
   static gfxPrefs* sInstance;
   static bool sInstanceHasBeenDestroyed;
   static nsTArray<Pref*>* sGfxPrefList;
 
-private:
+ private:
   // The constructor cannot access GetSingleton(), since sInstance (necessarily)
-  // has not been assigned yet. Follow-up initialization that needs GetSingleton()
-  // must be added to Init().
+  // has not been assigned yet. Follow-up initialization that needs
+  // GetSingleton() must be added to Init().
   void Init();
 
   static bool IsPrefsServiceAvailable();

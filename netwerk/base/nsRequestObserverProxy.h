@@ -18,41 +18,39 @@ namespace net {
 
 class nsARequestObserverEvent;
 
-class nsRequestObserverProxy final : public nsIRequestObserverProxy
-{
-    ~nsRequestObserverProxy() = default;
+class nsRequestObserverProxy final : public nsIRequestObserverProxy {
+  ~nsRequestObserverProxy() = default;
 
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIREQUESTOBSERVERPROXY
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSIREQUESTOBSERVERPROXY
 
-    nsRequestObserverProxy() = default;
+  nsRequestObserverProxy() = default;
 
-    nsIRequestObserver *Observer() { return mObserver; }
+  nsIRequestObserver *Observer() { return mObserver; }
 
-    nsresult FireEvent(nsARequestObserverEvent *);
+  nsresult FireEvent(nsARequestObserverEvent *);
 
-protected:
-    nsMainThreadPtrHandle<nsIRequestObserver> mObserver;
-    nsMainThreadPtrHandle<nsISupports>        mContext;
+ protected:
+  nsMainThreadPtrHandle<nsIRequestObserver> mObserver;
+  nsMainThreadPtrHandle<nsISupports> mContext;
 
-    friend class nsOnStartRequestEvent;
-    friend class nsOnStopRequestEvent;
+  friend class nsOnStartRequestEvent;
+  friend class nsOnStopRequestEvent;
 };
 
-class nsARequestObserverEvent : public Runnable
-{
-public:
-    explicit nsARequestObserverEvent(nsIRequest *);
+class nsARequestObserverEvent : public Runnable {
+ public:
+  explicit nsARequestObserverEvent(nsIRequest *);
 
-protected:
-    virtual ~nsARequestObserverEvent() = default;
+ protected:
+  virtual ~nsARequestObserverEvent() = default;
 
-    nsCOMPtr<nsIRequest>  mRequest;
+  nsCOMPtr<nsIRequest> mRequest;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsRequestObserverProxy_h__
+#endif  // nsRequestObserverProxy_h__

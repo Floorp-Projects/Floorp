@@ -16,8 +16,7 @@ class BrokerServices;
 /**
  * Data needed by XRE_XPCShellMain.
  */
-struct XREShellData
-{
+struct XREShellData {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   /**
    * Chromium sandbox BrokerServices.
@@ -26,4 +25,4 @@ struct XREShellData
 #endif
 };
 
-#endif // XREShellData_h
+#endif  // XREShellData_h

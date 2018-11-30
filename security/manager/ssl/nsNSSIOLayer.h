@@ -24,8 +24,8 @@ namespace mozilla {
 class OriginAttributes;
 namespace psm {
 class SharedSSLState;
-} // namespace psm
-} // namespace mozilla
+}  // namespace psm
+}  // namespace mozilla
 
 using mozilla::OriginAttributes;
 
@@ -33,9 +33,8 @@ class nsIObserver;
 
 class nsNSSSocketInfo final : public mozilla::psm::TransportSecurityInfo,
                               public nsISSLSocketControl,
-                              public nsIClientAuthUserDecision
-{
-public:
+                              public nsIClientAuthUserDecision {
+ public:
   nsNSSSocketInfo(mozilla::psm::SharedSSLState& aState, uint32_t providerFlags,
                   uint32_t providerTlsFlags);
 
@@ -64,12 +63,11 @@ public:
   bool IsHandshakeCompleted() const { return mHandshakeCompleted; }
   void NoteTimeUntilReady();
 
-
   void SetFalseStartCallbackCalled() { mFalseStartCallbackCalled = true; }
   void SetFalseStarted() { mFalseStarted = true; }
 
-  // Note that this is only valid *during* a handshake; at the end of the handshake,
-  // it gets reset back to false.
+  // Note that this is only valid *during* a handshake; at the end of the
+  // handshake, it gets reset back to false.
   void SetFullHandshake() { mIsFullHandshake = true; }
   bool IsFullHandshake() const { return mIsFullHandshake; }
 
@@ -92,8 +90,7 @@ public:
   void SetCertVerificationResult(PRErrorCode errorCode);
 
   // for logging only
-  PRBool IsWaitingForCertVerification() const
-  {
+  PRBool IsWaitingForCertVerification() const {
     return mCertVerificationState == waiting_for_cert_verification;
   }
   void AddPlaintextBytesRead(uint64_t val) { mPlaintextBytesRead += val; }
@@ -105,39 +102,29 @@ public:
 
   void SetKEAKeyBits(uint32_t keaBits) { mKEAKeyBits = keaBits; }
 
-  void SetBypassAuthentication(bool val)
-  {
+  void SetBypassAuthentication(bool val) {
     if (!mHandshakeCompleted) {
       mBypassAuthentication = val;
     }
   }
 
-  void SetSSLVersionUsed(int16_t version)
-  {
-    mSSLVersionUsed = version;
-  }
+  void SetSSLVersionUsed(int16_t version) { mSSLVersionUsed = version; }
 
   void SetMACAlgorithmUsed(int16_t mac) { mMACAlgorithmUsed = mac; }
 
-  void SetShortWritePending(int32_t amount, unsigned char data)
-  {
+  void SetShortWritePending(int32_t amount, unsigned char data) {
     mIsShortWritePending = true;
     mShortWriteOriginalAmount = amount;
     mShortWritePendingByte = data;
   }
 
-  bool IsShortWritePending()
-  {
-    return mIsShortWritePending;
-  }
+  bool IsShortWritePending() { return mIsShortWritePending; }
 
-  unsigned char const* GetShortWritePendingByteRef()
-  {
+  unsigned char const* GetShortWritePendingByteRef() {
     return &mShortWritePendingByte;
   }
 
-  int32_t ResetShortWritePending()
-  {
+  int32_t ResetShortWritePending() {
     mIsShortWritePending = false;
     return mShortWriteOriginalAmount;
   }
@@ -146,28 +133,28 @@ public:
   // These helpers assert that the caller does try to send the same data
   // as it was previously when we hit the short-write.  This is a measure
   // to make sure we communicate correctly to the consumer.
-  void RememberShortWrittenBuffer(const unsigned char *data)
-  {
-    mShortWriteBufferCheck = mozilla::MakeUnique<char[]>(mShortWriteOriginalAmount);
+  void RememberShortWrittenBuffer(const unsigned char* data) {
+    mShortWriteBufferCheck =
+        mozilla::MakeUnique<char[]>(mShortWriteOriginalAmount);
     memcpy(mShortWriteBufferCheck.get(), data, mShortWriteOriginalAmount);
   }
-  void CheckShortWrittenBuffer(const unsigned char *data, int32_t amount)
-  {
+  void CheckShortWrittenBuffer(const unsigned char* data, int32_t amount) {
     if (!mShortWriteBufferCheck) return;
     MOZ_ASSERT(amount >= mShortWriteOriginalAmount,
                "unexpected amount length after short write");
-    MOZ_ASSERT(!memcmp(mShortWriteBufferCheck.get(), data, mShortWriteOriginalAmount),
-               "unexpected buffer content after short write");
+    MOZ_ASSERT(
+        !memcmp(mShortWriteBufferCheck.get(), data, mShortWriteOriginalAmount),
+        "unexpected buffer content after short write");
     mShortWriteBufferCheck = nullptr;
   }
 #endif
 
   void SetSharedOwningReference(mozilla::psm::SharedSSLState* ref);
 
-protected:
+ protected:
   virtual ~nsNSSSocketInfo();
 
-private:
+ private:
   PRFileDesc* mFd;
 
   CertVerificationState mCertVerificationState;
@@ -177,27 +164,27 @@ private:
   SSLVersionRange mTLSVersionRange;
   bool mHandshakePending;
   bool mRememberClientAuthCertificate;
-  bool mPreliminaryHandshakeDone; // after false start items are complete
+  bool mPreliminaryHandshakeDone;  // after false start items are complete
 
   nsresult ActivateSSL();
 
   nsCString mNegotiatedNPN;
   nsCString mEsniTxt;
-  bool      mNPNCompleted;
-  bool      mEarlyDataAccepted;
-  bool      mDenyClientCert;
-  bool      mFalseStartCallbackCalled;
-  bool      mFalseStarted;
-  bool      mIsFullHandshake;
-  bool      mHandshakeCompleted;
-  bool      mJoined;
-  bool      mSentClientCert;
-  bool      mNotedTimeUntilReady;
-  bool      mFailedVerification;
+  bool mNPNCompleted;
+  bool mEarlyDataAccepted;
+  bool mDenyClientCert;
+  bool mFalseStartCallbackCalled;
+  bool mFalseStarted;
+  bool mIsFullHandshake;
+  bool mHandshakeCompleted;
+  bool mJoined;
+  bool mSentClientCert;
+  bool mNotedTimeUntilReady;
+  bool mFailedVerification;
 
   // True when SSL layer has indicated an "SSL short write", i.e. need
   // to call on send one or more times to push all pending data to write.
-  bool      mIsShortWritePending;
+  bool mIsShortWritePending;
 
   // These are only valid if mIsShortWritePending is true.
   //
@@ -207,7 +194,7 @@ private:
 
   // Original amount of data the upper layer has requested to write to
   // return after the successful flush.
-  int32_t   mShortWriteOriginalAmount;
+  int32_t mShortWriteOriginalAmount;
 
 #ifdef DEBUG
   mozilla::UniquePtr<char[]> mShortWriteBufferCheck;
@@ -219,7 +206,7 @@ private:
   uint32_t mKEAKeyBits;
   int16_t mSSLVersionUsed;
   int16_t mMACAlgorithmUsed;
-  bool    mBypassAuthentication;
+  bool mBypassAuthentication;
 
   uint32_t mProviderFlags;
   uint32_t mProviderTlsFlags;
@@ -236,9 +223,8 @@ private:
   RefPtr<mozilla::psm::SharedSSLState> mOwningSharedRef;
 };
 
-class nsSSLIOLayerHelpers
-{
-public:
+class nsSSLIOLayerHelpers {
+ public:
   explicit nsSSLIOLayerHelpers(uint32_t aTlsFlags = 0);
   ~nsSSLIOLayerHelpers();
 
@@ -256,15 +242,13 @@ public:
   void setTreatUnsafeNegotiationAsBroken(bool broken);
   bool treatUnsafeNegotiationAsBroken();
 
-private:
-  struct IntoleranceEntry
-  {
+ private:
+  struct IntoleranceEntry {
     uint16_t tolerant;
     uint16_t intolerant;
     PRErrorCode intoleranceReason;
 
-    void AssertInvariant() const
-    {
+    void AssertInvariant() const {
       MOZ_ASSERT(intolerant == 0 || tolerant < intolerant);
     }
   };
@@ -273,7 +257,8 @@ private:
   // security.tls.insecure_fallback_hosts, which is a comma-delimited
   // list of domain names.
   nsTHashtable<nsCStringHashKey> mInsecureFallbackSites;
-public:
+
+ public:
   void rememberTolerantAtVersion(const nsACString& hostname, int16_t port,
                                  uint16_t tolerant);
   bool fallbackLimitReached(const nsACString& hostname, uint16_t intolerant);
@@ -294,34 +279,27 @@ public:
   bool isInsecureFallbackSite(const nsACString& hostname);
 
   uint16_t mVersionFallbackLimit;
-private:
+
+ private:
   mozilla::Mutex mutex;
   nsCOMPtr<nsIObserver> mPrefObserver;
   uint32_t mTlsFlags;
 };
 
-nsresult nsSSLIOLayerNewSocket(int32_t family,
-                               const char* host,
-                               int32_t port,
-                               nsIProxyInfo *proxy,
+nsresult nsSSLIOLayerNewSocket(int32_t family, const char* host, int32_t port,
+                               nsIProxyInfo* proxy,
                                const OriginAttributes& originAttributes,
-                               PRFileDesc** fd,
-                               nsISupports** securityInfo,
-                               bool forSTARTTLS,
-                               uint32_t flags,
+                               PRFileDesc** fd, nsISupports** securityInfo,
+                               bool forSTARTTLS, uint32_t flags,
                                uint32_t tlsFlags);
 
-nsresult nsSSLIOLayerAddToSocket(int32_t family,
-                                 const char* host,
-                                 int32_t port,
-                                 nsIProxyInfo *proxy,
+nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
+                                 nsIProxyInfo* proxy,
                                  const OriginAttributes& originAttributes,
-                                 PRFileDesc* fd,
-                                 nsISupports** securityInfo,
-                                 bool forSTARTTLS,
-                                 uint32_t flags,
+                                 PRFileDesc* fd, nsISupports** securityInfo,
+                                 bool forSTARTTLS, uint32_t flags,
                                  uint32_t tlsFlags);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 
-#endif // nsNSSIOLayer_h
+#endif  // nsNSSIOLayer_h

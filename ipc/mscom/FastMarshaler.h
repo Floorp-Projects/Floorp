@@ -25,11 +25,9 @@ namespace mscom {
  * significant performance boost in a11y code due to large numbers of remote
  * objects being created and destroyed within a short period of time.
  */
-class FastMarshaler final : public IMarshal
-{
-public:
-  static HRESULT Create(IUnknown* aOuter,
-                        IUnknown** aOutMarshalerUnk);
+class FastMarshaler final : public IMarshal {
+ public:
+  static HRESULT Create(IUnknown* aOuter, IUnknown** aOutMarshalerUnk);
 
   // IMarshal
   STDMETHODIMP GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
@@ -46,20 +44,20 @@ public:
   STDMETHODIMP ReleaseMarshalData(IStream* pStm) override;
   STDMETHODIMP DisconnectObject(DWORD dwReserved) override;
 
-private:
+ private:
   FastMarshaler(IUnknown* aOuter, HRESULT* aResult);
   ~FastMarshaler() = default;
 
   static DWORD GetMarshalFlags(DWORD aDestContext, DWORD aMshlFlags);
 
-  Atomic<ULONG>     mRefCnt;
-  IUnknown*         mOuter;
-  RefPtr<IUnknown>  mStdMarshalUnk;
-  IMarshal*         mStdMarshalWeak;
+  Atomic<ULONG> mRefCnt;
+  IUnknown* mOuter;
+  RefPtr<IUnknown> mStdMarshalUnk;
+  IMarshal* mStdMarshalWeak;
   DECLARE_AGGREGATABLE(FastMarshaler);
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_FastMarshaler_h
+#endif  // mozilla_mscom_FastMarshaler_h

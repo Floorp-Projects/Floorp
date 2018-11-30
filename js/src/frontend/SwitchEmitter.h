@@ -170,312 +170,300 @@ struct BytecodeEmitter;
 //
 //     se.emitEnd();
 //
-class MOZ_STACK_CLASS SwitchEmitter
-{
-    // Bytecode for each case.
-    //
-    // Cond Switch
-    //     {discriminant}
-    //     JSOP_CONDSWITCH
-    //
-    //     {c1_expr}
-    //     JSOP_CASE c1
-    //
-    //     JSOP_JUMPTARGET
-    //     {c2_expr}
-    //     JSOP_CASE c2
-    //
-    //     ...
-    //
-    //     JSOP_JUMPTARGET
-    //     JSOP_DEFAULT default
-    //
-    //   c1:
-    //     JSOP_JUMPTARGET
-    //     {c1_body}
-    //     JSOP_GOTO end
-    //
-    //   c2:
-    //     JSOP_JUMPTARGET
-    //     {c2_body}
-    //     JSOP_GOTO end
-    //
-    //   default:
-    //   end:
-    //     JSOP_JUMPTARGET
-    //
-    // Table Switch
-    //     {discriminant}
-    //     JSOP_TABLESWITCH c1, c2, ...
-    //
-    //   c1:
-    //     JSOP_JUMPTARGET
-    //     {c1_body}
-    //     JSOP_GOTO end
-    //
-    //   c2:
-    //     JSOP_JUMPTARGET
-    //     {c2_body}
-    //     JSOP_GOTO end
-    //
-    //   ...
-    //
-    //   end:
-    //     JSOP_JUMPTARGET
+class MOZ_STACK_CLASS SwitchEmitter {
+  // Bytecode for each case.
+  //
+  // Cond Switch
+  //     {discriminant}
+  //     JSOP_CONDSWITCH
+  //
+  //     {c1_expr}
+  //     JSOP_CASE c1
+  //
+  //     JSOP_JUMPTARGET
+  //     {c2_expr}
+  //     JSOP_CASE c2
+  //
+  //     ...
+  //
+  //     JSOP_JUMPTARGET
+  //     JSOP_DEFAULT default
+  //
+  //   c1:
+  //     JSOP_JUMPTARGET
+  //     {c1_body}
+  //     JSOP_GOTO end
+  //
+  //   c2:
+  //     JSOP_JUMPTARGET
+  //     {c2_body}
+  //     JSOP_GOTO end
+  //
+  //   default:
+  //   end:
+  //     JSOP_JUMPTARGET
+  //
+  // Table Switch
+  //     {discriminant}
+  //     JSOP_TABLESWITCH c1, c2, ...
+  //
+  //   c1:
+  //     JSOP_JUMPTARGET
+  //     {c1_body}
+  //     JSOP_GOTO end
+  //
+  //   c2:
+  //     JSOP_JUMPTARGET
+  //     {c2_body}
+  //     JSOP_GOTO end
+  //
+  //   ...
+  //
+  //   end:
+  //     JSOP_JUMPTARGET
 
-  public:
-    enum class Kind {
-        Table,
-        Cond
-    };
+ public:
+  enum class Kind { Table, Cond };
 
-    // Class for generating optimized table switch data.
-    class MOZ_STACK_CLASS TableGenerator
-    {
-        BytecodeEmitter* bce_;
-
-        // Bit array for given numbers.
-        mozilla::Maybe<js::Vector<size_t, 128, SystemAllocPolicy>> intmap_;
-
-        // The length of the intmap_.
-        int32_t intmapBitLength_ = 0;
-
-        // The length of the table.
-        uint32_t tableLength_ = 0;
-
-        // The lower and higher bounds of the table.
-        int32_t low_ = JSVAL_INT_MAX, high_ = JSVAL_INT_MIN;
-
-        // Whether the table is still valid.
-        bool valid_= true;
-
-#ifdef DEBUG
-        bool finished_ = false;
-#endif
-
-      public:
-        explicit TableGenerator(BytecodeEmitter* bce)
-          : bce_(bce)
-        {}
-
-        void setInvalid() {
-            valid_ = false;
-        }
-        MOZ_MUST_USE bool isValid() const {
-            return valid_;
-        }
-        MOZ_MUST_USE bool isInvalid() const {
-            return !valid_;
-        }
-
-        // Add the given number to the table.  The number is the value of
-        // `expr` for `case expr:` syntax.
-        MOZ_MUST_USE bool addNumber(int32_t caseValue);
-
-        // Finish generating the table.
-        // `caseCount` should be the number of cases in the switch statement,
-        // excluding the default case.
-        void finish(uint32_t caseCount);
-
-      private:
-        friend SwitchEmitter;
-
-        // The following methods can be used only after calling `finish`.
-
-        // Returns the lower bound of the added numbers.
-        int32_t low() const {
-            MOZ_ASSERT(finished_);
-            return low_;
-        }
-
-        // Returns the higher bound of the numbers.
-        int32_t high() const {
-            MOZ_ASSERT(finished_);
-            return high_;
-        }
-
-        // Returns the index in SwitchEmitter.caseOffsets_ for table switch.
-        uint32_t toCaseIndex(int32_t caseValue) const;
-
-        // Returns the length of the table.
-        // This method can be called only if `isValid()` is true.
-        uint32_t tableLength() const;
-    };
-
-  private:
+  // Class for generating optimized table switch data.
+  class MOZ_STACK_CLASS TableGenerator {
     BytecodeEmitter* bce_;
 
-    // `kind_` should be set to the correct value in emitCond/emitTable.
-    Kind kind_ = Kind::Cond;
+    // Bit array for given numbers.
+    mozilla::Maybe<js::Vector<size_t, 128, SystemAllocPolicy>> intmap_;
 
-    // True if there's explicit default case.
-    bool hasDefault_ = false;
+    // The length of the intmap_.
+    int32_t intmapBitLength_ = 0;
 
-    // The source note index for SRC_CONDSWITCH.
-    unsigned noteIndex_ = 0;
+    // The length of the table.
+    uint32_t tableLength_ = 0;
 
-    // Source note index of the previous SRC_NEXTCASE.
-    unsigned caseNoteIndex_ = 0;
+    // The lower and higher bounds of the table.
+    int32_t low_ = JSVAL_INT_MAX, high_ = JSVAL_INT_MIN;
 
-    // The number of cases in the switch statement, excluding the default case.
-    uint32_t caseCount_ = 0;
+    // Whether the table is still valid.
+    bool valid_ = true;
 
-    // Internal index for case jump and case body, used by cond switch.
-    uint32_t caseIndex_ = 0;
+#ifdef DEBUG
+    bool finished_ = false;
+#endif
 
-    // Bytecode offset after emitting `discriminant`.
-    ptrdiff_t top_ = 0;
+   public:
+    explicit TableGenerator(BytecodeEmitter* bce) : bce_(bce) {}
 
-    // Bytecode offset of the previous JSOP_CASE.
-    ptrdiff_t lastCaseOffset_ = 0;
+    void setInvalid() { valid_ = false; }
+    MOZ_MUST_USE bool isValid() const { return valid_; }
+    MOZ_MUST_USE bool isInvalid() const { return !valid_; }
 
-    // Bytecode offset of the JSOP_JUMPTARGET for default body.
-    JumpTarget defaultJumpTargetOffset_ = { -1 };
+    // Add the given number to the table.  The number is the value of
+    // `expr` for `case expr:` syntax.
+    MOZ_MUST_USE bool addNumber(int32_t caseValue);
 
-    // Bytecode offset of the JSOP_DEFAULT.
-    JumpList condSwitchDefaultOffset_;
-
-    // Instantiated when there's lexical scope for entire switch.
-    mozilla::Maybe<TDZCheckCache> tdzCacheLexical_;
-    mozilla::Maybe<EmitterScope> emitterScope_;
-
-    // Instantiated while emitting case expression and case/default body.
-    mozilla::Maybe<TDZCheckCache> tdzCacheCaseAndBody_;
-
-    // Control for switch.
-    mozilla::Maybe<BreakableControl> controlInfo_;
-
-    mozilla::Maybe<uint32_t> switchPos_;
-
-    // Cond Switch:
-    //   Offset of each JSOP_CASE.
-    // Table Switch:
-    //   Offset of each JSOP_JUMPTARGET for case.
-    js::Vector<ptrdiff_t, 32, SystemAllocPolicy> caseOffsets_;
-
-    // The state of this emitter.
-    //
-    // +-------+ emitDiscriminant +--------------+
-    // | Start |----------------->| Discriminant |-+
-    // +-------+                  +--------------+ |
-    //                                             |
-    // +-------------------------------------------+
-    // |
-    // |                              validateCaseCount +-----------+
-    // +->+------------------------>+------------------>| CaseCount |-+
-    //    |                         ^                   +-----------+ |
-    //    | emitLexical +---------+ |                                 |
-    //    +------------>| Lexical |-+                                 |
-    //                  +---------+                                   |
-    //                                                                |
-    // +--------------------------------------------------------------+
-    // |
-    // | emitTable +-------+
-    // +---------->| Table |----------------------------------->+-+
-    // |           +-------+                                    ^ |
-    // |                                                        | |
-    // | emitCond  +------+                                     | |
-    // +---------->| Cond |-+------------------------------->+->+ |
-    //             +------+ |                                ^    |
-    //                      |                                |    |
-    //   +------------------+                                |    |
-    //   |                                                   |    |
-    //   |prepareForCaseValue  +-----------+                 |    |
-    //   +----------+--------->| CaseValue |                 |    |
-    //              ^          +-----------+                 |    |
-    //              |             |                          |    |
-    //              |             | emitCaseJump +------+    |    |
-    //              |             +------------->| Case |->+-+    |
-    //              |                            +------+  |      |
-    //              |                                      |      |
-    //              +--------------------------------------+      |
-    //                                                            |
-    // +----------------------------------------------------------+
-    // |
-    // |                                              emitEnd +-----+
-    // +-+----------------------------------------->+-------->| End |
-    //   |                                          ^         +-----+
-    //   |      emitCaseBody    +----------+        |
-    //   +->+-+---------------->| CaseBody |--->+-+-+
-    //      ^ |                 +----------+    ^ |
-    //      | |                                 | |
-    //      | | emitDefaultBody +-------------+ | |
-    //      | +---------------->| DefaultBody |-+ |
-    //      |                   +-------------+   |
-    //      |                                     |
-    //      +-------------------------------------+
-    //
-    enum class State {
-        // The initial state.
-        Start,
-
-        // After calling emitDiscriminant.
-        Discriminant,
-
-        // After calling validateCaseCount.
-        CaseCount,
-
-        // After calling emitLexical.
-        Lexical,
-
-        // After calling emitCond.
-        Cond,
-
-        // After calling emitTable.
-        Table,
-
-        // After calling prepareForCaseValue.
-        CaseValue,
-
-        // After calling emitCaseJump.
-        Case,
-
-        // After calling emitCaseBody.
-        CaseBody,
-
-        // After calling emitDefaultBody.
-        DefaultBody,
-
-        // After calling emitEnd.
-        End
-    };
-    State state_ = State::Start;
-
-  public:
-    explicit SwitchEmitter(BytecodeEmitter* bce);
-
-    // `switchPos` is the offset in the source code for the character below:
-    //
-    //   switch ( cond ) { ... }
-    //   ^
-    //   |
-    //   switchPos
-    //
-    // Can be Nothing() if not available.
-    MOZ_MUST_USE bool emitDiscriminant(const mozilla::Maybe<uint32_t>& switchPos);
-
+    // Finish generating the table.
     // `caseCount` should be the number of cases in the switch statement,
     // excluding the default case.
-    MOZ_MUST_USE bool validateCaseCount(uint32_t caseCount);
+    void finish(uint32_t caseCount);
 
-    // `bindings` is a lexical scope for the entire switch, in case there's
-    // let/const effectively directly under case or default blocks.
-    MOZ_MUST_USE bool emitLexical(Handle<LexicalScope::Data*> bindings);
+   private:
+    friend SwitchEmitter;
 
-    MOZ_MUST_USE bool emitCond();
-    MOZ_MUST_USE bool emitTable(const TableGenerator& tableGen);
+    // The following methods can be used only after calling `finish`.
 
-    MOZ_MUST_USE bool prepareForCaseValue();
-    MOZ_MUST_USE bool emitCaseJump();
+    // Returns the lower bound of the added numbers.
+    int32_t low() const {
+      MOZ_ASSERT(finished_);
+      return low_;
+    }
 
-    MOZ_MUST_USE bool emitCaseBody();
-    MOZ_MUST_USE bool emitCaseBody(int32_t caseValue, const TableGenerator& tableGen);
-    MOZ_MUST_USE bool emitDefaultBody();
-    MOZ_MUST_USE bool emitEnd();
+    // Returns the higher bound of the numbers.
+    int32_t high() const {
+      MOZ_ASSERT(finished_);
+      return high_;
+    }
 
-  private:
-    MOZ_MUST_USE bool emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault);
-    MOZ_MUST_USE bool emitImplicitDefault();
+    // Returns the index in SwitchEmitter.caseOffsets_ for table switch.
+    uint32_t toCaseIndex(int32_t caseValue) const;
+
+    // Returns the length of the table.
+    // This method can be called only if `isValid()` is true.
+    uint32_t tableLength() const;
+  };
+
+ private:
+  BytecodeEmitter* bce_;
+
+  // `kind_` should be set to the correct value in emitCond/emitTable.
+  Kind kind_ = Kind::Cond;
+
+  // True if there's explicit default case.
+  bool hasDefault_ = false;
+
+  // The source note index for SRC_CONDSWITCH.
+  unsigned noteIndex_ = 0;
+
+  // Source note index of the previous SRC_NEXTCASE.
+  unsigned caseNoteIndex_ = 0;
+
+  // The number of cases in the switch statement, excluding the default case.
+  uint32_t caseCount_ = 0;
+
+  // Internal index for case jump and case body, used by cond switch.
+  uint32_t caseIndex_ = 0;
+
+  // Bytecode offset after emitting `discriminant`.
+  ptrdiff_t top_ = 0;
+
+  // Bytecode offset of the previous JSOP_CASE.
+  ptrdiff_t lastCaseOffset_ = 0;
+
+  // Bytecode offset of the JSOP_JUMPTARGET for default body.
+  JumpTarget defaultJumpTargetOffset_ = {-1};
+
+  // Bytecode offset of the JSOP_DEFAULT.
+  JumpList condSwitchDefaultOffset_;
+
+  // Instantiated when there's lexical scope for entire switch.
+  mozilla::Maybe<TDZCheckCache> tdzCacheLexical_;
+  mozilla::Maybe<EmitterScope> emitterScope_;
+
+  // Instantiated while emitting case expression and case/default body.
+  mozilla::Maybe<TDZCheckCache> tdzCacheCaseAndBody_;
+
+  // Control for switch.
+  mozilla::Maybe<BreakableControl> controlInfo_;
+
+  mozilla::Maybe<uint32_t> switchPos_;
+
+  // Cond Switch:
+  //   Offset of each JSOP_CASE.
+  // Table Switch:
+  //   Offset of each JSOP_JUMPTARGET for case.
+  js::Vector<ptrdiff_t, 32, SystemAllocPolicy> caseOffsets_;
+
+  // The state of this emitter.
+  //
+  // +-------+ emitDiscriminant +--------------+
+  // | Start |----------------->| Discriminant |-+
+  // +-------+                  +--------------+ |
+  //                                             |
+  // +-------------------------------------------+
+  // |
+  // |                              validateCaseCount +-----------+
+  // +->+------------------------>+------------------>| CaseCount |-+
+  //    |                         ^                   +-----------+ |
+  //    | emitLexical +---------+ |                                 |
+  //    +------------>| Lexical |-+                                 |
+  //                  +---------+                                   |
+  //                                                                |
+  // +--------------------------------------------------------------+
+  // |
+  // | emitTable +-------+
+  // +---------->| Table |----------------------------------->+-+
+  // |           +-------+                                    ^ |
+  // |                                                        | |
+  // | emitCond  +------+                                     | |
+  // +---------->| Cond |-+------------------------------->+->+ |
+  //             +------+ |                                ^    |
+  //                      |                                |    |
+  //   +------------------+                                |    |
+  //   |                                                   |    |
+  //   |prepareForCaseValue  +-----------+                 |    |
+  //   +----------+--------->| CaseValue |                 |    |
+  //              ^          +-----------+                 |    |
+  //              |             |                          |    |
+  //              |             | emitCaseJump +------+    |    |
+  //              |             +------------->| Case |->+-+    |
+  //              |                            +------+  |      |
+  //              |                                      |      |
+  //              +--------------------------------------+      |
+  //                                                            |
+  // +----------------------------------------------------------+
+  // |
+  // |                                              emitEnd +-----+
+  // +-+----------------------------------------->+-------->| End |
+  //   |                                          ^         +-----+
+  //   |      emitCaseBody    +----------+        |
+  //   +->+-+---------------->| CaseBody |--->+-+-+
+  //      ^ |                 +----------+    ^ |
+  //      | |                                 | |
+  //      | | emitDefaultBody +-------------+ | |
+  //      | +---------------->| DefaultBody |-+ |
+  //      |                   +-------------+   |
+  //      |                                     |
+  //      +-------------------------------------+
+  //
+  enum class State {
+    // The initial state.
+    Start,
+
+    // After calling emitDiscriminant.
+    Discriminant,
+
+    // After calling validateCaseCount.
+    CaseCount,
+
+    // After calling emitLexical.
+    Lexical,
+
+    // After calling emitCond.
+    Cond,
+
+    // After calling emitTable.
+    Table,
+
+    // After calling prepareForCaseValue.
+    CaseValue,
+
+    // After calling emitCaseJump.
+    Case,
+
+    // After calling emitCaseBody.
+    CaseBody,
+
+    // After calling emitDefaultBody.
+    DefaultBody,
+
+    // After calling emitEnd.
+    End
+  };
+  State state_ = State::Start;
+
+ public:
+  explicit SwitchEmitter(BytecodeEmitter* bce);
+
+  // `switchPos` is the offset in the source code for the character below:
+  //
+  //   switch ( cond ) { ... }
+  //   ^
+  //   |
+  //   switchPos
+  //
+  // Can be Nothing() if not available.
+  MOZ_MUST_USE bool emitDiscriminant(const mozilla::Maybe<uint32_t>& switchPos);
+
+  // `caseCount` should be the number of cases in the switch statement,
+  // excluding the default case.
+  MOZ_MUST_USE bool validateCaseCount(uint32_t caseCount);
+
+  // `bindings` is a lexical scope for the entire switch, in case there's
+  // let/const effectively directly under case or default blocks.
+  MOZ_MUST_USE bool emitLexical(Handle<LexicalScope::Data*> bindings);
+
+  MOZ_MUST_USE bool emitCond();
+  MOZ_MUST_USE bool emitTable(const TableGenerator& tableGen);
+
+  MOZ_MUST_USE bool prepareForCaseValue();
+  MOZ_MUST_USE bool emitCaseJump();
+
+  MOZ_MUST_USE bool emitCaseBody();
+  MOZ_MUST_USE bool emitCaseBody(int32_t caseValue,
+                                 const TableGenerator& tableGen);
+  MOZ_MUST_USE bool emitDefaultBody();
+  MOZ_MUST_USE bool emitEnd();
+
+ private:
+  MOZ_MUST_USE bool emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault);
+  MOZ_MUST_USE bool emitImplicitDefault();
 };
 
 } /* namespace frontend */

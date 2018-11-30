@@ -12,17 +12,15 @@
 namespace mozilla {
 namespace dom {
 
-class SRILogHelper final
-{
-public:
-  static LogModule* GetSriLog()
-  {
+class SRILogHelper final {
+ public:
+  static LogModule* GetSriLog() {
     static LazyLogModule gSriPRLog("SRI");
     return gSriPRLog;
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SRILogHelper_h
+#endif  // mozilla_dom_SRILogHelper_h

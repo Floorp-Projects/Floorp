@@ -33,8 +33,7 @@ namespace file_util {
 
 bool EndsWithSeparator(const FilePath& path) {
   FilePath::StringType value = path.value();
-  if (value.empty())
-    return false;
+  if (value.empty()) return false;
 
   return FilePath::IsSeparator(value[value.size() - 1]);
 }
@@ -48,9 +47,10 @@ FilePath::StringType GetFileExtensionFromPath(const FilePath& path) {
   FilePath::StringType file_name = path.BaseName().value();
   const FilePath::StringType::size_type last_dot =
       file_name.rfind(kExtensionSeparator);
-  return FilePath::StringType(last_dot == FilePath::StringType::npos ?
-                              FILE_PATH_LITERAL("") :
-                              file_name, last_dot+1);
+  return FilePath::StringType(last_dot == FilePath::StringType::npos
+                                  ? FILE_PATH_LITERAL("")
+                                  : file_name,
+                              last_dot + 1);
 }
 
 void InsertBeforeExtension(FilePath* path, const FilePath::StringType& suffix) {
@@ -93,7 +93,7 @@ void ReplaceExtension(FilePath* path, const FilePath::StringType& extension) {
 
   // Erase the current extension, if any.
   if ((last_dot > last_separator ||
-      last_separator == FilePath::StringType::npos) &&
+       last_separator == FilePath::StringType::npos) &&
       last_dot != FilePath::StringType::npos)
     value.erase(last_dot);
 
@@ -102,23 +102,20 @@ void ReplaceExtension(FilePath* path, const FilePath::StringType& extension) {
 
 FILE* CreateAndOpenTemporaryFile(FilePath* path) {
   FilePath directory;
-  if (!GetTempDir(&directory))
-    return NULL;
+  if (!GetTempDir(&directory)) return NULL;
 
   return CreateAndOpenTemporaryFileInDir(directory, path);
 }
 
 bool GetFileSize(const FilePath& file_path, int64_t* file_size) {
   FileInfo info;
-  if (!GetFileInfo(file_path, &info))
-    return false;
+  if (!GetFileInfo(file_path, &info)) return false;
   *file_size = info.size;
   return true;
 }
 
 bool CloseFile(FILE* file) {
-  if (file == NULL)
-    return true;
+  if (file == NULL) return true;
   return fclose(file) == 0;
 }
 
@@ -126,8 +123,7 @@ bool CloseFile(FILE* file) {
 
 bool AbsolutePath(std::wstring* path_str) {
   FilePath path(FilePath::FromWStringHack(*path_str));
-  if (!AbsolutePath(&path))
-    return false;
+  if (!AbsolutePath(&path)) return false;
   *path_str = path.ToWStringHack();
   return true;
 }
@@ -137,8 +133,7 @@ void AppendToPath(std::wstring* path, const std::wstring& new_ending) {
     return;  // Don't crash in this function in release builds.
   }
 
-  if (!EndsWithSeparator(path))
-    path->push_back(FilePath::kSeparators[0]);
+  if (!EndsWithSeparator(path)) path->push_back(FilePath::kSeparators[0]);
   path->append(new_ending);
 }
 bool CopyFile(const std::wstring& from_path, const std::wstring& to_path) {
@@ -156,15 +151,13 @@ bool CreateNewTempDirectory(const std::wstring& prefix,
   FilePath::StringType dir_prefix = WideToUTF8(prefix);
 #endif
   FilePath temp_path;
-  if (!CreateNewTempDirectory(dir_prefix, &temp_path))
-    return false;
+  if (!CreateNewTempDirectory(dir_prefix, &temp_path)) return false;
   *new_temp_path = temp_path.ToWStringHack();
   return true;
 }
 bool CreateTemporaryFileName(std::wstring* temp_file) {
   FilePath temp_file_path;
-  if (!CreateTemporaryFileName(&temp_file_path))
-    return false;
+  if (!CreateTemporaryFileName(&temp_file_path)) return false;
   *temp_file = temp_file_path.ToWStringHack();
   return true;
 }
@@ -182,8 +175,7 @@ bool EndsWithSeparator(const std::wstring& path) {
 }
 bool GetCurrentDirectory(std::wstring* path_str) {
   FilePath path;
-  if (!GetCurrentDirectory(&path))
-    return false;
+  if (!GetCurrentDirectory(&path)) return false;
   *path_str = path.ToWStringHack();
   return true;
 }
@@ -200,8 +192,7 @@ bool GetFileInfo(const std::wstring& file_path, FileInfo* results) {
   return GetFileInfo(FilePath::FromWStringHack(file_path), results);
 }
 std::wstring GetFilenameFromPath(const std::wstring& path) {
-  if (path.empty() || EndsWithSeparator(path))
-    return std::wstring();
+  if (path.empty() || EndsWithSeparator(path)) return std::wstring();
 
   return FilePath::FromWStringHack(path).BaseName().ToWStringHack();
 }
@@ -210,8 +201,7 @@ bool GetFileSize(const std::wstring& file_path, int64_t* file_size) {
 }
 bool GetTempDir(std::wstring* path_str) {
   FilePath path;
-  if (!GetTempDir(&path))
-    return false;
+  if (!GetTempDir(&path)) return false;
   *path_str = path.ToWStringHack();
   return true;
 }
@@ -241,4 +231,4 @@ void UpOneDirectory(std::wstring* dir) {
 int WriteFile(const std::wstring& filename, const char* data, int size) {
   return WriteFile(FilePath::FromWStringHack(filename), data, size);
 }
-}  // namespace
+}  // namespace file_util

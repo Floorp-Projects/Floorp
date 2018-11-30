@@ -15,8 +15,7 @@
 namespace mozilla {
 namespace dom {
 namespace {
-bool IsValidNetwork(const nsAString& aNetwork)
-{
+bool IsValidNetwork(const nsAString& aNetwork) {
   return aNetwork.Equals(NS_LITERAL_STRING("amex")) ||
          aNetwork.Equals(NS_LITERAL_STRING("cartebancaire")) ||
          aNetwork.Equals(NS_LITERAL_STRING("diners")) ||
@@ -27,14 +26,11 @@ bool IsValidNetwork(const nsAString& aNetwork)
          aNetwork.Equals(NS_LITERAL_STRING("unionpay")) ||
          aNetwork.Equals(NS_LITERAL_STRING("visa"));
 }
-} // end of namespace
-
+}  // end of namespace
 
 StaticRefPtr<BasicCardService> gBasicCardService;
 
-already_AddRefed<BasicCardService>
-BasicCardService::GetService()
-{
+already_AddRefed<BasicCardService> BasicCardService::GetService() {
   if (!gBasicCardService) {
     gBasicCardService = new BasicCardService();
     ClearOnShutdown(&gBasicCardService);
@@ -43,17 +39,12 @@ BasicCardService::GetService()
   return service.forget();
 }
 
-bool
-BasicCardService::IsBasicCardPayment(const nsAString& aSupportedMethods)
-{
+bool BasicCardService::IsBasicCardPayment(const nsAString& aSupportedMethods) {
   return aSupportedMethods.Equals(NS_LITERAL_STRING("basic-card"));
 }
 
-bool
-BasicCardService::IsValidBasicCardRequest(JSContext* aCx,
-                                          JSObject* aData,
-                                          nsAString& aErrorMsg)
-{
+bool BasicCardService::IsValidBasicCardRequest(JSContext* aCx, JSObject* aData,
+                                               nsAString& aErrorMsg) {
   if (!aData) {
     return true;
   }
@@ -61,14 +52,16 @@ BasicCardService::IsValidBasicCardRequest(JSContext* aCx,
 
   BasicCardRequest request;
   if (!request.Init(aCx, data)) {
-    aErrorMsg.AssignLiteral("Fail to convert methodData.data to BasicCardRequest.");
+    aErrorMsg.AssignLiteral(
+        "Fail to convert methodData.data to BasicCardRequest.");
     return false;
   }
 
   if (request.mSupportedNetworks.WasPassed()) {
     for (const nsString& network : request.mSupportedNetworks.Value()) {
       if (!IsValidNetwork(network)) {
-        aErrorMsg.Assign(network + NS_LITERAL_STRING(" is not an valid network."));
+        aErrorMsg.Assign(network +
+                         NS_LITERAL_STRING(" is not an valid network."));
         return false;
       }
     }
@@ -76,9 +69,7 @@ BasicCardService::IsValidBasicCardRequest(JSContext* aCx,
   return true;
 }
 
-bool
-BasicCardService::IsValidExpiryMonth(const nsAString& aExpiryMonth)
-{
+bool BasicCardService::IsValidExpiryMonth(const nsAString& aExpiryMonth) {
   // ExpiryMonth can only be
   //   1. empty string
   //   2. 01 ~ 12
@@ -105,9 +96,7 @@ BasicCardService::IsValidExpiryMonth(const nsAString& aExpiryMonth)
   return false;
 }
 
-bool
-BasicCardService::IsValidExpiryYear(const nsAString& aExpiryYear)
-{
+bool BasicCardService::IsValidExpiryYear(const nsAString& aExpiryYear) {
   // ExpiryYear can only be
   //   1. empty string
   //   2. 0000 ~ 9999
@@ -116,8 +105,7 @@ BasicCardService::IsValidExpiryYear(const nsAString& aExpiryYear)
       return false;
     }
     for (uint32_t index = 0; index < 4; ++index) {
-      if (aExpiryYear.CharAt(index) < '0' ||
-          aExpiryYear.CharAt(index) > '9') {
+      if (aExpiryYear.CharAt(index) < '0' || aExpiryYear.CharAt(index) > '9') {
         return false;
       }
     }
@@ -125,10 +113,7 @@ BasicCardService::IsValidExpiryYear(const nsAString& aExpiryYear)
   return true;
 }
 
-bool
-BasicCardService::IsValidBasicCardErrors(JSContext* aCx,
-                                         JSObject* aData)
-{
+bool BasicCardService::IsValidBasicCardErrors(JSContext* aCx, JSObject* aData) {
   if (!aData) {
     return true;
   }
@@ -137,5 +122,5 @@ BasicCardService::IsValidBasicCardErrors(JSContext* aCx,
   BasicCardErrors bcError;
   return !bcError.Init(aCx, data);
 }
-} // end of namespace dom
-} // end of namespace mozilla
+}  // end of namespace dom
+}  // end of namespace mozilla

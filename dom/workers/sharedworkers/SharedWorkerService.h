@@ -23,55 +23,46 @@ class RemoteWorkerData;
 class SharedWorkerManager;
 class SharedWorkerParent;
 
-class SharedWorkerService final
-{
-public:
+class SharedWorkerService final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerService);
 
   // This can be called on PBackground thread only.
-  static already_AddRefed<SharedWorkerService>
-  GetOrCreate();
+  static already_AddRefed<SharedWorkerService> GetOrCreate();
 
   // The service, if already created, is available on any thread using this
   // method.
-  static SharedWorkerService*
-  Get();
+  static SharedWorkerService* Get();
 
   // PBackground method only.
-  void
-  GetOrCreateWorkerManager(SharedWorkerParent* aActor,
-                           const RemoteWorkerData& aData,
-                           uint64_t aWindowID,
-                           const MessagePortIdentifier& aPortIdentifier);
+  void GetOrCreateWorkerManager(SharedWorkerParent* aActor,
+                                const RemoteWorkerData& aData,
+                                uint64_t aWindowID,
+                                const MessagePortIdentifier& aPortIdentifier);
 
-  void
-  GetOrCreateWorkerManagerOnMainThread(nsIEventTarget* aBackgroundEventTarget,
-                                       SharedWorkerParent* aActor,
-                                       const RemoteWorkerData& aData,
-                                       uint64_t aWindowID,
-                                       const MessagePortIdentifier& aPortIdentifier);
+  void GetOrCreateWorkerManagerOnMainThread(
+      nsIEventTarget* aBackgroundEventTarget, SharedWorkerParent* aActor,
+      const RemoteWorkerData& aData, uint64_t aWindowID,
+      const MessagePortIdentifier& aPortIdentifier);
 
   // PBackground method only.
-  void
-  RemoveWorkerManager(SharedWorkerManager* aManager);
+  void RemoveWorkerManager(SharedWorkerManager* aManager);
 
-  void
-  RemoveWorkerManagerOnMainThread(SharedWorkerManager* aManager);
+  void RemoveWorkerManagerOnMainThread(SharedWorkerManager* aManager);
 
-private:
+ private:
   SharedWorkerService();
   ~SharedWorkerService();
 
-  void
-  ErrorPropagationOnMainThread(nsIEventTarget* aBackgroundEventTarget,
-                               SharedWorkerParent* aActor,
-                               nsresult aError);
+  void ErrorPropagationOnMainThread(nsIEventTarget* aBackgroundEventTarget,
+                                    SharedWorkerParent* aActor,
+                                    nsresult aError);
 
   // Touched on main-thread only.
   nsTArray<RefPtr<SharedWorkerManager>> mWorkerManagers;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SharedWorkerService_h
+#endif  // mozilla_dom_SharedWorkerService_h

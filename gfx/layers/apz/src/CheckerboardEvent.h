@@ -26,7 +26,7 @@ namespace layers {
  * prioritizing the debugging of some checkerboarding events over others.
  */
 class CheckerboardEvent {
-public:
+ public:
   // clang-format off
   MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(
     RendertraceProperty, (
@@ -41,7 +41,7 @@ public:
   static const char* sDescriptions[sRendertracePropertyCount];
   static const char* sColors[sRendertracePropertyCount];
 
-public:
+ public:
   explicit CheckerboardEvent(bool aRecordTrace);
 
   /**
@@ -91,7 +91,7 @@ public:
    */
   bool RecordFrameInfo(uint32_t aCssPixelsCheckerboarded);
 
-private:
+ private:
   /**
    * Helper method to do stuff when checkeboarding starts.
    */
@@ -105,17 +105,14 @@ private:
    * Helper method to log a rendertrace property and its value to the
    * rendertrace info buffer (mRendertraceInfo).
    */
-  void LogInfo(RendertraceProperty aProperty,
-               const TimeStamp& aTimestamp,
-               const CSSRect& aRect,
-               const std::string& aExtraInfo,
+  void LogInfo(RendertraceProperty aProperty, const TimeStamp& aTimestamp,
+               const CSSRect& aRect, const std::string& aExtraInfo,
                const MonitorAutoLock& aProofOfLock);
 
   /**
    * Helper struct that holds a single rendertrace property value.
    */
-  struct PropertyValue
-  {
+  struct PropertyValue {
     RendertraceProperty mProperty;
     TimeStamp mTimeStamp;
     CSSRect mRect;
@@ -128,9 +125,8 @@ private:
    * A circular buffer that stores the most recent BUFFER_SIZE values of a
    * given property.
    */
-  class PropertyBuffer
-  {
-  public:
+  class PropertyBuffer {
+   public:
     PropertyBuffer();
     /**
      * Add a new value to the buffer, overwriting the oldest one if needed.
@@ -145,7 +141,7 @@ private:
     void Flush(std::vector<PropertyValue>& aOut,
                const MonitorAutoLock& aProofOfLock);
 
-  private:
+   private:
     static const uint32_t BUFFER_SIZE = 5;
 
     /**
@@ -156,7 +152,7 @@ private:
     PropertyValue mValues[BUFFER_SIZE];
   };
 
-private:
+ private:
   /**
    * If true, we should log the various properties during the checkerboard
    * event. If false, we only need to record things we need for telemetry
@@ -217,7 +213,7 @@ private:
   std::ostringstream mRendertraceInfo;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_CheckerboardEvent_h
+#endif  // mozilla_layers_CheckerboardEvent_h

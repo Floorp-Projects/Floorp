@@ -23,18 +23,14 @@ namespace css {
 class Loader;
 
 // FIXME(emilio): Probably better to call this ErrorBuilder or something?
-class MOZ_STACK_CLASS ErrorReporter final
-{
-public:
-  ErrorReporter(const StyleSheet* aSheet,
-                const Loader* aLoader,
-                nsIURI* aURI);
+class MOZ_STACK_CLASS ErrorReporter final {
+ public:
+  ErrorReporter(const StyleSheet* aSheet, const Loader* aLoader, nsIURI* aURI);
 
   ~ErrorReporter();
 
   static void ReleaseGlobals();
-  static void EnsureGlobalsInitialized()
-  {
+  static void EnsureGlobalsInitialized() {
     if (MOZ_UNLIKELY(!sInitialized)) {
       InitGlobals();
     }
@@ -44,8 +40,7 @@ public:
   static bool ShouldReportErrors(const StyleSheet* aSheet,
                                  const Loader* aLoader);
 
-  void OutputError(uint32_t aLineNumber,
-                   uint32_t aLineOffset,
+  void OutputError(uint32_t aLineNumber, uint32_t aLineOffset,
                    const nsACString& aSource);
   void ClearError();
 
@@ -54,14 +49,14 @@ public:
   // indicated number of parameters.
 
   // no parameters
-  void ReportUnexpected(const char *aMessage);
+  void ReportUnexpected(const char* aMessage);
   // one parameter which has already been escaped appropriately
   void ReportUnexpectedUnescaped(const char* aMessage,
                                  const nsAutoString& aParam);
 
-private:
+ private:
   void OutputError();
-  void AddToError(const nsString &aErrorText);
+  void AddToError(const nsString& aErrorText);
   static void InitGlobals();
 
   static bool sInitialized;
@@ -78,7 +73,7 @@ private:
   uint32_t mErrorColNumber;
 };
 
-} // namespace css
-} // namespace mozilla
+}  // namespace css
+}  // namespace mozilla
 
-#endif // mozilla_css_ErrorReporter_h_
+#endif  // mozilla_css_ErrorReporter_h_

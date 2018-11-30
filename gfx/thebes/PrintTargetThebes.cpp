@@ -13,8 +13,7 @@ namespace mozilla {
 namespace gfx {
 
 /* static */ already_AddRefed<PrintTargetThebes>
-PrintTargetThebes::CreateOrNull(gfxASurface* aSurface)
-{
+PrintTargetThebes::CreateOrNull(gfxASurface* aSurface) {
   MOZ_ASSERT(aSurface);
 
   if (!aSurface || aSurface->CairoStatus()) {
@@ -27,21 +26,17 @@ PrintTargetThebes::CreateOrNull(gfxASurface* aSurface)
 }
 
 PrintTargetThebes::PrintTargetThebes(gfxASurface* aSurface)
-  : PrintTarget(nullptr, aSurface->GetSize())
-  , mGfxSurface(aSurface)
-{
-}
+    : PrintTarget(nullptr, aSurface->GetSize()), mGfxSurface(aSurface) {}
 
-already_AddRefed<DrawTarget>
-PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
-                                  DrawEventRecorder* aRecorder)
-{
+already_AddRefed<DrawTarget> PrintTargetThebes::MakeDrawTarget(
+    const IntSize& aSize, DrawEventRecorder* aRecorder) {
   // This should not be called outside of BeginPage()/EndPage() calls since
   // some backends can only provide a valid DrawTarget at that time.
   MOZ_ASSERT(mHasActivePage, "We can't guarantee a valid DrawTarget");
 
   RefPtr<gfx::DrawTarget> dt =
-    gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface, aSize);
+      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface,
+                                                             aSize);
   if (!dt || !dt->IsValid()) {
     return nullptr;
   }
@@ -56,68 +51,51 @@ PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
   return dt.forget();
 }
 
-already_AddRefed<DrawTarget>
-PrintTargetThebes::GetReferenceDrawTarget()
-{
+already_AddRefed<DrawTarget> PrintTargetThebes::GetReferenceDrawTarget() {
   if (!mRefDT) {
     RefPtr<gfx::DrawTarget> dt =
-      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface, mSize);
+        gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface,
+                                                               mSize);
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
-    mRefDT = dt->CreateSimilarDrawTarget(IntSize(1,1), dt->GetFormat());
+    mRefDT = dt->CreateSimilarDrawTarget(IntSize(1, 1), dt->GetFormat());
   }
 
   return do_AddRef(mRefDT);
 }
 
-nsresult
-PrintTargetThebes::BeginPrinting(const nsAString& aTitle,
-                                 const nsAString& aPrintToFileName,
-                                 int32_t aStartPage,
-                                 int32_t aEndPage)
-{
+nsresult PrintTargetThebes::BeginPrinting(const nsAString& aTitle,
+                                          const nsAString& aPrintToFileName,
+                                          int32_t aStartPage,
+                                          int32_t aEndPage) {
   return mGfxSurface->BeginPrinting(aTitle, aPrintToFileName);
 }
 
-nsresult
-PrintTargetThebes::EndPrinting()
-{
-  return mGfxSurface->EndPrinting();
-}
+nsresult PrintTargetThebes::EndPrinting() { return mGfxSurface->EndPrinting(); }
 
-nsresult
-PrintTargetThebes::AbortPrinting()
-{
+nsresult PrintTargetThebes::AbortPrinting() {
 #ifdef DEBUG
   mHasActivePage = false;
 #endif
   return mGfxSurface->AbortPrinting();
 }
 
-nsresult
-PrintTargetThebes::BeginPage()
-{
+nsresult PrintTargetThebes::BeginPage() {
 #ifdef DEBUG
   mHasActivePage = true;
 #endif
   return mGfxSurface->BeginPage();
 }
 
-nsresult
-PrintTargetThebes::EndPage()
-{
+nsresult PrintTargetThebes::EndPage() {
 #ifdef DEBUG
   mHasActivePage = false;
 #endif
   return mGfxSurface->EndPage();
 }
 
-void
-PrintTargetThebes::Finish()
-{
-  return mGfxSurface->Finish();
-}
+void PrintTargetThebes::Finish() { return mGfxSurface->Finish(); }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

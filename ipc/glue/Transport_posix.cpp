@@ -21,11 +21,8 @@ using base::ProcessHandle;
 namespace mozilla {
 namespace ipc {
 
-nsresult
-CreateTransport(base::ProcessId aProcIdOne,
-                TransportDescriptor* aOne,
-                TransportDescriptor* aTwo)
-{
+nsresult CreateTransport(base::ProcessId aProcIdOne, TransportDescriptor* aOne,
+                         TransportDescriptor* aTwo) {
   wstring id = IPC::Channel::GenerateVerifiedChannelID(std::wstring());
   // Use MODE_SERVER to force creation of the socketpair
   Transport t(id, Transport::MODE_SERVER, nullptr);
@@ -41,12 +38,12 @@ CreateTransport(base::ProcessId aProcIdOne,
   fd1 = dup(fd1);
   if (fd1 < 0) {
     AnnotateCrashReportWithErrno(
-      CrashReporter::Annotation::IpcCreateTransportDupErrno, errno);
+        CrashReporter::Annotation::IpcCreateTransportDupErrno, errno);
   }
   fd2 = dup(fd2);
   if (fd2 < 0) {
     AnnotateCrashReportWithErrno(
-      CrashReporter::Annotation::IpcCreateTransportDupErrno, errno);
+        CrashReporter::Annotation::IpcCreateTransportDupErrno, errno);
   }
 
   if (fd1 < 0 || fd2 < 0) {
@@ -55,27 +52,23 @@ CreateTransport(base::ProcessId aProcIdOne,
     return NS_ERROR_DUPLICATE_HANDLE;
   }
 
-  aOne->mFd = base::FileDescriptor(fd1, true/*close after sending*/);
-  aTwo->mFd = base::FileDescriptor(fd2, true/*close after sending*/);
+  aOne->mFd = base::FileDescriptor(fd1, true /*close after sending*/);
+  aTwo->mFd = base::FileDescriptor(fd2, true /*close after sending*/);
   return NS_OK;
 }
 
-UniquePtr<Transport>
-OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
-{
+UniquePtr<Transport> OpenDescriptor(const TransportDescriptor& aTd,
+                                    Transport::Mode aMode) {
   return MakeUnique<Transport>(aTd.mFd.fd, aMode, nullptr);
 }
 
-UniquePtr<Transport>
-OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
-{
+UniquePtr<Transport> OpenDescriptor(const FileDescriptor& aFd,
+                                    Transport::Mode aMode) {
   auto rawFD = aFd.ClonePlatformHandle();
   return MakeUnique<Transport>(rawFD.release(), aMode, nullptr);
 }
 
-TransportDescriptor
-DuplicateDescriptor(const TransportDescriptor& aTd)
-{
+TransportDescriptor DuplicateDescriptor(const TransportDescriptor& aTd) {
   TransportDescriptor result = aTd;
   result.mFd.fd = dup(aTd.mFd.fd);
   if (result.mFd.fd == -1) {
@@ -85,11 +78,7 @@ DuplicateDescriptor(const TransportDescriptor& aTd)
   return result;
 }
 
-void
-CloseDescriptor(const TransportDescriptor& aTd)
-{
-  close(aTd.mFd.fd);
-}
+void CloseDescriptor(const TransportDescriptor& aTd) { close(aTd.mFd.fd); }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

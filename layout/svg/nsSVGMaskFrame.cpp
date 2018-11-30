@@ -23,37 +23,30 @@ using namespace mozilla::dom::SVGUnitTypes_Binding;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-static LuminanceType
-GetLuminanceType(uint8_t aNSMaskType)
-{
+static LuminanceType GetLuminanceType(uint8_t aNSMaskType) {
   switch (aNSMaskType) {
     case NS_STYLE_MASK_TYPE_LUMINANCE:
       return LuminanceType::LUMINANCE;
     case NS_STYLE_COLOR_INTERPOLATION_LINEARRGB:
       return LuminanceType::LINEARRGB;
-    default:
-    {
+    default: {
       NS_WARNING("Unknown SVG mask type, defaulting to luminance");
       return LuminanceType::LUMINANCE;
     }
   }
 }
 
-nsIFrame*
-NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSVGMaskFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 
-already_AddRefed<SourceSurface>
-nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
-{
+already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
+    MaskParams& aParams) {
   // Make sure we break reference loops and over long reference chains:
   static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
-  AutoReferenceChainGuard refChainGuard(this, &mInUse,
-                                        &sRefChainLengthCounter);
+  AutoReferenceChainGuard refChainGuard(this, &mInUse, &sRefChainLengthCounter);
   if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
     // Break reference chain
     return nullptr;
@@ -71,8 +64,8 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
   context->Restore();
 
   bool resultOverflows;
-  IntSize maskSurfaceSize =
-    nsSVGUtils::ConvertToSurfaceSize(maskSurfaceRect.Size(), &resultOverflows);
+  IntSize maskSurfaceSize = nsSVGUtils::ConvertToSurfaceSize(
+      maskSurfaceRect.Size(), &resultOverflows);
 
   if (resultOverflows || maskSurfaceSize.IsEmpty()) {
     // Return value other then ImgDrawResult::SUCCESS, so the caller can skip
@@ -85,16 +78,17 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     maskType = StyleSVGReset()->mMaskType;
   } else {
     maskType = aParams.maskMode == NS_STYLE_MASK_MODE_LUMINANCE
-               ? NS_STYLE_MASK_TYPE_LUMINANCE : NS_STYLE_MASK_TYPE_ALPHA;
+                   ? NS_STYLE_MASK_TYPE_LUMINANCE
+                   : NS_STYLE_MASK_TYPE_ALPHA;
   }
 
   RefPtr<DrawTarget> maskDT;
   if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
     maskDT = context->GetDrawTarget()->CreateSimilarDrawTarget(
-               maskSurfaceSize, SurfaceFormat::B8G8R8A8);
+        maskSurfaceSize, SurfaceFormat::B8G8R8A8);
   } else {
     maskDT = context->GetDrawTarget()->CreateSimilarDrawTarget(
-               maskSurfaceSize, SurfaceFormat::A8);
+        maskSurfaceSize, SurfaceFormat::A8);
   }
 
   if (!maskDT || !maskDT->IsValid()) {
@@ -102,17 +96,17 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
   }
 
   Matrix maskSurfaceMatrix =
-    context->CurrentMatrix() * ToMatrix(gfxMatrix::Translation(-maskSurfaceRect.TopLeft()));
+      context->CurrentMatrix() *
+      ToMatrix(gfxMatrix::Translation(-maskSurfaceRect.TopLeft()));
 
   RefPtr<gfxContext> tmpCtx = gfxContext::CreateOrNull(maskDT);
-  MOZ_ASSERT(tmpCtx); // already checked the draw target above
+  MOZ_ASSERT(tmpCtx);  // already checked the draw target above
   tmpCtx->SetMatrix(maskSurfaceMatrix);
 
-  mMatrixForChildren = GetMaskTransform(aParams.maskedFrame) *
-                       aParams.toUserSpace;
+  mMatrixForChildren =
+      GetMaskTransform(aParams.maskedFrame) * aParams.toUserSpace;
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
     // The CTM of each frame referencing us can be different
     nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
@@ -120,8 +114,8 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     }
     gfxMatrix m = mMatrixForChildren;
     if (kid->GetContent()->IsSVGElement()) {
-      m = static_cast<nsSVGElement*>(kid->GetContent())->
-            PrependLocalTransformsTo(m, eUserSpaceToParent);
+      m = static_cast<nsSVGElement*>(kid->GetContent())
+              ->PrependLocalTransformsTo(m, eUserSpaceToParent);
     }
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, aParams.imgParams);
   }
@@ -133,16 +127,17 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
       maskType = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
     }
 
-    RefPtr<SourceSurface> maskSnapshot =
-      maskDT->IntoLuminanceSource(GetLuminanceType(maskType),
-                                  aParams.opacity);
+    RefPtr<SourceSurface> maskSnapshot = maskDT->IntoLuminanceSource(
+        GetLuminanceType(maskType), aParams.opacity);
     if (!maskSnapshot) {
       return nullptr;
     }
     surface = maskSnapshot.forget();
   } else {
     maskDT->SetTransform(Matrix());
-    maskDT->FillRect(Rect(0, 0, maskSurfaceSize.width, maskSurfaceSize.height), ColorPattern(Color(1.0f, 1.0f, 1.0f, aParams.opacity)), DrawOptions(1, CompositionOp::OP_IN));
+    maskDT->FillRect(Rect(0, 0, maskSurfaceSize.width, maskSurfaceSize.height),
+                     ColorPattern(Color(1.0f, 1.0f, 1.0f, aParams.opacity)),
+                     DrawOptions(1, CompositionOp::OP_IN));
     RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
     if (!maskSnapshot) {
       return nullptr;
@@ -159,54 +154,44 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
   return surface.forget();
 }
 
-gfxRect
-nsSVGMaskFrame::GetMaskArea(nsIFrame* aMaskedFrame)
-{
-  SVGMaskElement *maskElem = static_cast<SVGMaskElement*>(GetContent());
+gfxRect nsSVGMaskFrame::GetMaskArea(nsIFrame* aMaskedFrame) {
+  SVGMaskElement* maskElem = static_cast<SVGMaskElement*>(GetContent());
 
   uint16_t units =
-    maskElem->mEnumAttributes[SVGMaskElement::MASKUNITS].GetAnimValue();
+      maskElem->mEnumAttributes[SVGMaskElement::MASKUNITS].GetAnimValue();
   gfxRect bbox;
   if (units == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    bbox =
-      nsSVGUtils::GetBBox(aMaskedFrame,
-                          nsSVGUtils::eUseFrameBoundsForOuterSVG |
-                          nsSVGUtils::eBBoxIncludeFillGeometry);
+    bbox = nsSVGUtils::GetBBox(aMaskedFrame,
+                               nsSVGUtils::eUseFrameBoundsForOuterSVG |
+                                   nsSVGUtils::eBBoxIncludeFillGeometry);
   }
 
   // Bounds in the user space of aMaskedFrame
-  gfxRect maskArea = nsSVGUtils::GetRelativeRect(units,
-                       &maskElem->mLengthAttributes[SVGMaskElement::ATTR_X],
-                       bbox, aMaskedFrame);
+  gfxRect maskArea = nsSVGUtils::GetRelativeRect(
+      units, &maskElem->mLengthAttributes[SVGMaskElement::ATTR_X], bbox,
+      aMaskedFrame);
 
   return maskArea;
 }
 
-nsresult
-nsSVGMaskFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                 nsAtom* aAttribute,
-                                 int32_t  aModType)
-{
+nsresult nsSVGMaskFrame::AttributeChanged(int32_t aNameSpaceID,
+                                          nsAtom* aAttribute,
+                                          int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsGkAtoms::x ||
-       aAttribute == nsGkAtoms::y ||
-       aAttribute == nsGkAtoms::width ||
-       aAttribute == nsGkAtoms::height||
+      (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y ||
+       aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
        aAttribute == nsGkAtoms::maskUnits ||
        aAttribute == nsGkAtoms::maskContentUnits)) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
 
-  return nsSVGContainerFrame::AttributeChanged(aNameSpaceID,
-                                               aAttribute, aModType);
+  return nsSVGContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType);
 }
 
 #ifdef DEBUG
-void
-nsSVGMaskFrame::Init(nsIContent*       aContent,
-                     nsContainerFrame* aParent,
-                     nsIFrame*         aPrevInFlow)
-{
+void nsSVGMaskFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                          nsIFrame* aPrevInFlow) {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::mask),
                "Content is not an SVG mask");
 
@@ -214,25 +199,19 @@ nsSVGMaskFrame::Init(nsIContent*       aContent,
 }
 #endif /* DEBUG */
 
-gfxMatrix
-nsSVGMaskFrame::GetCanvasTM()
-{
-  return mMatrixForChildren;
-}
+gfxMatrix nsSVGMaskFrame::GetCanvasTM() { return mMatrixForChildren; }
 
-gfxMatrix
-nsSVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame)
-{
-  SVGMaskElement *content = static_cast<SVGMaskElement*>(GetContent());
+gfxMatrix nsSVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame) {
+  SVGMaskElement* content = static_cast<SVGMaskElement*>(GetContent());
 
   nsSVGEnum* maskContentUnits =
-    &content->mEnumAttributes[SVGMaskElement::MASKCONTENTUNITS];
+      &content->mEnumAttributes[SVGMaskElement::MASKCONTENTUNITS];
 
-  uint32_t flags =
-    nsSVGUtils::eBBoxIncludeFillGeometry |
-    (aMaskedFrame->StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone
-      ? nsSVGUtils::eIncludeOnlyCurrentFrameForNonSVGElement
-      : 0);
+  uint32_t flags = nsSVGUtils::eBBoxIncludeFillGeometry |
+                   (aMaskedFrame->StyleBorder()->mBoxDecorationBreak ==
+                            StyleBoxDecorationBreak::Clone
+                        ? nsSVGUtils::eIncludeOnlyCurrentFrameForNonSVGElement
+                        : 0);
 
   return nsSVGUtils::AdjustMatrixForUnits(gfxMatrix(), maskContentUnits,
                                           aMaskedFrame, flags);

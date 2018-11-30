@@ -12,24 +12,21 @@
 namespace mozilla {
 namespace dom {
 
-class GamepadTestChannelParent final : public PGamepadTestChannelParent
-{
+class GamepadTestChannelParent final : public PGamepadTestChannelParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadTestChannelParent)
-  GamepadTestChannelParent()
-    : mShuttingdown(false) {}
+  GamepadTestChannelParent() : mShuttingdown(false) {}
   virtual void ActorDestroy(ActorDestroyReason aWhy) override {}
-  virtual mozilla::ipc::IPCResult
-  RecvGamepadTestEvent(const uint32_t& aID,
-                       const GamepadChangeEvent& aGamepadEvent) override;
-  virtual mozilla::ipc::IPCResult
-  RecvShutdownChannel() override;
+  virtual mozilla::ipc::IPCResult RecvGamepadTestEvent(
+      const uint32_t& aID, const GamepadChangeEvent& aGamepadEvent) override;
+  virtual mozilla::ipc::IPCResult RecvShutdownChannel() override;
+
  private:
   ~GamepadTestChannelParent() {}
   bool mShuttingdown;
 };
 
-}// namespace dom
-}// namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

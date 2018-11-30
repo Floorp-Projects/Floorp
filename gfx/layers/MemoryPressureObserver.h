@@ -26,34 +26,34 @@ namespace layers {
 
 /// See nsIMemory.idl
 enum class MemoryPressureReason {
-    LOW_MEMORY,
-    LOW_MEMORY_ONGOING,
-    HEAP_MINIMIZE,
+  LOW_MEMORY,
+  LOW_MEMORY_ONGOING,
+  HEAP_MINIMIZE,
 };
 
 class MemoryPressureListener {
-public:
+ public:
   virtual void OnMemoryPressure(MemoryPressureReason aWhy) = 0;
 };
 
 class MemoryPressureObserver final : public nsIObserver {
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   // Returns null if anything goes wrong.
-  static already_AddRefed<MemoryPressureObserver>
-  Create(MemoryPressureListener* aListener);
+  static already_AddRefed<MemoryPressureObserver> Create(
+      MemoryPressureListener* aListener);
 
   void Unregister();
 
-private:
+ private:
   explicit MemoryPressureObserver(MemoryPressureListener* aListener);
   virtual ~MemoryPressureObserver();
   MemoryPressureListener* mListener;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

@@ -20,9 +20,8 @@ class nsIURI;
  * Read-only CSS primitive value - a DOM object representing values in DOM
  * computed style.
  */
-class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue
-{
-public:
+class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
+ public:
   enum : uint16_t {
     CSS_UNKNOWN,
     CSS_NUMBER,
@@ -74,31 +73,30 @@ public:
   void SetString(const nsACString& aString, uint16_t aType = CSS_STRING);
   // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
   void SetString(const nsAString& aString, uint16_t aType = CSS_STRING);
-  void SetURI(nsIURI *aURI);
+  void SetURI(nsIURI* aURI);
   void SetTime(float aValue);
   void Reset();
 
   virtual ~nsROCSSPrimitiveValue();
-protected:
 
+ protected:
   uint16_t mType;
 
   union {
-    nscoord         mAppUnits;
-    float           mFloat;
-    int32_t         mInt32;
-    uint32_t        mUint32;
-    char16_t*      mString;
+    nscoord mAppUnits;
+    float mFloat;
+    int32_t mInt32;
+    uint32_t mUint32;
+    char16_t* mString;
     nsIURI* MOZ_OWNING_REF mURI;
-    nsCSSKeyword    mKeyword;
+    nsCSSKeyword mKeyword;
   } mValue;
 };
 
-inline nsROCSSPrimitiveValue*
-mozilla::dom::CSSValue::AsPrimitiveValue()
-{
+inline nsROCSSPrimitiveValue* mozilla::dom::CSSValue::AsPrimitiveValue() {
   return CssValueType() == mozilla::dom::CSSValue::CSS_PRIMITIVE_VALUE
-    ? static_cast<nsROCSSPrimitiveValue*>(this) : nullptr;
+             ? static_cast<nsROCSSPrimitiveValue*>(this)
+             : nullptr;
 }
 
 #endif /* nsROCSSPrimitiveValue_h___ */

@@ -24,7 +24,7 @@ class ErrorResult;
 namespace layers {
 class AsyncCanvasRenderer;
 class CanvasClient;
-} // namespace layers
+}  // namespace layers
 
 namespace dom {
 class Blob;
@@ -34,8 +34,7 @@ class ImageBitmap;
 // Because OffscreenCanvas is not thread-safe. So we cannot pass Offscreen-
 // Canvas to worker thread directly. Thus, we create this helper class and
 // store necessary data in it then pass it to worker thread.
-struct OffscreenCanvasCloneData final
-{
+struct OffscreenCanvasCloneData final {
   OffscreenCanvasCloneData(layers::AsyncCanvasRenderer* aRenderer,
                            uint32_t aWidth, uint32_t aHeight,
                            layers::LayersBackend aCompositorBackend,
@@ -50,16 +49,14 @@ struct OffscreenCanvasCloneData final
   bool mIsWriteOnly;
 };
 
-class OffscreenCanvas final : public DOMEventTargetHelper
-                            , public CanvasRenderingContextHelper
-{
-public:
+class OffscreenCanvas final : public DOMEventTargetHelper,
+                              public CanvasRenderingContextHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OffscreenCanvas, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OffscreenCanvas,
+                                           DOMEventTargetHelper)
 
-  OffscreenCanvas(nsIGlobalObject* aGlobal,
-                  uint32_t aWidth,
-                  uint32_t aHeight,
+  OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
                   layers::LayersBackend aCompositorBackend,
                   layers::AsyncCanvasRenderer* aRenderer);
 
@@ -68,26 +65,17 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<OffscreenCanvas>
-  Constructor(const GlobalObject& aGlobal,
-              uint32_t aWidth,
-              uint32_t aHeight,
-              ErrorResult& aRv);
+  static already_AddRefed<OffscreenCanvas> Constructor(
+      const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight,
+      ErrorResult& aRv);
 
   void ClearResources();
 
-  uint32_t Width() const
-  {
-    return mWidth;
-  }
+  uint32_t Width() const { return mWidth; }
 
-  uint32_t Height() const
-  {
-    return mHeight;
-  }
+  uint32_t Height() const { return mHeight; }
 
-  void SetWidth(uint32_t aWidth, ErrorResult& aRv)
-  {
+  void SetWidth(uint32_t aWidth, ErrorResult& aRv) {
     if (mNeutered) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
@@ -99,8 +87,7 @@ public:
     }
   }
 
-  void SetHeight(uint32_t aHeight, ErrorResult& aRv)
-  {
+  void SetHeight(uint32_t aHeight, ErrorResult& aRv) {
     if (mNeutered) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
@@ -112,24 +99,21 @@ public:
     }
   }
 
-  already_AddRefed<ImageBitmap>
-  TransferToImageBitmap(ErrorResult& aRv);
+  already_AddRefed<ImageBitmap> TransferToImageBitmap(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  ToBlob(JSContext* aCx,
-         const nsAString& aType,
-         JS::Handle<JS::Value> aParams,
-         ErrorResult& aRv);
+  already_AddRefed<Promise> ToBlob(JSContext* aCx, const nsAString& aType,
+                                   JS::Handle<JS::Value> aParams,
+                                   ErrorResult& aRv);
 
-  nsICanvasRenderingContextInternal* GetContext() const
-  {
+  nsICanvasRenderingContextInternal* GetContext() const {
     return mCurrentContext;
   }
 
-  already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType = nullptr);
+  already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(
+      gfxAlphaType* aOutAlphaType = nullptr);
 
-  static already_AddRefed<OffscreenCanvas>
-  CreateFromCloneData(nsIGlobalObject* aGlobal, OffscreenCanvasCloneData* aData);
+  static already_AddRefed<OffscreenCanvas> CreateFromCloneData(
+      nsIGlobalObject* aGlobal, OffscreenCanvasCloneData* aData);
 
   // Return true on main-thread, and return gfx.offscreencanvas.enabled
   // on worker thread.
@@ -139,57 +123,37 @@ public:
 
   void CommitFrameToCompositor();
 
-  virtual bool GetOpaqueAttr() override
-  {
-    return false;
-  }
+  virtual bool GetOpaqueAttr() override { return false; }
 
-  virtual nsIntSize GetWidthHeight() override
-  {
+  virtual nsIntSize GetWidthHeight() override {
     return nsIntSize(mWidth, mHeight);
   }
 
-  virtual already_AddRefed<nsICanvasRenderingContextInternal>
-  CreateContext(CanvasContextType aContextType) override;
+  virtual already_AddRefed<nsICanvasRenderingContextInternal> CreateContext(
+      CanvasContextType aContextType) override;
 
-  virtual already_AddRefed<nsISupports>
-  GetContext(JSContext* aCx,
-             const nsAString& aContextId,
-             JS::Handle<JS::Value> aContextOptions,
-             ErrorResult& aRv) override;
+  virtual already_AddRefed<nsISupports> GetContext(
+      JSContext* aCx, const nsAString& aContextId,
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv) override;
 
-  void SetNeutered()
-  {
-    mNeutered = true;
-  }
+  void SetNeutered() { mNeutered = true; }
 
-  bool IsNeutered() const
-  {
-    return mNeutered;
-  }
+  bool IsNeutered() const { return mNeutered; }
 
-  void SetWriteOnly()
-  {
-    mIsWriteOnly = true;
-  }
+  void SetWriteOnly() { mIsWriteOnly = true; }
 
-  bool IsWriteOnly() const
-  {
-    return mIsWriteOnly;
-  }
+  bool IsWriteOnly() const { return mIsWriteOnly; }
 
-  layers::LayersBackend GetCompositorBackendType() const
-  {
+  layers::LayersBackend GetCompositorBackendType() const {
     return mCompositorBackendType;
   }
 
-private:
+ private:
   ~OffscreenCanvas();
 
   nsCOMPtr<nsIGlobalObject> GetGlobalObject();
 
-  void CanvasAttrChanged()
-  {
+  void CanvasAttrChanged() {
     mAttrDirty = true;
     ErrorResult dummy;
     UpdateContext(nullptr, JS::NullHandleValue, dummy);
@@ -208,7 +172,7 @@ private:
   RefPtr<layers::AsyncCanvasRenderer> mCanvasRenderer;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // MOZILLA_DOM_OFFSCREENCANVAS_H_
+#endif  // MOZILLA_DOM_OFFSCREENCANVAS_H_

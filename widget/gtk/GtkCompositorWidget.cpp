@@ -14,12 +14,10 @@
 namespace mozilla {
 namespace widget {
 
-GtkCompositorWidget::GtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
-                                         const layers::CompositorOptions& aOptions,
-                                         nsWindow* aWindow)
-      : CompositorWidget(aOptions)
-      , mWidget(aWindow)
-{
+GtkCompositorWidget::GtkCompositorWidget(
+    const GtkCompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions, nsWindow* aWindow)
+    : CompositorWidget(aOptions), mWidget(aWindow) {
   // If we have a nsWindow, then grab the already existing display connection
   // If we don't, then use the init data to connect to the display
   if (aWindow) {
@@ -30,8 +28,8 @@ GtkCompositorWidget::GtkCompositorWidget(const GtkCompositorWidgetInitData& aIni
 
 #ifdef MOZ_WAYLAND
   if (!mXDisplay) {
-    MOZ_RELEASE_ASSERT(aWindow,
-      "We're running on Wayland and but without valid nsWindow.");
+    MOZ_RELEASE_ASSERT(
+        aWindow, "We're running on Wayland and but without valid nsWindow.");
     mProvider.Initialize(aWindow);
   } else
 #endif
@@ -44,22 +42,17 @@ GtkCompositorWidget::GtkCompositorWidget(const GtkCompositorWidgetInitData& aIni
       NS_WARNING("GtkCompositorWidget(): XGetWindowAttributes() failed!");
     }
 
-    Visual*   visual = windowAttrs.visual;
-    int       depth = windowAttrs.depth;
+    Visual* visual = windowAttrs.visual;
+    int depth = windowAttrs.depth;
 
     // Initialize the window surface provider
-    mProvider.Initialize(
-      mXDisplay,
-      mXWindow,
-      visual,
-      depth,
-      aInitData.Shaped());
+    mProvider.Initialize(mXDisplay, mXWindow, visual, depth,
+                         aInitData.Shaped());
   }
   mClientSize = aInitData.InitialClientSize();
 }
 
-GtkCompositorWidget::~GtkCompositorWidget()
-{
+GtkCompositorWidget::~GtkCompositorWidget() {
   mProvider.CleanupResources();
 
   // If we created our own display connection, we need to destroy it
@@ -69,53 +62,34 @@ GtkCompositorWidget::~GtkCompositorWidget()
   }
 }
 
-already_AddRefed<gfx::DrawTarget>
-GtkCompositorWidget::StartRemoteDrawing()
-{
+already_AddRefed<gfx::DrawTarget> GtkCompositorWidget::StartRemoteDrawing() {
   return nullptr;
 }
-void
-GtkCompositorWidget::EndRemoteDrawing()
-{
-}
+void GtkCompositorWidget::EndRemoteDrawing() {}
 
 already_AddRefed<gfx::DrawTarget>
-GtkCompositorWidget::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
-                                                layers::BufferMode* aBufferMode)
-{
-  return mProvider.StartRemoteDrawingInRegion(aInvalidRegion,
-                                              aBufferMode);
+GtkCompositorWidget::StartRemoteDrawingInRegion(
+    LayoutDeviceIntRegion& aInvalidRegion, layers::BufferMode* aBufferMode) {
+  return mProvider.StartRemoteDrawingInRegion(aInvalidRegion, aBufferMode);
 }
 
-void GtkCompositorWidget::EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
-                              LayoutDeviceIntRegion& aInvalidRegion)
-{
-  mProvider.EndRemoteDrawingInRegion(aDrawTarget,
-                                     aInvalidRegion);
+void GtkCompositorWidget::EndRemoteDrawingInRegion(
+    gfx::DrawTarget* aDrawTarget, LayoutDeviceIntRegion& aInvalidRegion) {
+  mProvider.EndRemoteDrawingInRegion(aDrawTarget, aInvalidRegion);
 }
 
-nsIWidget* GtkCompositorWidget::RealWidget()
-{
-  return mWidget;
-}
+nsIWidget* GtkCompositorWidget::RealWidget() { return mWidget; }
 
-void
-GtkCompositorWidget::NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize)
-{
+void GtkCompositorWidget::NotifyClientSizeChanged(
+    const LayoutDeviceIntSize& aClientSize) {
   mClientSize = aClientSize;
 }
 
-LayoutDeviceIntSize
-GtkCompositorWidget::GetClientSize()
-{
-  return mClientSize;
-}
+LayoutDeviceIntSize GtkCompositorWidget::GetClientSize() { return mClientSize; }
 
-uintptr_t
-GtkCompositorWidget::GetWidgetKey()
-{
+uintptr_t GtkCompositorWidget::GetWidgetKey() {
   return reinterpret_cast<uintptr_t>(mWidget);
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

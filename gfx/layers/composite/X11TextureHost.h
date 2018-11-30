@@ -16,9 +16,8 @@
 namespace mozilla {
 namespace layers {
 
-class X11TextureSource : public TextureSource
-{
-public:
+class X11TextureSource : public TextureSource {
+ public:
   // Called when the underlying X surface has been changed.
   // Useful for determining whether to rebind a GLXPixmap to a texture.
   virtual void Updated() = 0;
@@ -27,13 +26,12 @@ public:
 };
 
 // TextureHost for Xlib-backed TextureSources.
-class X11TextureHost : public TextureHost
-{
-public:
-  X11TextureHost(TextureFlags aFlags,
-                 const SurfaceDescriptorX11& aDescriptor);
+class X11TextureHost : public TextureHost {
+ public:
+  X11TextureHost(TextureFlags aFlags, const SurfaceDescriptorX11& aDescriptor);
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetTextureSourceProvider(
+      TextureSourceProvider* aProvider) override;
 
   virtual bool Lock() override;
 
@@ -41,8 +39,8 @@ public:
 
   virtual gfx::IntSize GetSize() const override;
 
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override
-  {
+  virtual bool BindTextureSource(
+      CompositableTextureSourceRef& aTexture) override {
     aTexture = mTextureSource;
     return !!aTexture;
   }
@@ -53,11 +51,9 @@ public:
   virtual const char* Name() override { return "X11TextureHost"; }
 #endif
 
-protected:
-  virtual void UpdatedInternal(const nsIntRegion*) override
-  {
-    if (mTextureSource)
-      mTextureSource->Updated();
+ protected:
+  virtual void UpdatedInternal(const nsIntRegion*) override {
+    if (mTextureSource) mTextureSource->Updated();
   }
 
   RefPtr<Compositor> mCompositor;
@@ -65,7 +61,7 @@ protected:
   RefPtr<gfxXlibSurface> mSurface;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_X11TEXTUREHOST__H
+#endif  // MOZILLA_GFX_X11TEXTUREHOST__H

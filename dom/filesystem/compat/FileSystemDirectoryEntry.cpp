@@ -23,57 +23,47 @@ NS_IMPL_RELEASE_INHERITED(FileSystemDirectoryEntry, FileSystemEntry)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemDirectoryEntry)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
-FileSystemDirectoryEntry::FileSystemDirectoryEntry(nsIGlobalObject* aGlobal,
-                                                   Directory* aDirectory,
-                                                   FileSystemDirectoryEntry* aParentEntry,
-                                                   FileSystem* aFileSystem)
-  : FileSystemEntry(aGlobal, aParentEntry, aFileSystem)
-  , mDirectory(aDirectory)
-{
+FileSystemDirectoryEntry::FileSystemDirectoryEntry(
+    nsIGlobalObject* aGlobal, Directory* aDirectory,
+    FileSystemDirectoryEntry* aParentEntry, FileSystem* aFileSystem)
+    : FileSystemEntry(aGlobal, aParentEntry, aFileSystem),
+      mDirectory(aDirectory) {
   MOZ_ASSERT(aGlobal);
 }
 
-FileSystemDirectoryEntry::~FileSystemDirectoryEntry()
-{}
+FileSystemDirectoryEntry::~FileSystemDirectoryEntry() {}
 
-JSObject*
-FileSystemDirectoryEntry::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* FileSystemDirectoryEntry::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return FileSystemDirectoryEntry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-FileSystemDirectoryEntry::GetName(nsAString& aName, ErrorResult& aRv) const
-{
+void FileSystemDirectoryEntry::GetName(nsAString& aName,
+                                       ErrorResult& aRv) const {
   MOZ_ASSERT(mDirectory);
   mDirectory->GetName(aName, aRv);
 }
 
-void
-FileSystemDirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
-{
+void FileSystemDirectoryEntry::GetFullPath(nsAString& aPath,
+                                           ErrorResult& aRv) const {
   MOZ_ASSERT(mDirectory);
   mDirectory->GetPath(aPath, aRv);
 }
 
 already_AddRefed<FileSystemDirectoryReader>
-FileSystemDirectoryEntry::CreateReader()
-{
+FileSystemDirectoryEntry::CreateReader() {
   MOZ_ASSERT(mDirectory);
 
   RefPtr<FileSystemDirectoryReader> reader =
-    new FileSystemDirectoryReader(this, Filesystem(), mDirectory);
+      new FileSystemDirectoryReader(this, Filesystem(), mDirectory);
   return reader.forget();
 }
 
-void
-FileSystemDirectoryEntry::GetInternal(const nsAString& aPath,
-                                      const FileSystemFlags& aFlag,
-                                      const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-                                      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                                      GetInternalType aType)
-{
+void FileSystemDirectoryEntry::GetInternal(
+    const nsAString& aPath, const FileSystemFlags& aFlag,
+    const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+    const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+    GetInternalType aType) {
   MOZ_ASSERT(mDirectory);
 
   if (!aSuccessCallback.WasPassed() && !aErrorCallback.WasPassed()) {
@@ -93,15 +83,12 @@ FileSystemDirectoryEntry::GetInternal(const nsAString& aPath,
     return;
   }
 
-  RefPtr<GetEntryHelper> helper =
-    new GetEntryHelper(this, mDirectory, parts, Filesystem(),
-                       aSuccessCallback.WasPassed()
-                         ? &aSuccessCallback.Value() : nullptr,
-                       aErrorCallback.WasPassed()
-                         ? &aErrorCallback.Value() : nullptr,
-                       aType);
+  RefPtr<GetEntryHelper> helper = new GetEntryHelper(
+      this, mDirectory, parts, Filesystem(),
+      aSuccessCallback.WasPassed() ? &aSuccessCallback.Value() : nullptr,
+      aErrorCallback.WasPassed() ? &aErrorCallback.Value() : nullptr, aType);
   helper->Run();
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

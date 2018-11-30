@@ -12,26 +12,21 @@
 #include <limits>
 
 nsIncrementalStreamLoader::nsIncrementalStreamLoader()
-  : mData(), mBytesConsumed(0)
-{
-}
+    : mData(), mBytesConsumed(0) {}
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::Init(nsIIncrementalStreamLoaderObserver* observer)
-{
+nsIncrementalStreamLoader::Init(nsIIncrementalStreamLoaderObserver *observer) {
   NS_ENSURE_ARG_POINTER(observer);
   mObserver = observer;
   return NS_OK;
 }
 
-nsresult
-nsIncrementalStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
+nsresult nsIncrementalStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID,
+                                           void **aResult) {
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
-  nsIncrementalStreamLoader* it = new nsIncrementalStreamLoader();
-  if (it == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsIncrementalStreamLoader *it = new nsIncrementalStreamLoader();
+  if (it == nullptr) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(it);
   nsresult rv = it->QueryInterface(aIID, aResult);
   NS_RELEASE(it);
@@ -43,24 +38,22 @@ NS_IMPL_ISUPPORTS(nsIncrementalStreamLoader, nsIIncrementalStreamLoader,
                   nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::GetNumBytesRead(uint32_t* aNumBytes)
-{
+nsIncrementalStreamLoader::GetNumBytesRead(uint32_t *aNumBytes) {
   *aNumBytes = mBytesConsumed + mData.length();
   return NS_OK;
 }
 
 /* readonly attribute nsIRequest request; */
 NS_IMETHODIMP
-nsIncrementalStreamLoader::GetRequest(nsIRequest **aRequest)
-{
+nsIncrementalStreamLoader::GetRequest(nsIRequest **aRequest) {
   NS_IF_ADDREF(*aRequest = mRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
-{
-  nsCOMPtr<nsIChannel> chan( do_QueryInterface(request) );
+nsIncrementalStreamLoader::OnStartRequest(nsIRequest *request,
+                                          nsISupports *ctxt) {
+  nsCOMPtr<nsIChannel> chan(do_QueryInterface(request));
   if (chan) {
     int64_t contentLength = -1;
     chan->GetContentLength(&contentLength);
@@ -85,18 +78,18 @@ nsIncrementalStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
-                                         nsresult aStatus)
-{
+nsIncrementalStreamLoader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+                                         nsresult aStatus) {
   AUTO_PROFILER_LABEL("nsIncrementalStreamLoader::OnStopRequest", NETWORK);
 
   if (mObserver) {
-    // provide nsIIncrementalStreamLoader::request during call to OnStreamComplete
+    // provide nsIIncrementalStreamLoader::request during call to
+    // OnStreamComplete
     mRequest = request;
     size_t length = mData.length();
-    uint8_t* elems = mData.extractOrCopyRawBuffer();
-    nsresult rv = mObserver->OnStreamComplete(this, mContext, aStatus,
-                                              length, elems);
+    uint8_t *elems = mData.extractOrCopyRawBuffer();
+    nsresult rv =
+        mObserver->OnStreamComplete(this, mContext, aStatus, length, elems);
     if (rv != NS_SUCCESS_ADOPTED_DATA) {
       // The observer didn't take ownership of the extracted data buffer, so
       // put it back into mData.
@@ -111,23 +104,18 @@ nsIncrementalStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   return NS_OK;
 }
 
-nsresult
-nsIncrementalStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
-                                           void *closure,
-                                           const char *fromSegment,
-                                           uint32_t toOffset,
-                                           uint32_t count,
-                                           uint32_t *writeCount)
-{
-  nsIncrementalStreamLoader *self = (nsIncrementalStreamLoader *) closure;
+nsresult nsIncrementalStreamLoader::WriteSegmentFun(
+    nsIInputStream *inStr, void *closure, const char *fromSegment,
+    uint32_t toOffset, uint32_t count, uint32_t *writeCount) {
+  nsIncrementalStreamLoader *self = (nsIncrementalStreamLoader *)closure;
 
   const uint8_t *data = reinterpret_cast<const uint8_t *>(fromSegment);
   uint32_t consumedCount = 0;
   nsresult rv;
   if (self->mData.empty()) {
     // Shortcut when observer wants to keep the listener's buffer empty.
-    rv = self->mObserver->OnIncrementalData(self, self->mContext,
-                                            count, data, &consumedCount);
+    rv = self->mObserver->OnIncrementalData(self, self->mContext, count, data,
+                                            &consumedCount);
 
     if (rv != NS_OK) {
       return rv;
@@ -153,10 +141,10 @@ nsIncrementalStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
     }
     size_t length = self->mData.length();
     uint32_t reportCount = length > UINT32_MAX ? UINT32_MAX : (uint32_t)length;
-    uint8_t* elems = self->mData.extractOrCopyRawBuffer();
+    uint8_t *elems = self->mData.extractOrCopyRawBuffer();
 
-    rv = self->mObserver->OnIncrementalData(self, self->mContext,
-                                            reportCount, elems, &consumedCount);
+    rv = self->mObserver->OnIncrementalData(self, self->mContext, reportCount,
+                                            elems, &consumedCount);
 
     // We still own elems, freeing its memory when exiting scope.
     if (rv != NS_OK) {
@@ -170,7 +158,7 @@ nsIncrementalStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
     }
 
     if (consumedCount == length) {
-      free(elems); // good case -- fully consumed data
+      free(elems);  // good case -- fully consumed data
     } else {
       // Adopting elems back (at least its portion).
       self->mData.replaceRawBuffer(elems, length);
@@ -187,12 +175,14 @@ nsIncrementalStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
-                                nsIInputStream *inStr,
-                                uint64_t sourceOffset, uint32_t count)
-{
+nsIncrementalStreamLoader::OnDataAvailable(nsIRequest *request,
+                                           nsISupports *ctxt,
+                                           nsIInputStream *inStr,
+                                           uint64_t sourceOffset,
+                                           uint32_t count) {
   if (mObserver) {
-    // provide nsIIncrementalStreamLoader::request during call to OnStreamComplete
+    // provide nsIIncrementalStreamLoader::request during call to
+    // OnStreamComplete
     mRequest = request;
   }
   uint32_t countRead;
@@ -201,14 +191,7 @@ nsIncrementalStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctx
   return rv;
 }
 
-void
-nsIncrementalStreamLoader::ReleaseData()
-{
-  mData.clearAndFree();
-}
+void nsIncrementalStreamLoader::ReleaseData() { mData.clearAndFree(); }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::CheckListenerChain()
-{
-  return NS_OK;
-}
+nsIncrementalStreamLoader::CheckListenerChain() { return NS_OK; }

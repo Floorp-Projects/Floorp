@@ -21,20 +21,15 @@
 // Signal number used to enable seccomp on each thread.
 extern mozilla::Atomic<int> gSeccompTsyncBroadcastSignum;
 
-static bool
-SigSetNeedsFixup(const sigset_t* aSet)
-{
+static bool SigSetNeedsFixup(const sigset_t* aSet) {
   int tsyncSignum = gSeccompTsyncBroadcastSignum;
 
   return aSet != nullptr &&
          (sigismember(aSet, SIGSYS) ||
-          (tsyncSignum != 0 &&
-           sigismember(aSet, tsyncSignum)));
+          (tsyncSignum != 0 && sigismember(aSet, tsyncSignum)));
 }
 
-static void
-SigSetFixup(sigset_t* aSet)
-{
+static void SigSetFixup(sigset_t* aSet) {
   int tsyncSignum = gSeccompTsyncBroadcastSignum;
   int rv = sigdelset(aSet, SIGSYS);
   MOZ_RELEASE_ASSERT(rv == 0);
@@ -49,11 +44,9 @@ SigSetFixup(sigset_t* aSet)
 // sandbox. To avoid this, we intercept the call and remove SIGSYS.
 //
 // ENOSYS indicates an error within the hook function itself.
-static int
-HandleSigset(int (*aRealFunc)(int, const sigset_t*, sigset_t*),
-             int aHow, const sigset_t* aSet,
-             sigset_t* aOldSet, bool aUseErrno)
-{
+static int HandleSigset(int (*aRealFunc)(int, const sigset_t*, sigset_t*),
+                        int aHow, const sigset_t* aSet, sigset_t* aOldSet,
+                        bool aUseErrno) {
   if (!aRealFunc) {
     if (aUseErrno) {
       errno = ENOSYS;
@@ -73,30 +66,27 @@ HandleSigset(int (*aRealFunc)(int, const sigset_t*, sigset_t*),
   return aRealFunc(aHow, &newSet, aOldSet);
 }
 
-extern "C" MOZ_EXPORT int
-sigprocmask(int how, const sigset_t* set, sigset_t* oldset)
-{
-  static auto sRealFunc = (int (*)(int, const sigset_t*, sigset_t*))
-    dlsym(RTLD_NEXT, "sigprocmask");
+extern "C" MOZ_EXPORT int sigprocmask(int how, const sigset_t* set,
+                                      sigset_t* oldset) {
+  static auto sRealFunc =
+      (int (*)(int, const sigset_t*, sigset_t*))dlsym(RTLD_NEXT, "sigprocmask");
 
   return HandleSigset(sRealFunc, how, set, oldset, true);
 }
 
-extern "C" MOZ_EXPORT int
-pthread_sigmask(int how, const sigset_t* set, sigset_t* oldset)
-{
-  static auto sRealFunc = (int (*)(int, const sigset_t*, sigset_t*))
-    dlsym(RTLD_NEXT, "pthread_sigmask");
+extern "C" MOZ_EXPORT int pthread_sigmask(int how, const sigset_t* set,
+                                          sigset_t* oldset) {
+  static auto sRealFunc = (int (*)(int, const sigset_t*, sigset_t*))dlsym(
+      RTLD_NEXT, "pthread_sigmask");
 
   return HandleSigset(sRealFunc, how, set, oldset, false);
 }
 
-extern "C" MOZ_EXPORT int
-sigaction(int signum, const struct sigaction* act, struct sigaction* oldact)
-{
+extern "C" MOZ_EXPORT int sigaction(int signum, const struct sigaction* act,
+                                    struct sigaction* oldact) {
   static auto sRealFunc =
-    (int (*)(int, const struct sigaction*, struct sigaction*))
-    dlsym(RTLD_NEXT, "sigaction");
+      (int (*)(int, const struct sigaction*, struct sigaction*))dlsym(
+          RTLD_NEXT, "sigaction");
 
   if (!sRealFunc) {
     errno = ENOSYS;
@@ -112,15 +102,9 @@ sigaction(int signum, const struct sigaction* act, struct sigaction* oldact)
   return sRealFunc(signum, &newact, oldact);
 }
 
-extern "C" MOZ_EXPORT int
-inotify_init(void)
-{
-  return inotify_init1(0);
-}
+extern "C" MOZ_EXPORT int inotify_init(void) { return inotify_init1(0); }
 
-extern "C" MOZ_EXPORT int
-inotify_init1(int flags)
-{
+extern "C" MOZ_EXPORT int inotify_init1(int flags) {
   errno = ENOSYS;
   return -1;
 }

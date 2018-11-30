@@ -43,11 +43,10 @@ struct Thread::StartupData {
   WaitableEvent event;
 
   explicit StartupData(const Options& opt)
-      : options(opt),
-        event(false, false) {}
+      : options(opt), event(false, false) {}
 };
 
-Thread::Thread(const char *name)
+Thread::Thread(const char* name)
     : startup_data_(NULL),
       thread_(0),
       message_loop_(NULL),
@@ -75,9 +74,7 @@ static base::ThreadLocalBoolean& get_tls_bool() {
 
 }  // namespace
 
-void Thread::SetThreadWasQuitProperly(bool flag) {
-  get_tls_bool().Set(flag);
-}
+void Thread::SetThreadWasQuitProperly(bool flag) { get_tls_bool().Set(flag); }
 
 bool Thread::GetThreadWasQuitProperly() {
   bool quit_properly = true;
@@ -87,9 +84,7 @@ bool Thread::GetThreadWasQuitProperly() {
   return quit_properly;
 }
 
-bool Thread::Start() {
-  return StartWithOptions(Options());
-}
+bool Thread::Start() { return StartWithOptions(Options()); }
 
 bool Thread::StartWithOptions(const Options& options) {
   DCHECK(!message_loop_);
@@ -113,8 +108,7 @@ bool Thread::StartWithOptions(const Options& options) {
 }
 
 void Thread::Stop() {
-  if (!thread_was_started())
-    return;
+  if (!thread_was_started()) return;
 
   // We should only be called on the same thread that started us.
   DCHECK_NE(thread_id_, PlatformThread::CurrentId());
@@ -141,8 +135,7 @@ void Thread::Stop() {
 }
 
 void Thread::StopSoon() {
-  if (!message_loop_)
-    return;
+  if (!message_loop_) return;
 
   // We should only be called on the same thread that started us.
   DCHECK_NE(thread_id_, PlatformThread::CurrentId());
@@ -161,10 +154,11 @@ void Thread::ThreadMain() {
   auto loopType = startup_data_->options.message_loop_type;
   if (loopType == MessageLoop::TYPE_MOZILLA_NONMAINTHREAD ||
       loopType == MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD) {
-    auto queue = mozilla::MakeRefPtr<mozilla::ThreadEventQueue<mozilla::EventQueue>>(
-      mozilla::MakeUnique<mozilla::EventQueue>());
-    xpcomThread =
-      nsThreadManager::get().CreateCurrentThread(queue, nsThread::NOT_MAIN_THREAD);
+    auto queue =
+        mozilla::MakeRefPtr<mozilla::ThreadEventQueue<mozilla::EventQueue>>(
+            mozilla::MakeUnique<mozilla::EventQueue>());
+    xpcomThread = nsThreadManager::get().CreateCurrentThread(
+        queue, nsThread::NOT_MAIN_THREAD);
   } else {
     xpcomThread = NS_GetCurrentThread();
   }

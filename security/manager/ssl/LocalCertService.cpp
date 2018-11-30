@@ -26,10 +26,8 @@ namespace mozilla {
 // self-signed certificate with subject and issuer distinguished name equal to
 // "CN={name}". This assumes that the user has already authenticated to the
 // internal DB if necessary.
-static nsresult
-FindLocalCertByName(const nsACString& aName,
-            /*out*/ UniqueCERTCertificate& aResult)
-{
+static nsresult FindLocalCertByName(const nsACString& aName,
+                                    /*out*/ UniqueCERTCertificate& aResult) {
   aResult.reset(nullptr);
   NS_NAMED_LITERAL_CSTRING(commonNamePrefix, "CN=");
   nsAutoCString expectedDistinguishedName(commonNamePrefix + aName);
@@ -48,10 +46,10 @@ FindLocalCertByName(const nsACString& aName,
       continue;
     }
     if (!expectedDistinguishedName.Equals(node->cert->subjectName)) {
-      continue; // Subject should match nickname
+      continue;  // Subject should match nickname
     }
     if (!expectedDistinguishedName.Equals(node->cert->issuerName)) {
-      continue; // Issuer should match nickname
+      continue;  // Issuer should match nickname
     }
     // We found a match.
     aResult.reset(CERT_DupCertificate(node->cert));
@@ -60,16 +58,11 @@ FindLocalCertByName(const nsACString& aName,
   return NS_OK;
 }
 
-class LocalCertTask : public CryptoTask
-{
-protected:
-  explicit LocalCertTask(const nsACString& aNickname)
-    : mNickname(aNickname)
-  {
-  }
+class LocalCertTask : public CryptoTask {
+ protected:
+  explicit LocalCertTask(const nsACString& aNickname) : mNickname(aNickname) {}
 
-  nsresult RemoveExisting()
-  {
+  nsresult RemoveExisting() {
     // Search for any existing self-signed certs with this name and remove them
     for (;;) {
       UniqueCERTCertificate cert;
@@ -91,21 +84,17 @@ protected:
   nsCString mNickname;
 };
 
-class LocalCertGetTask final : public LocalCertTask
-{
-public:
+class LocalCertGetTask final : public LocalCertTask {
+ public:
   LocalCertGetTask(const nsACString& aNickname,
                    nsILocalCertGetCallback* aCallback)
-    : LocalCertTask(aNickname)
-    , mCallback(new nsMainThreadPtrHolder<nsILocalCertGetCallback>(
-        "LocalCertGetTask::mCallback", aCallback))
-    , mCert(nullptr)
-  {
-  }
+      : LocalCertTask(aNickname),
+        mCallback(new nsMainThreadPtrHolder<nsILocalCertGetCallback>(
+            "LocalCertGetTask::mCallback", aCallback)),
+        mCert(nullptr) {}
 
-private:
-  virtual nsresult CalculateResult() override
-  {
+ private:
+  virtual nsresult CalculateResult() override {
     // Try to lookup an existing cert in the DB
     nsresult rv = GetFromDB();
     // Make a new one if getting fails
@@ -130,8 +119,7 @@ private:
     return NS_OK;
   }
 
-  nsresult Generate()
-  {
+  nsresult Generate() {
     nsresult rv;
 
     // Get the key slot for generation later
@@ -168,10 +156,9 @@ private:
 
     // Generate cert key pair
     SECKEYPublicKey* tempPublicKey;
-    UniqueSECKEYPrivateKey privateKey(
-      PK11_GenerateKeyPair(slot.get(), CKM_EC_KEY_PAIR_GEN, &keyParams,
-                           &tempPublicKey, true /* token */,
-                           true /* sensitive */, nullptr));
+    UniqueSECKEYPrivateKey privateKey(PK11_GenerateKeyPair(
+        slot.get(), CKM_EC_KEY_PAIR_GEN, &keyParams, &tempPublicKey,
+        true /* token */, true /* sensitive */, nullptr));
     UniqueSECKEYPublicKey publicKey(tempPublicKey);
     tempPublicKey = nullptr;
     if (!privateKey || !publicKey) {
@@ -180,21 +167,20 @@ private:
 
     // Create subject public key info and cert request
     UniqueCERTSubjectPublicKeyInfo spki(
-      SECKEY_CreateSubjectPublicKeyInfo(publicKey.get()));
+        SECKEY_CreateSubjectPublicKeyInfo(publicKey.get()));
     if (!spki) {
       return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     }
     UniqueCERTCertificateRequest certRequest(
-      CERT_CreateCertificateRequest(subjectName.get(), spki.get(), nullptr));
+        CERT_CreateCertificateRequest(subjectName.get(), spki.get(), nullptr));
     if (!certRequest) {
       return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     }
 
     // Valid from one day before to 1 year after
-    static const PRTime oneDay = PRTime(PR_USEC_PER_SEC)
-                               * PRTime(60)  // sec
-                               * PRTime(60)  // min
-                               * PRTime(24); // hours
+    static const PRTime oneDay = PRTime(PR_USEC_PER_SEC) * PRTime(60)  // sec
+                                 * PRTime(60)                          // min
+                                 * PRTime(24);                         // hours
 
     PRTime now = PR_Now();
     PRTime notBefore = now - oneDay;
@@ -208,16 +194,15 @@ private:
     unsigned long serial;
     // This serial in principle could collide, but it's unlikely
     rv = MapSECStatus(PK11_GenerateRandomOnSlot(
-           slot.get(), BitwiseCast<unsigned char*, unsigned long*>(&serial),
-           sizeof(serial)));
+        slot.get(), BitwiseCast<unsigned char*, unsigned long*>(&serial),
+        sizeof(serial)));
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     // Create the cert from these pieces
-    UniqueCERTCertificate cert(
-      CERT_CreateCertificate(serial, subjectName.get(), validity.get(),
-                             certRequest.get()));
+    UniqueCERTCertificate cert(CERT_CreateCertificate(
+        serial, subjectName.get(), validity.get(), certRequest.get()));
     if (!cert) {
       return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     }
@@ -234,32 +219,29 @@ private:
     if (!arena) {
       return NS_ERROR_INVALID_POINTER;
     }
-    rv = MapSECStatus(
-           SECOID_SetAlgorithmID(arena, &cert->signature,
-                                 SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE, 0));
+    rv = MapSECStatus(SECOID_SetAlgorithmID(
+        arena, &cert->signature, SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE, 0));
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     // Encode and self-sign the cert
-    UniqueSECItem certDER(
-      SEC_ASN1EncodeItem(nullptr, nullptr, cert.get(),
-                         SEC_ASN1_GET(CERT_CertificateTemplate)));
+    UniqueSECItem certDER(SEC_ASN1EncodeItem(
+        nullptr, nullptr, cert.get(), SEC_ASN1_GET(CERT_CertificateTemplate)));
     if (!certDER) {
       return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     }
-    rv = MapSECStatus(
-           SEC_DerSignData(arena, &cert->derCert, certDER->data, certDER->len,
-                           privateKey.get(),
-                           SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE));
+    rv = MapSECStatus(SEC_DerSignData(arena, &cert->derCert, certDER->data,
+                                      certDER->len, privateKey.get(),
+                                      SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE));
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     // Create a CERTCertificate from the signed data
     UniqueCERTCertificate certFromDER(
-      CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &cert->derCert, nullptr,
-                              true /* perm */, true /* copyDER */));
+        CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &cert->derCert,
+                                nullptr, true /* perm */, true /* copyDER */));
     if (!certFromDER) {
       return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     }
@@ -276,8 +258,7 @@ private:
     return GetFromDB();
   }
 
-  nsresult GetFromDB()
-  {
+  nsresult GetFromDB() {
     UniqueCERTCertificate cert;
     nsresult rv = FindLocalCertByName(mNickname, cert);
     if (NS_FAILED(rv)) {
@@ -290,8 +271,7 @@ private:
     return NS_OK;
   }
 
-  nsresult Validate()
-  {
+  nsresult Validate() {
     // Verify cert is self-signed
     bool selfSigned;
     nsresult rv = mCert->GetIsSelfSigned(&selfSigned);
@@ -311,8 +291,8 @@ private:
       return NS_ERROR_FAILURE;
     }
     NS_NAMED_LITERAL_STRING(commonNamePrefix, "CN=");
-    nsAutoString subjectNameFromNickname(
-      commonNamePrefix + NS_ConvertASCIItoUTF16(mNickname));
+    nsAutoString subjectNameFromNickname(commonNamePrefix +
+                                         NS_ConvertASCIItoUTF16(mNickname));
     if (!subjectName.Equals(subjectNameFromNickname)) {
       return NS_ERROR_FAILURE;
     }
@@ -325,48 +305,38 @@ private:
     validity->GetNotAfter(&notAfter);
 
     // Ensure cert will last at least one more day
-    static const PRTime oneDay = PRTime(PR_USEC_PER_SEC)
-                               * PRTime(60)  // sec
-                               * PRTime(60)  // min
-                               * PRTime(24); // hours
+    static const PRTime oneDay = PRTime(PR_USEC_PER_SEC) * PRTime(60)  // sec
+                                 * PRTime(60)                          // min
+                                 * PRTime(24);                         // hours
     PRTime now = PR_Now();
-    if (notBefore > now ||
-        notAfter < (now - oneDay)) {
+    if (notBefore > now || notAfter < (now - oneDay)) {
       return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
   }
 
-  virtual void CallCallback(nsresult rv) override
-  {
-    (void) mCallback->HandleCert(mCert, rv);
+  virtual void CallCallback(nsresult rv) override {
+    (void)mCallback->HandleCert(mCert, rv);
   }
 
   nsMainThreadPtrHandle<nsILocalCertGetCallback> mCallback;
-  nsCOMPtr<nsIX509Cert> mCert; // out
+  nsCOMPtr<nsIX509Cert> mCert;  // out
 };
 
-class LocalCertRemoveTask final : public LocalCertTask
-{
-public:
+class LocalCertRemoveTask final : public LocalCertTask {
+ public:
   LocalCertRemoveTask(const nsACString& aNickname,
                       nsILocalCertCallback* aCallback)
-    : LocalCertTask(aNickname)
-    , mCallback(new nsMainThreadPtrHolder<nsILocalCertCallback>(
-        "LocalCertRemoveTask::mCallback", aCallback))
-  {
-  }
+      : LocalCertTask(aNickname),
+        mCallback(new nsMainThreadPtrHolder<nsILocalCertCallback>(
+            "LocalCertRemoveTask::mCallback", aCallback)) {}
 
-private:
-  virtual nsresult CalculateResult() override
-  {
-    return RemoveExisting();
-  }
+ private:
+  virtual nsresult CalculateResult() override { return RemoveExisting(); }
 
-  virtual void CallCallback(nsresult rv) override
-  {
-    (void) mCallback->HandleResult(rv);
+  virtual void CallCallback(nsresult rv) override {
+    (void)mCallback->HandleResult(rv);
   }
 
   nsMainThreadPtrHandle<nsILocalCertCallback> mCallback;
@@ -374,17 +344,11 @@ private:
 
 NS_IMPL_ISUPPORTS(LocalCertService, nsILocalCertService)
 
-LocalCertService::LocalCertService()
-{
-}
+LocalCertService::LocalCertService() {}
 
-LocalCertService::~LocalCertService()
-{
-}
+LocalCertService::~LocalCertService() {}
 
-nsresult
-LocalCertService::LoginToKeySlot()
-{
+nsresult LocalCertService::LoginToKeySlot() {
   nsresult rv;
 
   // Get access to key slot
@@ -404,8 +368,7 @@ LocalCertService::LoginToKeySlot()
   // If user has a password set, prompt to login
   if (PK11_NeedLogin(slot.get()) && !PK11_IsLoggedIn(slot.get(), nullptr)) {
     // Switching to XPCOM to get the UI prompt that PSM owns
-    nsCOMPtr<nsIPK11TokenDB> tokenDB =
-      do_GetService(NS_PK11TOKENDB_CONTRACTID);
+    nsCOMPtr<nsIPK11TokenDB> tokenDB = do_GetService(NS_PK11TOKENDB_CONTRACTID);
     if (!tokenDB) {
       return NS_ERROR_FAILURE;
     }
@@ -423,8 +386,7 @@ LocalCertService::LoginToKeySlot()
 
 NS_IMETHODIMP
 LocalCertService::GetOrCreateCert(const nsACString& aNickname,
-                                  nsILocalCertGetCallback* aCallback)
-{
+                                  nsILocalCertGetCallback* aCallback) {
   if (NS_WARN_IF(aNickname.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -445,8 +407,7 @@ LocalCertService::GetOrCreateCert(const nsACString& aNickname,
 
 NS_IMETHODIMP
 LocalCertService::RemoveCert(const nsACString& aNickname,
-                             nsILocalCertCallback* aCallback)
-{
+                             nsILocalCertCallback* aCallback) {
   if (NS_WARN_IF(aNickname.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -462,13 +423,12 @@ LocalCertService::RemoveCert(const nsACString& aNickname,
   }
 
   RefPtr<LocalCertRemoveTask> task(
-    new LocalCertRemoveTask(aNickname, aCallback));
+      new LocalCertRemoveTask(aNickname, aCallback));
   return task->Dispatch("LocalCertRm");
 }
 
 NS_IMETHODIMP
-LocalCertService::GetLoginPromptRequired(bool* aRequired)
-{
+LocalCertService::GetLoginPromptRequired(bool* aRequired) {
   nsresult rv;
 
   // Get access to key slot
@@ -485,35 +445,32 @@ LocalCertService::GetLoginPromptRequired(bool* aRequired)
     }
   }
 
-  *aRequired = PK11_NeedLogin(slot.get()) &&
-               !PK11_IsLoggedIn(slot.get(), nullptr);
+  *aRequired =
+      PK11_NeedLogin(slot.get()) && !PK11_IsLoggedIn(slot.get(), nullptr);
   return NS_OK;
 }
 
-#define LOCALCERTSERVICE_CID \
-{ 0x47402be2, 0xe653, 0x45d0, \
-  { 0x8d, 0xaa, 0x9f, 0x0d, 0xce, 0x0a, 0xc1, 0x48 } }
+#define LOCALCERTSERVICE_CID                         \
+  {                                                  \
+    0x47402be2, 0xe653, 0x45d0, {                    \
+      0x8d, 0xaa, 0x9f, 0x0d, 0xce, 0x0a, 0xc1, 0x48 \
+    }                                                \
+  }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(LocalCertService)
 
 NS_DEFINE_NAMED_CID(LOCALCERTSERVICE_CID);
 
 static const Module::CIDEntry kLocalCertServiceCIDs[] = {
-  { &kLOCALCERTSERVICE_CID, false, nullptr, LocalCertServiceConstructor },
-  { nullptr }
-};
+    {&kLOCALCERTSERVICE_CID, false, nullptr, LocalCertServiceConstructor},
+    {nullptr}};
 
 static const Module::ContractIDEntry kLocalCertServiceContracts[] = {
-  { LOCALCERTSERVICE_CONTRACTID, &kLOCALCERTSERVICE_CID },
-  { nullptr }
-};
+    {LOCALCERTSERVICE_CONTRACTID, &kLOCALCERTSERVICE_CID}, {nullptr}};
 
 static const Module kLocalCertServiceModule = {
-  Module::kVersion,
-  kLocalCertServiceCIDs,
-  kLocalCertServiceContracts
-};
+    Module::kVersion, kLocalCertServiceCIDs, kLocalCertServiceContracts};
 
 NSMODULE_DEFN(LocalCertServiceModule) = &kLocalCertServiceModule;
 
-} // namespace mozilla
+}  // namespace mozilla

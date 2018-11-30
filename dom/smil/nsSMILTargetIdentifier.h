@@ -22,22 +22,21 @@
  * future, and we need to make sure their target isn't deleted in that time.
  */
 
-struct nsSMILTargetIdentifier
-{
+struct nsSMILTargetIdentifier {
   nsSMILTargetIdentifier()
-    : mElement(nullptr), mAttributeName(nullptr),
-      mAttributeNamespaceID(kNameSpaceID_Unknown) {}
+      : mElement(nullptr),
+        mAttributeName(nullptr),
+        mAttributeNamespaceID(kNameSpaceID_Unknown) {}
 
-  inline bool Equals(const nsSMILTargetIdentifier& aOther) const
-  {
-    return (aOther.mElement              == mElement &&
-            aOther.mAttributeName        == mAttributeName &&
+  inline bool Equals(const nsSMILTargetIdentifier& aOther) const {
+    return (aOther.mElement == mElement &&
+            aOther.mAttributeName == mAttributeName &&
             aOther.mAttributeNamespaceID == mAttributeNamespaceID);
   }
 
   RefPtr<mozilla::dom::Element> mElement;
-  RefPtr<nsAtom>               mAttributeName;
-  int32_t                       mAttributeNamespaceID;
+  RefPtr<nsAtom> mAttributeName;
+  int32_t mAttributeNamespaceID;
 };
 
 /**
@@ -50,32 +49,27 @@ struct nsSMILTargetIdentifier
  * This is solely for comparisons to determine if a target has changed
  * from one sample to the next.
  */
-class nsSMILWeakTargetIdentifier
-{
-public:
+class nsSMILWeakTargetIdentifier {
+ public:
   // Trivial constructor
-  nsSMILWeakTargetIdentifier()
-    : mElement(nullptr), mAttributeName(nullptr) {}
+  nsSMILWeakTargetIdentifier() : mElement(nullptr), mAttributeName(nullptr) {}
 
   // Allow us to update a weak identifier to match a given non-weak identifier
-  nsSMILWeakTargetIdentifier&
-    operator=(const nsSMILTargetIdentifier& aOther)
-  {
+  nsSMILWeakTargetIdentifier& operator=(const nsSMILTargetIdentifier& aOther) {
     mElement = aOther.mElement;
     mAttributeName = aOther.mAttributeName;
     return *this;
   }
 
   // Allow for comparison vs. non-weak identifier
-  inline bool Equals(const nsSMILTargetIdentifier& aOther) const
-  {
-    return (aOther.mElement       == mElement &&
+  inline bool Equals(const nsSMILTargetIdentifier& aOther) const {
+    return (aOther.mElement == mElement &&
             aOther.mAttributeName == mAttributeName);
   }
 
-private:
+ private:
   const nsIContent* mElement;
-  const nsAtom*    mAttributeName;
+  const nsAtom* mAttributeName;
 };
 
-#endif // NS_SMILTARGETIDENTIFIER_H_
+#endif  // NS_SMILTARGETIDENTIFIER_H_

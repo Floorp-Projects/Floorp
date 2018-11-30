@@ -17,7 +17,7 @@
  * of the callback methods are called.
  */
 class nsIReflowCallback {
-public:
+ public:
   /**
    * The presshell calls this when reflow has finished. Return true if
    * you need a FlushType::Layout to happen after this.

@@ -20,13 +20,10 @@
 using namespace mozilla;
 
 class nsBlockOnBackgroundThreadEvent : public Runnable {
-public:
+ public:
   nsBlockOnBackgroundThreadEvent()
-    : mozilla::Runnable("nsBlockOnBackgroundThreadEvent")
-  {
-  }
-  NS_IMETHOD Run() override
-  {
+      : mozilla::Runnable("nsBlockOnBackgroundThreadEvent") {}
+  NS_IMETHOD Run() override {
     MutexAutoLock lock(nsDeleteDir::gInstance->mLock);
     nsDeleteDir::gInstance->mNotified = true;
     nsDeleteDir::gInstance->mCondVar.Notify();
@@ -34,39 +31,28 @@ public:
   }
 };
 
-
-nsDeleteDir * nsDeleteDir::gInstance = nullptr;
+nsDeleteDir *nsDeleteDir::gInstance = nullptr;
 
 nsDeleteDir::nsDeleteDir()
-  : mLock("nsDeleteDir.mLock"),
-    mCondVar(mLock, "nsDeleteDir.mCondVar"),
-    mNotified(false),
-    mShutdownPending(false),
-    mStopDeleting(false)
-{
-  NS_ASSERTION(gInstance==nullptr, "multiple nsCacheService instances!");
+    : mLock("nsDeleteDir.mLock"),
+      mCondVar(mLock, "nsDeleteDir.mCondVar"),
+      mNotified(false),
+      mShutdownPending(false),
+      mStopDeleting(false) {
+  NS_ASSERTION(gInstance == nullptr, "multiple nsCacheService instances!");
 }
 
-nsDeleteDir::~nsDeleteDir()
-{
-  gInstance = nullptr;
-}
+nsDeleteDir::~nsDeleteDir() { gInstance = nullptr; }
 
-nsresult
-nsDeleteDir::Init()
-{
-  if (gInstance)
-    return NS_ERROR_ALREADY_INITIALIZED;
+nsresult nsDeleteDir::Init() {
+  if (gInstance) return NS_ERROR_ALREADY_INITIALIZED;
 
   gInstance = new nsDeleteDir();
   return NS_OK;
 }
 
-nsresult
-nsDeleteDir::Shutdown(bool finishDeleting)
-{
-  if (!gInstance)
-    return NS_ERROR_NOT_INITIALIZED;
+nsresult nsDeleteDir::Shutdown(bool finishDeleting) {
+  if (!gInstance) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMArray<nsIFile> dirsToRemove;
   nsCOMPtr<nsIThread> thread;
@@ -76,20 +62,18 @@ nsDeleteDir::Shutdown(bool finishDeleting)
                  "Unexpected state in nsDeleteDir::Shutdown()");
     gInstance->mShutdownPending = true;
 
-    if (!finishDeleting)
-      gInstance->mStopDeleting = true;
+    if (!finishDeleting) gInstance->mStopDeleting = true;
 
     // remove all pending timers
     for (int32_t i = gInstance->mTimers.Count(); i > 0; i--) {
-      nsCOMPtr<nsITimer> timer = gInstance->mTimers[i-1];
-      gInstance->mTimers.RemoveObjectAt(i-1);
+      nsCOMPtr<nsITimer> timer = gInstance->mTimers[i - 1];
+      gInstance->mTimers.RemoveObjectAt(i - 1);
 
       nsCOMArray<nsIFile> *arg;
-      timer->GetClosure((reinterpret_cast<void**>(&arg)));
+      timer->GetClosure((reinterpret_cast<void **>(&arg)));
       timer->Cancel();
 
-      if (finishDeleting)
-        dirsToRemove.AppendObjects(*arg);
+      if (finishDeleting) dirsToRemove.AppendObjects(*arg);
 
       // delete argument passed to the timer
       delete arg;
@@ -122,11 +106,8 @@ nsDeleteDir::Shutdown(bool finishDeleting)
   return NS_OK;
 }
 
-nsresult
-nsDeleteDir::InitThread()
-{
-  if (mThread)
-    return NS_OK;
+nsresult nsDeleteDir::InitThread() {
+  if (mThread) return NS_OK;
 
   nsresult rv = NS_NewNamedThread("Cache Deleter", getter_AddRefs(mThread));
   if (NS_FAILED(rv)) {
@@ -141,11 +122,8 @@ nsDeleteDir::InitThread()
   return NS_OK;
 }
 
-void
-nsDeleteDir::DestroyThread()
-{
-  if (!mThread)
-    return;
+void nsDeleteDir::DestroyThread() {
+  if (!mThread) return;
 
   if (mTimers.Count())
     // more work to do, so don't delete thread.
@@ -155,9 +133,7 @@ nsDeleteDir::DestroyThread()
   mThread = nullptr;
 }
 
-void
-nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg)
-{
+void nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg) {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_DELETEDIR> timer;
   {
     MutexAutoLock lock(gInstance->mLock);
@@ -193,13 +169,11 @@ nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg)
   }
 }
 
-nsresult
-nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
-{
+nsresult nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash,
+                                uint32_t delay) {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_TRASHRENAME> timer;
 
-  if (!gInstance)
-    return NS_ERROR_NOT_INITIALIZED;
+  if (!gInstance) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult rv;
   nsCOMPtr<nsIFile> trash, dir;
@@ -207,17 +181,14 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
   // Need to make a clone of this since we don't want to modify the input
   // file object.
   rv = dirIn->Clone(getter_AddRefs(dir));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   if (moveToTrash) {
     rv = GetTrashDir(dir, &trash);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
     nsAutoCString origLeaf;
     rv = trash->GetNativeLeafName(origLeaf);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
 
     // Append random number to the trash directory and check if it exists.
     srand(static_cast<unsigned>(PR_Now()));
@@ -226,8 +197,7 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
       leaf = origLeaf;
       leaf.AppendInt(rand());
       rv = trash->SetNativeLeafName(leaf);
-      if (NS_FAILED(rv))
-        return rv;
+      if (NS_FAILED(rv)) return rv;
 
       bool exists;
       if (NS_SUCCEEDED(trash->Exists(&exists)) && !exists) {
@@ -238,14 +208,12 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
     }
 
     // Fail if we didn't find unused trash directory within the limit
-    if (!leaf.Length())
-      return NS_ERROR_FAILURE;
+    if (!leaf.Length()) return NS_ERROR_FAILURE;
 
 #if defined(MOZ_WIDGET_ANDROID)
     nsCOMPtr<nsIFile> parent;
     rv = trash->GetParent(getter_AddRefs(parent));
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
     rv = dir->MoveToNative(parent, leaf);
 #else
     // Important: must rename directory w/o changing parent directory: else on
@@ -253,8 +221,7 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
     // tree: was hanging GUI for *minutes* on large cache dirs.
     rv = dir->MoveToNative(nullptr, leaf);
 #endif
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
   } else {
     // we want to pass a clone of the original off to the worker thread.
     trash.swap(dir);
@@ -264,25 +231,21 @@ nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash, uint32_t delay)
   arg->AppendObject(trash);
 
   rv = gInstance->PostTimer(arg, delay);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   arg.forget();
   return NS_OK;
 }
 
-nsresult
-nsDeleteDir::GetTrashDir(nsIFile *target, nsCOMPtr<nsIFile> *result)
-{
+nsresult nsDeleteDir::GetTrashDir(nsIFile *target, nsCOMPtr<nsIFile> *result) {
   nsresult rv;
 #if defined(MOZ_WIDGET_ANDROID)
   // Try to use the app cache folder for cache trash on Android
-  char* cachePath = getenv("CACHE_DIRECTORY");
+  char *cachePath = getenv("CACHE_DIRECTORY");
   if (cachePath) {
-    rv = NS_NewNativeLocalFile(nsDependentCString(cachePath),
-                               true, getter_AddRefs(*result));
-    if (NS_FAILED(rv))
-      return rv;
+    rv = NS_NewNativeLocalFile(nsDependentCString(cachePath), true,
+                               getter_AddRefs(*result));
+    if (NS_FAILED(rv)) return rv;
 
     // Add a sub folder with the cache folder name
     nsAutoCString leaf;
@@ -293,35 +256,28 @@ nsDeleteDir::GetTrashDir(nsIFile *target, nsCOMPtr<nsIFile> *result)
   {
     rv = target->Clone(getter_AddRefs(*result));
   }
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsAutoCString leaf;
   rv = (*result)->GetNativeLeafName(leaf);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
   leaf.AppendLiteral(".Trash");
 
   return (*result)->SetNativeLeafName(leaf);
 }
 
-nsresult
-nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir)
-{
-  if (!gInstance)
-    return NS_ERROR_NOT_INITIALIZED;
+nsresult nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir) {
+  if (!gInstance) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult rv;
 
   nsCOMPtr<nsIFile> trash;
   rv = GetTrashDir(cacheDir, &trash);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsAutoString trashName;
   rv = trash->GetLeafName(trashName);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIFile> parent;
 #if defined(MOZ_WIDGET_ANDROID)
@@ -329,13 +285,11 @@ nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir)
 #else
   rv = cacheDir->GetParent(getter_AddRefs(parent));
 #endif
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDirectoryEnumerator> iter;
   rv = parent->GetDirectoryEntries(getter_AddRefs(iter));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsAutoPtr<nsCOMArray<nsIFile> > dirList;
 
@@ -343,21 +297,18 @@ nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir)
   while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(file))) && file) {
     nsAutoString leafName;
     rv = file->GetLeafName(leafName);
-    if (NS_FAILED(rv))
-      continue;
+    if (NS_FAILED(rv)) continue;
 
     // match all names that begin with the trash name (i.e. "Cache.Trash")
     if (Substring(leafName, 0, trashName.Length()).Equals(trashName)) {
-      if (!dirList)
-        dirList = new nsCOMArray<nsIFile>;
+      if (!dirList) dirList = new nsCOMArray<nsIFile>;
       dirList->AppendObject(file);
     }
   }
 
   if (dirList) {
     rv = gInstance->PostTimer(dirList, 90000);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
 
     dirList.forget();
   }
@@ -365,60 +316,46 @@ nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir)
   return NS_OK;
 }
 
-nsresult
-nsDeleteDir::PostTimer(void *arg, uint32_t delay)
-{
+nsresult nsDeleteDir::PostTimer(void *arg, uint32_t delay) {
   nsresult rv;
 
   MutexAutoLock lock(mLock);
 
   rv = InitThread();
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsITimer> timer;
-  rv = NS_NewTimerWithFuncCallback(getter_AddRefs(timer),
-                                   TimerCallback,
-                                   arg,
-                                   delay,
-                                   nsITimer::TYPE_ONE_SHOT,
-                                   "nsDeleteDir::PostTimer",
-                                   mThread);
-  if (NS_FAILED(rv))
-    return rv;
+  rv = NS_NewTimerWithFuncCallback(getter_AddRefs(timer), TimerCallback, arg,
+                                   delay, nsITimer::TYPE_ONE_SHOT,
+                                   "nsDeleteDir::PostTimer", mThread);
+  if (NS_FAILED(rv)) return rv;
 
   mTimers.AppendObject(timer);
   return NS_OK;
 }
 
-nsresult
-nsDeleteDir::RemoveDir(nsIFile *file, bool *stopDeleting)
-{
+nsresult nsDeleteDir::RemoveDir(nsIFile *file, bool *stopDeleting) {
   nsresult rv;
   bool isLink;
 
   rv = file->IsSymlink(&isLink);
-  if (NS_FAILED(rv) || isLink)
-    return NS_ERROR_UNEXPECTED;
+  if (NS_FAILED(rv) || isLink) return NS_ERROR_UNEXPECTED;
 
   bool isDir;
   rv = file->IsDirectory(&isDir);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   if (isDir) {
     nsCOMPtr<nsIDirectoryEnumerator> iter;
     rv = file->GetDirectoryEntries(getter_AddRefs(iter));
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIFile> file2;
     while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(file2))) && file2) {
       RemoveDir(file2, stopDeleting);
       // No check for errors to remove as much as possible
 
-      if (*stopDeleting)
-        return NS_OK;
+      if (*stopDeleting) return NS_OK;
     }
   }
 
@@ -426,8 +363,7 @@ nsDeleteDir::RemoveDir(nsIFile *file, bool *stopDeleting)
   // No check for errors to remove as much as possible
 
   MutexAutoLock lock(mLock);
-  if (mStopDeleting)
-    *stopDeleting = true;
+  if (mStopDeleting) *stopDeleting = true;
 
   return NS_OK;
 }

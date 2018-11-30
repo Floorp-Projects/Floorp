@@ -6,49 +6,40 @@
 
 #include "PolicyTokenizer.h"
 
-static LogModule*
-GetPolicyTokenizerLog()
-{
+static LogModule* GetPolicyTokenizerLog() {
   static LazyLogModule gPolicyTokenizerPRLog("PolicyTokenizer");
   return gPolicyTokenizerPRLog;
 }
 
-#define POLICYTOKENIZERLOG(args) MOZ_LOG(GetPolicyTokenizerLog(), mozilla::LogLevel::Debug, args)
+#define POLICYTOKENIZERLOG(args) \
+  MOZ_LOG(GetPolicyTokenizerLog(), mozilla::LogLevel::Debug, args)
 
 static const char16_t SEMICOL = ';';
 
-PolicyTokenizer::PolicyTokenizer(const char16_t* aStart,
-                                 const char16_t* aEnd)
-  : mCurChar(aStart)
-  , mEndChar(aEnd)
-{
+PolicyTokenizer::PolicyTokenizer(const char16_t* aStart, const char16_t* aEnd)
+    : mCurChar(aStart), mEndChar(aEnd) {
   POLICYTOKENIZERLOG(("PolicyTokenizer::PolicyTokenizer"));
 }
 
-PolicyTokenizer::~PolicyTokenizer()
-{
+PolicyTokenizer::~PolicyTokenizer() {
   POLICYTOKENIZERLOG(("PolicyTokenizer::~PolicyTokenizer"));
 }
 
-void
-PolicyTokenizer::generateNextToken()
-{
+void PolicyTokenizer::generateNextToken() {
   skipWhiteSpaceAndSemicolon();
-  while (!atEnd() &&
-         !nsContentUtils::IsHTMLWhitespace(*mCurChar) &&
+  while (!atEnd() && !nsContentUtils::IsHTMLWhitespace(*mCurChar) &&
          *mCurChar != SEMICOL) {
     mCurToken.Append(*mCurChar++);
   }
-  POLICYTOKENIZERLOG(("PolicyTokenizer::generateNextToken: %s", NS_ConvertUTF16toUTF8(mCurToken).get()));
+  POLICYTOKENIZERLOG(("PolicyTokenizer::generateNextToken: %s",
+                      NS_ConvertUTF16toUTF8(mCurToken).get()));
 }
 
-void
-PolicyTokenizer::generateTokens(policyTokens& outTokens)
-{
+void PolicyTokenizer::generateTokens(policyTokens& outTokens) {
   POLICYTOKENIZERLOG(("PolicyTokenizer::generateTokens"));
 
   // dirAndSrcs holds one set of [ name, src, src, src, ... ]
-  nsTArray <nsString> dirAndSrcs;
+  nsTArray<nsString> dirAndSrcs;
 
   while (!atEnd()) {
     generateNextToken();
@@ -61,10 +52,8 @@ PolicyTokenizer::generateTokens(policyTokens& outTokens)
   }
 }
 
-void
-PolicyTokenizer::tokenizePolicy(const nsAString &aPolicyString,
-                                policyTokens& outTokens)
-{
+void PolicyTokenizer::tokenizePolicy(const nsAString& aPolicyString,
+                                     policyTokens& outTokens) {
   POLICYTOKENIZERLOG(("PolicyTokenizer::tokenizePolicy"));
 
   PolicyTokenizer tokenizer(aPolicyString.BeginReading(),

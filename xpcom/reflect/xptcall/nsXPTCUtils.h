@@ -14,32 +14,28 @@
  * A helper class that initializes an xptcall helper at construction
  * and releases it at destruction.
  */
-class nsAutoXPTCStub : protected nsIXPTCProxy
-{
-public:
+class nsAutoXPTCStub : protected nsIXPTCProxy {
+ public:
   nsISomeInterface* mXPTCStub;
 
-protected:
+ protected:
   nsAutoXPTCStub() : mXPTCStub(nullptr) {}
 
-  nsresult
-  InitStub(const nsIID& aIID)
-  {
+  nsresult InitStub(const nsIID& aIID) {
     return NS_GetXPTCallStub(aIID, this, &mXPTCStub);
   }
 
-  ~nsAutoXPTCStub()
-  {
+  ~nsAutoXPTCStub() {
     if (mXPTCStub) {
       NS_DestroyXPTCallStub(mXPTCStub);
     }
   }
 
-  size_t
-  SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
-    return mXPTCStub ? NS_SizeOfIncludingThisXPTCallStub(mXPTCStub, aMallocSizeOf) : 0;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return mXPTCStub
+               ? NS_SizeOfIncludingThisXPTCallStub(mXPTCStub, aMallocSizeOf)
+               : 0;
   }
 };
 
-#endif // nsXPTCUtils_h__
+#endif  // nsXPTCUtils_h__

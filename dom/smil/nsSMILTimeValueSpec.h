@@ -22,10 +22,10 @@ class nsSMILInterval;
 namespace mozilla {
 namespace dom {
 class Event;
-} // namespace dom
+}  // namespace dom
 
 class EventListenerManager;
-} // namespace mozilla
+}  // namespace mozilla
 
 //----------------------------------------------------------------------
 // nsSMILTimeValueSpec class
@@ -38,9 +38,8 @@ class EventListenerManager;
 // For an overview of how this class is related to other SMIL time classes see
 // the documentation in nsSMILTimeValue.h
 
-class nsSMILTimeValueSpec
-{
-public:
+class nsSMILTimeValueSpec {
+ public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::Event Event;
   typedef mozilla::dom::IDTracker IDTracker;
@@ -52,23 +51,23 @@ public:
   void ResolveReferences(Element& aContextElement);
   bool IsEventBased() const;
 
-  void     HandleNewInterval(nsSMILInterval& aInterval,
-                             const nsSMILTimeContainer* aSrcContainer);
-  void     HandleTargetElementChange(Element* aNewTarget);
+  void HandleNewInterval(nsSMILInterval& aInterval,
+                         const nsSMILTimeContainer* aSrcContainer);
+  void HandleTargetElementChange(Element* aNewTarget);
 
   // For created nsSMILInstanceTime objects
-  bool     DependsOnBegin() const;
-  void     HandleChangedInstanceTime(const nsSMILInstanceTime& aBaseTime,
-                                     const nsSMILTimeContainer* aSrcContainer,
-                                     nsSMILInstanceTime& aInstanceTimeToUpdate,
-                                     bool aObjectChanged);
-  void     HandleDeletedInstanceTime(nsSMILInstanceTime& aInstanceTime);
+  bool DependsOnBegin() const;
+  void HandleChangedInstanceTime(const nsSMILInstanceTime& aBaseTime,
+                                 const nsSMILTimeContainer* aSrcContainer,
+                                 nsSMILInstanceTime& aInstanceTimeToUpdate,
+                                 bool aObjectChanged);
+  void HandleDeletedInstanceTime(nsSMILInstanceTime& aInstanceTime);
 
   // Cycle-collection support
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
   void Unlink();
 
-protected:
+ protected:
   void UpdateReferencedElement(Element* aFrom, Element* aTo);
   void UnregisterFromReferencedElement(Element* aElement);
   nsSMILTimedElement* GetTimedElement(Element* aElement);
@@ -77,17 +76,18 @@ protected:
   void UnregisterEventListener(Element* aElement);
   void HandleEvent(Event* aEvent);
   bool CheckRepeatEventDetail(Event* aEvent);
-  nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,
-                                      const nsSMILTimeContainer* aSrcContainer);
+  nsSMILTimeValue ConvertBetweenTimeContainers(
+      const nsSMILTimeValue& aSrcTime,
+      const nsSMILTimeContainer* aSrcContainer);
   bool ApplyOffset(nsSMILTimeValue& aTime) const;
 
-  nsSMILTimedElement*           mOwner;
-  bool                          mIsBegin; // Indicates if *we* are a begin spec,
-                                          // not to be confused with
-                                          // mParams.mSyncBegin which indicates
-                                          // if we're synced with the begin of
-                                          // the target.
-  nsSMILTimeValueSpecParams     mParams;
+  nsSMILTimedElement* mOwner;
+  bool mIsBegin;  // Indicates if *we* are a begin spec,
+                  // not to be confused with
+                  // mParams.mSyncBegin which indicates
+                  // if we're synced with the begin of
+                  // the target.
+  nsSMILTimeValueSpecParams mParams;
 
   /**
    * If our nsSMILTimeValueSpec exists for a 'begin' or 'end' attribute with a
@@ -99,48 +99,43 @@ protected:
    * nsSMILTimeValueSpec if the element that that ID identifies changes to a
    * different element (or none).
    */
-  class TimeReferenceTracker final : public IDTracker
-  {
-  public:
+  class TimeReferenceTracker final : public IDTracker {
+   public:
     explicit TimeReferenceTracker(nsSMILTimeValueSpec* aOwner)
-      : mSpec(aOwner)
-    {}
+        : mSpec(aOwner) {}
     void ResetWithElement(Element* aTo) {
       RefPtr<Element> from = get();
       Unlink();
       ElementChanged(from, aTo);
     }
 
-  protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) override
-    {
+   protected:
+    virtual void ElementChanged(Element* aFrom, Element* aTo) override {
       IDTracker::ElementChanged(aFrom, aTo);
       mSpec->UpdateReferencedElement(aFrom, aTo);
     }
     virtual bool IsPersistent() override { return true; }
-  private:
+
+   private:
     nsSMILTimeValueSpec* mSpec;
   };
 
   TimeReferenceTracker mReferencedElement;
 
-  class EventListener final : public nsIDOMEventListener
-  {
+  class EventListener final : public nsIDOMEventListener {
     ~EventListener() {}
-  public:
-    explicit EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
-    void Disconnect()
-    {
-      mSpec = nullptr;
-    }
+
+   public:
+    explicit EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) {}
+    void Disconnect() { mSpec = nullptr; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMEVENTLISTENER
 
-  private:
+   private:
     nsSMILTimeValueSpec* mSpec;
   };
   RefPtr<EventListener> mEventListener;
 };
 
-#endif // NS_SMILTIMEVALUESPEC_H_
+#endif  // NS_SMILTIMEVALUESPEC_H_

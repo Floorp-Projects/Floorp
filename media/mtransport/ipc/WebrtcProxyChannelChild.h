@@ -13,44 +13,38 @@ namespace mozilla {
 
 namespace dom {
 class PBrowserOrId;
-} // namespace dom
+}  // namespace dom
 
 namespace net {
 
 class WebrtcProxyChannelCallback;
 
-class WebrtcProxyChannelChild : public PWebrtcProxyChannelChild
-{
-public:
+class WebrtcProxyChannelChild : public PWebrtcProxyChannelChild {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelChild)
 
-  mozilla::ipc::IPCResult
-  RecvOnClose(const nsresult& aReason) override;
+  mozilla::ipc::IPCResult RecvOnClose(const nsresult& aReason) override;
 
-  mozilla::ipc::IPCResult
-  RecvOnConnected() override;
+  mozilla::ipc::IPCResult RecvOnConnected() override;
 
-  mozilla::ipc::IPCResult
-  RecvOnRead(nsTArray<uint8_t>&& aReadData) override;
+  mozilla::ipc::IPCResult RecvOnRead(nsTArray<uint8_t>&& aReadData) override;
 
   explicit WebrtcProxyChannelChild(WebrtcProxyChannelCallback* aProxyCallbacks);
 
-  void AsyncOpen(const nsCString& aHost,
-                 const int& aPort,
+  void AsyncOpen(const nsCString& aHost, const int& aPort,
                  const dom::PBrowserOrId& aBrowser,
-                 nsIPrincipal* aLoadingPrincipal,
-                 const nsCString& aAlpn);
+                 nsIPrincipal* aLoadingPrincipal, const nsCString& aAlpn);
 
   void AddIPDLReference() { AddRef(); }
   void ReleaseIPDLReference() { Release(); }
 
-protected:
+ protected:
   virtual ~WebrtcProxyChannelChild();
 
   RefPtr<WebrtcProxyChannelCallback> mProxyCallbacks;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_WebrtcProxyChannelChild_h
+#endif  // mozilla_net_WebrtcProxyChannelChild_h

@@ -31,36 +31,30 @@ class ComputedStyle;
 
 namespace css {
 class StyleRule;
-} // namespace css
+}  // namespace css
 
 namespace dom {
 class Element;
-} // namespace dom
+}  // namespace dom
 
 enum class CSSPseudoElementType : uint8_t;
 struct PropertyStyleAnimationValuePair;
 
-
-struct AnimationValue
-{
+struct AnimationValue {
   explicit AnimationValue(const RefPtr<RawServoAnimationValue>& aValue)
-    : mServo(aValue) { }
+      : mServo(aValue) {}
   AnimationValue() = default;
 
-  AnimationValue(const AnimationValue& aOther)
-    : mServo(aOther.mServo) { }
-  AnimationValue(AnimationValue&& aOther)
-    : mServo(std::move(aOther.mServo)) { }
+  AnimationValue(const AnimationValue& aOther) : mServo(aOther.mServo) {}
+  AnimationValue(AnimationValue&& aOther) : mServo(std::move(aOther.mServo)) {}
 
-  AnimationValue& operator=(const AnimationValue& aOther)
-  {
+  AnimationValue& operator=(const AnimationValue& aOther) {
     if (this != &aOther) {
       mServo = aOther.mServo;
     }
     return *this;
   }
-  AnimationValue& operator=(AnimationValue&& aOther)
-  {
+  AnimationValue& operator=(AnimationValue&& aOther) {
     MOZ_ASSERT(this != &aOther, "Do not move itself");
     if (this != &aOther) {
       mServo = std::move(aOther.mServo);
@@ -71,10 +65,7 @@ struct AnimationValue
   bool operator==(const AnimationValue& aOther) const;
   bool operator!=(const AnimationValue& aOther) const;
 
-  bool IsNull() const
-  {
-    return !mServo;
-  }
+  bool IsNull() const { return !mServo; }
 
   float GetOpacity() const;
 
@@ -115,18 +106,16 @@ struct AnimationValue
   // Create an AnimationValue from a transform list.
   static AnimationValue Transform(nsCSSValueSharedList& aList);
 
-  static already_AddRefed<nsCSSValue::Array>
-  AppendTransformFunction(nsCSSKeyword aTransformFunction,
-                          nsCSSValueList**& aListTail);
+  static already_AddRefed<nsCSSValue::Array> AppendTransformFunction(
+      nsCSSKeyword aTransformFunction, nsCSSValueList**& aListTail);
 
   RefPtr<RawServoAnimationValue> mServo;
 };
 
-struct PropertyStyleAnimationValuePair
-{
+struct PropertyStyleAnimationValuePair {
   nsCSSPropertyID mProperty;
   AnimationValue mValue;
 };
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -18,23 +18,20 @@ using namespace mozilla::dom;
 
 bool ContentProcessMessageManager::sWasCreated = false;
 
-ContentProcessMessageManager::ContentProcessMessageManager(nsFrameMessageManager* aMessageManager)
- : MessageManagerGlobal(aMessageManager),
-   mInitialized(false)
-{
+ContentProcessMessageManager::ContentProcessMessageManager(
+    nsFrameMessageManager* aMessageManager)
+    : MessageManagerGlobal(aMessageManager), mInitialized(false) {
   mozilla::HoldJSObjects(this);
 }
 
-ContentProcessMessageManager::~ContentProcessMessageManager()
-{
+ContentProcessMessageManager::~ContentProcessMessageManager() {
   mAnonymousGlobalScopes.Clear();
   mozilla::DropJSObjects(this);
 }
 
-ContentProcessMessageManager*
-ContentProcessMessageManager::Get()
-{
-  nsCOMPtr<nsIMessageSender> service = do_GetService(NS_CHILDPROCESSMESSAGEMANAGER_CONTRACTID);
+ContentProcessMessageManager* ContentProcessMessageManager::Get() {
+  nsCOMPtr<nsIMessageSender> service =
+      do_GetService(NS_CHILDPROCESSMESSAGEMANAGER_CONTRACTID);
   if (!service) {
     return nullptr;
   }
@@ -43,8 +40,7 @@ ContentProcessMessageManager::Get()
 }
 
 already_AddRefed<mozilla::dom::ipc::SharedMap>
-ContentProcessMessageManager::SharedData()
-{
+ContentProcessMessageManager::SharedData() {
   if (ContentChild* child = ContentChild::GetSingleton()) {
     return do_AddRef(child->SharedData());
   }
@@ -52,15 +48,9 @@ ContentProcessMessageManager::SharedData()
   return do_AddRef(ppmm->SharedData()->GetReadOnly());
 }
 
-bool
-ContentProcessMessageManager::WasCreated()
-{
-  return sWasCreated;
-}
+bool ContentProcessMessageManager::WasCreated() { return sWasCreated; }
 
-void
-ContentProcessMessageManager::MarkForCC()
-{
+void ContentProcessMessageManager::MarkForCC() {
   MarkScopesForCC();
   MessageManagerGlobal::MarkForCC();
 }
@@ -92,9 +82,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ContentProcessMessageManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ContentProcessMessageManager)
 
-bool
-ContentProcessMessageManager::Init()
-{
+bool ContentProcessMessageManager::Init() {
   if (mInitialized) {
     return true;
   }
@@ -103,16 +91,12 @@ ContentProcessMessageManager::Init()
   return nsMessageManagerScriptExecutor::Init();
 }
 
-JSObject*
-ContentProcessMessageManager::WrapObject(JSContext* aCx,
-                                         JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ContentProcessMessageManager::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return ContentProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-JSObject*
-ContentProcessMessageManager::GetOrCreateWrapper()
-{
+JSObject* ContentProcessMessageManager::GetOrCreateWrapper() {
   JS::RootedValue val(RootingCx());
   {
     // Scope to run ~AutoJSAPI before working with a raw JSObject*.
@@ -127,16 +111,14 @@ ContentProcessMessageManager::GetOrCreateWrapper()
   return &val.toObject();
 }
 
-void
-ContentProcessMessageManager::LoadScript(const nsAString& aURL)
-{
+void ContentProcessMessageManager::LoadScript(const nsAString& aURL) {
   Init();
-  JS::Rooted<JSObject*> messageManager(mozilla::dom::RootingCx(), GetOrCreateWrapper());
+  JS::Rooted<JSObject*> messageManager(mozilla::dom::RootingCx(),
+                                       GetOrCreateWrapper());
   LoadScriptInternal(messageManager, aURL, true);
 }
 
-void
-ContentProcessMessageManager::SetInitialProcessData(JS::HandleValue aInitialData)
-{
+void ContentProcessMessageManager::SetInitialProcessData(
+    JS::HandleValue aInitialData) {
   mMessageManager->SetInitialProcessData(aInitialData);
 }

@@ -23,8 +23,7 @@ typedef void* (*DeferredFinalizeAppendFunction)(void* aPointers, void* aThing);
 typedef bool (*DeferredFinalizeFunction)(uint32_t aSlice, void* aData);
 
 void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
-                      DeferredFinalizeFunction aFunc,
-                      void* aThing);
+                      DeferredFinalizeFunction aFunc, void* aThing);
 
 void DeferredFinalize(nsISupports* aSupports);
 
@@ -38,10 +37,10 @@ void DeferredFinalize(nsISupports* aSupports);
 // every thing which DeferredFinalize() will be called for at a later time.
 // Calls to these functions must be 1:1. When not recording or replaying, this
 // function is a no-op.
-void RecordReplayRegisterDeferredFinalizeThing(DeferredFinalizeAppendFunction aAppendFunc,
-                                               DeferredFinalizeFunction aFunc,
-                                               void* aThing);
+void RecordReplayRegisterDeferredFinalizeThing(
+    DeferredFinalizeAppendFunction aAppendFunc, DeferredFinalizeFunction aFunc,
+    void* aThing);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_DeferredFinalize_h
+#endif  // mozilla_DeferredFinalize_h

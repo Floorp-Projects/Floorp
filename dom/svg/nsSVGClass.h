@@ -20,42 +20,34 @@ class nsSVGElement;
 namespace mozilla {
 namespace dom {
 class SVGAnimatedString;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsSVGClass
-{
+class nsSVGClass {
+ public:
+  void Init() { mAnimVal = nullptr; }
 
-public:
-  void Init() {
-    mAnimVal = nullptr;
-  }
-
-  void SetBaseValue(const nsAString& aValue,
-                    nsSVGElement *aSVGElement,
+  void SetBaseValue(const nsAString& aValue, nsSVGElement* aSVGElement,
                     bool aDoSetAttr);
-  void GetBaseValue(nsAString& aValue, const nsSVGElement *aSVGElement) const;
+  void GetBaseValue(nsAString& aValue, const nsSVGElement* aSVGElement) const;
 
-  void SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement);
-  void GetAnimValue(nsAString& aValue, const nsSVGElement *aSVGElement) const;
-  bool IsAnimated() const
-    { return !!mAnimVal; }
+  void SetAnimValue(const nsAString& aValue, nsSVGElement* aSVGElement);
+  void GetAnimValue(nsAString& aValue, const nsSVGElement* aSVGElement) const;
+  bool IsAnimated() const { return !!mAnimVal; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedString>
-  ToDOMAnimatedString(nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAnimatedString> ToDOMAnimatedString(
+      nsSVGElement* aSVGElement);
 
-  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement *aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
-private:
-
+ private:
   nsAutoPtr<nsString> mAnimVal;
 
-public:
-  struct SMILString : public nsISMILAttr
-  {
-  public:
-    SMILString(nsSVGClass *aVal, nsSVGElement *aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
+ public:
+  struct SMILString : public nsISMILAttr {
+   public:
+    SMILString(nsSVGClass* aVal, nsSVGElement* aSVGElement)
+        : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
@@ -64,13 +56,13 @@ public:
     nsSVGElement* mSVGElement;
 
     // nsISMILAttr methods
-    virtual nsresult ValueFromString(const nsAString& aStr,
-                                     const mozilla::dom::SVGAnimationElement *aSrcElement,
-                                     nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsresult ValueFromString(
+        const nsAString& aStr,
+        const mozilla::dom::SVGAnimationElement* aSrcElement,
+        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual nsSMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
-#endif //__NS_SVGCLASS_H__
+#endif  //__NS_SVGCLASS_H__

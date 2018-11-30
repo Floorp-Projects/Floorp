@@ -14,39 +14,37 @@
 #include <gdk/gdkx.h>
 
 typedef struct {
-    Window window;              // Screen saver window
-    int state;                  // ScreenSaver(Off,On,Disabled)
-    int kind;                   // ScreenSaver(Blanked,Internal,External)
-    unsigned long til_or_since; // milliseconds since/til screensaver kicks in
-    unsigned long idle;         // milliseconds idle
-    unsigned long event_mask;   // event stuff
+  Window window;               // Screen saver window
+  int state;                   // ScreenSaver(Off,On,Disabled)
+  int kind;                    // ScreenSaver(Blanked,Internal,External)
+  unsigned long til_or_since;  // milliseconds since/til screensaver kicks in
+  unsigned long idle;          // milliseconds idle
+  unsigned long event_mask;    // event stuff
 } XScreenSaverInfo;
 
-class nsIdleServiceGTK : public nsIdleService
-{
-public:
-    NS_INLINE_DECL_REFCOUNTING_INHERITED(nsIdleServiceGTK, nsIdleService)
+class nsIdleServiceGTK : public nsIdleService {
+ public:
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsIdleServiceGTK, nsIdleService)
 
-    virtual bool PollIdleTime(uint32_t* aIdleTime) override;
+  virtual bool PollIdleTime(uint32_t* aIdleTime) override;
 
-    static already_AddRefed<nsIdleServiceGTK> GetInstance()
-    {
-        RefPtr<nsIdleServiceGTK> idleService =
-            nsIdleService::GetInstance().downcast<nsIdleServiceGTK>();
-        if (!idleService) {
-            idleService = new nsIdleServiceGTK();
-        }
-
-        return idleService.forget();
+  static already_AddRefed<nsIdleServiceGTK> GetInstance() {
+    RefPtr<nsIdleServiceGTK> idleService =
+        nsIdleService::GetInstance().downcast<nsIdleServiceGTK>();
+    if (!idleService) {
+      idleService = new nsIdleServiceGTK();
     }
 
-private:
-    ~nsIdleServiceGTK();
-    XScreenSaverInfo* mXssInfo;
+    return idleService.forget();
+  }
 
-protected:
-    nsIdleServiceGTK();
-    virtual bool UsePollMode() override;
+ private:
+  ~nsIdleServiceGTK();
+  XScreenSaverInfo* mXssInfo;
+
+ protected:
+  nsIdleServiceGTK();
+  virtual bool UsePollMode() override;
 };
 
-#endif // nsIdleServiceGTK_h__
+#endif  // nsIdleServiceGTK_h__

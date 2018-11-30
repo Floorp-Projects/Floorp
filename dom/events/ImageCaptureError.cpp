@@ -18,42 +18,24 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImageCaptureError)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-ImageCaptureError::ImageCaptureError(nsISupports* aParent,
-                                     uint16_t aCode,
+ImageCaptureError::ImageCaptureError(nsISupports* aParent, uint16_t aCode,
                                      const nsAString& aMessage)
-  : mParent(aParent)
-  , mMessage(aMessage)
-  , mCode(aCode)
-{
-}
+    : mParent(aParent), mMessage(aMessage), mCode(aCode) {}
 
-ImageCaptureError::~ImageCaptureError()
-{
-}
+ImageCaptureError::~ImageCaptureError() {}
 
-nsISupports*
-ImageCaptureError::GetParentObject() const
-{
-  return mParent;
-}
+nsISupports* ImageCaptureError::GetParentObject() const { return mParent; }
 
-JSObject*
-ImageCaptureError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ImageCaptureError::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return ImageCaptureError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-uint16_t
-ImageCaptureError::Code() const
-{
-  return mCode;
-}
+uint16_t ImageCaptureError::Code() const { return mCode; }
 
-void
-ImageCaptureError::GetMessage(nsAString& retval) const
-{
+void ImageCaptureError::GetMessage(nsAString& retval) const {
   retval = mMessage;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

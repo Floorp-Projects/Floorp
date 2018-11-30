@@ -12,72 +12,71 @@
 
 #include "jit/LIR.h"
 #if defined(JS_CODEGEN_X86)
-# include "jit/x86/Lowering-x86.h"
+#include "jit/x86/Lowering-x86.h"
 #elif defined(JS_CODEGEN_X64)
-# include "jit/x64/Lowering-x64.h"
+#include "jit/x64/Lowering-x64.h"
 #elif defined(JS_CODEGEN_ARM)
-# include "jit/arm/Lowering-arm.h"
+#include "jit/arm/Lowering-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
-# include "jit/arm64/Lowering-arm64.h"
+#include "jit/arm64/Lowering-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32)
-# include "jit/mips32/Lowering-mips32.h"
+#include "jit/mips32/Lowering-mips32.h"
 #elif defined(JS_CODEGEN_MIPS64)
-# include "jit/mips64/Lowering-mips64.h"
+#include "jit/mips64/Lowering-mips64.h"
 #elif defined(JS_CODEGEN_NONE)
-# include "jit/none/Lowering-none.h"
+#include "jit/none/Lowering-none.h"
 #else
-# error "Unknown architecture!"
+#error "Unknown architecture!"
 #endif
 
 namespace js {
 namespace jit {
 
-class LIRGenerator final : public LIRGeneratorSpecific
-{
-    void updateResumeState(MInstruction* ins);
-    void updateResumeState(MBasicBlock* block);
+class LIRGenerator final : public LIRGeneratorSpecific {
+  void updateResumeState(MInstruction* ins);
+  void updateResumeState(MBasicBlock* block);
 
-    // The maximum depth, for framesizeclass determination.
-    uint32_t maxargslots_;
+  // The maximum depth, for framesizeclass determination.
+  uint32_t maxargslots_;
 
-  public:
-    LIRGenerator(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : LIRGeneratorSpecific(gen, graph, lirGraph),
-        maxargslots_(0)
-    { }
+ public:
+  LIRGenerator(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
+      : LIRGeneratorSpecific(gen, graph, lirGraph), maxargslots_(0) {}
 
-    MOZ_MUST_USE bool generate();
+  MOZ_MUST_USE bool generate();
 
-  private:
-    LBoxAllocation useBoxFixedAtStart(MDefinition* mir, Register reg1, Register reg2) {
-        return useBoxFixed(mir, reg1, reg2, /* useAtStart = */ true);
-    }
+ private:
+  LBoxAllocation useBoxFixedAtStart(MDefinition* mir, Register reg1,
+                                    Register reg2) {
+    return useBoxFixed(mir, reg1, reg2, /* useAtStart = */ true);
+  }
 
-    LBoxAllocation useBoxFixedAtStart(MDefinition* mir, ValueOperand op);
-    LBoxAllocation useBoxAtStart(MDefinition* mir, LUse::Policy policy = LUse::REGISTER);
+  LBoxAllocation useBoxFixedAtStart(MDefinition* mir, ValueOperand op);
+  LBoxAllocation useBoxAtStart(MDefinition* mir,
+                               LUse::Policy policy = LUse::REGISTER);
 
-    void lowerBitOp(JSOp op, MInstruction* ins);
-    void lowerShiftOp(JSOp op, MShiftInstruction* ins);
-    void lowerBinaryV(JSOp op, MBinaryInstruction* ins);
-    void definePhis();
+  void lowerBitOp(JSOp op, MInstruction* ins);
+  void lowerShiftOp(JSOp op, MShiftInstruction* ins);
+  void lowerBinaryV(JSOp op, MBinaryInstruction* ins);
+  void definePhis();
 
-    MOZ_MUST_USE bool lowerCallArguments(MCall* call);
+  MOZ_MUST_USE bool lowerCallArguments(MCall* call);
 
-    template <typename LClass>
-    LInstruction* lowerWasmCall(MWasmCall* ins, bool needsBoundsCheck);
+  template <typename LClass>
+  LInstruction* lowerWasmCall(MWasmCall* ins, bool needsBoundsCheck);
 
-    friend class LIRGeneratorShared;
-    void visitInstructionDispatch(MInstruction* ins);
+  friend class LIRGeneratorShared;
+  void visitInstructionDispatch(MInstruction* ins);
 
-    MOZ_MUST_USE bool visitInstruction(MInstruction* ins);
-    MOZ_MUST_USE bool visitBlock(MBasicBlock* block);
+  MOZ_MUST_USE bool visitInstruction(MInstruction* ins);
+  MOZ_MUST_USE bool visitBlock(MBasicBlock* block);
 
 #define MIR_OP(op) void visit##op(M##op* ins);
-    MIR_OPCODE_LIST(MIR_OP)
+  MIR_OPCODE_LIST(MIR_OP)
 #undef MIR_OP
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_Lowering_h */

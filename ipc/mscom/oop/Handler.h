@@ -9,7 +9,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include <objidl.h>
 
@@ -24,9 +24,8 @@
 namespace mozilla {
 namespace mscom {
 
-class Handler : public IMarshal
-{
-public:
+class Handler : public IMarshal {
+ public:
   // IMarshal
   STDMETHODIMP GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                                  void* pvDestContext, DWORD mshlflags,
@@ -63,11 +62,12 @@ public:
   /**
    * Called when the implementer should deserialize data in aStream.
    * @return S_OK on success;
-   *         S_FALSE if the deserialization was successful but there was no data;
-   *         HRESULT error code otherwise.
+   *         S_FALSE if the deserialization was successful but there was no
+   * data; HRESULT error code otherwise.
    */
-  virtual HRESULT ReadHandlerPayload(IStream* aStream, REFIID aIid)
-  { return S_FALSE; }
+  virtual HRESULT ReadHandlerPayload(IStream* aStream, REFIID aIid) {
+    return S_FALSE;
+  }
 
   /**
    * Unfortunately when COM marshals a proxy, it doesn't implicitly marshal
@@ -93,8 +93,7 @@ public:
   /**
    * Called when the implementer must provide the size of the payload.
    */
-  virtual HRESULT GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize)
-  {
+  virtual HRESULT GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize) {
     if (!aOutPayloadSize) {
       return E_INVALIDARG;
     }
@@ -105,8 +104,7 @@ public:
   /**
    * Called when the implementer should serialize the payload data into aStream.
    */
-  virtual HRESULT WriteHandlerPayload(IStream* aStream, REFIID aIid)
-  {
+  virtual HRESULT WriteHandlerPayload(IStream* aStream, REFIID aIid) {
     return S_OK;
   }
 
@@ -115,23 +113,22 @@ public:
   static HRESULT Register(REFCLSID aClsid);
   static HRESULT Unregister(REFCLSID aClsid);
 
-protected:
+ protected:
   Handler(IUnknown* aOuter, HRESULT* aResult);
   virtual ~Handler() {}
   bool HasPayload() const { return mHasPayload; }
   IUnknown* GetOuter() const { return mOuter; }
 
-private:
-  ULONG             mRefCnt;
-  IUnknown*         mOuter;
-  RefPtr<IUnknown>  mInnerUnk;
-  IMarshal*         mUnmarshal; // WEAK
-  bool              mHasPayload;
+ private:
+  ULONG mRefCnt;
+  IUnknown* mOuter;
+  RefPtr<IUnknown> mInnerUnk;
+  IMarshal* mUnmarshal;  // WEAK
+  bool mHasPayload;
   DECLARE_AGGREGATABLE(Handler);
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_Handler_h
-
+#endif  // mozilla_mscom_Handler_h

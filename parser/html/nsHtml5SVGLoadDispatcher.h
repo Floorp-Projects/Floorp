@@ -8,15 +8,14 @@
 #include "nsThreadUtils.h"
 #include "nsIContent.h"
 
-class nsHtml5SVGLoadDispatcher : public mozilla::Runnable
-{
-private:
+class nsHtml5SVGLoadDispatcher : public mozilla::Runnable {
+ private:
   nsCOMPtr<nsIContent> mElement;
   nsCOMPtr<nsIDocument> mDocument;
 
-public:
+ public:
   explicit nsHtml5SVGLoadDispatcher(nsIContent* aElement);
   NS_IMETHOD Run() override;
 };
 
-#endif // nsHtml5SVGLoadDispatcher_h
+#endif  // nsHtml5SVGLoadDispatcher_h

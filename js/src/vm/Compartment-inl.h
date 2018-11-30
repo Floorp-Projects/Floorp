@@ -23,88 +23,87 @@
 
 #include "vm/JSContext-inl.h"
 
-inline bool
-JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
-{
-    /* Only GC things have to be wrapped or copied. */
-    if (!vp.isGCThing()) {
-        return true;
-    }
+inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
+  /* Only GC things have to be wrapped or copied. */
+  if (!vp.isGCThing()) {
+    return true;
+  }
 
-    /*
-     * Symbols are GC things, but never need to be wrapped or copied because
-     * they are always allocated in the atoms zone. They still need to be
-     * marked in the new compartment's zone, however.
-     */
-    if (vp.isSymbol()) {
-        cx->markAtomValue(vp);
-        return true;
-    }
+  /*
+   * Symbols are GC things, but never need to be wrapped or copied because
+   * they are always allocated in the atoms zone. They still need to be
+   * marked in the new compartment's zone, however.
+   */
+  if (vp.isSymbol()) {
+    cx->markAtomValue(vp);
+    return true;
+  }
 
-    /* Handle strings. */
-    if (vp.isString()) {
-        JS::RootedString str(cx, vp.toString());
-        if (!wrap(cx, &str)) {
-            return false;
-        }
-        vp.setString(str);
-        return true;
+  /* Handle strings. */
+  if (vp.isString()) {
+    JS::RootedString str(cx, vp.toString());
+    if (!wrap(cx, &str)) {
+      return false;
     }
+    vp.setString(str);
+    return true;
+  }
 
 #ifdef ENABLE_BIGINT
-    if (vp.isBigInt()) {
-        JS::RootedBigInt bi(cx, vp.toBigInt());
-        if (!wrap(cx, &bi)) {
-            return false;
-        }
-        vp.setBigInt(bi);
-        return true;
+  if (vp.isBigInt()) {
+    JS::RootedBigInt bi(cx, vp.toBigInt());
+    if (!wrap(cx, &bi)) {
+      return false;
     }
-#endif
-
-    MOZ_ASSERT(vp.isObject());
-
-    /*
-     * All that's left are objects.
-     *
-     * Object wrapping isn't the fastest thing in the world, in part because
-     * we have to unwrap and invoke the prewrap hook to find the identity
-     * object before we even start checking the cache. Neither of these
-     * operations are needed in the common case, where we're just wrapping
-     * a plain JS object from the wrappee's side of the membrane to the
-     * wrapper's side.
-     *
-     * To optimize this, we note that the cache should only ever contain
-     * identity objects - that is to say, objects that serve as the
-     * canonical representation for a unique object identity observable by
-     * script. Unwrap and prewrap are both steps that we take to get to the
-     * identity of an incoming objects, and as such, they shuld never map
-     * one identity object to another object. This means that we can safely
-     * check the cache immediately, and only risk false negatives. Do this
-     * in opt builds, and do both in debug builds so that we can assert
-     * that we get the same answer.
-     */
-#ifdef DEBUG
-    MOZ_ASSERT(JS::ValueIsNotGray(vp));
-    JS::RootedObject cacheResult(cx);
-#endif
-    JS::RootedValue v(cx, vp);
-    if (js::WrapperMap::Ptr p = crossCompartmentWrappers.lookup(js::CrossCompartmentKey(v))) {
-#ifdef DEBUG
-        cacheResult = &p->value().get().toObject();
-#else
-        vp.set(p->value().get());
-        return true;
-#endif
-    }
-
-    JS::RootedObject obj(cx, &vp.toObject());
-    if (!wrap(cx, &obj)) {
-        return false;
-    }
-    vp.setObject(*obj);
-    MOZ_ASSERT_IF(cacheResult, obj == cacheResult);
+    vp.setBigInt(bi);
     return true;
+  }
+#endif
+
+  MOZ_ASSERT(vp.isObject());
+
+  /*
+   * All that's left are objects.
+   *
+   * Object wrapping isn't the fastest thing in the world, in part because
+   * we have to unwrap and invoke the prewrap hook to find the identity
+   * object before we even start checking the cache. Neither of these
+   * operations are needed in the common case, where we're just wrapping
+   * a plain JS object from the wrappee's side of the membrane to the
+   * wrapper's side.
+   *
+   * To optimize this, we note that the cache should only ever contain
+   * identity objects - that is to say, objects that serve as the
+   * canonical representation for a unique object identity observable by
+   * script. Unwrap and prewrap are both steps that we take to get to the
+   * identity of an incoming objects, and as such, they shuld never map
+   * one identity object to another object. This means that we can safely
+   * check the cache immediately, and only risk false negatives. Do this
+   * in opt builds, and do both in debug builds so that we can assert
+   * that we get the same answer.
+   */
+#ifdef DEBUG
+  MOZ_ASSERT(JS::ValueIsNotGray(vp));
+  JS::RootedObject cacheResult(cx);
+#endif
+  JS::RootedValue v(cx, vp);
+  if (js::WrapperMap::Ptr p =
+          crossCompartmentWrappers.lookup(js::CrossCompartmentKey(v))) {
+#ifdef DEBUG
+    cacheResult = &p->value().get().toObject();
+#else
+    vp.set(p->value().get());
+    return true;
+#endif
+  }
+
+  JS::RootedObject obj(cx, &vp.toObject());
+  if (!wrap(cx, &obj)) {
+    return false;
+  }
+  vp.setObject(*obj);
+  MOZ_ASSERT_IF(cacheResult, obj == cacheResult);
+  return true;
 }
 
 namespace js {
@@ -115,79 +114,71 @@ namespace detail {
  * (for error messages).
  */
 template <class T>
-const char *
-ClassName()
-{
-    return T::class_.name;
+const char* ClassName() {
+  return T::class_.name;
 }
 
 template <class T>
-MOZ_MUST_USE T*
-UnwrapAndTypeCheckThisSlowPath(JSContext* cx,
-                               HandleValue val,
-                               const char* methodName)
-{
-    if (!val.isObject()) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                   ClassName<T>(), methodName, InformalValueTypeName(val));
-        return nullptr;
-    }
+MOZ_MUST_USE T* UnwrapAndTypeCheckThisSlowPath(JSContext* cx, HandleValue val,
+                                               const char* methodName) {
+  if (!val.isObject()) {
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               JSMSG_INCOMPATIBLE_PROTO, ClassName<T>(),
+                               methodName, InformalValueTypeName(val));
+    return nullptr;
+  }
 
-    JSObject* obj = &val.toObject();
+  JSObject* obj = &val.toObject();
+  if (IsWrapper(obj)) {
+    obj = CheckedUnwrap(obj);
+    if (!obj) {
+      ReportAccessDenied(cx);
+      return nullptr;
+    }
+  }
+
+  if (!obj->is<T>()) {
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               JSMSG_INCOMPATIBLE_PROTO, ClassName<T>(),
+                               methodName, InformalValueTypeName(val));
+    return nullptr;
+  }
+
+  return &obj->as<T>();
+}
+
+template <class T>
+MOZ_MUST_USE T* UnwrapAndTypeCheckArgumentSlowPath(JSContext* cx,
+                                                   CallArgs& args,
+                                                   const char* methodName,
+                                                   int argIndex) {
+  Value val = args.get(argIndex);
+  JSObject* obj = nullptr;
+  if (val.isObject()) {
+    obj = &val.toObject();
     if (IsWrapper(obj)) {
-        obj = CheckedUnwrap(obj);
-        if (!obj) {
-            ReportAccessDenied(cx);
-            return nullptr;
-        }
-    }
-
-    if (!obj->is<T>()) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                   ClassName<T>(), methodName, InformalValueTypeName(val));
+      obj = CheckedUnwrap(obj);
+      if (!obj) {
+        ReportAccessDenied(cx);
         return nullptr;
+      }
     }
+  }
 
-    return &obj->as<T>();
+  if (!obj || !obj->is<T>()) {
+    ToCStringBuf cbuf;
+    if (char* numStr = NumberToCString(cx, &cbuf, argIndex + 1, 10)) {
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WRONG_TYPE_ARG, numStr, methodName,
+                                 ClassName<T>(), InformalValueTypeName(val));
+    }
+    return nullptr;
+  }
+
+  return &obj->as<T>();
 }
 
-template <class T>
-MOZ_MUST_USE T*
-UnwrapAndTypeCheckArgumentSlowPath(JSContext* cx,
-                                   CallArgs& args,
-                                   const char* methodName,
-                                   int argIndex)
-{
-    Value val = args.get(argIndex);
-    JSObject* obj = nullptr;
-    if (val.isObject()) {
-        obj = &val.toObject();
-        if (IsWrapper(obj)) {
-            obj = CheckedUnwrap(obj);
-            if (!obj) {
-                ReportAccessDenied(cx);
-                return nullptr;
-            }
-        }
-    }
-
-    if (!obj || !obj->is<T>()) {
-        ToCStringBuf cbuf;
-        if (char* numStr = NumberToCString(cx, &cbuf, argIndex + 1, 10)) {
-            JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                       JSMSG_WRONG_TYPE_ARG,
-                                       numStr,
-                                       methodName,
-                                       ClassName<T>(),
-                                       InformalValueTypeName(val));
-        }
-        return nullptr;
-    }
-
-    return &obj->as<T>();
-}
-
-} // namespace detail
+}  // namespace detail
 
 /**
  * Remove all wrappers from `val` and try to downcast the result to `T`.
@@ -198,20 +189,17 @@ UnwrapAndTypeCheckArgumentSlowPath(JSContext* cx,
  * or isn't an instance of the expected type.
  */
 template <class T>
-inline MOZ_MUST_USE T*
-UnwrapAndTypeCheckThis(JSContext* cx,
-                       CallArgs& args,
-                       const char* methodName)
-{
-    static_assert(!std::is_convertible<T*, Wrapper*>::value,
-                  "T can't be a Wrapper type; this function discards wrappers");
+inline MOZ_MUST_USE T* UnwrapAndTypeCheckThis(JSContext* cx, CallArgs& args,
+                                              const char* methodName) {
+  static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                "T can't be a Wrapper type; this function discards wrappers");
 
-    HandleValue thisv = args.thisv();
-    cx->check(thisv);
-    if (thisv.isObject() && thisv.toObject().is<T>()) {
-        return &thisv.toObject().as<T>();
-    }
-    return detail::UnwrapAndTypeCheckThisSlowPath<T>(cx, thisv, methodName);
+  HandleValue thisv = args.thisv();
+  cx->check(thisv);
+  if (thisv.isObject() && thisv.toObject().is<T>()) {
+    return &thisv.toObject().as<T>();
+  }
+  return detail::UnwrapAndTypeCheckThisSlowPath<T>(cx, thisv, methodName);
 }
 
 /**
@@ -224,20 +212,18 @@ UnwrapAndTypeCheckThis(JSContext* cx,
  * object, cannot be unwrapped, or isn't an instance of the expected type.
  */
 template <class T>
-inline MOZ_MUST_USE T*
-UnwrapAndTypeCheckArgument(JSContext* cx,
-                           CallArgs& args,
-                           const char* methodName,
-                           int argIndex)
-{
-    static_assert(!std::is_convertible<T*, Wrapper*>::value,
-                  "T can't be a Wrapper type; this function discards wrappers");
+inline MOZ_MUST_USE T* UnwrapAndTypeCheckArgument(JSContext* cx, CallArgs& args,
+                                                  const char* methodName,
+                                                  int argIndex) {
+  static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                "T can't be a Wrapper type; this function discards wrappers");
 
-    Value val = args.get(argIndex);
-    if (val.isObject() && val.toObject().is<T>()) {
-        return &val.toObject().as<T>();
-    }
-    return detail::UnwrapAndTypeCheckArgumentSlowPath<T>(cx, args, methodName, argIndex);
+  Value val = args.get(argIndex);
+  if (val.isObject() && val.toObject().is<T>()) {
+    return &val.toObject().as<T>();
+  }
+  return detail::UnwrapAndTypeCheckArgumentSlowPath<T>(cx, args, methodName,
+                                                       argIndex);
 }
 
 /**
@@ -252,38 +238,36 @@ UnwrapAndTypeCheckArgument(JSContext* cx,
  * known to have been an object of class T, or a wrapper to a T, at some point.
  */
 template <class T>
-MOZ_MUST_USE T*
-UnwrapAndDowncastObject(JSContext* cx, JSObject* obj)
-{
-    static_assert(!std::is_convertible<T*, Wrapper*>::value,
-                  "T can't be a Wrapper type; this function discards wrappers");
+MOZ_MUST_USE T* UnwrapAndDowncastObject(JSContext* cx, JSObject* obj) {
+  static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                "T can't be a Wrapper type; this function discards wrappers");
 
-    if (IsProxy(obj)) {
-        if (JS_IsDeadWrapper(obj)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-            return nullptr;
-        }
-
-        // It would probably be OK to do an unchecked unwrap here, but we allow
-        // arbitrary security policies, so check anyway.
-        obj = CheckedUnwrap(obj);
-        if (!obj) {
-            ReportAccessDenied(cx);
-            return nullptr;
-        }
+  if (IsProxy(obj)) {
+    if (JS_IsDeadWrapper(obj)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEAD_OBJECT);
+      return nullptr;
     }
 
-    return &obj->as<T>();
+    // It would probably be OK to do an unchecked unwrap here, but we allow
+    // arbitrary security policies, so check anyway.
+    obj = CheckedUnwrap(obj);
+    if (!obj) {
+      ReportAccessDenied(cx);
+      return nullptr;
+    }
+  }
+
+  return &obj->as<T>();
 }
 
 /**
  * Unwrap a value of a known type. See UnwrapAndDowncastObject.
  */
 template <class T>
-inline MOZ_MUST_USE T*
-UnwrapAndDowncastValue(JSContext* cx, const Value& value)
-{
-    return UnwrapAndDowncastObject<T>(cx, &value.toObject());
+inline MOZ_MUST_USE T* UnwrapAndDowncastValue(JSContext* cx,
+                                              const Value& value) {
+  return UnwrapAndDowncastObject<T>(cx, &value.toObject());
 }
 
 /**
@@ -305,13 +289,13 @@ UnwrapAndDowncastValue(JSContext* cx, const Value& value)
  * DANGER: The result may not be same-compartment with either `cx` or `obj`.
  */
 template <class T>
-inline MOZ_MUST_USE T*
-UnwrapInternalSlot(JSContext* cx, Handle<NativeObject*> unwrappedObj, uint32_t slot)
-{
-    static_assert(!std::is_convertible<T*, Wrapper*>::value,
-                  "T can't be a Wrapper type; this function discards wrappers");
+inline MOZ_MUST_USE T* UnwrapInternalSlot(JSContext* cx,
+                                          Handle<NativeObject*> unwrappedObj,
+                                          uint32_t slot) {
+  static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                "T can't be a Wrapper type; this function discards wrappers");
 
-    return UnwrapAndDowncastValue<T>(cx, unwrappedObj->getFixedSlot(slot));
+  return UnwrapAndDowncastValue<T>(cx, unwrappedObj->getFixedSlot(slot));
 }
 
 /**
@@ -324,13 +308,12 @@ UnwrapInternalSlot(JSContext* cx, Handle<NativeObject*> unwrappedObj, uint32_t s
  * DANGER: The result may not be same-compartment with `cx`.
  */
 template <class T>
-MOZ_MUST_USE T*
-UnwrapCalleeSlot(JSContext* cx, CallArgs& args, size_t extendedSlot)
-{
-    JSFunction& func = args.callee().as<JSFunction>();
-    return UnwrapAndDowncastValue<T>(cx, func.getExtendedSlot(extendedSlot));
+MOZ_MUST_USE T* UnwrapCalleeSlot(JSContext* cx, CallArgs& args,
+                                 size_t extendedSlot) {
+  JSFunction& func = args.callee().as<JSFunction>();
+  return UnwrapAndDowncastValue<T>(cx, func.getExtendedSlot(extendedSlot));
 }
 
-} // namespace js
+}  // namespace js
 
 #endif /* vm_Compartment_inl_h */

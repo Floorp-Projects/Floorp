@@ -44,18 +44,16 @@ nsPlaceholderFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
                                            mozilla::ComputedStyle* aStyle,
                                            nsFrameState aTypeBits);
 
-#define PLACEHOLDER_TYPE_MASK    (PLACEHOLDER_FOR_FLOAT | \
-                                  PLACEHOLDER_FOR_ABSPOS | \
-                                  PLACEHOLDER_FOR_FIXEDPOS | \
-                                  PLACEHOLDER_FOR_POPUP | \
-                                  PLACEHOLDER_FOR_TOPLAYER)
+#define PLACEHOLDER_TYPE_MASK                                                  \
+  (PLACEHOLDER_FOR_FLOAT | PLACEHOLDER_FOR_ABSPOS | PLACEHOLDER_FOR_FIXEDPOS | \
+   PLACEHOLDER_FOR_POPUP | PLACEHOLDER_FOR_TOPLAYER)
 
 /**
  * Implementation of a frame that's used as a placeholder for a frame that
  * has been moved out of the flow.
  */
 class nsPlaceholderFrame final : public nsFrame {
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
 #ifdef DEBUG
   NS_DECL_QUERYFRAME
@@ -70,26 +68,25 @@ public:
                                                     nsFrameState aTypeBits);
 
   nsPlaceholderFrame(ComputedStyle* aStyle, nsFrameState aTypeBits)
-    : nsFrame(aStyle, kClassID)
-    , mOutOfFlowFrame(nullptr)
-  {
-    MOZ_ASSERT(aTypeBits == PLACEHOLDER_FOR_FLOAT ||
-               aTypeBits == PLACEHOLDER_FOR_ABSPOS ||
-               aTypeBits == PLACEHOLDER_FOR_FIXEDPOS ||
-               aTypeBits == PLACEHOLDER_FOR_POPUP ||
-               aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_ABSPOS) ||
-               aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_FIXEDPOS),
-               "Unexpected type bit");
+      : nsFrame(aStyle, kClassID), mOutOfFlowFrame(nullptr) {
+    MOZ_ASSERT(
+        aTypeBits == PLACEHOLDER_FOR_FLOAT ||
+            aTypeBits == PLACEHOLDER_FOR_ABSPOS ||
+            aTypeBits == PLACEHOLDER_FOR_FIXEDPOS ||
+            aTypeBits == PLACEHOLDER_FOR_POPUP ||
+            aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_ABSPOS) ||
+            aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_FIXEDPOS),
+        "Unexpected type bit");
     AddStateBits(aTypeBits);
   }
 
   // Get/Set the associated out of flow frame
-  nsIFrame*  GetOutOfFlowFrame() const { return mOutOfFlowFrame; }
-  void       SetOutOfFlowFrame(nsIFrame* aFrame) {
-               NS_ASSERTION(!aFrame || !aFrame->GetPrevContinuation(),
-                            "OOF must be first continuation");
-               mOutOfFlowFrame = aFrame;
-             }
+  nsIFrame* GetOutOfFlowFrame() const { return mOutOfFlowFrame; }
+  void SetOutOfFlowFrame(nsIFrame* aFrame) {
+    NS_ASSERTION(!aFrame || !aFrame->GetPrevContinuation(),
+                 "OOF must be first continuation");
+    mOutOfFlowFrame = aFrame;
+  }
 
   // nsIFrame overrides
   // We need to override GetXULMinSize and GetXULPrefSize because XUL uses
@@ -102,22 +99,23 @@ public:
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
 
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
-#endif // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
+#endif  // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
 
 #ifdef DEBUG_FRAME_DUMP
-  void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const override;
+  void List(FILE* out = stderr, const char* aPrefix = "",
+            uint32_t aFlags = 0) const override;
   virtual nsresult GetFrameName(nsAString& aResult) const override;
-#endif // DEBUG
+#endif  // DEBUG
 
   virtual bool IsEmpty() override { return true; }
   virtual bool IsSelfEmpty() override { return true; }
@@ -140,26 +138,24 @@ public:
   }
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override
-  {
+  virtual mozilla::a11y::AccType AccessibleType() override {
     nsIFrame* realFrame = GetRealFrameForPlaceholder(this);
-    return realFrame ? realFrame->AccessibleType() :
-                       nsFrame::AccessibleType();
+    return realFrame ? realFrame->AccessibleType() : nsFrame::AccessibleType();
   }
 #endif
 
-  ComputedStyle* GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame) const;
+  ComputedStyle* GetParentComputedStyleForOutOfFlow(
+      nsIFrame** aProviderFrame) const;
 
   // Like GetParentComputedStyleForOutOfFlow, but ignores display:contents bits.
-  ComputedStyle* GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const;
+  ComputedStyle* GetLayoutParentStyleForOutOfFlow(
+      nsIFrame** aProviderFrame) const;
 
-  bool RenumberFrameAndDescendants(int32_t* aOrdinal,
-                                   int32_t aDepth,
+  bool RenumberFrameAndDescendants(int32_t* aOrdinal, int32_t aDepth,
                                    int32_t aIncrement,
-                                   bool aForCounting) override
-  {
-    return mOutOfFlowFrame->
-      RenumberFrameAndDescendants(aOrdinal, aDepth, aIncrement, aForCounting);
+                                   bool aForCounting) override {
+    return mOutOfFlowFrame->RenumberFrameAndDescendants(
+        aOrdinal, aDepth, aIncrement, aForCounting);
   }
 
   /**
@@ -181,12 +177,12 @@ public:
     MOZ_ASSERT(aFrame->IsPlaceholderFrame(),
                "Must have placeholder frame as input");
     nsIFrame* outOfFlow =
-      static_cast<nsPlaceholderFrame*>(aFrame)->GetOutOfFlowFrame();
+        static_cast<nsPlaceholderFrame*>(aFrame)->GetOutOfFlowFrame();
     NS_ASSERTION(outOfFlow, "Null out-of-flow for placeholder?");
     return outOfFlow;
   }
 
-protected:
+ protected:
   nsIFrame* mOutOfFlowFrame;
 };
 

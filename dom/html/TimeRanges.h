@@ -18,16 +18,14 @@ namespace mozilla {
 
 namespace dom {
 class TimeRanges;
-} // namespace dom
+}  // namespace dom
 
 namespace dom {
 
 // Implements media TimeRanges:
 // http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
-class TimeRanges final : public nsISupports,
-                         public nsWrapperCache
-{
-public:
+class TimeRanges final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TimeRanges)
 
@@ -60,43 +58,30 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  uint32_t Length() const
-  {
-    return mRanges.Length();
-  }
+  uint32_t Length() const { return mRanges.Length(); }
 
   double Start(uint32_t aIndex, ErrorResult& aRv) const;
 
   double End(uint32_t aIndex, ErrorResult& aRv) const;
 
-  double Start(uint32_t aIndex) const
-  {
-    return mRanges[aIndex].mStart;
-  }
+  double Start(uint32_t aIndex) const { return mRanges[aIndex].mStart; }
 
-  double End(uint32_t aIndex) const
-  {
-    return mRanges[aIndex].mEnd;
-  }
+  double End(uint32_t aIndex) const { return mRanges[aIndex].mEnd; }
 
   // Shift all values by aOffset seconds.
   void Shift(double aOffset);
 
-private:
+ private:
   ~TimeRanges();
 
   // Comparator which orders TimeRanges by start time. Used by Normalize().
-  struct TimeRange
-  {
-    TimeRange(double aStart, double aEnd)
-      : mStart(aStart),
-        mEnd(aEnd) {}
+  struct TimeRange {
+    TimeRange(double aStart, double aEnd) : mStart(aStart), mEnd(aEnd) {}
     double mStart;
     double mEnd;
   };
 
-  struct CompareTimeRanges
-  {
+  struct CompareTimeRanges {
     bool Equals(const TimeRange& aTr1, const TimeRange& aTr2) const {
       return aTr1.mStart == aTr2.mStart && aTr1.mEnd == aTr2.mEnd;
     }
@@ -106,11 +91,11 @@ private:
     }
   };
 
-  AutoTArray<TimeRange,4> mRanges;
+  AutoTArray<TimeRange, 4> mRanges;
 
   nsCOMPtr<nsISupports> mParent;
 
-public:
+ public:
   typedef nsTArray<TimeRange>::index_type index_type;
   static const index_type NoIndex = index_type(-1);
 
@@ -126,7 +111,7 @@ public:
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TimeRanges_h_
+#endif  // mozilla_dom_TimeRanges_h_

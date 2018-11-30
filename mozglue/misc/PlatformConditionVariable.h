@@ -14,20 +14,17 @@
 
 #include <stdint.h>
 #ifndef XP_WIN
-# include <pthread.h>
+#include <pthread.h>
 #endif
 
 namespace mozilla {
 
-enum class CVStatus {
-  NoTimeout,
-  Timeout
-};
+enum class CVStatus { NoTimeout, Timeout };
 
 namespace detail {
 
 class ConditionVariableImpl {
-public:
+ public:
   struct PlatformData;
 
   MFBT_API ConditionVariableImpl();
@@ -46,7 +43,7 @@ public:
   MFBT_API CVStatus wait_for(MutexImpl& lock,
                              const mozilla::TimeDuration& rel_time);
 
-private:
+ private:
   ConditionVariableImpl(const ConditionVariableImpl&) = delete;
   ConditionVariableImpl& operator=(const ConditionVariableImpl&) = delete;
 
@@ -55,15 +52,15 @@ private:
 #ifndef XP_WIN
   void* platformData_[sizeof(pthread_cond_t) / sizeof(void*)];
   static_assert(sizeof(pthread_cond_t) / sizeof(void*) != 0 &&
-                sizeof(pthread_cond_t) % sizeof(void*) == 0,
+                    sizeof(pthread_cond_t) % sizeof(void*) == 0,
                 "pthread_cond_t must have pointer alignment");
 #else
   void* platformData_[4];
 #endif
 };
 
-} // namespace detail
+}  // namespace detail
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ConditionVariable_h
+#endif  // mozilla_ConditionVariable_h

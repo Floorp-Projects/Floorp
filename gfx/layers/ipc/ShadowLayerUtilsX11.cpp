@@ -5,29 +5,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ShadowLayerUtilsX11.h"
-#include <X11/X.h>                      // for Drawable, XID
-#include <X11/Xlib.h>                   // for Display, Visual, etc
-#include <X11/extensions/Xrender.h>     // for XRenderPictFormat, etc
-#include <X11/extensions/render.h>      // for PictFormat
+#include <X11/X.h>                   // for Drawable, XID
+#include <X11/Xlib.h>                // for Display, Visual, etc
+#include <X11/extensions/Xrender.h>  // for XRenderPictFormat, etc
+#include <X11/extensions/render.h>   // for PictFormat
 #include "cairo-xlib.h"
 #include "X11UndefineNone.h"
-#include <stdint.h>                     // for uint32_t
-#include "GLDefs.h"                     // for GLenum
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxXlibSurface.h"             // for gfxXlibSurface
-#include "gfx2DGlue.h"                  // for Moz2D transistion helpers
-#include "mozilla/X11Util.h"            // for DefaultXDisplay, FinishX, etc
-#include "mozilla/gfx/Point.h"          // for IntSize
+#include <stdint.h>             // for uint32_t
+#include "GLDefs.h"             // for GLenum
+#include "gfxPlatform.h"        // for gfxPlatform
+#include "gfxXlibSurface.h"     // for gfxXlibSurface
+#include "gfx2DGlue.h"          // for Moz2D transistion helpers
+#include "mozilla/X11Util.h"    // for DefaultXDisplay, FinishX, etc
+#include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/CompositorTypes.h"  // for OpenMode
+#include "mozilla/layers/CompositorTypes.h"    // for OpenMode
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator, etc
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder, etc
-#include "mozilla/mozalloc.h"           // for operator new
+#include "mozilla/layers/ShadowLayers.h"    // for ShadowLayerForwarder, etc
+#include "mozilla/mozalloc.h"               // for operator new
 #include "gfxEnv.h"
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_ERROR
+#include "nsCOMPtr.h"  // for already_AddRefed
+#include "nsDebug.h"   // for NS_ERROR
 
 using namespace mozilla::gl;
 
@@ -35,17 +35,15 @@ namespace mozilla {
 namespace gl {
 class GLContext;
 class TextureImage;
-}
+}  // namespace gl
 
 namespace layers {
 
 // Return true if we're likely compositing using X and so should use
 // Xlib surfaces in shadow layers.
-static bool
-UsingXCompositing()
-{
+static bool UsingXCompositing() {
   if (!gfxEnv::LayersEnableXlibSurfaces()) {
-      return false;
+    return false;
   }
   return (gfxSurfaceType::Xlib ==
           gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType());
@@ -53,9 +51,8 @@ UsingXCompositing()
 
 // LookReturn a pointer to |aFormat| that lives in the Xrender library.
 // All code using render formats assumes it doesn't need to copy.
-static XRenderPictFormat*
-GetXRenderPictFormatFromId(Display* aDisplay, PictFormat aFormatId)
-{
+static XRenderPictFormat* GetXRenderPictFormatFromId(Display* aDisplay,
+                                                     PictFormat aFormatId) {
   XRenderPictFormat tmplate;
   tmplate.id = aFormatId;
   return XRenderFindFormat(aDisplay, PictFormatID, &tmplate, 0);
@@ -63,11 +60,8 @@ GetXRenderPictFormatFromId(Display* aDisplay, PictFormat aFormatId)
 
 SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf,
                                            bool aForwardGLX)
-  : mId(aSurf->XDrawable())
-  , mSize(aSurf->GetSize())
-  , mGLXPixmap(X11None)
-{
-  const XRenderPictFormat *pictFormat = aSurf->XRenderFormat();
+    : mId(aSurf->XDrawable()), mSize(aSurf->GetSize()), mGLXPixmap(X11None) {
+  const XRenderPictFormat* pictFormat = aSurf->XRenderFormat();
   if (pictFormat) {
     mFormat = pictFormat->id;
   } else {
@@ -81,15 +75,9 @@ SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf,
 
 SurfaceDescriptorX11::SurfaceDescriptorX11(Drawable aDrawable, XID aFormatID,
                                            const gfx::IntSize& aSize)
-  : mId(aDrawable)
-  , mFormat(aFormatID)
-  , mSize(aSize)
-  , mGLXPixmap(X11None)
-{ }
+    : mId(aDrawable), mFormat(aFormatID), mSize(aSize), mGLXPixmap(X11None) {}
 
-already_AddRefed<gfxXlibSurface>
-SurfaceDescriptorX11::OpenForeign() const
-{
+already_AddRefed<gfxXlibSurface> SurfaceDescriptorX11::OpenForeign() const {
   Display* display = DefaultXDisplay();
   if (!display) {
     return nullptr;
@@ -104,21 +92,17 @@ SurfaceDescriptorX11::OpenForeign() const
     Visual* visual;
     int depth;
     FindVisualAndDepth(display, mFormat, &visual, &depth);
-    if (!visual)
-      return nullptr;
+    if (!visual) return nullptr;
 
     surf = new gfxXlibSurface(display, mId, visual, mSize);
   }
 
-  if (mGLXPixmap)
-    surf->BindGLXPixmap(mGLXPixmap);
+  if (mGLXPixmap) surf->BindGLXPixmap(mGLXPixmap);
 
   return surf->CairoStatus() ? nullptr : surf.forget();
 }
 
-/*static*/ void
-ShadowLayerForwarder::PlatformSyncBeforeUpdate()
-{
+/*static*/ void ShadowLayerForwarder::PlatformSyncBeforeUpdate() {
   if (UsingXCompositing()) {
     // If we're using X surfaces, then we need to finish all pending
     // operations on the back buffers before handing them to the
@@ -128,9 +112,7 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
   }
 }
 
-/*static*/ void
-LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
-{
+/*static*/ void LayerManagerComposite::PlatformSyncBeforeReplyUpdate() {
   if (UsingXCompositing()) {
     // If we're using X surfaces, we need to finish all pending
     // operations on the *front buffers* before handing them back to
@@ -141,11 +123,9 @@ LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
   }
 }
 
-/*static*/ bool
-LayerManagerComposite::SupportsDirectTexturing()
-{
+/*static*/ bool LayerManagerComposite::SupportsDirectTexturing() {
   return false;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

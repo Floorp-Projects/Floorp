@@ -7,20 +7,17 @@
 #ifndef nsPrintSettingsWin_h__
 #define nsPrintSettingsWin_h__
 
-#include "nsPrintSettingsImpl.h"  
-#include "nsIPrintSettingsWin.h"  
-#include <windows.h>  
-
+#include "nsPrintSettingsImpl.h"
+#include "nsIPrintSettingsWin.h"
+#include <windows.h>
 
 //*****************************************************************************
 //***    nsPrintSettingsWin
 //*****************************************************************************
-class nsPrintSettingsWin : public nsPrintSettings,
-                           public nsIPrintSettingsWin
-{
+class nsPrintSettingsWin : public nsPrintSettings, public nsIPrintSettingsWin {
   virtual ~nsPrintSettingsWin();
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRINTSETTINGSWIN
 
@@ -30,7 +27,7 @@ public:
   /**
    * Makes a new copy
    */
-  virtual nsresult _Clone(nsIPrintSettings **_retval);
+  virtual nsresult _Clone(nsIPrintSettings** _retval);
 
   /**
    * Assigns values
@@ -42,19 +39,17 @@ public:
    */
   nsPrintSettingsWin& operator=(const nsPrintSettingsWin& rhs);
 
-  NS_IMETHOD GetEffectivePageSize(double *aWidth, double *aHeight) override;
+  NS_IMETHOD GetEffectivePageSize(double* aWidth, double* aHeight) override;
 
-protected:
-  void CopyDevMode(DEVMODEW* aInDevMode, DEVMODEW *& aOutDevMode);
+ protected:
+  void CopyDevMode(DEVMODEW* aInDevMode, DEVMODEW*& aOutDevMode);
   void InitUnwriteableMargin(HDC aHdc);
 
-  nsString      mDeviceName;
-  nsString      mDriverName;
+  nsString mDeviceName;
+  nsString mDriverName;
   LPDEVMODEW mDevMode;
   double mPrintableWidthInInches = 0l;
   double mPrintableHeightInInches = 0l;
 };
-
-
 
 #endif /* nsPrintSettingsWin_h__ */

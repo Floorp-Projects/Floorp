@@ -19,6 +19,6 @@ namespace mozilla {
 // "NS_ERROR_GENERATE_FAILURE(<module>, <code>)".
 void GetErrorName(nsresult rv, nsACString& name);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ErrorNames_h
+#endif  // mozilla_ErrorNames_h

@@ -1,5 +1,3 @@
 #include "structures.h"
 
-void test() {
-  mkstemp("XX");
-}
+void test() { mkstemp("XX"); }

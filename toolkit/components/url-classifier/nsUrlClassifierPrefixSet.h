@@ -26,14 +26,12 @@ namespace safebrowsing {
 
 class VariableLengthPrefixSet;
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
-class nsUrlClassifierPrefixSet final
-  : public nsIUrlClassifierPrefixSet
-  , public nsIMemoryReporter
-{
-public:
+class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
+                                       public nsIMemoryReporter {
+ public:
   nsUrlClassifierPrefixSet();
 
   NS_IMETHOD Init(const nsACString& aName) override;
@@ -53,7 +51,7 @@ public:
 
   friend class mozilla::safebrowsing::VariableLengthPrefixSet;
 
-private:
+ private:
   virtual ~nsUrlClassifierPrefixSet();
 
   static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;

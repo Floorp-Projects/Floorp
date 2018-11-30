@@ -19,9 +19,8 @@ class SessionStorageCache;
 // PartitionedLocalStorage is a in-memory-only storage exposed to trackers. It
 // doesn't share data with other contexts.
 
-class PartitionedLocalStorage final : public Storage
-{
-public:
+class PartitionedLocalStorage final : public Storage {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PartitionedLocalStorage, Storage)
 
@@ -38,34 +37,29 @@ public:
   uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
                      ErrorResult& aRv) override;
 
-  void Key(uint32_t aIndex, nsAString& aResult,
-           nsIPrincipal& aSubjectPrincipal,
+  void Key(uint32_t aIndex, nsAString& aResult, nsIPrincipal& aSubjectPrincipal,
            ErrorResult& aRv) override;
 
   void GetItem(const nsAString& aKey, nsAString& aResult,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv) override;
+               nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
   void GetSupportedNames(nsTArray<nsString>& aKeys) override;
 
   void SetItem(const nsAString& aKey, const nsAString& aValue,
-               nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aRv) override;
+               nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
-  void RemoveItem(const nsAString& aKey,
-                  nsIPrincipal& aSubjectPrincipal,
+  void RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv) override;
 
-  void Clear(nsIPrincipal& aSubjectPrincipal,
-             ErrorResult& aRv) override;
+  void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) override;
 
-private:
+ private:
   ~PartitionedLocalStorage();
 
   RefPtr<SessionStorageCache> mCache;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif //mozilla_dom_PartitionedLocalStorage_h
+#endif  // mozilla_dom_PartitionedLocalStorage_h

@@ -7,15 +7,15 @@
 #ifndef MOZILLA_GFX_TEXTURECLIENTOGL_H
 #define MOZILLA_GFX_TEXTURECLIENTOGL_H
 
-#include "GLContextTypes.h"             // for SharedTextureHandle, etc
+#include "GLContextTypes.h"  // for SharedTextureHandle, etc
 #include "GLImages.h"
 #include "gfxTypes.h"
-#include "mozilla/Attributes.h"         // for override
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/gfx/Types.h"          // for SurfaceFormat
+#include "mozilla/Attributes.h"  // for override
+#include "mozilla/gfx/Point.h"   // for IntSize
+#include "mozilla/gfx/Types.h"   // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
+#include "mozilla/layers/TextureClient.h"   // for TextureClient, etc
 #include "AndroidSurfaceTexture.h"
 #include "AndroidNativeWindow.h"
 #ifdef MOZ_WIDGET_ANDROID
@@ -28,22 +28,18 @@ namespace gfx {
 
 class DrawTarget;
 
-} // namespace gfx
+}  // namespace gfx
 
 namespace layers {
 
 #ifdef MOZ_WIDGET_ANDROID
 
-class AndroidSurfaceTextureData : public TextureData
-{
-public:
-  static already_AddRefed<TextureClient>
-  CreateTextureClient(AndroidSurfaceTextureHandle aHandle,
-                      gfx::IntSize aSize,
-                      bool aContinuous,
-                      gl::OriginPos aOriginPos,
-                      LayersIPCChannel* aAllocator,
-                      TextureFlags aFlags);
+class AndroidSurfaceTextureData : public TextureData {
+ public:
+  static already_AddRefed<TextureClient> CreateTextureClient(
+      AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous,
+      gl::OriginPos aOriginPos, LayersIPCChannel* aAllocator,
+      TextureFlags aFlags);
 
   ~AndroidSurfaceTextureData();
 
@@ -59,18 +55,19 @@ public:
   // Our data is always owned externally.
   virtual void Deallocate(LayersIPCChannel*) override {}
 
-protected:
-  AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous);
+ protected:
+  AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle,
+                            gfx::IntSize aSize, bool aContinuous);
 
   const AndroidSurfaceTextureHandle mHandle;
   const gfx::IntSize mSize;
   const bool mContinuous;
 };
 
-class AndroidNativeWindowTextureData : public TextureData
-{
-public:
-  static AndroidNativeWindowTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
+class AndroidNativeWindowTextureData : public TextureData {
+ public:
+  static AndroidNativeWindowTextureData* Create(gfx::IntSize aSize,
+                                                gfx::SurfaceFormat aFormat);
 
   virtual void FillInfo(TextureData::Info& aInfo) const override;
 
@@ -86,12 +83,12 @@ public:
 
   virtual void OnForwardedToHost() override;
 
-protected:
+ protected:
   AndroidNativeWindowTextureData(java::GeckoSurface::Param aSurface,
                                  gfx::IntSize aSize,
                                  gfx::SurfaceFormat aFormat);
 
-private:
+ private:
   java::GeckoSurface::GlobalRef mSurface;
   ANativeWindow* mNativeWindow;
   ANativeWindow_Buffer mBuffer;
@@ -102,9 +99,9 @@ private:
   const gfx::SurfaceFormat mFormat;
 };
 
-#endif // MOZ_WIDGET_ANDROID
+#endif  // MOZ_WIDGET_ANDROID
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

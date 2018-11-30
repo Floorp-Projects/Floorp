@@ -7,26 +7,22 @@
 #include "nsSMILTimeValue.h"
 
 const nsSMILTime nsSMILTimeValue::kUnresolvedMillis =
-  std::numeric_limits<nsSMILTime>::max();
+    std::numeric_limits<nsSMILTime>::max();
 
 //----------------------------------------------------------------------
 // nsSMILTimeValue methods:
 
-static inline int8_t
-Cmp(int64_t aA, int64_t aB)
-{
+static inline int8_t Cmp(int64_t aA, int64_t aB) {
   return aA == aB ? 0 : (aA > aB ? 1 : -1);
 }
 
-int8_t
-nsSMILTimeValue::CompareTo(const nsSMILTimeValue& aOther) const
-{
+int8_t nsSMILTimeValue::CompareTo(const nsSMILTimeValue& aOther) const {
   int8_t result;
 
   if (mState == STATE_DEFINITE) {
     result = (aOther.mState == STATE_DEFINITE)
-           ? Cmp(mMilliseconds, aOther.mMilliseconds)
-           : -1;
+                 ? Cmp(mMilliseconds, aOther.mMilliseconds)
+                 : -1;
   } else if (mState == STATE_INDEFINITE) {
     if (aOther.mState == STATE_DEFINITE)
       result = 1;

@@ -18,37 +18,31 @@ namespace dom {
 
 typedef nsTArray<RefPtr<TextClause>> TextClauseArray;
 
-class CompositionEvent : public UIEvent
-{
-public:
-  CompositionEvent(EventTarget* aOwner,
-                   nsPresContext* aPresContext,
+class CompositionEvent : public UIEvent {
+ public:
+  CompositionEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                    WidgetCompositionEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompositionEvent, UIEvent)
 
-  static already_AddRefed<CompositionEvent> Constructor(const GlobalObject& aGlobal,
-                                                        const nsAString& aType,
-                                                        const CompositionEventInit& aParam,
-                                                        ErrorResult& aRv);
+  static already_AddRefed<CompositionEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const CompositionEventInit& aParam, ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return CompositionEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  void InitCompositionEvent(const nsAString& aType,
-                            bool aCanBubble,
-                            bool aCancelable,
-                            nsGlobalWindowInner* aView,
-                            const nsAString& aData,
-                            const nsAString& aLocale);
+  void InitCompositionEvent(const nsAString& aType, bool aCanBubble,
+                            bool aCancelable, nsGlobalWindowInner* aView,
+                            const nsAString& aData, const nsAString& aLocale);
   void GetData(nsAString&) const;
   void GetLocale(nsAString&) const;
   void GetRanges(TextClauseArray& aRanges);
 
-protected:
+ protected:
   ~CompositionEvent() {}
 
   nsString mData;
@@ -56,12 +50,11 @@ protected:
   TextClauseArray mRanges;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::CompositionEvent>
-NS_NewDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
-                          nsPresContext* aPresContext,
-                          mozilla::WidgetCompositionEvent* aEvent);
+already_AddRefed<mozilla::dom::CompositionEvent> NS_NewDOMCompositionEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetCompositionEvent* aEvent);
 
-#endif // mozilla_dom_CompositionEvent_h_
+#endif  // mozilla_dom_CompositionEvent_h_

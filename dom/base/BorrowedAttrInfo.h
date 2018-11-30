@@ -23,13 +23,8 @@ namespace dom {
  * this struct hold are only valid until the element or its attributes are
  * mutated (directly or via script).
  */
-struct BorrowedAttrInfo
-{
-  BorrowedAttrInfo()
-    : mName(nullptr)
-    , mValue(nullptr)
-  {
-  }
+struct BorrowedAttrInfo {
+  BorrowedAttrInfo() : mName(nullptr), mValue(nullptr) {}
 
   BorrowedAttrInfo(const nsAttrName* aName, const nsAttrValue* aValue);
 
@@ -41,6 +36,6 @@ struct BorrowedAttrInfo
   explicit operator bool() const { return mName != nullptr; }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 #endif

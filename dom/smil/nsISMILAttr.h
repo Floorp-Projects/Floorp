@@ -16,8 +16,8 @@ class nsIContent;
 namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////
 // nsISMILAttr: A variable targeted by SMIL for animation and can therefore have
@@ -28,9 +28,8 @@ class SVGAnimationElement;
 // calculations. They have a single owner who is responsible for deleting the
 // object.
 
-class nsISMILAttr
-{
-public:
+class nsISMILAttr {
+ public:
   /**
    * Creates a new nsSMILValue for this attribute from a string. The string is
    * parsed in the context of this attribute so that context-dependent values
@@ -50,10 +49,10 @@ public:
    *                    reused in future samples.
    * @return NS_OK on success or an error code if creation failed.
    */
-  virtual nsresult ValueFromString(const nsAString& aStr,
-                                   const mozilla::dom::SVGAnimationElement* aSrcElement,
-                                   nsSMILValue& aValue,
-                                   bool& aPreventCachingOfSandwich) const = 0;
+  virtual nsresult ValueFromString(
+      const nsAString& aStr,
+      const mozilla::dom::SVGAnimationElement* aSrcElement, nsSMILValue& aValue,
+      bool& aPreventCachingOfSandwich) const = 0;
 
   /**
    * Gets the underlying value of this attribute.
@@ -95,4 +94,4 @@ public:
   virtual ~nsISMILAttr() {}
 };
 
-#endif // NS_ISMILATTR_H_
+#endif  // NS_ISMILATTR_H_

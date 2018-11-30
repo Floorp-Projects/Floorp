@@ -15,12 +15,12 @@ using namespace gfx;
 
 namespace layers {
 
-#define ALIGNED_32(x) ((x+31)&~31)
-#define ALIGNEDPTR_32(x) reinterpret_cast<uint8_t*>((reinterpret_cast<uintptr_t>(x)+31)&~31)
+#define ALIGNED_32(x) ((x + 31) & ~31)
+#define ALIGNEDPTR_32(x) \
+  reinterpret_cast<uint8_t*>((reinterpret_cast<uintptr_t>(x) + 31) & ~31)
 
 static already_AddRefed<SourceSurface>
-CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
-{
+CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
   size_t bytesPerRow = aSurface->GetBytesPerRow();
   size_t ioWidth = aSurface->GetDevicePixelWidth();
   size_t ioHeight = aSurface->GetDevicePixelHeight();
@@ -33,12 +33,12 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
   }
 
   SurfaceFormat format =
-    (ioFormat == SurfaceFormat::NV12 || ioFormat == SurfaceFormat::YUV422)
-      ? SurfaceFormat::B8G8R8X8
-      : SurfaceFormat::B8G8R8A8;
+      (ioFormat == SurfaceFormat::NV12 || ioFormat == SurfaceFormat::YUV422)
+          ? SurfaceFormat::B8G8R8X8
+          : SurfaceFormat::B8G8R8A8;
 
-  RefPtr<DataSourceSurface> dataSurface =
-    Factory::CreateDataSourceSurface(IntSize::Truncate(ioWidth, ioHeight), format);
+  RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
+      IntSize::Truncate(ioWidth, ioHeight), format);
   if (NS_WARN_IF(!dataSurface)) {
     return nullptr;
   }
@@ -84,20 +84,21 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
     data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
     data.mPicSize = data.mYSize;
 
-    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
+    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8,
+                      IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData,
+                      mappedSurface.mStride);
   } else if (ioFormat == SurfaceFormat::YUV422) {
     if (ioWidth == ALIGNED_32(ioWidth)) {
       // Optimization when width is aligned to 32.
       IntSize size = IntSize::Truncate(ioWidth, ioHeight);
-      libyuv::ConvertToARGB((uint8_t*)aSurface->GetBaseAddress(), 0 /* not used */,
-                            mappedSurface.mData, mappedSurface.mStride,
-                            0, 0,
-                            size.width, size.height,
-                            size.width, size.height,
+      libyuv::ConvertToARGB((uint8_t*)aSurface->GetBaseAddress(),
+                            0 /* not used */, mappedSurface.mData,
+                            mappedSurface.mStride, 0, 0, size.width,
+                            size.height, size.width, size.height,
                             libyuv::kRotate0, libyuv::FOURCC_UYVY);
     } else {
       /* Convert to YV16 */
-      size_t cbCrWidth = (ioWidth+1)>>1;
+      size_t cbCrWidth = (ioWidth + 1) >> 1;
       size_t cbCrHeight = ioHeight;
       // Ensure our stride is a multiple of 32 to allow for memory aligned rows.
       size_t cbCrStride = ALIGNED_32(cbCrWidth);
@@ -132,7 +133,7 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
         if (strideDelta) {
           cbDest += strideDelta;
           crDest += strideDelta;
-          yDest  += strideDelta << 1;
+          yDest += strideDelta << 1;
         }
       }
 
@@ -147,15 +148,16 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
       data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
       data.mPicSize = data.mYSize;
 
-      ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
+      ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8,
+                        IntSize::Truncate(ioWidth, ioHeight),
+                        mappedSurface.mData, mappedSurface.mStride);
     }
   } else {
     unsigned char* ioData = (unsigned char*)aSurface->GetBaseAddress();
 
     for (size_t i = 0; i < ioHeight; ++i) {
       memcpy(mappedSurface.mData + i * mappedSurface.mStride,
-             ioData + i * bytesPerRow,
-             ioWidth * 4);
+             ioData + i * bytesPerRow, ioWidth * 4);
     }
   }
 
@@ -164,14 +166,14 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
   return dataSurface.forget();
 }
 
-already_AddRefed<SourceSurface>
-CreateSourceSurfaceFromMacIOSurface(MacIOSurface* aSurface)
-{
+already_AddRefed<SourceSurface> CreateSourceSurfaceFromMacIOSurface(
+    MacIOSurface* aSurface) {
   aSurface->Lock();
-  RefPtr<SourceSurface> result = CreateSourceSurfaceFromLockedMacIOSurface(aSurface);
+  RefPtr<SourceSurface> result =
+      CreateSourceSurfaceFromLockedMacIOSurface(aSurface);
   aSurface->Unlock();
   return result.forget();
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

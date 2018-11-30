@@ -12,25 +12,22 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Desc)
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGDescElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGDescElement::WrapNode(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return SVGDescElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGDescElement::SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGDescElementBase(std::move(aNodeInfo))
-{
-}
+SVGDescElement::SVGDescElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGDescElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
 // nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGDescElement)
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGViewElement.h"
-#include "nsContentUtils.h" // for nsCharSeparatedTokenizerTemplate
+#include "nsContentUtils.h"  // for nsCharSeparatedTokenizerTemplate
 #include "nsSVGAnimatedTransformList.h"
 #include "nsCharSeparatedTokenizer.h"
 
@@ -16,37 +16,30 @@ namespace mozilla {
 
 using namespace dom;
 
-static bool
-IsMatchingParameter(const nsAString& aString, const nsAString& aParameterName)
-{
+static bool IsMatchingParameter(const nsAString& aString,
+                                const nsAString& aParameterName) {
   // The first two tests ensure aString.Length() > aParameterName.Length()
   // so it's then safe to do the third test
-  return StringBeginsWith(aString, aParameterName) &&
-         aString.Last() == ')' &&
+  return StringBeginsWith(aString, aParameterName) && aString.Last() == ')' &&
          aString.CharAt(aParameterName.Length()) == '(';
 }
 
-inline bool
-IgnoreWhitespace(char16_t aChar)
-{
-  return false;
-}
+inline bool IgnoreWhitespace(char16_t aChar) { return false; }
 
-static SVGViewElement*
-GetViewElement(nsIDocument* aDocument, const nsAString& aId)
-{
+static SVGViewElement* GetViewElement(nsIDocument* aDocument,
+                                      const nsAString& aId) {
   Element* element = aDocument->GetElementById(aId);
-  return (element && element->IsSVGElement(nsGkAtoms::view)) ?
-            static_cast<SVGViewElement*>(element) : nullptr;
+  return (element && element->IsSVGElement(nsGkAtoms::view))
+             ? static_cast<SVGViewElement*>(element)
+             : nullptr;
 }
 
 // Handles setting/clearing the root's mSVGView pointer.
-class MOZ_RAII AutoSVGViewHandler
-{
-public:
-  explicit AutoSVGViewHandler(SVGSVGElement* aRoot
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mRoot(aRoot), mValid(false) {
+class MOZ_RAII AutoSVGViewHandler {
+ public:
+  explicit AutoSVGViewHandler(
+      SVGSVGElement* aRoot MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mRoot(aRoot), mValid(false) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     mWasOverridden = mRoot->UseCurrentView();
     mRoot->mSVGView = nullptr;
@@ -70,8 +63,7 @@ public:
     mSVGView = new SVGView();
   }
 
-  bool ProcessAttr(const nsAString& aToken, const nsAString &aParams) {
-
+  bool ProcessAttr(const nsAString& aToken, const nsAString& aParams) {
     MOZ_ASSERT(mSVGView, "CreateSVGView should have been called");
 
     // SVGViewAttributes may occur in any order, but each type may only occur
@@ -81,14 +73,15 @@ public:
 
     if (IsMatchingParameter(aToken, NS_LITERAL_STRING("viewBox"))) {
       if (mSVGView->mViewBox.IsExplicitlySet() ||
-          NS_FAILED(mSVGView->mViewBox.SetBaseValueString(
-                      aParams, mRoot, false))) {
+          NS_FAILED(
+              mSVGView->mViewBox.SetBaseValueString(aParams, mRoot, false))) {
         return false;
       }
-    } else if (IsMatchingParameter(aToken, NS_LITERAL_STRING("preserveAspectRatio"))) {
+    } else if (IsMatchingParameter(aToken,
+                                   NS_LITERAL_STRING("preserveAspectRatio"))) {
       if (mSVGView->mPreserveAspectRatio.IsExplicitlySet() ||
           NS_FAILED(mSVGView->mPreserveAspectRatio.SetBaseValueString(
-                      aParams, mRoot, false))) {
+              aParams, mRoot, false))) {
         return false;
       }
     } else if (IsMatchingParameter(aToken, NS_LITERAL_STRING("transform"))) {
@@ -96,7 +89,8 @@ public:
         return false;
       }
       mSVGView->mTransforms = new nsSVGAnimatedTransformList();
-      if (NS_FAILED(mSVGView->mTransforms->SetBaseValueString(aParams, mRoot))) {
+      if (NS_FAILED(
+              mSVGView->mTransforms->SetBaseValueString(aParams, mRoot))) {
         return false;
       }
     } else if (IsMatchingParameter(aToken, NS_LITERAL_STRING("zoomAndPan"))) {
@@ -105,8 +99,7 @@ public:
       }
       nsAtom* valAtom = NS_GetStaticAtom(aParams);
       if (!valAtom ||
-          NS_FAILED(mSVGView->mZoomAndPan.SetBaseValueAtom(
-                      valAtom, mRoot))) {
+          NS_FAILED(mSVGView->mZoomAndPan.SetBaseValueAtom(valAtom, mRoot))) {
         return false;
       }
     } else {
@@ -115,22 +108,18 @@ public:
     return true;
   }
 
-  void SetValid() {
-    mValid = true;
-  }
+  void SetValid() { mValid = true; }
 
-private:
-  SVGSVGElement*     mRoot;
+ private:
+  SVGSVGElement* mRoot;
   nsAutoPtr<SVGView> mSVGView;
-  bool               mValid;
-  bool               mWasOverridden;
+  bool mValid;
+  bool mWasOverridden;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-bool
-SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
-                                          SVGSVGElement* aRoot)
-{
+bool SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
+                                               SVGSVGElement* aRoot) {
   AutoSVGViewHandler viewHandler(aRoot);
 
   if (!IsMatchingParameter(aViewSpec, NS_LITERAL_STRING("svgView"))) {
@@ -141,7 +130,7 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
   int32_t bracketPos = aViewSpec.FindChar('(');
   uint32_t lengthOfViewSpec = aViewSpec.Length() - bracketPos - 2;
   nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> tokenizer(
-    Substring(aViewSpec, bracketPos + 1, lengthOfViewSpec), ';');
+      Substring(aViewSpec, bracketPos + 1, lengthOfViewSpec), ';');
 
   if (!tokenizer.hasMoreTokens()) {
     return false;
@@ -149,7 +138,6 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
   viewHandler.CreateSVGView();
 
   do {
-
     nsAutoString token(tokenizer.nextToken());
 
     bracketPos = token.FindChar('(');
@@ -158,8 +146,8 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
       return false;
     }
 
-    const nsAString &params =
-      Substring(token, bracketPos + 1, token.Length() - bracketPos - 2);
+    const nsAString& params =
+        Substring(token, bracketPos + 1, token.Length() - bracketPos - 2);
 
     if (!viewHandler.ProcessAttr(token, params)) {
       return false;
@@ -171,15 +159,13 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
   return true;
 }
 
-bool
-SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument* aDocument,
-                                                 const nsAString& aAnchorName)
-{
+bool SVGFragmentIdentifier::ProcessFragmentIdentifier(
+    nsIDocument* aDocument, const nsAString& aAnchorName) {
   MOZ_ASSERT(aDocument->GetRootElement()->IsSVGElement(nsGkAtoms::svg),
              "expecting an SVG root element");
 
   SVGSVGElement* rootElement =
-    static_cast<SVGSVGElement*>(aDocument->GetRootElement());
+      static_cast<SVGSVGElement*>(aDocument->GetRootElement());
 
   const SVGViewElement* viewElement = GetViewElement(aDocument, aAnchorName);
 
@@ -198,4 +184,4 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument* aDocument,
   return ProcessSVGViewSpec(aAnchorName, rootElement);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

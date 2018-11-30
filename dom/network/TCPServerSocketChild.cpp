@@ -26,17 +26,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPServerSocketChildBase)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TCPServerSocketChildBase::TCPServerSocketChildBase()
-: mIPCOpen(false)
-{
-}
+TCPServerSocketChildBase::TCPServerSocketChildBase() : mIPCOpen(false) {}
 
-TCPServerSocketChildBase::~TCPServerSocketChildBase()
-{
-}
+TCPServerSocketChildBase::~TCPServerSocketChildBase() {}
 
-NS_IMETHODIMP_(MozExternalRefCountType) TCPServerSocketChild::Release(void)
-{
+NS_IMETHODIMP_(MozExternalRefCountType) TCPServerSocketChild::Release(void) {
   nsrefcnt refcnt = TCPServerSocketChildBase::Release();
   if (refcnt == 1 && mIPCOpen) {
     PTCPServerSocketChild::SendRequestDelete();
@@ -45,52 +39,43 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPServerSocketChild::Release(void)
   return refcnt;
 }
 
-TCPServerSocketChild::TCPServerSocketChild(TCPServerSocket* aServerSocket, uint16_t aLocalPort,
-                                           uint16_t aBacklog, bool aUseArrayBuffers,
-                                           nsIEventTarget* aIPCEventTarget)
-{
+TCPServerSocketChild::TCPServerSocketChild(TCPServerSocket* aServerSocket,
+                                           uint16_t aLocalPort,
+                                           uint16_t aBacklog,
+                                           bool aUseArrayBuffers,
+                                           nsIEventTarget* aIPCEventTarget) {
   mServerSocket = aServerSocket;
   if (aIPCEventTarget) {
     gNeckoChild->SetEventTargetForActor(this, aIPCEventTarget);
   }
   AddIPDLReference();
-  gNeckoChild->SendPTCPServerSocketConstructor(this, aLocalPort, aBacklog, aUseArrayBuffers);
+  gNeckoChild->SendPTCPServerSocketConstructor(this, aLocalPort, aBacklog,
+                                               aUseArrayBuffers);
 }
 
-void
-TCPServerSocketChildBase::ReleaseIPDLReference()
-{
+void TCPServerSocketChildBase::ReleaseIPDLReference() {
   MOZ_ASSERT(mIPCOpen);
   mIPCOpen = false;
   this->Release();
 }
 
-void
-TCPServerSocketChildBase::AddIPDLReference()
-{
+void TCPServerSocketChildBase::AddIPDLReference() {
   MOZ_ASSERT(!mIPCOpen);
   mIPCOpen = true;
   this->AddRef();
 }
 
-TCPServerSocketChild::~TCPServerSocketChild()
-{
-}
+TCPServerSocketChild::~TCPServerSocketChild() {}
 
-mozilla::ipc::IPCResult
-TCPServerSocketChild::RecvCallbackAccept(PTCPSocketChild *psocket)
-{
+mozilla::ipc::IPCResult TCPServerSocketChild::RecvCallbackAccept(
+    PTCPSocketChild* psocket) {
   RefPtr<TCPSocketChild> socket = static_cast<TCPSocketChild*>(psocket);
   nsresult rv = mServerSocket->AcceptChildSocket(socket);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   return IPC_OK();
 }
 
-void
-TCPServerSocketChild::Close()
-{
-  SendClose();
-}
+void TCPServerSocketChild::Close() { SendClose(); }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

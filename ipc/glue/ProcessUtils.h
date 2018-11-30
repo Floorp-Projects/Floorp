@@ -14,8 +14,7 @@ namespace ipc {
 // this directly.
 void SetThisProcessName(const char *aName);
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // ifndef mozilla_ipc_ProcessUtils_h
-
+#endif  // ifndef mozilla_ipc_ProcessUtils_h

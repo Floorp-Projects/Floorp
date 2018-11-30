@@ -9,9 +9,12 @@
 
 #define NS_MIXEDCONTENTBLOCKER_CONTRACTID "@mozilla.org/mixedcontentblocker;1"
 /* daf1461b-bf29-4f88-8d0e-4bcdf332c862 */
-#define NS_MIXEDCONTENTBLOCKER_CID \
-{ 0xdaf1461b, 0xbf29, 0x4f88, \
-  { 0x8d, 0x0e, 0x4b, 0xcd, 0xf3, 0x32, 0xc8, 0x62 } }
+#define NS_MIXEDCONTENTBLOCKER_CID                   \
+  {                                                  \
+    0xdaf1461b, 0xbf29, 0x4f88, {                    \
+      0x8d, 0x0e, 0x4b, 0xcd, 0xf3, 0x32, 0xc8, 0x62 \
+    }                                                \
+  }
 
 // This enum defines type of content that is detected when an
 // nsMixedContentEvent fires
@@ -30,15 +33,14 @@ enum MixedContentTypes {
 
 using mozilla::OriginAttributes;
 
-class nsILoadInfo; // forward declaration
+class nsILoadInfo;  // forward declaration
 
 class nsMixedContentBlocker : public nsIContentPolicy,
-                              public nsIChannelEventSink
-{
-private:
+                              public nsIChannelEventSink {
+ private:
   virtual ~nsMixedContentBlocker();
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPOLICY
   NS_DECL_NSICHANNELEVENTSINK
@@ -60,16 +62,14 @@ public:
    * Remaining parameters are from nsIContentPolicy::ShouldLoad().
    */
   static nsresult ShouldLoad(bool aHadInsecureImageRedirect,
-                             uint32_t aContentType,
-                             nsIURI* aContentLocation,
+                             uint32_t aContentType, nsIURI* aContentLocation,
                              nsIURI* aRequestingLocation,
                              nsISupports* aRequestingContext,
                              const nsACString& aMimeGuess,
                              nsIPrincipal* aRequestPrincipal,
                              int16_t* aDecision);
-  static void AccumulateMixedContentHSTS(nsIURI* aURI,
-                                         bool aActive,
-                                         const OriginAttributes& aOriginAttributes);
+  static void AccumulateMixedContentHSTS(
+      nsIURI* aURI, bool aActive, const OriginAttributes& aOriginAttributes);
 
   static bool ShouldUpgradeMixedDisplayContent();
 

@@ -52,6 +52,6 @@ struct EventInfo {
   const nsDependentCString object() const;
 };
 
-} // namespace
+}  // namespace
 
-#endif // TelemetryEventInfo_h__
+#endif  // TelemetryEventInfo_h__

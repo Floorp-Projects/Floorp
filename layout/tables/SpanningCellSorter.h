@@ -22,70 +22,69 @@
  * stable sort (in fact, it currently reverses).
  */
 class MOZ_STACK_CLASS SpanningCellSorter {
-public:
-    SpanningCellSorter();
-    ~SpanningCellSorter();
+ public:
+  SpanningCellSorter();
+  ~SpanningCellSorter();
 
-    struct Item {
-        int32_t row, col;
-        Item *next;
-    };
+  struct Item {
+    int32_t row, col;
+    Item *next;
+  };
 
-    /**
-     * Add a cell to the sorter.  Returns false on out of memory.
-     * aColSpan is the number of columns spanned, and aRow/aCol are the
-     * position of the cell in the table (for GetCellInfoAt).
-     */
-    bool AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol);
+  /**
+   * Add a cell to the sorter.  Returns false on out of memory.
+   * aColSpan is the number of columns spanned, and aRow/aCol are the
+   * position of the cell in the table (for GetCellInfoAt).
+   */
+  bool AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol);
 
-    /**
-     * Get the next *list* of cells.  Each list contains all the cells
-     * for a colspan value, and the lists are given in order from lowest
-     * to highest colspan.  The colspan value is filled in to *aColSpan.
-     */
-    Item* GetNext(int32_t *aColSpan);
-private:
+  /**
+   * Get the next *list* of cells.  Each list contains all the cells
+   * for a colspan value, and the lists are given in order from lowest
+   * to highest colspan.  The colspan value is filled in to *aColSpan.
+   */
+  Item *GetNext(int32_t *aColSpan);
 
-    enum State { ADDING, ENUMERATING_ARRAY, ENUMERATING_HASH, DONE };
-    State mState;
+ private:
+  enum State { ADDING, ENUMERATING_ARRAY, ENUMERATING_HASH, DONE };
+  State mState;
 
-    // store small colspans in an array for fast sorting and
-    // enumeration, and large colspans in a hash table
+  // store small colspans in an array for fast sorting and
+  // enumeration, and large colspans in a hash table
 
-    enum { ARRAY_BASE = 2 };
-    enum { ARRAY_SIZE = 8 };
-    Item *mArray[ARRAY_SIZE];
-    int32_t SpanToIndex(int32_t aSpan) { return aSpan - ARRAY_BASE; }
-    int32_t IndexToSpan(int32_t aIndex) { return aIndex + ARRAY_BASE; }
-    bool UseArrayForSpan(int32_t aSpan) {
-        NS_ASSERTION(SpanToIndex(aSpan) >= 0, "cell without colspan");
-        return SpanToIndex(aSpan) < ARRAY_SIZE;
-    }
+  enum { ARRAY_BASE = 2 };
+  enum { ARRAY_SIZE = 8 };
+  Item *mArray[ARRAY_SIZE];
+  int32_t SpanToIndex(int32_t aSpan) { return aSpan - ARRAY_BASE; }
+  int32_t IndexToSpan(int32_t aIndex) { return aIndex + ARRAY_BASE; }
+  bool UseArrayForSpan(int32_t aSpan) {
+    NS_ASSERTION(SpanToIndex(aSpan) >= 0, "cell without colspan");
+    return SpanToIndex(aSpan) < ARRAY_SIZE;
+  }
 
-    PLDHashTable mHashTable;
-    struct HashTableEntry : public PLDHashEntryHdr {
-        int32_t mColSpan;
-        Item *mItems;
-    };
+  PLDHashTable mHashTable;
+  struct HashTableEntry : public PLDHashEntryHdr {
+    int32_t mColSpan;
+    Item *mItems;
+  };
 
-    static const PLDHashTableOps HashTableOps;
+  static const PLDHashTableOps HashTableOps;
 
-    static PLDHashNumber HashTableHashKey(const void *key);
-    static bool
-        HashTableMatchEntry(const PLDHashEntryHdr *hdr, const void *key);
+  static PLDHashNumber HashTableHashKey(const void *key);
+  static bool HashTableMatchEntry(const PLDHashEntryHdr *hdr, const void *key);
 
-    static int SortArray(const void *a, const void *b, void *closure);
+  static int SortArray(const void *a, const void *b, void *closure);
 
-    /* state used only during enumeration */
-    uint32_t mEnumerationIndex; // into mArray or mSortedHashTable
-    HashTableEntry **mSortedHashTable;
+  /* state used only during enumeration */
+  uint32_t mEnumerationIndex;  // into mArray or mSortedHashTable
+  HashTableEntry **mSortedHashTable;
 
-    /*
-     * operator new is forbidden since we use the pres shell's stack
-     * memory, which much be pushed and popped at points matching a
-     * push/pop on the C++ stack.
-     */
-    void* operator new(size_t sz) CPP_THROW_NEW { return nullptr; }
+  /*
+   * operator new is forbidden since we use the pres shell's stack
+   * memory, which much be pushed and popped at points matching a
+   * push/pop on the C++ stack.
+   */
+  void *operator new(size_t sz) CPP_THROW_NEW { return nullptr; }
 };
 
 #endif

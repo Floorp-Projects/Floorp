@@ -10,26 +10,20 @@
 #include "mozilla/Tuple.h"
 #include "nsCycleCollectionTraversalCallback.h"
 
-template<typename... Elements>
-inline void
-ImplCycleCollectionUnlink(mozilla::Tuple<Elements...>& aField)
-{
-  ForEach(aField, [](auto& aElem) {
-    ImplCycleCollectionUnlink(aElem);
-  });
+template <typename... Elements>
+inline void ImplCycleCollectionUnlink(mozilla::Tuple<Elements...>& aField) {
+  ForEach(aField, [](auto& aElem) { ImplCycleCollectionUnlink(aElem); });
 }
 
-template<typename... Elements>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            mozilla::Tuple<Elements...>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
+template <typename... Elements>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    mozilla::Tuple<Elements...>& aField, const char* aName,
+    uint32_t aFlags = 0) {
   aFlags |= CycleCollectionEdgeNameArrayFlag;
   ForEach(aField, [&](auto& aElem) {
     ImplCycleCollectionTraverse(aCallback, aElem, aName, aFlags);
   });
 }
 
-#endif // TupleCycleCollection_h
+#endif  // TupleCycleCollection_h

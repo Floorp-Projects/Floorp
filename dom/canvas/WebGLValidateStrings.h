@@ -33,13 +33,10 @@ namespace mozilla {
 
 class WebGLContext;
 
-bool
-TruncateComments(const nsAString& src, nsAString* const out);
-bool
-ValidateGLSLPreprocString(WebGLContext* webgl, const nsAString& string);
-bool
-ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl);
+bool TruncateComments(const nsAString& src, nsAString* const out);
+bool ValidateGLSLPreprocString(WebGLContext* webgl, const nsAString& string);
+bool ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WEBGL_VALIDATE_STRINGS_H_
+#endif  // WEBGL_VALIDATE_STRINGS_H_

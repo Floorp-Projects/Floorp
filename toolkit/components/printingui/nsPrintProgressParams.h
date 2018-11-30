@@ -9,18 +9,17 @@
 #include "nsIPrintProgressParams.h"
 #include "nsString.h"
 
-class nsPrintProgressParams : public nsIPrintProgressParams
-{
-public:
-	NS_DECL_ISUPPORTS
+class nsPrintProgressParams : public nsIPrintProgressParams {
+ public:
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTPROGRESSPARAMS
 
-	nsPrintProgressParams();
+  nsPrintProgressParams();
 
-protected:
-	virtual ~nsPrintProgressParams();
+ protected:
+  virtual ~nsPrintProgressParams();
 
-private:
+ private:
   nsString mDocTitle;
   nsString mDocURL;
 };

@@ -13,167 +13,158 @@ using namespace JS;
 
 static bool executor_called = false;
 
-static bool
-PromiseExecutor(JSContext* cx, unsigned argc, Value* vp)
-{
+static bool PromiseExecutor(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef DEBUG
-    CallArgs args = CallArgsFromVp(argc, vp);
-#endif // DEBUG
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[0].toObject().is<JSFunction>());
-    MOZ_ASSERT(args[1].toObject().is<JSFunction>());
+  CallArgs args = CallArgsFromVp(argc, vp);
+#endif  // DEBUG
+  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args[0].toObject().is<JSFunction>());
+  MOZ_ASSERT(args[1].toObject().is<JSFunction>());
 
-    executor_called = true;
-    return true;
+  executor_called = true;
+  return true;
 }
 
-static JSObject*
-CreatePromise(JSContext* cx)
-{
-    RootedFunction executor(cx, JS_NewFunction(cx, PromiseExecutor, 2, 0, "executor"));
-    if (!executor) {
-        return nullptr;
-    }
-    return JS::NewPromiseObject(cx, executor);
+static JSObject* CreatePromise(JSContext* cx) {
+  RootedFunction executor(
+      cx, JS_NewFunction(cx, PromiseExecutor, 2, 0, "executor"));
+  if (!executor) {
+    return nullptr;
+  }
+  return JS::NewPromiseObject(cx, executor);
 }
 
-BEGIN_TEST(testPromise_NewPromise)
-{
-    RootedObject promise(cx, CreatePromise(cx));
-    CHECK(promise);
-    CHECK(executor_called);
+BEGIN_TEST(testPromise_NewPromise) {
+  RootedObject promise(cx, CreatePromise(cx));
+  CHECK(promise);
+  CHECK(executor_called);
 
-    return true;
+  return true;
 }
 END_TEST(testPromise_NewPromise)
 
-BEGIN_TEST(testPromise_GetPromiseState)
-{
-    RootedObject promise(cx, CreatePromise(cx));
-    if (!promise) {
-        return false;
-    }
+BEGIN_TEST(testPromise_GetPromiseState) {
+  RootedObject promise(cx, CreatePromise(cx));
+  if (!promise) {
+    return false;
+  }
 
-    CHECK(JS::GetPromiseState(promise) == JS::PromiseState::Pending);
+  CHECK(JS::GetPromiseState(promise) == JS::PromiseState::Pending);
 
-    return true;
+  return true;
 }
 END_TEST(testPromise_GetPromiseState)
 
-BEGIN_TEST(testPromise_ResolvePromise)
-{
-    RootedObject promise(cx, CreatePromise(cx));
-    if (!promise) {
-        return false;
-    }
+BEGIN_TEST(testPromise_ResolvePromise) {
+  RootedObject promise(cx, CreatePromise(cx));
+  if (!promise) {
+    return false;
+  }
 
-    RootedValue result(cx);
-    result.setInt32(42);
-    JS::ResolvePromise(cx, promise, result);
+  RootedValue result(cx);
+  result.setInt32(42);
+  JS::ResolvePromise(cx, promise, result);
 
-    CHECK(JS::GetPromiseState(promise) == JS::PromiseState::Fulfilled);
+  CHECK(JS::GetPromiseState(promise) == JS::PromiseState::Fulfilled);
 
-    return true;
+  return true;
 }
 END_TEST(testPromise_ResolvePromise)
 
-BEGIN_TEST(testPromise_RejectPromise)
-{
-    RootedObject promise(cx, CreatePromise(cx));
-    if (!promise) {
-        return false;
-    }
+BEGIN_TEST(testPromise_RejectPromise) {
+  RootedObject promise(cx, CreatePromise(cx));
+  if (!promise) {
+    return false;
+  }
 
-    RootedValue result(cx);
-    result.setInt32(42);
-    JS::RejectPromise(cx, promise, result);
+  RootedValue result(cx);
+  result.setInt32(42);
+  JS::RejectPromise(cx, promise, result);
 
-    CHECK(JS::GetPromiseState(promise) == JS::PromiseState::Rejected);
+  CHECK(JS::GetPromiseState(promise) == JS::PromiseState::Rejected);
 
-    return true;
+  return true;
 }
 END_TEST(testPromise_RejectPromise)
 
 static bool thenHandler_called = false;
 
-static bool
-PromiseThenHandler(JSContext* cx, unsigned argc, Value* vp)
-{
+static bool PromiseThenHandler(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef DEBUG
-    CallArgs args = CallArgsFromVp(argc, vp);
-#endif // DEBUG
-    MOZ_ASSERT(args.length() == 1);
+  CallArgs args = CallArgsFromVp(argc, vp);
+#endif  // DEBUG
+  MOZ_ASSERT(args.length() == 1);
 
-    thenHandler_called = true;
-    return true;
+  thenHandler_called = true;
+  return true;
 }
 
 static bool catchHandler_called = false;
 
-static bool
-PromiseCatchHandler(JSContext* cx, unsigned argc, Value* vp)
-{
+static bool PromiseCatchHandler(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef DEBUG
-    CallArgs args = CallArgsFromVp(argc, vp);
-#endif // DEBUG
-    MOZ_ASSERT(args.length() == 1);
+  CallArgs args = CallArgsFromVp(argc, vp);
+#endif  // DEBUG
+  MOZ_ASSERT(args.length() == 1);
 
-    catchHandler_called = true;
-    return true;
+  catchHandler_called = true;
+  return true;
 }
 
-BEGIN_TEST(testPromise_PromiseThen)
-{
-    RootedObject promise(cx, CreatePromise(cx));
-    if (!promise) {
-        return false;
-    }
+BEGIN_TEST(testPromise_PromiseThen) {
+  RootedObject promise(cx, CreatePromise(cx));
+  if (!promise) {
+    return false;
+  }
 
-    RootedFunction thenHandler(cx, JS_NewFunction(cx, PromiseThenHandler, 1, 0, "thenHandler"));
-    if (!thenHandler) {
-        return false;
-    }
-    RootedFunction catchHandler(cx, JS_NewFunction(cx, PromiseCatchHandler, 1, 0, "catchHandler"));
-    if (!catchHandler) {
-        return false;
-    }
-    JS::AddPromiseReactions(cx, promise, thenHandler, catchHandler);
+  RootedFunction thenHandler(
+      cx, JS_NewFunction(cx, PromiseThenHandler, 1, 0, "thenHandler"));
+  if (!thenHandler) {
+    return false;
+  }
+  RootedFunction catchHandler(
+      cx, JS_NewFunction(cx, PromiseCatchHandler, 1, 0, "catchHandler"));
+  if (!catchHandler) {
+    return false;
+  }
+  JS::AddPromiseReactions(cx, promise, thenHandler, catchHandler);
 
-    RootedValue result(cx);
-    result.setInt32(42);
-    JS::ResolvePromise(cx, promise, result);
-    js::RunJobs(cx);
+  RootedValue result(cx);
+  result.setInt32(42);
+  JS::ResolvePromise(cx, promise, result);
+  js::RunJobs(cx);
 
-    CHECK(thenHandler_called);
+  CHECK(thenHandler_called);
 
-    return true;
+  return true;
 }
 END_TEST(testPromise_PromiseThen)
 
-BEGIN_TEST(testPromise_PromiseCatch)
-{
-    RootedObject promise(cx, CreatePromise(cx));
-    if (!promise) {
-        return false;
-    }
+BEGIN_TEST(testPromise_PromiseCatch) {
+  RootedObject promise(cx, CreatePromise(cx));
+  if (!promise) {
+    return false;
+  }
 
-    RootedFunction thenHandler(cx, JS_NewFunction(cx, PromiseThenHandler, 1, 0, "thenHandler"));
-    if (!thenHandler) {
-        return false;
-    }
-    RootedFunction catchHandler(cx, JS_NewFunction(cx, PromiseCatchHandler, 1, 0, "catchHandler"));
-    if (!catchHandler) {
-        return false;
-    }
-    JS::AddPromiseReactions(cx, promise, thenHandler, catchHandler);
+  RootedFunction thenHandler(
+      cx, JS_NewFunction(cx, PromiseThenHandler, 1, 0, "thenHandler"));
+  if (!thenHandler) {
+    return false;
+  }
+  RootedFunction catchHandler(
+      cx, JS_NewFunction(cx, PromiseCatchHandler, 1, 0, "catchHandler"));
+  if (!catchHandler) {
+    return false;
+  }
+  JS::AddPromiseReactions(cx, promise, thenHandler, catchHandler);
 
-    RootedValue result(cx);
-    result.setInt32(42);
-    JS::RejectPromise(cx, promise, result);
-    js::RunJobs(cx);
+  RootedValue result(cx);
+  result.setInt32(42);
+  JS::RejectPromise(cx, promise, result);
+  js::RunJobs(cx);
 
-    CHECK(catchHandler_called);
+  CHECK(catchHandler_called);
 
-    return true;
+  return true;
 }
 END_TEST(testPromise_PromiseCatch)

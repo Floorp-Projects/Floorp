@@ -27,37 +27,27 @@
 namespace mozilla {
 namespace ipc {
 
-static void
-LogError(const char* what)
-{
-  __android_log_print(ANDROID_LOG_ERROR, "Gecko",
-                      "%s: %s (%d)", what, strerror(errno), errno);
+static void LogError(const char* what) {
+  __android_log_print(ANDROID_LOG_ERROR, "Gecko", "%s: %s (%d)", what,
+                      strerror(errno), errno);
 }
 
 SharedMemoryBasic::SharedMemoryBasic()
-  : mShmFd(-1)
-  , mMemory(nullptr)
-  , mOpenRights(RightsReadWrite)
-{ }
+    : mShmFd(-1), mMemory(nullptr), mOpenRights(RightsReadWrite) {}
 
-SharedMemoryBasic::~SharedMemoryBasic()
-{
+SharedMemoryBasic::~SharedMemoryBasic() {
   Unmap();
   CloseHandle();
 }
 
-bool
-SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights)
-{
+bool SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights) {
   MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
   mShmFd = aHandle.fd;
   mOpenRights = aRights;
   return true;
 }
 
-bool
-SharedMemoryBasic::Create(size_t aNbytes)
-{
+bool SharedMemoryBasic::Create(size_t aNbytes) {
   MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
 
   // Carve a new instance off of /dev/ashmem
@@ -78,9 +68,7 @@ SharedMemoryBasic::Create(size_t aNbytes)
   return true;
 }
 
-bool
-SharedMemoryBasic::Map(size_t nBytes)
-{
+bool SharedMemoryBasic::Map(size_t nBytes) {
   MOZ_ASSERT(nullptr == mMemory, "Already Map()d");
 
   int prot = PROT_READ;
@@ -88,11 +76,7 @@ SharedMemoryBasic::Map(size_t nBytes)
     prot |= PROT_WRITE;
   }
 
-  mMemory = mmap(nullptr, nBytes,
-                 prot,
-                 MAP_SHARED,
-                 mShmFd,
-                 0);
+  mMemory = mmap(nullptr, nBytes, prot, MAP_SHARED, mShmFd, 0);
   if (MAP_FAILED == mMemory) {
     LogError("ShmemAndroid::Map()");
     mMemory = nullptr;
@@ -103,10 +87,8 @@ SharedMemoryBasic::Map(size_t nBytes)
   return true;
 }
 
-bool
-SharedMemoryBasic::ShareToProcess(base::ProcessId/*unused*/,
-                                  Handle* aNewHandle)
-{
+bool SharedMemoryBasic::ShareToProcess(base::ProcessId /*unused*/,
+                                       Handle* aNewHandle) {
   MOZ_ASSERT(mShmFd >= 0, "Should have been Create()d by now");
 
   int shmfdDup = dup(mShmFd);
@@ -120,9 +102,7 @@ SharedMemoryBasic::ShareToProcess(base::ProcessId/*unused*/,
   return true;
 }
 
-void
-SharedMemoryBasic::Unmap()
-{
+void SharedMemoryBasic::Unmap() {
   if (!mMemory) {
     return;
   }
@@ -133,9 +113,7 @@ SharedMemoryBasic::Unmap()
   mMemory = nullptr;
 }
 
-void
-SharedMemoryBasic::CloseHandle()
-{
+void SharedMemoryBasic::CloseHandle() {
   if (mShmFd != -1) {
     close(mShmFd);
     mShmFd = -1;
@@ -143,5 +121,5 @@ SharedMemoryBasic::CloseHandle()
   }
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

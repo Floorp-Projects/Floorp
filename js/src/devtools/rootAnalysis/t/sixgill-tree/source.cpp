@@ -2,58 +2,58 @@
 
 namespace js {
 namespace gc {
-struct Cell { int f; } ANNOTATE("GC Thing");
-}
-}
+struct Cell {
+  int f;
+} ANNOTATE("GC Thing");
+}  // namespace gc
+}  // namespace js
 
-struct Bogon {
-};
+struct Bogon {};
 
 struct JustACell : public js::gc::Cell {
-    bool iHaveNoDataMembers() { return true; }
+  bool iHaveNoDataMembers() { return true; }
 };
 
 struct JSObject : public js::gc::Cell, public Bogon {
-    int g;
+  int g;
 };
 
 struct SpecialObject : public JSObject {
-    int z;
+  int z;
 };
 
 struct ErrorResult {
-    bool hasObj;
-    JSObject *obj;
-    void trace() {}
+  bool hasObj;
+  JSObject *obj;
+  void trace() {}
 } ANNOTATE("Suppressed GC Pointer");
 
 struct OkContainer {
-    ErrorResult res;
-    bool happy;
+  ErrorResult res;
+  bool happy;
 };
 
 struct UnrootedPointer {
-    JSObject *obj;
+  JSObject *obj;
 };
 
 template <typename T>
 class Rooted {
-    T data;
+  T data;
 } ANNOTATE("Rooted Pointer");
 
 extern void js_GC() ANNOTATE("GC Call") ANNOTATE("Slow");
 
 void js_GC() {}
 
-void root_arg(JSObject *obj, JSObject *random)
-{
+void root_arg(JSObject *obj, JSObject *random) {
   // Use all these types so they get included in the output.
   SpecialObject so;
   UnrootedPointer up;
   Bogon b;
   OkContainer okc;
-  Rooted<JSObject*> ro;
-  Rooted<SpecialObject*> rso;
+  Rooted<JSObject *> ro;
+  Rooted<SpecialObject *> rso;
 
   obj = random;
 

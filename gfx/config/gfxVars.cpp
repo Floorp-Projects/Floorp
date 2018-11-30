@@ -16,9 +16,8 @@ StaticAutoPtr<nsTArray<gfxVars::VarBase*>> gfxVars::sVarList;
 
 StaticAutoPtr<nsTArray<GfxVarUpdate>> gGfxVarInitUpdates;
 
-void
-gfxVars::SetValuesForInitialize(const nsTArray<GfxVarUpdate>& aInitUpdates)
-{
+void gfxVars::SetValuesForInitialize(
+    const nsTArray<GfxVarUpdate>& aInitUpdates) {
   // This should only be called once
   MOZ_RELEASE_ASSERT(!gGfxVarInitUpdates);
 
@@ -30,16 +29,16 @@ gfxVars::SetValuesForInitialize(const nsTArray<GfxVarUpdate>& aInitUpdates)
       ApplyUpdate(varUpdate);
     }
   } else {
-      // Save the values for Initialize call
-      gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(aInitUpdates);
+    // Save the values for Initialize call
+    gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(aInitUpdates);
   }
 }
 
-void
-gfxVars::Initialize()
-{
+void gfxVars::Initialize() {
   if (sInstance) {
-    MOZ_RELEASE_ASSERT(!gGfxVarInitUpdates, "Initial updates should not be present after any gfxVars operation");
+    MOZ_RELEASE_ASSERT(
+        !gGfxVarInitUpdates,
+        "Initial updates should not be present after any gfxVars operation");
     return;
   }
 
@@ -51,7 +50,8 @@ gfxVars::Initialize()
   // Note the GPU process is not handled here - it cannot send sync
   // messages, so instead the initial data is pushed down.
   if (XRE_IsContentProcess()) {
-    MOZ_ASSERT(gGfxVarInitUpdates, "Initial updates should be provided in content process");
+    MOZ_ASSERT(gGfxVarInitUpdates,
+               "Initial updates should be provided in content process");
     if (!gGfxVarInitUpdates) {
       // No provided initial updates, sync-request them from parent.
       InfallibleTArray<GfxVarUpdate> initUpdates;
@@ -65,21 +65,15 @@ gfxVars::Initialize()
   }
 }
 
-gfxVars::gfxVars()
-{
-}
+gfxVars::gfxVars() {}
 
-void
-gfxVars::Shutdown()
-{
+void gfxVars::Shutdown() {
   sInstance = nullptr;
   sVarList = nullptr;
   gGfxVarInitUpdates = nullptr;
 }
 
-/* static */ void
-gfxVars::ApplyUpdate(const GfxVarUpdate& aUpdate)
-{
+/* static */ void gfxVars::ApplyUpdate(const GfxVarUpdate& aUpdate) {
   // Only subprocesses receive updates and apply them locally.
   MOZ_ASSERT(!XRE_IsParentProcess());
   MOZ_DIAGNOSTIC_ASSERT(sVarList || gGfxVarInitUpdates);
@@ -92,9 +86,7 @@ gfxVars::ApplyUpdate(const GfxVarUpdate& aUpdate)
   }
 }
 
-/* static */ void
-gfxVars::AddReceiver(gfxVarReceiver* aReceiver)
-{
+/* static */ void gfxVars::AddReceiver(gfxVarReceiver* aReceiver) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Don't double-add receivers, in case a broken content process sends two
@@ -104,9 +96,7 @@ gfxVars::AddReceiver(gfxVarReceiver* aReceiver)
   }
 }
 
-/* static */ void
-gfxVars::RemoveReceiver(gfxVarReceiver* aReceiver)
-{
+/* static */ void gfxVars::RemoveReceiver(gfxVarReceiver* aReceiver) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sInstance) {
@@ -114,9 +104,7 @@ gfxVars::RemoveReceiver(gfxVarReceiver* aReceiver)
   }
 }
 
-/* static */ nsTArray<GfxVarUpdate>
-gfxVars::FetchNonDefaultVars()
-{
+/* static */ nsTArray<GfxVarUpdate> gfxVars::FetchNonDefaultVars() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sVarList);
 
@@ -136,15 +124,12 @@ gfxVars::FetchNonDefaultVars()
   return updates;
 }
 
-gfxVars::VarBase::VarBase()
-{
+gfxVars::VarBase::VarBase() {
   mIndex = gfxVars::sVarList->Length();
   gfxVars::sVarList->AppendElement(this);
 }
 
-void
-gfxVars::NotifyReceivers(VarBase* aVar)
-{
+void gfxVars::NotifyReceivers(VarBase* aVar) {
   MOZ_ASSERT(NS_IsMainThread());
 
   GfxVarValue value;
@@ -156,5 +141,5 @@ gfxVars::NotifyReceivers(VarBase* aVar)
   }
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

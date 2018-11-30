@@ -13,15 +13,14 @@
 namespace mozilla {
 namespace dom {
 
-template<class T>
-T* GetAtomCache(JSContext* aCx)
-{
+template <class T>
+T* GetAtomCache(JSContext* aCx) {
   auto atomCache = static_cast<PerThreadAtomCache*>(JS_GetContextPrivate(aCx));
 
   return static_cast<T*>(atomCache);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_AtomList_h
+#endif  // mozilla_dom_AtomList_h

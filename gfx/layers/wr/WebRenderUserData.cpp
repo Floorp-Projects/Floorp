@@ -20,22 +20,17 @@
 namespace mozilla {
 namespace layers {
 
-void
-WebRenderBackgroundData::AddWebRenderCommands(wr::DisplayListBuilder& aBuilder)
-{
-  aBuilder.PushRect(mBounds,
-                    mBounds,
-                    true,
-                    mColor);
+void WebRenderBackgroundData::AddWebRenderCommands(
+    wr::DisplayListBuilder& aBuilder) {
+  aBuilder.PushRect(mBounds, mBounds, true, mColor);
 }
 
-/* static */ bool
-WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame)
-{
+/* static */ bool WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame) {
   if (!aFrame) {
     return false;
   }
-  RefPtr<WebRenderImageData> data = GetWebRenderUserData<WebRenderImageData>(aFrame, static_cast<uint32_t>(DisplayItemType::TYPE_VIDEO));
+  RefPtr<WebRenderImageData> data = GetWebRenderUserData<WebRenderImageData>(
+      aFrame, static_cast<uint32_t>(DisplayItemType::TYPE_VIDEO));
   if (data) {
     return data->IsAsync();
   }
@@ -43,9 +38,8 @@ WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame)
   return false;
 }
 
-/* static */ bool
-WebRenderUserData::ProcessInvalidateForImage(nsIFrame* aFrame, DisplayItemType aType)
-{
+/* static */ bool WebRenderUserData::ProcessInvalidateForImage(
+    nsIFrame* aFrame, DisplayItemType aType) {
   MOZ_ASSERT(aFrame);
 
   if (!aFrame->HasProperty(WebRenderUserDataProperty::Key())) {
@@ -54,7 +48,7 @@ WebRenderUserData::ProcessInvalidateForImage(nsIFrame* aFrame, DisplayItemType a
 
   auto type = static_cast<uint32_t>(aType);
   RefPtr<WebRenderFallbackData> fallback =
-    GetWebRenderUserData<WebRenderFallbackData>(aFrame, type);
+      GetWebRenderUserData<WebRenderFallbackData>(aFrame, type);
   if (fallback) {
     fallback->SetInvalid(true);
     aFrame->SchedulePaint();
@@ -62,7 +56,7 @@ WebRenderUserData::ProcessInvalidateForImage(nsIFrame* aFrame, DisplayItemType a
   }
 
   RefPtr<WebRenderImageData> image =
-    GetWebRenderUserData<WebRenderImageData>(aFrame, type);
+      GetWebRenderUserData<WebRenderImageData>(aFrame, type);
   if (image && image->IsAsyncAnimatedImage()) {
     return true;
   }
@@ -71,39 +65,27 @@ WebRenderUserData::ProcessInvalidateForImage(nsIFrame* aFrame, DisplayItemType a
   return false;
 }
 
-WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
-  : mWRManager(aWRManager)
-  , mFrame(aItem->Frame())
-  , mDisplayItemKey(aItem->GetPerFrameKey())
-  , mTable(aWRManager->GetWebRenderUserDataTable())
-  , mUsed(false)
-{
-}
+WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager,
+                                     nsDisplayItem* aItem)
+    : mWRManager(aWRManager),
+      mFrame(aItem->Frame()),
+      mDisplayItemKey(aItem->GetPerFrameKey()),
+      mTable(aWRManager->GetWebRenderUserDataTable()),
+      mUsed(false) {}
 
-WebRenderUserData::~WebRenderUserData()
-{
-}
+WebRenderUserData::~WebRenderUserData() {}
 
-void
-WebRenderUserData::RemoveFromTable()
-{
-  mTable->RemoveEntry(this);
-}
+void WebRenderUserData::RemoveFromTable() { mTable->RemoveEntry(this); }
 
-WebRenderBridgeChild*
-WebRenderUserData::WrBridge() const
-{
+WebRenderBridgeChild* WebRenderUserData::WrBridge() const {
   return mWRManager->WrBridge();
 }
 
-WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
-  : WebRenderUserData(aWRManager, aItem)
-  , mOwnsKey(false)
-{
-}
+WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager,
+                                       nsDisplayItem* aItem)
+    : WebRenderUserData(aWRManager, aItem), mOwnsKey(false) {}
 
-WebRenderImageData::~WebRenderImageData()
-{
+WebRenderImageData::~WebRenderImageData() {
   ClearImageKey();
 
   if (mPipelineId) {
@@ -111,15 +93,11 @@ WebRenderImageData::~WebRenderImageData()
   }
 }
 
-bool
-WebRenderImageData::IsAsyncAnimatedImage() const
-{
+bool WebRenderImageData::IsAsyncAnimatedImage() const {
   return mContainer && mContainer->GetSharedSurfacesAnimation();
 }
 
-void
-WebRenderImageData::ClearImageKey()
-{
+void WebRenderImageData::ClearImageKey() {
   if (mKey) {
     // If we don't own the key, then the owner is responsible for discarding the
     // key when appropriate.
@@ -136,11 +114,9 @@ WebRenderImageData::ClearImageKey()
   MOZ_ASSERT(!mTextureOfImage);
 }
 
-Maybe<wr::ImageKey>
-WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
-                                   wr::IpcResourceUpdateQueue& aResources,
-                                   bool aFallback)
-{
+Maybe<wr::ImageKey> WebRenderImageData::UpdateImageKey(
+    ImageContainer* aContainer, wr::IpcResourceUpdateQueue& aResources,
+    bool aFallback) {
   MOZ_ASSERT(aContainer);
 
   if (mContainer != aContainer) {
@@ -149,11 +125,12 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
 
   wr::WrImageKey key;
   if (!aFallback) {
-    nsresult rv = SharedSurfacesChild::Share(aContainer, mWRManager, aResources, key);
+    nsresult rv =
+        SharedSurfacesChild::Share(aContainer, mWRManager, aResources, key);
     if (NS_SUCCEEDED(rv)) {
       // Ensure that any previously owned keys are released before replacing. We
-      // don't own this key, the surface itself owns it, so that it can be shared
-      // across multiple elements.
+      // don't own this key, the surface itself owns it, so that it can be
+      // shared across multiple elements.
       ClearImageKey();
       mKey = Some(key);
       return mKey;
@@ -176,7 +153,7 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   ImageClientSingle* imageClient = mImageClient->AsImageClientSingle();
   uint32_t oldCounter = imageClient->GetLastUpdateGenerationCounter();
 
-  bool ret = imageClient->UpdateImage(aContainer, /* unused */0);
+  bool ret = imageClient->UpdateImage(aContainer, /* unused */ 0);
   RefPtr<TextureClient> currentTexture = imageClient->GetForwardedTexture();
   if (!ret || !currentTexture) {
     // Delete old key
@@ -185,17 +162,16 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   }
 
   // Reuse old key if generation is not updated.
-  if (!aFallback && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
+  if (!aFallback &&
+      oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
     return mKey;
   }
 
-  // If we already had a texture and the format hasn't changed, better to reuse the image keys
-  // than create new ones.
-  bool useUpdate = mKey.isSome()
-                   && !!mTextureOfImage
-                   && !!currentTexture
-                   && mTextureOfImage->GetSize() == currentTexture->GetSize()
-                   && mTextureOfImage->GetFormat() == currentTexture->GetFormat();
+  // If we already had a texture and the format hasn't changed, better to reuse
+  // the image keys than create new ones.
+  bool useUpdate = mKey.isSome() && !!mTextureOfImage && !!currentTexture &&
+                   mTextureOfImage->GetSize() == currentTexture->GetSize() &&
+                   mTextureOfImage->GetFormat() == currentTexture->GetFormat();
 
   wr::MaybeExternalImageId extId = currentTexture->GetExternalImageKey();
   MOZ_RELEASE_ASSERT(extId.isSome());
@@ -203,11 +179,13 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   if (useUpdate) {
     MOZ_ASSERT(mKey.isSome());
     MOZ_ASSERT(mTextureOfImage);
-    aResources.PushExternalImageForTexture(extId.ref(), mKey.ref(), currentTexture, /* aIsUpdate */ true);
+    aResources.PushExternalImageForTexture(
+        extId.ref(), mKey.ref(), currentTexture, /* aIsUpdate */ true);
   } else {
     ClearImageKey();
     key = WrBridge()->GetNextImageKey();
-    aResources.PushExternalImageForTexture(extId.ref(), key, currentTexture, /* aIsUpdate */ false);
+    aResources.PushExternalImageForTexture(extId.ref(), key, currentTexture,
+                                           /* aIsUpdate */ false);
     mKey = Some(key);
   }
 
@@ -217,25 +195,17 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   return mKey;
 }
 
-already_AddRefed<ImageClient>
-WebRenderImageData::GetImageClient()
-{
+already_AddRefed<ImageClient> WebRenderImageData::GetImageClient() {
   RefPtr<ImageClient> imageClient = mImageClient;
   return imageClient.forget();
 }
 
-void
-WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                                      ImageContainer* aContainer,
-                                                      const StackingContextHelper& aSc,
-                                                      const LayoutDeviceRect& aBounds,
-                                                      const LayoutDeviceRect& aSCBounds,
-                                                      const gfx::Matrix4x4& aSCTransform,
-                                                      const gfx::MaybeIntSize& aScaleToSize,
-                                                      const wr::ImageRendering& aFilter,
-                                                      const wr::MixBlendMode& aMixBlendMode,
-                                                      bool aIsBackfaceVisible)
-{
+void WebRenderImageData::CreateAsyncImageWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder, ImageContainer* aContainer,
+    const StackingContextHelper& aSc, const LayoutDeviceRect& aBounds,
+    const LayoutDeviceRect& aSCBounds, const gfx::Matrix4x4& aSCTransform,
+    const gfx::MaybeIntSize& aScaleToSize, const wr::ImageRendering& aFilter,
+    const wr::MixBlendMode& aMixBlendMode, bool aIsBackfaceVisible) {
   MOZ_ASSERT(aContainer->IsAsync());
 
   if (mPipelineId.isSome() && mContainer != aContainer) {
@@ -247,9 +217,10 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
 
   if (!mPipelineId) {
     // Alloc async image pipeline id.
-    mPipelineId = Some(WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
-    WrBridge()->AddPipelineIdForAsyncCompositable(mPipelineId.ref(),
-                                                  aContainer->GetAsyncContainerHandle());
+    mPipelineId =
+        Some(WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
+    WrBridge()->AddPipelineIdForAsyncCompositable(
+        mPipelineId.ref(), aContainer->GetAsyncContainerHandle());
     mContainer = aContainer;
   }
   MOZ_ASSERT(!mImageClient);
@@ -263,23 +234,18 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
   // where it will be done when we build the display list for the iframe.
   // That happens in AsyncImagePipelineManager.
   wr::LayoutRect r = wr::ToRoundedLayoutRect(aBounds);
-  aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(), /*ignoreMissingPipelines*/ false);
+  aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(),
+                      /*ignoreMissingPipelines*/ false);
 
-  WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(mPipelineId.value(),
-                                                                   aSCBounds,
-                                                                   aSCTransform,
-                                                                   aScaleToSize,
-                                                                   aFilter,
-                                                                   aMixBlendMode));
+  WrBridge()->AddWebRenderParentCommand(
+      OpUpdateAsyncImagePipeline(mPipelineId.value(), aSCBounds, aSCTransform,
+                                 aScaleToSize, aFilter, aMixBlendMode));
 }
 
-void
-WebRenderImageData::CreateImageClientIfNeeded()
-{
+void WebRenderImageData::CreateImageClientIfNeeded() {
   if (!mImageClient) {
-    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
-                                                  WrBridge(),
-                                                  TextureFlags::DEFAULT);
+    mImageClient = ImageClient::CreateImageClient(
+        CompositableType::IMAGE, WrBridge(), TextureFlags::DEFAULT);
     if (!mImageClient) {
       return;
     }
@@ -288,40 +254,28 @@ WebRenderImageData::CreateImageClientIfNeeded()
   }
 }
 
-WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
-  : WebRenderImageData(aWRManager, aItem)
-  , mInvalid(false)
-{
-}
+WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager,
+                                             nsDisplayItem* aItem)
+    : WebRenderImageData(aWRManager, aItem), mInvalid(false) {}
 
-WebRenderFallbackData::~WebRenderFallbackData()
-{
-  ClearImageKey();
-}
+WebRenderFallbackData::~WebRenderFallbackData() { ClearImageKey(); }
 
-nsDisplayItemGeometry*
-WebRenderFallbackData::GetGeometry()
-{
+nsDisplayItemGeometry* WebRenderFallbackData::GetGeometry() {
   return mGeometry.get();
 }
 
-void
-WebRenderFallbackData::SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
-{
+void WebRenderFallbackData::SetGeometry(
+    nsAutoPtr<nsDisplayItemGeometry> aGeometry) {
   mGeometry = aGeometry;
 }
 
-void
-WebRenderFallbackData::SetBlobImageKey(const wr::BlobImageKey& aKey)
-{
+void WebRenderFallbackData::SetBlobImageKey(const wr::BlobImageKey& aKey) {
   ClearImageKey();
   mBlobKey = Some(aKey);
   mOwnsKey = true;
 }
 
-Maybe<wr::ImageKey>
-WebRenderFallbackData::GetImageKey()
-{
+Maybe<wr::ImageKey> WebRenderFallbackData::GetImageKey() {
   if (mBlobKey) {
     return Some(wr::AsImageKey(mBlobKey.value()));
   }
@@ -329,9 +283,7 @@ WebRenderFallbackData::GetImageKey()
   return mKey;
 }
 
-void
-WebRenderFallbackData::ClearImageKey()
-{
+void WebRenderFallbackData::ClearImageKey() {
   if (mBlobKey && mOwnsKey) {
     mWRManager->AddBlobImageKeyForDiscard(mBlobKey.value());
   }
@@ -340,13 +292,11 @@ WebRenderFallbackData::ClearImageKey()
   WebRenderImageData::ClearImageKey();
 }
 
-WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
-  : WebRenderUserData(aWRManager, aItem)
-{
-}
+WebRenderAnimationData::WebRenderAnimationData(
+    WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
+    : WebRenderUserData(aWRManager, aItem) {}
 
-WebRenderAnimationData::~WebRenderAnimationData()
-{
+WebRenderAnimationData::~WebRenderAnimationData() {
   // It may be the case that nsDisplayItem that created this WebRenderUserData
   // gets destroyed without getting a chance to discard the compositor animation
   // id, so we should do it as part of cleanup here.
@@ -357,46 +307,33 @@ WebRenderAnimationData::~WebRenderAnimationData()
   }
 }
 
-WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
-  : WebRenderUserData(aWRManager, aItem)
-{
-}
+WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager,
+                                         nsDisplayItem* aItem)
+    : WebRenderUserData(aWRManager, aItem) {}
 
-WebRenderCanvasData::~WebRenderCanvasData()
-{
+WebRenderCanvasData::~WebRenderCanvasData() {
   if (mCanvasRenderer) {
     mCanvasRenderer->ClearCachedResources();
   }
 }
 
-void
-WebRenderCanvasData::ClearCanvasRenderer()
-{
-  mCanvasRenderer = nullptr;
-}
+void WebRenderCanvasData::ClearCanvasRenderer() { mCanvasRenderer = nullptr; }
 
-WebRenderCanvasRendererAsync*
-WebRenderCanvasData::GetCanvasRenderer()
-{
+WebRenderCanvasRendererAsync* WebRenderCanvasData::GetCanvasRenderer() {
   return mCanvasRenderer.get();
 }
 
-WebRenderCanvasRendererAsync*
-WebRenderCanvasData::CreateCanvasRenderer()
-{
+WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mWRManager);
   return mCanvasRenderer.get();
 }
 
-void
-DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable)
-{
+void DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable) {
   for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
     iter.UserData()->RemoveFromTable();
   }
   delete aTable;
 }
 
-
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

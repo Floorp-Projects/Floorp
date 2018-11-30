@@ -17,7 +17,7 @@ namespace net {
 // Need to define typedef in .h file--can't seem to in ipdl.h file?
 typedef nsTArray<NetAddr> NetAddrArray;
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // PDNSParams_h
+#endif  // PDNSParams_h

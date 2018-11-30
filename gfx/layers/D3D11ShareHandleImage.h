@@ -17,26 +17,19 @@
 namespace mozilla {
 namespace layers {
 
-class D3D11RecycleAllocator : public TextureClientRecycleAllocator
-{
-public:
+class D3D11RecycleAllocator : public TextureClientRecycleAllocator {
+ public:
   explicit D3D11RecycleAllocator(KnowsCompositor* aAllocator,
                                  ID3D11Device* aDevice)
-    : TextureClientRecycleAllocator(aAllocator)
-    , mDevice(aDevice)
-  {}
+      : TextureClientRecycleAllocator(aAllocator), mDevice(aDevice) {}
 
-  already_AddRefed<TextureClient>
-  CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
-                        const gfx::IntSize& aSize);
+  already_AddRefed<TextureClient> CreateOrRecycleClient(
+      gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize);
 
-protected:
+ protected:
   virtual already_AddRefed<TextureClient> Allocate(
-    gfx::SurfaceFormat aFormat,
-    gfx::IntSize aSize,
-    BackendSelector aSelector,
-    TextureFlags aTextureFlags,
-    TextureAllocationFlags aAllocFlags) override;
+      gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
+      TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) override;
 
   RefPtr<ID3D11Device> mDevice;
   /**
@@ -50,9 +43,8 @@ protected:
 // This class also manages the synchronization of the copy, to ensure the
 // resource is ready to use.
 class D3D11ShareHandleImage final : public Image {
-public:
-  D3D11ShareHandleImage(const gfx::IntSize& aSize,
-                        const gfx::IntRect& aRect,
+ public:
+  D3D11ShareHandleImage(const gfx::IntSize& aSize, const gfx::IntRect& aRect,
                         const GUID& aSourceFormat);
   virtual ~D3D11ShareHandleImage() {}
 
@@ -66,7 +58,7 @@ public:
 
   ID3D11Texture2D* GetTexture() const;
 
-private:
+ private:
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
   const GUID mSourceFormat;
@@ -74,7 +66,7 @@ private:
   RefPtr<ID3D11Texture2D> mTexture;
 };
 
-} // namepace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // GFX_D3DSURFACEIMAGE_H
+#endif  // GFX_D3DSURFACEIMAGE_H

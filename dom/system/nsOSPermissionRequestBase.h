@@ -10,17 +10,19 @@
 #include "nsIOSPermissionRequest.h"
 #include "nsWeakReference.h"
 
-#define  NS_OSPERMISSIONREQUEST_CID                                   \
-{ 0x95790842, 0x75a0, 0x430d, \
-  { 0x98, 0xbf, 0xf5, 0xce, 0x37, 0x88, 0xea, 0x6d } }
-#define NS_OSPERMISSIONREQUEST_CONTRACTID \
-  "@mozilla.org/ospermissionrequest;1"
+#define NS_OSPERMISSIONREQUEST_CID                   \
+  {                                                  \
+    0x95790842, 0x75a0, 0x430d, {                    \
+      0x98, 0xbf, 0xf5, 0xce, 0x37, 0x88, 0xea, 0x6d \
+    }                                                \
+  }
+#define NS_OSPERMISSIONREQUEST_CONTRACTID "@mozilla.org/ospermissionrequest;1"
 
 namespace mozilla {
 namespace dom {
 class Promise;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using mozilla::dom::Promise;
 
@@ -30,17 +32,15 @@ using mozilla::dom::Promise;
  * as media captures devices. This implementation always returns results
  * indicating access is permitted.
  */
-class nsOSPermissionRequestBase
-: public nsIOSPermissionRequest,
-  public nsSupportsWeakReference
-{
-public:
+class nsOSPermissionRequestBase : public nsIOSPermissionRequest,
+                                  public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOSPERMISSIONREQUEST
 
-  nsOSPermissionRequestBase() {};
+  nsOSPermissionRequestBase(){};
 
-protected:
+ protected:
   nsresult GetPromise(JSContext* aCx, RefPtr<Promise>& aPromiseOut);
   virtual ~nsOSPermissionRequestBase() = default;
 };

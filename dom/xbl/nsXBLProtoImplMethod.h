@@ -39,11 +39,8 @@ struct nsXBLUncompiledMethod {
   nsXBLParameter* mLastParameter;
   nsXBLTextWithLineNumber mBodyText;
 
-  nsXBLUncompiledMethod() :
-    mParameters(nullptr),
-    mLastParameter(nullptr),
-    mBodyText()
-  {
+  nsXBLUncompiledMethod()
+      : mParameters(nullptr), mLastParameter(nullptr), mBodyText() {
     MOZ_COUNT_CTOR(nsXBLUncompiledMethod);
   }
 
@@ -54,14 +51,11 @@ struct nsXBLUncompiledMethod {
 
   int32_t GetParameterCount() {
     int32_t result = 0;
-    for (nsXBLParameter* curr = mParameters; curr; curr=curr->mNext)
-      result++;
+    for (nsXBLParameter* curr = mParameters; curr; curr = curr->mNext) result++;
     return result;
   }
 
-  void AppendBodyText(const nsAString& aText) {
-    mBodyText.AppendText(aText);
-  }
+  void AppendBodyText(const nsAString& aText) { mBodyText.AppendText(aText); }
 
   void AddParameter(const nsAString& aText) {
     nsXBLParameter* param = new nsXBLParameter(aText);
@@ -77,9 +71,8 @@ struct nsXBLUncompiledMethod {
   }
 };
 
-class nsXBLProtoImplMethod: public nsXBLProtoImplMember
-{
-public:
+class nsXBLProtoImplMethod : public nsXBLProtoImplMember {
+ public:
   explicit nsXBLProtoImplMethod(const char16_t* aName);
   virtual ~nsXBLProtoImplMethod();
 
@@ -88,44 +81,35 @@ public:
 
   void SetLineNumber(uint32_t aLineNumber);
 
-  virtual nsresult InstallMember(JSContext* aCx,
-                                 JS::Handle<JSObject*> aTargetClassObject) override;
-  virtual nsresult CompileMember(mozilla::dom::AutoJSAPI& jsapi, const nsString& aClassStr,
+  virtual nsresult InstallMember(
+      JSContext* aCx, JS::Handle<JSObject*> aTargetClassObject) override;
+  virtual nsresult CompileMember(mozilla::dom::AutoJSAPI& jsapi,
+                                 const nsString& aClassStr,
                                  JS::Handle<JSObject*> aClassObject) override;
 
-  virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure) override;
+  virtual void Trace(const TraceCallbacks& aCallbacks, void* aClosure) override;
 
   nsresult Read(nsIObjectInputStream* aStream);
   virtual nsresult Write(nsIObjectOutputStream* aStream) override;
 
-  bool IsCompiled() const
-  {
-    return mMethod.IsCompiled();
-  }
+  bool IsCompiled() const { return mMethod.IsCompiled(); }
 
-  void SetUncompiledMethod(nsXBLUncompiledMethod* aUncompiledMethod)
-  {
+  void SetUncompiledMethod(nsXBLUncompiledMethod* aUncompiledMethod) {
     mMethod.SetUncompiled(aUncompiledMethod);
   }
 
-  nsXBLUncompiledMethod* GetUncompiledMethod() const
-  {
+  nsXBLUncompiledMethod* GetUncompiledMethod() const {
     return mMethod.GetUncompiled();
   }
 
-protected:
-  void SetCompiledMethod(JSObject* aCompiledMethod)
-  {
+ protected:
+  void SetCompiledMethod(JSObject* aCompiledMethod) {
     mMethod.SetJSFunction(aCompiledMethod);
   }
 
-  JSObject* GetCompiledMethod() const
-  {
-    return mMethod.GetJSFunction();
-  }
+  JSObject* GetCompiledMethod() const { return mMethod.GetJSFunction(); }
 
-  JSObject* GetCompiledMethodPreserveColor() const
-  {
+  JSObject* GetCompiledMethodPreserveColor() const {
     return mMethod.GetJSFunctionPreserveColor();
   }
 
@@ -133,18 +117,17 @@ protected:
 };
 
 class nsXBLProtoImplAnonymousMethod : public nsXBLProtoImplMethod {
-public:
-  explicit nsXBLProtoImplAnonymousMethod(const char16_t* aName) :
-    nsXBLProtoImplMethod(aName)
-  {}
+ public:
+  explicit nsXBLProtoImplAnonymousMethod(const char16_t* aName)
+      : nsXBLProtoImplMethod(aName) {}
 
   nsresult Execute(nsIContent* aBoundElement, const nsXBLPrototypeBinding&);
 
   // Override InstallMember; these methods never get installed as members on
   // binding instantiations (though they may hang out in mMembers on the
   // prototype implementation).
-  virtual nsresult InstallMember(JSContext* aCx,
-                                 JS::Handle<JSObject*> aTargetClassObject) override {
+  virtual nsresult InstallMember(
+      JSContext* aCx, JS::Handle<JSObject*> aTargetClassObject) override {
     return NS_OK;
   }
 
@@ -153,4 +136,4 @@ public:
                  XBLBindingSerializeDetails aType);
 };
 
-#endif // nsXBLProtoImplMethod_h__
+#endif  // nsXBLProtoImplMethod_h__

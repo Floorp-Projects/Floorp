@@ -7,21 +7,19 @@
 BOOL StartServiceUpdate(LPCWSTR installDir);
 DWORD LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR *argv);
 BOOL GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath);
-BOOL WriteStatusFailure(LPCWSTR updateDirPath,
-                        int errorCode,
+BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode,
                         nsAutoHandle &userToken);
 DWORD WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds);
 DWORD WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds);
 DWORD IsProcessRunning(LPCWSTR filename);
 BOOL DoesFallbackKeyExist();
 BOOL IsLocalFile(LPCWSTR file, BOOL &isLocal);
-DWORD StartServiceCommand(int argc, LPCWSTR* argv);
+DWORD StartServiceCommand(int argc, LPCWSTR *argv);
 BOOL IsUnpromptedElevation(BOOL &isUnpromptedElevation);
 
 #define SVC_NAME L"MozillaMaintenance"
 
-#define BASE_SERVICE_REG_KEY \
-  L"SOFTWARE\\Mozilla\\MaintenanceService"
+#define BASE_SERVICE_REG_KEY L"SOFTWARE\\Mozilla\\MaintenanceService"
 
 // Environment variable used to pass impersonation token to child
 #define USER_TOKEN_VAR_NAME "MOZ_USER_TOKEN"

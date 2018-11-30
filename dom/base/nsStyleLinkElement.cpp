@@ -35,27 +35,21 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsStyleLinkElement::SheetInfo::SheetInfo(
-  const nsIDocument& aDocument,
-  nsIContent* aContent,
-  already_AddRefed<nsIURI> aURI,
-  already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
-  mozilla::net::ReferrerPolicy aReferrerPolicy,
-  mozilla::CORSMode aCORSMode,
-  const nsAString& aTitle,
-  const nsAString& aMedia,
-  HasAlternateRel aHasAlternateRel,
-  IsInline aIsInline
-)
-  : mContent(aContent)
-  , mURI(aURI)
-  , mTriggeringPrincipal(aTriggeringPrincipal)
-  , mReferrerPolicy(aReferrerPolicy)
-  , mCORSMode(aCORSMode)
-  , mTitle(aTitle)
-  , mMedia(aMedia)
-  , mHasAlternateRel(aHasAlternateRel == HasAlternateRel::Yes)
-  , mIsInline(aIsInline == IsInline::Yes)
-{
+    const nsIDocument& aDocument, nsIContent* aContent,
+    already_AddRefed<nsIURI> aURI,
+    already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
+    mozilla::net::ReferrerPolicy aReferrerPolicy, mozilla::CORSMode aCORSMode,
+    const nsAString& aTitle, const nsAString& aMedia,
+    HasAlternateRel aHasAlternateRel, IsInline aIsInline)
+    : mContent(aContent),
+      mURI(aURI),
+      mTriggeringPrincipal(aTriggeringPrincipal),
+      mReferrerPolicy(aReferrerPolicy),
+      mCORSMode(aCORSMode),
+      mTitle(aTitle),
+      mMedia(aMedia),
+      mHasAlternateRel(aHasAlternateRel == HasAlternateRel::Yes),
+      mIsInline(aIsInline == IsInline::Yes) {
   MOZ_ASSERT(!mIsInline || aContent);
   MOZ_ASSERT_IF(aContent, aContent->OwnerDoc() == &aDocument);
 
@@ -64,8 +58,7 @@ nsStyleLinkElement::SheetInfo::SheetInfo(
   }
 
   if (!mIsInline && aContent && aContent->IsElement()) {
-    aContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                   nsGkAtoms::integrity,
+    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
                                    mIntegrity);
   }
 }
@@ -73,23 +66,18 @@ nsStyleLinkElement::SheetInfo::SheetInfo(
 nsStyleLinkElement::SheetInfo::~SheetInfo() = default;
 
 nsStyleLinkElement::nsStyleLinkElement()
-  : mDontLoadStyle(false)
-  , mUpdatesEnabled(true)
-  , mLineNumber(1)
-  , mColumnNumber(1)
-{
-}
+    : mDontLoadStyle(false),
+      mUpdatesEnabled(true),
+      mLineNumber(1),
+      mColumnNumber(1) {}
 
-nsStyleLinkElement::~nsStyleLinkElement()
-{
+nsStyleLinkElement::~nsStyleLinkElement() {
   nsStyleLinkElement::SetStyleSheet(nullptr);
 }
 
-void
-nsStyleLinkElement::GetTitleAndMediaForElement(const Element& aSelf,
-                                               nsString& aTitle,
-                                               nsString& aMedia)
-{
+void nsStyleLinkElement::GetTitleAndMediaForElement(const Element& aSelf,
+                                                    nsString& aTitle,
+                                                    nsString& aMedia) {
   // Only honor title as stylesheet name for elements in the document (that is,
   // ignore for Shadow DOM), per [1] and [2]. See [3].
   //
@@ -110,9 +98,7 @@ nsStyleLinkElement::GetTitleAndMediaForElement(const Element& aSelf,
   nsContentUtils::ASCIIToLower(aMedia);
 }
 
-bool
-nsStyleLinkElement::IsCSSMimeTypeAttribute(const Element& aSelf)
-{
+bool nsStyleLinkElement::IsCSSMimeTypeAttribute(const Element& aSelf) {
   nsAutoString type;
   nsAutoString mimeType;
   nsAutoString notUsed;
@@ -121,22 +107,16 @@ nsStyleLinkElement::IsCSSMimeTypeAttribute(const Element& aSelf)
   return mimeType.IsEmpty() || mimeType.LowerCaseEqualsLiteral("text/css");
 }
 
-void
-nsStyleLinkElement::Unlink()
-{
+void nsStyleLinkElement::Unlink() {
   nsStyleLinkElement::SetStyleSheet(nullptr);
 }
 
-void
-nsStyleLinkElement::Traverse(nsCycleCollectionTraversalCallback &cb)
-{
+void nsStyleLinkElement::Traverse(nsCycleCollectionTraversalCallback& cb) {
   nsStyleLinkElement* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheet);
 }
 
-void
-nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet)
-{
+void nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet) {
   if (mStyleSheet) {
     mStyleSheet->SetOwningNode(nullptr);
   }
@@ -150,63 +130,43 @@ nsStyleLinkElement::SetStyleSheet(StyleSheet* aStyleSheet)
   }
 }
 
-StyleSheet*
-nsStyleLinkElement::GetStyleSheet()
-{
-  return mStyleSheet;
-}
+StyleSheet* nsStyleLinkElement::GetStyleSheet() { return mStyleSheet; }
 
-void
-nsStyleLinkElement::InitStyleLinkElement(bool aDontLoadStyle)
-{
+void nsStyleLinkElement::InitStyleLinkElement(bool aDontLoadStyle) {
   mDontLoadStyle = aDontLoadStyle;
 }
 
-void
-nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates)
-{
+void nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates) {
   mUpdatesEnabled = aEnableUpdates;
 }
 
-void
-nsStyleLinkElement::GetCharset(nsAString& aCharset)
-{
+void nsStyleLinkElement::GetCharset(nsAString& aCharset) {
   aCharset.Truncate();
 }
 
-/* virtual */ void
-nsStyleLinkElement::OverrideBaseURI(nsIURI* aNewBaseURI)
-{
-  MOZ_ASSERT_UNREACHABLE("Base URI can't be overriden in this implementation "
-                         "of nsIStyleSheetLinkingElement.");
+/* virtual */ void nsStyleLinkElement::OverrideBaseURI(nsIURI* aNewBaseURI) {
+  MOZ_ASSERT_UNREACHABLE(
+      "Base URI can't be overriden in this implementation "
+      "of nsIStyleSheetLinkingElement.");
 }
 
-/* virtual */ void
-nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber)
-{
+/* virtual */ void nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber) {
   mLineNumber = aLineNumber;
 }
 
-/* virtual */ uint32_t
-nsStyleLinkElement::GetLineNumber()
-{
+/* virtual */ uint32_t nsStyleLinkElement::GetLineNumber() {
   return mLineNumber;
 }
 
-/* virtual */ void
-nsStyleLinkElement::SetColumnNumber(uint32_t aColumnNumber)
-{
+/* virtual */ void nsStyleLinkElement::SetColumnNumber(uint32_t aColumnNumber) {
   mColumnNumber = aColumnNumber;
 }
 
-/* virtual */ uint32_t
-nsStyleLinkElement::GetColumnNumber()
-{
+/* virtual */ uint32_t nsStyleLinkElement::GetColumnNumber() {
   return mColumnNumber;
 }
 
-static uint32_t ToLinkMask(const nsAString& aLink)
-{
+static uint32_t ToLinkMask(const nsAString& aLink) {
   // Keep this in sync with sRelValues in HTMLLinkElement.cpp
   if (aLink.EqualsLiteral("prefetch"))
     return nsStyleLinkElement::ePREFETCH;
@@ -226,14 +186,12 @@ static uint32_t ToLinkMask(const nsAString& aLink)
     return 0;
 }
 
-uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
-{
+uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes) {
   uint32_t linkMask = 0;
   nsAString::const_iterator start, done;
   aTypes.BeginReading(start);
   aTypes.EndReading(done);
-  if (start == done)
-    return linkMask;
+  if (start == done) return linkMask;
 
   nsAString::const_iterator current(start);
   bool inString = !nsContentUtils::IsHTMLWhitespace(*current);
@@ -246,8 +204,7 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
         linkMask |= ToLinkMask(subString);
         inString = false;
       }
-    }
-    else {
+    } else {
       if (!inString) {
         start = current;
         inString = true;
@@ -263,26 +220,23 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
 }
 
 Result<nsStyleLinkElement::Update, nsresult>
-nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver)
-{
+nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver) {
   return DoUpdateStyleSheet(nullptr, nullptr, aObserver, ForceUpdate::No);
 }
 
 Result<nsStyleLinkElement::Update, nsresult>
 nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument* aOldDocument,
                                              ShadowRoot* aOldShadowRoot,
-                                             ForceUpdate aForceUpdate)
-{
-  return DoUpdateStyleSheet(
-    aOldDocument, aOldShadowRoot, nullptr, aForceUpdate);
+                                             ForceUpdate aForceUpdate) {
+  return DoUpdateStyleSheet(aOldDocument, aOldShadowRoot, nullptr,
+                            aForceUpdate);
 }
 
 Result<nsStyleLinkElement::Update, nsresult>
 nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
                                        ShadowRoot* aOldShadowRoot,
                                        nsICSSLoaderObserver* aObserver,
-                                       ForceUpdate aForceUpdate)
-{
+                                       ForceUpdate aForceUpdate) {
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   // All instances of nsStyleLinkElement should implement nsIContent.
   MOZ_ASSERT(thisContent);
@@ -290,7 +244,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   if (thisContent->IsInSVGUseShadowTree()) {
     // Stylesheets in <use>-cloned subtrees are disabled until we figure out
     // how they should behave.
-    return Update { };
+    return Update{};
   }
 
   if (mStyleSheet && (aOldDocument || aOldShadowRoot)) {
@@ -316,25 +270,22 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
 
   // Loader could be null during unlink, see bug 1425866.
   if (!doc || !doc->CSSLoader() || !doc->CSSLoader()->GetEnabled()) {
-    return Update { };
+    return Update{};
   }
 
   // When static documents are created, stylesheets are cloned manually.
   if (mDontLoadStyle || !mUpdatesEnabled || doc->IsStaticDocument()) {
-    return Update { };
+    return Update{};
   }
 
   Maybe<SheetInfo> info = GetStyleSheetInfo();
-  if (aForceUpdate == ForceUpdate::No &&
-      mStyleSheet &&
-      info &&
-      !info->mIsInline &&
-      info->mURI) {
+  if (aForceUpdate == ForceUpdate::No && mStyleSheet && info &&
+      !info->mIsInline && info->mURI) {
     if (nsIURI* oldURI = mStyleSheet->GetSheetURI()) {
       bool equal;
       nsresult rv = oldURI->Equals(info->mURI, &equal);
       if (NS_SUCCEEDED(rv) && equal) {
-        return Update { };
+        return Update{};
       }
     }
   }
@@ -354,41 +305,40 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   }
 
   if (!info) {
-    return Update { };
+    return Update{};
   }
 
   MOZ_ASSERT(info->mReferrerPolicy != net::RP_Unset ||
              info->mReferrerPolicy == doc->GetReferrerPolicy());
   if (!info->mURI && !info->mIsInline) {
     // If href is empty and this is not inline style then just bail
-    return Update { };
+    return Update{};
   }
 
   if (info->mIsInline) {
     nsAutoString text;
-    if (!nsContentUtils::GetNodeTextContent(thisContent, false, text, fallible)) {
+    if (!nsContentUtils::GetNodeTextContent(thisContent, false, text,
+                                            fallible)) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
-
 
     MOZ_ASSERT(thisContent->NodeInfo()->NameAtom() != nsGkAtoms::link,
                "<link> is not 'inline', and needs different CSP checks");
     MOZ_ASSERT(thisContent->IsElement());
     nsresult rv = NS_OK;
-    if (!nsStyleUtil::CSPAllowsInlineStyle(thisContent->AsElement(),
-                                           thisContent->NodePrincipal(),
-                                           info->mTriggeringPrincipal,
-                                           doc->GetDocumentURI(),
-                                           mLineNumber, mColumnNumber, text,
-                                           &rv)) {
+    if (!nsStyleUtil::CSPAllowsInlineStyle(
+            thisContent->AsElement(), thisContent->NodePrincipal(),
+            info->mTriggeringPrincipal, doc->GetDocumentURI(), mLineNumber,
+            mColumnNumber, text, &rv)) {
       if (NS_FAILED(rv)) {
         return Err(rv);
       }
-      return Update { };
+      return Update{};
     }
 
     // Parse the style sheet.
-    return doc->CSSLoader()->LoadInlineStyle(*info, text, mLineNumber, aObserver);
+    return doc->CSSLoader()->LoadInlineStyle(*info, text, mLineNumber,
+                                             aObserver);
   }
   if (thisContent->IsElement()) {
     nsAutoString integrity;
@@ -405,7 +355,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     // Don't propagate LoadStyleLink() errors further than this, since some
     // consumers (e.g. nsXMLContentSink) will completely abort on innocuous
     // things like a stylesheet load being blocked by the security system.
-    return Update { };
+    return Update{};
   }
   return resultOrError;
 }

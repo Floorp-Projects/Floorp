@@ -14,60 +14,57 @@
 #include "nsTArray.h"
 
 #define BEGIN_QUOTA_NAMESPACE \
-  namespace mozilla { namespace dom { namespace quota {
+  namespace mozilla {         \
+  namespace dom {             \
+  namespace quota {
 #define END_QUOTA_NAMESPACE \
-  } /* namespace quota */ } /* namespace dom */ } /* namespace mozilla */
-#define USING_QUOTA_NAMESPACE \
-  using namespace mozilla::dom::quota;
+  } /* namespace quota */   \
+  } /* namespace dom */     \
+  } /* namespace mozilla */
+#define USING_QUOTA_NAMESPACE using namespace mozilla::dom::quota;
 
 #define DSSTORE_FILE_NAME ".DS_Store"
 
-#define QM_WARNING(...)                                                        \
-  do {                                                                         \
-    nsPrintfCString str(__VA_ARGS__);                                          \
-    mozilla::dom::quota::ReportInternalError(__FILE__, __LINE__, str.get());   \
-    NS_WARNING(str.get());                                                     \
+#define QM_WARNING(...)                                                      \
+  do {                                                                       \
+    nsPrintfCString str(__VA_ARGS__);                                        \
+    mozilla::dom::quota::ReportInternalError(__FILE__, __LINE__, str.get()); \
+    NS_WARNING(str.get());                                                   \
   } while (0)
 
 class nsIEventTarget;
 
 BEGIN_QUOTA_NAMESPACE
 
-class BackgroundThreadObject
-{
-protected:
+class BackgroundThreadObject {
+ protected:
   nsCOMPtr<nsIEventTarget> mOwningThread;
 
-public:
-  void
-  AssertIsOnOwningThread() const
+ public:
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-  nsIEventTarget*
-  OwningThread() const;
+  nsIEventTarget* OwningThread() const;
 
-protected:
+ protected:
   BackgroundThreadObject();
 
   explicit BackgroundThreadObject(nsIEventTarget* aOwningThread);
 };
 
-void
-AssertIsOnIOThread();
+void AssertIsOnIOThread();
 
-void
-AssertCurrentThreadOwnsQuotaMutex();
+void AssertCurrentThreadOwnsQuotaMutex();
 
-bool
-IsOnIOThread();
+bool IsOnIOThread();
 
-void
-ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
+void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
 
 END_QUOTA_NAMESPACE
 
-#endif // mozilla_dom_quota_quotacommon_h__
+#endif  // mozilla_dom_quota_quotacommon_h__

@@ -16,26 +16,25 @@ namespace mozilla {
 namespace ipc {
 
 // Copied from browser_process_impl.cc, modified slightly.
-class BrowserProcessSubThread : public base::Thread
-{
-public:
+class BrowserProcessSubThread : public base::Thread {
+ public:
   // An enumeration of the well-known threads.
   enum ID {
-      IO,
-      //FILE,
-      //DB,
-      //HISTORY,
+    IO,
+  // FILE,
+  // DB,
+  // HISTORY,
 #if defined(OS_LINUX) || defined(OS_SOLARIS)
-      // This thread has a second connection to the X server and is used
-      // to process UI requests when routing the request to the UI
-      // thread would risk deadlock.
-      BACKGROUND_X11,
+    // This thread has a second connection to the X server and is used
+    // to process UI requests when routing the request to the UI
+    // thread would risk deadlock.
+    BACKGROUND_X11,
 #endif
 
-      // This identifier does not represent a thread.  Instead it counts
-      // the number of well-known threads.  Insert new well-known
-      // threads before this identifier.
-      ID_COUNT
+    // This identifier does not represent a thread.  Instead it counts
+    // the number of well-known threads.  Insert new well-known
+    // threads before this identifier.
+    ID_COUNT
   };
 
   explicit BrowserProcessSubThread(ID aId);
@@ -43,11 +42,11 @@ public:
 
   static MessageLoop* GetMessageLoop(ID identifier);
 
-protected:
+ protected:
   virtual void Init() override;
   virtual void CleanUp() override;
 
-private:
+ private:
   // The identifier of this thread.  Only one thread can exist with a given
   // identifier at a given time.
   ID mIdentifier;
@@ -64,13 +63,12 @@ private:
   static BrowserProcessSubThread* sBrowserThreads[ID_COUNT];
 };
 
-inline void AssertIOThread()
-{
+inline void AssertIOThread() {
   NS_ASSERTION(MessageLoop::TYPE_IO == MessageLoop::current()->type(),
                "should be on the IO thread!");
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_BrowserProcessSubThread_h
+#endif  // mozilla_ipc_BrowserProcessSubThread_h

@@ -34,63 +34,62 @@ struct BytecodeEmitter;
 //     emit(cond);
 //     wh.emitEnd();
 //
-class MOZ_STACK_CLASS WhileEmitter
-{
-    BytecodeEmitter* bce_;
+class MOZ_STACK_CLASS WhileEmitter {
+  BytecodeEmitter* bce_;
 
-    // The source note index for SRC_WHILE.
-    unsigned noteIndex_ = 0;
+  // The source note index for SRC_WHILE.
+  unsigned noteIndex_ = 0;
 
-    mozilla::Maybe<LoopControl> loopInfo_;
+  mozilla::Maybe<LoopControl> loopInfo_;
 
-    // Cache for the loop body, which is enclosed by the cache in `loopInfo_`,
-    // which is effectively for the loop condition.
-    mozilla::Maybe<TDZCheckCache> tdzCacheForBody_;
+  // Cache for the loop body, which is enclosed by the cache in `loopInfo_`,
+  // which is effectively for the loop condition.
+  mozilla::Maybe<TDZCheckCache> tdzCacheForBody_;
 
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    // +-------+ emitBody +------+ emitCond +------+ emitEnd  +-----+
-    // | Start |--------->| Body |--------->| Cond |--------->| End |
-    // +-------+          +------+          +------+          +-----+
-    enum class State {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  // +-------+ emitBody +------+ emitCond +------+ emitEnd  +-----+
+  // | Start |--------->| Body |--------->| Cond |--------->| End |
+  // +-------+          +------+          +------+          +-----+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling emitBody.
-        Body,
+    // After calling emitBody.
+    Body,
 
-        // After calling emitCond.
-        Cond,
+    // After calling emitCond.
+    Cond,
 
-        // After calling emitEnd.
-        End
-    };
-    State state_ = State::Start;
+    // After calling emitEnd.
+    End
+  };
+  State state_ = State::Start;
 #endif
 
-  public:
-    explicit WhileEmitter(BytecodeEmitter* bce);
+ public:
+  explicit WhileEmitter(BytecodeEmitter* bce);
 
-    // Parameters are the offset in the source code for each character below:
-    //
-    //   while ( x < 20 ) { ... }
-    //   ^       ^        ^     ^
-    //   |       |        |     |
-    //   |       |        |     endPos_
-    //   |       |        |
-    //   |       |        bodyPos_
-    //   |       |
-    //   |       condPos_
-    //   |
-    //   whilePos_
-    //
-    // Can be Nothing() if not available.
-    MOZ_MUST_USE bool emitBody(const mozilla::Maybe<uint32_t>& whilePos,
-                               const mozilla::Maybe<uint32_t>& bodyPos,
-                               const mozilla::Maybe<uint32_t>& endPos);
-    MOZ_MUST_USE bool emitCond(const mozilla::Maybe<uint32_t>& condPos);
-    MOZ_MUST_USE bool emitEnd();
+  // Parameters are the offset in the source code for each character below:
+  //
+  //   while ( x < 20 ) { ... }
+  //   ^       ^        ^     ^
+  //   |       |        |     |
+  //   |       |        |     endPos_
+  //   |       |        |
+  //   |       |        bodyPos_
+  //   |       |
+  //   |       condPos_
+  //   |
+  //   whilePos_
+  //
+  // Can be Nothing() if not available.
+  MOZ_MUST_USE bool emitBody(const mozilla::Maybe<uint32_t>& whilePos,
+                             const mozilla::Maybe<uint32_t>& bodyPos,
+                             const mozilla::Maybe<uint32_t>& endPos);
+  MOZ_MUST_USE bool emitCond(const mozilla::Maybe<uint32_t>& condPos);
+  MOZ_MUST_USE bool emitEnd();
 };
 
 } /* namespace frontend */

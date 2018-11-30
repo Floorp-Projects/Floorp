@@ -14,29 +14,31 @@
 namespace mozilla {
 namespace layers {
 
-WebRenderTextureHostWrapper::WebRenderTextureHostWrapper(AsyncImagePipelineManager* aManager)
-  : mExternalImageId(aManager->GetNextExternalImageId())
-{
+WebRenderTextureHostWrapper::WebRenderTextureHostWrapper(
+    AsyncImagePipelineManager* aManager)
+    : mExternalImageId(aManager->GetNextExternalImageId()) {
   MOZ_ASSERT(aManager);
   MOZ_COUNT_CTOR(WebRenderTextureHostWrapper);
 
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderTextureHostWrapper();
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture.forget());
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId),
+                                                 texture.forget());
 }
 
-WebRenderTextureHostWrapper::~WebRenderTextureHostWrapper()
-{
+WebRenderTextureHostWrapper::~WebRenderTextureHostWrapper() {
   MOZ_COUNT_DTOR(WebRenderTextureHostWrapper);
-  wr::RenderThread::Get()->UnregisterExternalImage(wr::AsUint64(mExternalImageId));
+  wr::RenderThread::Get()->UnregisterExternalImage(
+      wr::AsUint64(mExternalImageId));
 }
 
-void
-WebRenderTextureHostWrapper::UpdateWebRenderTextureHost(WebRenderTextureHost* aTextureHost) {
+void WebRenderTextureHostWrapper::UpdateWebRenderTextureHost(
+    WebRenderTextureHost* aTextureHost) {
   MOZ_ASSERT(aTextureHost);
   mWrTextureHost = aTextureHost;
-  wr::RenderThread::Get()->UpdateRenderTextureHost(wr::AsUint64(mExternalImageId), wr::AsUint64(aTextureHost->GetExternalImageKey()));
+  wr::RenderThread::Get()->UpdateRenderTextureHost(
+      wr::AsUint64(mExternalImageId),
+      wr::AsUint64(aTextureHost->GetExternalImageKey()));
 }
 
-
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

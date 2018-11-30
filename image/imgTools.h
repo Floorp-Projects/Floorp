@@ -9,30 +9,28 @@
 
 #include "imgITools.h"
 
-#define NS_IMGTOOLS_CID \
-{ /* 3d8fa16d-c9e1-4b50-bdef-2c7ae249967a */         \
-     0x3d8fa16d,                                     \
-     0xc9e1,                                         \
-     0x4b50,                                         \
-    {0xbd, 0xef, 0x2c, 0x7a, 0xe2, 0x49, 0x96, 0x7a} \
-}
+#define NS_IMGTOOLS_CID                              \
+  { /* 3d8fa16d-c9e1-4b50-bdef-2c7ae249967a */       \
+    0x3d8fa16d, 0xc9e1, 0x4b50, {                    \
+      0xbd, 0xef, 0x2c, 0x7a, 0xe2, 0x49, 0x96, 0x7a \
+    }                                                \
+  }
 
 namespace mozilla {
 namespace image {
 
-class imgTools final : public imgITools
-{
-public:
+class imgTools final : public imgITools {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGITOOLS
 
   imgTools();
 
-private:
+ private:
   virtual ~imgTools();
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_imgITools_h
+#endif  // mozilla_image_imgITools_h

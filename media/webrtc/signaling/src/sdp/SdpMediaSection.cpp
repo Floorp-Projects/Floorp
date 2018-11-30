@@ -6,11 +6,9 @@
 
 #include "signaling/src/sdp/SdpMediaSection.h"
 
-namespace mozilla
-{
-const SdpFmtpAttributeList::Parameters*
-SdpMediaSection::FindFmtp(const std::string& pt) const
-{
+namespace mozilla {
+const SdpFmtpAttributeList::Parameters* SdpMediaSection::FindFmtp(
+    const std::string& pt) const {
   const SdpAttributeList& attrs = GetAttributeList();
 
   if (attrs.HasAttribute(SdpAttribute::kFmtpAttribute)) {
@@ -23,9 +21,7 @@ SdpMediaSection::FindFmtp(const std::string& pt) const
   return nullptr;
 }
 
-void
-SdpMediaSection::SetFmtp(const SdpFmtpAttributeList::Fmtp& fmtpToSet)
-{
+void SdpMediaSection::SetFmtp(const SdpFmtpAttributeList::Fmtp& fmtpToSet) {
   UniquePtr<SdpFmtpAttributeList> fmtps(new SdpFmtpAttributeList);
 
   if (GetAttributeList().HasAttribute(SdpAttribute::kFmtpAttribute)) {
@@ -47,9 +43,7 @@ SdpMediaSection::SetFmtp(const SdpFmtpAttributeList::Fmtp& fmtpToSet)
   GetAttributeList().SetAttribute(fmtps.release());
 }
 
-void
-SdpMediaSection::RemoveFmtp(const std::string& pt)
-{
+void SdpMediaSection::RemoveFmtp(const std::string& pt) {
   UniquePtr<SdpFmtpAttributeList> fmtps(new SdpFmtpAttributeList);
 
   SdpAttributeList& attrList = GetAttributeList();
@@ -67,9 +61,8 @@ SdpMediaSection::RemoveFmtp(const std::string& pt)
   attrList.SetAttribute(fmtps.release());
 }
 
-const SdpRtpmapAttributeList::Rtpmap*
-SdpMediaSection::FindRtpmap(const std::string& pt) const
-{
+const SdpRtpmapAttributeList::Rtpmap* SdpMediaSection::FindRtpmap(
+    const std::string& pt) const {
   auto& attrs = GetAttributeList();
   if (!attrs.HasAttribute(SdpAttribute::kRtpmapAttribute)) {
     return nullptr;
@@ -83,9 +76,7 @@ SdpMediaSection::FindRtpmap(const std::string& pt) const
   return &rtpmap.GetEntry(pt);
 }
 
-const SdpSctpmapAttributeList::Sctpmap*
-SdpMediaSection::GetSctpmap() const
-{
+const SdpSctpmapAttributeList::Sctpmap* SdpMediaSection::GetSctpmap() const {
   auto& attrs = GetAttributeList();
   if (!attrs.HasAttribute(SdpAttribute::kSctpmapAttribute)) {
     return nullptr;
@@ -99,9 +90,7 @@ SdpMediaSection::GetSctpmap() const
   return &sctpmap.GetFirstEntry();
 }
 
-uint32_t
-SdpMediaSection::GetSctpPort() const
-{
+uint32_t SdpMediaSection::GetSctpPort() const {
   auto& attrs = GetAttributeList();
   if (!attrs.HasAttribute(SdpAttribute::kSctpPortAttribute)) {
     return 0;
@@ -110,9 +99,7 @@ SdpMediaSection::GetSctpPort() const
   return attrs.GetSctpPort();
 }
 
-bool
-SdpMediaSection::GetMaxMessageSize(uint32_t* size) const
-{
+bool SdpMediaSection::GetMaxMessageSize(uint32_t* size) const {
   *size = 0;
 
   auto& attrs = GetAttributeList();
@@ -124,11 +111,9 @@ SdpMediaSection::GetMaxMessageSize(uint32_t* size) const
   return true;
 }
 
-bool
-SdpMediaSection::HasRtcpFb(const std::string& pt,
-                           SdpRtcpFbAttributeList::Type type,
-                           const std::string& subType) const
-{
+bool SdpMediaSection::HasRtcpFb(const std::string& pt,
+                                SdpRtcpFbAttributeList::Type type,
+                                const std::string& subType) const {
   const SdpAttributeList& attrs(GetAttributeList());
 
   if (!attrs.HasAttribute(SdpAttribute::kRtcpFbAttribute)) {
@@ -148,9 +133,7 @@ SdpMediaSection::HasRtcpFb(const std::string& pt,
   return false;
 }
 
-SdpRtcpFbAttributeList
-SdpMediaSection::GetRtcpFbs() const
-{
+SdpRtcpFbAttributeList SdpMediaSection::GetRtcpFbs() const {
   SdpRtcpFbAttributeList result;
   if (GetAttributeList().HasAttribute(SdpAttribute::kRtcpFbAttribute)) {
     result = GetAttributeList().GetRtcpFb();
@@ -158,9 +141,7 @@ SdpMediaSection::GetRtcpFbs() const
   return result;
 }
 
-void
-SdpMediaSection::SetRtcpFbs(const SdpRtcpFbAttributeList& rtcpfbs)
-{
+void SdpMediaSection::SetRtcpFbs(const SdpRtcpFbAttributeList& rtcpfbs) {
   if (rtcpfbs.mFeedbacks.empty()) {
     GetAttributeList().RemoveAttribute(SdpAttribute::kRtcpFbAttribute);
     return;
@@ -169,10 +150,8 @@ SdpMediaSection::SetRtcpFbs(const SdpRtcpFbAttributeList& rtcpfbs)
   GetAttributeList().SetAttribute(new SdpRtcpFbAttributeList(rtcpfbs));
 }
 
-void
-SdpMediaSection::SetSsrcs(const std::vector<uint32_t>& ssrcs,
-                          const std::string& cname)
-{
+void SdpMediaSection::SetSsrcs(const std::vector<uint32_t>& ssrcs,
+                               const std::string& cname) {
   if (ssrcs.empty()) {
     GetAttributeList().RemoveAttribute(SdpAttribute::kSsrcAttribute);
     return;
@@ -190,9 +169,8 @@ SdpMediaSection::SetSsrcs(const std::vector<uint32_t>& ssrcs,
   GetAttributeList().SetAttribute(ssrcAttr.release());
 }
 
-void
-SdpMediaSection::AddMsid(const std::string& id, const std::string& appdata)
-{
+void SdpMediaSection::AddMsid(const std::string& id,
+                              const std::string& appdata) {
   UniquePtr<SdpMsidAttributeList> msids(new SdpMsidAttributeList);
   if (GetAttributeList().HasAttribute(SdpAttribute::kMsidAttribute)) {
     msids->mMsids = GetAttributeList().GetMsid().mMsids;
@@ -201,9 +179,8 @@ SdpMediaSection::AddMsid(const std::string& id, const std::string& appdata)
   GetAttributeList().SetAttribute(msids.release());
 }
 
-const SdpRidAttributeList::Rid*
-SdpMediaSection::FindRid(const std::string& id) const
-{
+const SdpRidAttributeList::Rid* SdpMediaSection::FindRid(
+    const std::string& id) const {
   if (!GetAttributeList().HasAttribute(SdpAttribute::kRidAttribute)) {
     return nullptr;
   }
@@ -217,5 +194,4 @@ SdpMediaSection::FindRid(const std::string& id) const
   return nullptr;
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

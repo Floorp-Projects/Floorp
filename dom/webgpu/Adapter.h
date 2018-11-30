@@ -15,35 +15,32 @@ namespace dom {
 struct WebGPUDeviceDescriptor;
 struct WebGPUExtensions;
 struct WebGPUFeatures;
-} // namespace dom
+}  // namespace dom
 
 namespace webgpu {
 class Device;
 class Instance;
 
-class Adapter final
-    : public ChildOf<Instance>
-{
-public:
-    WEBGPU_DECL_GOOP(Adapter)
+class Adapter final : public ChildOf<Instance> {
+ public:
+  WEBGPU_DECL_GOOP(Adapter)
 
-    const nsString mName;
+  const nsString mName;
 
-private:
-    Adapter() = delete;
-    virtual ~Adapter();
+ private:
+  Adapter() = delete;
+  virtual ~Adapter();
 
-public:
-    void GetName(nsString& out) const {
-        out = mName;
-    }
+ public:
+  void GetName(nsString& out) const { out = mName; }
 
-    void Extensions(dom::WebGPUExtensions& out) const;
-    void Features(dom::WebGPUFeatures& out) const;
-    already_AddRefed<Device> CreateDevice(const dom::WebGPUDeviceDescriptor& desc) const;
+  void Extensions(dom::WebGPUExtensions& out) const;
+  void Features(dom::WebGPUFeatures& out) const;
+  already_AddRefed<Device> CreateDevice(
+      const dom::WebGPUDeviceDescriptor& desc) const;
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_Adapter_H_
+#endif  // WEBGPU_Adapter_H_

@@ -44,8 +44,7 @@ class MachMessageSource {
 
   // |listener| is a week reference passed to CF, it needs to remain in
   // existence till this object is destroeyd.
-  MachMessageSource(mach_port_t port,
-                    MachPortListener* listener,
+  MachMessageSource(mach_port_t port, MachPortListener* listener,
                     bool* success);
   ~MachMessageSource();
 
@@ -58,4 +57,4 @@ class MachMessageSource {
   DISALLOW_COPY_AND_ASSIGN(MachMessageSource);
 };
 
-#endif // CHROME_COMMON_MACH_MESSAGE_SOURCE_MAC_H_
+#endif  // CHROME_COMMON_MACH_MESSAGE_SOURCE_MAC_H_

@@ -1,6 +1,6 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-* vim: set ts=8 sts=4 et sw=4 tw=99:
-*/
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,14 +18,8 @@ mozilla::Atomic<void*> g_hidden_pointer;
 
 // Call this to install a pointer into the global.
 
-MOZ_NEVER_INLINE void setHiddenPointer(void* p)
-{
-    g_hidden_pointer = p;
-}
+MOZ_NEVER_INLINE void setHiddenPointer(void* p) { g_hidden_pointer = p; }
 
 // Call this to retrieve the pointer.
 
-MOZ_NEVER_INLINE void* getHiddenPointer()
-{
-    return g_hidden_pointer;
-}
+MOZ_NEVER_INLINE void* getHiddenPointer() { return g_hidden_pointer; }

@@ -8,36 +8,28 @@
 #include "nsString.h"
 #include "txIXPathContext.h"
 
-nsresult
-txErrorExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
-{
-    *aResult = nullptr;
+nsresult txErrorExpr::evaluate(txIEvalContext* aContext,
+                               txAExprResult** aResult) {
+  *aResult = nullptr;
 
-    nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
+  nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
 #ifdef TX_TO_STRING
-    err.AppendLiteral(": ");
-    toString(err);
+  err.AppendLiteral(": ");
+  toString(err);
 #endif
-    aContext->receiveError(err,
-                           NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED);
+  aContext->receiveError(err, NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED);
 
-    return NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED;
+  return NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED;
 }
 
 TX_IMPL_EXPR_STUBS_0(txErrorExpr, ANY_RESULT)
 
-bool
-txErrorExpr::isSensitiveTo(ContextSensitivity aContext)
-{
-    // It doesn't really matter what we return here, but it might
-    // be a good idea to try to keep this as unoptimizable as possible
-    return true;
+bool txErrorExpr::isSensitiveTo(ContextSensitivity aContext) {
+  // It doesn't really matter what we return here, but it might
+  // be a good idea to try to keep this as unoptimizable as possible
+  return true;
 }
 
 #ifdef TX_TO_STRING
-void
-txErrorExpr::toString(nsAString& aStr)
-{
-    aStr.Append(mStr);
-}
+void txErrorExpr::toString(nsAString& aStr) { aStr.Append(mStr); }
 #endif

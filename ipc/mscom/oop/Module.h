@@ -9,7 +9,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include <objbase.h>
 
@@ -20,20 +20,18 @@
 namespace mozilla {
 namespace mscom {
 
-class Module
-{
-public:
+class Module {
+ public:
   static HRESULT CanUnload() { return sRefCount == 0 ? S_OK : S_FALSE; }
 
   static void Lock() { ++sRefCount; }
   static void Unlock() { --sRefCount; }
 
-private:
+ private:
   static ULONG sRefCount;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_Module_h
-
+#endif  // mozilla_mscom_Module_h

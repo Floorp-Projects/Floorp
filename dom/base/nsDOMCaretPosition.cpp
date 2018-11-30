@@ -13,22 +13,13 @@
 using namespace mozilla::dom;
 
 nsDOMCaretPosition::nsDOMCaretPosition(nsINode* aNode, uint32_t aOffset)
-  : mOffset(aOffset), mOffsetNode(aNode), mAnonymousContentNode(nullptr)
-{
-}
+    : mOffset(aOffset), mOffsetNode(aNode), mAnonymousContentNode(nullptr) {}
 
-nsDOMCaretPosition::~nsDOMCaretPosition()
-{
-}
+nsDOMCaretPosition::~nsDOMCaretPosition() {}
 
-nsINode* nsDOMCaretPosition::GetOffsetNode() const
-{
-  return mOffsetNode;
-}
+nsINode* nsDOMCaretPosition::GetOffsetNode() const { return mOffsetNode; }
 
-already_AddRefed<DOMRect>
-nsDOMCaretPosition::GetClientRect() const
-{
+already_AddRefed<DOMRect> nsDOMCaretPosition::GetClientRect() const {
   if (!mOffsetNode) {
     return nullptr;
   }
@@ -43,28 +34,27 @@ nsDOMCaretPosition::GetClientRect() const
     node = mOffsetNode;
   }
 
-  nsresult creationRv = nsRange::CreateRange(node, mOffset, node,
-                                             mOffset,
+  nsresult creationRv = nsRange::CreateRange(node, mOffset, node, mOffset,
                                              getter_AddRefs<nsRange>(domRange));
   if (!NS_SUCCEEDED(creationRv)) {
     return nullptr;
   }
 
-  NS_ASSERTION(domRange, "unable to retrieve valid dom range from CaretPosition");
+  NS_ASSERTION(domRange,
+               "unable to retrieve valid dom range from CaretPosition");
 
   rect = domRange->GetBoundingClientRect(false);
 
   return rect.forget();
 }
 
-JSObject*
-nsDOMCaretPosition::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* nsDOMCaretPosition::WrapObject(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::CaretPosition_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMCaretPosition,
-                                      mOffsetNode, mAnonymousContentNode)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMCaretPosition, mOffsetNode,
+                                      mAnonymousContentNode)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCaretPosition)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCaretPosition)
@@ -73,4 +63,3 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCaretPosition)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-

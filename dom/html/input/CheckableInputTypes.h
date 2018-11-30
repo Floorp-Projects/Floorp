@@ -9,24 +9,20 @@
 
 #include "InputType.h"
 
-class CheckableInputTypeBase : public ::InputType
-{
-public:
+class CheckableInputTypeBase : public ::InputType {
+ public:
   ~CheckableInputTypeBase() override {}
 
-protected:
+ protected:
   explicit CheckableInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
-    : InputType(aInputElement)
-  {}
+      : InputType(aInputElement) {}
 };
 
 // input type=checkbox
-class CheckboxInputType : public CheckableInputTypeBase
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class CheckboxInputType : public CheckableInputTypeBase {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) CheckboxInputType(aInputElement);
   }
 
@@ -34,28 +30,24 @@ public:
 
   nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
-private:
+ private:
   explicit CheckboxInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : CheckableInputTypeBase(aInputElement)
-  {}
+      : CheckableInputTypeBase(aInputElement) {}
 };
 
 // input type=radio
-class RadioInputType : public CheckableInputTypeBase
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class RadioInputType : public CheckableInputTypeBase {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) RadioInputType(aInputElement);
   }
 
   nsresult GetValueMissingMessage(nsAString& aMessage) override;
 
-private:
+ private:
   explicit RadioInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : CheckableInputTypeBase(aInputElement)
-  {}
+      : CheckableInputTypeBase(aInputElement) {}
 };
 
 #endif /* CheckableInputTypes_h__ */

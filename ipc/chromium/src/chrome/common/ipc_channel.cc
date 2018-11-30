@@ -33,10 +33,8 @@ std::wstring Channel::GenerateUniqueRandomChannelID() {
   // component. The strong random component prevents other processes from
   // hijacking or squatting on predictable channel names.
 
-  return StringPrintf(L"%d.%u.%d",
-      base::GetCurrentProcId(),
-      g_last_id++,
-      base::RandInt(0, std::numeric_limits<int32_t>::max()));
+  return StringPrintf(L"%d.%u.%d", base::GetCurrentProcId(), g_last_id++,
+                      base::RandInt(0, std::numeric_limits<int32_t>::max()));
 }
 
 }  // namespace IPC

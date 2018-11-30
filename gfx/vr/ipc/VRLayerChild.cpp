@@ -8,50 +8,43 @@
 #include "gfxPlatform.h"
 #include "GLScreenBuffer.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
-#include "SharedSurface.h"                // for SharedSurface
-#include "SharedSurfaceGL.h"              // for SharedSurface
-#include "mozilla/layers/LayersMessages.h" // for TimedTexture
+#include "SharedSurface.h"                  // for SharedSurface
+#include "SharedSurfaceGL.h"                // for SharedSurface
+#include "mozilla/layers/LayersMessages.h"  // for TimedTexture
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/layers/SyncObject.h" // for SyncObjectClient
+#include "mozilla/layers/SyncObject.h"  // for SyncObjectClient
 
 namespace mozilla {
 namespace gfx {
 
 VRLayerChild::VRLayerChild()
-  : mCanvasElement(nullptr)
-  , mIPCOpen(false)
-  , mLastSubmittedFrameId(0)
-{
+    : mCanvasElement(nullptr), mIPCOpen(false), mLastSubmittedFrameId(0) {
   MOZ_COUNT_CTOR(VRLayerChild);
 }
 
-VRLayerChild::~VRLayerChild()
-{
+VRLayerChild::~VRLayerChild() {
   ClearSurfaces();
 
   MOZ_COUNT_DTOR(VRLayerChild);
 }
 
-void
-VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement,
-                         const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect)
-{
+void VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement,
+                              const gfx::Rect& aLeftEyeRect,
+                              const gfx::Rect& aRightEyeRect) {
   MOZ_ASSERT(aCanvasElement);
   mLeftEyeRect = aLeftEyeRect;
   mRightEyeRect = aRightEyeRect;
   if (mCanvasElement == nullptr) {
     mCanvasElement = aCanvasElement;
-    VRManagerChild *vrmc = VRManagerChild::Get();
+    VRManagerChild* vrmc = VRManagerChild::Get();
     vrmc->RunFrameRequestCallbacks();
   } else {
     mCanvasElement = aCanvasElement;
   }
 }
 
-void
-VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo)
-{
+void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
   uint64_t frameId = aDisplayInfo.GetFrameId();
 
   // aFrameId will not increment unless the previuosly submitted
@@ -68,17 +61,19 @@ VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo)
 
 #if defined(MOZ_WIDGET_ANDROID)
   /**
-   * Do not blit WebGL to a SurfaceTexture until the last submitted frame is already processed
-   * and the new frame poses are ready. SurfaceTextures need to be released in the VR render thread 
-   * in order to allow to be used again in the WebGLContext GLScreenBuffer producer.
-   * Not doing so causes some freezes, crashes or other undefined behaviour.
+   * Do not blit WebGL to a SurfaceTexture until the last submitted frame is
+   * already processed and the new frame poses are ready. SurfaceTextures need
+   * to be released in the VR render thread in order to allow to be used again
+   * in the WebGLContext GLScreenBuffer producer. Not doing so causes some
+   * freezes, crashes or other undefined behaviour.
    */
-  if (!mThisFrameTexture || aDisplayInfo.mDisplayState.mLastSubmittedFrameId == mLastSubmittedFrameId) {
-      mThisFrameTexture = mCanvasElement->GetVRFrame();
+  if (!mThisFrameTexture || aDisplayInfo.mDisplayState.mLastSubmittedFrameId ==
+                                mLastSubmittedFrameId) {
+    mThisFrameTexture = mCanvasElement->GetVRFrame();
   }
 #else
   mThisFrameTexture = mCanvasElement->GetVRFrame();
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
   mLastSubmittedFrameId = frameId;
 
@@ -102,60 +97,45 @@ VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo)
 
   layers::SurfaceDescriptor desc;
   if (!surf->ToSurfaceDescriptor(&desc)) {
-    gfxCriticalError() << "SharedSurface::ToSurfaceDescriptor failed in VRLayerChild::SubmitFrame";
+    gfxCriticalError() << "SharedSurface::ToSurfaceDescriptor failed in "
+                          "VRLayerChild::SubmitFrame";
     return;
   }
 
   SendSubmitFrame(desc, frameId, mLeftEyeRect, mRightEyeRect);
 }
 
-bool
-VRLayerChild::IsIPCOpen()
-{
-  return mIPCOpen;
-}
+bool VRLayerChild::IsIPCOpen() { return mIPCOpen; }
 
-void
-VRLayerChild::ClearSurfaces()
-{
+void VRLayerChild::ClearSurfaces() {
   mThisFrameTexture = nullptr;
   mLastFrameTexture = nullptr;
 }
 
-void
-VRLayerChild::ActorDestroy(ActorDestroyReason aWhy)
-{
-  mIPCOpen = false;
-}
+void VRLayerChild::ActorDestroy(ActorDestroyReason aWhy) { mIPCOpen = false; }
 
 // static
-PVRLayerChild*
-VRLayerChild::CreateIPDLActor()
-{
+PVRLayerChild* VRLayerChild::CreateIPDLActor() {
   VRLayerChild* c = new VRLayerChild();
   c->AddIPDLReference();
   return c;
 }
 
 // static
-bool
-VRLayerChild::DestroyIPDLActor(PVRLayerChild* actor)
-{
+bool VRLayerChild::DestroyIPDLActor(PVRLayerChild* actor) {
   static_cast<VRLayerChild*>(actor)->ReleaseIPDLReference();
   return true;
 }
 
-void
-VRLayerChild::AddIPDLReference() {
+void VRLayerChild::AddIPDLReference() {
   MOZ_ASSERT(mIPCOpen == false);
   mIPCOpen = true;
   AddRef();
 }
-void
-VRLayerChild::ReleaseIPDLReference() {
+void VRLayerChild::ReleaseIPDLReference() {
   MOZ_ASSERT(mIPCOpen == false);
   Release();
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

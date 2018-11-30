@@ -22,7 +22,7 @@ class MIDIPortInterface;
  *
  */
 class TestMIDIPlatformService : public MIDIPlatformService {
-public:
+ public:
   TestMIDIPlatformService();
   virtual void Init() override;
   virtual void Open(MIDIPortParent* aPort) override;
@@ -33,7 +33,8 @@ public:
   // in order to trigger device connection events and state changes,
   // interrupting messages for high priority sysex sends, etc...
   void ProcessMessages(const nsAString& aPort);
-private:
+
+ private:
   virtual ~TestMIDIPlatformService();
   // Convenience object for sending runnables to the background thread. All
   // runnables are pushed to the background thread, and check for existence of a
@@ -55,7 +56,7 @@ private:
   bool mIsInitialized;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TestMIDIPlatformService_h
+#endif  // mozilla_dom_TestMIDIPlatformService_h

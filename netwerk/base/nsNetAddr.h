@@ -11,21 +11,20 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/Attributes.h"
 
-class nsNetAddr final : public nsINetAddr
-{
+class nsNetAddr final : public nsINetAddr {
   ~nsNetAddr() = default;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETADDR
 
   explicit nsNetAddr(mozilla::net::NetAddr* addr);
 
-private:
+ private:
   mozilla::net::NetAddr mAddr;
 
-protected:
+ protected:
   /* additional members */
 };
 
-#endif // !nsNetAddr_h__
+#endif  // !nsNetAddr_h__

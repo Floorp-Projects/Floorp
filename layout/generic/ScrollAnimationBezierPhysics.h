@@ -12,12 +12,12 @@
 
 namespace mozilla {
 
-struct ScrollAnimationBezierPhysicsSettings
-{
+struct ScrollAnimationBezierPhysicsSettings {
   // These values are minimum and maximum animation duration per event,
   // and a global ratio which defines how longer is the animation's duration
   // compared to the average recent events intervals (such that for a relatively
-  // consistent events rate, the next event arrives before current animation ends)
+  // consistent events rate, the next event arrives before current animation
+  // ends)
   int32_t mMinMS;
   int32_t mMaxMS;
   double mIntervalRatio;
@@ -25,14 +25,13 @@ struct ScrollAnimationBezierPhysicsSettings
 
 // This class implements a cubic bezier timing function and automatically
 // adapts the animation duration based on the scrolling rate.
-class ScrollAnimationBezierPhysics final : public ScrollAnimationPhysics
-{
-public:
-  explicit ScrollAnimationBezierPhysics(const nsPoint& aStartPos,
-                                        const ScrollAnimationBezierPhysicsSettings& aSettings);
+class ScrollAnimationBezierPhysics final : public ScrollAnimationPhysics {
+ public:
+  explicit ScrollAnimationBezierPhysics(
+      const nsPoint& aStartPos,
+      const ScrollAnimationBezierPhysicsSettings& aSettings);
 
-  void Update(const TimeStamp& aTime,
-              const nsPoint& aDestination,
+  void Update(const TimeStamp& aTime, const nsPoint& aDestination,
               const nsSize& aCurrentVelocity) override;
 
   void ApplyContentShift(const CSSPoint& aShiftDelta) override;
@@ -48,7 +47,7 @@ public:
     return aTime > mStartTime + mDuration;
   }
 
-protected:
+ protected:
   double ProgressAt(const TimeStamp& aTime) const {
     return clamped((aTime - mStartTime) / mDuration, 0.0, 1.0);
   }
@@ -64,9 +63,8 @@ protected:
 
   // Initializes the timing function in such a way that the current velocity is
   // preserved.
-  void InitTimingFunction(nsSMILKeySpline& aTimingFunction,
-                          nscoord aCurrentPos, nscoord aCurrentVelocity,
-                          nscoord aDestination);
+  void InitTimingFunction(nsSMILKeySpline& aTimingFunction, nscoord aCurrentPos,
+                          nscoord aCurrentVelocity, nscoord aDestination);
 
   // Initialize event history.
   void InitializeHistory(const TimeStamp& aTime);
@@ -91,6 +89,6 @@ protected:
   bool mIsFirstIteration;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_layout_ScrollAnimationBezierPhysics_h_
+#endif  // mozilla_layout_ScrollAnimationBezierPhysics_h_

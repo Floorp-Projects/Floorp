@@ -10,14 +10,9 @@
 namespace mozilla {
 namespace gfx {
 
-CaptureCommandList::~CaptureCommandList()
-{
-  Clear();
-}
+CaptureCommandList::~CaptureCommandList() { Clear(); }
 
-void
-CaptureCommandList::Clear()
-{
+void CaptureCommandList::Clear() {
   for (iterator iter(*this); !iter.Done(); iter.Next()) {
     DrawingCommand* cmd = iter.Get();
     cmd->~DrawingCommand();
@@ -26,5 +21,5 @@ CaptureCommandList::Clear()
   mStorage.clear();
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

@@ -15,7 +15,7 @@ namespace a11y {
 typedef class ARIAGridAccessible ARIAGridAccessibleWrap;
 typedef class ARIAGridCellAccessible ARIAGridCellAccessibleWrap;
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

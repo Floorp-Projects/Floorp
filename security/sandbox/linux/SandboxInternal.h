@@ -23,6 +23,6 @@ typedef void (*SandboxCrashFunc)(int, siginfo_t*, void*);
 extern MOZ_EXPORT SandboxCrashFunc gSandboxCrashFunc;
 extern const sock_fprog* gSetSandboxFilter;
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxInternal_h
+#endif  // mozilla_SandboxInternal_h

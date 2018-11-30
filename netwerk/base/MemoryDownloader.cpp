@@ -11,19 +11,13 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(MemoryDownloader,
-		  nsIStreamListener,
-		  nsIRequestObserver)
+NS_IMPL_ISUPPORTS(MemoryDownloader, nsIStreamListener, nsIRequestObserver)
 
 MemoryDownloader::MemoryDownloader(IObserver* aObserver)
-: mObserver(aObserver)
-, mStatus(NS_ERROR_NOT_INITIALIZED)
-{
-}
+    : mObserver(aObserver), mStatus(NS_ERROR_NOT_INITIALIZED) {}
 
 NS_IMETHODIMP
-MemoryDownloader::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
-{
+MemoryDownloader::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt) {
   MOZ_ASSERT(!mData);
   mData.reset(new FallibleTArray<uint8_t>());
   mStatus = NS_OK;
@@ -31,29 +25,22 @@ MemoryDownloader::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
 }
 
 NS_IMETHODIMP
-MemoryDownloader::OnStopRequest(nsIRequest* aRequest,
-                                nsISupports* aCtxt,
-                                nsresult aStatus)
-{
+MemoryDownloader::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
+                                nsresult aStatus) {
   MOZ_ASSERT_IF(NS_FAILED(mStatus), NS_FAILED(aStatus));
   MOZ_ASSERT(!mData == NS_FAILED(mStatus));
   Data data;
   data.swap(mData);
   RefPtr<IObserver> observer;
   observer.swap(mObserver);
-  observer->OnDownloadComplete(this, aRequest, aCtxt, aStatus,
-                               std::move(data));
+  observer->OnDownloadComplete(this, aRequest, aCtxt, aStatus, std::move(data));
   return NS_OK;
 }
 
-nsresult
-MemoryDownloader::ConsumeData(nsIInputStream* aIn,
-                              void* aClosure,
-                              const char* aFromRawSegment,
-                              uint32_t aToOffset,
-                              uint32_t aCount,
-                              uint32_t* aWriteCount)
-{
+nsresult MemoryDownloader::ConsumeData(nsIInputStream* aIn, void* aClosure,
+                                       const char* aFromRawSegment,
+                                       uint32_t aToOffset, uint32_t aCount,
+                                       uint32_t* aWriteCount) {
   MemoryDownloader* self = static_cast<MemoryDownloader*>(aClosure);
   if (!self->mData->AppendElements(aFromRawSegment, aCount, fallible)) {
     // The error returned by ConsumeData isn't propagated to the
@@ -66,12 +53,9 @@ MemoryDownloader::ConsumeData(nsIInputStream* aIn,
 }
 
 NS_IMETHODIMP
-MemoryDownloader::OnDataAvailable(nsIRequest* aRequest,
-                                  nsISupports* aCtxt,
+MemoryDownloader::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
                                   nsIInputStream* aInStr,
-                                  uint64_t aSourceOffset,
-                                  uint32_t aCount)
-{
+                                  uint64_t aSourceOffset, uint32_t aCount) {
   uint32_t n;
   MOZ_ASSERT(mData);
   nsresult rv = aInStr->ReadSegments(ConsumeData, this, aCount, &n);
@@ -85,5 +69,5 @@ MemoryDownloader::OnDataAvailable(nsIRequest* aRequest,
   return NS_OK;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

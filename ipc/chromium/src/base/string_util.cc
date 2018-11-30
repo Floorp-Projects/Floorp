@@ -30,20 +30,20 @@ namespace {
 // Hack to convert any char-like type to its unsigned counterpart.
 // For example, it will convert char, signed char and unsigned char to unsigned
 // char.
-template<typename T>
+template <typename T>
 struct ToUnsigned {
   typedef T Unsigned;
 };
 
-template<>
+template <>
 struct ToUnsigned<char> {
   typedef unsigned char Unsigned;
 };
-template<>
+template <>
 struct ToUnsigned<signed char> {
   typedef unsigned char Unsigned;
 };
-template<>
+template <>
 struct ToUnsigned<wchar_t> {
 #if defined(WCHAR_T_IS_UTF16)
   typedef unsigned short Unsigned;
@@ -51,7 +51,7 @@ struct ToUnsigned<wchar_t> {
   typedef uint32_t Unsigned;
 #endif
 };
-template<>
+template <>
 struct ToUnsigned<short> {
   typedef unsigned short Unsigned;
 };
@@ -68,15 +68,15 @@ struct ToUnsigned<short> {
 //    conditions that convert_func tolerates but should result in
 //    StringToNumber returning false.  For strtol-like funtions, valid_func
 //    should check for leading whitespace.
-template<typename StringToNumberTraits>
+template <typename StringToNumberTraits>
 bool StringToNumber(const typename StringToNumberTraits::string_type& input,
                     typename StringToNumberTraits::value_type* output) {
   typedef StringToNumberTraits traits;
 
   errno = 0;  // Thread-safe?  It is on at least Mac, Linux, and Windows.
   typename traits::string_type::value_type* endptr = NULL;
-  typename traits::value_type value = traits::convert_func(input.c_str(),
-                                                           &endptr);
+  typename traits::value_type value =
+      traits::convert_func(input.c_str(), &endptr);
   *output = value;
 
   // Cases to return false:
@@ -88,10 +88,8 @@ bool StringToNumber(const typename StringToNumberTraits::string_type& input,
   //    expected end given the string's stated length to correctly catch cases
   //    where the string contains embedded NUL characters.
   //  - valid_func determines that the input is not in preferred form.
-  return errno == 0 &&
-         !input.empty() &&
-         input.c_str() + input.length() == endptr &&
-         traits::valid_func(input);
+  return errno == 0 && !input.empty() &&
+         input.c_str() + input.length() == endptr && traits::valid_func(input);
 }
 
 class StringToLongTraits {
@@ -178,12 +176,10 @@ class String16ToInt64Traits {
 
 }  // namespace
 
-
 namespace base {
 
 bool IsWprintfFormatPortable(const wchar_t* format) {
   for (const wchar_t* position = format; *position != '\0'; ++position) {
-
     if (*position == '%') {
       bool in_specification = true;
       bool modifier_l = false;
@@ -212,80 +208,61 @@ bool IsWprintfFormatPortable(const wchar_t* format) {
         }
       }
     }
-
   }
 
   return true;
 }
 
-
 }  // namespace base
 
 static const wchar_t kWhitespaceWide[] = {
-  0x0009,  // <control-0009> to <control-000D>
-  0x000A,
-  0x000B,
-  0x000C,
-  0x000D,
-  0x0020,  // Space
-  0x0085,  // <control-0085>
-  0x00A0,  // No-Break Space
-  0x1680,  // Ogham Space Mark
-  0x180E,  // Mongolian Vowel Separator
-  0x2000,  // En Quad to Hair Space
-  0x2001,
-  0x2002,
-  0x2003,
-  0x2004,
-  0x2005,
-  0x2006,
-  0x2007,
-  0x2008,
-  0x2009,
-  0x200A,
-  0x200C,  // Zero Width Non-Joiner
-  0x2028,  // Line Separator
-  0x2029,  // Paragraph Separator
-  0x202F,  // Narrow No-Break Space
-  0x205F,  // Medium Mathematical Space
-  0x3000,  // Ideographic Space
-  0
-};
+    0x0009,  // <control-0009> to <control-000D>
+    0x000A, 0x000B, 0x000C, 0x000D,
+    0x0020,  // Space
+    0x0085,  // <control-0085>
+    0x00A0,  // No-Break Space
+    0x1680,  // Ogham Space Mark
+    0x180E,  // Mongolian Vowel Separator
+    0x2000,  // En Quad to Hair Space
+    0x2001, 0x2002, 0x2003, 0x2004, 0x2005,
+    0x2006, 0x2007, 0x2008, 0x2009, 0x200A,
+    0x200C,  // Zero Width Non-Joiner
+    0x2028,  // Line Separator
+    0x2029,  // Paragraph Separator
+    0x202F,  // Narrow No-Break Space
+    0x205F,  // Medium Mathematical Space
+    0x3000,  // Ideographic Space
+    0};
 static const char kWhitespaceASCII[] = {
-  0x09,    // <control-0009> to <control-000D>
-  0x0A,
-  0x0B,
-  0x0C,
-  0x0D,
-  0x20,    // Space
-  0
-};
+    0x09,  // <control-0009> to <control-000D>
+    0x0A, 0x0B, 0x0C, 0x0D,
+    0x20,  // Space
+    0};
 
-template<typename STR>
+template <typename STR>
 TrimPositions TrimStringT(const STR& input,
                           const typename STR::value_type trim_chars[],
-                          TrimPositions positions,
-                          STR* output) {
+                          TrimPositions positions, STR* output) {
   // Find the edges of leading/trailing whitespace as desired.
   const typename STR::size_type last_char = input.length() - 1;
-  const typename STR::size_type first_good_char = (positions & TRIM_LEADING) ?
-      input.find_first_not_of(trim_chars) : 0;
-  const typename STR::size_type last_good_char = (positions & TRIM_TRAILING) ?
-      input.find_last_not_of(trim_chars) : last_char;
+  const typename STR::size_type first_good_char =
+      (positions & TRIM_LEADING) ? input.find_first_not_of(trim_chars) : 0;
+  const typename STR::size_type last_good_char =
+      (positions & TRIM_TRAILING) ? input.find_last_not_of(trim_chars)
+                                  : last_char;
 
   // When the string was all whitespace, report that we stripped off whitespace
   // from whichever position the caller was interested in.  For empty input, we
   // stripped no whitespace, but we still need to clear |output|.
-  if (input.empty() ||
-      (first_good_char == STR::npos) || (last_good_char == STR::npos)) {
+  if (input.empty() || (first_good_char == STR::npos) ||
+      (last_good_char == STR::npos)) {
     bool input_was_empty = input.empty();  // in case output == &input
     output->clear();
     return input_was_empty ? TRIM_NONE : positions;
   }
 
   // Trim the whitespace.
-  *output =
-      input.substr(first_good_char, last_good_char - first_good_char + 1);
+  *output = input.substr(first_good_char, last_good_char - first_good_char + 1);
 
   // Return where we trimmed from.
   return static_cast<TrimPositions>(
@@ -293,8 +270,7 @@ TrimPositions TrimStringT(const STR& input,
       ((last_good_char == last_char) ? TRIM_NONE : TRIM_TRAILING));
 }
 
-TrimPositions TrimWhitespace(const std::wstring& input,
-                             TrimPositions positions,
+TrimPositions TrimWhitespace(const std::wstring& input, TrimPositions positions,
                              std::wstring* output) {
   return TrimStringT(input, kWhitespaceWide, positions, output);
 }
@@ -307,8 +283,7 @@ TrimPositions TrimWhitespaceASCII(const std::string& input,
 
 // This function is only for backward-compatibility.
 // To be removed when all callers are updated.
-TrimPositions TrimWhitespace(const std::string& input,
-                             TrimPositions positions,
+TrimPositions TrimWhitespace(const std::string& input, TrimPositions positions,
                              std::string* output) {
   return TrimWhitespaceASCII(input, positions, output);
 }
@@ -333,29 +308,22 @@ string16 ASCIIToUTF16(const std::string& ascii) {
   return string16(ascii.begin(), ascii.end());
 }
 
-template<class STR>
+template <class STR>
 static bool DoIsStringASCII(const STR& str) {
   for (size_t i = 0; i < str.length(); i++) {
     typename ToUnsigned<typename STR::value_type>::Unsigned c = str[i];
-    if (c > 0x7F)
-      return false;
+    if (c > 0x7F) return false;
   }
   return true;
 }
 
-bool IsStringASCII(const std::wstring& str) {
-  return DoIsStringASCII(str);
-}
+bool IsStringASCII(const std::wstring& str) { return DoIsStringASCII(str); }
 
 #if !defined(WCHAR_T_IS_UTF16)
-bool IsStringASCII(const string16& str) {
-  return DoIsStringASCII(str);
-}
+bool IsStringASCII(const string16& str) { return DoIsStringASCII(str); }
 #endif
 
-bool IsStringASCII(const std::string& str) {
-  return DoIsStringASCII(str);
-}
+bool IsStringASCII(const std::string& str) { return DoIsStringASCII(str); }
 
 // Overloaded wrappers around vsnprintf and vswprintf. The buf_size parameter
 // is the size of the buffer. These return the number of characters in the
@@ -363,16 +331,12 @@ bool IsStringASCII(const std::string& str) {
 // large enough to accommodate the formatted string without truncation, they
 // return the number of characters that would be in the fully-formatted string
 // (vsnprintf, and vswprintf on Windows), or -1 (vswprintf on POSIX platforms).
-inline int vsnprintfT(char* buffer,
-                      size_t buf_size,
-                      const char* format,
+inline int vsnprintfT(char* buffer, size_t buf_size, const char* format,
                       va_list argptr) {
   return base::vsnprintf(buffer, buf_size, format, argptr);
 }
 
-inline int vsnprintfT(wchar_t* buffer,
-                      size_t buf_size,
-                      const wchar_t* format,
+inline int vsnprintfT(wchar_t* buffer, size_t buf_size, const wchar_t* format,
                       va_list argptr) {
   return base::vswprintf(buffer, buf_size, format, argptr);
 }
@@ -453,7 +417,6 @@ namespace {
 
 template <typename STR, typename INT, typename UINT, bool NEG>
 struct IntToStringT {
-
   // This is to avoid a compiler warning about unary minus on unsigned type.
   // For example, say you had the following code:
   //   template <typename INT>
@@ -462,13 +425,11 @@ struct IntToStringT {
   // unary minus will never be taken, the compiler will still generate a
   // warning.  We do a little specialization dance...
   template <typename INT2, typename UINT2, bool NEG2>
-  struct ToUnsignedT { };
+  struct ToUnsignedT {};
 
   template <typename INT2, typename UINT2>
   struct ToUnsignedT<INT2, UINT2, false> {
-    static UINT2 ToUnsigned(INT2 value) {
-      return static_cast<UINT2>(value);
-    }
+    static UINT2 ToUnsigned(INT2 value) { return static_cast<UINT2>(value); }
   };
 
   template <typename INT2, typename UINT2>
@@ -491,9 +452,7 @@ struct IntToStringT {
   };
   template <typename INT2>
   struct TestNegT<INT2, true> {
-    static bool TestNeg(INT2 value) {
-      return value < 0;
-    }
+    static bool TestNeg(INT2 value) { return value < 0; }
   };
 
   static STR IntToString(INT value) {
@@ -531,39 +490,37 @@ struct IntToStringT {
   }
 };
 
-}
+}  // namespace
 
 std::string IntToString(int value) {
-  return IntToStringT<std::string, int, unsigned int, true>::
-      IntToString(value);
+  return IntToStringT<std::string, int, unsigned int, true>::IntToString(value);
 }
 std::wstring IntToWString(int value) {
-  return IntToStringT<std::wstring, int, unsigned int, true>::
-      IntToString(value);
+  return IntToStringT<std::wstring, int, unsigned int, true>::IntToString(
+      value);
 }
 std::string UintToString(unsigned int value) {
-  return IntToStringT<std::string, unsigned int, unsigned int, false>::
-      IntToString(value);
+  return IntToStringT<std::string, unsigned int, unsigned int,
+                      false>::IntToString(value);
 }
 std::wstring UintToWString(unsigned int value) {
-  return IntToStringT<std::wstring, unsigned int, unsigned int, false>::
-      IntToString(value);
+  return IntToStringT<std::wstring, unsigned int, unsigned int,
+                      false>::IntToString(value);
 }
 std::string Int64ToString(int64_t value) {
-  return IntToStringT<std::string, int64_t, uint64_t, true>::
-      IntToString(value);
+  return IntToStringT<std::string, int64_t, uint64_t, true>::IntToString(value);
 }
 std::wstring Int64ToWString(int64_t value) {
-  return IntToStringT<std::wstring, int64_t, uint64_t, true>::
-      IntToString(value);
+  return IntToStringT<std::wstring, int64_t, uint64_t, true>::IntToString(
+      value);
 }
 std::string Uint64ToString(uint64_t value) {
-  return IntToStringT<std::string, uint64_t, uint64_t, false>::
-      IntToString(value);
+  return IntToStringT<std::string, uint64_t, uint64_t, false>::IntToString(
+      value);
 }
 std::wstring Uint64ToWString(uint64_t value) {
-  return IntToStringT<std::wstring, uint64_t, uint64_t, false>::
-      IntToString(value);
+  return IntToStringT<std::wstring, uint64_t, uint64_t, false>::IntToString(
+      value);
 }
 
 // Lower-level routine that takes a va_list and appends to a specified
@@ -572,7 +529,8 @@ static void StringAppendV(std::string* dst, const char* format, va_list ap) {
   StringAppendVT(dst, format, ap);
 }
 
-static void StringAppendV(std::wstring* dst, const wchar_t* format, va_list ap) {
+static void StringAppendV(std::wstring* dst, const wchar_t* format,
+                          va_list ap) {
   StringAppendVT(dst, format, ap);
 }
 
@@ -603,8 +561,8 @@ const std::string& SStringPrintf(std::string* dst, const char* format, ...) {
   return *dst;
 }
 
-const std::wstring& SStringPrintf(std::wstring* dst,
-                                  const wchar_t* format, ...) {
+const std::wstring& SStringPrintf(std::wstring* dst, const wchar_t* format,
+                                  ...) {
   va_list ap;
   va_start(ap, format);
   dst->clear();
@@ -627,11 +585,9 @@ void StringAppendF(std::wstring* dst, const wchar_t* format, ...) {
   va_end(ap);
 }
 
-template<typename STR>
-static void SplitStringT(const STR& str,
-                         const typename STR::value_type s,
-                         bool trim_whitespace,
-                         std::vector<STR>* r) {
+template <typename STR>
+static void SplitStringT(const STR& str, const typename STR::value_type s,
+                         bool trim_whitespace, std::vector<STR>* r) {
   size_t last = 0;
   size_t i;
   size_t c = str.size();
@@ -651,15 +607,12 @@ static void SplitStringT(const STR& str,
   }
 }
 
-void SplitString(const std::wstring& str,
-                 wchar_t s,
+void SplitString(const std::wstring& str, wchar_t s,
                  std::vector<std::wstring>* r) {
   SplitStringT(str, s, true, r);
 }
 
-void SplitString(const std::string& str,
-                 char s,
-                 std::vector<std::string>* r) {
+void SplitString(const std::string& str, char s, std::vector<std::string>* r) {
   SplitStringT(str, s, true, r);
 }
 
@@ -703,7 +656,7 @@ bool StringToInt(const string16& input, int* output) {
   *output = static_cast<int>(tmp);
   return true;
 }
-#endif //  !defined(ARCH_CPU_64_BITS)
+#endif  //  !defined(ARCH_CPU_64_BITS)
 
 bool StringToInt64(const std::string& input, int64_t* output) {
   return StringToNumber<StringToInt64Traits>(input, output);
@@ -751,8 +704,7 @@ size_t lcpyT(CHAR* dst, const CHAR* src, size_t dst_size) {
   }
 
   // We were left off at dst_size.  We over copied 1 byte.  Null terminate.
-  if (dst_size != 0)
-    dst[dst_size - 1] = 0;
+  if (dst_size != 0) dst[dst_size - 1] = 0;
 
   // Count the rest of the |src|, and return it's length in characters.
   while (src[dst_size]) ++dst_size;

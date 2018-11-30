@@ -15,75 +15,64 @@
 
 #include "AndroidBridge.h"
 
-class nsAndroidSystemProxySettings : public nsISystemProxySettings
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSISYSTEMPROXYSETTINGS
+class nsAndroidSystemProxySettings : public nsISystemProxySettings {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISYSTEMPROXYSETTINGS
 
-    nsAndroidSystemProxySettings() {};
-    nsresult Init();
+  nsAndroidSystemProxySettings(){};
+  nsresult Init();
 
-private:
-    virtual ~nsAndroidSystemProxySettings() {}
+ private:
+  virtual ~nsAndroidSystemProxySettings() {}
 };
 
 NS_IMPL_ISUPPORTS(nsAndroidSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
-nsAndroidSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly)
-{
+nsAndroidSystemProxySettings::GetMainThreadOnly(bool* aMainThreadOnly) {
   *aMainThreadOnly = true;
   return NS_OK;
 }
 
+nsresult nsAndroidSystemProxySettings::Init() { return NS_OK; }
 
-nsresult
-nsAndroidSystemProxySettings::Init()
-{
-    return NS_OK;
+nsresult nsAndroidSystemProxySettings::GetPACURI(nsACString& aResult) {
+  return NS_OK;
 }
 
-nsresult
-nsAndroidSystemProxySettings::GetPACURI(nsACString& aResult)
-{
-    return NS_OK;
-}
-
-nsresult
-nsAndroidSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
-                                             const nsACString & aScheme,
-                                             const nsACString & aHost,
-                                             const int32_t      aPort,
-                                             nsACString & aResult)
-{
-    return mozilla::AndroidBridge::Bridge()->GetProxyForURI(aSpec, aScheme, aHost, aPort, aResult);
+nsresult nsAndroidSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
+                                                      const nsACString& aScheme,
+                                                      const nsACString& aHost,
+                                                      const int32_t aPort,
+                                                      nsACString& aResult) {
+  return mozilla::AndroidBridge::Bridge()->GetProxyForURI(aSpec, aScheme, aHost,
+                                                          aPort, aResult);
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAndroidSystemProxySettings, Init)
 
-#define NS_ANDROIDSYSTEMPROXYSERVICE_CID                    \
-    {0xf01f0060, 0x3708, 0x478e,                            \
-    {0xb9, 0x35, 0x3e, 0xce, 0x8b, 0xe2, 0x94, 0xb8}}
+#define NS_ANDROIDSYSTEMPROXYSERVICE_CID             \
+  {                                                  \
+    0xf01f0060, 0x3708, 0x478e, {                    \
+      0xb9, 0x35, 0x3e, 0xce, 0x8b, 0xe2, 0x94, 0xb8 \
+    }                                                \
+  }
 
 NS_DEFINE_NAMED_CID(NS_ANDROIDSYSTEMPROXYSERVICE_CID);
 
-void test() {};
+void test(){};
 
 static const mozilla::Module::CIDEntry kSysProxyCIDs[] = {
-    { &kNS_ANDROIDSYSTEMPROXYSERVICE_CID, false, nullptr, nsAndroidSystemProxySettingsConstructor },
-    { nullptr }
-};
+    {&kNS_ANDROIDSYSTEMPROXYSERVICE_CID, false, nullptr,
+     nsAndroidSystemProxySettingsConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kSysProxyContracts[] = {
-    { NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_ANDROIDSYSTEMPROXYSERVICE_CID },
-    { nullptr }
-};
+    {NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_ANDROIDSYSTEMPROXYSERVICE_CID},
+    {nullptr}};
 
 static const mozilla::Module kSysProxyModule = {
-    mozilla::Module::kVersion,
-    kSysProxyCIDs,
-    kSysProxyContracts
-};
+    mozilla::Module::kVersion, kSysProxyCIDs, kSysProxyContracts};
 
 NSMODULE_DEFN(nsAndroidProxyModule) = &kSysProxyModule;

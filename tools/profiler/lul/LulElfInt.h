@@ -50,7 +50,6 @@
 
 #include "PlatformMacros.h"
 
-
 // (derived from)
 // elfutils.h: Utilities for dealing with ELF files.
 //
@@ -61,15 +60,15 @@
 // From toolkit/crashreporter/google-breakpad/src/common/android/include/elf.h
 // The Android headers don't always define this constant.
 #ifndef EM_X86_64
-#define EM_X86_64  62
+#define EM_X86_64 62
 #endif
 
 #ifndef EM_PPC64
-#define EM_PPC64   21
+#define EM_PPC64 21
 #endif
 
 #ifndef EM_S390
-#define EM_S390    22
+#define EM_S390 22
 #endif
 
 #ifndef NT_GNU_BUILD_ID
@@ -77,13 +76,12 @@
 #endif
 
 #ifndef ElfW
-#define ElfW(type)      _ElfW (Elf, ELFSIZE, type)
-#define _ElfW(e,w,t)    _ElfW_1 (e, w, _##t)
-#define _ElfW_1(e,w,t)  e##w##t
+#define ElfW(type) _ElfW(Elf, ELFSIZE, type)
+#define _ElfW(e, w, t) _ElfW_1(e, w, _##t)
+#define _ElfW_1(e, w, t) e##w##t
 #endif
 
 #endif
-
 
 namespace lul {
 
@@ -123,44 +121,34 @@ int ElfClass(const void* elf_base);
 // and sets |*section_start| to point to the start of the section data,
 // and |*section_size| to the size of the section's data. If |elfclass|
 // is not NULL, set |*elfclass| to the ELF file class.
-bool FindElfSection(const void *elf_mapped_base,
-                    const char *section_name,
-                    uint32_t section_type,
-                    const void **section_start,
-                    int *section_size,
-                    int *elfclass);
+bool FindElfSection(const void* elf_mapped_base, const char* section_name,
+                    uint32_t section_type, const void** section_start,
+                    int* section_size, int* elfclass);
 
 // Internal helper method, exposed for convenience for callers
 // that already have more info.
-template<typename ElfClass>
-const typename ElfClass::Shdr*
-FindElfSectionByName(const char* name,
-                     typename ElfClass::Word section_type,
-                     const typename ElfClass::Shdr* sections,
-                     const char* section_names,
-                     const char* names_end,
-                     int nsection);
+template <typename ElfClass>
+const typename ElfClass::Shdr* FindElfSectionByName(
+    const char* name, typename ElfClass::Word section_type,
+    const typename ElfClass::Shdr* sections, const char* section_names,
+    const char* names_end, int nsection);
 
 // Attempt to find the first segment of type |segment_type| in the ELF
 // binary data at |elf_mapped_base|. On success, returns true and sets
 // |*segment_start| to point to the start of the segment data, and
 // and |*segment_size| to the size of the segment's data. If |elfclass|
 // is not NULL, set |*elfclass| to the ELF file class.
-bool FindElfSegment(const void *elf_mapped_base,
-                    uint32_t segment_type,
-                    const void **segment_start,
-                    int *segment_size,
-                    int *elfclass);
+bool FindElfSegment(const void* elf_mapped_base, uint32_t segment_type,
+                    const void** segment_start, int* segment_size,
+                    int* elfclass);
 
 // Convert an offset from an Elf header into a pointer to the mapped
 // address in the current process. Takes an extra template parameter
 // to specify the return type to avoid having to dynamic_cast the
 // result.
-template<typename ElfClass, typename T>
-const T*
-GetOffset(const typename ElfClass::Ehdr* elf_header,
-          typename ElfClass::Off offset);
-
+template <typename ElfClass, typename T>
+const T* GetOffset(const typename ElfClass::Ehdr* elf_header,
+                   typename ElfClass::Off offset);
 
 // (derived from)
 // file_id.h: Return a unique identifier for a file
@@ -170,7 +158,6 @@ static const size_t kMDGUIDSize = sizeof(MDGUID);
 
 class FileID {
  public:
-
   // Load the identifier for the elf file mapped into memory at |base| into
   // |identifier|.  Return false if the identifier could not be created for the
   // file.
@@ -185,30 +172,24 @@ class FileID {
                                         char* buffer, int buffer_length);
 };
 
-
-
-template<typename ElfClass, typename T>
+template <typename ElfClass, typename T>
 const T* GetOffset(const typename ElfClass::Ehdr* elf_header,
                    typename ElfClass::Off offset) {
   return reinterpret_cast<const T*>(reinterpret_cast<uintptr_t>(elf_header) +
                                     offset);
 }
 
-template<typename ElfClass>
+template <typename ElfClass>
 const typename ElfClass::Shdr* FindElfSectionByName(
-    const char* name,
-    typename ElfClass::Word section_type,
-    const typename ElfClass::Shdr* sections,
-    const char* section_names,
-    const char* names_end,
-    int nsection) {
+    const char* name, typename ElfClass::Word section_type,
+    const typename ElfClass::Shdr* sections, const char* section_names,
+    const char* names_end, int nsection) {
   MOZ_ASSERT(name != NULL);
   MOZ_ASSERT(sections != NULL);
   MOZ_ASSERT(nsection > 0);
 
   int name_len = strlen(name);
-  if (name_len == 0)
-    return NULL;
+  if (name_len == 0) return NULL;
 
   for (int i = 0; i < nsection; ++i) {
     const char* section_name = section_names + sections[i].sh_name;
@@ -221,10 +202,9 @@ const typename ElfClass::Shdr* FindElfSectionByName(
   return NULL;
 }
 
-} // namespace lul
-
+}  // namespace lul
 
 // And finally, the external interface, offered to LulMain.cpp
 #include "LulElfExt.h"
 
-#endif // LulElfInt_h
+#endif  // LulElfInt_h

@@ -30,45 +30,36 @@ class LSObserverChild;
  *   destroyed or having their `LSObject::DropObserver` methods invoked due to
  *   the last "storage" event listener being removed from the owning window.
  */
-class LSObserver final
-{
+class LSObserver final {
   friend class LSObject;
 
   LSObserverChild* mActor;
 
   const nsCString mOrigin;
 
-public:
+ public:
   explicit LSObserver(const nsACString& aOrigin);
 
-  static LSObserver*
-  Get(const nsACString& aOrigin);
+  static LSObserver* Get(const nsACString& aOrigin);
 
   NS_INLINE_DECL_REFCOUNTING(LSObserver)
 
-  void
-  AssertIsOnOwningThread() const
-  {
-    NS_ASSERT_OWNINGTHREAD(LSDatabase);
-  }
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(LSDatabase); }
 
-  void
-  SetActor(LSObserverChild* aActor);
+  void SetActor(LSObserverChild* aActor);
 
-  void
-  ClearActor()
-  {
+  void ClearActor() {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mActor);
 
     mActor = nullptr;
   }
 
-private:
+ private:
   ~LSObserver();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_localstorage_LSObserver_h
+#endif  // mozilla_dom_localstorage_LSObserver_h

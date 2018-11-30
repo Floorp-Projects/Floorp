@@ -13,7 +13,7 @@
 #include <inputscope.h>
 
 #define NS_WM_IMEFIRST WM_IME_SETCONTEXT
-#define NS_WM_IMELAST  WM_IME_KEYUP
+#define NS_WM_IMELAST WM_IME_KEYUP
 
 class nsWindow;
 
@@ -28,9 +28,8 @@ struct MSGResult;
  * API set. By using this class, non-IME handler classes don't need to worry
  * that we're in which mode.
  */
-class IMEHandler final
-{
-private:
+class IMEHandler final {
+ private:
   /**
    * Initialize() initializes both TSF modules and IMM modules.  Some TIPs
    * may require a normal window (i.e., not message window) belonging to
@@ -39,7 +38,7 @@ private:
    */
   static void Initialize();
 
-public:
+ public:
   static void Terminate();
 
   /**
@@ -58,9 +57,8 @@ public:
    * When the message is not needed to handle anymore by the caller, this
    * returns true.  Otherwise, false.
    */
-  static bool ProcessMessage(nsWindow* aWindow, UINT aMessage,
-                             WPARAM& aWParam, LPARAM& aLParam,
-                             MSGResult& aResult);
+  static bool ProcessMessage(nsWindow* aWindow, UINT aMessage, WPARAM& aWParam,
+                             LPARAM& aLParam, MSGResult& aResult);
 
   /**
    * When there is a composition, returns true.  Otherwise, false.
@@ -103,8 +101,7 @@ public:
    * Called when nsIWidget::SetInputContext() is called before the window's
    * InputContext is modified actually.
    */
-  static void SetInputContext(nsWindow* aWindow,
-                              InputContext& aInputContext,
+  static void SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
                               const InputContextAction& aAction);
 
   /**
@@ -133,16 +130,16 @@ public:
    * This is called by TSFStaticSink when active IME is changed.
    */
   static void OnKeyboardLayoutChanged();
-#endif // #ifdef NS_ENABLE_TSF
+#endif  // #ifdef NS_ENABLE_TSF
 
 #ifdef DEBUG
   /**
    * Returns true when current keyboard layout has IME.  Otherwise, false.
    */
   static bool CurrentKeyboardLayoutHasIME();
-#endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
 
-private:
+ private:
   static nsWindow* sFocusedWindow;
   static InputContextAction::Cause sLastContextActionCause;
 
@@ -190,10 +187,10 @@ private:
    * allowed for Windows 8 and higher.
    */
   static HWND GetOnScreenKeyboardWindow();
-#endif // #ifdef NS_ENABLE_TSF
+#endif  // #ifdef NS_ENABLE_TSF
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // #ifndef WinIMEHandler_h_
+#endif  // #ifndef WinIMEHandler_h_

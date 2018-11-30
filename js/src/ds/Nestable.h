@@ -14,56 +14,50 @@ namespace js {
 
 // A base class for nestable structures.
 template <typename Concrete>
-class MOZ_STACK_CLASS Nestable
-{
-    Concrete** stack_;
-    Concrete*  enclosing_;
+class MOZ_STACK_CLASS Nestable {
+  Concrete** stack_;
+  Concrete* enclosing_;
 
-  protected:
-    explicit Nestable(Concrete** stack)
-      : stack_(stack),
-        enclosing_(*stack)
-    {
-        *stack_ = static_cast<Concrete*>(this);
-    }
+ protected:
+  explicit Nestable(Concrete** stack) : stack_(stack), enclosing_(*stack) {
+    *stack_ = static_cast<Concrete*>(this);
+  }
 
-    // These method are protected. Some derived classes, such as ParseContext,
-    // do not expose the ability to walk the stack.
-    Concrete* enclosing() const {
-        return enclosing_;
-    }
+  // These method are protected. Some derived classes, such as ParseContext,
+  // do not expose the ability to walk the stack.
+  Concrete* enclosing() const { return enclosing_; }
 
-    template <typename Predicate /* (Concrete*) -> bool */>
-    static Concrete* findNearest(Concrete* it, Predicate predicate) {
-        while (it && !predicate(it)) {
-            it = it->enclosing();
-        }
-        return it;
+  template <typename Predicate /* (Concrete*) -> bool */>
+  static Concrete* findNearest(Concrete* it, Predicate predicate) {
+    while (it && !predicate(it)) {
+      it = it->enclosing();
     }
+    return it;
+  }
 
-    template <typename T>
-    static T* findNearest(Concrete* it) {
-        while (it && !it->template is<T>()) {
-            it = it->enclosing();
-        }
-        return it ? &it->template as<T>() : nullptr;
+  template <typename T>
+  static T* findNearest(Concrete* it) {
+    while (it && !it->template is<T>()) {
+      it = it->enclosing();
     }
+    return it ? &it->template as<T>() : nullptr;
+  }
 
-    template <typename T, typename Predicate /* (T*) -> bool */>
-    static T* findNearest(Concrete* it, Predicate predicate) {
-        while (it && (!it->template is<T>() || !predicate(&it->template as<T>()))) {
-            it = it->enclosing();
-        }
-        return it ? &it->template as<T>() : nullptr;
+  template <typename T, typename Predicate /* (T*) -> bool */>
+  static T* findNearest(Concrete* it, Predicate predicate) {
+    while (it && (!it->template is<T>() || !predicate(&it->template as<T>()))) {
+      it = it->enclosing();
     }
+    return it ? &it->template as<T>() : nullptr;
+  }
 
-  public:
-    ~Nestable() {
-        MOZ_ASSERT(*stack_ == static_cast<Concrete*>(this));
-        *stack_ = enclosing_;
-    }
+ public:
+  ~Nestable() {
+    MOZ_ASSERT(*stack_ == static_cast<Concrete*>(this));
+    *stack_ = enclosing_;
+  }
 };
 
-} // namespace js
+}  // namespace js
 
 #endif /* ds_Nestable_h */

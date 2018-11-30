@@ -13,32 +13,27 @@
 namespace js {
 namespace jit {
 
-class BailoutStack
-{
-    RegisterDump::FPUArray fpregs_;
-    RegisterDump::GPRArray regs_;
-    uintptr_t frameSize_;
-    uintptr_t snapshotOffset_;
+class BailoutStack {
+  RegisterDump::FPUArray fpregs_;
+  RegisterDump::GPRArray regs_;
+  uintptr_t frameSize_;
+  uintptr_t snapshotOffset_;
 
-  public:
-    MachineState machineState() {
-        return MachineState::FromBailout(regs_, fpregs_);
-    }
-    uint32_t snapshotOffset() const {
-        return snapshotOffset_;
-    }
-    uint32_t frameSize() const {
-        return frameSize_;
-    }
-    uint8_t* parentStackPointer() {
-        return (uint8_t*)this + sizeof(BailoutStack);
-    }
-    static size_t offsetOfFrameSize() {
-        return offsetof(BailoutStack, frameSize_);
-    }
+ public:
+  MachineState machineState() {
+    return MachineState::FromBailout(regs_, fpregs_);
+  }
+  uint32_t snapshotOffset() const { return snapshotOffset_; }
+  uint32_t frameSize() const { return frameSize_; }
+  uint8_t* parentStackPointer() {
+    return (uint8_t*)this + sizeof(BailoutStack);
+  }
+  static size_t offsetOfFrameSize() {
+    return offsetof(BailoutStack, frameSize_);
+  }
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_mips64_Bailouts_mips64_h */

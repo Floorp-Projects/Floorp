@@ -16,48 +16,43 @@ namespace devtools {
 
 using ipc::FileDescriptor;
 
-static bool
-openFileFailure(ErrorResult& rv,
-                OpenHeapSnapshotTempFileResponse* outResponse)
-{
-    *outResponse = rv.StealNSResult();
-    return true;
+static bool openFileFailure(ErrorResult& rv,
+                            OpenHeapSnapshotTempFileResponse* outResponse) {
+  *outResponse = rv.StealNSResult();
+  return true;
 }
 
 mozilla::ipc::IPCResult
 HeapSnapshotTempFileHelperParent::RecvOpenHeapSnapshotTempFile(
-    OpenHeapSnapshotTempFileResponse* outResponse)
-{
-    auto start = TimeStamp::Now();
-    ErrorResult rv;
-    nsAutoString filePath;
-    nsAutoString snapshotId;
-    nsCOMPtr<nsIFile> file = HeapSnapshot::CreateUniqueCoreDumpFile(rv,
-                                                                    start,
-                                                                    filePath,
-                                                                    snapshotId);
-    if (NS_WARN_IF(rv.Failed())) {
-        if (!openFileFailure(rv, outResponse)) {
-          return IPC_FAIL_NO_REASON(this);
-        }
-        return IPC_OK();
+    OpenHeapSnapshotTempFileResponse* outResponse) {
+  auto start = TimeStamp::Now();
+  ErrorResult rv;
+  nsAutoString filePath;
+  nsAutoString snapshotId;
+  nsCOMPtr<nsIFile> file =
+      HeapSnapshot::CreateUniqueCoreDumpFile(rv, start, filePath, snapshotId);
+  if (NS_WARN_IF(rv.Failed())) {
+    if (!openFileFailure(rv, outResponse)) {
+      return IPC_FAIL_NO_REASON(this);
     }
-
-    PRFileDesc* prfd;
-    rv = file->OpenNSPRFileDesc(PR_WRONLY, 0, &prfd);
-    if (NS_WARN_IF(rv.Failed())) {
-        if (!openFileFailure(rv, outResponse)) {
-          return IPC_FAIL_NO_REASON(this);
-        }
-        return IPC_OK();
-    }
-
-    FileDescriptor::PlatformHandleType handle =
-        FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfd));
-    FileDescriptor fd(handle);
-    *outResponse = OpenedFile(filePath, snapshotId, fd);
     return IPC_OK();
+  }
+
+  PRFileDesc* prfd;
+  rv = file->OpenNSPRFileDesc(PR_WRONLY, 0, &prfd);
+  if (NS_WARN_IF(rv.Failed())) {
+    if (!openFileFailure(rv, outResponse)) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
+  }
+
+  FileDescriptor::PlatformHandleType handle =
+      FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfd));
+  FileDescriptor fd(handle);
+  *outResponse = OpenedFile(filePath, snapshotId, fd);
+  return IPC_OK();
 }
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla

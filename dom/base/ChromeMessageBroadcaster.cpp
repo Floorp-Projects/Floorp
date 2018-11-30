@@ -12,14 +12,12 @@
 namespace mozilla {
 namespace dom {
 
-JSObject*
-ChromeMessageBroadcaster::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ChromeMessageBroadcaster::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
 
   return ChromeMessageBroadcaster_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

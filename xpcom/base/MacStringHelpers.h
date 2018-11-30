@@ -15,6 +15,6 @@ namespace mozilla {
 
 nsresult CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo);
 
-} // namespace Mozilla
+}  // namespace Mozilla
 
 #endif

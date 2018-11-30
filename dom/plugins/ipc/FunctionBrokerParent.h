@@ -21,24 +21,25 @@ class FunctionBrokerThread;
  * Top-level actor run on the process to which we broker calls from sandboxed
  * plugin processes.
  */
-class FunctionBrokerParent : public PFunctionBrokerParent
-{
-public:
-  static FunctionBrokerParent* Create(Endpoint<PFunctionBrokerParent>&& aParentEnd);
+class FunctionBrokerParent : public PFunctionBrokerParent {
+ public:
+  static FunctionBrokerParent* Create(
+      Endpoint<PFunctionBrokerParent>&& aParentEnd);
   static void Destroy(FunctionBrokerParent* aInst);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  RecvBrokerFunction(const FunctionHookId &aFunctionId, const IpdlTuple &aInTuple,
-                   IpdlTuple *aOutTuple) override;
+  mozilla::ipc::IPCResult RecvBrokerFunction(const FunctionHookId& aFunctionId,
+                                             const IpdlTuple& aInTuple,
+                                             IpdlTuple* aOutTuple) override;
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  static mozilla::SandboxPermissions*
-  GetSandboxPermissions() { return &sSandboxPermissions; }
-#endif // defined(XP_WIN) && defined(MOZ_SANDBOX)
+  static mozilla::SandboxPermissions* GetSandboxPermissions() {
+    return &sSandboxPermissions;
+  }
+#endif  // defined(XP_WIN) && defined(MOZ_SANDBOX)
 
-private:
+ private:
   explicit FunctionBrokerParent(FunctionBrokerThread* aThread,
                                 Endpoint<PFunctionBrokerParent>&& aParentEnd);
   ~FunctionBrokerParent();
@@ -46,21 +47,21 @@ private:
   void Bind(Endpoint<PFunctionBrokerParent>&& aEnd);
 
   static bool RunBrokeredFunction(base::ProcessId aClientId,
-                                  const FunctionHookId &aFunctionId,
-                                  const IPC::IpdlTuple &aInTuple,
-                                  IPC::IpdlTuple *aOutTuple);
+                                  const FunctionHookId& aFunctionId,
+                                  const IPC::IpdlTuple& aInTuple,
+                                  IPC::IpdlTuple* aOutTuple);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   static void RemovePermissionsForProcess(base::ProcessId aClientId);
   static mozilla::SandboxPermissions sSandboxPermissions;
-#endif // defined(XP_WIN) && defined(MOZ_SANDBOX)
+#endif  // defined(XP_WIN) && defined(MOZ_SANDBOX)
 
   nsAutoPtr<FunctionBrokerThread> mThread;
   Monitor mMonitor;
   bool mShutdownDone;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // mozilla_plugins_functionbrokerparent_hk
+#endif  // mozilla_plugins_functionbrokerparent_hk

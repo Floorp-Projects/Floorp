@@ -16,18 +16,16 @@ namespace mozilla {
 namespace dom {
 namespace payments {
 
-class PaymentMethodData final : public nsIPaymentMethodData
-{
-public:
+class PaymentMethodData final : public nsIPaymentMethodData {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTMETHODDATA
 
   static nsresult Create(const IPCPaymentMethodData& aIPCMethodData,
                          nsIPaymentMethodData** aMethodData);
 
-private:
-  PaymentMethodData(const nsAString& aSupportedMethods,
-                    const nsAString& aData);
+ private:
+  PaymentMethodData(const nsAString& aSupportedMethods, const nsAString& aData);
 
   ~PaymentMethodData() = default;
 
@@ -35,18 +33,16 @@ private:
   nsString mData;
 };
 
-class PaymentCurrencyAmount final : public nsIPaymentCurrencyAmount
-{
-public:
+class PaymentCurrencyAmount final : public nsIPaymentCurrencyAmount {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTCURRENCYAMOUNT
 
   static nsresult Create(const IPCPaymentCurrencyAmount& aIPCAmount,
                          nsIPaymentCurrencyAmount** aAmount);
 
-private:
-  PaymentCurrencyAmount(const nsAString& aCurrency,
-                        const nsAString& aValue);
+ private:
+  PaymentCurrencyAmount(const nsAString& aCurrency, const nsAString& aValue);
 
   ~PaymentCurrencyAmount() = default;
 
@@ -54,17 +50,16 @@ private:
   nsString mValue;
 };
 
-class PaymentItem final : public nsIPaymentItem
-{
-public:
+class PaymentItem final : public nsIPaymentItem {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTITEM
 
-  static nsresult Create(const IPCPaymentItem& aIPCItem, nsIPaymentItem** aItem);
+  static nsresult Create(const IPCPaymentItem& aIPCItem,
+                         nsIPaymentItem** aItem);
 
-private:
-  PaymentItem(const nsAString& aLabel,
-              nsIPaymentCurrencyAmount* aAmount,
+ private:
+  PaymentItem(const nsAString& aLabel, nsIPaymentCurrencyAmount* aAmount,
               const bool aPending);
 
   ~PaymentItem() = default;
@@ -74,16 +69,15 @@ private:
   bool mPending;
 };
 
-class PaymentDetailsModifier final : public nsIPaymentDetailsModifier
-{
-public:
+class PaymentDetailsModifier final : public nsIPaymentDetailsModifier {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTDETAILSMODIFIER
 
   static nsresult Create(const IPCPaymentDetailsModifier& aIPCModifier,
                          nsIPaymentDetailsModifier** aModifier);
 
-private:
+ private:
   PaymentDetailsModifier(const nsAString& aSupportedMethods,
                          nsIPaymentItem* aTotal,
                          nsIArray* aAdditionalDisplayItems,
@@ -97,20 +91,18 @@ private:
   nsString mData;
 };
 
-class PaymentShippingOption final : public nsIPaymentShippingOption
-{
-public:
+class PaymentShippingOption final : public nsIPaymentShippingOption {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTSHIPPINGOPTION
 
   static nsresult Create(const IPCPaymentShippingOption& aIPCOption,
                          nsIPaymentShippingOption** aOption);
 
-private:
-  PaymentShippingOption(const nsAString& aId,
-                        const nsAString& aLabel,
+ private:
+  PaymentShippingOption(const nsAString& aId, const nsAString& aLabel,
                         nsIPaymentCurrencyAmount* aAmount,
-                        const bool aSelected=false);
+                        const bool aSelected = false);
 
   ~PaymentShippingOption() = default;
 
@@ -120,12 +112,10 @@ private:
   bool mSelected;
 };
 
-class PaymentDetails final : public nsIPaymentDetails
-{
-public:
+class PaymentDetails final : public nsIPaymentDetails {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTDETAILS
-
 
   static nsresult Create(const IPCPaymentDetails& aIPCDetails,
                          nsIPaymentDetails** aDetails);
@@ -133,18 +123,14 @@ public:
   const nsString& GetShippingAddressErrors() const;
   const nsString& GetPayerErrors() const;
   const nsString& GetPaymentMethodErrors() const;
-  nsresult UpdateErrors(const nsAString& aError,
-                        const nsAString& aPayerErrors,
+  nsresult UpdateErrors(const nsAString& aError, const nsAString& aPayerErrors,
                         const nsAString& aPaymentMethodErrors,
                         const nsAString& aShippingAddressErrors);
 
-private:
-  PaymentDetails(const nsAString& aId,
-                 nsIPaymentItem* aTotalItem,
-                 nsIArray* aDisplayItems,
-                 nsIArray* aShippingOptions,
-                 nsIArray* aModifiers,
-                 const nsAString& aError,
+ private:
+  PaymentDetails(const nsAString& aId, nsIPaymentItem* aTotalItem,
+                 nsIArray* aDisplayItems, nsIArray* aShippingOptions,
+                 nsIArray* aModifiers, const nsAString& aError,
                  const nsAString& aShippingAddressError,
                  const nsAString& aPayerError,
                  const nsAString& aPaymentMethodError);
@@ -162,20 +148,17 @@ private:
   nsString mPaymentMethodErrors;
 };
 
-class PaymentOptions final : public nsIPaymentOptions
-{
-public:
+class PaymentOptions final : public nsIPaymentOptions {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTOPTIONS
 
   static nsresult Create(const IPCPaymentOptions& aIPCOptions,
                          nsIPaymentOptions** aOptions);
 
-private:
-  PaymentOptions(const bool aRequestPayerName,
-                 const bool aRequestPayerEmail,
-                 const bool aRequestPayerPhone,
-                 const bool aRequestShipping,
+ private:
+  PaymentOptions(const bool aRequestPayerName, const bool aRequestPayerEmail,
+                 const bool aRequestPayerPhone, const bool aRequestShipping,
                  const bool aRequestBillingAddress,
                  const nsAString& aShippintType);
   ~PaymentOptions() = default;
@@ -188,42 +171,29 @@ private:
   nsString mShippingType;
 };
 
-class PaymentRequest final : public nsIPaymentRequest
-{
-public:
+class PaymentRequest final : public nsIPaymentRequest {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTREQUEST
 
-  PaymentRequest(const uint64_t aTopOuterWindowId,
-                 const nsAString& aRequestId,
-                 nsIPrincipal* aPrincipal,
-                 nsIArray* aPaymentMethods,
+  PaymentRequest(const uint64_t aTopOuterWindowId, const nsAString& aRequestId,
+                 nsIPrincipal* aPrincipal, nsIArray* aPaymentMethods,
                  nsIPaymentDetails* aPaymentDetails,
                  nsIPaymentOptions* aPaymentOptions,
                  const nsAString& aShippingOption);
 
-  void SetIPC(PaymentRequestParent* aIPC)
-  {
-    mIPC = aIPC;
-  }
+  void SetIPC(PaymentRequestParent* aIPC) { mIPC = aIPC; }
 
-  PaymentRequestParent* GetIPC() const
-  {
-    return mIPC;
-  }
+  PaymentRequestParent* GetIPC() const { return mIPC; }
 
-  nsresult
-  UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
-                       const nsAString& aShippingOption);
+  nsresult UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
+                                const nsAString& aShippingOption);
 
-  void
-  SetCompleteStatus(const nsAString& aCompleteStatus);
+  void SetCompleteStatus(const nsAString& aCompleteStatus);
 
-  nsresult
-  UpdateErrors(const nsAString& aError,
-               const nsAString& aPayerErrors,
-               const nsAString& aPaymentMethodErrors,
-               const nsAString& aShippingAddressErrors);
+  nsresult UpdateErrors(const nsAString& aError, const nsAString& aPayerErrors,
+                        const nsAString& aPaymentMethodErrors,
+                        const nsAString& aShippingAddressErrors);
 
   // The state represents the PaymentRequest's state in the spec. The state is
   // not synchronized between content and parent processes.
@@ -237,25 +207,13 @@ public:
   //                state becomes eClosed. Under eClosed state, response from
   //                Payment UI would not be accepted by PaymentRequestService
   //                anymore, except the Complete response.
-  enum eState {
-    eCreated,
-    eInteractive,
-    eClosed
-  };
+  enum eState { eCreated, eInteractive, eClosed };
 
-  void
-  SetState(const eState aState)
-  {
-    mState = aState;
-  }
+  void SetState(const eState aState) { mState = aState; }
 
-  const eState&
-  GetState() const
-  {
-    return mState;
-  }
+  const eState& GetState() const { return mState; }
 
-private:
+ private:
   ~PaymentRequest() = default;
 
   uint64_t mTopOuterWindowId;
@@ -273,15 +231,14 @@ private:
   eState mState;
 };
 
-class PaymentAddress final : public nsIPaymentAddress
-{
-public:
+class PaymentAddress final : public nsIPaymentAddress {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTADDRESS
 
   PaymentAddress() = default;
 
-private:
+ private:
   ~PaymentAddress() = default;
 
   nsString mCountry;
@@ -297,8 +254,8 @@ private:
   nsString mPhone;
 };
 
-} // end of namespace payment
-} // end of namespace dom
-} // end of namespace mozilla
+}  // namespace payments
+}  // end of namespace dom
+}  // end of namespace mozilla
 
 #endif

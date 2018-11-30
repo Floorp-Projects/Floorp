@@ -7,10 +7,10 @@
 #ifndef GFX_BASICIMPLDATA_H
 #define GFX_BASICIMPLDATA_H
 
-#include "Layers.h"                     // for Layer (ptr only), etc
-#include "gfxContext.h"                 // for gfxContext, etc
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
+#include "Layers.h"           // for Layer (ptr only), etc
+#include "gfxContext.h"       // for gfxContext, etc
+#include "nsDebug.h"          // for NS_ASSERTION
+#include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
 #include "mozilla/gfx/Types.h"
 
 namespace mozilla {
@@ -41,18 +41,15 @@ class ReadbackProcessor;
  *       +-> BasicImageLayer <--------------+
  */
 class BasicImplData {
-public:
-  BasicImplData() : mHidden(false),
-    mClipToVisibleRegion(false),
-    mDrawAtomically(false),
-    mOperator(gfx::CompositionOp::OP_OVER)
-  {
+ public:
+  BasicImplData()
+      : mHidden(false),
+        mClipToVisibleRegion(false),
+        mDrawAtomically(false),
+        mOperator(gfx::CompositionOp::OP_OVER) {
     MOZ_COUNT_CTOR(BasicImplData);
   }
-  virtual ~BasicImplData()
-  {
-    MOZ_COUNT_DTOR(BasicImplData);
-  }
+  virtual ~BasicImplData() { MOZ_COUNT_DTOR(BasicImplData); }
 
   /**
    * Layers that paint themselves, such as ImageLayers, should paint
@@ -60,8 +57,7 @@ public:
    * set up to account for all the properties of the layer (transform,
    * opacity, etc).
    */
-  virtual void Paint(gfx::DrawTarget* aDT,
-                     const gfx::Point& aDeviceOffset,
+  virtual void Paint(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
                      Layer* aMaskLayer) {}
 
   /**
@@ -70,14 +66,12 @@ public:
    * If mClipToVisibleRegion is set, then the layer must clip to its
    * effective visible region (snapped or unsnapped, it doesn't matter).
    */
-  virtual void PaintThebes(gfxContext* aContext,
-                           Layer* aMasklayer,
+  virtual void PaintThebes(gfxContext* aContext, Layer* aMasklayer,
                            LayerManager::DrawPaintedLayerCallback aCallback,
                            void* aCallbackData) {}
 
   virtual void Validate(LayerManager::DrawPaintedLayerCallback aCallback,
-                        void* aCallbackData,
-                        ReadbackProcessor* aReadback) {}
+                        void* aCallbackData, ReadbackProcessor* aReadback) {}
 
   /**
    * Layers will get this call when their layer manager is destroyed, this
@@ -94,13 +88,12 @@ public:
   bool IsHidden() const { return false; }
   /**
    * This variable is set by MarkLayersHidden() before painting. This is
-   * the operator to be used when compositing the layer in this transaction. It must
-   * be OVER or SOURCE.
+   * the operator to be used when compositing the layer in this transaction. It
+   * must be OVER or SOURCE.
    */
-  void SetOperator(gfx::CompositionOp aOperator)
-  {
+  void SetOperator(gfx::CompositionOp aOperator) {
     NS_ASSERTION(aOperator == gfx::CompositionOp::OP_OVER ||
-                 aOperator == gfx::CompositionOp::OP_SOURCE,
+                     aOperator == gfx::CompositionOp::OP_SOURCE,
                  "Bad composition operator");
     mOperator = aOperator;
   }
@@ -114,21 +107,25 @@ public:
    * return false if a surface cannot be created.  If true is
    * returned, only one of |aSurface| or |aDescriptor| is valid.
    */
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; }
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() {
+    return nullptr;
+  }
 
   bool GetClipToVisibleRegion() { return mClipToVisibleRegion; }
   void SetClipToVisibleRegion(bool aClip) { mClipToVisibleRegion = aClip; }
 
-  void SetDrawAtomically(bool aDrawAtomically) { mDrawAtomically = aDrawAtomically; }
+  void SetDrawAtomically(bool aDrawAtomically) {
+    mDrawAtomically = aDrawAtomically;
+  }
 
-protected:
+ protected:
   bool mHidden;
   bool mClipToVisibleRegion;
   bool mDrawAtomically;
   gfx::CompositionOp mOperator;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

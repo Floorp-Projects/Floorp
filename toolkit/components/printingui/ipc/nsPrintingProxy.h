@@ -13,54 +13,48 @@ namespace mozilla {
 namespace layout {
 class PRemotePrintJobChild;
 }
-}
+}  // namespace mozilla
 
-class nsPrintingProxy final: public nsIPrintingPromptService,
-                             public mozilla::embedding::PPrintingChild
-{
-public:
-    static already_AddRefed<nsPrintingProxy> GetInstance();
+class nsPrintingProxy final : public nsIPrintingPromptService,
+                              public mozilla::embedding::PPrintingChild {
+ public:
+  static already_AddRefed<nsPrintingProxy> GetInstance();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPRINTINGPROMPTSERVICE
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTINGPROMPTSERVICE
 
-    /**
-     * Used to proxy nsIPrintSettings.savePrintSettingsToPrefs calls to the
-     * parent process.
-     *
-     * @param aFlags - kInitSave* flags from nsIPrintSettings's to specify
-     *          which settings to save.
-     */
-    nsresult SavePrintSettings(nsIPrintSettings* aPS,
-                               bool aUsePrinterNamePrefix,
-                               uint32_t aFlags);
+  /**
+   * Used to proxy nsIPrintSettings.savePrintSettingsToPrefs calls to the
+   * parent process.
+   *
+   * @param aFlags - kInitSave* flags from nsIPrintSettings's to specify
+   *          which settings to save.
+   */
+  nsresult SavePrintSettings(nsIPrintSettings* aPS, bool aUsePrinterNamePrefix,
+                             uint32_t aFlags);
 
-protected:
-    virtual PPrintProgressDialogChild*
-    AllocPPrintProgressDialogChild() override;
+ protected:
+  virtual PPrintProgressDialogChild* AllocPPrintProgressDialogChild() override;
 
-    virtual bool
-    DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor) override;
+  virtual bool DeallocPPrintProgressDialogChild(
+      PPrintProgressDialogChild* aActor) override;
 
-    virtual PPrintSettingsDialogChild*
-    AllocPPrintSettingsDialogChild() override;
+  virtual PPrintSettingsDialogChild* AllocPPrintSettingsDialogChild() override;
 
-    virtual bool
-    DeallocPPrintSettingsDialogChild(PPrintSettingsDialogChild* aActor) override;
+  virtual bool DeallocPPrintSettingsDialogChild(
+      PPrintSettingsDialogChild* aActor) override;
 
-    virtual PRemotePrintJobChild*
-    AllocPRemotePrintJobChild() override;
+  virtual PRemotePrintJobChild* AllocPRemotePrintJobChild() override;
 
-    virtual bool
-    DeallocPRemotePrintJobChild(PRemotePrintJobChild* aActor) override;
+  virtual bool DeallocPRemotePrintJobChild(
+      PRemotePrintJobChild* aActor) override;
 
-private:
-    nsPrintingProxy();
+ private:
+  nsPrintingProxy();
 
-    virtual ~nsPrintingProxy();
+  virtual ~nsPrintingProxy();
 
-    nsresult Init();
+  nsresult Init();
 };
 
 #endif
-

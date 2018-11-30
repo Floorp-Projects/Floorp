@@ -30,11 +30,9 @@
 namespace mozilla {
 
 #ifdef DEBUG
-nsCString
-GetFrameState(nsIFrame* aFrame)
-{
+nsCString GetFrameState(nsIFrame* aFrame) {
   nsCString result;
-  AutoTArray<const char*,3> groups;
+  AutoTArray<const char*, 3> groups;
 
   nsFrameState state = aFrame->GetStateBits();
 
@@ -43,20 +41,20 @@ GetFrameState(nsIFrame* aFrame)
     return result;
   }
 
-#define FRAME_STATE_GROUP(name_, class_)                                      \
-  {                                                                           \
-    class_* frame = do_QueryFrame(aFrame);                                    \
-    if (frame && (groups.IsEmpty() || strcmp(groups.LastElement(), #name_))) {\
-      groups.AppendElement(#name_);                                           \
-    }                                                                         \
+#define FRAME_STATE_GROUP(name_, class_)                                       \
+  {                                                                            \
+    class_* frame = do_QueryFrame(aFrame);                                     \
+    if (frame && (groups.IsEmpty() || strcmp(groups.LastElement(), #name_))) { \
+      groups.AppendElement(#name_);                                            \
+    }                                                                          \
   }
-#define FRAME_STATE_BIT(group_, value_, name_)                                \
-  if ((state & NS_FRAME_STATE_BIT(value_)) && groups.Contains(#group_)) {     \
-    if (!result.IsEmpty()) {                                                  \
-      result.InsertLiteral(" | ", 0);                                         \
-    }                                                                         \
-    result.InsertLiteral(#name_, 0);                                          \
-    state = state & ~NS_FRAME_STATE_BIT(value_);                              \
+#define FRAME_STATE_BIT(group_, value_, name_)                            \
+  if ((state & NS_FRAME_STATE_BIT(value_)) && groups.Contains(#group_)) { \
+    if (!result.IsEmpty()) {                                              \
+      result.InsertLiteral(" | ", 0);                                     \
+    }                                                                     \
+    result.InsertLiteral(#name_, 0);                                      \
+    state = state & ~NS_FRAME_STATE_BIT(value_);                          \
   }
 #include "nsFrameStateBits.h"
 #undef FRAME_STATE_GROUP
@@ -69,11 +67,9 @@ GetFrameState(nsIFrame* aFrame)
   return result;
 }
 
-void
-PrintFrameState(nsIFrame* aFrame)
-{
+void PrintFrameState(nsIFrame* aFrame) {
   printf("%s\n", GetFrameState(aFrame).get());
 }
 #endif
 
-} // namespace mozilla
+}  // namespace mozilla

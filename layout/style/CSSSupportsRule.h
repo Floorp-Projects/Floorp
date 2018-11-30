@@ -13,14 +13,10 @@
 namespace mozilla {
 namespace dom {
 
-class CSSSupportsRule : public css::ConditionRule
-{
-public:
-  CSSSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
-                  StyleSheet* aSheet,
-                  css::Rule* aParentRule,
-                  uint32_t aLine,
-                  uint32_t aColumn);
+class CSSSupportsRule : public css::ConditionRule {
+ public:
+  CSSSupportsRule(RefPtr<RawServoSupportsRule> aRawRule, StyleSheet* aSheet,
+                  css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -37,18 +33,18 @@ public:
   void SetConditionText(const nsAString& aConditionText,
                         ErrorResult& aRv) final;
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const override;
+  size_t SizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   ~CSSSupportsRule() = default;
 
   RefPtr<RawServoSupportsRule> mRawRule;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSSupportsRule_h
+#endif  // mozilla_dom_CSSSupportsRule_h

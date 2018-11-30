@@ -21,11 +21,7 @@ struct nsRect;
 
 namespace mozilla {
 
-enum LineBreakType
-{
-  LINE_BREAK_TYPE_NATIVE,
-  LINE_BREAK_TYPE_XP
-};
+enum LineBreakType { LINE_BREAK_TYPE_NATIVE, LINE_BREAK_TYPE_XP };
 
 /*
  * Query Content Event Handler
@@ -35,34 +31,25 @@ enum LineBreakType
  *   This class answers to NS_QUERY_* events from actual contents.
  */
 
-class MOZ_STACK_CLASS ContentEventHandler
-{
-private:
+class MOZ_STACK_CLASS ContentEventHandler {
+ private:
   /**
    * RawRange is a helper class of ContentEventHandler class.  The caller is
    * responsible for making sure the start/end nodes are in document order.
    * This is enforced by assertions in DEBUG builds.
    */
-  class MOZ_STACK_CLASS RawRange final
-  {
-  public:
+  class MOZ_STACK_CLASS RawRange final {
+   public:
     RawRange() {}
 
-    void Clear()
-    {
+    void Clear() {
       mRoot = nullptr;
       mStart = RangeBoundary();
       mEnd = RangeBoundary();
     }
 
-    bool IsPositioned() const
-    {
-      return mStart.IsSet() && mEnd.IsSet();
-    }
-    bool Collapsed() const
-    {
-      return mStart == mEnd && IsPositioned();
-    }
+    bool IsPositioned() const { return mStart.IsSet() && mEnd.IsSet(); }
+    bool Collapsed() const { return mStart == mEnd && IsPositioned(); }
     nsINode* GetStartContainer() const { return mStart.Container(); }
     nsINode* GetEndContainer() const { return mEnd.Container(); }
     uint32_t StartOffset() const { return mStart.Offset(); }
@@ -74,8 +61,7 @@ private:
     const RangeBoundary& End() const { return mEnd; }
 
     // XXX: Make these use RangeBoundaries...
-    nsresult CollapseTo(const RawRangeBoundary& aBoundary)
-    {
+    nsresult CollapseTo(const RawRangeBoundary& aBoundary) {
       return SetStartAndEnd(aBoundary, aBoundary);
     }
     nsresult SetStart(const RawRangeBoundary& aStart);
@@ -97,7 +83,7 @@ private:
 
     nsresult SelectNodeContents(nsINode* aNodeToSelectContents);
 
-  private:
+   private:
     nsINode* IsValidBoundary(nsINode* aNode) const;
     inline void AssertStartIsBeforeOrEqualToEnd();
 
@@ -107,7 +93,7 @@ private:
     RangeBoundary mEnd;
   };
 
-public:
+ public:
   typedef dom::Selection Selection;
 
   explicit ContentEventHandler(nsPresContext* aPresContext);
@@ -139,7 +125,7 @@ public:
   // NS_SELECTION_* event
   nsresult OnSelectionEvent(WidgetSelectionEvent* aEvent);
 
-protected:
+ protected:
   nsCOMPtr<nsIDocument> mDocument;
   // mSelection is typically normal selection but if OnQuerySelectedText()
   // is called, i.e., handling eQuerySelectedText, it's the specified selection
@@ -164,7 +150,7 @@ protected:
    */
   nsresult InitRootContent(Selection* aNormalSelection);
 
-public:
+ public:
   // FlatText means the text that is generated from DOM tree. The BR elements
   // are replaced to native linefeeds. Other elements are ignored.
 
@@ -174,69 +160,47 @@ public:
   // This is useful to receive one or more sets of them instead of nsRange.
   // This type is intended to be used for short-lived operations, and is thus
   // marked MOZ_STACK_CLASS.
-  struct MOZ_STACK_CLASS NodePosition : public RangeBoundary
-  {
+  struct MOZ_STACK_CLASS NodePosition : public RangeBoundary {
     // Only when mNode is an element node and mOffset is 0, mAfterOpenTag is
     // referred.
     bool mAfterOpenTag = true;
 
-    NodePosition()
-      : RangeBoundary()
-    {
-    }
+    NodePosition() : RangeBoundary() {}
 
     NodePosition(nsINode* aContainer, int32_t aOffset)
-      : RangeBoundary(aContainer, aOffset)
-    {
-    }
+        : RangeBoundary(aContainer, aOffset) {}
 
     NodePosition(nsINode* aContainer, nsIContent* aRef)
-      : RangeBoundary(aContainer, aRef)
-    {
-    }
+        : RangeBoundary(aContainer, aRef) {}
 
     explicit NodePosition(const nsIFrame::ContentOffsets& aContentOffsets)
-      : RangeBoundary(aContentOffsets.content, aContentOffsets.offset)
-    {
-    }
+        : RangeBoundary(aContentOffsets.content, aContentOffsets.offset) {}
 
-  public:
-    bool operator==(const NodePosition& aOther) const
-    {
+   public:
+    bool operator==(const NodePosition& aOther) const {
       return RangeBoundary::operator==(aOther) &&
-        mAfterOpenTag == aOther.mAfterOpenTag;
+             mAfterOpenTag == aOther.mAfterOpenTag;
     }
 
-    bool IsBeforeOpenTag() const
-    {
-      return IsSet() &&
-        Container()->IsElement() &&
-        !Ref() &&
-        !mAfterOpenTag;
+    bool IsBeforeOpenTag() const {
+      return IsSet() && Container()->IsElement() && !Ref() && !mAfterOpenTag;
     }
-    bool IsImmediatelyAfterOpenTag() const
-    {
-      return IsSet() &&
-        Container()->IsElement() &&
-        !Ref() &&
-        mAfterOpenTag;
+    bool IsImmediatelyAfterOpenTag() const {
+      return IsSet() && Container()->IsElement() && !Ref() && mAfterOpenTag;
     }
   };
 
   // NodePositionBefore isn't good name if Container() isn't an element node nor
   // Offset() is not 0, though, when Container() is an element node and mOffset
   // is 0, this is treated as before the open tag of Container().
-  struct NodePositionBefore final : public NodePosition
-  {
+  struct NodePositionBefore final : public NodePosition {
     NodePositionBefore(nsINode* aContainer, int32_t aOffset)
-      : NodePosition(aContainer, aOffset)
-    {
+        : NodePosition(aContainer, aOffset) {
       mAfterOpenTag = false;
     }
 
     NodePositionBefore(nsINode* aContainer, nsIContent* aRef)
-      : NodePosition(aContainer, aRef)
-    {
+        : NodePosition(aContainer, aRef) {
       mAfterOpenTag = false;
     }
   };
@@ -278,7 +242,7 @@ public:
   static uint32_t GetNativeTextLengthBefore(nsIContent* aContent,
                                             nsINode* aRootNode);
 
-protected:
+ protected:
   // Get the text length of aContent.  aContent must be a text node.
   static uint32_t GetTextLength(nsIContent* aContent,
                                 LineBreakType aLineBreakType,
@@ -294,24 +258,20 @@ protected:
   // Note that the result is not same as .textContent.  The result is
   // optimized for native IMEs.  For example, <br> element and some block
   // elements causes "\n" (or "\r\n"), see also ShouldBreakLineBefore().
-  nsresult GenerateFlatTextContent(nsIContent* aContent,
-                                   nsString& aString,
+  nsresult GenerateFlatTextContent(nsIContent* aContent, nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
-  nsresult GenerateFlatTextContent(const RawRange& aRawRange,
-                                   nsString& aString,
+  nsresult GenerateFlatTextContent(const RawRange& aRawRange, nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get offset of start of aRange.  Note that the result includes the length
   // of line breaker caused by the start of aContent because aRange never
   // includes the line breaker caused by its start node.
-  nsresult GetStartOffset(const RawRange& aRawRange,
-                          uint32_t* aOffset,
+  nsresult GetStartOffset(const RawRange& aRawRange, uint32_t* aOffset,
                           LineBreakType aLineBreakType);
   // Check if we should insert a line break before aContent.
   // This should return false only when aContent is an html element which
   // is typically used in a paragraph like <em>.
-  static bool ShouldBreakLineBefore(nsIContent* aContent,
-                                    nsINode* aRootNode);
+  static bool ShouldBreakLineBefore(nsIContent* aContent, nsINode* aRootNode);
   // Get the line breaker length.
   static inline uint32_t GetBRLength(LineBreakType aLineBreakType);
   static LineBreakType GetLineBreakType(WidgetQueryContentEvent* aEvent);
@@ -327,8 +287,7 @@ protected:
   // Initialize aRawRange from the offset of FlatText and the text length.
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.
-  nsresult SetRawRangeFromFlatTextOffset(RawRange* aRawRange,
-                                         uint32_t aOffset,
+  nsresult SetRawRangeFromFlatTextOffset(RawRange* aRawRange, uint32_t aOffset,
                                          uint32_t aLength,
                                          LineBreakType aLineBreakType,
                                          bool aExpandToClusterBoundaries,
@@ -339,8 +298,7 @@ protected:
   nsresult AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aCollapsedRawRange);
   // Convert the frame relative offset to be relative to the root frame of the
   // root presContext (but still measured in appUnits of aFrame's presContext).
-  nsresult ConvertToRootRelativeOffset(nsIFrame* aFrame,
-                                       nsRect& aRect);
+  nsresult ConvertToRootRelativeOffset(nsIFrame* aFrame, nsRect& aRect);
   // Expand aXPOffset to the nearest offset in cluster boundary. aForward is
   // true, it is expanded to forward.
   nsresult ExpandToClusterBoundary(nsIContent* aContent, bool aForward,
@@ -348,10 +306,8 @@ protected:
 
   typedef nsTArray<mozilla::FontRange> FontRangeArray;
   static void AppendFontRanges(FontRangeArray& aFontRanges,
-                               nsIContent* aContent,
-                               uint32_t aBaseOffset,
-                               uint32_t aXPStartOffset,
-                               uint32_t aXPEndOffset,
+                               nsIContent* aContent, uint32_t aBaseOffset,
+                               uint32_t aXPStartOffset, uint32_t aXPEndOffset,
                                LineBreakType aLineBreakType);
   nsresult GenerateFlatFontRanges(const RawRange& aRawRange,
                                   FontRangeArray& aFontRanges,
@@ -361,8 +317,7 @@ protected:
                                 LayoutDeviceIntRect& aRect,
                                 WritingMode& aWritingMode);
 
-  struct MOZ_STACK_CLASS FrameAndNodeOffset final
-  {
+  struct MOZ_STACK_CLASS FrameAndNodeOffset final {
     // mFrame is safe since this can live in only stack class and
     // ContentEventHandler doesn't modify layout after
     // ContentEventHandler::Init() flushes pending layout.  In other words,
@@ -372,17 +327,10 @@ protected:
     // offset in the node of mFrame
     int32_t mOffsetInNode;
 
-    FrameAndNodeOffset()
-      : mFrame(nullptr)
-      , mOffsetInNode(-1)
-    {
-    }
+    FrameAndNodeOffset() : mFrame(nullptr), mOffsetInNode(-1) {}
 
     FrameAndNodeOffset(nsIFrame* aFrame, int32_t aStartOffsetInNode)
-      : mFrame(aFrame)
-      , mOffsetInNode(aStartOffsetInNode)
-    {
-    }
+        : mFrame(aFrame), mOffsetInNode(aStartOffsetInNode) {}
 
     nsIFrame* operator->() { return mFrame; }
     const nsIFrame* operator->() const { return mFrame; }
@@ -402,27 +350,17 @@ protected:
   // offset in the frame.
   FrameAndNodeOffset GetLastFrameInRangeForTextRect(const RawRange& aRawRange);
 
-  struct MOZ_STACK_CLASS FrameRelativeRect final
-  {
+  struct MOZ_STACK_CLASS FrameRelativeRect final {
     // mRect is relative to the mBaseFrame's position.
     nsRect mRect;
     nsIFrame* mBaseFrame;
 
-    FrameRelativeRect()
-      : mBaseFrame(nullptr)
-    {
-    }
+    FrameRelativeRect() : mBaseFrame(nullptr) {}
 
-    explicit FrameRelativeRect(nsIFrame* aBaseFrame)
-      : mBaseFrame(aBaseFrame)
-    {
-    }
+    explicit FrameRelativeRect(nsIFrame* aBaseFrame) : mBaseFrame(aBaseFrame) {}
 
     FrameRelativeRect(const nsRect& aRect, nsIFrame* aBaseFrame)
-      : mRect(aRect)
-      , mBaseFrame(aBaseFrame)
-    {
-    }
+        : mRect(aRect), mBaseFrame(aBaseFrame) {}
 
     bool IsValid() const { return mBaseFrame != nullptr; }
 
@@ -468,6 +406,6 @@ protected:
   void EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ContentEventHandler_h_
+#endif  // mozilla_ContentEventHandler_h_

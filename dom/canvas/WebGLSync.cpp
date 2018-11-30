@@ -12,50 +12,37 @@
 namespace mozilla {
 
 WebGLSync::WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags)
-    : WebGLRefCountedObject(webgl)
-    , mGLName(mContext->gl->fFenceSync(condition, flags))
-    , mFenceId(mContext->mNextFenceId)
-{
-    mContext->mNextFenceId += 1;
-    mContext->mSyncs.insertBack(this);
+    : WebGLRefCountedObject(webgl),
+      mGLName(mContext->gl->fFenceSync(condition, flags)),
+      mFenceId(mContext->mNextFenceId) {
+  mContext->mNextFenceId += 1;
+  mContext->mSyncs.insertBack(this);
 }
 
-WebGLSync::~WebGLSync()
-{
-    DeleteOnce();
+WebGLSync::~WebGLSync() { DeleteOnce(); }
+
+void WebGLSync::Delete() {
+  mContext->gl->fDeleteSync(mGLName);
+  LinkedListElement<WebGLSync>::removeFrom(mContext->mSyncs);
 }
 
-void
-WebGLSync::Delete()
-{
-    mContext->gl->fDeleteSync(mGLName);
-    LinkedListElement<WebGLSync>::removeFrom(mContext->mSyncs);
-}
+WebGLContext* WebGLSync::GetParentObject() const { return mContext; }
 
-WebGLContext*
-WebGLSync::GetParentObject() const
-{
-    return mContext;
-}
-
-void
-WebGLSync::MarkSignaled() const
-{
-    if (mContext->mCompletedFenceId < mFenceId) {
-        mContext->mCompletedFenceId = mFenceId;
-    }
+void WebGLSync::MarkSignaled() const {
+  if (mContext->mCompletedFenceId < mFenceId) {
+    mContext->mCompletedFenceId = mFenceId;
+  }
 }
 
 // -------------------------------------------------------------------------
 // IMPLEMENT NS
-JSObject*
-WebGLSync::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
-{
-    return dom::WebGLSync_Binding::Wrap(cx, this, givenProto);
+JSObject* WebGLSync::WrapObject(JSContext* cx,
+                                JS::Handle<JSObject*> givenProto) {
+  return dom::WebGLSync_Binding::Wrap(cx, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLSync)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLSync, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLSync, Release);
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 // Main header first:
 #include "SVGImageContext.h"
 
@@ -17,21 +16,15 @@
 
 namespace mozilla {
 
-/* static */ void
-SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
-                                        nsIFrame* aFromFrame,
-                                        imgIContainer* aImgContainer)
-{
-  return MaybeStoreContextPaint(aContext,
-                                aFromFrame->Style(),
-                                aImgContainer);
+/* static */ void SVGImageContext::MaybeStoreContextPaint(
+    Maybe<SVGImageContext>& aContext, nsIFrame* aFromFrame,
+    imgIContainer* aImgContainer) {
+  return MaybeStoreContextPaint(aContext, aFromFrame->Style(), aImgContainer);
 }
 
-/* static */ void
-SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
-                                        ComputedStyle* aFromComputedStyle,
-                                        imgIContainer* aImgContainer)
-{
+/* static */ void SVGImageContext::MaybeStoreContextPaint(
+    Maybe<SVGImageContext>& aContext, ComputedStyle* aFromComputedStyle,
+    imgIContainer* aImgContainer) {
   const nsStyleSVG* style = aFromComputedStyle->StyleSVG();
 
   if (!style->ExposesContextProperties()) {
@@ -47,7 +40,8 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
 
   bool haveContextPaint = false;
 
-  RefPtr<SVGEmbeddingContextPaint> contextPaint = new SVGEmbeddingContextPaint();
+  RefPtr<SVGEmbeddingContextPaint> contextPaint =
+      new SVGEmbeddingContextPaint();
 
   if ((style->mContextPropsBits & NS_STYLE_CONTEXT_PROPERTY_FILL) &&
       style->mFill.Type() == eStyleSVGPaintType_Color) {
@@ -76,4 +70,4 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

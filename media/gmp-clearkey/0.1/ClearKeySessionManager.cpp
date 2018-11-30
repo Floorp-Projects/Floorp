@@ -34,8 +34,7 @@ using namespace std;
 using namespace cdm;
 
 ClearKeySessionManager::ClearKeySessionManager(Host_9* aHost)
-  : mDecryptionManager(ClearKeyDecryptionManager::Get())
-{
+    : mDecryptionManager(ClearKeyDecryptionManager::Get()) {
   CK_LOGD("ClearKeySessionManager ctor %p", this);
   AddRef();
 
@@ -43,21 +42,16 @@ ClearKeySessionManager::ClearKeySessionManager(Host_9* aHost)
   mPersistence = new ClearKeyPersistence(mHost);
 }
 
-ClearKeySessionManager::~ClearKeySessionManager()
-{
+ClearKeySessionManager::~ClearKeySessionManager() {
   CK_LOGD("ClearKeySessionManager dtor %p", this);
 }
 
-void
-ClearKeySessionManager::Init(bool aDistinctiveIdentifierAllowed,
-                             bool aPersistentStateAllowed)
-{
+void ClearKeySessionManager::Init(bool aDistinctiveIdentifierAllowed,
+                                  bool aPersistentStateAllowed) {
   CK_LOGD("ClearKeySessionManager::Init");
 
   RefPtr<ClearKeySessionManager> self(this);
-  function<void()> onPersistentStateLoaded =
-    [self] ()
-  {
+  function<void()> onPersistentStateLoaded = [self]() {
     while (!self->mDeferredInitialize.empty()) {
       function<void()> func = self->mDeferredInitialize.front();
       self->mDeferredInitialize.pop();
@@ -70,27 +64,21 @@ ClearKeySessionManager::Init(bool aDistinctiveIdentifierAllowed,
                                   move(onPersistentStateLoaded));
 }
 
-void
-ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
-                                      InitDataType aInitDataType,
-                                      const uint8_t* aInitData,
-                                      uint32_t aInitDataSize,
-                                      SessionType aSessionType)
-{
+void ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
+                                           InitDataType aInitDataType,
+                                           const uint8_t* aInitData,
+                                           uint32_t aInitDataSize,
+                                           SessionType aSessionType) {
   CK_LOGD("ClearKeySessionManager::CreateSession type:%u", aInitDataType);
 
   // Copy the init data so it is correctly captured by the lambda
   vector<uint8_t> initData(aInitData, aInitData + aInitDataSize);
 
   RefPtr<ClearKeySessionManager> self(this);
-  function<void()> deferrer =
-    [self, aPromiseId, aInitDataType, initData, aSessionType] ()
-  {
-    self->CreateSession(aPromiseId,
-                        aInitDataType,
-                        initData.data(),
-                        initData.size(),
-                        aSessionType);
+  function<void()> deferrer = [self, aPromiseId, aInitDataType, initData,
+                               aSessionType]() {
+    self->CreateSession(aPromiseId, aInitDataType, initData.data(),
+                        initData.size(), aSessionType);
   };
 
   // If we haven't loaded, don't do this yet
@@ -99,8 +87,7 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
     return;
   }
 
-  CK_LOGARRAY("ClearKeySessionManager::CreateSession initdata: ",
-              aInitData,
+  CK_LOGARRAY("ClearKeySessionManager::CreateSession initdata: ", aInitData,
               aInitDataSize);
 
   // If 'DecryptingComplete' has been called mHost will be null so we can't
@@ -114,13 +101,9 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
   if (aInitDataType != InitDataType::kCenc &&
       aInitDataType != InitDataType::kKeyIds &&
       aInitDataType != InitDataType::kWebM) {
-
     string message = "initDataType is not supported by ClearKey";
-    mHost->OnRejectPromise(aPromiseId,
-                           Exception::kExceptionNotSupportedError,
-                           0,
-                           message.c_str(),
-                           message.size());
+    mHost->OnRejectPromise(aPromiseId, Exception::kExceptionNotSupportedError,
+                           0, message.c_str(), message.size());
 
     return;
   }
@@ -128,19 +111,14 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
   string sessionId = mPersistence->GetNewSessionId(aSessionType);
   assert(mSessions.find(sessionId) == mSessions.end());
 
-  ClearKeySession* session = new ClearKeySession(sessionId,
-                                                 aSessionType);
+  ClearKeySession* session = new ClearKeySession(sessionId, aSessionType);
 
   if (!session->Init(aInitDataType, aInitData, aInitDataSize)) {
-
     CK_LOGD("Failed to initialize session: %s", sessionId.c_str());
 
     const static char* message = "Failed to initialize session";
-    mHost->OnRejectPromise(aPromiseId,
-                           Exception::kExceptionInvalidStateError,
-                           0,
-                           message,
-                           strlen(message));
+    mHost->OnRejectPromise(aPromiseId, Exception::kExceptionInvalidStateError,
+                           0, message, strlen(message));
     delete session;
 
     return;
@@ -170,22 +148,17 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
   ClearKeyUtils::MakeKeyRequest(neededKeys, request, aSessionType);
 
   // Resolve the promise with the new session information.
-  mHost->OnResolveNewSessionPromise(aPromiseId,
-                                    sessionId.c_str(),
+  mHost->OnResolveNewSessionPromise(aPromiseId, sessionId.c_str(),
                                     sessionId.size());
 
-  mHost->OnSessionMessage(sessionId.c_str(),
-                          sessionId.size(),
-                          MessageType::kLicenseRequest,
-                          request.c_str(),
+  mHost->OnSessionMessage(sessionId.c_str(), sessionId.size(),
+                          MessageType::kLicenseRequest, request.c_str(),
                           request.size());
 }
 
-void
-ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
-                                    const char* aSessionId,
-                                    uint32_t aSessionIdLength)
-{
+void ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
+                                         const char* aSessionId,
+                                         uint32_t aSessionIdLength) {
   CK_LOGD("ClearKeySessionManager::LoadSession");
 
   // Copy the sessionId into a string so the lambda captures it properly.
@@ -194,9 +167,7 @@ ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
   // Hold a reference to the SessionManager so that it isn't released before
   // we try to use it.
   RefPtr<ClearKeySessionManager> self(this);
-  function<void()> deferrer =
-    [self, aPromiseId, sessionId] ()
-  {
+  function<void()> deferrer = [self, aPromiseId, sessionId]() {
     self->LoadSession(aPromiseId, sessionId.data(), sessionId.size());
   };
 
@@ -222,13 +193,9 @@ ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
   }
 
   function<void(const uint8_t*, uint32_t)> success =
-    [self, sessionId, aPromiseId] (const uint8_t* data, uint32_t size)
-  {
-    self->PersistentSessionDataLoaded(aPromiseId,
-                                      sessionId,
-                                      data,
-                                      size);
-  };
+      [self, sessionId, aPromiseId](const uint8_t* data, uint32_t size) {
+        self->PersistentSessionDataLoaded(aPromiseId, sessionId, data, size);
+      };
 
   function<void()> failure = [self, aPromiseId] {
     if (!self->mHost) {
@@ -241,12 +208,9 @@ ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
   ReadData(mHost, sessionId, move(success), move(failure));
 }
 
-void
-ClearKeySessionManager::PersistentSessionDataLoaded(uint32_t aPromiseId,
-                                                    const string& aSessionId,
-                                                    const uint8_t* aKeyData,
-                                                    uint32_t aKeyDataSize)
-{
+void ClearKeySessionManager::PersistentSessionDataLoaded(
+    uint32_t aPromiseId, const string& aSessionId, const uint8_t* aKeyData,
+    uint32_t aKeyDataSize) {
   CK_LOGD("ClearKeySessionManager::PersistentSessionDataLoaded");
 
   // Check that the SessionManager has not been shut down before we try and
@@ -257,14 +221,13 @@ ClearKeySessionManager::PersistentSessionDataLoaded(uint32_t aPromiseId,
 
   if (Contains(mSessions, aSessionId) ||
       (aKeyDataSize % (2 * CENC_KEY_LEN)) != 0) {
-
     // As per the instructions in ContentDecryptionModule_8
     mHost->OnResolveNewSessionPromise(aPromiseId, nullptr, 0);
     return;
   }
 
-  ClearKeySession* session = new ClearKeySession(aSessionId,
-                                                 SessionType::kPersistentLicense);
+  ClearKeySession* session =
+      new ClearKeySession(aSessionId, SessionType::kPersistentLicense);
 
   mSessions[aSessionId] = session;
 
@@ -272,7 +235,7 @@ ClearKeySessionManager::PersistentSessionDataLoaded(uint32_t aPromiseId,
 
   vector<KeyInformation> keyInfos;
   vector<KeyIdPair> keyPairs;
-  for (uint32_t i = 0; i < numKeys; i ++) {
+  for (uint32_t i = 0; i < numKeys; i++) {
     const uint8_t* base = aKeyData + 2 * CENC_KEY_LEN * i;
 
     KeyIdPair keyPair;
@@ -298,24 +261,18 @@ ClearKeySessionManager::PersistentSessionDataLoaded(uint32_t aPromiseId,
     keyInfos.push_back(keyInfo);
   }
 
-  mHost->OnSessionKeysChange(&aSessionId[0],
-                             aSessionId.size(),
-                             true,
-                             keyInfos.data(),
-                             keyInfos.size());
+  mHost->OnSessionKeysChange(&aSessionId[0], aSessionId.size(), true,
+                             keyInfos.data(), keyInfos.size());
 
-  mHost->OnResolveNewSessionPromise(aPromiseId,
-                                    aSessionId.c_str(),
+  mHost->OnResolveNewSessionPromise(aPromiseId, aSessionId.c_str(),
                                     aSessionId.size());
 }
 
-void
-ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
-                                      const char* aSessionId,
-                                      uint32_t aSessionIdLength,
-                                      const uint8_t* aResponse,
-                                      uint32_t aResponseSize)
-{
+void ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
+                                           const char* aSessionId,
+                                           uint32_t aSessionIdLength,
+                                           const uint8_t* aResponse,
+                                           uint32_t aResponseSize) {
   CK_LOGD("ClearKeySessionManager::UpdateSession");
 
   // Copy the method arguments so we can capture them in the lambda
@@ -325,14 +282,9 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
   // Hold  a reference to the SessionManager so it isn't released before we
   // callback.
   RefPtr<ClearKeySessionManager> self(this);
-  function<void()> deferrer =
-    [self, aPromiseId, sessionId, response] ()
-  {
-    self->UpdateSession(aPromiseId,
-                        sessionId.data(),
-                        sessionId.size(),
-                        response.data(),
-                        response.size());
+  function<void()> deferrer = [self, aPromiseId, sessionId, response]() {
+    self->UpdateSession(aPromiseId, sessionId.data(), sessionId.size(),
+                        response.data(), response.size());
   };
 
   // If we haven't fully loaded, defer calling this method
@@ -353,11 +305,8 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
   if (itr == mSessions.end() || !(itr->second)) {
     CK_LOGW("ClearKey CDM couldn't resolve session ID in UpdateSession.");
     CK_LOGD("Unable to find session: %s", sessionId.c_str());
-    mHost->OnRejectPromise(aPromiseId,
-                           Exception::kExceptionTypeError,
-                           0,
-                           nullptr,
-                           0);
+    mHost->OnRejectPromise(aPromiseId, Exception::kExceptionTypeError, 0,
+                           nullptr, 0);
 
     return;
   }
@@ -368,28 +317,20 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
     CK_LOGW("Session response size is not within a reasonable size.");
     CK_LOGD("Failed to parse response for session %s", sessionId.c_str());
 
-    mHost->OnRejectPromise(aPromiseId,
-                           Exception::kExceptionTypeError,
-                           0,
-                           nullptr,
-                           0);
+    mHost->OnRejectPromise(aPromiseId, Exception::kExceptionTypeError, 0,
+                           nullptr, 0);
 
     return;
   }
 
   // Parse the response for any (key ID, key) pairs.
   vector<KeyIdPair> keyPairs;
-  if (!ClearKeyUtils::ParseJWK(aResponse,
-                               aResponseSize,
-                               keyPairs,
+  if (!ClearKeyUtils::ParseJWK(aResponse, aResponseSize, keyPairs,
                                session->Type())) {
     CK_LOGW("ClearKey CDM failed to parse JSON Web Key.");
 
-    mHost->OnRejectPromise(aPromiseId,
-                           Exception::kExceptionTypeError,
-                           0,
-                           nullptr,
-                           0);
+    mHost->OnRejectPromise(aPromiseId, Exception::kExceptionTypeError, 0,
+                           nullptr, 0);
 
     return;
   }
@@ -408,11 +349,8 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
     keyInfos.push_back(keyInfo);
   }
 
-  mHost->OnSessionKeysChange(aSessionId,
-                             aSessionIdLength,
-                             true,
-                             keyInfos.data(),
-                             keyInfos.size());
+  mHost->OnSessionKeysChange(aSessionId, aSessionIdLength, true,
+                             keyInfos.data(), keyInfos.size());
 
   if (session->Type() != SessionType::kPersistentLicense) {
     mHost->OnResolvePromise(aPromiseId);
@@ -424,35 +362,29 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
   vector<uint8_t> keydata;
   Serialize(session, keydata);
 
-  function<void()> resolve = [self, aPromiseId] ()
-  {
+  function<void()> resolve = [self, aPromiseId]() {
     if (!self->mHost) {
       return;
     }
     self->mHost->OnResolvePromise(aPromiseId);
   };
 
-  function<void()> reject = [self, aPromiseId] ()
-  {
+  function<void()> reject = [self, aPromiseId]() {
     if (!self->mHost) {
       return;
     }
 
     static const char* message = "Couldn't store cenc key init data";
     self->mHost->OnRejectPromise(aPromiseId,
-                                 Exception::kExceptionInvalidStateError,
-                                 0,
-                                 message,
-                                 strlen(message));
+                                 Exception::kExceptionInvalidStateError, 0,
+                                 message, strlen(message));
   };
 
   WriteData(mHost, sessionId, keydata, move(resolve), move(reject));
 }
 
-void
-ClearKeySessionManager::Serialize(const ClearKeySession* aSession,
-                                  std::vector<uint8_t>& aOutKeyData)
-{
+void ClearKeySessionManager::Serialize(const ClearKeySession* aSession,
+                                       std::vector<uint8_t>& aOutKeyData) {
   const std::vector<KeyId>& keyIds = aSession->GetKeyIds();
   for (size_t i = 0; i < keyIds.size(); i++) {
     const KeyId& keyId = keyIds[i];
@@ -467,11 +399,9 @@ ClearKeySessionManager::Serialize(const ClearKeySession* aSession,
   }
 }
 
-void
-ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
-                                     const char* aSessionId,
-                                     uint32_t aSessionIdLength)
-{
+void ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
+                                          const char* aSessionId,
+                                          uint32_t aSessionIdLength) {
   CK_LOGD("ClearKeySessionManager::CloseSession");
 
   // Copy the sessionId into a string so we capture it properly.
@@ -479,9 +409,7 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
   // Hold a reference to the session manager, so it doesn't get deleted
   // before we need to use it.
   RefPtr<ClearKeySessionManager> self(this);
-  function<void()> deferrer =
-    [self, aPromiseId, sessionId] ()
-  {
+  function<void()> deferrer = [self, aPromiseId, sessionId]() {
     self->CloseSession(aPromiseId, sessionId.data(), sessionId.size());
   };
 
@@ -500,11 +428,8 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
   auto itr = mSessions.find(sessionId);
   if (itr == mSessions.end()) {
     CK_LOGW("ClearKey CDM couldn't close non-existent session.");
-    mHost->OnRejectPromise(aPromiseId,
-                           Exception::kExceptionTypeError,
-                           0,
-                           nullptr,
-                           0);
+    mHost->OnRejectPromise(aPromiseId, Exception::kExceptionTypeError, 0,
+                           nullptr, 0);
 
     return;
   }
@@ -518,18 +443,15 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
   mHost->OnResolvePromise(aPromiseId);
 }
 
-void
-ClearKeySessionManager::ClearInMemorySessionData(ClearKeySession* aSession)
-{
+void ClearKeySessionManager::ClearInMemorySessionData(
+    ClearKeySession* aSession) {
   mSessions.erase(aSession->Id());
   delete aSession;
 }
 
-void
-ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
-                                      const char* aSessionId,
-                                      uint32_t aSessionIdLength)
-{
+void ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
+                                           const char* aSessionId,
+                                           uint32_t aSessionIdLength) {
   CK_LOGD("ClearKeySessionManager::RemoveSession");
 
   // Copy the sessionId into a string so it can be captured for the lambda.
@@ -538,9 +460,7 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
   // Hold a reference to the SessionManager, so it isn't released before we
   // try and use it.
   RefPtr<ClearKeySessionManager> self(this);
-  function<void()> deferrer =
-    [self, aPromiseId, sessionId] ()
-  {
+  function<void()> deferrer = [self, aPromiseId, sessionId]() {
     self->RemoveSession(aPromiseId, sessionId.data(), sessionId.size());
   };
 
@@ -560,11 +480,8 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
   if (itr == mSessions.end()) {
     CK_LOGW("ClearKey CDM couldn't remove non-existent session.");
 
-    mHost->OnRejectPromise(aPromiseId,
-                           Exception::kExceptionTypeError,
-                           0,
-                           nullptr,
-                           0);
+    mHost->OnRejectPromise(aPromiseId, Exception::kExceptionTypeError, 0,
+                           nullptr, 0);
 
     return;
   }
@@ -584,48 +501,36 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
 
   vector<uint8_t> emptyKeydata;
 
-  function<void()> resolve = [self, aPromiseId] ()
-  {
+  function<void()> resolve = [self, aPromiseId]() {
     if (!self->mHost) {
       return;
     }
     self->mHost->OnResolvePromise(aPromiseId);
   };
 
-  function<void()> reject = [self, aPromiseId] ()
-  {
+  function<void()> reject = [self, aPromiseId]() {
     if (!self->mHost) {
       return;
     }
     static const char* message = "Could not remove session";
-    self->mHost->OnRejectPromise(aPromiseId,
-                                 Exception::kExceptionTypeError,
-                                 0,
-                                 message,
-                                 strlen(message));
+    self->mHost->OnRejectPromise(aPromiseId, Exception::kExceptionTypeError, 0,
+                                 message, strlen(message));
   };
 
   WriteData(mHost, sessionId, emptyKeydata, move(resolve), move(reject));
 }
 
-void
-ClearKeySessionManager::SetServerCertificate(uint32_t aPromiseId,
-                                             const uint8_t* aServerCert,
-                                             uint32_t aServerCertSize)
-{
+void ClearKeySessionManager::SetServerCertificate(uint32_t aPromiseId,
+                                                  const uint8_t* aServerCert,
+                                                  uint32_t aServerCertSize) {
   // ClearKey CDM doesn't support this method by spec.
   CK_LOGD("ClearKeySessionManager::SetServerCertificate");
-  mHost->OnRejectPromise(aPromiseId,
-                         Exception::kExceptionNotSupportedError,
-                         0,
-                         nullptr /* message */,
-                         0 /* messageLen */);
+  mHost->OnRejectPromise(aPromiseId, Exception::kExceptionNotSupportedError, 0,
+                         nullptr /* message */, 0 /* messageLen */);
 }
 
-Status
-ClearKeySessionManager::Decrypt(const InputBuffer_1& aBuffer,
-                                DecryptedBlock* aDecryptedBlock)
-{
+Status ClearKeySessionManager::Decrypt(const InputBuffer_1& aBuffer,
+                                       DecryptedBlock* aDecryptedBlock) {
   CK_LOGD("ClearKeySessionManager::Decrypt");
 
   CK_LOGARRAY("Key: ", aBuffer.key_id, aBuffer.key_id_size);
@@ -641,8 +546,7 @@ ClearKeySessionManager::Decrypt(const InputBuffer_1& aBuffer,
   // According to the comment `If |iv_size| = 0, the data is unencrypted.`
   // Use iv_size to determine if the sample is encrypted.
   if (aBuffer.iv_size != 0) {
-    status = mDecryptionManager->Decrypt(buffer->Data(),
-                                         buffer->Size(),
+    status = mDecryptionManager->Decrypt(buffer->Data(), buffer->Size(),
                                          CryptoMetaData(&aBuffer));
   }
 
@@ -652,9 +556,7 @@ ClearKeySessionManager::Decrypt(const InputBuffer_1& aBuffer,
   return status;
 }
 
-void
-ClearKeySessionManager::DecryptingComplete()
-{
+void ClearKeySessionManager::DecryptingComplete() {
   CK_LOGD("ClearKeySessionManager::DecryptingComplete %p", this);
 
   for (auto it = mSessions.begin(); it != mSessions.end(); it++) {
@@ -668,8 +570,8 @@ ClearKeySessionManager::DecryptingComplete()
   Release();
 }
 
-bool ClearKeySessionManager::MaybeDeferTillInitialized(function<void()>&& aMaybeDefer)
-{
+bool ClearKeySessionManager::MaybeDeferTillInitialized(
+    function<void()>&& aMaybeDefer) {
   if (mPersistence->IsLoaded()) {
     return false;
   }

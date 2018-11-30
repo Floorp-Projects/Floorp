@@ -33,9 +33,8 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
                            public nsIInputStreamCallback,
                            public nsIOutputStreamCallback,
                            public nsIInterfaceRequestor,
-                           public nsIAuthPromptProvider
-{
-public:
+                           public nsIAuthPromptProvider {
+ public:
   NS_DECL_NSIHTTPUPGRADELISTENER
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -48,16 +47,14 @@ public:
   WebrtcProxyChannel(nsIAuthPromptProvider* aAuthProvider,
                      WebrtcProxyChannelCallback* aProxyCallbacks);
 
-  nsresult Open(const nsCString& aHost,
-                const int& aPort,
-                nsILoadInfo* aLoadInfo,
-                const nsCString& aAlpn);
+  nsresult Open(const nsCString& aHost, const int& aPort,
+                nsILoadInfo* aLoadInfo, const nsCString& aAlpn);
   nsresult Write(nsTArray<uint8_t>&& aBytes);
   nsresult Close();
 
   size_t CountUnwrittenBytes() const;
 
-protected:
+ protected:
   virtual ~WebrtcProxyChannel();
 
   // protected for gtests
@@ -67,7 +64,7 @@ protected:
 
   RefPtr<WebrtcProxyChannelCallback> mProxyCallbacks;
 
-private:
+ private:
   bool mClosed;
   bool mOpened;
 
@@ -75,20 +72,19 @@ private:
 
   void CloseWithReason(nsresult aReason);
 
-  size_t                          mWriteOffset;
-  std::list<WebrtcProxyData>      mWriteQueue;
+  size_t mWriteOffset;
+  std::list<WebrtcProxyData> mWriteQueue;
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
 
   // Indicates that the channel is CONNECTed
-  nsCOMPtr<nsISocketTransport>    mTransport;
-  nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
-  nsCOMPtr<nsIAsyncOutputStream>  mSocketOut;
-  nsCOMPtr<nsIEventTarget>        mMainThread;
-  nsCOMPtr<nsIEventTarget>        mSocketThread;
+  nsCOMPtr<nsISocketTransport> mTransport;
+  nsCOMPtr<nsIAsyncInputStream> mSocketIn;
+  nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
+  nsCOMPtr<nsIEventTarget> mMainThread;
+  nsCOMPtr<nsIEventTarget> mSocketThread;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // webrtc_proxy_channel_h__
-
+#endif  // webrtc_proxy_channel_h__

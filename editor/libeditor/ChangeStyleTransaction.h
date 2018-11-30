@@ -6,10 +6,10 @@
 #ifndef mozilla_ChangeStyleTransaction_h
 #define mozilla_ChangeStyleTransaction_h
 
-#include "mozilla/EditTransactionBase.h"  // base class
-#include "nsCOMPtr.h"                     // nsCOMPtr members
-#include "nsCycleCollectionParticipant.h" // various macros
-#include "nsString.h"                     // nsString members
+#include "mozilla/EditTransactionBase.h"   // base class
+#include "nsCOMPtr.h"                      // nsCOMPtr members
+#include "nsCycleCollectionParticipant.h"  // various macros
+#include "nsString.h"                      // nsString members
 
 class nsAtom;
 
@@ -17,21 +17,18 @@ namespace mozilla {
 
 namespace dom {
 class Element;
-} // namespace dom
+}  // namespace dom
 
 /**
  * A transaction that changes the value of a CSS inline style of a content
  * node.  This transaction covers add, remove, and change a property's value.
  */
-class ChangeStyleTransaction final : public EditTransactionBase
-{
-protected:
-  ChangeStyleTransaction(dom::Element& aElement,
-                         nsAtom& aProperty,
-                         const nsAString& aValue,
-                         bool aRemove);
+class ChangeStyleTransaction final : public EditTransactionBase {
+ protected:
+  ChangeStyleTransaction(dom::Element& aElement, nsAtom& aProperty,
+                         const nsAString& aValue, bool aRemove);
 
-public:
+ public:
   /**
    * Creates a change style transaction.  This never returns nullptr.
    *
@@ -39,10 +36,8 @@ public:
    * @param aProperty   The name of the property to change.
    * @param aValue      New value for aProperty.
    */
-  static already_AddRefed<ChangeStyleTransaction>
-  Create(dom::Element& aElement,
-         nsAtom& aProperty,
-         const nsAString& aValue);
+  static already_AddRefed<ChangeStyleTransaction> Create(
+      dom::Element& aElement, nsAtom& aProperty, const nsAString& aValue);
 
   /**
    * Creates a change style transaction.  This never returns nullptr.
@@ -51,10 +46,8 @@ public:
    * @param aProperty   The name of the property to change.
    * @param aValue      The value to remove from aProperty.
    */
-  static already_AddRefed<ChangeStyleTransaction>
-  CreateToRemove(dom::Element& aElement,
-                 nsAtom& aProperty,
-                 const nsAString& aValue);
+  static already_AddRefed<ChangeStyleTransaction> CreateToRemove(
+      dom::Element& aElement, nsAtom& aProperty, const nsAString& aValue);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeStyleTransaction,
                                            EditTransactionBase)
@@ -75,7 +68,7 @@ public:
   static bool ValueIncludes(const nsAString& aValueList,
                             const nsAString& aValue);
 
-private:
+ private:
   virtual ~ChangeStyleTransaction();
 
   /*
@@ -134,6 +127,6 @@ private:
   bool mRedoAttributeWasSet;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef mozilla_ChangeStyleTransaction_h
+#endif  // #ifndef mozilla_ChangeStyleTransaction_h

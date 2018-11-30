@@ -10,27 +10,22 @@
 
 namespace mozilla {
 
-void
-WebGL2Context::TexStorage(uint8_t funcDims, GLenum rawTarget,
-                          GLsizei levels, GLenum internalFormat, GLsizei width,
-                          GLsizei height, GLsizei depth)
-{
-    const FuncScope funcScope(*this, "texStorage");
+void WebGL2Context::TexStorage(uint8_t funcDims, GLenum rawTarget,
+                               GLsizei levels, GLenum internalFormat,
+                               GLsizei width, GLsizei height, GLsizei depth) {
+  const FuncScope funcScope(*this, "texStorage");
 
-    TexTarget target;
-    WebGLTexture* tex;
-    if (!ValidateTexTarget(this, funcDims, rawTarget, &target, &tex))
-        return;
+  TexTarget target;
+  WebGLTexture* tex;
+  if (!ValidateTexTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
-    tex->TexStorage(target, levels, internalFormat, width, height, depth);
+  tex->TexStorage(target, levels, internalFormat, width, height, depth);
 }
 
 ////////////////////
 
-/*virtual*/ bool
-WebGL2Context::IsTexParamValid(GLenum pname) const
-{
-    switch (pname) {
+/*virtual*/ bool WebGL2Context::IsTexParamValid(GLenum pname) const {
+  switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
     case LOCAL_GL_TEXTURE_COMPARE_FUNC:
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
@@ -40,11 +35,11 @@ WebGL2Context::IsTexParamValid(GLenum pname) const
     case LOCAL_GL_TEXTURE_WRAP_R:
     case LOCAL_GL_TEXTURE_MAX_LOD:
     case LOCAL_GL_TEXTURE_MIN_LOD:
-        return true;
+      return true;
 
     default:
-        return WebGLContext::IsTexParamValid(pname);
-    }
+      return WebGLContext::IsTexParamValid(pname);
+  }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

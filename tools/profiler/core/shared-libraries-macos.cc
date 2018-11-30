@@ -38,21 +38,19 @@ typedef segment_command_64 mach_segment_command_type;
 #define seg_size uint64_t
 #endif
 
-struct NativeSharedLibrary
-{
-  const platform_mach_header* header;
+struct NativeSharedLibrary {
+  const platform_mach_header *header;
   std::string path;
 };
-static std::vector<NativeSharedLibrary>* sSharedLibrariesList = nullptr;
+static std::vector<NativeSharedLibrary> *sSharedLibrariesList = nullptr;
 static StaticMutex sSharedLibrariesMutex;
 
-static void
-SharedLibraryAddImage(const struct mach_header* mh, intptr_t vmaddr_slide)
-{
+static void SharedLibraryAddImage(const struct mach_header *mh,
+                                  intptr_t vmaddr_slide) {
   // NOTE: Presumably for backwards-compatibility reasons, this function accepts
   // a mach_header even on 64-bit where it ought to be a mach_header_64. We cast
   // it to the right type here.
-  auto header = reinterpret_cast<const platform_mach_header*>(mh);
+  auto header = reinterpret_cast<const platform_mach_header *>(mh);
 
   Dl_info info;
   if (!dladdr(header, &info)) {
@@ -64,17 +62,16 @@ SharedLibraryAddImage(const struct mach_header* mh, intptr_t vmaddr_slide)
     return;
   }
 
-  NativeSharedLibrary lib = { header, info.dli_fname };
+  NativeSharedLibrary lib = {header, info.dli_fname};
   sSharedLibrariesList->push_back(lib);
 }
 
-static void
-SharedLibraryRemoveImage(const struct mach_header* mh, intptr_t vmaddr_slide)
-{
+static void SharedLibraryRemoveImage(const struct mach_header *mh,
+                                     intptr_t vmaddr_slide) {
   // NOTE: Presumably for backwards-compatibility reasons, this function accepts
   // a mach_header even on 64-bit where it ought to be a mach_header_64. We cast
   // it to the right type here.
-  auto header = reinterpret_cast<const platform_mach_header*>(mh);
+  auto header = reinterpret_cast<const platform_mach_header *>(mh);
 
   StaticMutexAutoLock lock(sSharedLibrariesMutex);
   if (!sSharedLibrariesList) {
@@ -90,9 +87,7 @@ SharedLibraryRemoveImage(const struct mach_header* mh, intptr_t vmaddr_slide)
   }
 }
 
-void
-SharedLibraryInfo::Initialize()
-{
+void SharedLibraryInfo::Initialize() {
   // NOTE: We intentionally leak this memory here. We're allocating dynamically
   // in order to avoid static initializers.
   sSharedLibrariesList = new std::vector<NativeSharedLibrary>();
@@ -101,21 +96,22 @@ SharedLibraryInfo::Initialize()
   _dyld_register_func_for_remove_image(SharedLibraryRemoveImage);
 }
 
-static
-void addSharedLibrary(const platform_mach_header* header, const char *path, SharedLibraryInfo &info) {
+static void addSharedLibrary(const platform_mach_header *header,
+                             const char *path, SharedLibraryInfo &info) {
   const struct load_command *cmd =
-    reinterpret_cast<const struct load_command *>(header + 1);
+      reinterpret_cast<const struct load_command *>(header + 1);
 
   seg_size size = 0;
   unsigned long long start = reinterpret_cast<unsigned long long>(header);
-  // Find the cmd segment in the macho image. It will contain the offset we care about.
+  // Find the cmd segment in the macho image. It will contain the offset we care
+  // about.
   const uint8_t *uuid_bytes = nullptr;
   for (unsigned int i = 0;
        cmd && (i < header->ncmds) && (uuid_bytes == nullptr || size == 0);
        ++i) {
     if (cmd->cmd == CMD_SEGMENT) {
       const mach_segment_command_type *seg =
-        reinterpret_cast<const mach_segment_command_type *>(cmd);
+          reinterpret_cast<const mach_segment_command_type *>(cmd);
 
       if (!strcmp(seg->segname, "__TEXT")) {
         size = seg->vmsize;
@@ -125,25 +121,39 @@ void addSharedLibrary(const platform_mach_header* header, const char *path, Shar
       uuid_bytes = ucmd->uuid;
     }
 
-    cmd = reinterpret_cast<const struct load_command *>
-      (reinterpret_cast<const char *>(cmd) + cmd->cmdsize);
+    cmd = reinterpret_cast<const struct load_command *>(
+        reinterpret_cast<const char *>(cmd) + cmd->cmdsize);
   }
 
   nsAutoCString uuid;
   if (uuid_bytes != nullptr) {
-    uuid.AppendPrintf("%02X" "%02X" "%02X" "%02X"
-                      "%02X" "%02X" "%02X" "%02X"
-                      "%02X" "%02X" "%02X" "%02X"
-                      "%02X" "%02X" "%02X" "%02X"
-                      "0" /* breakpad id age */,
-                      uuid_bytes[0], uuid_bytes[1], uuid_bytes[2], uuid_bytes[3],
-                      uuid_bytes[4], uuid_bytes[5], uuid_bytes[6], uuid_bytes[7],
-                      uuid_bytes[8], uuid_bytes[9], uuid_bytes[10], uuid_bytes[11],
-                      uuid_bytes[12], uuid_bytes[13], uuid_bytes[14], uuid_bytes[15]);
+    uuid.AppendPrintf(
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "%02X"
+        "0" /* breakpad id age */,
+        uuid_bytes[0], uuid_bytes[1], uuid_bytes[2], uuid_bytes[3],
+        uuid_bytes[4], uuid_bytes[5], uuid_bytes[6], uuid_bytes[7],
+        uuid_bytes[8], uuid_bytes[9], uuid_bytes[10], uuid_bytes[11],
+        uuid_bytes[12], uuid_bytes[13], uuid_bytes[14], uuid_bytes[15]);
   }
 
   nsAutoString pathStr;
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), pathStr)));
+  mozilla::Unused << NS_WARN_IF(
+      NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), pathStr)));
 
   nsAutoString nameStr = pathStr;
   int32_t pos = nameStr.RFindChar('/');
@@ -151,24 +161,21 @@ void addSharedLibrary(const platform_mach_header* header, const char *path, Shar
     nameStr.Cut(0, pos + 1);
   }
 
-  const NXArchInfo* archInfo =
-    NXGetArchInfoFromCpuType(header->cputype, header->cpusubtype);
+  const NXArchInfo *archInfo =
+      NXGetArchInfoFromCpuType(header->cputype, header->cpusubtype);
 
-  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid,
-                                      nameStr, pathStr, nameStr, pathStr,
-                                      EmptyCString(),
+  info.AddSharedLibrary(SharedLibrary(start, start + size, 0, uuid, nameStr,
+                                      pathStr, nameStr, pathStr, EmptyCString(),
                                       archInfo ? archInfo->name : ""));
 }
 
 // Translate the statically stored sSharedLibrariesList information into a
 // SharedLibraryInfo object.
-SharedLibraryInfo
-SharedLibraryInfo::GetInfoForSelf()
-{
+SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   StaticMutexAutoLock lock(sSharedLibrariesMutex);
   SharedLibraryInfo sharedLibraryInfo;
 
-  for (auto& info : *sSharedLibrariesList) {
+  for (auto &info : *sSharedLibrariesList) {
     addSharedLibrary(info.header, info.path.c_str(), sharedLibraryInfo);
   }
 

@@ -16,18 +16,15 @@ namespace dom {
 
 class HTMLSelectElement;
 
-class HTMLOptionElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+class HTMLOptionElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLOptionElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  static already_AddRefed<HTMLOptionElement>
-    Option(const GlobalObject& aGlobal,
-           const nsAString& aText,
-           const Optional<nsAString>& aValue,
-           bool aDefaultSelected,
-           bool aSelected,
-           ErrorResult& aError);
+  static already_AddRefed<HTMLOptionElement> Option(
+      const GlobalObject& aGlobal, const nsAString& aText,
+      const Optional<nsAString>& aValue, bool aDefaultSelected, bool aSelected,
+      ErrorResult& aError);
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLOptionElement, option)
 
@@ -36,17 +33,10 @@ public:
 
   using mozilla::dom::Element::GetText;
 
-  bool Selected() const
-  {
-    return mIsSelected;
-  }
+  bool Selected() const { return mIsSelected; }
   void SetSelected(bool aValue);
 
-
-  void SetSelectedChanged(bool aValue)
-  {
-    mSelectedChanged = aValue;
-  }
+  void SetSelectedChanged(bool aValue) { mSelectedChanged = aValue; }
 
   virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                               int32_t aModType) const override;
@@ -87,46 +77,36 @@ public:
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
-  bool Disabled() const
-  {
-    return GetBoolAttr(nsGkAtoms::disabled);
-  }
+  bool Disabled() const { return GetBoolAttr(nsGkAtoms::disabled); }
 
-  void SetDisabled(bool aValue, ErrorResult& aRv)
-  {
+  void SetDisabled(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aValue, aRv);
   }
 
   HTMLFormElement* GetForm();
 
-  void GetLabel(DOMString& aLabel)
-  {
+  void GetLabel(DOMString& aLabel) {
     if (!GetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel)) {
       GetText(aLabel);
     }
   }
-  void SetLabel(const nsAString& aLabel, ErrorResult& aError)
-  {
+  void SetLabel(const nsAString& aLabel, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::label, aLabel, aError);
   }
 
-  bool DefaultSelected() const
-  {
+  bool DefaultSelected() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::selected);
   }
-  void SetDefaultSelected(bool aValue, ErrorResult& aRv)
-  {
+  void SetDefaultSelected(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::selected, aValue, aRv);
   }
 
-  void GetValue(nsAString& aValue)
-  {
+  void GetValue(nsAString& aValue) {
     if (!GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue)) {
       GetText(aValue);
     }
   }
-  void SetValue(const nsAString& aValue, ErrorResult& aRv)
-  {
+  void SetValue(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
   }
 
@@ -135,10 +115,11 @@ public:
 
   int32_t Index();
 
-protected:
+ protected:
   virtual ~HTMLOptionElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   /**
    * Get the select content element that contains this option, this
@@ -155,7 +136,7 @@ protected:
   bool mIsInSetDefaultSelected;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLOptionElement_h__
+#endif  // mozilla_dom_HTMLOptionElement_h__

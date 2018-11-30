@@ -15,26 +15,21 @@
 namespace mozilla {
 namespace dom {
 
-class PromiseNativeThenHandlerBase : public PromiseNativeHandler
-{
+class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(PromiseNativeThenHandlerBase)
 
-  PromiseNativeThenHandlerBase(Promise& aPromise)
-    : mPromise(&aPromise)
-  {}
+  PromiseNativeThenHandlerBase(Promise& aPromise) : mPromise(&aPromise) {}
 
-  void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-  void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-protected:
+ protected:
   virtual ~PromiseNativeThenHandlerBase() = default;
 
-  virtual already_AddRefed<Promise>
-  CallResolveCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;
+  virtual already_AddRefed<Promise> CallResolveCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;
 
   virtual void Traverse(nsCycleCollectionTraversalCallback&) = 0;
   virtual void Unlink() = 0;
@@ -48,35 +43,28 @@ template <typename T,
           bool = IsRefcounted<typename RemovePointer<T>::Type>::value,
           bool = (IsConvertible<T, nsISupports*>::value ||
                   IsConvertible<T*, nsISupports*>::value)>
-struct StorageTypeHelper
-{
+struct StorageTypeHelper {
   using Type = T;
 };
 
 template <typename T>
-struct StorageTypeHelper<T, true, true>
-{
+struct StorageTypeHelper<T, true, true> {
   using Type = nsCOMPtr<T>;
 };
 
 template <typename T>
-struct StorageTypeHelper<nsCOMPtr<T>, true, true>
-{
+struct StorageTypeHelper<nsCOMPtr<T>, true, true> {
   using Type = nsCOMPtr<T>;
 };
 
 template <typename T>
-struct StorageTypeHelper<T*, true, false>
-{
+struct StorageTypeHelper<T*, true, false> {
   using Type = RefPtr<T>;
 };
 
 template <template <typename> class SmartPtr, typename T>
 struct StorageTypeHelper<SmartPtr<T>, true, false>
-  : EnableIf<IsConvertible<SmartPtr<T>, T*>::value,
-             RefPtr<T>>
-{
-};
+    : EnableIf<IsConvertible<SmartPtr<T>, T*>::value, RefPtr<T>> {};
 
 template <typename T>
 using StorageType = typename StorageTypeHelper<typename Decay<T>::Type>::Type;
@@ -90,63 +78,54 @@ using StorageType = typename StorageTypeHelper<typename Decay<T>::Type>::Type;
 // spec-compliant behavior there should still give us the expected results, MSVC
 // considers it an illegal use of std::forward.
 template <template <typename> class SmartPtr, typename T>
-decltype(DeclVal<SmartPtr<T>>().get())
-ArgType(SmartPtr<T>& aVal)
-{
+decltype(DeclVal<SmartPtr<T>>().get()) ArgType(SmartPtr<T>& aVal) {
   return aVal.get();
 }
 
 template <typename T>
-T&&
-ArgType(T& aVal)
-{
+T&& ArgType(T& aVal) {
   return std::move(aVal);
 }
 
 using ::ImplCycleCollectionUnlink;
 
 template <typename Callback, typename... Args>
-class NativeThenHandler final : public PromiseNativeThenHandlerBase
-{
-public:
-  NativeThenHandler(Promise& aPromise, Callback&& aOnResolve,
-                    Args&&... aArgs)
-    : PromiseNativeThenHandlerBase(aPromise)
-    , mOnResolve(std::forward<Callback>(aOnResolve))
-    , mArgs(std::forward<Args>(aArgs)...)
-  {}
+class NativeThenHandler final : public PromiseNativeThenHandlerBase {
+ public:
+  NativeThenHandler(Promise& aPromise, Callback&& aOnResolve, Args&&... aArgs)
+      : PromiseNativeThenHandlerBase(aPromise),
+        mOnResolve(std::forward<Callback>(aOnResolve)),
+        mArgs(std::forward<Args>(aArgs)...) {}
 
-protected:
-  void Traverse(nsCycleCollectionTraversalCallback& cb) override
-  {
+ protected:
+  void Traverse(nsCycleCollectionTraversalCallback& cb) override {
     auto* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArgs)
   }
 
-  void Unlink() override
-  {
+  void Unlink() override {
     auto* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mArgs)
   }
 
-  already_AddRefed<Promise>
-  CallResolveCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
+  already_AddRefed<Promise> CallResolveCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     return CallCallback(aCx, mOnResolve, aValue);
   }
 
   template <size_t... Indices>
-  already_AddRefed<Promise>
-  CallCallback(JSContext* aCx, const Callback& aHandler, JS::Handle<JS::Value> aValue,
-               std::index_sequence<Indices...>)
-  {
+  already_AddRefed<Promise> CallCallback(JSContext* aCx,
+                                         const Callback& aHandler,
+                                         JS::Handle<JS::Value> aValue,
+                                         std::index_sequence<Indices...>) {
     return mOnResolve(aCx, aValue, ArgType(Get<Indices>(mArgs))...);
   }
 
-  already_AddRefed<Promise>
-  CallCallback(JSContext* aCx, const Callback& aHandler, JS::Handle<JS::Value> aValue)
-  {
-    return CallCallback(aCx, aHandler, aValue, std::index_sequence_for<Args...>{});
+  already_AddRefed<Promise> CallCallback(JSContext* aCx,
+                                         const Callback& aHandler,
+                                         JS::Handle<JS::Value> aValue) {
+    return CallCallback(aCx, aHandler, aValue,
+                        std::index_sequence_for<Args...>{});
   }
 
   Callback mOnResolve;
@@ -154,12 +133,11 @@ protected:
   Tuple<StorageType<Args>...> mArgs;
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 template <typename Callback, typename... Args>
-Promise::ThenResult<Callback, Args...>
-Promise::ThenWithCycleCollectedArgs(Callback&& aOnResolve, Args&&... aArgs)
-{
+Promise::ThenResult<Callback, Args...> Promise::ThenWithCycleCollectedArgs(
+    Callback&& aOnResolve, Args&&... aArgs) {
   using HandlerType = NativeThenHandler<Callback, Args...>;
 
   ErrorResult rv;
@@ -168,9 +146,9 @@ Promise::ThenWithCycleCollectedArgs(Callback&& aOnResolve, Args&&... aArgs)
     return Err(rv.StealNSResult());
   }
 
-  auto* handler = new (fallible) HandlerType(
-    *promise, std::forward<Callback>(aOnResolve),
-    std::forward<Args>(aArgs)...);
+  auto* handler =
+      new (fallible) HandlerType(*promise, std::forward<Callback>(aOnResolve),
+                                 std::forward<Args>(aArgs)...);
 
   if (!handler) {
     return Err(NS_ERROR_OUT_OF_MEMORY);
@@ -180,7 +158,7 @@ Promise::ThenWithCycleCollectedArgs(Callback&& aOnResolve, Args&&... aArgs)
   return std::move(promise);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Promise_inl_h
+#endif  // mozilla_dom_Promise_inl_h

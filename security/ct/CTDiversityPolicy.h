@@ -12,7 +12,8 @@
 #include "certt.h"
 #include "mozpkix/Result.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // Retuns the list of unique CT log operator IDs appearing in the provided
 // list of verified SCTs.
@@ -22,9 +23,8 @@ void GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
 // Helper class used by CTPolicyEnforcer to check the CT log operators
 // diversity requirements of the CT Policy.
 // See CTPolicyEnforcer.h for more details.
-class CTDiversityPolicy
-{
-public:
+class CTDiversityPolicy {
+ public:
   // Given a certificate chain and a set of CT log operators,
   // returns the subset of log operators that are dependent on the CA
   // issuing the certificate (as defined by the CT Policy).
@@ -35,6 +35,7 @@ public:
                                      CTLogOperatorList& dependentOperators);
 };
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
-#endif // CTDiversityPolicy_h
+#endif  // CTDiversityPolicy_h

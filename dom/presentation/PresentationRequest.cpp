@@ -40,12 +40,9 @@ NS_IMPL_RELEASE_INHERITED(PresentationRequest, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PresentationRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-static nsresult
-GetAbsoluteURL(const nsAString& aUrl,
-               nsIURI* aBaseUri,
-               nsIDocument* aDocument,
-               nsAString& aAbsoluteUrl)
-{
+static nsresult GetAbsoluteURL(const nsAString& aUrl, nsIURI* aBaseUri,
+                               nsIDocument* aDocument,
+                               nsAString& aAbsoluteUrl) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
   if (aDocument) {
@@ -69,9 +66,7 @@ GetAbsoluteURL(const nsAString& aUrl,
 
 /* static */ already_AddRefed<PresentationRequest>
 PresentationRequest::Constructor(const GlobalObject& aGlobal,
-                                 const nsAString& aUrl,
-                                 ErrorResult& aRv)
-{
+                                 const nsAString& aUrl, ErrorResult& aRv) {
   Sequence<nsString> urls;
   urls.AppendElement(aUrl, fallible);
   return Constructor(aGlobal, urls, aRv);
@@ -80,9 +75,9 @@ PresentationRequest::Constructor(const GlobalObject& aGlobal,
 /* static */ already_AddRefed<PresentationRequest>
 PresentationRequest::Constructor(const GlobalObject& aGlobal,
                                  const Sequence<nsString>& aUrls,
-                                 ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+                                 ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -99,7 +94,7 @@ PresentationRequest::Constructor(const GlobalObject& aGlobal,
   for (const auto& url : aUrls) {
     nsAutoString absoluteUrl;
     nsresult rv =
-      GetAbsoluteURL(url, baseUri, window->GetExtantDoc(), absoluteUrl);
+        GetAbsoluteURL(url, baseUri, window->GetExtantDoc(), absoluteUrl);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return nullptr;
@@ -109,44 +104,29 @@ PresentationRequest::Constructor(const GlobalObject& aGlobal,
   }
 
   RefPtr<PresentationRequest> request =
-    new PresentationRequest(window, std::move(urls));
+      new PresentationRequest(window, std::move(urls));
   return NS_WARN_IF(!request->Init()) ? nullptr : request.forget();
 }
 
 PresentationRequest::PresentationRequest(nsPIDOMWindowInner* aWindow,
                                          nsTArray<nsString>&& aUrls)
-  : DOMEventTargetHelper(aWindow)
-  , mUrls(std::move(aUrls))
-{
-}
+    : DOMEventTargetHelper(aWindow), mUrls(std::move(aUrls)) {}
 
-PresentationRequest::~PresentationRequest()
-{
-}
+PresentationRequest::~PresentationRequest() {}
 
-bool
-PresentationRequest::Init()
-{
-  return true;
-}
+bool PresentationRequest::Init() { return true; }
 
-/* virtual */ JSObject*
-PresentationRequest::WrapObject(JSContext* aCx,
-                                JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* PresentationRequest::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return PresentationRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise>
-PresentationRequest::Start(ErrorResult& aRv)
-{
+already_AddRefed<Promise> PresentationRequest::Start(ErrorResult& aRv) {
   return StartWithDevice(VoidString(), aRv);
 }
 
-already_AddRefed<Promise>
-PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
-                                     ErrorResult& aRv)
-{
+already_AddRefed<Promise> PresentationRequest::StartWithDevice(
+    const nsAString& aDeviceId, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -177,8 +157,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     return promise.forget();
   }
 
-  if (IsProhibitMixedSecurityContexts(doc) &&
-      !IsAllURLAuthenticated()) {
+  if (IsProhibitMixedSecurityContexts(doc) && !IsAllURLAuthenticated()) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -188,7 +167,8 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     return promise.forget();
   }
 
-  RefPtr<Navigator> navigator = nsGlobalWindowInner::Cast(GetOwner())->Navigator();
+  RefPtr<Navigator> navigator =
+      nsGlobalWindowInner::Cast(GetOwner())->Navigator();
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -205,8 +185,8 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
 
   // Generate a session ID.
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1");
-  if(NS_WARN_IF(!uuidgen)) {
+      do_GetService("@mozilla.org/uuid-generator;1");
+  if (NS_WARN_IF(!uuidgen)) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
     return promise.forget();
   }
@@ -219,8 +199,8 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
   CopyASCIItoUTF16(MakeSpan(buffer, NSID_LENGTH - 1), id);
 
   nsCOMPtr<nsIPresentationService> service =
-    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  if(NS_WARN_IF(!service)) {
+      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
     return promise.forget();
   }
@@ -234,18 +214,12 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
   nsCOMPtr<EventTarget> handler = GetOwner()->GetChromeEventHandler();
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
   nsCOMPtr<nsIPresentationServiceCallback> callback =
-    new PresentationRequesterCallback(this, id, promise);
+      new PresentationRequesterCallback(this, id, promise);
   nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor =
-    PresentationTransportBuilderConstructor::Create();
-  rv = service->StartSession(mUrls,
-                             id,
-                             origin,
-                             aDeviceId,
-                             GetOwner()->WindowID(),
-                             handler,
-                             principal,
-                             callback,
-                             constructor);
+      PresentationTransportBuilderConstructor::Create();
+  rv = service->StartSession(mUrls, id, origin, aDeviceId,
+                             GetOwner()->WindowID(), handler, principal,
+                             callback, constructor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
     NotifyPromiseSettled();
@@ -254,10 +228,8 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
   return promise.forget();
 }
 
-already_AddRefed<Promise>
-PresentationRequest::Reconnect(const nsAString& aPresentationId,
-                               ErrorResult& aRv)
-{
+already_AddRefed<Promise> PresentationRequest::Reconnect(
+    const nsAString& aPresentationId, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -280,8 +252,7 @@ PresentationRequest::Reconnect(const nsAString& aPresentationId,
     return promise.forget();
   }
 
-  if (IsProhibitMixedSecurityContexts(doc) &&
-      !IsAllURLAuthenticated()) {
+  if (IsProhibitMixedSecurityContexts(doc) && !IsAllURLAuthenticated()) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -293,11 +264,9 @@ PresentationRequest::Reconnect(const nsAString& aPresentationId,
 
   nsString presentationId = nsString(aPresentationId);
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod<nsString, RefPtr<Promise>>(
-    "dom::PresentationRequest::FindOrCreatePresentationConnection",
-    this,
-    &PresentationRequest::FindOrCreatePresentationConnection,
-    presentationId,
-    promise);
+      "dom::PresentationRequest::FindOrCreatePresentationConnection", this,
+      &PresentationRequest::FindOrCreatePresentationConnection, presentationId,
+      promise);
 
   if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(r)))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
@@ -306,11 +275,8 @@ PresentationRequest::Reconnect(const nsAString& aPresentationId,
   return promise.forget();
 }
 
-void
-PresentationRequest::FindOrCreatePresentationConnection(
-  const nsAString& aPresentationId,
-  Promise* aPromise)
-{
+void PresentationRequest::FindOrCreatePresentationConnection(
+    const nsAString& aPresentationId, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
 
   if (NS_WARN_IF(!GetOwner())) {
@@ -319,10 +285,9 @@ PresentationRequest::FindOrCreatePresentationConnection(
   }
 
   RefPtr<PresentationConnection> connection =
-    ControllerConnectionCollection::GetSingleton()->FindConnection(
-      GetOwner()->WindowID(),
-      aPresentationId,
-      nsIPresentationService::ROLE_CONTROLLER);
+      ControllerConnectionCollection::GetSingleton()->FindConnection(
+          GetOwner()->WindowID(), aPresentationId,
+          nsIPresentationService::ROLE_CONTROLLER);
 
   if (connection) {
     nsAutoString url;
@@ -350,31 +315,26 @@ PresentationRequest::FindOrCreatePresentationConnection(
   }
 
   nsCOMPtr<nsIPresentationService> service =
-    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  if(NS_WARN_IF(!service)) {
+      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
     aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
     return;
   }
 
   nsCOMPtr<nsIPresentationServiceCallback> callback =
-    new PresentationReconnectCallback(this,
-                                      aPresentationId,
-                                      aPromise,
-                                      connection);
+      new PresentationReconnectCallback(this, aPresentationId, aPromise,
+                                        connection);
 
-  nsresult rv =
-    service->ReconnectSession(mUrls,
-                              aPresentationId,
-                              nsIPresentationService::ROLE_CONTROLLER,
-                              callback);
+  nsresult rv = service->ReconnectSession(
+      mUrls, aPresentationId, nsIPresentationService::ROLE_CONTROLLER,
+      callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
 }
 
-already_AddRefed<Promise>
-PresentationRequest::GetAvailability(ErrorResult& aRv)
-{
+already_AddRefed<Promise> PresentationRequest::GetAvailability(
+    ErrorResult& aRv) {
   PRES_DEBUG("%s\n", __func__);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
@@ -398,8 +358,7 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return promise.forget();
   }
 
-  if (IsProhibitMixedSecurityContexts(doc) &&
-      !IsAllURLAuthenticated()) {
+  if (IsProhibitMixedSecurityContexts(doc) && !IsAllURLAuthenticated()) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -414,9 +373,8 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
   return promise.forget();
 }
 
-void
-PresentationRequest::FindOrCreatePresentationAvailability(RefPtr<Promise>& aPromise)
-{
+void PresentationRequest::FindOrCreatePresentationAvailability(
+    RefPtr<Promise>& aPromise) {
   MOZ_ASSERT(aPromise);
 
   if (NS_WARN_IF(!GetOwner())) {
@@ -431,10 +389,11 @@ PresentationRequest::FindOrCreatePresentationAvailability(RefPtr<Promise>& aProm
   }
 
   RefPtr<PresentationAvailability> availability =
-    collection->Find(GetOwner()->WindowID(), mUrls);
+      collection->Find(GetOwner()->WindowID(), mUrls);
 
   if (!availability) {
-    availability = PresentationAvailability::Create(GetOwner(), mUrls, aPromise);
+    availability =
+        PresentationAvailability::Create(GetOwner(), mUrls, aPromise);
   } else {
     PRES_DEBUG(">resolve with same object\n");
 
@@ -454,9 +413,8 @@ PresentationRequest::FindOrCreatePresentationAvailability(RefPtr<Promise>& aProm
   }
 }
 
-nsresult
-PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aConnection)
-{
+nsresult PresentationRequest::DispatchConnectionAvailableEvent(
+    PresentationConnection* aConnection) {
   if (nsContentUtils::ShouldResistFingerprinting()) {
     return NS_OK;
   }
@@ -465,29 +423,27 @@ PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aC
   init.mConnection = aConnection;
 
   RefPtr<PresentationConnectionAvailableEvent> event =
-    PresentationConnectionAvailableEvent::Constructor(this,
-                                                      NS_LITERAL_STRING("connectionavailable"),
-                                                      init);
+      PresentationConnectionAvailableEvent::Constructor(
+          this, NS_LITERAL_STRING("connectionavailable"), init);
   if (NS_WARN_IF(!event)) {
     return NS_ERROR_FAILURE;
   }
   event->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, event);
+      new AsyncEventDispatcher(this, event);
   return asyncDispatcher->PostDOMEvent();
 }
 
-void
-PresentationRequest::NotifyPromiseSettled()
-{
+void PresentationRequest::NotifyPromiseSettled() {
   PRES_DEBUG("%s\n", __func__);
 
   if (!GetOwner()) {
     return;
   }
 
-  RefPtr<Navigator> navigator = nsGlobalWindowInner::Cast(GetOwner())->Navigator();
+  RefPtr<Navigator> navigator =
+      nsGlobalWindowInner::Cast(GetOwner())->Navigator();
   if (!navigator) {
     return;
   }
@@ -500,9 +456,8 @@ PresentationRequest::NotifyPromiseSettled()
   }
 }
 
-bool
-PresentationRequest::IsProhibitMixedSecurityContexts(nsIDocument* aDocument)
-{
+bool PresentationRequest::IsProhibitMixedSecurityContexts(
+    nsIDocument* aDocument) {
   MOZ_ASSERT(aDocument);
 
   if (nsContentUtils::IsChromeDoc(aDocument)) {
@@ -521,9 +476,7 @@ PresentationRequest::IsProhibitMixedSecurityContexts(nsIDocument* aDocument)
   return false;
 }
 
-bool
-PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl)
-{
+bool PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl) {
   nsCOMPtr<nsIURI> uri;
   if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aUrl))) {
     return false;
@@ -552,13 +505,13 @@ PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl)
 
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+      BasePrincipal::CreateCodebasePrincipal(uri, attrs);
   if (NS_WARN_IF(!principal)) {
     return false;
   }
 
   nsCOMPtr<nsIContentSecurityManager> csm =
-    do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
+      do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
   if (NS_WARN_IF(!csm)) {
     return false;
   }
@@ -568,9 +521,7 @@ PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl)
   return isTrustworthyOrigin;
 }
 
-bool
-PresentationRequest::IsAllURLAuthenticated()
-{
+bool PresentationRequest::IsAllURLAuthenticated() {
   for (const auto& url : mUrls) {
     if (!IsPrioriAuthenticatedURL(url)) {
       return false;

@@ -14,9 +14,8 @@
 namespace mozilla {
 namespace image {
 
-class SurfaceCacheUtils
-{
-public:
+class SurfaceCacheUtils {
+ public:
   /**
    * Evicts all evictable entries from the surface cache.
    *
@@ -24,11 +23,11 @@ public:
    */
   static void DiscardAll();
 
-private:
+ private:
   virtual ~SurfaceCacheUtils() = 0;  // Forbid instantiation.
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_SurfaceCacheUtils_h
+#endif  // mozilla_image_SurfaceCacheUtils_h

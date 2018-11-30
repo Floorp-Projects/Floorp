@@ -12,44 +12,42 @@
 namespace js {
 namespace gc {
 
-struct ClearEdgesTracer : public JS::CallbackTracer
-{
-    ClearEdgesTracer();
+struct ClearEdgesTracer : public JS::CallbackTracer {
+  ClearEdgesTracer();
 
 #ifdef DEBUG
-    TracerKind getTracerKind() const override { return TracerKind::ClearEdges; }
+  TracerKind getTracerKind() const override { return TracerKind::ClearEdges; }
 #endif
 
-    template <typename T>
-    inline void clearEdge(T** thingp);
+  template <typename T>
+  inline void clearEdge(T** thingp);
 
-    void onObjectEdge(JSObject** objp) override;
-    void onStringEdge(JSString** strp) override;
-    void onSymbolEdge(JS::Symbol** symp) override;
+  void onObjectEdge(JSObject** objp) override;
+  void onStringEdge(JSString** strp) override;
+  void onSymbolEdge(JS::Symbol** symp) override;
 #ifdef ENABLE_BIGINT
-    void onBigIntEdge(JS::BigInt** bip) override;
+  void onBigIntEdge(JS::BigInt** bip) override;
 #endif
-    void onScriptEdge(JSScript** scriptp) override;
-    void onShapeEdge(js::Shape** shapep) override;
-    void onObjectGroupEdge(js::ObjectGroup** groupp) override;
-    void onBaseShapeEdge(js::BaseShape** basep) override;
-    void onJitCodeEdge(js::jit::JitCode** codep) override;
-    void onLazyScriptEdge(js::LazyScript** lazyp) override;
-    void onScopeEdge(js::Scope** scopep) override;
-    void onRegExpSharedEdge(js::RegExpShared** sharedp) override;
-    void onChild(const JS::GCCellPtr& thing) override;
+  void onScriptEdge(JSScript** scriptp) override;
+  void onShapeEdge(js::Shape** shapep) override;
+  void onObjectGroupEdge(js::ObjectGroup** groupp) override;
+  void onBaseShapeEdge(js::BaseShape** basep) override;
+  void onJitCodeEdge(js::jit::JitCode** codep) override;
+  void onLazyScriptEdge(js::LazyScript** lazyp) override;
+  void onScopeEdge(js::Scope** scopep) override;
+  void onRegExpSharedEdge(js::RegExpShared** sharedp) override;
+  void onChild(const JS::GCCellPtr& thing) override;
 };
 
 #ifdef DEBUG
-inline bool
-IsClearEdgesTracer(JSTracer *trc)
-{
-    return trc->isCallbackTracer() &&
-           trc->asCallbackTracer()->getTracerKind() == JS::CallbackTracer::TracerKind::ClearEdges;
+inline bool IsClearEdgesTracer(JSTracer* trc) {
+  return trc->isCallbackTracer() &&
+         trc->asCallbackTracer()->getTracerKind() ==
+             JS::CallbackTracer::TracerKind::ClearEdges;
 }
 #endif
 
-} // namespace gc
+}  // namespace gc
 
 /*
  * Provides a delete policy that can be used for objects which have their
@@ -65,18 +63,17 @@ IsClearEdgesTracer(JSTracer *trc)
  * into the object and make it safe to delete.
  */
 template <typename T>
-struct GCManagedDeletePolicy
-{
-    void operator()(const T* constPtr) {
-        if (constPtr) {
-            auto ptr = const_cast<T*>(constPtr);
-            gc::ClearEdgesTracer trc;
-            ptr->trace(&trc);
-            js_delete(ptr);
-        }
+struct GCManagedDeletePolicy {
+  void operator()(const T* constPtr) {
+    if (constPtr) {
+      auto ptr = const_cast<T*>(constPtr);
+      gc::ClearEdgesTracer trc;
+      ptr->trace(&trc);
+      js_delete(ptr);
     }
+  }
 };
 
-} // namespace js
+}  // namespace js
 
-#endif // gc_DeletePolicy_h
+#endif  // gc_DeletePolicy_h

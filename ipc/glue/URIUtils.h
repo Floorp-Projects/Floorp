@@ -15,33 +15,24 @@
 namespace mozilla {
 namespace ipc {
 
-void
-SerializeURI(nsIURI* aURI,
-             URIParams& aParams);
+void SerializeURI(nsIURI* aURI, URIParams& aParams);
 
-void
-SerializeURI(nsIURI* aURI,
-             OptionalURIParams& aParams);
+void SerializeURI(nsIURI* aURI, OptionalURIParams& aParams);
 
-already_AddRefed<nsIURI>
-DeserializeURI(const URIParams& aParams);
+already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams);
 
-already_AddRefed<nsIURI>
-DeserializeURI(const OptionalURIParams& aParams);
+already_AddRefed<nsIURI> DeserializeURI(const OptionalURIParams& aParams);
 
-template<>
-struct IPDLParamTraits<nsIURI>
-{
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, nsIURI* aParam)
-  {
+template <>
+struct IPDLParamTraits<nsIURI> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, nsIURI* aParam) {
     OptionalURIParams params;
     SerializeURI(aParam, params);
     WriteIPDLParam(aMsg, aActor, params);
   }
 
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, RefPtr<nsIURI>* aResult)
-  {
+                   IProtocol* aActor, RefPtr<nsIURI>* aResult) {
     OptionalURIParams params;
     if (!ReadIPDLParam(aMsg, aIter, aActor, &params)) {
       return false;
@@ -51,7 +42,7 @@ struct IPDLParamTraits<nsIURI>
   }
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_URIUtils_h
+#endif  // mozilla_ipc_URIUtils_h

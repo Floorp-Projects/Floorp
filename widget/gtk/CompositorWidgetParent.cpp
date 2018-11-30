@@ -10,20 +10,17 @@
 namespace mozilla {
 namespace widget {
 
-CompositorWidgetParent::CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
-                                               const layers::CompositorOptions& aOptions)
- : GtkCompositorWidget(aInitData.get_GtkCompositorWidgetInitData(), aOptions)
-{
+CompositorWidgetParent::CompositorWidgetParent(
+    const CompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions)
+    : GtkCompositorWidget(aInitData.get_GtkCompositorWidgetInitData(),
+                          aOptions) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
 }
 
-CompositorWidgetParent::~CompositorWidgetParent()
-{
-}
+CompositorWidgetParent::~CompositorWidgetParent() {}
 
-void
-CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver)
-{
+void CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver) {
   if (aObserver) {
     Unused << SendObserveVsync();
   } else {
@@ -32,19 +29,16 @@ CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver)
   mVsyncObserver = aObserver;
 }
 
-RefPtr<VsyncObserver>
-CompositorWidgetParent::GetVsyncObserver() const
-{
+RefPtr<VsyncObserver> CompositorWidgetParent::GetVsyncObserver() const {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
   return mVsyncObserver;
 }
 
-mozilla::ipc::IPCResult
-CompositorWidgetParent::RecvNotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize)
-{
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvNotifyClientSizeChanged(
+    const LayoutDeviceIntSize& aClientSize) {
   NotifyClientSizeChanged(aClientSize);
   return IPC_OK();
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

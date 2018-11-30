@@ -61,13 +61,12 @@ namespace mozilla {
  * l2 and l3 were used inconsistently (and potentially in ways that
  * would deadlock).
  */
-template<typename T>
-class DeadlockDetector
-{
-public:
+template <typename T>
+class DeadlockDetector {
+ public:
   typedef nsTArray<const T*> ResourceAcquisitionArray;
 
-private:
+ private:
   struct OrderingEntry;
   typedef nsTArray<OrderingEntry*> HashEntryArray;
   typedef typename HashEntryArray::index_type index_type;
@@ -81,41 +80,34 @@ private:
    * which the other resource was acquired; this improves the
    * quality of error messages when potential deadlock is detected.
    */
-  struct OrderingEntry
-  {
+  struct OrderingEntry {
     explicit OrderingEntry(const T* aResource)
-      : mOrderedLT()        // FIXME bug 456272: set to empirical dep size?
-      , mExternalRefs()
-      , mResource(aResource)
-    {
-    }
-    ~OrderingEntry()
-    {
-    }
+        : mOrderedLT()  // FIXME bug 456272: set to empirical dep size?
+          ,
+          mExternalRefs(),
+          mResource(aResource) {}
+    ~OrderingEntry() {}
 
-    size_t
-    SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-    {
+    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
       size_t n = aMallocSizeOf(this);
       n += mOrderedLT.ShallowSizeOfExcludingThis(aMallocSizeOf);
       n += mExternalRefs.ShallowSizeOfExcludingThis(aMallocSizeOf);
       return n;
     }
 
-    HashEntryArray mOrderedLT; // this <_o Other
-    HashEntryArray mExternalRefs; // hash entries that reference this
+    HashEntryArray mOrderedLT;     // this <_o Other
+    HashEntryArray mExternalRefs;  // hash entries that reference this
     const T* mResource;
   };
 
   // Throwaway RAII lock to make the following code safer.
-  struct PRAutoLock
-  {
+  struct PRAutoLock {
     explicit PRAutoLock(PRLock* aLock) : mLock(aLock) { PR_Lock(mLock); }
     ~PRAutoLock() { PR_Unlock(mLock); }
     PRLock* mLock;
   };
 
-public:
+ public:
   static const uint32_t kDefaultNumBuckets;
 
   /**
@@ -126,8 +118,7 @@ public:
    *        that will be checked.
    */
   explicit DeadlockDetector(uint32_t aNumResourcesGuess = kDefaultNumBuckets)
-    : mOrdering(aNumResourcesGuess)
-  {
+      : mOrdering(aNumResourcesGuess) {
     recordreplay::AutoPassThroughThreadEvents pt;
     mLock = PR_NewLock();
     if (!mLock) {
@@ -140,14 +131,9 @@ public:
    *
    * *NOT* thread safe.
    */
-  ~DeadlockDetector()
-  {
-    PR_DestroyLock(mLock);
-  }
+  ~DeadlockDetector() { PR_DestroyLock(mLock); }
 
-  size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t n = aMallocSizeOf(this);
 
     {
@@ -172,14 +158,12 @@ public:
    *
    * @param aResource Resource to make deadlock detector aware of.
    */
-  void Add(const T* aResource)
-  {
+  void Add(const T* aResource) {
     PRAutoLock _(mLock);
     mOrdering.Put(aResource, new OrderingEntry(aResource));
   }
 
-  void Remove(const T* aResource)
-  {
+  void Remove(const T* aResource) {
     PRAutoLock _(mLock);
 
     OrderingEntry* entry = mOrdering.Get(aResource);
@@ -222,8 +206,7 @@ public:
    * @param aProposed Resource calling thread proposes to acquire.
    */
   ResourceAcquisitionArray* CheckAcquisition(const T* aLast,
-                                             const T* aProposed)
-  {
+                                             const T* aProposed) {
     if (!aLast) {
       // don't check if |0 < aProposed|; just vamoose
       return 0;
@@ -281,8 +264,7 @@ public:
    * @precondition |aStart != aTarget|
    */
   bool InTransitiveClosure(const OrderingEntry* aStart,
-                           const OrderingEntry* aTarget) const
-  {
+                           const OrderingEntry* aTarget) const {
     // NB: Using a static comparator rather than default constructing one shows
     //     a 9% improvement in scalability tests on some systems.
     static nsDefaultComparator<const OrderingEntry*, const OrderingEntry*> comp;
@@ -317,8 +299,7 @@ public:
    * @precondition |aStart != aTarget|
    */
   ResourceAcquisitionArray* GetDeductionChain(const OrderingEntry* aStart,
-                                              const OrderingEntry* aTarget)
-  {
+                                              const OrderingEntry* aTarget) {
     ResourceAcquisitionArray* chain = new ResourceAcquisitionArray();
     if (!chain) {
       MOZ_CRASH("can't allocate dep. cycle array");
@@ -334,8 +315,7 @@ public:
   // invariant: |aStart| is the last element in |aChain|
   bool GetDeductionChain_Helper(const OrderingEntry* aStart,
                                 const OrderingEntry* aTarget,
-                                ResourceAcquisitionArray* aChain)
-  {
+                                ResourceAcquisitionArray* aChain) {
     if (aStart->mOrderedLT.BinaryIndexOf(aTarget) != NoIndex) {
       aChain->AppendElement(aTarget->mResource);
       return true;
@@ -359,7 +339,6 @@ public:
    */
   nsClassHashtable<nsPtrHashKey<const T>, OrderingEntry> mOrdering;
 
-
   /**
    * Protects contentious methods.
    * Nb: can't use mozilla::Mutex since we are used as its deadlock
@@ -367,17 +346,15 @@ public:
    */
   PRLock* mLock;
 
-private:
+ private:
   DeadlockDetector(const DeadlockDetector& aDD) = delete;
   DeadlockDetector& operator=(const DeadlockDetector& aDD) = delete;
 };
 
-
-template<typename T>
+template <typename T>
 // FIXME bug 456272: tune based on average workload
 const uint32_t DeadlockDetector<T>::kDefaultNumBuckets = 32;
 
+}  // namespace mozilla
 
-} // namespace mozilla
-
-#endif // ifndef mozilla_DeadlockDetector_h
+#endif  // ifndef mozilla_DeadlockDetector_h

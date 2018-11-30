@@ -19,20 +19,18 @@
  * @param Interface the interface-type being wrapped
  * @see nsDataHashtable, nsClassHashtable
  */
-template<class KeyClass, class Interface>
+template <class KeyClass, class Interface>
 class nsInterfaceHashtable
-  : public nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>
-{
-public:
+    : public nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*> {
+ public:
   typedef typename KeyClass::KeyType KeyType;
   typedef Interface* UserDataType;
   typedef nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*> base_type;
 
   nsInterfaceHashtable() {}
   explicit nsInterfaceHashtable(uint32_t aInitLength)
-    : nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>(aInitLength)
-  {
-  }
+      : nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>(
+            aInitLength) {}
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -58,8 +56,7 @@ public:
    * Allows inserting a value into the hashtable, moving its owning reference
    * count into the hashtable, avoiding an AddRef.
    */
-  void Put(KeyType aKey, already_AddRefed<Interface>&& aData)
-  {
+  void Put(KeyType aKey, already_AddRefed<Interface>&& aData) {
     if (!Put(aKey, std::move(aData), mozilla::fallible)) {
       NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
     }
@@ -81,20 +78,16 @@ public:
   inline bool Remove(KeyType aKey, Interface** aData = nullptr);
 };
 
-template<typename K, typename T>
-inline void
-ImplCycleCollectionUnlink(nsInterfaceHashtable<K, T>& aField)
-{
+template <typename K, typename T>
+inline void ImplCycleCollectionUnlink(nsInterfaceHashtable<K, T>& aField) {
   aField.Clear();
 }
 
-template<typename K, typename T>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            const nsInterfaceHashtable<K, T>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
+template <typename K, typename T>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    const nsInterfaceHashtable<K, T>& aField, const char* aName,
+    uint32_t aFlags = 0) {
   for (auto iter = aField.ConstIter(); !iter.Done(); iter.Next()) {
     CycleCollectionNoteChild(aCallback, iter.UserData(), aName, aFlags);
   }
@@ -104,11 +97,9 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 // nsInterfaceHashtable definitions
 //
 
-template<class KeyClass, class Interface>
-bool
-nsInterfaceHashtable<KeyClass, Interface>::Get(KeyType aKey,
-                                               UserDataType* aInterface) const
-{
+template <class KeyClass, class Interface>
+bool nsInterfaceHashtable<KeyClass, Interface>::Get(
+    KeyType aKey, UserDataType* aInterface) const {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
   if (ent) {
@@ -130,10 +121,9 @@ nsInterfaceHashtable<KeyClass, Interface>::Get(KeyType aKey,
   return false;
 }
 
-template<class KeyClass, class Interface>
-already_AddRefed<Interface>
-nsInterfaceHashtable<KeyClass, Interface>::Get(KeyType aKey) const
-{
+template <class KeyClass, class Interface>
+already_AddRefed<Interface> nsInterfaceHashtable<KeyClass, Interface>::Get(
+    KeyType aKey) const {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
   if (!ent) {
     return nullptr;
@@ -143,11 +133,9 @@ nsInterfaceHashtable<KeyClass, Interface>::Get(KeyType aKey) const
   return copy.forget();
 }
 
-template<class KeyClass, class Interface>
-Interface*
-nsInterfaceHashtable<KeyClass, Interface>::GetWeak(KeyType aKey,
-                                                   bool* aFound) const
-{
+template <class KeyClass, class Interface>
+Interface* nsInterfaceHashtable<KeyClass, Interface>::GetWeak(
+    KeyType aKey, bool* aFound) const {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
   if (ent) {
@@ -165,12 +153,10 @@ nsInterfaceHashtable<KeyClass, Interface>::GetWeak(KeyType aKey,
   return nullptr;
 }
 
-template<class KeyClass, class Interface>
-bool
-nsInterfaceHashtable<KeyClass, Interface>::Put(KeyType aKey,
-                                               already_AddRefed<Interface>&& aValue,
-                                               const mozilla::fallible_t&)
-{
+template <class KeyClass, class Interface>
+bool nsInterfaceHashtable<KeyClass, Interface>::Put(
+    KeyType aKey, already_AddRefed<Interface>&& aValue,
+    const mozilla::fallible_t&) {
   typename base_type::EntryType* ent = this->PutEntry(aKey);
   if (!ent) {
     return false;
@@ -180,11 +166,9 @@ nsInterfaceHashtable<KeyClass, Interface>::Put(KeyType aKey,
   return true;
 }
 
-template<class KeyClass, class Interface>
-bool
-nsInterfaceHashtable<KeyClass, Interface>::Remove(KeyType aKey,
-                                                  Interface** aData)
-{
+template <class KeyClass, class Interface>
+bool nsInterfaceHashtable<KeyClass, Interface>::Remove(KeyType aKey,
+                                                       Interface** aData) {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
   if (ent) {
@@ -201,4 +185,4 @@ nsInterfaceHashtable<KeyClass, Interface>::Remove(KeyType aKey,
   return false;
 }
 
-#endif // nsInterfaceHashtable_h__
+#endif  // nsInterfaceHashtable_h__

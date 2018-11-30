@@ -20,132 +20,100 @@ namespace dom {
 class DOMIntersectionObserver;
 
 class DOMIntersectionObserverEntry final : public nsISupports,
-                                           public nsWrapperCache
-{
+                                           public nsWrapperCache {
   ~DOMIntersectionObserverEntry() {}
 
-public:
-  DOMIntersectionObserverEntry(nsISupports* aOwner,
-                               DOMHighResTimeStamp aTime,
+ public:
+  DOMIntersectionObserverEntry(nsISupports* aOwner, DOMHighResTimeStamp aTime,
                                RefPtr<DOMRect> aRootBounds,
                                RefPtr<DOMRect> aBoundingClientRect,
                                RefPtr<DOMRect> aIntersectionRect,
-                               bool aIsIntersecting,
-                               Element* aTarget,
+                               bool aIsIntersecting, Element* aTarget,
                                double aIntersectionRatio)
-  : mOwner(aOwner),
-    mTime(aTime),
-    mRootBounds(aRootBounds),
-    mBoundingClientRect(aBoundingClientRect),
-    mIntersectionRect(aIntersectionRect),
-    mIsIntersecting(aIsIntersecting),
-    mTarget(aTarget),
-    mIntersectionRatio(aIntersectionRatio)
-  {
-  }
+      : mOwner(aOwner),
+        mTime(aTime),
+        mRootBounds(aRootBounds),
+        mBoundingClientRect(aBoundingClientRect),
+        mIntersectionRect(aIntersectionRect),
+        mIsIntersecting(aIsIntersecting),
+        mTarget(aTarget),
+        mIntersectionRatio(aIntersectionRatio) {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMIntersectionObserverEntry)
 
-  nsISupports* GetParentObject() const
-  {
-    return mOwner;
+  nsISupports* GetParentObject() const { return mOwner; }
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
+    return mozilla::dom::IntersectionObserverEntry_Binding::Wrap(aCx, this,
+                                                                 aGivenProto);
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    return mozilla::dom::IntersectionObserverEntry_Binding::Wrap(aCx, this, aGivenProto);
-  }
+  DOMHighResTimeStamp Time() { return mTime; }
 
-  DOMHighResTimeStamp Time()
-  {
-    return mTime;
-  }
+  DOMRect* GetRootBounds() { return mRootBounds; }
 
-  DOMRect* GetRootBounds()
-  {
-    return mRootBounds;
-  }
+  DOMRect* BoundingClientRect() { return mBoundingClientRect; }
 
-  DOMRect* BoundingClientRect()
-  {
-    return mBoundingClientRect;
-  }
+  DOMRect* IntersectionRect() { return mIntersectionRect; }
 
-  DOMRect* IntersectionRect()
-  {
-    return mIntersectionRect;
-  }
+  bool IsIntersecting() { return mIsIntersecting; }
 
-  bool IsIntersecting()
-  {
-    return mIsIntersecting;
-  }
+  double IntersectionRatio() { return mIntersectionRatio; }
 
-  double IntersectionRatio()
-  {
-    return mIntersectionRatio;
-  }
+  Element* Target() { return mTarget; }
 
-  Element* Target()
-  {
-    return mTarget;
-  }
-
-protected:
+ protected:
   nsCOMPtr<nsISupports> mOwner;
-  DOMHighResTimeStamp   mTime;
-  RefPtr<DOMRect>       mRootBounds;
-  RefPtr<DOMRect>       mBoundingClientRect;
-  RefPtr<DOMRect>       mIntersectionRect;
-  bool                  mIsIntersecting;
-  RefPtr<Element>       mTarget;
-  double                mIntersectionRatio;
+  DOMHighResTimeStamp mTime;
+  RefPtr<DOMRect> mRootBounds;
+  RefPtr<DOMRect> mBoundingClientRect;
+  RefPtr<DOMRect> mIntersectionRect;
+  bool mIsIntersecting;
+  RefPtr<Element> mTarget;
+  double mIntersectionRatio;
 };
 
-#define NS_DOM_INTERSECTION_OBSERVER_IID \
-{ 0x8570a575, 0xe303, 0x4d18, \
-  { 0xb6, 0xb1, 0x4d, 0x2b, 0x49, 0xd8, 0xef, 0x94 } }
+#define NS_DOM_INTERSECTION_OBSERVER_IID             \
+  {                                                  \
+    0x8570a575, 0xe303, 0x4d18, {                    \
+      0xb6, 0xb1, 0x4d, 0x2b, 0x49, 0xd8, 0xef, 0x94 \
+    }                                                \
+  }
 
 class DOMIntersectionObserver final : public nsISupports,
-                                      public nsWrapperCache
-{
-  virtual ~DOMIntersectionObserver() {
-    Disconnect();
-  }
+                                      public nsWrapperCache {
+  virtual ~DOMIntersectionObserver() { Disconnect(); }
 
-public:
+ public:
   DOMIntersectionObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
                           mozilla::dom::IntersectionCallback& aCb)
-  : mOwner(aOwner), mDocument(mOwner->GetExtantDoc()), mCallback(&aCb), mConnected(false)
-  {
-  }
+      : mOwner(aOwner),
+        mDocument(mOwner->GetExtantDoc()),
+        mCallback(&aCb),
+        mConnected(false) {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMIntersectionObserver)
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_INTERSECTION_OBSERVER_IID)
 
-  static already_AddRefed<DOMIntersectionObserver>
-  Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              mozilla::dom::IntersectionCallback& aCb,
-              mozilla::ErrorResult& aRv);
-  static already_AddRefed<DOMIntersectionObserver>
-  Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              mozilla::dom::IntersectionCallback& aCb,
-              const mozilla::dom::IntersectionObserverInit& aOptions,
-              mozilla::ErrorResult& aRv);
+  static already_AddRefed<DOMIntersectionObserver> Constructor(
+      const mozilla::dom::GlobalObject& aGlobal,
+      mozilla::dom::IntersectionCallback& aCb, mozilla::ErrorResult& aRv);
+  static already_AddRefed<DOMIntersectionObserver> Constructor(
+      const mozilla::dom::GlobalObject& aGlobal,
+      mozilla::dom::IntersectionCallback& aCb,
+      const mozilla::dom::IntersectionObserverInit& aOptions,
+      mozilla::ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    return mozilla::dom::IntersectionObserver_Binding::Wrap(aCx, this, aGivenProto);
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
+    return mozilla::dom::IntersectionObserver_Binding::Wrap(aCx, this,
+                                                            aGivenProto);
   }
 
-  nsISupports* GetParentObject() const
-  {
-    return mOwner;
-  }
+  nsISupports* GetParentObject() const { return mOwner; }
 
-  Element* GetRoot() const {
-    return mRoot;
-  }
+  Element* GetRoot() const { return mRoot; }
 
   void GetRootMargin(mozilla::dom::DOMString& aRetVal);
   void GetThresholds(nsTArray<double>& aRetVal);
@@ -157,14 +125,16 @@ public:
 
   void TakeRecords(nsTArray<RefPtr<DOMIntersectionObserverEntry>>& aRetVal);
 
-  mozilla::dom::IntersectionCallback* IntersectionCallback() { return mCallback; }
+  mozilla::dom::IntersectionCallback* IntersectionCallback() {
+    return mCallback;
+  }
 
   bool SetRootMargin(const nsAString& aString);
 
   void Update(nsIDocument* aDocument, DOMHighResTimeStamp time);
   void Notify();
 
-protected:
+ protected:
   void Connect();
   void QueueIntersectionObserverEntry(Element* aTarget,
                                       DOMHighResTimeStamp time,
@@ -173,23 +143,24 @@ protected:
                                       const Maybe<nsRect>& aIntersectionRect,
                                       double aIntersectionRatio);
 
-  nsCOMPtr<nsPIDOMWindowInner>                    mOwner;
-  RefPtr<nsIDocument>                             mDocument;
-  RefPtr<mozilla::dom::IntersectionCallback>      mCallback;
-  RefPtr<Element>                                 mRoot;
-  nsStyleSides                                    mRootMargin;
-  nsTArray<double>                                mThresholds;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
+  RefPtr<nsIDocument> mDocument;
+  RefPtr<mozilla::dom::IntersectionCallback> mCallback;
+  RefPtr<Element> mRoot;
+  nsStyleSides mRootMargin;
+  nsTArray<double> mThresholds;
 
   // Holds raw pointers which are explicitly cleared by UnlinkTarget().
-  nsTArray<Element*>                              mObservationTargets;
+  nsTArray<Element*> mObservationTargets;
 
-  nsTArray<RefPtr<DOMIntersectionObserverEntry>>  mQueuedEntries;
-  bool                                            mConnected;
+  nsTArray<RefPtr<DOMIntersectionObserverEntry>> mQueuedEntries;
+  bool mConnected;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(DOMIntersectionObserver, NS_DOM_INTERSECTION_OBSERVER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(DOMIntersectionObserver,
+                              NS_DOM_INTERSECTION_OBSERVER_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

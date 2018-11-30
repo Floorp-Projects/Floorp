@@ -15,30 +15,22 @@ namespace dom {
 
 class Grid;
 
-class GridArea : public nsISupports
-               , public nsWrapperCache
-{
-public:
-  explicit GridArea(Grid *aParent,
-                    const nsString& aName,
-                    GridDeclaration aType,
-                    uint32_t aRowStart,
-                    uint32_t aRowEnd,
-                    uint32_t aColumnStart,
+class GridArea : public nsISupports, public nsWrapperCache {
+ public:
+  explicit GridArea(Grid* aParent, const nsString& aName, GridDeclaration aType,
+                    uint32_t aRowStart, uint32_t aRowEnd, uint32_t aColumnStart,
                     uint32_t aColumnEnd);
 
-protected:
+ protected:
   virtual ~GridArea();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GridArea)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  Grid* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  Grid* GetParentObject() { return mParent; }
 
   void GetName(nsString& aName) const;
   GridDeclaration Type() const;
@@ -47,7 +39,7 @@ public:
   uint32_t ColumnStart() const;
   uint32_t ColumnEnd() const;
 
-protected:
+ protected:
   RefPtr<Grid> mParent;
   const nsString mName;
   const GridDeclaration mType;
@@ -57,7 +49,7 @@ protected:
   const uint32_t mColumnEnd;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_GridTrack_h */

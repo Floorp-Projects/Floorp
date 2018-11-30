@@ -990,6 +990,5 @@ SpeechEvent::Run() {
   return NS_OK;
 }
 
-
 }  // namespace dom
 }  // namespace mozilla

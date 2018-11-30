@@ -11,15 +11,14 @@
 #include "gtest/gtest.h"
 #include "nss.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 using namespace pkix;
 
-class CTObjectsExtractorTest : public ::testing::Test
-{
-public:
-  void SetUp() override
-  {
+class CTObjectsExtractorTest : public ::testing::Test {
+ public:
+  void SetUp() override {
     // Does nothing if NSS is already initialized.
     if (NSS_NoDB_Init(nullptr) != SECSuccess) {
       abort();
@@ -31,13 +30,12 @@ public:
     mCaCertSPKI = ExtractCertSPKI(mCaCert);
 
     Buffer logPublicKey = GetTestPublicKey();
-    ASSERT_EQ(Success, mLog.Init(InputForBuffer(logPublicKey),
-                                 -1 /*operator id*/,
-                                 CTLogStatus::Included,
-                                 0 /*disqualification time*/));
+    ASSERT_EQ(Success,
+              mLog.Init(InputForBuffer(logPublicKey), -1 /*operator id*/,
+                        CTLogStatus::Included, 0 /*disqualification time*/));
   }
 
-protected:
+ protected:
   Buffer mTestCert;
   Buffer mEmbeddedCert;
   Buffer mCaCert;
@@ -45,13 +43,10 @@ protected:
   CTLogVerifier mLog;
 };
 
-TEST_F(CTObjectsExtractorTest, ExtractPrecert)
-{
+TEST_F(CTObjectsExtractorTest, ExtractPrecert) {
   LogEntry entry;
-  ASSERT_EQ(Success,
-            GetPrecertLogEntry(InputForBuffer(mEmbeddedCert),
-                               InputForBuffer(mCaCertSPKI),
-                               entry));
+  ASSERT_EQ(Success, GetPrecertLogEntry(InputForBuffer(mEmbeddedCert),
+                                        InputForBuffer(mCaCertSPKI), entry));
 
   EXPECT_EQ(LogEntry::Type::Precert, entry.type);
   // Should have empty leaf cert for this log entry type.
@@ -60,8 +55,7 @@ TEST_F(CTObjectsExtractorTest, ExtractPrecert)
   EXPECT_EQ(GetDEREncodedTestTbsCert(), entry.tbsCertificate);
 }
 
-TEST_F(CTObjectsExtractorTest, ExtractOrdinaryX509Cert)
-{
+TEST_F(CTObjectsExtractorTest, ExtractOrdinaryX509Cert) {
   LogEntry entry;
   GetX509LogEntry(InputForBuffer(mTestCert), entry);
 
@@ -75,8 +69,7 @@ TEST_F(CTObjectsExtractorTest, ExtractOrdinaryX509Cert)
 
 // Test that an externally-provided SCT verifies over the LogEntry
 // of a regular X.509 Certificate
-TEST_F(CTObjectsExtractorTest, ComplementarySCTVerifies)
-{
+TEST_F(CTObjectsExtractorTest, ComplementarySCTVerifies) {
   SignedCertificateTimestamp sct;
   GetX509CertSCT(sct);
 
@@ -85,4 +78,5 @@ TEST_F(CTObjectsExtractorTest, ComplementarySCTVerifies)
   EXPECT_EQ(Success, mLog.Verify(entry, sct));
 }
 
-} }  // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

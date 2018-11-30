@@ -18,32 +18,34 @@ typedef unsigned int u_int;
 struct Symbol;
 struct leaky;
 
-class FunctionCount : public IntCount
-{
-public:
-  void printReport(FILE *fp, leaky *lk, int parent, int total);
+class FunctionCount : public IntCount {
+ public:
+  void printReport(FILE* fp, leaky* lk, int parent, int total);
 };
 
 struct Symbol {
   char* name;
   u_long address;
-  int    timerHit;
+  int timerHit;
   FunctionCount cntP, cntC;
 
-  int regChild(int id) {return cntC.countAdd(id, 1);}
-  int regParrent(int id) {return cntP.countAdd(id, 1);}
-  void regClear() {cntC.clear(); cntP.clear();}
+  int regChild(int id) { return cntC.countAdd(id, 1); }
+  int regParrent(int id) { return cntP.countAdd(id, 1); }
+  void regClear() {
+    cntC.clear();
+    cntP.clear();
+  }
 
   Symbol() : timerHit(0) {}
   void Init(const char* aName, u_long aAddress) {
-    name = aName ? strdup(aName) : (char *)"";
+    name = aName ? strdup(aName) : (char*)"";
     address = aAddress;
   }
 };
 
 struct LoadMapEntry {
-  char* name;			// name of .so
-  u_long address;		// base address where it was mapped in
+  char* name;      // name of .so
+  u_long address;  // base address where it was mapped in
   LoadMapEntry* next;
 };
 
@@ -52,33 +54,33 @@ struct leaky {
   ~leaky();
 
   void initialize(int argc, char** argv);
-  void open(char *arg);
+  void open(char* arg);
 
-  char*  applicationName;
-  int    logFileIndex;
-  int    numLogFiles;
-  char*  progFile;
-  FILE*  outputfd;
+  char* applicationName;
+  int logFileIndex;
+  int numLogFiles;
+  char* progFile;
+  FILE* outputfd;
 
-  bool  quiet;
-  bool  showAddress;
-  bool  showThreads;
-  bool  cleo;
+  bool quiet;
+  bool showAddress;
+  bool showThreads;
+  bool cleo;
   u_int stackDepth;
-  int   onlyThread;
+  int onlyThread;
   char* output_dir;
 
-  int   mappedLogFile;
+  int mappedLogFile;
   malloc_log_entry* firstLogEntry;
   malloc_log_entry* lastLogEntry;
 
-  int    stacks;
+  int stacks;
 
   int sfd;
   Symbol** externalSymbols;
   Symbol** lastSymbol;
-  int     usefulSymbols;
-  int     numExternalSymbols;
+  int usefulSymbols;
+  int numExternalSymbols;
   StrSet exclusions;
   u_long lowestSymbolAddr;
   u_long highestSymbolAddr;
@@ -86,8 +88,8 @@ struct leaky {
   LoadMapEntry* loadMap;
 
   bool collect_last;
-  int  collect_start;
-  int  collect_end;
+  int collect_start;
+  int collect_end;
 
   StrSet roots;
   StrSet includes;
@@ -105,18 +107,18 @@ struct leaky {
 
   void displayStackTrace(FILE* out, malloc_log_entry* lep);
 
-  Symbol ** ExtendSymbols(int num);
+  Symbol** ExtendSymbols(int num);
   void ReadSymbols(const char* fileName, u_long aBaseAddress);
   void ReadSharedLibrarySymbols();
   void setupSymbols(const char* fileName);
   Symbol* findSymbol(u_long address);
   bool excluded(malloc_log_entry* lep);
   bool included(malloc_log_entry* lep);
-  const char* indexToName(int idx) {return externalSymbols[idx]->name;}
+  const char* indexToName(int idx) { return externalSymbols[idx]->name; }
 
-  private:
-  void generateReportHTML(FILE *fp, int *countArray, int count, int thread);
-  int  findSymbolIndex(u_long address);
+ private:
+  void generateReportHTML(FILE* fp, int* countArray, int count, int thread);
+  int findSymbolIndex(u_long address);
 };
 
 #endif /* __leaky_h_ */

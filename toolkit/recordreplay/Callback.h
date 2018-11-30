@@ -90,7 +90,7 @@ void EndCallback();
 // specific and is defined in the various ProcessRedirect*.cpp files.
 void ReplayInvokeCallback(size_t aCallbackId);
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_Callback_h
+#endif  // mozilla_recordreplay_Callback_h

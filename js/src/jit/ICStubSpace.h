@@ -12,71 +12,58 @@
 namespace js {
 namespace jit {
 
-// ICStubSpace is an abstraction for allocation policy and storage for stub data.
-// There are two kinds of stubs: optimized stubs and fallback stubs (the latter
-// also includes stubs that can make non-tail calls that can GC).
+// ICStubSpace is an abstraction for allocation policy and storage for stub
+// data. There are two kinds of stubs: optimized stubs and fallback stubs (the
+// latter also includes stubs that can make non-tail calls that can GC).
 //
 // Optimized stubs are allocated per-compartment and are always purged when
 // JIT-code is discarded. Fallback stubs are allocated per BaselineScript and
 // are only destroyed when the BaselineScript is destroyed.
-class ICStubSpace
-{
-  protected:
-    LifoAlloc allocator_;
+class ICStubSpace {
+ protected:
+  LifoAlloc allocator_;
 
-    explicit ICStubSpace(size_t chunkSize)
-      : allocator_(chunkSize)
-    {}
+  explicit ICStubSpace(size_t chunkSize) : allocator_(chunkSize) {}
 
-  public:
-    inline void* alloc(size_t size) {
-        return allocator_.alloc(size);
-    }
+ public:
+  inline void* alloc(size_t size) { return allocator_.alloc(size); }
 
-    JS_DECLARE_NEW_METHODS(allocate, alloc, inline)
+  JS_DECLARE_NEW_METHODS(allocate, alloc, inline)
 
-    void freeAllAfterMinorGC(JS::Zone* zone);
+  void freeAllAfterMinorGC(JS::Zone* zone);
 
 #ifdef DEBUG
-    bool isEmpty() const {
-        return allocator_.isEmpty();
-    }
+  bool isEmpty() const { return allocator_.isEmpty(); }
 #endif
 
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return allocator_.sizeOfExcludingThis(mallocSizeOf);
-    }
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return allocator_.sizeOfExcludingThis(mallocSizeOf);
+  }
 };
 
 // Space for optimized stubs. Every JitRealm has a single
 // OptimizedICStubSpace.
-struct OptimizedICStubSpace : public ICStubSpace
-{
-    static const size_t STUB_DEFAULT_CHUNK_SIZE = 4096;
+struct OptimizedICStubSpace : public ICStubSpace {
+  static const size_t STUB_DEFAULT_CHUNK_SIZE = 4096;
 
-  public:
-    OptimizedICStubSpace()
-      : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE)
-    {}
+ public:
+  OptimizedICStubSpace() : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE) {}
 };
 
 // Space for fallback stubs. Every BaselineScript has a
 // FallbackICStubSpace.
-struct FallbackICStubSpace : public ICStubSpace
-{
-    static const size_t STUB_DEFAULT_CHUNK_SIZE = 4096;
+struct FallbackICStubSpace : public ICStubSpace {
+  static const size_t STUB_DEFAULT_CHUNK_SIZE = 4096;
 
-  public:
-    FallbackICStubSpace()
-      : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE)
-    {}
+ public:
+  FallbackICStubSpace() : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE) {}
 
-    inline void adoptFrom(FallbackICStubSpace* other) {
-        allocator_.steal(&(other->allocator_));
-    }
+  inline void adoptFrom(FallbackICStubSpace* other) {
+    allocator_.steal(&(other->allocator_));
+  }
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_ICStubSpace_h */

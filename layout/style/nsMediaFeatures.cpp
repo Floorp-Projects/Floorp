@@ -36,16 +36,13 @@ struct OperatingSystemVersionInfo {
 
 // Os version identities used in the -moz-os-version media query.
 const OperatingSystemVersionInfo kOsVersionStrings[] = {
-  { LookAndFeel::eOperatingSystemVersion_Windows7,  nsGkAtoms::windows_win7 },
-  { LookAndFeel::eOperatingSystemVersion_Windows8,  nsGkAtoms::windows_win8 },
-  { LookAndFeel::eOperatingSystemVersion_Windows10, nsGkAtoms::windows_win10 }
-};
+    {LookAndFeel::eOperatingSystemVersion_Windows7, nsGkAtoms::windows_win7},
+    {LookAndFeel::eOperatingSystemVersion_Windows8, nsGkAtoms::windows_win8},
+    {LookAndFeel::eOperatingSystemVersion_Windows10, nsGkAtoms::windows_win10}};
 #endif
 
 // A helper for four features below
-static nsSize
-GetSize(nsIDocument* aDocument)
-{
+static nsSize GetSize(nsIDocument* aDocument) {
   nsPresContext* pc = aDocument->GetPresContext();
 
   // Per spec, return a 0x0 viewport if we're not being rendered. See:
@@ -54,7 +51,7 @@ GetSize(nsIDocument* aDocument)
   //  * https://github.com/whatwg/html/issues/1813
   //
   if (!pc) {
-    return { };
+    return {};
   }
 
   if (pc->IsRootPaginatedDocument()) {
@@ -67,9 +64,7 @@ GetSize(nsIDocument* aDocument)
   return pc->GetVisibleArea().Size();
 }
 
-static bool
-IsDeviceSizePageSize(nsIDocument* aDocument)
-{
+static bool IsDeviceSizePageSize(nsIDocument* aDocument) {
   nsIDocShell* docShell = aDocument->GetDocShell();
   if (!docShell) {
     return false;
@@ -78,9 +73,7 @@ IsDeviceSizePageSize(nsIDocument* aDocument)
 }
 
 // A helper for three features below.
-static nsSize
-GetDeviceSize(nsIDocument* aDocument)
-{
+static nsSize GetDeviceSize(nsIDocument* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument) ||
       IsDeviceSizePageSize(aDocument)) {
     return GetSize(aDocument);
@@ -91,7 +84,7 @@ GetDeviceSize(nsIDocument* aDocument)
   // device size here, though in a multi-screen world that makes no sense
   // really.
   if (!pc) {
-    return { };
+    return {};
   }
 
   if (pc->IsRootPaginatedDocument()) {
@@ -106,15 +99,11 @@ GetDeviceSize(nsIDocument* aDocument)
   return size;
 }
 
-bool
-Gecko_MediaFeatures_IsResourceDocument(nsIDocument* aDocument)
-{
+bool Gecko_MediaFeatures_IsResourceDocument(nsIDocument* aDocument) {
   return aDocument->IsResourceDoc();
 }
 
-static nsDeviceContext*
-GetDeviceContextFor(nsIDocument* aDocument)
-{
+static nsDeviceContext* GetDeviceContextFor(nsIDocument* aDocument) {
   nsPresContext* pc = aDocument->GetPresContext();
   if (!pc) {
     return nullptr;
@@ -126,19 +115,14 @@ GetDeviceContextFor(nsIDocument* aDocument)
   return pc->DeviceContext();
 }
 
-void
-Gecko_MediaFeatures_GetDeviceSize(nsIDocument* aDocument,
-                                  nscoord* aWidth,
-                                  nscoord* aHeight)
-{
+void Gecko_MediaFeatures_GetDeviceSize(nsIDocument* aDocument, nscoord* aWidth,
+                                       nscoord* aHeight) {
   nsSize size = GetDeviceSize(aDocument);
   *aWidth = size.width;
   *aHeight = size.height;
 }
 
-uint32_t
-Gecko_MediaFeatures_GetColorDepth(nsIDocument* aDocument)
-{
+uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument* aDocument) {
   // Use depth of 24 when resisting fingerprinting, or when we're not being
   // rendered.
   uint32_t depth = 24;
@@ -156,9 +140,7 @@ Gecko_MediaFeatures_GetColorDepth(nsIDocument* aDocument)
   return depth / 3;
 }
 
-float
-Gecko_MediaFeatures_GetResolution(nsIDocument* aDocument)
-{
+float Gecko_MediaFeatures_GetResolution(nsIDocument* aDocument) {
   // We're returning resolution in terms of device pixels per css pixel, since
   // that is the preferred unit for media queries of resolution. This avoids
   // introducing precision error from conversion to and from less-used
@@ -176,12 +158,11 @@ Gecko_MediaFeatures_GetResolution(nsIDocument* aDocument)
     return pc->DeviceContext()->GetFullZoom();
   }
   // Get the actual device pixel ratio, which also takes zoom into account.
-  return float(AppUnitsPerCSSPixel()) / pc->DeviceContext()->AppUnitsPerDevPixel();
+  return float(AppUnitsPerCSSPixel()) /
+         pc->DeviceContext()->AppUnitsPerDevPixel();
 }
 
-static nsIDocument*
-TopDocument(nsIDocument* aDocument)
-{
+static nsIDocument* TopDocument(nsIDocument* aDocument) {
   nsIDocument* current = aDocument;
   while (nsIDocument* parent = current->GetParentDocument()) {
     current = parent;
@@ -189,9 +170,7 @@ TopDocument(nsIDocument* aDocument)
   return current;
 }
 
-StyleDisplayMode
-Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument)
-{
+StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument) {
   nsIDocument* rootDocument = TopDocument(aDocument);
 
   nsCOMPtr<nsISupports> container = rootDocument->GetContainer();
@@ -203,10 +182,14 @@ Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument)
     }
   }
 
-  static_assert(nsIDocShell::DISPLAY_MODE_BROWSER == static_cast<int32_t>(StyleDisplayMode::Browser) &&
-                nsIDocShell::DISPLAY_MODE_MINIMAL_UI == static_cast<int32_t>(StyleDisplayMode::MinimalUi) &&
-                nsIDocShell::DISPLAY_MODE_STANDALONE == static_cast<int32_t>(StyleDisplayMode::Standalone) &&
-                nsIDocShell::DISPLAY_MODE_FULLSCREEN == static_cast<int32_t>(StyleDisplayMode::Fullscreen),
+  static_assert(nsIDocShell::DISPLAY_MODE_BROWSER ==
+                        static_cast<int32_t>(StyleDisplayMode::Browser) &&
+                    nsIDocShell::DISPLAY_MODE_MINIMAL_UI ==
+                        static_cast<int32_t>(StyleDisplayMode::MinimalUi) &&
+                    nsIDocShell::DISPLAY_MODE_STANDALONE ==
+                        static_cast<int32_t>(StyleDisplayMode::Standalone) &&
+                    nsIDocShell::DISPLAY_MODE_FULLSCREEN ==
+                        static_cast<int32_t>(StyleDisplayMode::Fullscreen),
                 "nsIDocShell display modes must mach nsStyleConsts.h");
 
   nsIDocShell* docShell = rootDocument->GetDocShell();
@@ -216,11 +199,9 @@ Gecko_MediaFeatures_GetDisplayMode(nsIDocument* aDocument)
   return static_cast<StyleDisplayMode>(docShell->GetDisplayMode());
 }
 
-bool
-Gecko_MediaFeatures_HasSystemMetric(nsIDocument* aDocument,
-                                    nsAtom* aMetric,
-                                    bool aIsAccessibleFromContent)
-{
+bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument* aDocument,
+                                         nsAtom* aMetric,
+                                         bool aIsAccessibleFromContent) {
   if (aIsAccessibleFromContent &&
       nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return false;
@@ -230,18 +211,16 @@ Gecko_MediaFeatures_HasSystemMetric(nsIDocument* aDocument,
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
 }
 
-nsAtom*
-Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument* aDocument)
-{
+nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return nullptr;
   }
 
 #ifdef XP_WIN
   int32_t metricResult;
-  if (NS_SUCCEEDED(
-        LookAndFeel::GetInt(LookAndFeel::eIntID_OperatingSystemVersionIdentifier,
-                            &metricResult))) {
+  if (NS_SUCCEEDED(LookAndFeel::GetInt(
+          LookAndFeel::eIntID_OperatingSystemVersionIdentifier,
+          &metricResult))) {
     for (const auto& osVersion : kOsVersionStrings) {
       if (metricResult == osVersion.mId) {
         return osVersion.mName;
@@ -253,18 +232,15 @@ Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument* aDocument)
   return nullptr;
 }
 
-bool
-Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument* aDocument)
-{
+bool Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return false;
   }
   return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
 }
 
-static PointerCapabilities
-GetPointerCapabilities(nsIDocument* aDocument, LookAndFeel::IntID aID)
-{
+static PointerCapabilities GetPointerCapabilities(nsIDocument* aDocument,
+                                                  LookAndFeel::IntID aID) {
   MOZ_ASSERT(aID == LookAndFeel::eIntID_PrimaryPointerCapabilities ||
              aID == LookAndFeel::eIntID_AllPointerCapabilities);
   MOZ_ASSERT(aDocument);
@@ -272,14 +248,15 @@ GetPointerCapabilities(nsIDocument* aDocument, LookAndFeel::IntID aID)
   if (nsIDocShell* docShell = aDocument->GetDocShell()) {
     // The touch-events-override happens only for the Responsive Design Mode so
     // that we don't need to care about ResistFingerprinting.
-    if (docShell->GetTouchEventsOverride() == nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED) {
+    if (docShell->GetTouchEventsOverride() ==
+        nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED) {
       return PointerCapabilities::Coarse;
     }
   }
 
   // The default value is mouse-type pointer.
   const PointerCapabilities kDefaultCapabilities =
-    PointerCapabilities::Fine | PointerCapabilities::Hover;
+      PointerCapabilities::Fine | PointerCapabilities::Hover;
 
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return kDefaultCapabilities;
@@ -294,25 +271,20 @@ GetPointerCapabilities(nsIDocument* aDocument, LookAndFeel::IntID aID)
   return static_cast<PointerCapabilities>(intValue);
 }
 
-PointerCapabilities
-Gecko_MediaFeatures_PrimaryPointerCapabilities(nsIDocument* aDocument)
-{
+PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
+    nsIDocument* aDocument) {
   return GetPointerCapabilities(aDocument,
                                 LookAndFeel::eIntID_PrimaryPointerCapabilities);
 }
 
-PointerCapabilities
-Gecko_MediaFeatures_AllPointerCapabilities(nsIDocument* aDocument)
-{
+PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
+    nsIDocument* aDocument) {
   return GetPointerCapabilities(aDocument,
                                 LookAndFeel::eIntID_AllPointerCapabilities);
 }
 
-/* static */ void
-nsMediaFeatures::InitSystemMetrics()
-{
-  if (sSystemMetrics)
-    return;
+/* static */ void nsMediaFeatures::InitSystemMetrics() {
+  if (sSystemMetrics) return;
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -323,73 +295,71 @@ nsMediaFeatures::InitSystemMetrics()
    ***************************************************************************/
 
   int32_t metricResult =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollArrowStyle);
+      LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollArrowStyle);
   if (metricResult & LookAndFeel::eScrollArrow_StartBackward) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_start_backward);
+        (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_start_backward);
   }
   if (metricResult & LookAndFeel::eScrollArrow_StartForward) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_start_forward);
+        (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_start_forward);
   }
   if (metricResult & LookAndFeel::eScrollArrow_EndBackward) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_end_backward);
+        (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_end_backward);
   }
   if (metricResult & LookAndFeel::eScrollArrow_EndForward) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_end_forward);
+        (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_end_forward);
   }
 
-  metricResult =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollSliderStyle);
+  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollSliderStyle);
   if (metricResult != LookAndFeel::eScrollThumbStyle_Normal) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_thumb_proportional);
+        (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_thumb_proportional);
   }
 
-  metricResult =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
+  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
   if (metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_overlay_scrollbars);
+        (nsStaticAtom*)nsGkAtoms::_moz_overlay_scrollbars);
   }
 
-  metricResult =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_MenuBarDrag);
+  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_MenuBarDrag);
   if (metricResult) {
     sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_menubar_drag);
   }
 
-  nsresult rv =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsDefaultTheme, &metricResult);
+  nsresult rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsDefaultTheme,
+                                    &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_windows_default_theme);
+        (nsStaticAtom*)nsGkAtoms::_moz_windows_default_theme);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacGraphiteTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_mac_graphite_theme);
+        (nsStaticAtom*)nsGkAtoms::_moz_mac_graphite_theme);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacYosemiteTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_mac_yosemite_theme);
+        (nsStaticAtom*)nsGkAtoms::_moz_mac_yosemite_theme);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsAccentColorInTitlebar, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsAccentColorInTitlebar,
+                           &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_windows_accent_color_in_titlebar);
+        (nsStaticAtom*)nsGkAtoms::_moz_windows_accent_color_in_titlebar);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_DWMCompositor, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_windows_compositor);
+        (nsStaticAtom*)nsGkAtoms::_moz_windows_compositor);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsGlass, &metricResult);
@@ -400,7 +370,7 @@ nsMediaFeatures::InitSystemMetrics()
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsClassic, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_windows_classic);
+        (nsStaticAtom*)nsGkAtoms::_moz_windows_classic);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_TouchEnabled, &metricResult);
@@ -412,61 +382,53 @@ nsMediaFeatures::InitSystemMetrics()
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_swipe_animation_enabled);
+        (nsStaticAtom*)nsGkAtoms::_moz_swipe_animation_enabled);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable,
-                           &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_available);
+        (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_available);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDTransparentBackground,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_transparent_background);
+        (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_transparent_background);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMinimizeButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_minimize_button);
+        (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_minimize_button);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMaximizeButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_maximize_button);
+        (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_maximize_button);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDCloseButton,
-                           &metricResult);
+  rv =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDCloseButton, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_close_button);
+        (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_close_button);
   }
 
-  metricResult =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme);
+  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme);
   if (metricResult) {
     sSystemMetrics->AppendElement(
-      (nsStaticAtom*)nsGkAtoms::_moz_system_dark_theme);
+        (nsStaticAtom*)nsGkAtoms::_moz_system_dark_theme);
   }
 }
 
-/* static */ void
-nsMediaFeatures::FreeSystemMetrics()
-{
+/* static */ void nsMediaFeatures::FreeSystemMetrics() {
   delete sSystemMetrics;
   sSystemMetrics = nullptr;
 }
 
-/* static */ void
-nsMediaFeatures::Shutdown()
-{
-  FreeSystemMetrics();
-}
+/* static */ void nsMediaFeatures::Shutdown() { FreeSystemMetrics(); }

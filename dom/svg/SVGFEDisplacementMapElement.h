@@ -10,35 +10,37 @@
 #include "nsSVGEnum.h"
 #include "nsSVGFilters.h"
 
-nsresult NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGFEDisplacementMapElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 typedef nsSVGFE SVGFEDisplacementMapElementBase;
 
-class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase
-{
-protected:
-  friend nsresult (::NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGFEDisplacementMapElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : SVGFEDisplacementMapElementBase(std::move(aNodeInfo))
-  {
-  }
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
+ protected:
+  friend nsresult(::NS_NewSVGFEDisplacementMapElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  explicit SVGFEDisplacementMapElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGFEDisplacementMapElementBase(std::move(aNodeInfo)) {}
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-public:
-  virtual FilterPrimitiveDescription
-    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                            const IntRect& aFilterSubregion,
-                            const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) override;
+ public:
+  virtual FilterPrimitiveDescription GetPrimitiveDescription(
+      nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+      const nsTArray<bool>& aInputsAreTainted,
+      nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
+  virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
+                                         nsAtom* aAttribute) const override;
+  virtual nsSVGString& GetResultImageName() override {
+    return mStringAttributes[RESULT];
+  }
+  virtual void GetSourceImageNames(
+      nsTArray<nsSVGStringInfo>& aSources) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -49,17 +51,18 @@ public:
   already_AddRefed<SVGAnimatedEnumeration> XChannelSelector();
   already_AddRefed<SVGAnimatedEnumeration> YChannelSelector();
 
-protected:
+ protected:
   virtual bool OperatesOnSRGB(int32_t aInputIndex,
                               bool aInputIsAlreadySRGB) override {
     switch (aInputIndex) {
-    case 0:
-      return aInputIsAlreadySRGB;
-    case 1:
-      return SVGFEDisplacementMapElementBase::OperatesOnSRGB(aInputIndex, aInputIsAlreadySRGB);
-    default:
-      NS_ERROR("Will not give correct color model");
-      return false;
+      case 0:
+        return aInputIsAlreadySRGB;
+      case 1:
+        return SVGFEDisplacementMapElementBase::OperatesOnSRGB(
+            aInputIndex, aInputIsAlreadySRGB);
+      default:
+        NS_ERROR("Will not give correct color model");
+        return false;
     }
   }
 
@@ -81,7 +84,7 @@ protected:
   static StringInfo sStringInfo[3];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGFEDisplacementMapElement_h
+#endif  // mozilla_dom_SVGFEDisplacementMapElement_h

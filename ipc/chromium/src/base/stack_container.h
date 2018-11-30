@@ -30,7 +30,7 @@
 // be sure to reserve() in the container up to the stack buffer size. Otherwise
 // the container will allocate a small array which will "use up" the stack
 // buffer.
-template<typename T, size_t stack_capacity>
+template <typename T, size_t stack_capacity>
 class StackAllocator : public std::allocator<T> {
  public:
   typedef typename std::allocator<T>::pointer pointer;
@@ -40,8 +40,7 @@ class StackAllocator : public std::allocator<T> {
   // maintaining this for as long as any containers using this allocator are
   // live.
   struct Source {
-    Source() : used_stack_buffer_(false) {
-    }
+    Source() : used_stack_buffer_(false) {}
 
     // Casts the buffer in its right type.
     T* stack_buffer() { return reinterpret_cast<T*>(stack_buffer_); }
@@ -67,15 +66,14 @@ class StackAllocator : public std::allocator<T> {
   };
 
   // Used by containers when they want to refer to an allocator of type U.
-  template<typename U>
+  template <typename U>
   struct rebind {
     typedef StackAllocator<U, stack_capacity> other;
   };
 
   // For the straight up copy c-tor, we can share storage.
   StackAllocator(const StackAllocator<T, stack_capacity>& rhs)
-      : source_(rhs.source_) {
-  }
+      : source_(rhs.source_) {}
 
   // ISO C++ requires the following constructor to be defined,
   // and std::vector in VC++2008SP1 Release fails with an error
@@ -86,20 +84,18 @@ class StackAllocator : public std::allocator<T> {
   // for Us.
   // TODO: If we were fancy pants, perhaps we could share storage
   // iff sizeof(T) == sizeof(U).
-  template<typename U, size_t other_capacity>
+  template <typename U, size_t other_capacity>
   explicit StackAllocator(const StackAllocator<U, other_capacity>& other)
-      : source_(NULL) {
-  }
+      : source_(NULL) {}
 
-  explicit StackAllocator(Source* source) : source_(source) {
-  }
+  explicit StackAllocator(Source* source) : source_(source) {}
 
   // Actually do the allocation. Use the stack buffer if nobody has used it yet
   // and the size requested fits. Otherwise, fall through to the standard
   // allocator.
   pointer allocate(size_type n, void* hint = 0) {
-    if (source_ != NULL && !source_->used_stack_buffer_
-        && n <= stack_capacity) {
+    if (source_ != NULL && !source_->used_stack_buffer_ &&
+        n <= stack_capacity) {
       source_->used_stack_buffer_ = true;
       return source_->stack_buffer();
     } else {
@@ -128,7 +124,7 @@ class StackAllocator : public std::allocator<T> {
 // WATCH OUT: the ContainerType MUST use the proper StackAllocator for this
 // type. This object is really intended to be used only internally. You'll want
 // to use the wrappers below for different types.
-template<typename TContainerType, int stack_capacity>
+template <typename TContainerType, int stack_capacity>
 class StackContainer {
  public:
   typedef TContainerType ContainerType;
@@ -160,9 +156,7 @@ class StackContainer {
 #ifdef UNIT_TEST
   // Retrieves the stack source so that that unit tests can verify that the
   // buffer is being used properly.
-  const typename Allocator::Source& stack_data() const {
-    return stack_data_;
-  }
+  const typename Allocator::Source& stack_data() const { return stack_data_; }
 #endif
 
  protected:
@@ -174,38 +168,35 @@ class StackContainer {
 };
 
 // StackString
-template<size_t stack_capacity>
-class StackString : public StackContainer<
-    std::basic_string<char,
-                      std::char_traits<char>,
-                      StackAllocator<char, stack_capacity> >,
-    stack_capacity> {
+template <size_t stack_capacity>
+class StackString
+    : public StackContainer<
+          std::basic_string<char, std::char_traits<char>,
+                            StackAllocator<char, stack_capacity> >,
+          stack_capacity> {
  public:
-  StackString() : StackContainer<
-      std::basic_string<char,
-                        std::char_traits<char>,
-                        StackAllocator<char, stack_capacity> >,
-      stack_capacity>() {
-  }
+  StackString()
+      : StackContainer<std::basic_string<char, std::char_traits<char>,
+                                         StackAllocator<char, stack_capacity> >,
+                       stack_capacity>() {}
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(StackString);
 };
 
 // StackWString
-template<size_t stack_capacity>
-class StackWString : public StackContainer<
-    std::basic_string<wchar_t,
-                      std::char_traits<wchar_t>,
-                      StackAllocator<wchar_t, stack_capacity> >,
-    stack_capacity> {
+template <size_t stack_capacity>
+class StackWString
+    : public StackContainer<
+          std::basic_string<wchar_t, std::char_traits<wchar_t>,
+                            StackAllocator<wchar_t, stack_capacity> >,
+          stack_capacity> {
  public:
-  StackWString() : StackContainer<
-      std::basic_string<wchar_t,
-                        std::char_traits<wchar_t>,
-                        StackAllocator<wchar_t, stack_capacity> >,
-      stack_capacity>() {
-  }
+  StackWString()
+      : StackContainer<
+            std::basic_string<wchar_t, std::char_traits<wchar_t>,
+                              StackAllocator<wchar_t, stack_capacity> >,
+            stack_capacity>() {}
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(StackWString);
@@ -217,24 +208,22 @@ class StackWString : public StackContainer<
 //   StackVector<int, 16> foo;
 //   foo->push_back(22);  // we have overloaded operator->
 //   foo[0] = 10;         // as well as operator[]
-template<typename T, size_t stack_capacity>
-class StackVector : public StackContainer<
-    std::vector<T, StackAllocator<T, stack_capacity> >,
-    stack_capacity> {
+template <typename T, size_t stack_capacity>
+class StackVector
+    : public StackContainer<std::vector<T, StackAllocator<T, stack_capacity> >,
+                            stack_capacity> {
  public:
-  StackVector() : StackContainer<
-      std::vector<T, StackAllocator<T, stack_capacity> >,
-      stack_capacity>() {
-  }
+  StackVector()
+      : StackContainer<std::vector<T, StackAllocator<T, stack_capacity> >,
+                       stack_capacity>() {}
 
   // We need to put this in STL containers sometimes, which requires a copy
   // constructor. We can't call the regular copy constructor because that will
   // take the stack buffer from the original. Here, we create an empty object
   // and make a stack buffer of its own.
   StackVector(const StackVector<T, stack_capacity>& other)
-      : StackContainer<
-            std::vector<T, StackAllocator<T, stack_capacity> >,
-            stack_capacity>() {
+      : StackContainer<std::vector<T, StackAllocator<T, stack_capacity> >,
+                       stack_capacity>() {
     this->container().assign(other->begin(), other->end());
   }
 

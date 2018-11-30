@@ -23,41 +23,40 @@
  */
 // XXXldb This needs a better name that indicates that it's for any grid
 // row.
-class nsGridRowLeafLayout final : public nsGridRowLayout
-{
-public:
-
+class nsGridRowLeafLayout final : public nsGridRowLayout {
+ public:
   friend already_AddRefed<nsBoxLayout> NS_NewGridRowLeafLayout();
 
-  virtual nsSize GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState) override;
-  NS_IMETHOD XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) override;
+  virtual nsSize GetXULPrefSize(nsIFrame* aBox,
+                                nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMinSize(nsIFrame* aBox,
+                               nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMaxSize(nsIFrame* aBox,
+                               nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void ChildAddedOrRemoved(nsIFrame* aBox,
+                                   nsBoxLayoutState& aState) override;
+  NS_IMETHOD XULLayout(nsIFrame* aBox,
+                       nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount,
+                                int32_t& aComputedColumnCount) override;
   virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) override;
   virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) override;
   virtual Type GetType() override { return eRowLeaf; }
 
-protected:
-
-  virtual void PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState,
+ protected:
+  virtual void PopulateBoxSizes(nsIFrame* aBox,
+                                nsBoxLayoutState& aBoxLayoutState,
                                 nsBoxSize*& aBoxSizes, nscoord& aMinSize,
                                 nscoord& aMaxSize, int32_t& aFlexes) override;
-  virtual void ComputeChildSizes(nsIFrame* aBox,
-                                 nsBoxLayoutState& aState,
-                                 nscoord& aGivenSize,
-                                 nsBoxSize* aBoxSizes,
-                                 nsComputedBoxSize*& aComputedBoxSizes) override;
-
+  virtual void ComputeChildSizes(
+      nsIFrame* aBox, nsBoxLayoutState& aState, nscoord& aGivenSize,
+      nsBoxSize* aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes) override;
 
   nsGridRowLeafLayout();
   virtual ~nsGridRowLeafLayout();
-  //virtual void AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
+  // virtual void AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
 
-private:
-
-}; // class nsGridRowLeafLayout
+ private:
+};  // class nsGridRowLeafLayout
 
 #endif
-

@@ -11,9 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<Text>
-Text::SplitText(uint32_t aOffset, ErrorResult& aRv)
-{
+already_AddRefed<Text> Text::SplitText(uint32_t aOffset, ErrorResult& aRv) {
   nsAutoString cutText;
   uint32_t length = TextLength();
 
@@ -41,13 +39,12 @@ Text::SplitText(uint32_t aOffset, ErrorResult& aRv)
   // nsRange expects the CharacterDataChanged notification is followed
   // by an insertion of |newContent|. If you change this code,
   // make sure you make the appropriate changes in nsRange.
-  newContent->SetText(cutText, true); // XXX should be false?
+  newContent->SetText(cutText, true);  // XXX should be false?
 
   CharacterDataChangeInfo::Details details = {
-    CharacterDataChangeInfo::Details::eSplit, newContent
-  };
-  nsresult rv = SetTextInternal(cutStartOffset, cutLength, nullptr, 0, true,
-                                &details);
+      CharacterDataChangeInfo::Details::eSplit, newContent};
+  nsresult rv =
+      SetTextInternal(cutStartOffset, cutLength, nullptr, 0, true, &details);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -62,9 +59,7 @@ Text::SplitText(uint32_t aOffset, ErrorResult& aRv)
   return newContent.forget();
 }
 
-static Text*
-FirstLogicallyAdjacentTextNode(Text* aNode)
-{
+static Text* FirstLogicallyAdjacentTextNode(Text* aNode) {
   do {
     nsIContent* sibling = aNode->GetPreviousSibling();
     if (!sibling || !sibling->IsText()) {
@@ -74,9 +69,7 @@ FirstLogicallyAdjacentTextNode(Text* aNode)
   } while (1);  // Must run out of previous siblings eventually!
 }
 
-static Text*
-LastLogicallyAdjacentTextNode(Text* aNode)
-{
+static Text* LastLogicallyAdjacentTextNode(Text* aNode) {
   do {
     nsIContent* sibling = aNode->GetNextSibling();
     if (!sibling || !sibling->IsText()) {
@@ -84,13 +77,10 @@ LastLogicallyAdjacentTextNode(Text* aNode)
     }
 
     aNode = static_cast<Text*>(sibling);
-  } while (1); // Must run out of next siblings eventually!
+  } while (1);  // Must run out of next siblings eventually!
 }
 
-void
-Text::GetWholeText(nsAString& aWholeText,
-                   ErrorResult& aRv)
-{
+void Text::GetWholeText(nsAString& aWholeText, ErrorResult& aRv) {
   nsIContent* parent = GetParent();
 
   // Handle parent-less nodes
@@ -130,11 +120,10 @@ Text::GetWholeText(nsAString& aWholeText,
   }
 }
 
-/* static */ already_AddRefed<Text>
-Text::Constructor(const GlobalObject& aGlobal,
-                  const nsAString& aData, ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+/* static */ already_AddRefed<Text> Text::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aData, ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   if (!window || !window->GetDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -143,9 +132,7 @@ Text::Constructor(const GlobalObject& aGlobal,
   return window->GetDoc()->CreateTextNode(aData);
 }
 
-bool
-Text::HasTextForTranslation()
-{
+bool Text::HasTextForTranslation() {
   if (mText.Is2b()) {
     // The fragment contains non-8bit characters which means there
     // was at least one "interesting" character to trigger non-8bit.
@@ -166,11 +153,8 @@ Text::HasTextForTranslation()
 
     // These are the characters that are letters
     // in the first 256 UTF-8 codepoints.
-    if ((ch >= 'a' && ch <= 'z') ||
-       (ch >= 'A' && ch <= 'Z') ||
-       (ch >= 192 && ch <= 214) ||
-       (ch >= 216 && ch <= 246) ||
-       (ch >= 248)) {
+    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+        (ch >= 192 && ch <= 214) || (ch >= 216 && ch <= 246) || (ch >= 248)) {
       return true;
     }
   }
@@ -178,5 +162,5 @@ Text::HasTextForTranslation()
   return false;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

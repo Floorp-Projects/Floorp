@@ -10,10 +10,6 @@
 // This file makes the nsDirection enum present both in nsIFrame.h and
 // Selection.h.
 
-enum nsDirection {
-  eDirNext    = 0,
-  eDirPrevious= 1
-};
+enum nsDirection { eDirNext = 0, eDirPrevious = 1 };
 
 #endif
-

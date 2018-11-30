@@ -13,18 +13,17 @@
 namespace js {
 namespace jit {
 
-class MoveEmitterNone
-{
-  public:
-    explicit MoveEmitterNone(MacroAssemblerNone&) { MOZ_CRASH(); }
-    void emit(const MoveResolver&) { MOZ_CRASH(); }
-    void finish() { MOZ_CRASH(); }
-    void setScratchRegister(Register) { MOZ_CRASH(); }
+class MoveEmitterNone {
+ public:
+  explicit MoveEmitterNone(MacroAssemblerNone&) { MOZ_CRASH(); }
+  void emit(const MoveResolver&) { MOZ_CRASH(); }
+  void finish() { MOZ_CRASH(); }
+  void setScratchRegister(Register) { MOZ_CRASH(); }
 };
 
 typedef MoveEmitterNone MoveEmitter;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_none_MoveEmitter_none_h */

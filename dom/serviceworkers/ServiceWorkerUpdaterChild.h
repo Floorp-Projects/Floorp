@@ -14,19 +14,16 @@
 namespace mozilla {
 namespace dom {
 
-class ServiceWorkerUpdaterChild final : public PServiceWorkerUpdaterChild
-{
-public:
+class ServiceWorkerUpdaterChild final : public PServiceWorkerUpdaterChild {
+ public:
   ServiceWorkerUpdaterChild(GenericPromise* aPromise,
                             CancelableRunnable* aSuccessRunnable,
                             CancelableRunnable* aFailureRunnable);
 
-  mozilla::ipc::IPCResult
-  RecvProceed(const bool& aAllowed) override;
+  mozilla::ipc::IPCResult RecvProceed(const bool& aAllowed) override;
 
-private:
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+ private:
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   MozPromiseRequestHolder<GenericPromise> mPromiseHolder;
 
@@ -34,7 +31,7 @@ private:
   RefPtr<CancelableRunnable> mFailureRunnable;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ServiceWorkerUpdaterChild_h
+#endif  // mozilla_dom_ServiceWorkerUpdaterChild_h

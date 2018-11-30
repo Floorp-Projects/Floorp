@@ -15,9 +15,8 @@
 namespace mozilla {
 namespace mscom {
 
-class MainThreadClientInfo final : public IMessageFilter
-{
-public:
+class MainThreadClientInfo final : public IMessageFilter {
+ public:
   static HRESULT Create(MainThreadClientInfo** aOutObj);
 
   DWORD GetLastRemoteCallThreadId() const;
@@ -27,26 +26,27 @@ public:
   STDMETHODIMP_(ULONG) AddRef() override;
   STDMETHODIMP_(ULONG) Release() override;
 
-  STDMETHODIMP_(DWORD) HandleInComingCall(DWORD aCallType, HTASK aCallerTid,
-                                          DWORD aTickCount,
-                                          LPINTERFACEINFO aInterfaceInfo) override;
-  STDMETHODIMP_(DWORD) RetryRejectedCall(HTASK aCalleeTid, DWORD aTickCount,
-                                         DWORD aRejectType) override;
-  STDMETHODIMP_(DWORD) MessagePending(HTASK aCalleeTid, DWORD aTickCount,
-                                      DWORD aPendingType) override;
+  STDMETHODIMP_(DWORD)
+  HandleInComingCall(DWORD aCallType, HTASK aCallerTid, DWORD aTickCount,
+                     LPINTERFACEINFO aInterfaceInfo) override;
+  STDMETHODIMP_(DWORD)
+  RetryRejectedCall(HTASK aCalleeTid, DWORD aTickCount,
+                    DWORD aRejectType) override;
+  STDMETHODIMP_(DWORD)
+  MessagePending(HTASK aCalleeTid, DWORD aTickCount,
+                 DWORD aPendingType) override;
 
-private:
+ private:
   MainThreadClientInfo();
   ~MainThreadClientInfo() = default;
 
-private:
+ private:
   ULONG mRefCnt;
   RefPtr<IMessageFilter> mPrevFilter;
   DWORD mLastRemoteCallTid;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_MainThreadClientInfo
-
+#endif  // mozilla_mscom_MainThreadClientInfo

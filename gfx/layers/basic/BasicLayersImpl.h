@@ -7,20 +7,20 @@
 #ifndef GFX_BASICLAYERSIMPL_H
 #define GFX_BASICLAYERSIMPL_H
 
-#include "BasicImplData.h"              // for BasicImplData
-#include "BasicLayers.h"                // for BasicLayerManager
-#include "ReadbackLayer.h"              // for ReadbackLayer
-#include "gfxContext.h"                 // for gfxContext, etc
-#include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
-#include "mozilla/Maybe.h"              // for Maybe
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsImpl.h"            // for gfxContext::Release, etc
-#include "nsRegion.h"                   // for nsIntRegion
+#include "BasicImplData.h"       // for BasicImplData
+#include "BasicLayers.h"         // for BasicLayerManager
+#include "ReadbackLayer.h"       // for ReadbackLayer
+#include "gfxContext.h"          // for gfxContext, etc
+#include "mozilla/Attributes.h"  // for MOZ_STACK_CLASS
+#include "mozilla/Maybe.h"       // for Maybe
+#include "nsDebug.h"             // for NS_ASSERTION
+#include "nsISupportsImpl.h"     // for gfxContext::Release, etc
+#include "nsRegion.h"            // for nsIntRegion
 
 namespace mozilla {
 namespace gfx {
 class DrawTarget;
-} // namespace gfx
+}  // namespace gfx
 
 namespace layers {
 
@@ -29,7 +29,8 @@ class Layer;
 
 class AutoSetOperator {
   typedef mozilla::gfx::CompositionOp CompositionOp;
-public:
+
+ public:
   AutoSetOperator(gfxContext* aContext, CompositionOp aOperator) {
     if (aOperator != CompositionOp::OP_OVER) {
       aContext->SetOp(aOperator);
@@ -41,37 +42,30 @@ public:
       mContext->SetOp(CompositionOp::OP_OVER);
     }
   }
-private:
+
+ private:
   RefPtr<gfxContext> mContext;
 };
 
-class BasicReadbackLayer : public ReadbackLayer,
-                           public BasicImplData
-{
-public:
-  explicit BasicReadbackLayer(BasicLayerManager* aLayerManager) :
-    ReadbackLayer(aLayerManager, static_cast<BasicImplData*>(this))
-  {
+class BasicReadbackLayer : public ReadbackLayer, public BasicImplData {
+ public:
+  explicit BasicReadbackLayer(BasicLayerManager* aLayerManager)
+      : ReadbackLayer(aLayerManager, static_cast<BasicImplData*>(this)) {
     MOZ_COUNT_CTOR(BasicReadbackLayer);
   }
 
-protected:
-  virtual ~BasicReadbackLayer()
-  {
-    MOZ_COUNT_DTOR(BasicReadbackLayer);
-  }
+ protected:
+  virtual ~BasicReadbackLayer() { MOZ_COUNT_DTOR(BasicReadbackLayer); }
 
-public:
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
-  {
+ public:
+  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ReadbackLayer::SetVisibleRegion(aRegion);
   }
 
-protected:
-  BasicLayerManager* BasicManager()
-  {
+ protected:
+  BasicLayerManager* BasicManager() {
     return static_cast<BasicLayerManager*>(mManager);
   }
 };
@@ -83,73 +77,52 @@ protected:
  * false otherwise.
  * The transform for the layer will be put in aMaskData
  */
-bool
-GetMaskData(Layer* aMaskLayer,
-            const gfx::Point& aDeviceOffset,
-            AutoMoz2DMaskData* aMaskData);
+bool GetMaskData(Layer* aMaskLayer, const gfx::Point& aDeviceOffset,
+                 AutoMoz2DMaskData* aMaskData);
 
-already_AddRefed<gfx::SourceSurface> GetMaskForLayer(Layer* aLayer, gfx::Matrix* aMaskTransform);
+already_AddRefed<gfx::SourceSurface> GetMaskForLayer(
+    Layer* aLayer, gfx::Matrix* aMaskTransform);
 
 // Paint the current source to a context using a mask, if present
-void
-PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer);
+void PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer);
 
 // Fill the rect with the source, using a mask and opacity, if present
-void
-FillRectWithMask(gfx::DrawTarget* aDT,
-                 const gfx::Rect& aRect,
-                 const gfx::Color& aColor,
-                 const gfx::DrawOptions& aOptions,
-                 gfx::SourceSurface* aMaskSource = nullptr,
-                 const gfx::Matrix* aMaskTransform = nullptr);
-void
-FillRectWithMask(gfx::DrawTarget* aDT,
-                 const gfx::Rect& aRect,
-                 gfx::SourceSurface* aSurface,
-                 gfx::SamplingFilter aSamplingFilter,
-                 const gfx::DrawOptions& aOptions,
-                 gfx::ExtendMode aExtendMode,
-                 gfx::SourceSurface* aMaskSource = nullptr,
-                 const gfx::Matrix* aMaskTransform = nullptr,
-                 const gfx::Matrix* aSurfaceTransform = nullptr);
-void
-FillRectWithMask(gfx::DrawTarget* aDT,
-                 const gfx::Point& aDeviceOffset,
-                 const gfx::Rect& aRect,
-                 gfx::SourceSurface* aSurface,
-                 gfx::SamplingFilter aSamplingFilter,
-                 const gfx::DrawOptions& aOptions,
-                 Layer* aMaskLayer);
-void
-FillRectWithMask(gfx::DrawTarget* aDT,
-                 const gfx::Point& aDeviceOffset,
-                 const gfx::Rect& aRect,
-                 const gfx::Color& aColor,
-                 const gfx::DrawOptions& aOptions,
-                 Layer* aMaskLayer);
+void FillRectWithMask(gfx::DrawTarget* aDT, const gfx::Rect& aRect,
+                      const gfx::Color& aColor,
+                      const gfx::DrawOptions& aOptions,
+                      gfx::SourceSurface* aMaskSource = nullptr,
+                      const gfx::Matrix* aMaskTransform = nullptr);
+void FillRectWithMask(gfx::DrawTarget* aDT, const gfx::Rect& aRect,
+                      gfx::SourceSurface* aSurface,
+                      gfx::SamplingFilter aSamplingFilter,
+                      const gfx::DrawOptions& aOptions,
+                      gfx::ExtendMode aExtendMode,
+                      gfx::SourceSurface* aMaskSource = nullptr,
+                      const gfx::Matrix* aMaskTransform = nullptr,
+                      const gfx::Matrix* aSurfaceTransform = nullptr);
+void FillRectWithMask(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
+                      const gfx::Rect& aRect, gfx::SourceSurface* aSurface,
+                      gfx::SamplingFilter aSamplingFilter,
+                      const gfx::DrawOptions& aOptions, Layer* aMaskLayer);
+void FillRectWithMask(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
+                      const gfx::Rect& aRect, const gfx::Color& aColor,
+                      const gfx::DrawOptions& aOptions, Layer* aMaskLayer);
 
-void
-FillPathWithMask(gfx::DrawTarget* aDT,
-                 const gfx::Path* aPath,
-                 const gfx::Rect& aClipRect,
-                 const gfx::Color& aColor,
-                 const gfx::DrawOptions& aOptions,
-                 gfx::SourceSurface* aMaskSource = nullptr,
-                 const gfx::Matrix* aMaskTransform = nullptr);
-void
-FillPathWithMask(gfx::DrawTarget* aDT,
-                 const gfx::Path* aPath,
-                 const gfx::Rect& aClipRect,
-                 gfx::SourceSurface* aSurface,
-                 gfx::SamplingFilter aSamplingFilter,
-                 const gfx::DrawOptions& aOptions,
-                 gfx::ExtendMode aExtendMode,
-                 gfx::SourceSurface* aMaskSource,
-                 const gfx::Matrix* aMaskTransform,
-                 const gfx::Matrix* aSurfaceTransform);
+void FillPathWithMask(gfx::DrawTarget* aDT, const gfx::Path* aPath,
+                      const gfx::Rect& aClipRect, const gfx::Color& aColor,
+                      const gfx::DrawOptions& aOptions,
+                      gfx::SourceSurface* aMaskSource = nullptr,
+                      const gfx::Matrix* aMaskTransform = nullptr);
+void FillPathWithMask(gfx::DrawTarget* aDT, const gfx::Path* aPath,
+                      const gfx::Rect& aClipRect, gfx::SourceSurface* aSurface,
+                      gfx::SamplingFilter aSamplingFilter,
+                      const gfx::DrawOptions& aOptions,
+                      gfx::ExtendMode aExtendMode,
+                      gfx::SourceSurface* aMaskSource,
+                      const gfx::Matrix* aMaskTransform,
+                      const gfx::Matrix* aSurfaceTransform);
 
-BasicImplData*
-ToData(Layer* aLayer);
+BasicImplData* ToData(Layer* aLayer);
 
 /**
  * Returns the operator to be used when blending and compositing this layer.
@@ -163,10 +136,9 @@ ToData(Layer* aLayer);
  * If the blend mode for this layer is normal, the compositing operator
  * returned by GetOperator is used.
  */
-gfx::CompositionOp
-GetEffectiveOperator(Layer* aLayer);
+gfx::CompositionOp GetEffectiveOperator(Layer* aLayer);
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

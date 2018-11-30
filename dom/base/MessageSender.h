@@ -15,23 +15,20 @@ namespace dom {
 class MessageBroadcaster;
 
 /**
- * Implementation for the WebIDL MessageSender interface. Base class for frame and child
- * process message managers.
+ * Implementation for the WebIDL MessageSender interface. Base class for frame
+ * and child process message managers.
  */
-class MessageSender : public MessageListenerManager
-{
-public:
+class MessageSender : public MessageListenerManager {
+ public:
   void InitWithCallback(ipc::MessageManagerCallback* aCallback);
 
-protected:
+ protected:
   MessageSender(ipc::MessageManagerCallback* aCallback,
-                MessageBroadcaster* aParentManager,
-                MessageManagerFlags aFlags)
-    : MessageListenerManager(aCallback, aParentManager, aFlags)
-  {}
+                MessageBroadcaster* aParentManager, MessageManagerFlags aFlags)
+      : MessageListenerManager(aCallback, aParentManager, aFlags) {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MessageSender_h
+#endif  // mozilla_dom_MessageSender_h

@@ -11,10 +11,8 @@
 
 using namespace mozilla;
 
-static void
-ReadString(nsINIParser &parser, const char* section,
-           const char* key, XREAppData::CharPtr& result)
-{
+static void ReadString(nsINIParser& parser, const char* section,
+                       const char* key, XREAppData::CharPtr& result) {
   nsCString str;
   nsresult rv = parser.GetString(section, key, str);
   if (NS_SUCCEEDED(rv)) {
@@ -23,16 +21,14 @@ ReadString(nsINIParser &parser, const char* section,
 }
 
 struct ReadFlag {
-  const char *section;
-  const char *key;
+  const char* section;
+  const char* key;
   uint32_t flag;
 };
 
-static void
-ReadFlag(nsINIParser &parser, const char* section,
-         const char* key, uint32_t flag, uint32_t& result)
-{
-  char buf[6]; // large enough to hold "false"
+static void ReadFlag(nsINIParser& parser, const char* section, const char* key,
+                     uint32_t flag, uint32_t& result) {
+  char buf[6];  // large enough to hold "false"
   nsresult rv = parser.GetString(section, key, buf, sizeof(buf));
   if (NS_SUCCEEDED(rv) || rv == NS_ERROR_LOSS_OF_SIGNIFICANT_DATA) {
     if (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T') {
@@ -44,17 +40,14 @@ ReadFlag(nsINIParser &parser, const char* section,
   }
 }
 
-nsresult
-XRE_ParseAppData(nsIFile* aINIFile, XREAppData& aAppData)
-{
+nsresult XRE_ParseAppData(nsIFile* aINIFile, XREAppData& aAppData) {
   NS_ENSURE_ARG(aINIFile);
 
   nsresult rv;
 
   nsINIParser parser;
   rv = parser.Init(aINIFile);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   ReadString(parser, "App", "Vendor", aAppData.vendor);
   ReadString(parser, "App", "Name", aAppData.name);
@@ -70,8 +63,8 @@ XRE_ParseAppData(nsIFile* aINIFile, XREAppData& aAppData)
   ReadString(parser, "App", "UAName", aAppData.UAName);
   ReadFlag(parser, "XRE", "EnableProfileMigrator",
            NS_XRE_ENABLE_PROFILE_MIGRATOR, aAppData.flags);
-  ReadFlag(parser, "Crash Reporter", "Enabled",
-           NS_XRE_ENABLE_CRASH_REPORTER, aAppData.flags);
+  ReadFlag(parser, "Crash Reporter", "Enabled", NS_XRE_ENABLE_CRASH_REPORTER,
+           aAppData.flags);
 
   return NS_OK;
 }

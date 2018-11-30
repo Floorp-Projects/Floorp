@@ -12,8 +12,8 @@
 
 class SVGFEImageFrame;
 
-nsresult NS_NewSVGFEImageElement(nsIContent **aResult,
-                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGFEImageElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,18 +21,20 @@ namespace dom {
 typedef nsSVGFE SVGFEImageElementBase;
 
 class SVGFEImageElement final : public SVGFEImageElementBase,
-                                public nsImageLoadingContent
-{
+                                public nsImageLoadingContent {
   friend class ::SVGFEImageFrame;
 
-protected:
-  friend nsresult (::NS_NewSVGFEImageElement(nsIContent **aResult,
-                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGFEImageElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+ protected:
+  friend nsresult(::NS_NewSVGFEImageElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  explicit SVGFEImageElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual ~SVGFEImageElement();
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-public:
+ public:
   virtual bool SubregionIsUnionOfRegions() override { return false; }
 
   // interfaces:
@@ -41,14 +43,15 @@ public:
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
-  virtual FilterPrimitiveDescription
-    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                            const IntRect& aFilterSubregion,
-                            const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsAtom* aAttribute) const override;
-  virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
+  virtual FilterPrimitiveDescription GetPrimitiveDescription(
+      nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+      const nsTArray<bool>& aInputsAreTainted,
+      nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
+  virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
+                                         nsAtom* aAttribute) const override;
+  virtual nsSVGString& GetResultImageName() override {
+    return mStringAttributes[RESULT];
+  }
   virtual bool OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
                                nsIPrincipal* aReferencePrincipal) override;
 
@@ -67,7 +70,8 @@ public:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
   virtual EventStates IntrinsicState() const override;
 
-  NS_IMETHOD Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData) override;
+  NS_IMETHOD Notify(imgIRequest* aRequest, int32_t aType,
+                    const nsIntRect* aData) override;
 
   // Override for nsIImageLoadingContent.
   NS_IMETHOD_(void) FrameCreated(nsIFrame* aFrame) override;
@@ -78,13 +82,13 @@ public:
   already_AddRefed<SVGAnimatedString> Href();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
 
-private:
+ private:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
 
-protected:
+ protected:
   virtual bool ProducesSRGB() override { return true; }
 
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() override;
+  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
   virtual StringAttributesInfo GetStringInfo() override;
 
   // Override for nsImageLoadingContent.
@@ -98,7 +102,7 @@ protected:
   uint16_t mImageAnimationMode;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

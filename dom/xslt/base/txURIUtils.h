@@ -14,24 +14,23 @@ class nsINode;
 /**
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
-**/
+ **/
 
 class URIUtils {
-public:
+ public:
+  /**
+   * Reset the given document with the document of the source node
+   */
+  static void ResetWithSource(nsIDocument* aNewDoc, nsINode* aSourceNode);
 
-    /**
-     * Reset the given document with the document of the source node
-     */
-    static void ResetWithSource(nsIDocument *aNewDoc, nsINode *aSourceNode);
-
-    /**
-     * Resolves the given href argument, using the given documentBase
-     * if necessary.
-     * The new resolved href will be appended to the given dest String
-    **/
-    static void resolveHref(const nsAString& href, const nsAString& base,
-                            nsAString& dest);
-}; //-- URIUtils
+  /**
+   * Resolves the given href argument, using the given documentBase
+   * if necessary.
+   * The new resolved href will be appended to the given dest String
+   **/
+  static void resolveHref(const nsAString& href, const nsAString& base,
+                          nsAString& dest);
+};  //-- URIUtils
 
 /* */
 #endif

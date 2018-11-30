@@ -29,34 +29,33 @@ namespace mozilla {
 namespace image {
 
 typedef struct {
-    struct jpeg_error_mgr pub;  // "public" fields for IJG library
-    jmp_buf setjmp_buffer;      // For handling catastropic errors
+  struct jpeg_error_mgr pub;  // "public" fields for IJG library
+  jmp_buf setjmp_buffer;      // For handling catastropic errors
 } decoder_error_mgr;
 
 typedef enum {
-    JPEG_HEADER,                          // Reading JFIF headers
-    JPEG_START_DECOMPRESS,
-    JPEG_DECOMPRESS_PROGRESSIVE,          // Output progressive pixels
-    JPEG_DECOMPRESS_SEQUENTIAL,           // Output sequential pixels
-    JPEG_DONE,
-    JPEG_SINK_NON_JPEG_TRAILER,          // Some image files have a
-                                         // non-JPEG trailer
-    JPEG_ERROR
+  JPEG_HEADER,  // Reading JFIF headers
+  JPEG_START_DECOMPRESS,
+  JPEG_DECOMPRESS_PROGRESSIVE,  // Output progressive pixels
+  JPEG_DECOMPRESS_SEQUENTIAL,   // Output sequential pixels
+  JPEG_DONE,
+  JPEG_SINK_NON_JPEG_TRAILER,  // Some image files have a
+                               // non-JPEG trailer
+  JPEG_ERROR
 } jstate;
 
 class RasterImage;
 struct Orientation;
 
-class nsJPEGDecoder : public Decoder
-{
-public:
+class nsJPEGDecoder : public Decoder {
+ public:
   virtual ~nsJPEGDecoder();
 
   DecoderType GetType() const override { return DecoderType::JPEG; }
 
   void NotifyDone();
 
-protected:
+ protected:
   nsresult InitInternal() override;
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
@@ -64,21 +63,17 @@ protected:
 
   Maybe<Telemetry::HistogramID> SpeedHistogram() const override;
 
-protected:
+ protected:
   Orientation ReadOrientationFromEXIF();
   void OutputScanlines(bool* suspend);
 
-private:
+ private:
   friend class DecoderFactory;
 
   // Decoders should only be instantiated via DecoderFactory.
   nsJPEGDecoder(RasterImage* aImage, Decoder::DecodeStyle aDecodeStyle);
 
-  enum class State
-  {
-    JPEG_DATA,
-    FINISHED_JPEG_DATA
-  };
+  enum class State { JPEG_DATA, FINISHED_JPEG_DATA };
 
   void FinishRow(uint32_t aLastSourceRow);
   LexerTransition<State> ReadJPEGData(const char* aData, size_t aLength);
@@ -86,7 +81,7 @@ private:
 
   StreamingLexer<State> mLexer;
 
-public:
+ public:
   struct jpeg_decompress_struct mInfo;
   struct jpeg_source_mgr mSourceMgr;
   decoder_error_mgr mErr;
@@ -94,15 +89,15 @@ public:
 
   uint32_t mBytesToSkip;
 
-  const JOCTET* mSegment;   // The current segment we are decoding from
-  uint32_t mSegmentLen;     // amount of data in mSegment
+  const JOCTET* mSegment;  // The current segment we are decoding from
+  uint32_t mSegmentLen;    // amount of data in mSegment
 
   JOCTET* mBackBuffer;
-  uint32_t mBackBufferLen; // Offset of end of active backtrack data
-  uint32_t mBackBufferSize; // size in bytes what mBackBuffer was created with
-  uint32_t mBackBufferUnreadLen; // amount of data currently in mBackBuffer
+  uint32_t mBackBufferLen;   // Offset of end of active backtrack data
+  uint32_t mBackBufferSize;  // size in bytes what mBackBuffer was created with
+  uint32_t mBackBufferUnreadLen;  // amount of data currently in mBackBuffer
 
-  JOCTET * mProfile;
+  JOCTET* mProfile;
   uint32_t mProfileLength;
 
   qcms_profile* mInProfile;
@@ -115,7 +110,7 @@ public:
   uint32_t mCMSMode;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_decoders_nsJPEGDecoder_h
+#endif  // mozilla_image_decoders_nsJPEGDecoder_h

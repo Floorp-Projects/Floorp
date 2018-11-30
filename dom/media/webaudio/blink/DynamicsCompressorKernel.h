@@ -36,95 +36,90 @@
 namespace WebCore {
 
 class DynamicsCompressorKernel {
-public:
-    DynamicsCompressorKernel(float sampleRate, unsigned numberOfChannels);
+ public:
+  DynamicsCompressorKernel(float sampleRate, unsigned numberOfChannels);
 
-    void setNumberOfChannels(unsigned);
+  void setNumberOfChannels(unsigned);
 
-    // Performs stereo-linked compression.
-    void process(float* sourceChannels[],
-                 float* destinationChannels[],
-                 unsigned numberOfChannels,
-                 unsigned framesToProcess,
+  // Performs stereo-linked compression.
+  void process(float* sourceChannels[], float* destinationChannels[],
+               unsigned numberOfChannels, unsigned framesToProcess,
 
-                 float dbThreshold,
-                 float dbKnee,
-                 float ratio,
-                 float attackTime,
-                 float releaseTime,
-                 float preDelayTime,
-                 float dbPostGain,
-                 float effectBlend,
+               float dbThreshold, float dbKnee, float ratio, float attackTime,
+               float releaseTime, float preDelayTime, float dbPostGain,
+               float effectBlend,
 
-                 float releaseZone1,
-                 float releaseZone2,
-                 float releaseZone3,
-                 float releaseZone4
-                 );
+               float releaseZone1, float releaseZone2, float releaseZone3,
+               float releaseZone4);
 
-    void reset();
+  void reset();
 
-    unsigned latencyFrames() const { return m_lastPreDelayFrames; }
+  unsigned latencyFrames() const { return m_lastPreDelayFrames; }
 
-    float sampleRate() const { return m_sampleRate; }
+  float sampleRate() const { return m_sampleRate; }
 
-    float meteringGain() const { return m_meteringGain; }
+  float meteringGain() const { return m_meteringGain; }
 
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-protected:
-    float m_sampleRate;
+ protected:
+  float m_sampleRate;
 
-    float m_detectorAverage;
-    float m_compressorGain;
+  float m_detectorAverage;
+  float m_compressorGain;
 
-    // Metering
-    float m_meteringReleaseK;
-    float m_meteringGain;
+  // Metering
+  float m_meteringReleaseK;
+  float m_meteringGain;
 
-    // Lookahead section.
-    enum { MaxPreDelayFrames = 1024 };
-    enum { MaxPreDelayFramesMask = MaxPreDelayFrames - 1 };
-    enum { DefaultPreDelayFrames = 256 }; // setPreDelayTime() will override this initial value
-    unsigned m_lastPreDelayFrames;
-    void setPreDelayTime(float);
+  // Lookahead section.
+  enum { MaxPreDelayFrames = 1024 };
+  enum { MaxPreDelayFramesMask = MaxPreDelayFrames - 1 };
+  enum {
+    DefaultPreDelayFrames = 256
+  };  // setPreDelayTime() will override this initial value
+  unsigned m_lastPreDelayFrames;
+  void setPreDelayTime(float);
 
-    nsTArray<mozilla::UniquePtr<float[]>> m_preDelayBuffers;
-    int m_preDelayReadIndex;
-    int m_preDelayWriteIndex;
+  nsTArray<mozilla::UniquePtr<float[]>> m_preDelayBuffers;
+  int m_preDelayReadIndex;
+  int m_preDelayWriteIndex;
 
-    float m_maxAttackCompressionDiffDb;
+  float m_maxAttackCompressionDiffDb;
 
-    // Static compression curve.
-    float kneeCurve(float x, float k);
-    float saturate(float x, float k);
-    float slopeAt(float x, float k);
-    float kAtSlope(float desiredSlope);
+  // Static compression curve.
+  float kneeCurve(float x, float k);
+  float saturate(float x, float k);
+  float slopeAt(float x, float k);
+  float kAtSlope(float desiredSlope);
 
-    float updateStaticCurveParameters(float dbThreshold, float dbKnee, float ratio);
+  float updateStaticCurveParameters(float dbThreshold, float dbKnee,
+                                    float ratio);
 
-    // Amount of input change in dB required for 1 dB of output change.
-    // This applies to the portion of the curve above m_kneeThresholdDb (see below).
-    float m_ratio;
-    float m_slope; // Inverse ratio.
+  // Amount of input change in dB required for 1 dB of output change.
+  // This applies to the portion of the curve above m_kneeThresholdDb (see
+  // below).
+  float m_ratio;
+  float m_slope;  // Inverse ratio.
 
-    // The input to output change below the threshold is linear 1:1.
-    float m_linearThreshold;
-    float m_dbThreshold;
+  // The input to output change below the threshold is linear 1:1.
+  float m_linearThreshold;
+  float m_dbThreshold;
 
-    // m_dbKnee is the number of dB above the threshold before we enter the "ratio" portion of the curve.
-    // m_kneeThresholdDb = m_dbThreshold + m_dbKnee
-    // The portion between m_dbThreshold and m_kneeThresholdDb is the "soft knee" portion of the curve
-    // which transitions smoothly from the linear portion to the ratio portion.
-    float m_dbKnee;
-    float m_kneeThreshold;
-    float m_kneeThresholdDb;
-    float m_ykneeThresholdDb;
+  // m_dbKnee is the number of dB above the threshold before we enter the
+  // "ratio" portion of the curve. m_kneeThresholdDb = m_dbThreshold + m_dbKnee
+  // The portion between m_dbThreshold and m_kneeThresholdDb is the "soft knee"
+  // portion of the curve which transitions smoothly from the linear portion to
+  // the ratio portion.
+  float m_dbKnee;
+  float m_kneeThreshold;
+  float m_kneeThresholdDb;
+  float m_ykneeThresholdDb;
 
-    // Internal parameter for the knee portion of the curve.
-    float m_K;
+  // Internal parameter for the knee portion of the curve.
+  float m_K;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // DynamicsCompressorKernel_h
+#endif  // DynamicsCompressorKernel_h

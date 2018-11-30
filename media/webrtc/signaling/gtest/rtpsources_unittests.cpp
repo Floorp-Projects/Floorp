@@ -6,12 +6,11 @@
 using namespace mozilla;
 
 namespace test {
-class RtpSourcesTest : public ::testing::Test
-{
-using RtpSourceHistory = RtpSourceObserver::RtpSourceHistory;
-using RtpSourceEntry = mozilla::RtpSourceObserver::RtpSourceEntry;
-public:
+class RtpSourcesTest : public ::testing::Test {
+  using RtpSourceHistory = RtpSourceObserver::RtpSourceHistory;
+  using RtpSourceEntry = mozilla::RtpSourceObserver::RtpSourceEntry;
 
+ public:
   // History Tests
 
   // Test init happens as expected
@@ -31,27 +30,21 @@ public:
     const uint8_t audioLevel = 10;
     const int64_t jitter = 10;
     RtpSourceHistory history;
-    const int64_t times[] = {100,
-                             120,
-                             140,
-                             160,
-                             180,
-                             200,
-                             220};
+    const int64_t times[] = {100, 120, 140, 160, 180, 200, 220};
     const size_t numEntries = sizeof(times) / sizeof(times[0]);
     for (auto i : times) {
       history.Insert(i, i + jitter, hasAudioLevel, audioLevel);
-     }
-     ASSERT_EQ(history.mDetailedHistory.size(), numEntries);
-     for (auto i : times) {
-       auto entry = history.FindClosestNotAfter(i + jitter);
-       ASSERT_NE(entry, nullptr);
-       if (entry) {
-         EXPECT_EQ(entry->jitterAdjustedTimestamp, i + jitter);
-         EXPECT_EQ(entry->hasAudioLevel, hasAudioLevel);
-         EXPECT_EQ(entry->audioLevel, audioLevel);
-       }
-     }
+    }
+    ASSERT_EQ(history.mDetailedHistory.size(), numEntries);
+    for (auto i : times) {
+      auto entry = history.FindClosestNotAfter(i + jitter);
+      ASSERT_NE(entry, nullptr);
+      if (entry) {
+        EXPECT_EQ(entry->jitterAdjustedTimestamp, i + jitter);
+        EXPECT_EQ(entry->hasAudioLevel, hasAudioLevel);
+        EXPECT_EQ(entry->audioLevel, audioLevel);
+      }
+    }
   }
 
   // Tests inserting before the jitter window, in long term history.
@@ -153,7 +146,6 @@ public:
     EXPECT_EQ(history.mLatestEviction.jitterAdjustedTimestamp, time1);
     EXPECT_EQ(history.mLatestEviction.hasAudioLevel, true);
     EXPECT_EQ(history.mLatestEviction.audioLevel, 2);
-
   }
 
   // Packets have a maximum audio level of 127
@@ -272,8 +264,7 @@ public:
       }
       if (entry.mSource == csrc) {
         csrcFound = true;
-        EXPECT_EQ(entry.mSourceType,
-                  dom::RTCRtpSourceEntryType::Contributing);
+        EXPECT_EQ(entry.mSourceType, dom::RTCRtpSourceEntryType::Contributing);
       }
     }
     EXPECT_TRUE(ssrcFound);
@@ -312,13 +303,11 @@ public:
       }
       if (entry.mSource == csrc0) {
         csrc0Found = true;
-        EXPECT_EQ(entry.mSourceType,
-                  dom::RTCRtpSourceEntryType::Contributing);
+        EXPECT_EQ(entry.mSourceType, dom::RTCRtpSourceEntryType::Contributing);
       }
       if (entry.mSource == csrc1) {
         csrc1Found = true;
-        EXPECT_EQ(entry.mSourceType,
-                  dom::RTCRtpSourceEntryType::Contributing);
+        EXPECT_EQ(entry.mSourceType, dom::RTCRtpSourceEntryType::Contributing);
       }
     }
     EXPECT_TRUE(ssrcFound);
@@ -331,14 +320,13 @@ public:
     RtpSourceObserver observer;
     webrtc::WebRtcRTPHeader header;
   }
-
 };
 
 TEST_F(RtpSourcesTest, TestInitState) { TestInitState(); }
 TEST_F(RtpSourcesTest, TestInsertIntoJitterWindow) {
   TestInsertIntoJitterWindow();
 }
-TEST_F(RtpSourcesTest, TestAgeIntoLongTerm){ TestAgeIntoLongTerm(); }
+TEST_F(RtpSourcesTest, TestAgeIntoLongTerm) { TestAgeIntoLongTerm(); }
 TEST_F(RtpSourcesTest, TestInsertIntoLongTerm) { TestInsertIntoLongTerm(); }
 TEST_F(RtpSourcesTest, TestMaximumAudioLevel) { TestMaximumAudioLevel(); }
 TEST_F(RtpSourcesTest, TestEmptyPrune) { TestEmptyPrune(); }
@@ -349,4 +337,4 @@ TEST_F(RtpSourcesTest, TestObserveTwoCsrcs) { TestObserveTwoCsrcs(); }
 TEST_F(RtpSourcesTest, TestObserveCsrcWithAudioLevel) {
   TestObserveCsrcWithAudioLevel();
 }
-}
+}  // namespace test

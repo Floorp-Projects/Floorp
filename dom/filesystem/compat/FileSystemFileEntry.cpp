@@ -16,21 +16,16 @@ namespace dom {
 
 namespace {
 
-class FileCallbackRunnable final : public Runnable
-{
-public:
+class FileCallbackRunnable final : public Runnable {
+ public:
   FileCallbackRunnable(FileCallback* aCallback, File* aFile)
-    : Runnable("FileCallbackRunnable")
-    , mCallback(aCallback)
-    , mFile(aFile)
-  {
+      : Runnable("FileCallbackRunnable"), mCallback(aCallback), mFile(aFile) {
     MOZ_ASSERT(aCallback);
     MOZ_ASSERT(aFile);
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     // Here we clone the File object.
 
     RefPtr<File> file = File::Create(mFile->GetParentObject(), mFile->Impl());
@@ -40,12 +35,12 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<FileCallback> mCallback;
   RefPtr<File> mFile;
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemFileEntry, FileSystemEntry, mFile)
 
@@ -55,36 +50,27 @@ NS_IMPL_RELEASE_INHERITED(FileSystemFileEntry, FileSystemEntry)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemFileEntry)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
-FileSystemFileEntry::FileSystemFileEntry(nsIGlobalObject* aGlobal,
-                                         File* aFile,
+FileSystemFileEntry::FileSystemFileEntry(nsIGlobalObject* aGlobal, File* aFile,
                                          FileSystemDirectoryEntry* aParentEntry,
                                          FileSystem* aFileSystem)
-  : FileSystemEntry(aGlobal, aParentEntry, aFileSystem)
-  , mFile(aFile)
-{
+    : FileSystemEntry(aGlobal, aParentEntry, aFileSystem), mFile(aFile) {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(mFile);
 }
 
-FileSystemFileEntry::~FileSystemFileEntry()
-{}
+FileSystemFileEntry::~FileSystemFileEntry() {}
 
-JSObject*
-FileSystemFileEntry::WrapObject(JSContext* aCx,
-                                JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* FileSystemFileEntry::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return FileSystemFileEntry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-FileSystemFileEntry::GetName(nsAString& aName, ErrorResult& aRv) const
-{
+void FileSystemFileEntry::GetName(nsAString& aName, ErrorResult& aRv) const {
   mFile->GetName(aName);
 }
 
-void
-FileSystemFileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
-{
+void FileSystemFileEntry::GetFullPath(nsAString& aPath,
+                                      ErrorResult& aRv) const {
   mFile->Impl()->GetDOMPath(aPath);
   if (aPath.IsEmpty()) {
     // We're under the root directory. webkitRelativePath
@@ -98,15 +84,14 @@ FileSystemFileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
   }
 }
 
-void
-FileSystemFileEntry::GetFile(FileCallback& aSuccessCallback,
-                             const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
-{
+void FileSystemFileEntry::GetFile(
+    FileCallback& aSuccessCallback,
+    const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const {
   RefPtr<FileCallbackRunnable> runnable =
-    new FileCallbackRunnable(&aSuccessCallback, mFile);
+      new FileCallbackRunnable(&aSuccessCallback, mFile);
 
   FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

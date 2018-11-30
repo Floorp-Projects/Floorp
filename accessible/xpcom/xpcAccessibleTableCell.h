@@ -18,14 +18,13 @@ namespace a11y {
  * XPCOM wrapper around TableAccessibleCell class.
  */
 class xpcAccessibleTableCell : public xpcAccessibleHyperText,
-                               public nsIAccessibleTableCell
-{
-public:
-  explicit xpcAccessibleTableCell(Accessible* aIntl) :
-    xpcAccessibleHyperText(aIntl) { }
+                               public nsIAccessibleTableCell {
+ public:
+  explicit xpcAccessibleTableCell(Accessible* aIntl)
+      : xpcAccessibleHyperText(aIntl) {}
 
-  xpcAccessibleTableCell(ProxyAccessible* aProxy, uint32_t aInterfaces) :
-    xpcAccessibleHyperText(aProxy, aInterfaces) {}
+  xpcAccessibleTableCell(ProxyAccessible* aProxy, uint32_t aInterfaces)
+      : xpcAccessibleHyperText(aProxy, aInterfaces) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -39,24 +38,23 @@ public:
   NS_IMETHOD GetRowHeaderCells(nsIArray** aHeaderCells) final;
   NS_IMETHOD IsSelected(bool* aSelected) final;
 
-protected:
+ protected:
   virtual ~xpcAccessibleTableCell() {}
 
-private:
-  TableCellAccessible* Intl()
-  {
+ private:
+  TableCellAccessible* Intl() {
     if (Accessible* acc = mIntl.AsAccessible()) {
       return acc->AsTableCell();
     }
 
     return nullptr;
-}
+  }
 
   xpcAccessibleTableCell(const xpcAccessibleTableCell&) = delete;
-  xpcAccessibleTableCell& operator =(const xpcAccessibleTableCell&) = delete;
+  xpcAccessibleTableCell& operator=(const xpcAccessibleTableCell&) = delete;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_xpcom_xpcAccessibletableCell_h_
+#endif  // mozilla_a11y_xpcom_xpcAccessibletableCell_h_

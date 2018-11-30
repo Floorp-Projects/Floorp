@@ -10,37 +10,34 @@
 
 #include "nsIdleService.h"
 
-
 /* NOTE: Compare of GetTickCount() could overflow.  This corrects for
-* overflow situations.
-***/
+ * overflow situations.
+ ***/
 #ifndef SAFE_COMPARE_EVEN_WITH_WRAPPING
-#define SAFE_COMPARE_EVEN_WITH_WRAPPING(A, B) (((int)((long)A - (long)B) & 0xFFFFFFFF))
+#define SAFE_COMPARE_EVEN_WITH_WRAPPING(A, B) \
+  (((int)((long)A - (long)B) & 0xFFFFFFFF))
 #endif
 
+class nsIdleServiceWin : public nsIdleService {
+ public:
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsIdleServiceWin, nsIdleService)
 
-class nsIdleServiceWin : public nsIdleService
-{
-public:
-    NS_INLINE_DECL_REFCOUNTING_INHERITED(nsIdleServiceWin, nsIdleService)
+  bool PollIdleTime(uint32_t* aIdleTime) override;
 
-    bool PollIdleTime(uint32_t* aIdleTime) override;
-
-    static already_AddRefed<nsIdleServiceWin> GetInstance()
-    {
-        RefPtr<nsIdleServiceWin> idleService =
-            nsIdleService::GetInstance().downcast<nsIdleServiceWin>();
-        if (!idleService) {
-            idleService = new nsIdleServiceWin();
-        }
-        
-        return idleService.forget();
+  static already_AddRefed<nsIdleServiceWin> GetInstance() {
+    RefPtr<nsIdleServiceWin> idleService =
+        nsIdleService::GetInstance().downcast<nsIdleServiceWin>();
+    if (!idleService) {
+      idleService = new nsIdleServiceWin();
     }
 
-protected:
-    nsIdleServiceWin() { }
-    virtual ~nsIdleServiceWin() { }
-    bool UsePollMode() override;
+    return idleService.forget();
+  }
+
+ protected:
+  nsIdleServiceWin() {}
+  virtual ~nsIdleServiceWin() {}
+  bool UsePollMode() override;
 };
 
-#endif // nsIdleServiceWin_h__
+#endif  // nsIdleServiceWin_h__

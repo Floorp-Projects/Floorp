@@ -18,18 +18,13 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace css {
 
-GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules,
-                     StyleSheet* aSheet,
-                     Rule* aParentRule,
-                     uint32_t aLineNumber,
+GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules, StyleSheet* aSheet,
+                     Rule* aParentRule, uint32_t aLineNumber,
                      uint32_t aColumnNumber)
-  : Rule(aSheet, aParentRule, aLineNumber, aColumnNumber)
-  , mRuleList(new ServoCSSRuleList(std::move(aRules), aSheet, this))
-{
-}
+    : Rule(aSheet, aParentRule, aLineNumber, aColumnNumber),
+      mRuleList(new ServoCSSRuleList(std::move(aRules), aSheet, this)) {}
 
-GroupRule::~GroupRule()
-{
+GroupRule::~GroupRule() {
   MOZ_ASSERT(!mSheet, "SetStyleSheet should have been called");
   if (mRuleList) {
     mRuleList->DropReferences();
@@ -42,9 +37,7 @@ NS_IMPL_RELEASE_INHERITED(GroupRule, Rule)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GroupRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
 
-bool
-GroupRule::IsCCLeaf() const
-{
+bool GroupRule::IsCCLeaf() const {
   // Let's not worry for now about sorting out whether we're a leaf or not.
   return false;
 }
@@ -66,25 +59,20 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(GroupRule, Rule)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 #ifdef DEBUG
-void
-GroupRule::List(FILE* out, int32_t aIndent) const
-{
+void GroupRule::List(FILE* out, int32_t aIndent) const {
   // TODO list something reasonable?
 }
 #endif
 
-/* virtual */ void
-GroupRule::DropSheetReference()
-{
+/* virtual */ void GroupRule::DropSheetReference() {
   if (mRuleList) {
     mRuleList->DropSheetReference();
   }
   Rule::DropSheetReference();
 }
 
-uint32_t
-GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex, ErrorResult& aRv)
-{
+uint32_t GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex,
+                               ErrorResult& aRv) {
   StyleSheet* sheet = GetStyleSheet();
   if (NS_WARN_IF(!sheet)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -107,9 +95,7 @@ GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex, ErrorResult& aRv)
   return aIndex;
 }
 
-void
-GroupRule::DeleteRule(uint32_t aIndex, ErrorResult& aRv)
-{
+void GroupRule::DeleteRule(uint32_t aIndex, ErrorResult& aRv) {
   StyleSheet* sheet = GetStyleSheet();
   if (NS_WARN_IF(!sheet)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -130,12 +116,10 @@ GroupRule::DeleteRule(uint32_t aIndex, ErrorResult& aRv)
   }
 }
 
-size_t
-GroupRule::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t GroupRule::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // TODO how to implement?
   return 0;
 }
 
-} // namespace css
-} // namespace mozilla
+}  // namespace css
+}  // namespace mozilla

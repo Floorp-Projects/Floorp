@@ -27,9 +27,8 @@
 
 using namespace mozilla;
 
-static nsresult
-FreeBSDGetAccessPointData(nsCOMArray<nsWifiAccessPoint> &accessPoints)
-{
+static nsresult FreeBSDGetAccessPointData(
+    nsCOMArray<nsWifiAccessPoint> &accessPoints) {
   // get list of interfaces
   struct ifaddrs *ifal;
   if (getifaddrs(&ifal) < 0) {
@@ -78,7 +77,7 @@ FreeBSDGetAccessPointData(nsCOMArray<nsWifiAccessPoint> &accessPoints)
 
     // perform WiFi scan
     struct ieee80211req i802r;
-    char iscanbuf[32*1024];
+    char iscanbuf[32 * 1024];
     memset(&i802r, 0, sizeof(i802r));
     strncpy(i802r.i_name, ifa->ifa_name, sizeof(i802r.i_name));
     i802r.i_type = IEEE80211_IOC_SCAN_RESULTS;
@@ -93,11 +92,11 @@ FreeBSDGetAccessPointData(nsCOMArray<nsWifiAccessPoint> &accessPoints)
     close(s);
 
     // loop through WiFi networks and build geoloc-lookup structure
-    char *vsr = (char *) i802r.i_data;
+    char *vsr = (char *)i802r.i_data;
     unsigned len = i802r.i_len;
     while (len >= sizeof(struct ieee80211req_scan_result)) {
       struct ieee80211req_scan_result *isr =
-        (struct ieee80211req_scan_result *) vsr;
+          (struct ieee80211req_scan_result *)vsr;
 
       // determine size of this entry
       char *id;
@@ -111,7 +110,7 @@ FreeBSDGetAccessPointData(nsCOMArray<nsWifiAccessPoint> &accessPoints)
       }
 
       // copy network data
-      char ssid[IEEE80211_NWID_LEN+1];
+      char ssid[IEEE80211_NWID_LEN + 1];
       strncpy(ssid, id, idlen);
       ssid[idlen] = '\0';
       nsWifiAccessPoint *ap = new nsWifiAccessPoint();
@@ -122,12 +121,13 @@ FreeBSDGetAccessPointData(nsCOMArray<nsWifiAccessPoint> &accessPoints)
       rv = NS_OK;
 
       // log the data
-      LOG(( "FreeBSD access point: "
-            "SSID: %s, MAC: %02x-%02x-%02x-%02x-%02x-%02x, "
-            "Strength: %d, Channel: %dMHz\n",
-            ssid, isr->isr_bssid[0], isr->isr_bssid[1], isr->isr_bssid[2],
-            isr->isr_bssid[3], isr->isr_bssid[4], isr->isr_bssid[5],
-            isr->isr_rssi, isr->isr_freq));
+      LOG(
+          ("FreeBSD access point: "
+           "SSID: %s, MAC: %02x-%02x-%02x-%02x-%02x-%02x, "
+           "Strength: %d, Channel: %dMHz\n",
+           ssid, isr->isr_bssid[0], isr->isr_bssid[1], isr->isr_bssid[2],
+           isr->isr_bssid[3], isr->isr_bssid[4], isr->isr_bssid[5],
+           isr->isr_rssi, isr->isr_freq));
 
       // increment pointers
       len -= isr->isr_len;
@@ -140,9 +140,7 @@ FreeBSDGetAccessPointData(nsCOMArray<nsWifiAccessPoint> &accessPoints)
   return rv;
 }
 
-nsresult
-nsWifiMonitor::DoScan()
-{
+nsresult nsWifiMonitor::DoScan() {
   // Regularly get the access point data.
 
   nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
@@ -150,10 +148,10 @@ nsWifiMonitor::DoScan()
 
   do {
     nsresult rv = FreeBSDGetAccessPointData(accessPoints);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
 
-    bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
+    bool accessPointsChanged =
+        !AccessPointsEqual(accessPoints, lastAccessPoints);
     ReplaceArray(lastAccessPoints, accessPoints);
 
     rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
@@ -164,8 +162,7 @@ nsWifiMonitor::DoScan()
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mon.Wait(PR_SecondsToInterval(kDefaultWifiScanInterval));
-  }
-  while (mKeepGoing);
+  } while (mKeepGoing);
 
   return NS_OK;
 }

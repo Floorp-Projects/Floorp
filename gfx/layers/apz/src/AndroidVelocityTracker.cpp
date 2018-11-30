@@ -32,24 +32,18 @@ static const uint8_t kPolyDegree = kDegree + 1;
 static const uint8_t kHistorySize = 20;
 
 AndroidVelocityTracker::AndroidVelocityTracker()
-  : mLastEventTime(0)
-  , mAdditionalDelta(0)
-{
-}
+    : mLastEventTime(0), mAdditionalDelta(0) {}
 
-void
-AndroidVelocityTracker::StartTracking(ParentLayerCoord aPos, uint32_t aTimestampMs)
-{
+void AndroidVelocityTracker::StartTracking(ParentLayerCoord aPos,
+                                           uint32_t aTimestampMs) {
   Clear();
   mHistory.AppendElement(std::make_pair(aTimestampMs, aPos));
   mLastEventTime = aTimestampMs;
 }
 
-Maybe<float>
-AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
-                                    uint32_t aTimestampMs,
-                                    bool aIsAxisLocked)
-{
+Maybe<float> AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
+                                                 uint32_t aTimestampMs,
+                                                 bool aIsAxisLocked) {
   if ((aTimestampMs - mLastEventTime) >= kAssumePointerMoveStoppedTimeMs) {
     Clear();
   }
@@ -87,11 +81,9 @@ AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
   return Some((end.second - start.second) / (end.first - start.first));
 }
 
-float
-AndroidVelocityTracker::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
-                                                     uint32_t aEndTimestampMs,
-                                                     ParentLayerCoord aDelta)
-{
+float AndroidVelocityTracker::HandleDynamicToolbarMovement(
+    uint32_t aStartTimestampMs, uint32_t aEndTimestampMs,
+    ParentLayerCoord aDelta) {
   // If the dynamic toolbar is moving, the page content is moving relative
   // to the screen. The positions passed to AddPosition() reflect the position
   // of the finger relative to the page content, but we want the velocity we
@@ -177,17 +169,12 @@ static float VectorNorm(const float* a, uint32_t m) {
  * http://en.wikipedia.org/wiki/Numerical_methods_for_linear_least_squares
  * http://en.wikipedia.org/wiki/Gram-Schmidt
  */
-static bool SolveLeastSquares(const float* x,
-                              const float* y,
-                              const float* w,
-                              uint32_t m,
-                              uint32_t n,
-                              float* out_b) {
+static bool SolveLeastSquares(const float* x, const float* y, const float* w,
+                              uint32_t m, uint32_t n, float* out_b) {
   // MSVC does not support variable-length arrays (used by the original Android
   // implementation of this function).
 #if defined(COMPILER_MSVC)
-  const uint32_t M_ARRAY_LENGTH =
-      VelocityTracker::kHistorySize;
+  const uint32_t M_ARRAY_LENGTH = VelocityTracker::kHistorySize;
   const uint32_t N_ARRAY_LENGTH = VelocityTracker::kPolyDegree;
   DCHECK_LE(m, M_ARRAY_LENGTH);
   DCHECK_LE(n, N_ARRAY_LENGTH);
@@ -254,10 +241,7 @@ static bool SolveLeastSquares(const float* x,
   return true;
 }
 
-Maybe<float>
-AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
-{
-
+Maybe<float> AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   if (mHistory.IsEmpty()) {
     return Nothing{};
   }
@@ -280,8 +264,7 @@ AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
   do {
     const auto& movement = mHistory[index];
     uint32_t age = newest_movement.first - movement.first;
-    if (age > horizon)
-      break;
+    if (age > horizon) break;
 
     ParentLayerCoord position = movement.second;
     pos[m] = position;
@@ -319,13 +302,10 @@ AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
   return Nothing{};
 }
 
-void
-AndroidVelocityTracker::Clear()
-{
+void AndroidVelocityTracker::Clear() {
   mAdditionalDelta = 0;
   mHistory.Clear();
 }
 
-}
-}
-
+}  // namespace layers
+}  // namespace mozilla

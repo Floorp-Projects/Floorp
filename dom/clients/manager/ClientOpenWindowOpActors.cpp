@@ -12,41 +12,31 @@
 namespace mozilla {
 namespace dom {
 
-PClientOpenWindowOpChild*
-AllocClientOpenWindowOpChild()
-{
+PClientOpenWindowOpChild* AllocClientOpenWindowOpChild() {
   return new ClientOpenWindowOpChild();
 }
 
-void
-InitClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor,
-                            const ClientOpenWindowArgs& aArgs)
-{
+void InitClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor,
+                                 const ClientOpenWindowArgs& aArgs) {
   auto actor = static_cast<ClientOpenWindowOpChild*>(aActor);
   actor->Init(aArgs);
 }
 
-bool
-DeallocClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor)
-{
+bool DeallocClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor) {
   delete aActor;
   return true;
 }
 
-PClientOpenWindowOpParent*
-AllocClientOpenWindowOpParent(const ClientOpenWindowArgs& aArgs)
-{
+PClientOpenWindowOpParent* AllocClientOpenWindowOpParent(
+    const ClientOpenWindowArgs& aArgs) {
   MOZ_CRASH("ClientOpenWindowOpParent must be explicitly allocated");
   return nullptr;
 }
 
-bool
-DeallocClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor)
-{
+bool DeallocClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor) {
   delete aActor;
   return true;
 }
 
-
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

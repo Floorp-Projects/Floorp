@@ -16,19 +16,18 @@ namespace mozilla {
 namespace image {
 class RasterImage;
 
-class nsWebPDecoder final : public Decoder
-{
-public:
+class nsWebPDecoder final : public Decoder {
+ public:
   virtual ~nsWebPDecoder();
 
   DecoderType GetType() const override { return DecoderType::WEBP; }
 
-protected:
+ protected:
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
   Maybe<Telemetry::HistogramID> SpeedHistogram() const override;
 
-private:
+ private:
   friend class DecoderFactory;
 
   // Decoders should only be instantiated via DecoderFactory.
@@ -106,7 +105,7 @@ private:
   qcms_transform* mTransform;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_decoders_nsWebPDecoder_h
+#endif  // mozilla_image_decoders_nsWebPDecoder_h

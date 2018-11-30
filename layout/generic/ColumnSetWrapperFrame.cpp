@@ -10,11 +10,9 @@
 
 using namespace mozilla;
 
-nsBlockFrame*
-NS_NewColumnSetWrapperFrame(nsIPresShell* aPresShell,
-                            ComputedStyle* aStyle,
-                            nsFrameState aStateFlags)
-{
+nsBlockFrame* NS_NewColumnSetWrapperFrame(nsIPresShell* aPresShell,
+                                          ComputedStyle* aStyle,
+                                          nsFrameState aStateFlags) {
   ColumnSetWrapperFrame* frame = new (aPresShell) ColumnSetWrapperFrame(aStyle);
 
   // CSS Multi-column level 1 section 2: A multi-column container
@@ -27,17 +25,13 @@ NS_NewColumnSetWrapperFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(ColumnSetWrapperFrame)
 
 NS_QUERYFRAME_HEAD(ColumnSetWrapperFrame)
-  NS_QUERYFRAME_ENTRY(ColumnSetWrapperFrame)
+NS_QUERYFRAME_ENTRY(ColumnSetWrapperFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 ColumnSetWrapperFrame::ColumnSetWrapperFrame(ComputedStyle* aStyle)
-  : nsBlockFrame(aStyle, kClassID)
-{
-}
+    : nsBlockFrame(aStyle, kClassID) {}
 
-nsContainerFrame*
-ColumnSetWrapperFrame::GetContentInsertionFrame()
-{
+nsContainerFrame* ColumnSetWrapperFrame::GetContentInsertionFrame() {
   nsIFrame* columnSet = PrincipalChildList().OnlyChild();
   if (columnSet) {
     // We have only one child, which means we don't have any column-span
@@ -53,9 +47,8 @@ ColumnSetWrapperFrame::GetContentInsertionFrame()
   return this;
 }
 
-void
-ColumnSetWrapperFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
-{
+void ColumnSetWrapperFrame::AppendDirectlyOwnedAnonBoxes(
+    nsTArray<OwnedAnonBox>& aResult) {
   MOZ_ASSERT(!GetPrevContinuation(),
              "Who set NS_FRAME_OWNS_ANON_BOXES on our continuations?");
 
@@ -75,9 +68,7 @@ ColumnSetWrapperFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aRes
 }
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-ColumnSetWrapperFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult ColumnSetWrapperFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("ColumnSetWrapper"), aResult);
 }
 #endif
@@ -85,10 +76,8 @@ ColumnSetWrapperFrame::GetFrameName(nsAString& aResult) const
 // Disallow any append, insert, or remove operations after building the
 // column hierarchy since any change to the column hierarchy in the column
 // sub-tree need to be re-created.
-void
-ColumnSetWrapperFrame::AppendFrames(ChildListID aListID,
-                                    nsFrameList& aFrameList)
-{
+void ColumnSetWrapperFrame::AppendFrames(ChildListID aListID,
+                                         nsFrameList& aFrameList) {
 #ifdef DEBUG
   MOZ_ASSERT(!mFinishedBuildingColumns, "Should only call once!");
   mFinishedBuildingColumns = true;
@@ -110,27 +99,23 @@ ColumnSetWrapperFrame::AppendFrames(ChildListID aListID,
 #endif
 }
 
-void
-ColumnSetWrapperFrame::InsertFrames(ChildListID aListID,
-                                    nsIFrame* aPrevFrame,
-                                    nsFrameList& aFrameList)
-{
+void ColumnSetWrapperFrame::InsertFrames(ChildListID aListID,
+                                         nsIFrame* aPrevFrame,
+                                         nsFrameList& aFrameList) {
   MOZ_ASSERT_UNREACHABLE("Unsupported operation!");
   nsBlockFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
-void
-ColumnSetWrapperFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame)
-{
+void ColumnSetWrapperFrame::RemoveFrame(ChildListID aListID,
+                                        nsIFrame* aOldFrame) {
   MOZ_ASSERT_UNREACHABLE("Unsupported operation!");
   nsBlockFrame::RemoveFrame(aListID, aOldFrame);
 }
 
 #ifdef DEBUG
 
-/* static */ void
-ColumnSetWrapperFrame::AssertColumnSpanWrapperSubtreeIsSane(
-  const nsIFrame* aFrame) {
+/* static */ void ColumnSetWrapperFrame::AssertColumnSpanWrapperSubtreeIsSane(
+    const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->IsColumnSpan(), "aFrame is not column-span?");
 
   if (!aFrame->Style()->IsAnonBox()) {
@@ -139,8 +124,9 @@ ColumnSetWrapperFrame::AssertColumnSpanWrapperSubtreeIsSane(
     return;
   }
 
-  MOZ_ASSERT(aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper(),
-             "aFrame should be ::-moz-column-span-wrapper");
+  MOZ_ASSERT(
+      aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper(),
+      "aFrame should be ::-moz-column-span-wrapper");
 
   MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES),
              "::-moz-column-span-wrapper anonymous blocks cannot own "

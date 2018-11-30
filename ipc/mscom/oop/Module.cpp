@@ -14,6 +14,5 @@ namespace mscom {
 
 ULONG Module::sRefCount = 0;
 
-} // namespace mscom
-} // namespace mozilla
-
+}  // namespace mscom
+}  // namespace mozilla

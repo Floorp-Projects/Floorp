@@ -27,26 +27,21 @@ static AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument);
 static const gchar* getDocumentAttributeValueCB(AtkDocument* aDocument,
                                                 const gchar* aAttrName);
 
-void
-documentInterfaceInitCB(AtkDocumentIface *aIface)
-{
-    NS_ASSERTION(aIface, "Invalid Interface");
-    if(MOZ_UNLIKELY(!aIface))
-        return;
+void documentInterfaceInitCB(AtkDocumentIface* aIface) {
+  NS_ASSERTION(aIface, "Invalid Interface");
+  if (MOZ_UNLIKELY(!aIface)) return;
 
-    /*
-     * We don't support get_document or set_attribute right now.
-     * get_document_type is deprecated, we return DocType in
-     * get_document_attribute_value and get_document_attributes instead.
-     */
-    aIface->get_document_attributes = getDocumentAttributesCB;
-    aIface->get_document_attribute_value = getDocumentAttributeValueCB;
-    aIface->get_document_locale = getDocumentLocaleCB;
+  /*
+   * We don't support get_document or set_attribute right now.
+   * get_document_type is deprecated, we return DocType in
+   * get_document_attribute_value and get_document_attributes instead.
+   */
+  aIface->get_document_attributes = getDocumentAttributesCB;
+  aIface->get_document_attribute_value = getDocumentAttributeValueCB;
+  aIface->get_document_locale = getDocumentLocaleCB;
 }
 
-const gchar *
-getDocumentLocaleCB(AtkDocument *aDocument)
-{
+const gchar* getDocumentLocaleCB(AtkDocument* aDocument) {
   nsAutoString locale;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
   if (accWrap) {
@@ -58,23 +53,20 @@ getDocumentLocaleCB(AtkDocument *aDocument)
   return locale.IsEmpty() ? nullptr : AccessibleWrap::ReturnString(locale);
 }
 
-static inline GSList *
-prependToList(GSList *aList, const char *const aName, const nsAutoString &aValue)
-{
+static inline GSList* prependToList(GSList* aList, const char* const aName,
+                                    const nsAutoString& aValue) {
   if (aValue.IsEmpty()) {
     return aList;
   }
 
   // libspi will free these
-  AtkAttribute *atkAttr = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
+  AtkAttribute* atkAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
   atkAttr->name = g_strdup(aName);
   atkAttr->value = g_strdup(NS_ConvertUTF16toUTF8(aValue).get());
   return g_slist_prepend(aList, atkAttr);
 }
 
-AtkAttributeSet *
-getDocumentAttributesCB(AtkDocument *aDocument)
-{
+AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
   nsAutoString url;
   nsAutoString w3cDocType;
   nsAutoString mimeType;
@@ -103,10 +95,8 @@ getDocumentAttributesCB(AtkDocument *aDocument)
   return attributes;
 }
 
-const gchar *
-getDocumentAttributeValueCB(AtkDocument *aDocument,
-                            const gchar *aAttrName)
-{
+const gchar* getDocumentAttributeValueCB(AtkDocument* aDocument,
+                                         const gchar* aAttrName) {
   ProxyAccessible* proxy = nullptr;
   DocAccessible* document = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
@@ -146,6 +136,7 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
     return nullptr;
   }
 
-  return attrValue.IsEmpty() ? nullptr : AccessibleWrap::ReturnString(attrValue);
+  return attrValue.IsEmpty() ? nullptr
+                             : AccessibleWrap::ReturnString(attrValue);
 }
 }

@@ -27,9 +27,8 @@ class HyperTextAccessible;
 class DocAccessible;
 class Attribute;
 
-class nsAccUtils
-{
-public:
+class nsAccUtils {
+ public:
   /**
    * Returns value of attribute from the given attributes container.
    *
@@ -37,9 +36,8 @@ public:
    * @param aAttrName - the name of requested attribute
    * @param aAttrValue - value of attribute
    */
-  static void GetAccAttr(nsIPersistentProperties *aAttributes,
-                         nsAtom *aAttrName,
-                         nsAString& aAttrValue);
+  static void GetAccAttr(nsIPersistentProperties* aAttributes,
+                         nsAtom* aAttrName, nsAString& aAttrValue);
 
   /**
    * Set value of attribute for the given attributes container.
@@ -48,18 +46,16 @@ public:
    * @param aAttrName - the name of requested attribute
    * @param aAttrValue - new value of attribute
    */
-  static void SetAccAttr(nsIPersistentProperties *aAttributes,
-                         nsAtom *aAttrName,
-                         const nsAString& aAttrValue);
+  static void SetAccAttr(nsIPersistentProperties* aAttributes,
+                         nsAtom* aAttrName, const nsAString& aAttrValue);
 
-  static void SetAccAttr(nsIPersistentProperties *aAttributes,
-                         nsAtom* aAttrName,
-                         nsAtom* aAttrValue);
+  static void SetAccAttr(nsIPersistentProperties* aAttributes,
+                         nsAtom* aAttrName, nsAtom* aAttrValue);
 
   /**
    * Set group attributes ('level', 'setsize', 'posinset').
    */
-  static void SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
+  static void SetAccGroupAttrs(nsIPersistentProperties* aAttributes,
                                int32_t aLevel, int32_t aSetSize,
                                int32_t aPosInSet);
 
@@ -77,7 +73,7 @@ public:
   /**
    * Compute group level for nsIDOMXULContainerItemElement node.
    */
-  static int32_t GetLevelForXULContainerItem(nsIContent *aContent);
+  static int32_t GetLevelForXULContainerItem(nsIContent* aContent);
 
   /**
    * Set container-foo live region attributes for the given node.
@@ -86,7 +82,7 @@ public:
    * @param aStartContent  node to start from
    * @param aTopContent    node to end at
    */
-  static void SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
+  static void SetLiveContainerAttributes(nsIPersistentProperties* aAttributes,
                                          nsIContent* aStartContent,
                                          mozilla::dom::Element* aTopEl);
 
@@ -97,7 +93,7 @@ public:
    *
    * Return true if the ARIA property is defined, otherwise false
    */
-  static bool HasDefinedARIAToken(nsIContent *aContent, nsAtom *aAtom);
+  static bool HasDefinedARIAToken(nsIContent* aContent, nsAtom* aAtom);
 
   /**
    * Return atomic value of ARIA attribute of boolean or NMTOKEN type.
@@ -107,7 +103,7 @@ public:
 
   /**
    * If the given ARIA attribute has a specific known token value, return it.
-   * If the specification demands for a fallback value for unknown attribute 
+   * If the specification demands for a fallback value for unknown attribute
    * values, return that. For all others, return a nullptr.
    */
   static nsStaticAtom* NormalizeARIAToken(mozilla::dom::Element* aElement,
@@ -116,17 +112,15 @@ public:
   /**
    * Return document accessible for the given DOM node.
    */
-  static DocAccessible* GetDocAccessibleFor(nsINode* aNode)
-  {
-    nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
+  static DocAccessible* GetDocAccessibleFor(nsINode* aNode) {
+    nsIPresShell* presShell = nsCoreUtils::GetPresShellFor(aNode);
     return GetAccService()->GetDocAccessible(presShell);
   }
 
   /**
    * Return document accessible for the given docshell.
    */
-  static DocAccessible* GetDocAccessibleFor(nsIDocShellTreeItem* aContainer)
-  {
+  static DocAccessible* GetDocAccessibleFor(nsIDocShellTreeItem* aContainer) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
     return GetAccService()->GetDocAccessible(docShell->GetPresShell());
   }
@@ -233,25 +227,21 @@ public:
   /**
    * Transform nsIAccessibleStates constants to internal state constant.
    */
-  static inline uint64_t To64State(uint32_t aState1, uint32_t aState2)
-  {
+  static inline uint64_t To64State(uint32_t aState1, uint32_t aState2) {
     return static_cast<uint64_t>(aState1) +
-        (static_cast<uint64_t>(aState2) << 31);
+           (static_cast<uint64_t>(aState2) << 31);
   }
 
   /**
    * Transform internal state constant to nsIAccessibleStates constants.
    */
-  static inline void To32States(uint64_t aState64,
-                                uint32_t* aState1, uint32_t* aState2)
-  {
+  static inline void To32States(uint64_t aState64, uint32_t* aState1,
+                                uint32_t* aState2) {
     *aState1 = aState64 & 0x7fffffff;
-    if (aState2)
-      *aState2 = static_cast<uint32_t>(aState64 >> 31);
+    if (aState2) *aState2 = static_cast<uint32_t>(aState64 >> 31);
   }
 
-  static uint32_t To32States(uint64_t aState, bool* aIsExtra)
-  {
+  static uint32_t To32States(uint64_t aState, bool* aIsExtra) {
     uint32_t extraState = aState >> 31;
     *aIsExtra = !!extraState;
     return aState | extraState;
@@ -265,10 +255,9 @@ public:
 
   static bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                           nsTArray<Attribute>* aAttributes);
-
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

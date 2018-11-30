@@ -20,37 +20,28 @@
 namespace mozilla {
 namespace dom {
 
-template<typename ChildIterator>
-class MOZ_STACK_CLASS TreeIterator
-{
-  enum class Direction
-  {
+template <typename ChildIterator>
+class MOZ_STACK_CLASS TreeIterator {
+  enum class Direction {
     Forward,
     Backwards,
   };
 
-  template<Direction aDirection>
-  nsIContent* GetNextChild(ChildIterator& aIter)
-  {
-    return aDirection == Direction::Forward
-      ? aIter.GetNextChild()
-      : aIter.GetPreviousChild();
+  template <Direction aDirection>
+  nsIContent* GetNextChild(ChildIterator& aIter) {
+    return aDirection == Direction::Forward ? aIter.GetNextChild()
+                                            : aIter.GetPreviousChild();
   }
 
-  template<Direction> inline void Advance();
-  template<Direction> inline void AdvanceSkippingChildren();
+  template <Direction>
+  inline void Advance();
+  template <Direction>
+  inline void AdvanceSkippingChildren();
 
-public:
-  explicit TreeIterator(nsIContent& aRoot)
-    : mRoot(aRoot)
-    , mCurrent(&aRoot)
-  {
-  }
+ public:
+  explicit TreeIterator(nsIContent& aRoot) : mRoot(aRoot), mCurrent(&aRoot) {}
 
-  nsIContent* GetCurrent() const
-  {
-    return mCurrent;
-  }
+  nsIContent* GetCurrent() const { return mCurrent; }
 
   // Note that this keeps the iterator state consistent in case of failure.
   inline bool Seek(nsIContent&);
@@ -59,7 +50,7 @@ public:
   inline nsIContent* GetPrev();
   inline nsIContent* GetPrevSkippingChildren();
 
-private:
+ private:
   using IteratorArray = AutoTArray<ChildIterator, 30>;
 
   nsIContent& mRoot;
@@ -67,11 +58,9 @@ private:
   IteratorArray mParentIterators;
 };
 
-template<typename ChildIterator>
-template<typename TreeIterator<ChildIterator>::Direction aDirection>
-inline void
-TreeIterator<ChildIterator>::AdvanceSkippingChildren()
-{
+template <typename ChildIterator>
+template <typename TreeIterator<ChildIterator>::Direction aDirection>
+inline void TreeIterator<ChildIterator>::AdvanceSkippingChildren() {
   while (true) {
     if (MOZ_UNLIKELY(mParentIterators.IsEmpty())) {
       mCurrent = nullptr;
@@ -79,7 +68,7 @@ TreeIterator<ChildIterator>::AdvanceSkippingChildren()
     }
 
     if (nsIContent* nextSibling =
-          GetNextChild<aDirection>(mParentIterators.LastElement())) {
+            GetNextChild<aDirection>(mParentIterators.LastElement())) {
       mCurrent = nextSibling;
       return;
     }
@@ -87,10 +76,8 @@ TreeIterator<ChildIterator>::AdvanceSkippingChildren()
   }
 }
 
-template<typename ChildIterator>
-inline bool
-TreeIterator<ChildIterator>::Seek(nsIContent& aContent)
-{
+template <typename ChildIterator>
+inline bool TreeIterator<ChildIterator>::Seek(nsIContent& aContent) {
   IteratorArray parentIterators;
   nsIContent* current = &aContent;
   while (current != &mRoot) {
@@ -116,11 +103,9 @@ TreeIterator<ChildIterator>::Seek(nsIContent& aContent)
   return true;
 }
 
-template<typename ChildIterator>
-template<typename TreeIterator<ChildIterator>::Direction aDirection>
-inline void
-TreeIterator<ChildIterator>::Advance()
-{
+template <typename ChildIterator>
+template <typename TreeIterator<ChildIterator>::Direction aDirection>
+inline void TreeIterator<ChildIterator>::Advance() {
   MOZ_ASSERT(mCurrent);
   const bool startAtBeginning = aDirection == Direction::Forward;
   ChildIterator children(mCurrent, startAtBeginning);
@@ -133,39 +118,31 @@ TreeIterator<ChildIterator>::Advance()
   AdvanceSkippingChildren<aDirection>();
 }
 
-template<typename ChildIterator>
-inline nsIContent*
-TreeIterator<ChildIterator>::GetNext()
-{
+template <typename ChildIterator>
+inline nsIContent* TreeIterator<ChildIterator>::GetNext() {
   Advance<Direction::Forward>();
   return GetCurrent();
 }
 
-template<typename ChildIterator>
-inline nsIContent*
-TreeIterator<ChildIterator>::GetPrev()
-{
+template <typename ChildIterator>
+inline nsIContent* TreeIterator<ChildIterator>::GetPrev() {
   Advance<Direction::Backwards>();
   return GetCurrent();
 }
 
-template<typename ChildIterator>
-inline nsIContent*
-TreeIterator<ChildIterator>::GetNextSkippingChildren()
-{
+template <typename ChildIterator>
+inline nsIContent* TreeIterator<ChildIterator>::GetNextSkippingChildren() {
   AdvanceSkippingChildren<Direction::Forward>();
   return GetCurrent();
 }
 
-template<typename ChildIterator>
-inline nsIContent*
-TreeIterator<ChildIterator>::GetPrevSkippingChildren()
-{
+template <typename ChildIterator>
+inline nsIContent* TreeIterator<ChildIterator>::GetPrevSkippingChildren() {
   AdvanceSkippingChildren<Direction::Backwards>();
   return GetCurrent();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

@@ -21,21 +21,19 @@ nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell,
                                mozilla::ComputedStyle* aStyle);
 
 class nsScrollbarFrame final : public nsBoxFrame,
-                               public nsIAnonymousContentCreator
-{
-public:
+                               public nsIAnonymousContentCreator {
+ public:
   explicit nsScrollbarFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID)
-    , mIncrement(0)
-    , mSmoothScroll(false)
-    , mScrollbarMediator(nullptr)
-    , mUpTopButton(nullptr)
-    , mDownTopButton(nullptr)
-    , mSlider(nullptr)
-    , mThumb(nullptr)
-    , mUpBottomButton(nullptr)
-    , mDownBottomButton(nullptr)
-  {}
+      : nsBoxFrame(aStyle, kClassID),
+        mIncrement(0),
+        mSmoothScroll(false),
+        mScrollbarMediator(nullptr),
+        mUpTopButton(nullptr),
+        mDownTopButton(nullptr),
+        mSlider(nullptr),
+        mThumb(nullptr),
+        mUpBottomButton(nullptr),
+        mDownBottomButton(nullptr) {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsScrollbarFrame)
@@ -47,8 +45,7 @@ public:
 #endif
 
   // nsIFrame overrides
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsAtom* aAttribute,
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
@@ -68,16 +65,15 @@ public:
                            mozilla::WidgetGUIEvent* aEvent,
                            nsEventStatus* aEventStatus) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+                      nsReflowStatus& aStatus) override;
 
   void SetScrollbarMediatorContent(nsIContent* aMediator);
   nsIScrollbarMediator* GetScrollbarMediator();
@@ -112,17 +108,18 @@ public:
   int32_t GetIncrement() { return mIncrement; }
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  virtual nsresult CreateAnonymousContent(
+      nsTArray<ContentInfo>& aElements) override;
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) override;
 
   void UpdateChildrenAttributeValue(nsAtom* aAttribute, bool aNotify);
 
-protected:
-  int32_t mIncrement; // Amount to scroll, in CSSPixels
+ protected:
+  int32_t mIncrement;  // Amount to scroll, in CSSPixels
   bool mSmoothScroll;
 
-private:
+ private:
   nsCOMPtr<nsIContent> mScrollbarMediator;
 
   nsCOMPtr<Element> mUpTopButton;
@@ -131,6 +128,6 @@ private:
   nsCOMPtr<Element> mThumb;
   nsCOMPtr<Element> mUpBottomButton;
   nsCOMPtr<Element> mDownBottomButton;
-}; // class nsScrollbarFrame
+};  // class nsScrollbarFrame
 
 #endif

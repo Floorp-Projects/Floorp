@@ -8,13 +8,13 @@
 
 namespace mozilla {
 
-nsWifiScannerDBus::nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint> *aAccessPoints)
-: mAccessPoints(aAccessPoints)
-{
+nsWifiScannerDBus::nsWifiScannerDBus(
+    nsCOMArray<nsWifiAccessPoint>* aAccessPoints)
+    : mAccessPoints(aAccessPoints) {
   MOZ_ASSERT(mAccessPoints);
 
   mConnection =
-    already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SYSTEM, nullptr));
+      already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SYSTEM, nullptr));
 
   if (mConnection) {
     dbus_connection_setup_with_g_main(mConnection, nullptr);
@@ -24,14 +24,9 @@ nsWifiScannerDBus::nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint> *aAccessPoint
   MOZ_COUNT_CTOR(nsWifiScannerDBus);
 }
 
-nsWifiScannerDBus::~nsWifiScannerDBus()
-{
-  MOZ_COUNT_DTOR(nsWifiScannerDBus);
-}
+nsWifiScannerDBus::~nsWifiScannerDBus() { MOZ_COUNT_DTOR(nsWifiScannerDBus); }
 
-nsresult
-nsWifiScannerDBus::Scan()
-{
+nsresult nsWifiScannerDBus::Scan() {
   if (!mConnection) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -42,14 +37,11 @@ nsWifiScannerDBus::Scan()
 // Refer to function dbus_connection_send_with_reply_and_block.
 static const uint32_t DBUS_DEFAULT_TIMEOUT = -1;
 
-nsresult
-nsWifiScannerDBus::SendGetDevices()
-{
-  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
-    dbus_message_new_method_call("org.freedesktop.NetworkManager",
-                                 "/org/freedesktop/NetworkManager",
-                                 "org.freedesktop.NetworkManager",
-                                 "GetDevices"));
+nsresult nsWifiScannerDBus::SendGetDevices() {
+  RefPtr<DBusMessage> msg =
+      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
+          "org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager",
+          "org.freedesktop.NetworkManager", "GetDevices"));
   if (!msg) {
     return NS_ERROR_FAILURE;
   }
@@ -57,9 +49,9 @@ nsWifiScannerDBus::SendGetDevices()
   DBusError err;
   dbus_error_init(&err);
 
-  RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
-    dbus_connection_send_with_reply_and_block(mConnection, msg,
-                                              DBUS_DEFAULT_TIMEOUT, &err));
+  RefPtr<DBusMessage> reply =
+      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
+          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
     return NS_ERROR_FAILURE;
@@ -68,14 +60,10 @@ nsWifiScannerDBus::SendGetDevices()
   return IdentifyDevices(reply);
 }
 
-nsresult
-nsWifiScannerDBus::SendGetDeviceType(const char* aPath)
-{
+nsresult nsWifiScannerDBus::SendGetDeviceType(const char* aPath) {
   RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
-    dbus_message_new_method_call("org.freedesktop.NetworkManager",
-                                 aPath,
-                                 "org.freedesktop.DBus.Properties",
-                                 "Get"));
+      dbus_message_new_method_call("org.freedesktop.NetworkManager", aPath,
+                                   "org.freedesktop.DBus.Properties", "Get"));
   if (!msg) {
     return NS_ERROR_FAILURE;
   }
@@ -98,9 +86,9 @@ nsWifiScannerDBus::SendGetDeviceType(const char* aPath)
   DBusError err;
   dbus_error_init(&err);
 
-  RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
-    dbus_connection_send_with_reply_and_block(mConnection, msg,
-                                              DBUS_DEFAULT_TIMEOUT, &err));
+  RefPtr<DBusMessage> reply =
+      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
+          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
     return NS_ERROR_FAILURE;
@@ -109,14 +97,11 @@ nsWifiScannerDBus::SendGetDeviceType(const char* aPath)
   return IdentifyDeviceType(reply, aPath);
 }
 
-nsresult
-nsWifiScannerDBus::SendGetAccessPoints(const char* aPath)
-{
-  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
-    dbus_message_new_method_call("org.freedesktop.NetworkManager",
-                                 aPath,
-                                 "org.freedesktop.NetworkManager.Device.Wireless",
-                                 "GetAccessPoints"));
+nsresult nsWifiScannerDBus::SendGetAccessPoints(const char* aPath) {
+  RefPtr<DBusMessage> msg =
+      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
+          "org.freedesktop.NetworkManager", aPath,
+          "org.freedesktop.NetworkManager.Device.Wireless", "GetAccessPoints"));
   if (!msg) {
     return NS_ERROR_FAILURE;
   }
@@ -124,9 +109,9 @@ nsWifiScannerDBus::SendGetAccessPoints(const char* aPath)
   DBusError err;
   dbus_error_init(&err);
 
-  RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
-    dbus_connection_send_with_reply_and_block(mConnection, msg,
-                                              DBUS_DEFAULT_TIMEOUT, &err));
+  RefPtr<DBusMessage> reply =
+      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
+          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
     // In the GetAccessPoints case, if there are no access points, error is set.
@@ -137,14 +122,11 @@ nsWifiScannerDBus::SendGetAccessPoints(const char* aPath)
   return IdentifyAccessPoints(reply);
 }
 
-nsresult
-nsWifiScannerDBus::SendGetAPProperties(const char* aPath)
-{
-  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
-    dbus_message_new_method_call("org.freedesktop.NetworkManager",
-                                 aPath,
-                                 "org.freedesktop.DBus.Properties",
-                                 "GetAll"));
+nsresult nsWifiScannerDBus::SendGetAPProperties(const char* aPath) {
+  RefPtr<DBusMessage> msg =
+      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
+          "org.freedesktop.NetworkManager", aPath,
+          "org.freedesktop.DBus.Properties", "GetAll"));
   if (!msg) {
     return NS_ERROR_FAILURE;
   }
@@ -160,9 +142,9 @@ nsWifiScannerDBus::SendGetAPProperties(const char* aPath)
   DBusError err;
   dbus_error_init(&err);
 
-  RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
-    dbus_connection_send_with_reply_and_block(mConnection, msg,
-                                              DBUS_DEFAULT_TIMEOUT, &err));
+  RefPtr<DBusMessage> reply =
+      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
+          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
     return NS_ERROR_FAILURE;
@@ -171,9 +153,7 @@ nsWifiScannerDBus::SendGetAPProperties(const char* aPath)
   return IdentifyAPProperties(reply);
 }
 
-nsresult
-nsWifiScannerDBus::IdentifyDevices(DBusMessage* aMsg)
-{
+nsresult nsWifiScannerDBus::IdentifyDevices(DBusMessage* aMsg) {
   DBusMessageIter iter;
   nsresult rv = GetDBusIterator(aMsg, &iter);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -196,9 +176,8 @@ nsWifiScannerDBus::IdentifyDevices(DBusMessage* aMsg)
   return NS_OK;
 }
 
-nsresult
-nsWifiScannerDBus::IdentifyDeviceType(DBusMessage* aMsg, const char* aDevicePath)
-{
+nsresult nsWifiScannerDBus::IdentifyDeviceType(DBusMessage* aMsg,
+                                               const char* aDevicePath) {
   DBusMessageIter args;
   if (!dbus_message_iter_init(aMsg, &args)) {
     return NS_ERROR_FAILURE;
@@ -228,9 +207,7 @@ nsWifiScannerDBus::IdentifyDeviceType(DBusMessage* aMsg, const char* aDevicePath
   return rv;
 }
 
-nsresult
-nsWifiScannerDBus::IdentifyAccessPoints(DBusMessage* aMsg)
-{
+nsresult nsWifiScannerDBus::IdentifyAccessPoints(DBusMessage* aMsg) {
   DBusMessageIter iter;
   nsresult rv = GetDBusIterator(aMsg, &iter);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -252,9 +229,7 @@ nsWifiScannerDBus::IdentifyAccessPoints(DBusMessage* aMsg)
   return NS_OK;
 }
 
-nsresult
-nsWifiScannerDBus::IdentifyAPProperties(DBusMessage* aMsg)
-{
+nsresult nsWifiScannerDBus::IdentifyAPProperties(DBusMessage* aMsg) {
   DBusMessageIter arr;
   nsresult rv = GetDBusIterator(aMsg, &arr);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -303,9 +278,8 @@ nsWifiScannerDBus::IdentifyAPProperties(DBusMessage* aMsg)
   return NS_OK;
 }
 
-nsresult
-nsWifiScannerDBus::StoreSsid(DBusMessageIter* aVariant, nsWifiAccessPoint* aAp)
-{
+nsresult nsWifiScannerDBus::StoreSsid(DBusMessageIter* aVariant,
+                                      nsWifiAccessPoint* aAp) {
   if (dbus_message_iter_get_arg_type(aVariant) != DBUS_TYPE_ARRAY) {
     return NS_ERROR_FAILURE;
   }
@@ -330,9 +304,8 @@ nsWifiScannerDBus::StoreSsid(DBusMessageIter* aVariant, nsWifiAccessPoint* aAp)
   return NS_OK;
 }
 
-nsresult
-nsWifiScannerDBus::SetMac(DBusMessageIter* aVariant, nsWifiAccessPoint* aAp)
-{
+nsresult nsWifiScannerDBus::SetMac(DBusMessageIter* aVariant,
+                                   nsWifiAccessPoint* aAp) {
   if (dbus_message_iter_get_arg_type(aVariant) != DBUS_TYPE_STRING) {
     return NS_ERROR_FAILURE;
   }
@@ -358,10 +331,8 @@ nsWifiScannerDBus::SetMac(DBusMessageIter* aVariant, nsWifiAccessPoint* aAp)
   return NS_OK;
 }
 
-nsresult
-nsWifiScannerDBus::GetDBusIterator(DBusMessage* aMsg,
-                                   DBusMessageIter* aIterArray)
-{
+nsresult nsWifiScannerDBus::GetDBusIterator(DBusMessage* aMsg,
+                                            DBusMessageIter* aIterArray) {
   DBusMessageIter iter;
   if (!dbus_message_iter_init(aMsg, &iter)) {
     return NS_ERROR_FAILURE;
@@ -375,11 +346,9 @@ nsWifiScannerDBus::GetDBusIterator(DBusMessage* aMsg,
   return NS_OK;
 }
 
-} // mozilla
+}  // namespace mozilla
 
-nsresult
-nsWifiMonitor::DoScan()
-{
+nsresult nsWifiMonitor::DoScan() {
   nsCOMArray<nsWifiAccessPoint> accessPoints;
   mozilla::nsWifiScannerDBus wifiScanner(&accessPoints);
   nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
@@ -388,8 +357,8 @@ nsWifiMonitor::DoScan()
     accessPoints.Clear();
     nsresult rv = wifiScanner.Scan();
     NS_ENSURE_SUCCESS(rv, rv);
-    bool accessPointsChanged = !AccessPointsEqual(accessPoints,
-                                                  lastAccessPoints);
+    bool accessPointsChanged =
+        !AccessPointsEqual(accessPoints, lastAccessPoints);
     ReplaceArray(lastAccessPoints, accessPoints);
 
     rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);

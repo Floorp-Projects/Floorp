@@ -10,25 +10,19 @@
 // Keep in (case-insensitive) order:
 #include "nsSVGGFrame.h"
 
-class nsSVGUseFrame final
-  : public nsSVGGFrame
-{
+class nsSVGUseFrame final : public nsSVGGFrame {
   friend nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
-protected:
+ protected:
   explicit nsSVGUseFrame(ComputedStyle* aStyle)
-    : nsSVGGFrame(aStyle, kClassID)
-    , mHasValidDimensions(true)
-  {
-  }
+      : nsSVGGFrame(aStyle, kClassID), mHasValidDimensions(true) {}
 
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGUseFrame)
 
   // nsIFrame interface:
-  void Init(nsIContent* aContent,
-            nsContainerFrame* aParent,
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
   // Called when the x or y attributes changed.
@@ -41,13 +35,11 @@ public:
   void DimensionAttributeChanged(bool aHadValidDimensions,
                                  bool aAttributeIsUsed);
 
-  nsresult AttributeChanged(int32_t aNamespaceID,
-                            nsAtom* aAttribute,
+  nsresult AttributeChanged(int32_t aNamespaceID, nsAtom* aAttribute,
                             int32_t aModType) final;
 
 #ifdef DEBUG_FRAME_DUMP
-  nsresult GetFrameName(nsAString& aResult) const override
-  {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGUse"), aResult);
   }
 #endif
@@ -56,8 +48,8 @@ public:
   void ReflowSVG() override;
   void NotifySVGChanged(uint32_t aFlags) override;
 
-private:
+ private:
   bool mHasValidDimensions;
 };
 
-#endif // __NS_SVGUSEFRAME_H__
+#endif  // __NS_SVGUSEFRAME_H__

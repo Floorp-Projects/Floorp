@@ -27,4 +27,4 @@ typedef struct stat statstruct;
 #error Missing stat syscall include.
 #endif
 
-#endif // mozilla_SandboxBrokerUtils_h
+#endif  // mozilla_SandboxBrokerUtils_h

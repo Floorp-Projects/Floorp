@@ -26,8 +26,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(AuthenticatorAssertionResponse,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mUserHandleCachedObj)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AuthenticatorAssertionResponse,
-                                                  AuthenticatorResponse)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
+    AuthenticatorAssertionResponse, AuthenticatorResponse)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(AuthenticatorAssertionResponse, AuthenticatorResponse)
@@ -36,70 +36,59 @@ NS_IMPL_RELEASE_INHERITED(AuthenticatorAssertionResponse, AuthenticatorResponse)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AuthenticatorAssertionResponse)
 NS_INTERFACE_MAP_END_INHERITING(AuthenticatorResponse)
 
-AuthenticatorAssertionResponse::AuthenticatorAssertionResponse(nsPIDOMWindowInner* aParent)
-  : AuthenticatorResponse(aParent)
-  , mAuthenticatorDataCachedObj(nullptr)
-  , mSignatureCachedObj(nullptr)
-  , mUserHandleCachedObj(nullptr)
-{
+AuthenticatorAssertionResponse::AuthenticatorAssertionResponse(
+    nsPIDOMWindowInner* aParent)
+    : AuthenticatorResponse(aParent),
+      mAuthenticatorDataCachedObj(nullptr),
+      mSignatureCachedObj(nullptr),
+      mUserHandleCachedObj(nullptr) {
   mozilla::HoldJSObjects(this);
 }
 
-AuthenticatorAssertionResponse::~AuthenticatorAssertionResponse()
-{
+AuthenticatorAssertionResponse::~AuthenticatorAssertionResponse() {
   mozilla::DropJSObjects(this);
 }
 
-JSObject*
-AuthenticatorAssertionResponse::WrapObject(JSContext* aCx,
-                                           JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AuthenticatorAssertionResponse::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return AuthenticatorAssertionResponse_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AuthenticatorAssertionResponse::GetAuthenticatorData(JSContext* aCx,
-                                                     JS::MutableHandle<JSObject*> aRetVal)
-{
+void AuthenticatorAssertionResponse::GetAuthenticatorData(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   if (!mAuthenticatorDataCachedObj) {
     mAuthenticatorDataCachedObj = mAuthenticatorData.ToArrayBuffer(aCx);
   }
   aRetVal.set(mAuthenticatorDataCachedObj);
 }
 
-nsresult
-AuthenticatorAssertionResponse::SetAuthenticatorData(CryptoBuffer& aBuffer)
-{
+nsresult AuthenticatorAssertionResponse::SetAuthenticatorData(
+    CryptoBuffer& aBuffer) {
   if (NS_WARN_IF(!mAuthenticatorData.Assign(aBuffer))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-void
-AuthenticatorAssertionResponse::GetSignature(JSContext* aCx,
-                                             JS::MutableHandle<JSObject*> aRetVal)
-{
+void AuthenticatorAssertionResponse::GetSignature(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   if (!mSignatureCachedObj) {
     mSignatureCachedObj = mSignature.ToArrayBuffer(aCx);
   }
   aRetVal.set(mSignatureCachedObj);
 }
 
-nsresult
-AuthenticatorAssertionResponse::SetSignature(CryptoBuffer& aBuffer)
-{
+nsresult AuthenticatorAssertionResponse::SetSignature(CryptoBuffer& aBuffer) {
   if (NS_WARN_IF(!mSignature.Assign(aBuffer))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-void
-AuthenticatorAssertionResponse::GetUserHandle(JSContext* aCx,
-                                              JS::MutableHandle<JSObject*> aRetVal)
-{
-  // Per https://w3c.github.io/webauthn/#ref-for-dom-authenticatorassertionresponse-userhandle%E2%91%A0
+void AuthenticatorAssertionResponse::GetUserHandle(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
+  // Per
+  // https://w3c.github.io/webauthn/#ref-for-dom-authenticatorassertionresponse-userhandle%E2%91%A0
   // this should return null if the handle is unset.
   if (mUserHandle.IsEmpty()) {
     aRetVal.set(nullptr);
@@ -111,14 +100,12 @@ AuthenticatorAssertionResponse::GetUserHandle(JSContext* aCx,
   }
 }
 
-nsresult
-AuthenticatorAssertionResponse::SetUserHandle(CryptoBuffer& aBuffer)
-{
+nsresult AuthenticatorAssertionResponse::SetUserHandle(CryptoBuffer& aBuffer) {
   if (NS_WARN_IF(!mUserHandle.Assign(aBuffer))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

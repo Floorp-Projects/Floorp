@@ -12,17 +12,18 @@
 
 #include "nsINetworkInfoService.h"
 
-#define NETWORKINFOSERVICE_CID \
-{ 0x296d0900, 0xf8ef, 0x4df0, \
-  { 0x9c, 0x35, 0xdb, 0x58, 0x62, 0xab, 0xc5, 0x8d } }
+#define NETWORKINFOSERVICE_CID                       \
+  {                                                  \
+    0x296d0900, 0xf8ef, 0x4df0, {                    \
+      0x9c, 0x35, 0xdb, 0x58, 0x62, 0xab, 0xc5, 0x8d \
+    }                                                \
+  }
 
 namespace mozilla {
 namespace net {
 
-class nsNetworkInfoService final
-  : public nsINetworkInfoService
-{
-public:
+class nsNetworkInfoService final : public nsINetworkInfoService {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETWORKINFOSERVICE
 
@@ -30,11 +31,11 @@ public:
 
   explicit nsNetworkInfoService();
 
-private:
+ private:
   virtual ~nsNetworkInfoService() = default;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_dom_nsNetworkInfoService_h
+#endif  // mozilla_dom_nsNetworkInfoService_h

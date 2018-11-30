@@ -19,11 +19,10 @@ class ScriptLoader;
 
 // A reference counted set of URLs we have visited in the process of loading a
 // module graph.
-class VisitedURLSet : public nsTHashtable<nsURIHashKey>
-{
+class VisitedURLSet : public nsTHashtable<nsURIHashKey> {
   NS_INLINE_DECL_REFCOUNTING(VisitedURLSet)
 
-private:
+ private:
   ~VisitedURLSet() = default;
 };
 
@@ -31,32 +30,25 @@ private:
 // every module import.  Load request can share an ModuleScript if there are
 // multiple imports of the same module.
 
-class ModuleLoadRequest final : public ScriptLoadRequest
-{
+class ModuleLoadRequest final : public ScriptLoadRequest {
   ~ModuleLoadRequest() = default;
 
   ModuleLoadRequest(const ModuleLoadRequest& aOther) = delete;
   ModuleLoadRequest(ModuleLoadRequest&& aOther) = delete;
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 
   // Create a top-level module load request.
-  ModuleLoadRequest(nsIURI* aURI,
-                    ScriptFetchOptions* aFetchOptions,
-                    const SRIMetadata& aIntegrity,
-                    nsIURI* aReferrer,
+  ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
+                    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     ScriptLoader* aLoader);
 
   // Create a module load request for an imported module.
-  ModuleLoadRequest(nsIURI* aURI,
-                    ModuleLoadRequest* aParent);
+  ModuleLoadRequest(nsIURI* aURI, ModuleLoadRequest* aParent);
 
-  bool IsTopLevel() const override
-  {
-    return mIsTopLevel;
-  }
+  bool IsTopLevel() const override { return mIsTopLevel; }
 
   void SetReady() override;
   void Cancel() override;
@@ -98,7 +90,7 @@ public:
   RefPtr<VisitedURLSet> mVisitedSet;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ModuleLoadRequest_h
+#endif  // mozilla_dom_ModuleLoadRequest_h

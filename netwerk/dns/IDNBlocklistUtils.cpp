@@ -11,9 +11,8 @@ static constexpr char16_t sBlocklistPairs[][2] = {
 #include "IDNCharacterBlocklist.inc"
 };
 
-void
-RemoveCharFromBlocklist(char16_t aChar, nsTArray<BlocklistRange>& aBlocklist)
-{
+void RemoveCharFromBlocklist(char16_t aChar,
+                             nsTArray<BlocklistRange>& aBlocklist) {
   auto pos = aBlocklist.BinaryIndexOf(aChar, BlocklistPairToCharComparator());
   if (pos == nsTArray<BlocklistRange>::NoIndex) {
     return;
@@ -46,12 +45,10 @@ RemoveCharFromBlocklist(char16_t aChar, nsTArray<BlocklistRange>& aBlocklist)
   char16_t lastElement = pair.second();
   pair.second() = aChar - 1;
   aBlocklist.InsertElementAt(
-    pos + 1, mozilla::MakePair(char16_t(aChar + 1), lastElement));
+      pos + 1, mozilla::MakePair(char16_t(aChar + 1), lastElement));
 }
 
-void
-InitializeBlocklist(nsTArray<BlocklistRange>& aBlocklist)
-{
+void InitializeBlocklist(nsTArray<BlocklistRange>& aBlocklist) {
   aBlocklist.Clear();
   for (auto const& arr : sBlocklistPairs) {
     // The hardcoded pairs are already sorted.
@@ -60,7 +57,7 @@ InitializeBlocklist(nsTArray<BlocklistRange>& aBlocklist)
 
   nsAutoString extraAllowed;
   nsresult rv =
-    Preferences::GetString("network.IDN.extra_allowed_chars", extraAllowed);
+      Preferences::GetString("network.IDN.extra_allowed_chars", extraAllowed);
   if (NS_SUCCEEDED(rv) && !extraAllowed.IsEmpty()) {
     const char16_t* cur = extraAllowed.BeginReading();
     const char16_t* end = extraAllowed.EndReading();
@@ -76,11 +73,11 @@ InitializeBlocklist(nsTArray<BlocklistRange>& aBlocklist)
   if (NS_SUCCEEDED(rv) && !extraBlocked.IsEmpty()) {
     for (size_t i = 0; i < extraBlocked.Length(); ++i) {
       aBlocklist.AppendElement(
-        mozilla::MakePair(extraBlocked[i], extraBlocked[i]));
+          mozilla::MakePair(extraBlocked[i], extraBlocked[i]));
     }
     aBlocklist.Sort(BlocklistEntryComparator());
   }
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

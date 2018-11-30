@@ -14,8 +14,7 @@ NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsProperties)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsProperties::Get(const char* prop, const nsIID& uuid, void** result)
-{
+nsProperties::Get(const char* prop, const nsIID& uuid, void** result) {
   if (NS_WARN_IF(!prop)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -28,8 +27,7 @@ nsProperties::Get(const char* prop, const nsIID& uuid, void** result)
 }
 
 NS_IMETHODIMP
-nsProperties::Set(const char* prop, nsISupports* value)
-{
+nsProperties::Set(const char* prop, nsISupports* value) {
   if (NS_WARN_IF(!prop)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -38,8 +36,7 @@ nsProperties::Set(const char* prop, nsISupports* value)
 }
 
 NS_IMETHODIMP
-nsProperties::Undefine(const char* prop)
-{
+nsProperties::Undefine(const char* prop) {
   if (NS_WARN_IF(!prop)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -48,8 +45,7 @@ nsProperties::Undefine(const char* prop)
 }
 
 NS_IMETHODIMP
-nsProperties::Has(const char* prop, bool* result)
-{
+nsProperties::Has(const char* prop, bool* result) {
   if (NS_WARN_IF(!prop)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -59,8 +55,7 @@ nsProperties::Has(const char* prop, bool* result)
 }
 
 NS_IMETHODIMP
-nsProperties::GetKeys(uint32_t* aCount, char*** aKeys)
-{
+nsProperties::GetKeys(uint32_t* aCount, char*** aKeys) {
   if (NS_WARN_IF(!aCount) || NS_WARN_IF(!aKeys)) {
     return NS_ERROR_INVALID_ARG;
   }

@@ -24,15 +24,15 @@
 // guarantee that the INTn_C macros can be defined by including <stdint.h> at
 // any specific point.  Provide GG_INTn_C macros instead.
 
-#define GG_INT8_C(x)    (x)
-#define GG_INT16_C(x)   (x)
-#define GG_INT32_C(x)   (x)
-#define GG_INT64_C(x)   GG_LONGLONG(x)
+#define GG_INT8_C(x) (x)
+#define GG_INT16_C(x) (x)
+#define GG_INT32_C(x) (x)
+#define GG_INT64_C(x) GG_LONGLONG(x)
 
-#define GG_UINT8_C(x)   (x ## U)
-#define GG_UINT16_C(x)  (x ## U)
-#define GG_UINT32_C(x)  (x ## U)
-#define GG_UINT64_C(x)  GG_ULONGLONG(x)
+#define GG_UINT8_C(x) (x##U)
+#define GG_UINT16_C(x) (x##U)
+#define GG_UINT32_C(x) (x##U)
+#define GG_UINT64_C(x) GG_ULONGLONG(x)
 
 namespace base {
 
@@ -43,15 +43,15 @@ namespace base {
 // implementation here.  It is not guaranteed that assignment is a copy, so the
 // StringUtil.VariableArgsFunc unit test tests this capability.
 
-// The C standard says that va_copy is a "macro", not a function.  Trying to 
+// The C standard says that va_copy is a "macro", not a function.  Trying to
 // use va_list as ref args to a function, as above, breaks some machines.
-#  if defined(COMPILER_GCC)
-#    define base_va_copy(_a, _b) ::va_copy(_a, _b)
-#  elif defined(COMPILER_MSVC)
-#    define base_va_copy(_a, _b) (_a = _b)
-#  else
-#    error No va_copy for your compiler
-#  endif
+#if defined(COMPILER_GCC)
+#define base_va_copy(_a, _b) ::va_copy(_a, _b)
+#elif defined(COMPILER_MSVC)
+#define base_va_copy(_a, _b) (_a = _b)
+#else
+#error No va_copy for your compiler
+#endif
 
 }  // namespace base
 

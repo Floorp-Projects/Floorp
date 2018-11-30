@@ -10,9 +10,6 @@
  * This is the enum used by functions that need to be told whether to
  * do case-sensitive or case-insensitive string comparisons.
  */
-enum nsCaseTreatment {
-  eCaseMatters,
-  eIgnoreCase
-};
+enum nsCaseTreatment { eCaseMatters, eIgnoreCase };
 
 #endif /* nsCaseTreatment_h___ */

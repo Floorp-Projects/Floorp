@@ -15,32 +15,32 @@
 namespace mozilla {
 namespace gfx {
 
-class NativeFontResourceFreeType : public NativeFontResource
-{
-public:
+class NativeFontResourceFreeType : public NativeFontResource {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceFreeType, override)
 
 #ifdef MOZ_WIDGET_ANDROID
-  static already_AddRefed<NativeFontResourceFreeType>
-    Create(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary = nullptr);
+  static already_AddRefed<NativeFontResourceFreeType> Create(
+      uint8_t* aFontData, uint32_t aDataLength,
+      FT_Library aFTLibrary = nullptr);
 
-  already_AddRefed<UnscaledFont>
-    CreateUnscaledFont(uint32_t aIndex,
-                       const uint8_t* aInstanceData, uint32_t aInstanceDataLength) override;
+  already_AddRefed<UnscaledFont> CreateUnscaledFont(
+      uint32_t aIndex, const uint8_t* aInstanceData,
+      uint32_t aInstanceDataLength) override;
 #endif
 
   ~NativeFontResourceFreeType();
 
   FT_Face CloneFace();
 
-protected:
+ protected:
   NativeFontResourceFreeType(UniquePtr<uint8_t[]>&& aFontData,
-                             uint32_t aDataLength,
-                             FT_Face aFace);
+                             uint32_t aDataLength, FT_Face aFace);
 
-  template<class T>
-  static already_AddRefed<T>
-    CreateInternal(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary);
+  template <class T>
+  static already_AddRefed<T> CreateInternal(uint8_t* aFontData,
+                                            uint32_t aDataLength,
+                                            FT_Library aFTLibrary);
 
   UniquePtr<uint8_t[]> mFontData;
   uint32_t mDataLength;
@@ -48,28 +48,28 @@ protected:
 };
 
 #ifdef MOZ_WIDGET_GTK
-class NativeFontResourceFontconfig final : public NativeFontResourceFreeType
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceFontconfig, override)
+class NativeFontResourceFontconfig final : public NativeFontResourceFreeType {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceFontconfig,
+                                          override)
 
-  static already_AddRefed<NativeFontResourceFontconfig>
-    Create(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary = nullptr);
+  static already_AddRefed<NativeFontResourceFontconfig> Create(
+      uint8_t* aFontData, uint32_t aDataLength,
+      FT_Library aFTLibrary = nullptr);
 
-  already_AddRefed<UnscaledFont>
-    CreateUnscaledFont(uint32_t aIndex,
-                       const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
+  already_AddRefed<UnscaledFont> CreateUnscaledFont(
+      uint32_t aIndex, const uint8_t* aInstanceData,
+      uint32_t aInstanceDataLength) final;
 
-private:
+ private:
   friend class NativeFontResourceFreeType;
 
   NativeFontResourceFontconfig(UniquePtr<uint8_t[]>&& aFontData,
-                               uint32_t aDataLength,
-                               FT_Face aFace);
+                               uint32_t aDataLength, FT_Face aFace);
 };
 #endif
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_NativeFontResourceFreeType_h
+#endif  // mozilla_gfx_NativeFontResourceFreeType_h

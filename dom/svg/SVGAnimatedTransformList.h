@@ -37,11 +37,10 @@ namespace dom {
  * nulling out our pointers to them when they die (making our pointers to them
  * true weak refs).
  */
-class SVGAnimatedTransformList final : public nsWrapperCache
-{
+class SVGAnimatedTransformList final : public nsWrapperCache {
   friend class mozilla::DOMSVGTransformList;
 
-public:
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedTransformList)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedTransformList)
 
@@ -49,23 +48,23 @@ public:
    * Factory method to create and return a SVGAnimatedTransformList wrapper
    * for a given internal nsSVGAnimatedTransformList object. The factory takes
    * care of caching the object that it returns so that the same object can be
-   * returned for the given nsSVGAnimatedTransformList each time it is requested.
-   * The cached object is only removed from the cache when it is destroyed due
-   * to there being no more references to it or to any of its descendant
-   * objects. If that happens, any subsequent call requesting the DOM wrapper
-   * for the nsSVGAnimatedTransformList will naturally result in a new
+   * returned for the given nsSVGAnimatedTransformList each time it is
+   * requested. The cached object is only removed from the cache when it is
+   * destroyed due to there being no more references to it or to any of its
+   * descendant objects. If that happens, any subsequent call requesting the DOM
+   * wrapper for the nsSVGAnimatedTransformList will naturally result in a new
    * SVGAnimatedTransformList being returned.
    */
-  static already_AddRefed<SVGAnimatedTransformList>
-    GetDOMWrapper(nsSVGAnimatedTransformList *aList, nsSVGElement *aElement);
+  static already_AddRefed<SVGAnimatedTransformList> GetDOMWrapper(
+      nsSVGAnimatedTransformList* aList, nsSVGElement* aElement);
 
   /**
    * This method returns the SVGAnimatedTransformList wrapper for an internal
    * nsSVGAnimatedTransformList object if it currently has a wrapper. If it does
    * not, then nullptr is returned.
    */
-  static SVGAnimatedTransformList*
-    GetDOMWrapperIfExists(nsSVGAnimatedTransformList *aList);
+  static SVGAnimatedTransformList* GetDOMWrapperIfExists(
+      nsSVGAnimatedTransformList* aList);
 
   /**
    * Called by internal code to notify us when we need to sync the length of
@@ -90,23 +89,19 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
   // These aren't weak refs because mBaseVal and mAnimVal are weak
   already_AddRefed<DOMSVGTransformList> BaseVal();
   already_AddRefed<DOMSVGTransformList> AnimVal();
 
-private:
-
+ private:
   /**
    * Only our static GetDOMWrapper() factory method may create objects of our
    * type.
    */
-  explicit SVGAnimatedTransformList(nsSVGElement *aElement)
-    : mBaseVal(nullptr)
-    , mAnimVal(nullptr)
-    , mElement(aElement)
-  {
-  }
+  explicit SVGAnimatedTransformList(nsSVGElement* aElement)
+      : mBaseVal(nullptr), mAnimVal(nullptr), mElement(aElement) {}
 
   ~SVGAnimatedTransformList();
 
@@ -117,15 +112,15 @@ private:
   // Weak refs to our DOMSVGTransformList baseVal/animVal objects. These objects
   // are friends and take care of clearing these pointers when they die, making
   // these true weak references.
-  DOMSVGTransformList *mBaseVal;
-  DOMSVGTransformList *mAnimVal;
+  DOMSVGTransformList* mBaseVal;
+  DOMSVGTransformList* mAnimVal;
 
   // Strong ref to our element to keep it alive. We hold this not only for
   // ourself, but also for our base/animVal and all of their items.
   RefPtr<nsSVGElement> mElement;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGAnimatedTransformList_h
+#endif  // mozilla_dom_SVGAnimatedTransformList_h

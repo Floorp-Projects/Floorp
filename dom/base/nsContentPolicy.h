@@ -14,34 +14,30 @@
  * Implementation of the "@mozilla.org/layout/content-policy;1" contract.
  */
 
-class nsContentPolicy : public nsIContentPolicy
-{
+class nsContentPolicy : public nsIContentPolicy {
  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICONTENTPOLICY
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPOLICY
 
-    nsContentPolicy();
+  nsContentPolicy();
 
  protected:
-    virtual ~nsContentPolicy();
+  virtual ~nsContentPolicy();
 
  private:
-    //Array of policies
-    nsCategoryCache<nsIContentPolicy> mPolicies;
+  // Array of policies
+  nsCategoryCache<nsIContentPolicy> mPolicies;
 
-    //Helper type for CheckPolicy
-    typedef decltype(&nsIContentPolicy::ShouldProcess) CPMethod;
+  // Helper type for CheckPolicy
+  typedef decltype(&nsIContentPolicy::ShouldProcess) CPMethod;
 
-    //Helper method that applies policyMethod across all policies in mPolicies
-    // with the given parameters
-    nsresult CheckPolicy(CPMethod policyMethod,
-                         nsIURI *aURI,
-                         nsILoadInfo *aLoadInfo,
-                         const nsACString &mimeGuess,
-                         int16_t *decision);
+  // Helper method that applies policyMethod across all policies in mPolicies
+  // with the given parameters
+  nsresult CheckPolicy(CPMethod policyMethod, nsIURI *aURI,
+                       nsILoadInfo *aLoadInfo, const nsACString &mimeGuess,
+                       int16_t *decision);
 };
 
-nsresult
-NS_NewContentPolicy(nsIContentPolicy **aResult);
+nsresult NS_NewContentPolicy(nsIContentPolicy **aResult);
 
 #endif /* __nsContentPolicy_h__ */

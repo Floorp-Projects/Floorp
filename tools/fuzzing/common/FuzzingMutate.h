@@ -13,14 +13,13 @@
 namespace mozilla {
 namespace fuzzing {
 
-class FuzzingMutate
-{
-public:
+class FuzzingMutate {
+ public:
   static void ChangeBit(uint8_t* aData, size_t aLength);
   static void ChangeByte(uint8_t* aData, size_t aLength);
 };
 
-} // namespace fuzzing
-} // namespace mozilla
+}  // namespace fuzzing
+}  // namespace mozilla
 
 #endif

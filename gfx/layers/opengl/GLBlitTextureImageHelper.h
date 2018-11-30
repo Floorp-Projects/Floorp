@@ -14,59 +14,57 @@
 
 namespace mozilla {
 namespace gl {
-    class GLContext;
-    class TextureImage;
-} // namespace gl
+class GLContext;
+class TextureImage;
+}  // namespace gl
 namespace layers {
 
 class CompositorOGL;
 
-class GLBlitTextureImageHelper final
-{
-    // The GLContext is the sole owner of the GLBlitTextureImageHelper.
-    CompositorOGL* mCompositor;
+class GLBlitTextureImageHelper final {
+  // The GLContext is the sole owner of the GLBlitTextureImageHelper.
+  CompositorOGL* mCompositor;
 
-    // lazy-initialized things
-    GLuint mBlitProgram, mBlitFramebuffer;
-    void UseBlitProgram();
-    void SetBlitFramebufferForDestTexture(GLuint aTexture);
+  // lazy-initialized things
+  GLuint mBlitProgram, mBlitFramebuffer;
+  void UseBlitProgram();
+  void SetBlitFramebufferForDestTexture(GLuint aTexture);
 
-public:
+ public:
+  explicit GLBlitTextureImageHelper(CompositorOGL* gl);
+  ~GLBlitTextureImageHelper();
 
-    explicit GLBlitTextureImageHelper(CompositorOGL *gl);
-    ~GLBlitTextureImageHelper();
-
-    /**
-     * Copy a rectangle from one TextureImage into another.  The
-     * source and destination are given in integer coordinates, and
-     * will be converted to texture coordinates.
-     *
-     * For the source texture, the wrap modes DO apply -- it's valid
-     * to use REPEAT or PAD and expect appropriate behaviour if the source
-     * rectangle extends beyond its bounds.
-     *
-     * For the destination texture, the wrap modes DO NOT apply -- the
-     * destination will be clipped by the bounds of the texture.
-     *
-     * Note: calling this function will cause the following OpenGL state
-     * to be changed:
-     *
-     *   - current program
-     *   - framebuffer binding
-     *   - viewport
-     *   - blend state (will be enabled at end)
-     *   - scissor state (will be enabled at end)
-     *   - vertex attrib 0 and 1 (pointer and enable state [enable state will
-     *     be disabled at exit])
-     *   - array buffer binding (will be 0)
-     *   - active texture (will be 0)
-     *   - texture 0 binding
-     */
-    void BlitTextureImage(gl::TextureImage *aSrc, const gfx::IntRect& aSrcRect,
-                          gl::TextureImage *aDst, const gfx::IntRect& aDstRect);
+  /**
+   * Copy a rectangle from one TextureImage into another.  The
+   * source and destination are given in integer coordinates, and
+   * will be converted to texture coordinates.
+   *
+   * For the source texture, the wrap modes DO apply -- it's valid
+   * to use REPEAT or PAD and expect appropriate behaviour if the source
+   * rectangle extends beyond its bounds.
+   *
+   * For the destination texture, the wrap modes DO NOT apply -- the
+   * destination will be clipped by the bounds of the texture.
+   *
+   * Note: calling this function will cause the following OpenGL state
+   * to be changed:
+   *
+   *   - current program
+   *   - framebuffer binding
+   *   - viewport
+   *   - blend state (will be enabled at end)
+   *   - scissor state (will be enabled at end)
+   *   - vertex attrib 0 and 1 (pointer and enable state [enable state will
+   *     be disabled at exit])
+   *   - array buffer binding (will be 0)
+   *   - active texture (will be 0)
+   *   - texture 0 binding
+   */
+  void BlitTextureImage(gl::TextureImage* aSrc, const gfx::IntRect& aSrcRect,
+                        gl::TextureImage* aDst, const gfx::IntRect& aDstRect);
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // GLBLITTEXTUREIMAGEHELPER_H_
+#endif  // GLBLITTEXTUREIMAGEHELPER_H_

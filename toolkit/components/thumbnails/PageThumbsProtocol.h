@@ -10,19 +10,22 @@
 #include "nsString.h"
 
 // {5a4ae9b5-f475-48ae-9dce-0b4c1d347884}
-#define PAGETHUMBSPROTOCOL_CID \
-{ 0x5a4ae9b5, 0xf475, 0x48ae, { 0x9d, 0xce, 0x0b, 0x4c, 0x1d, 0x34, 0x78, 0x84 } }
+#define PAGETHUMBSPROTOCOL_CID                       \
+  {                                                  \
+    0x5a4ae9b5, 0xf475, 0x48ae, {                    \
+      0x9d, 0xce, 0x0b, 0x4c, 0x1d, 0x34, 0x78, 0x84 \
+    }                                                \
+  }
 
-class PageThumbsProtocol final : public nsIProtocolHandler
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROTOCOLHANDLER
+class PageThumbsProtocol final : public nsIProtocolHandler {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROTOCOLHANDLER
 
-  private:
-    ~PageThumbsProtocol() {}
-    nsresult GetFilePathForURL(nsIURI* aURI, nsIFile **_retval);
-    nsresult ParseProtocolURL(nsIURI* aURI, nsString& aParsedURL);
+ private:
+  ~PageThumbsProtocol() {}
+  nsresult GetFilePathForURL(nsIURI* aURI, nsIFile** _retval);
+  nsresult ParseProtocolURL(nsIURI* aURI, nsString& aParsedURL);
 };
 
 #endif /* PageThumbsProtocol_h__ */

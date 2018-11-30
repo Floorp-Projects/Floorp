@@ -10,15 +10,13 @@
 
 namespace mozilla {
 
-WebGLExtensionDebugRendererInfo::WebGLExtensionDebugRendererInfo(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-}
+WebGLExtensionDebugRendererInfo::WebGLExtensionDebugRendererInfo(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {}
 
-WebGLExtensionDebugRendererInfo::~WebGLExtensionDebugRendererInfo()
-{
-}
+WebGLExtensionDebugRendererInfo::~WebGLExtensionDebugRendererInfo() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugRendererInfo, WEBGL_debug_renderer_info)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugRendererInfo,
+                          WEBGL_debug_renderer_info)
 
-} // namespace mozilla
+}  // namespace mozilla

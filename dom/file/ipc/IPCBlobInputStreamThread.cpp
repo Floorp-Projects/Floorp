@@ -25,38 +25,32 @@ StaticMutex gIPCBlobThreadMutex;
 StaticRefPtr<IPCBlobInputStreamThread> gIPCBlobThread;
 bool gShutdownHasStarted = false;
 
-class ThreadInitializeRunnable final : public Runnable
-{
-public:
+class ThreadInitializeRunnable final : public Runnable {
+ public:
   ThreadInitializeRunnable() : Runnable("dom::ThreadInitializeRunnable") {}
 
   NS_IMETHOD
-  Run() override
-  {
-     mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
-     MOZ_ASSERT(gIPCBlobThread);
-     gIPCBlobThread->InitializeOnMainThread();
-     return NS_OK;
+  Run() override {
+    mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
+    MOZ_ASSERT(gIPCBlobThread);
+    gIPCBlobThread->InitializeOnMainThread();
+    return NS_OK;
   }
 };
 
-class MigrateActorRunnable final : public Runnable
-{
-public:
+class MigrateActorRunnable final : public Runnable {
+ public:
   explicit MigrateActorRunnable(IPCBlobInputStreamChild* aActor)
-    : Runnable("dom::MigrateActorRunnable")
-    , mActor(aActor)
-  {
+      : Runnable("dom::MigrateActorRunnable"), mActor(aActor) {
     MOZ_ASSERT(mActor);
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(mActor->State() == IPCBlobInputStreamChild::eInactiveMigrating);
 
     PBackgroundChild* actorChild =
-      BackgroundChild::GetOrCreateForCurrentThread();
+        BackgroundChild::GetOrCreateForCurrentThread();
     if (!actorChild) {
       return NS_OK;
     }
@@ -73,28 +67,25 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   ~MigrateActorRunnable() = default;
 
   RefPtr<IPCBlobInputStreamChild> mActor;
 };
 
-} // anonymous
+}  // namespace
 
 NS_IMPL_ISUPPORTS(IPCBlobInputStreamThread, nsIObserver, nsIEventTarget)
 
-/* static */ bool
-IPCBlobInputStreamThread::IsOnFileEventTarget(nsIEventTarget* aEventTarget)
-{
+/* static */ bool IPCBlobInputStreamThread::IsOnFileEventTarget(
+    nsIEventTarget* aEventTarget) {
   MOZ_ASSERT(aEventTarget);
 
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
   return gIPCBlobThread && aEventTarget == gIPCBlobThread->mThread;
 }
 
-/* static */ IPCBlobInputStreamThread*
-IPCBlobInputStreamThread::GetOrCreate()
-{
+/* static */ IPCBlobInputStreamThread* IPCBlobInputStreamThread::GetOrCreate() {
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
 
   if (gShutdownHasStarted) {
@@ -111,9 +102,7 @@ IPCBlobInputStreamThread::GetOrCreate()
   return gIPCBlobThread;
 }
 
-bool
-IPCBlobInputStreamThread::Initialize()
-{
+bool IPCBlobInputStreamThread::Initialize() {
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_NewNamedThread("DOM File", getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -140,9 +129,7 @@ IPCBlobInputStreamThread::Initialize()
   return true;
 }
 
-void
-IPCBlobInputStreamThread::InitializeOnMainThread()
-{
+void IPCBlobInputStreamThread::InitializeOnMainThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -151,17 +138,15 @@ IPCBlobInputStreamThread::InitializeOnMainThread()
   }
 
   nsresult rv =
-    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
+      obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 }
 
 NS_IMETHODIMP
-IPCBlobInputStreamThread::Observe(nsISupports* aSubject,
-                                  const char* aTopic,
-                                  const char16_t* aData)
-{
+IPCBlobInputStreamThread::Observe(nsISupports* aSubject, const char* aTopic,
+                                  const char16_t* aData) {
   MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID));
 
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
@@ -177,9 +162,7 @@ IPCBlobInputStreamThread::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void
-IPCBlobInputStreamThread::MigrateActor(IPCBlobInputStreamChild* aActor)
-{
+void IPCBlobInputStreamThread::MigrateActor(IPCBlobInputStreamChild* aActor) {
   MOZ_ASSERT(aActor->State() == IPCBlobInputStreamChild::eInactiveMigrating);
 
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
@@ -197,9 +180,8 @@ IPCBlobInputStreamThread::MigrateActor(IPCBlobInputStreamChild* aActor)
   MigrateActorInternal(aActor);
 }
 
-void
-IPCBlobInputStreamThread::MigrateActorInternal(IPCBlobInputStreamChild* aActor)
-{
+void IPCBlobInputStreamThread::MigrateActorInternal(
+    IPCBlobInputStreamChild* aActor) {
   RefPtr<Runnable> runnable = new MigrateActorRunnable(aActor);
   mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
@@ -207,21 +189,18 @@ IPCBlobInputStreamThread::MigrateActorInternal(IPCBlobInputStreamChild* aActor)
 // nsIEventTarget
 
 NS_IMETHODIMP_(bool)
-IPCBlobInputStreamThread::IsOnCurrentThreadInfallible()
-{
+IPCBlobInputStreamThread::IsOnCurrentThreadInfallible() {
   return mThread->IsOnCurrentThread();
 }
 
 NS_IMETHODIMP
-IPCBlobInputStreamThread::IsOnCurrentThread(bool* aRetval)
-{
+IPCBlobInputStreamThread::IsOnCurrentThread(bool* aRetval) {
   return mThread->IsOnCurrentThread(aRetval);
 }
 
 NS_IMETHODIMP
 IPCBlobInputStreamThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                                   uint32_t aFlags)
-{
+                                   uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
 
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
@@ -235,21 +214,18 @@ IPCBlobInputStreamThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
 NS_IMETHODIMP
 IPCBlobInputStreamThread::DispatchFromScript(nsIRunnable* aRunnable,
-                                             uint32_t aFlags)
-{
+                                             uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   return Dispatch(runnable.forget(), aFlags);
 }
 
 NS_IMETHODIMP
-IPCBlobInputStreamThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
-{
+IPCBlobInputStreamThread::DelayedDispatch(already_AddRefed<nsIRunnable>,
+                                          uint32_t) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-bool
-IsOnDOMFileThread()
-{
+bool IsOnDOMFileThread() {
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
 
   MOZ_ASSERT(!gShutdownHasStarted);
@@ -258,11 +234,7 @@ IsOnDOMFileThread()
   return gIPCBlobThread->IsOnCurrentThreadInfallible();
 }
 
-void
-AssertIsOnDOMFileThread()
-{
-  MOZ_ASSERT(IsOnDOMFileThread());
-}
+void AssertIsOnDOMFileThread() { MOZ_ASSERT(IsOnDOMFileThread()); }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

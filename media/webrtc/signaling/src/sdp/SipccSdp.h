@@ -18,58 +18,49 @@ extern "C" {
 #include "signaling/src/sdp/sipcc/sdp.h"
 }
 
-namespace mozilla
-{
+namespace mozilla {
 
 class SipccSdpParser;
 class SdpErrorHolder;
 
-class SipccSdp final : public Sdp
-{
+class SipccSdp final : public Sdp {
   friend class SipccSdpParser;
 
-public:
+ public:
   explicit SipccSdp(const SdpOrigin& origin)
-      : mOrigin(origin), mAttributeList(nullptr)
-  {
-  }
+      : mOrigin(origin), mAttributeList(nullptr) {}
 
   virtual const SdpOrigin& GetOrigin() const override;
 
   // Note: connection information is always retrieved from media sections
   virtual uint32_t GetBandwidth(const std::string& type) const override;
 
-  virtual size_t
-  GetMediaSectionCount() const override
-  {
+  virtual size_t GetMediaSectionCount() const override {
     return mMediaSections.size();
   }
 
-  virtual const SdpAttributeList&
-  GetAttributeList() const override
-  {
+  virtual const SdpAttributeList& GetAttributeList() const override {
     return mAttributeList;
   }
 
-  virtual SdpAttributeList&
-  GetAttributeList() override
-  {
+  virtual SdpAttributeList& GetAttributeList() override {
     return mAttributeList;
   }
 
-  virtual const SdpMediaSection& GetMediaSection(size_t level) const
-      override;
+  virtual const SdpMediaSection& GetMediaSection(size_t level) const override;
 
   virtual SdpMediaSection& GetMediaSection(size_t level) override;
 
-  virtual SdpMediaSection& AddMediaSection(
-      SdpMediaSection::MediaType media, SdpDirectionAttribute::Direction dir,
-      uint16_t port, SdpMediaSection::Protocol proto, sdp::AddrType addrType,
-      const std::string& addr) override;
+  virtual SdpMediaSection& AddMediaSection(SdpMediaSection::MediaType media,
+                                           SdpDirectionAttribute::Direction dir,
+                                           uint16_t port,
+                                           SdpMediaSection::Protocol proto,
+                                           sdp::AddrType addrType,
+                                           const std::string& addr) override;
 
   virtual void Serialize(std::ostream&) const override;
 
-private:
+ private:
   SipccSdp() : mOrigin("", 0, 0, sdp::kIPv4, ""), mAttributeList(nullptr) {}
 
   bool Load(sdp_t* sdp, SdpErrorHolder& errorHolder);
@@ -81,6 +72,6 @@ private:
   std::vector<UniquePtr<SipccSdpMediaSection>> mMediaSections;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _sdp_h_
+#endif  // _sdp_h_

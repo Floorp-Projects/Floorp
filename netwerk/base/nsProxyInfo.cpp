@@ -14,71 +14,61 @@ namespace net {
 NS_IMPL_ISUPPORTS(nsProxyInfo, nsProxyInfo, nsIProxyInfo)
 
 NS_IMETHODIMP
-nsProxyInfo::GetHost(nsACString &result)
-{
+nsProxyInfo::GetHost(nsACString &result) {
   result = mHost;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetPort(int32_t *result)
-{
+nsProxyInfo::GetPort(int32_t *result) {
   *result = mPort;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetType(nsACString &result)
-{
+nsProxyInfo::GetType(nsACString &result) {
   result = mType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetFlags(uint32_t *result)
-{
+nsProxyInfo::GetFlags(uint32_t *result) {
   *result = mFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetResolveFlags(uint32_t *result)
-{
+nsProxyInfo::GetResolveFlags(uint32_t *result) {
   *result = mResolveFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetUsername(nsACString &result)
-{
+nsProxyInfo::GetUsername(nsACString &result) {
   result = mUsername;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetPassword(nsACString &result)
-{
+nsProxyInfo::GetPassword(nsACString &result) {
   result = mPassword;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetFailoverTimeout(uint32_t *result)
-{
+nsProxyInfo::GetFailoverTimeout(uint32_t *result) {
   *result = mTimeout;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::GetFailoverProxy(nsIProxyInfo **result)
-{
+nsProxyInfo::GetFailoverProxy(nsIProxyInfo **result) {
   NS_IF_ADDREF(*result = mNext);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProxyInfo::SetFailoverProxy(nsIProxyInfo *proxy)
-{
+nsProxyInfo::SetFailoverProxy(nsIProxyInfo *proxy) {
   nsCOMPtr<nsProxyInfo> pi = do_QueryInterface(proxy);
   NS_ENSURE_ARG(pi);
 
@@ -88,39 +78,26 @@ nsProxyInfo::SetFailoverProxy(nsIProxyInfo *proxy)
 
 // These pointers are declared in nsProtocolProxyService.cpp and
 // comparison of mType by string pointer is valid within necko
-  extern const char kProxyType_HTTP[];
-  extern const char kProxyType_HTTPS[];
-  extern const char kProxyType_SOCKS[];
-  extern const char kProxyType_SOCKS4[];
-  extern const char kProxyType_SOCKS5[];
-  extern const char kProxyType_DIRECT[];
+extern const char kProxyType_HTTP[];
+extern const char kProxyType_HTTPS[];
+extern const char kProxyType_SOCKS[];
+extern const char kProxyType_SOCKS4[];
+extern const char kProxyType_SOCKS5[];
+extern const char kProxyType_DIRECT[];
 
-bool
-nsProxyInfo::IsDirect()
-{
-  if (!mType)
-    return true;
+bool nsProxyInfo::IsDirect() {
+  if (!mType) return true;
   return mType == kProxyType_DIRECT;
 }
 
-bool
-nsProxyInfo::IsHTTP()
-{
-  return mType == kProxyType_HTTP;
+bool nsProxyInfo::IsHTTP() { return mType == kProxyType_HTTP; }
+
+bool nsProxyInfo::IsHTTPS() { return mType == kProxyType_HTTPS; }
+
+bool nsProxyInfo::IsSOCKS() {
+  return mType == kProxyType_SOCKS || mType == kProxyType_SOCKS4 ||
+         mType == kProxyType_SOCKS5;
 }
 
-bool
-nsProxyInfo::IsHTTPS()
-{
-  return mType == kProxyType_HTTPS;
-}
-
-bool
-nsProxyInfo::IsSOCKS()
-{
-  return mType == kProxyType_SOCKS ||
-    mType == kProxyType_SOCKS4 || mType == kProxyType_SOCKS5;
-}
-
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

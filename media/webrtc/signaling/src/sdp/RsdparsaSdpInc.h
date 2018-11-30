@@ -23,11 +23,7 @@ struct U16Vec;
 struct F32Vec;
 struct RustHeapString;
 
-enum class RustSdpAddrType {
-  kRustAddrNone,
-  kRustAddrIp4,
-  kRustAddrIp6
-};
+enum class RustSdpAddrType { kRustAddrNone, kRustAddrIp4, kRustAddrIp6 };
 
 struct RustIpAddr {
   RustSdpAddrType addrType;
@@ -52,11 +48,7 @@ struct RustSdpOrigin {
   RustIpAddr addr;
 };
 
-enum class RustSdpMediaValue {
-  kRustAudio,
-  kRustVideo,
-  kRustApplication
-};
+enum class RustSdpMediaValue { kRustAudio, kRustVideo, kRustApplication };
 
 enum class RustSdpProtocolValue {
   kRustRtpSavpf,
@@ -67,10 +59,7 @@ enum class RustSdpProtocolValue {
   kRustTcpDtlsSctp,
 };
 
-enum class RustSdpFormatType {
-  kRustIntegers,
-  kRustStrings
-};
+enum class RustSdpFormatType { kRustIntegers, kRustStrings };
 
 enum class RustSdpAttributeFingerprintHashAlgorithm : uint16_t {
   kSha1,
@@ -318,8 +307,8 @@ nsresult u8_vec_get(const U8Vec* vec, size_t index, uint8_t* ret);
 
 void sdp_free_string(char* string);
 
-nsresult parse_sdp(StringView sdp, bool fail_on_warning,
-                   RustSdpSession** ret, RustSdpError** err);
+nsresult parse_sdp(StringView sdp, bool fail_on_warning, RustSdpSession** ret,
+                   RustSdpError** err);
 RustSdpSession* sdp_new_reference(RustSdpSession* aSess);
 void sdp_free_session(RustSdpSession* ret);
 size_t sdp_get_error_line_num(const RustSdpError* err);
@@ -346,8 +335,7 @@ nsresult sdp_add_media_section(RustSdpSession* aSess, uint32_t aMediaType,
                                uint32_t aProtocol, uint32_t aAddrType,
                                StringView aAddr);
 RustSdpMediaValue sdp_rust_get_media_type(const RustMediaSection* aMediaSec);
-RustSdpProtocolValue
-sdp_get_media_protocol(const RustMediaSection* aMediaSec);
+RustSdpProtocolValue sdp_get_media_protocol(const RustMediaSection* aMediaSec);
 RustSdpFormatType sdp_get_format_type(const RustMediaSection* aMediaSec);
 StringVec* sdp_get_format_string_vec(const RustMediaSection* aMediaSec);
 U32Vec* sdp_get_format_u32_vec(const RustMediaSection* aMediaSec);
@@ -360,12 +348,12 @@ bool sdp_media_has_connection(const RustMediaSection* aMediaSec);
 nsresult sdp_get_media_connection(const RustMediaSection* aMediaSec,
                                   RustSdpConnection* ret);
 
-RustAttributeList*
-sdp_get_media_attribute_list(const RustMediaSection* aMediaSec);
+RustAttributeList* sdp_get_media_attribute_list(
+    const RustMediaSection* aMediaSec);
 
-nsresult sdp_media_add_codec(const RustMediaSection* aMediaSec,
-                             uint8_t aPT, StringView aCodecName,
-                             uint32_t aClockrate, uint16_t channels);
+nsresult sdp_media_add_codec(const RustMediaSection* aMediaSec, uint8_t aPT,
+                             StringView aCodecName, uint32_t aClockrate,
+                             uint16_t channels);
 void sdp_media_clear_codecs(const RustMediaSection* aMediaSec);
 nsresult sdp_media_add_datachannel(const RustMediaSection* aMediaSec,
                                    StringView aName, uint16_t aPort,
@@ -386,8 +374,8 @@ void sdp_get_fingerprints(const RustAttributeList* aList, size_t listSize,
 nsresult sdp_get_setup(const RustAttributeList* aList, RustSdpSetup* ret);
 
 size_t sdp_get_ssrc_count(const RustAttributeList* aList);
-void sdp_get_ssrcs(const RustAttributeList* aList,
-                   size_t listSize, RustSdpAttributeSsrc* ret);
+void sdp_get_ssrcs(const RustAttributeList* aList, size_t listSize,
+                   RustSdpAttributeSsrc* ret);
 
 size_t sdp_get_rtpmap_count(const RustAttributeList* aList);
 void sdp_get_rtpmaps(const RustAttributeList* aList, size_t listSize,
@@ -416,11 +404,10 @@ void sdp_get_msid_semantics(const RustAttributeList* aList, size_t listSize,
 
 size_t sdp_get_group_count(const RustAttributeList* aList);
 void sdp_get_groups(const RustAttributeList* aList, size_t listSize,
-                        RustSdpAttributeGroup* ret);
+                    RustSdpAttributeGroup* ret);
 
 nsresult sdp_get_rtcp(const RustAttributeList* aList,
                       RustSdpAttributeRtcp* ret);
-
 
 size_t sdp_get_rtcpfb_count(const RustAttributeList* aList);
 void sdp_get_rtcpfbs(const RustAttributeList* aList, size_t listSize,
@@ -442,39 +429,33 @@ nsresult sdp_get_simulcast(const RustAttributeList* aList,
                            RustSdpAttributeSimulcast* ret);
 
 size_t sdp_simulcast_get_version_count(
-                    const RustSdpAttributeSimulcastVersionVec* aVersionList);
+    const RustSdpAttributeSimulcastVersionVec* aVersionList);
 void sdp_simulcast_get_versions(
-                    const RustSdpAttributeSimulcastVersionVec* aversionList,
-                    size_t listSize,
-                    RustSdpAttributeSimulcastVersion* ret);
+    const RustSdpAttributeSimulcastVersionVec* aversionList, size_t listSize,
+    RustSdpAttributeSimulcastVersion* ret);
 
 size_t sdp_simulcast_get_ids_count(const RustSdpAttributeSimulcastIdVec* aAlts);
 void sdp_simulcast_get_ids(const RustSdpAttributeSimulcastIdVec* aAlts,
-                           size_t listSize,
-                           RustSdpAttributeSimulcastId* ret);
+                           size_t listSize, RustSdpAttributeSimulcastId* ret);
 
 RustDirection sdp_get_direction(const RustAttributeList* aList);
 
-
 size_t sdp_get_remote_candidate_count(const RustAttributeList* aList);
-void sdp_get_remote_candidates(const RustAttributeList* aList,
-                               size_t listSize,
+void sdp_get_remote_candidates(const RustAttributeList* aList, size_t listSize,
                                RustSdpAttributeRemoteCandidate* ret);
 
 size_t sdp_get_candidate_count(const RustAttributeList* aList);
-void sdp_get_candidates(const RustAttributeList* aLisst,
-                        size_t listSize,
+void sdp_get_candidates(const RustAttributeList* aLisst, size_t listSize,
                         StringVec** ret);
 
 size_t sdp_get_rid_count(const RustAttributeList* aList);
 void sdp_get_rids(const RustAttributeList* aList, size_t listSize,
                   RustSdpAttributeRid* ret);
 
-
 size_t sdp_get_extmap_count(const RustAttributeList* aList);
 void sdp_get_extmaps(const RustAttributeList* aList, size_t listSize,
                      RustSdpAttributeExtmap* ret);
 
-} //extern "C"
+}  // extern "C"
 
 #endif

@@ -91,15 +91,16 @@ struct Tuple2 {
   typedef A TypeA;
   typedef B TypeB;
   typedef Tuple2<typename TupleTraits<A>::ValueType,
-                 typename TupleTraits<B>::ValueType> ValueTuple;
+                 typename TupleTraits<B>::ValueType>
+      ValueTuple;
   typedef Tuple2<typename TupleTraits<A>::RefType,
-                 typename TupleTraits<B>::RefType> RefTuple;
+                 typename TupleTraits<B>::RefType>
+      RefTuple;
 
   Tuple2() {}
   Tuple2(typename TupleTraits<A>::ParamType aA,
          typename TupleTraits<B>::ParamType aB)
-      : a(aA), b(aB) {
-  }
+      : a(aA), b(aB) {}
 
   A a;
   B b;
@@ -113,17 +114,18 @@ struct Tuple3 {
   typedef C TypeC;
   typedef Tuple3<typename TupleTraits<A>::ValueType,
                  typename TupleTraits<B>::ValueType,
-                 typename TupleTraits<C>::ValueType> ValueTuple;
+                 typename TupleTraits<C>::ValueType>
+      ValueTuple;
   typedef Tuple3<typename TupleTraits<A>::RefType,
                  typename TupleTraits<B>::RefType,
-                 typename TupleTraits<C>::RefType> RefTuple;
+                 typename TupleTraits<C>::RefType>
+      RefTuple;
 
   Tuple3() {}
   Tuple3(typename TupleTraits<A>::ParamType aA,
          typename TupleTraits<B>::ParamType aB,
          typename TupleTraits<C>::ParamType aC)
-      : a(aA), b(aB), c(aC) {
-  }
+      : a(aA), b(aB), c(aC) {}
 
   A a;
   B b;
@@ -137,22 +139,21 @@ struct Tuple4 {
   typedef B TypeB;
   typedef C TypeC;
   typedef D TypeD;
-  typedef Tuple4<typename TupleTraits<A>::ValueType,
-                 typename TupleTraits<B>::ValueType,
-                 typename TupleTraits<C>::ValueType,
-                 typename TupleTraits<D>::ValueType> ValueTuple;
-  typedef Tuple4<typename TupleTraits<A>::RefType,
-                 typename TupleTraits<B>::RefType,
-                 typename TupleTraits<C>::RefType,
-                 typename TupleTraits<D>::RefType> RefTuple;
+  typedef Tuple4<
+      typename TupleTraits<A>::ValueType, typename TupleTraits<B>::ValueType,
+      typename TupleTraits<C>::ValueType, typename TupleTraits<D>::ValueType>
+      ValueTuple;
+  typedef Tuple4<
+      typename TupleTraits<A>::RefType, typename TupleTraits<B>::RefType,
+      typename TupleTraits<C>::RefType, typename TupleTraits<D>::RefType>
+      RefTuple;
 
   Tuple4() {}
   Tuple4(typename TupleTraits<A>::ParamType aA,
          typename TupleTraits<B>::ParamType aB,
          typename TupleTraits<C>::ParamType aC,
          typename TupleTraits<D>::ParamType aD)
-      : a(aA), b(aB), c(aC), d(aD) {
-  }
+      : a(aA), b(aB), c(aC), d(aD) {}
 
   A a;
   B b;
@@ -162,22 +163,22 @@ struct Tuple4 {
 
 template <class A, class B, class C, class D, class E>
 struct Tuple5 {
-public:
+ public:
   typedef A TypeA;
   typedef B TypeB;
   typedef C TypeC;
   typedef D TypeD;
   typedef E TypeE;
-  typedef Tuple5<typename TupleTraits<A>::ValueType,
-    typename TupleTraits<B>::ValueType,
-    typename TupleTraits<C>::ValueType,
-    typename TupleTraits<D>::ValueType,
-    typename TupleTraits<E>::ValueType> ValueTuple;
-  typedef Tuple5<typename TupleTraits<A>::RefType,
-    typename TupleTraits<B>::RefType,
-    typename TupleTraits<C>::RefType,
-    typename TupleTraits<D>::RefType,
-    typename TupleTraits<E>::RefType> RefTuple;
+  typedef Tuple5<
+      typename TupleTraits<A>::ValueType, typename TupleTraits<B>::ValueType,
+      typename TupleTraits<C>::ValueType, typename TupleTraits<D>::ValueType,
+      typename TupleTraits<E>::ValueType>
+      ValueTuple;
+  typedef Tuple5<
+      typename TupleTraits<A>::RefType, typename TupleTraits<B>::RefType,
+      typename TupleTraits<C>::RefType, typename TupleTraits<D>::RefType,
+      typename TupleTraits<E>::RefType>
+      RefTuple;
 
   Tuple5() {}
   Tuple5(typename TupleTraits<A>::ParamType aA,
@@ -185,8 +186,7 @@ public:
          typename TupleTraits<C>::ParamType aC,
          typename TupleTraits<D>::ParamType aD,
          typename TupleTraits<E>::ParamType aE)
-    : a(aA), b(aB), c(aC), d(aD), e(aE) {
-  }
+      : a(aA), b(aB), c(aC), d(aD), e(aE) {}
 
   A a;
   B b;
@@ -197,35 +197,32 @@ public:
 
 template <class A, class B, class C, class D, class E, class F>
 struct Tuple6 {
-public:
+ public:
   typedef A TypeA;
   typedef B TypeB;
   typedef C TypeC;
   typedef D TypeD;
   typedef E TypeE;
   typedef F TypeF;
-  typedef Tuple6<typename TupleTraits<A>::ValueType,
-    typename TupleTraits<B>::ValueType,
-    typename TupleTraits<C>::ValueType,
-    typename TupleTraits<D>::ValueType,
-    typename TupleTraits<E>::ValueType,
-    typename TupleTraits<F>::ValueType> ValueTuple;
-  typedef Tuple6<typename TupleTraits<A>::RefType,
-    typename TupleTraits<B>::RefType,
-    typename TupleTraits<C>::RefType,
-    typename TupleTraits<D>::RefType,
-    typename TupleTraits<E>::RefType,
-    typename TupleTraits<F>::RefType> RefTuple;
+  typedef Tuple6<
+      typename TupleTraits<A>::ValueType, typename TupleTraits<B>::ValueType,
+      typename TupleTraits<C>::ValueType, typename TupleTraits<D>::ValueType,
+      typename TupleTraits<E>::ValueType, typename TupleTraits<F>::ValueType>
+      ValueTuple;
+  typedef Tuple6<
+      typename TupleTraits<A>::RefType, typename TupleTraits<B>::RefType,
+      typename TupleTraits<C>::RefType, typename TupleTraits<D>::RefType,
+      typename TupleTraits<E>::RefType, typename TupleTraits<F>::RefType>
+      RefTuple;
 
   Tuple6() {}
   Tuple6(typename TupleTraits<A>::ParamType aA,
-    typename TupleTraits<B>::ParamType aB,
-    typename TupleTraits<C>::ParamType aC,
-    typename TupleTraits<D>::ParamType aD,
-    typename TupleTraits<E>::ParamType aE,
-    typename TupleTraits<F>::ParamType aF)
-    : a(aA), b(aB), c(aC), d(aD), e(aE), f(aF) {
-  }
+         typename TupleTraits<B>::ParamType aB,
+         typename TupleTraits<C>::ParamType aC,
+         typename TupleTraits<D>::ParamType aD,
+         typename TupleTraits<E>::ParamType aE,
+         typename TupleTraits<F>::ParamType aF)
+      : a(aA), b(aB), c(aC), d(aD), e(aE), f(aF) {}
 
   A a;
   B b;
@@ -237,7 +234,7 @@ public:
 
 template <class A, class B, class C, class D, class E, class F, class G>
 struct Tuple7 {
-public:
+ public:
   typedef A TypeA;
   typedef B TypeB;
   typedef C TypeC;
@@ -245,20 +242,18 @@ public:
   typedef E TypeE;
   typedef F TypeF;
   typedef G TypeG;
-  typedef Tuple7<typename TupleTraits<A>::ValueType,
-    typename TupleTraits<B>::ValueType,
-    typename TupleTraits<C>::ValueType,
-    typename TupleTraits<D>::ValueType,
-    typename TupleTraits<E>::ValueType,
-    typename TupleTraits<F>::ValueType,
-    typename TupleTraits<G>::ValueType> ValueTuple;
-  typedef Tuple7<typename TupleTraits<A>::RefType,
-    typename TupleTraits<B>::RefType,
-    typename TupleTraits<C>::RefType,
-    typename TupleTraits<D>::RefType,
-    typename TupleTraits<E>::RefType,
-    typename TupleTraits<F>::RefType,
-    typename TupleTraits<G>::RefType> RefTuple;
+  typedef Tuple7<
+      typename TupleTraits<A>::ValueType, typename TupleTraits<B>::ValueType,
+      typename TupleTraits<C>::ValueType, typename TupleTraits<D>::ValueType,
+      typename TupleTraits<E>::ValueType, typename TupleTraits<F>::ValueType,
+      typename TupleTraits<G>::ValueType>
+      ValueTuple;
+  typedef Tuple7<
+      typename TupleTraits<A>::RefType, typename TupleTraits<B>::RefType,
+      typename TupleTraits<C>::RefType, typename TupleTraits<D>::RefType,
+      typename TupleTraits<E>::RefType, typename TupleTraits<F>::RefType,
+      typename TupleTraits<G>::RefType>
+      RefTuple;
 
   Tuple7() {}
   Tuple7(typename TupleTraits<A>::ParamType aA,
@@ -268,8 +263,7 @@ public:
          typename TupleTraits<E>::ParamType aE,
          typename TupleTraits<F>::ParamType aF,
          typename TupleTraits<G>::ParamType aG)
-    : a(aA), b(aB), c(aC), d(aD), e(aE), f(aF), g(aG) {
-  }
+      : a(aA), b(aB), c(aC), d(aD), e(aE), f(aF), g(aG) {}
 
   A a;
   B b;
@@ -287,9 +281,7 @@ public:
 
 namespace base {
 
-inline Tuple0 MakeTuple() {
-  return Tuple0();
-}
+inline Tuple0 MakeTuple() { return Tuple0(); }
 
 template <class A>
 inline Tuple1<A> MakeTuple(const A& a) {
@@ -399,40 +391,39 @@ inline void DispatchToMethod(ObjT* obj, Method method, const Tuple1<A>& arg) {
   (obj->*method)(arg.a);
 }
 
-template<class ObjT, class Method, class A, class B>
-inline void DispatchToMethod(ObjT* obj,
-                             Method method,
+template <class ObjT, class Method, class A, class B>
+inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple2<A, B>& arg) {
   (obj->*method)(arg.a, arg.b);
 }
 
-template<class ObjT, class Method, class A, class B, class C>
+template <class ObjT, class Method, class A, class B, class C>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple3<A, B, C>& arg) {
   (obj->*method)(arg.a, arg.b, arg.c);
 }
 
-template<class ObjT, class Method, class A, class B, class C, class D>
+template <class ObjT, class Method, class A, class B, class C, class D>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple4<A, B, C, D>& arg) {
   (obj->*method)(arg.a, arg.b, arg.c, arg.d);
 }
 
-template<class ObjT, class Method, class A, class B, class C, class D, class E>
+template <class ObjT, class Method, class A, class B, class C, class D, class E>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple5<A, B, C, D, E>& arg) {
   (obj->*method)(arg.a, arg.b, arg.c, arg.d, arg.e);
 }
 
-template<class ObjT, class Method, class A, class B, class C, class D, class E,
-         class F>
+template <class ObjT, class Method, class A, class B, class C, class D, class E,
+          class F>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple6<A, B, C, D, E, F>& arg) {
   (obj->*method)(arg.a, arg.b, arg.c, arg.d, arg.e, arg.f);
 }
 
-template<class ObjT, class Method, class A, class B, class C, class D, class E,
-         class F, class G>
+template <class ObjT, class Method, class A, class B, class C, class D, class E,
+          class F, class G>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple7<A, B, C, D, E, F, G>& arg) {
   (obj->*method)(arg.a, arg.b, arg.c, arg.d, arg.e, arg.f, arg.g);
@@ -455,29 +446,29 @@ inline void DispatchToFunction(Function function, const Tuple1<A>& arg) {
   (*function)(arg.a);
 }
 
-template<class Function, class A, class B>
+template <class Function, class A, class B>
 inline void DispatchToFunction(Function function, const Tuple2<A, B>& arg) {
   (*function)(arg.a, arg.b);
 }
 
-template<class Function, class A, class B, class C>
+template <class Function, class A, class B, class C>
 inline void DispatchToFunction(Function function, const Tuple3<A, B, C>& arg) {
   (*function)(arg.a, arg.b, arg.c);
 }
 
-template<class Function, class A, class B, class C, class D>
+template <class Function, class A, class B, class C, class D>
 inline void DispatchToFunction(Function function,
                                const Tuple4<A, B, C, D>& arg) {
   (*function)(arg.a, arg.b, arg.c, arg.d);
 }
 
-template<class Function, class A, class B, class C, class D, class E>
+template <class Function, class A, class B, class C, class D, class E>
 inline void DispatchToFunction(Function function,
                                const Tuple5<A, B, C, D, E>& arg) {
   (*function)(arg.a, arg.b, arg.c, arg.d, arg.e);
 }
 
-template<class Function, class A, class B, class C, class D, class E, class F>
+template <class Function, class A, class B, class C, class D, class E, class F>
 inline void DispatchToFunction(Function function,
                                const Tuple6<A, B, C, D, E, F>& arg) {
   (*function)(arg.a, arg.b, arg.c, arg.d, arg.e, arg.f);
@@ -486,9 +477,8 @@ inline void DispatchToFunction(Function function,
 // Dispatchers with 0 out param (as a Tuple0).
 
 template <class ObjT, class Method>
-inline void DispatchToMethod(ObjT* obj,
-                             Method method,
-                             const Tuple0& arg, Tuple0*) {
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple0& arg,
+                             Tuple0*) {
   (obj->*method)();
 }
 
@@ -498,39 +488,37 @@ inline void DispatchToMethod(ObjT* obj, Method method, const A& arg, Tuple0*) {
 }
 
 template <class ObjT, class Method, class A>
-inline void DispatchToMethod(ObjT* obj,
-                             Method method,
-                             const Tuple1<A>& arg, Tuple0*) {
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple1<A>& arg,
+                             Tuple0*) {
   (obj->*method)(arg.a);
 }
 
-template<class ObjT, class Method, class A, class B>
-inline void DispatchToMethod(ObjT* obj,
-                             Method method,
-                             const Tuple2<A, B>& arg, Tuple0*) {
+template <class ObjT, class Method, class A, class B>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple2<A, B>& arg,
+                             Tuple0*) {
   (obj->*method)(arg.a, arg.b);
 }
 
-template<class ObjT, class Method, class A, class B, class C>
+template <class ObjT, class Method, class A, class B, class C>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple3<A, B, C>& arg, Tuple0*) {
   (obj->*method)(arg.a, arg.b, arg.c);
 }
 
-template<class ObjT, class Method, class A, class B, class C, class D>
+template <class ObjT, class Method, class A, class B, class C, class D>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple4<A, B, C, D>& arg, Tuple0*) {
   (obj->*method)(arg.a, arg.b, arg.c, arg.d);
 }
 
-template<class ObjT, class Method, class A, class B, class C, class D, class E>
+template <class ObjT, class Method, class A, class B, class C, class D, class E>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple5<A, B, C, D, E>& arg, Tuple0*) {
   (obj->*method)(arg.a, arg.b, arg.c, arg.d, arg.e);
 }
 
-template<class ObjT, class Method, class A, class B, class C, class D, class E,
-         class F>
+template <class ObjT, class Method, class A, class B, class C, class D, class E,
+          class F>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple6<A, B, C, D, E, F>& arg, Tuple0*) {
   (obj->*method)(arg.a, arg.b, arg.c, arg.d, arg.e, arg.f);
@@ -538,66 +526,55 @@ inline void DispatchToMethod(ObjT* obj, Method method,
 
 // Dispatchers with 1 out param.
 
-template<class ObjT, class Method,
-         class OutA>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple0& in,
+template <class ObjT, class Method, class OutA>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple0& in,
                              Tuple1<OutA>* out) {
   (obj->*method)(&out->a);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const InA& in,
+template <class ObjT, class Method, class InA, class OutA>
+inline void DispatchToMethod(ObjT* obj, Method method, const InA& in,
                              Tuple1<OutA>* out) {
   (obj->*method)(in, &out->a);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple1<InA>& in,
+template <class ObjT, class Method, class InA, class OutA>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple1<InA>& in,
                              Tuple1<OutA>* out) {
   (obj->*method)(in.a, &out->a);
 }
 
-template<class ObjT, class Method, class InA, class InB,
-         class OutA>
+template <class ObjT, class Method, class InA, class InB, class OutA>
 inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple2<InA, InB>& in,
-                             Tuple1<OutA>* out) {
+                             const Tuple2<InA, InB>& in, Tuple1<OutA>* out) {
   (obj->*method)(in.a, in.b, &out->a);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC,
-         class OutA>
+template <class ObjT, class Method, class InA, class InB, class InC, class OutA>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple3<InA, InB, InC>& in,
                              Tuple1<OutA>* out) {
   (obj->*method)(in.a, in.b, in.c, &out->a);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC, class InD,
-         class OutA>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class OutA>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple4<InA, InB, InC, InD>& in,
                              Tuple1<OutA>* out) {
   (obj->*method)(in.a, in.b, in.c, in.d, &out->a);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE,
-         class OutA>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class OutA>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple5<InA, InB, InC, InD, InE>& in,
                              Tuple1<OutA>* out) {
   (obj->*method)(in.a, in.b, in.c, in.d, in.e, &out->a);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE, class InF,
-         class OutA>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class InF, class OutA>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple6<InA, InB, InC, InD, InE, InF>& in,
                              Tuple1<OutA>* out) {
@@ -606,66 +583,58 @@ inline void DispatchToMethod(ObjT* obj, Method method,
 
 // Dispatchers with 2 out params.
 
-template<class ObjT, class Method,
-         class OutA, class OutB>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple0& in,
+template <class ObjT, class Method, class OutA, class OutB>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple0& in,
                              Tuple2<OutA, OutB>* out) {
   (obj->*method)(&out->a, &out->b);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const InA& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB>
+inline void DispatchToMethod(ObjT* obj, Method method, const InA& in,
                              Tuple2<OutA, OutB>* out) {
   (obj->*method)(in, &out->a, &out->b);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple1<InA>& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple1<InA>& in,
                              Tuple2<OutA, OutB>* out) {
   (obj->*method)(in.a, &out->a, &out->b);
 }
 
-template<class ObjT, class Method, class InA, class InB,
-         class OutA, class OutB>
+template <class ObjT, class Method, class InA, class InB, class OutA,
+          class OutB>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple2<InA, InB>& in,
                              Tuple2<OutA, OutB>* out) {
   (obj->*method)(in.a, in.b, &out->a, &out->b);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC,
-         class OutA, class OutB>
+template <class ObjT, class Method, class InA, class InB, class InC, class OutA,
+          class OutB>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple3<InA, InB, InC>& in,
                              Tuple2<OutA, OutB>* out) {
   (obj->*method)(in.a, in.b, in.c, &out->a, &out->b);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC, class InD,
-         class OutA, class OutB>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class OutA, class OutB>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple4<InA, InB, InC, InD>& in,
                              Tuple2<OutA, OutB>* out) {
   (obj->*method)(in.a, in.b, in.c, in.d, &out->a, &out->b);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE,
-         class OutA, class OutB>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class OutA, class OutB>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple5<InA, InB, InC, InD, InE>& in,
                              Tuple2<OutA, OutB>* out) {
   (obj->*method)(in.a, in.b, in.c, in.d, in.e, &out->a, &out->b);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE, class InF,
-         class OutA, class OutB>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class InF, class OutA, class OutB>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple6<InA, InB, InC, InD, InE, InF>& in,
                              Tuple2<OutA, OutB>* out) {
@@ -674,66 +643,60 @@ inline void DispatchToMethod(ObjT* obj, Method method,
 
 // Dispatchers with 3 out params.
 
-template<class ObjT, class Method,
-         class OutA, class OutB, class OutC>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple0& in,
+template <class ObjT, class Method, class OutA, class OutB, class OutC>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple0& in,
                              Tuple3<OutA, OutB, OutC>* out) {
   (obj->*method)(&out->a, &out->b, &out->c);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB, class OutC>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const InA& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB,
+          class OutC>
+inline void DispatchToMethod(ObjT* obj, Method method, const InA& in,
                              Tuple3<OutA, OutB, OutC>* out) {
   (obj->*method)(in, &out->a, &out->b, &out->c);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB, class OutC>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple1<InA>& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB,
+          class OutC>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple1<InA>& in,
                              Tuple3<OutA, OutB, OutC>* out) {
   (obj->*method)(in.a, &out->a, &out->b, &out->c);
 }
 
-template<class ObjT, class Method, class InA, class InB,
-         class OutA, class OutB, class OutC>
+template <class ObjT, class Method, class InA, class InB, class OutA,
+          class OutB, class OutC>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple2<InA, InB>& in,
                              Tuple3<OutA, OutB, OutC>* out) {
   (obj->*method)(in.a, in.b, &out->a, &out->b, &out->c);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC,
-         class OutA, class OutB, class OutC>
+template <class ObjT, class Method, class InA, class InB, class InC, class OutA,
+          class OutB, class OutC>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple3<InA, InB, InC>& in,
                              Tuple3<OutA, OutB, OutC>* out) {
   (obj->*method)(in.a, in.b, in.c, &out->a, &out->b, &out->c);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC, class InD,
-         class OutA, class OutB, class OutC>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class OutA, class OutB, class OutC>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple4<InA, InB, InC, InD>& in,
                              Tuple3<OutA, OutB, OutC>* out) {
   (obj->*method)(in.a, in.b, in.c, in.d, &out->a, &out->b, &out->c);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE,
-         class OutA, class OutB, class OutC>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class OutA, class OutB, class OutC>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple5<InA, InB, InC, InD, InE>& in,
                              Tuple3<OutA, OutB, OutC>* out) {
   (obj->*method)(in.a, in.b, in.c, in.d, in.e, &out->a, &out->b, &out->c);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE, class InF,
-         class OutA, class OutB, class OutC>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class InF, class OutA, class OutB, class OutC>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple6<InA, InB, InC, InD, InE, InF>& in,
                              Tuple3<OutA, OutB, OutC>* out) {
@@ -742,118 +705,110 @@ inline void DispatchToMethod(ObjT* obj, Method method,
 
 // Dispatchers with 4 out params.
 
-template<class ObjT, class Method,
-         class OutA, class OutB, class OutC, class OutD>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple0& in,
+template <class ObjT, class Method, class OutA, class OutB, class OutC,
+          class OutD>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple0& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
   (obj->*method)(&out->a, &out->b, &out->c, &out->d);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB, class OutC, class OutD>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const InA& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB,
+          class OutC, class OutD>
+inline void DispatchToMethod(ObjT* obj, Method method, const InA& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
   (obj->*method)(in, &out->a, &out->b, &out->c, &out->d);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB, class OutC, class OutD>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple1<InA>& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB,
+          class OutC, class OutD>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple1<InA>& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
   (obj->*method)(in.a, &out->a, &out->b, &out->c, &out->d);
 }
 
-template<class ObjT, class Method, class InA, class InB,
-         class OutA, class OutB, class OutC, class OutD>
+template <class ObjT, class Method, class InA, class InB, class OutA,
+          class OutB, class OutC, class OutD>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple2<InA, InB>& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
   (obj->*method)(in.a, in.b, &out->a, &out->b, &out->c, &out->d);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC,
-         class OutA, class OutB, class OutC, class OutD>
+template <class ObjT, class Method, class InA, class InB, class InC, class OutA,
+          class OutB, class OutC, class OutD>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple3<InA, InB, InC>& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
   (obj->*method)(in.a, in.b, in.c, &out->a, &out->b, &out->c, &out->d);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC, class InD,
-         class OutA, class OutB, class OutC, class OutD>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class OutA, class OutB, class OutC, class OutD>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple4<InA, InB, InC, InD>& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
   (obj->*method)(in.a, in.b, in.c, in.d, &out->a, &out->b, &out->c, &out->d);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE,
-         class OutA, class OutB, class OutC, class OutD>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class OutA, class OutB, class OutC, class OutD>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple5<InA, InB, InC, InD, InE>& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
-  (obj->*method)(in.a, in.b, in.c, in.d, in.e,
-                 &out->a, &out->b, &out->c, &out->d);
+  (obj->*method)(in.a, in.b, in.c, in.d, in.e, &out->a, &out->b, &out->c,
+                 &out->d);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE, class InF,
-         class OutA, class OutB, class OutC, class OutD>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class InF, class OutA, class OutB, class OutC, class OutD>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple6<InA, InB, InC, InD, InE, InF>& in,
                              Tuple4<OutA, OutB, OutC, OutD>* out) {
-  (obj->*method)(in.a, in.b, in.c, in.d, in.e, in.f,
-                 &out->a, &out->b, &out->c, &out->d);
+  (obj->*method)(in.a, in.b, in.c, in.d, in.e, in.f, &out->a, &out->b, &out->c,
+                 &out->d);
 }
 
 // Dispatchers with 5 out params.
 
-template<class ObjT, class Method,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple0& in,
+template <class ObjT, class Method, class OutA, class OutB, class OutC,
+          class OutD, class OutE>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple0& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
   (obj->*method)(&out->a, &out->b, &out->c, &out->d, &out->e);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const InA& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB,
+          class OutC, class OutD, class OutE>
+inline void DispatchToMethod(ObjT* obj, Method method, const InA& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
   (obj->*method)(in, &out->a, &out->b, &out->c, &out->d, &out->e);
 }
 
-template<class ObjT, class Method, class InA,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
-inline void DispatchToMethod(ObjT* obj, Method method,
-                             const Tuple1<InA>& in,
+template <class ObjT, class Method, class InA, class OutA, class OutB,
+          class OutC, class OutD, class OutE>
+inline void DispatchToMethod(ObjT* obj, Method method, const Tuple1<InA>& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
   (obj->*method)(in.a, &out->a, &out->b, &out->c, &out->d, &out->e);
 }
 
-template<class ObjT, class Method, class InA, class InB,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
+template <class ObjT, class Method, class InA, class InB, class OutA,
+          class OutB, class OutC, class OutD, class OutE>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple2<InA, InB>& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
   (obj->*method)(in.a, in.b, &out->a, &out->b, &out->c, &out->d, &out->e);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
+template <class ObjT, class Method, class InA, class InB, class InC, class OutA,
+          class OutB, class OutC, class OutD, class OutE>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple3<InA, InB, InC>& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
   (obj->*method)(in.a, in.b, in.c, &out->a, &out->b, &out->c, &out->d, &out->e);
 }
 
-template<class ObjT, class Method, class InA, class InB, class InC, class InD,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class OutA, class OutB, class OutC, class OutD, class OutE>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple4<InA, InB, InC, InD>& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
@@ -861,24 +816,23 @@ inline void DispatchToMethod(ObjT* obj, Method method,
                  &out->e);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class OutA, class OutB, class OutC, class OutD, class OutE>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple5<InA, InB, InC, InD, InE>& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
-  (obj->*method)(in.a, in.b, in.c, in.d, in.e,
-                 &out->a, &out->b, &out->c, &out->d, &out->e);
+  (obj->*method)(in.a, in.b, in.c, in.d, in.e, &out->a, &out->b, &out->c,
+                 &out->d, &out->e);
 }
 
-template<class ObjT, class Method,
-         class InA, class InB, class InC, class InD, class InE, class InF,
-         class OutA, class OutB, class OutC, class OutD, class OutE>
+template <class ObjT, class Method, class InA, class InB, class InC, class InD,
+          class InE, class InF, class OutA, class OutB, class OutC, class OutD,
+          class OutE>
 inline void DispatchToMethod(ObjT* obj, Method method,
                              const Tuple6<InA, InB, InC, InD, InE, InF>& in,
                              Tuple5<OutA, OutB, OutC, OutD, OutE>* out) {
-  (obj->*method)(in.a, in.b, in.c, in.d, in.e, in.f,
-                 &out->a, &out->b, &out->c, &out->d, &out->e);
+  (obj->*method)(in.a, in.b, in.c, in.d, in.e, in.f, &out->a, &out->b, &out->c,
+                 &out->d, &out->e);
 }
 
 #endif  // BASE_TUPLE_H__

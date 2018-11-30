@@ -15,25 +15,24 @@
 namespace mozilla {
 namespace widget {
 
-
 /* this is handy wrapper around JSAPI to make it more pleasant to use.
  * We collect the JSAPI errors and so that callers don't need to */
-class MOZ_STACK_CLASS InfoObject
-{
+class MOZ_STACK_CLASS InfoObject {
   friend class GfxInfoBase;
 
-  public:
+ public:
   void DefineProperty(const char *name, int value);
   void DefineProperty(const char *name, nsAString &value);
   void DefineProperty(const char *name, const char *value);
 
-  private:
-  // We need to ensure that this object lives on the stack so that GC sees it properly
+ private:
+  // We need to ensure that this object lives on the stack so that GC sees it
+  // properly
   explicit InfoObject(JSContext *aCx);
-  InfoObject(InfoObject&);
+  InfoObject(InfoObject &);
 
   JSContext *mCx;
-  JS::Rooted<JSObject*> mObj;
+  JS::Rooted<JSObject *> mObj;
   bool mOk;
 };
 
@@ -64,31 +63,26 @@ class MOZ_STACK_CLASS InfoObject
 
 */
 
-class GfxInfoCollectorBase
-{
-  public:
+class GfxInfoCollectorBase {
+ public:
   GfxInfoCollectorBase();
   virtual void GetInfo(InfoObject &obj) = 0;
   virtual ~GfxInfoCollectorBase();
 };
 
-template<class T>
-class GfxInfoCollector : public GfxInfoCollectorBase
-{
-  public:
-  GfxInfoCollector(T* aPointer, void (T::*aFunc)(InfoObject &obj)) : mPointer(aPointer), mFunc(aFunc) {
-  }
-  virtual void GetInfo(InfoObject &obj) override {
-    (mPointer->*mFunc)(obj);
-  }
+template <class T>
+class GfxInfoCollector : public GfxInfoCollectorBase {
+ public:
+  GfxInfoCollector(T *aPointer, void (T::*aFunc)(InfoObject &obj))
+      : mPointer(aPointer), mFunc(aFunc) {}
+  virtual void GetInfo(InfoObject &obj) override { (mPointer->*mFunc)(obj); }
 
-  protected:
-  T* mPointer;
+ protected:
+  T *mPointer;
   void (T::*mFunc)(InfoObject &obj);
-
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif

@@ -25,19 +25,17 @@ namespace net {
  * methods are not implemented and this is not intended to be a general
  * purpose file implementation.
  */
-class FileDescriptorFile final : public nsIFile
-{
+class FileDescriptorFile final : public nsIFile {
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
 
-public:
+ public:
   FileDescriptorFile(const FileDescriptor& aFD, nsIFile* aFile);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFILE
 
-private:
-  ~FileDescriptorFile()
-  {}
+ private:
+  ~FileDescriptorFile() {}
 
   FileDescriptorFile(const FileDescriptorFile& other);
 
@@ -46,7 +44,7 @@ private:
   FileDescriptor mFD;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // _FileDescriptorFile_h
+#endif  // _FileDescriptorFile_h

@@ -16,20 +16,14 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS(nsScriptableUnicodeConverter, nsIScriptableUnicodeConverter)
 
 nsScriptableUnicodeConverter::nsScriptableUnicodeConverter()
-: mIsInternal(false)
-{
-}
+    : mIsInternal(false) {}
 
-nsScriptableUnicodeConverter::~nsScriptableUnicodeConverter()
-{
-}
+nsScriptableUnicodeConverter::~nsScriptableUnicodeConverter() {}
 
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
-                                                 nsACString& _retval)
-{
-  if (!mEncoder)
-    return NS_ERROR_FAILURE;
+                                                 nsACString& _retval) {
+  if (!mEncoder) return NS_ERROR_FAILURE;
 
   // We can compute the length without replacement, because the
   // the replacement is only one byte long and a mappable character
@@ -39,7 +33,7 @@ nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
   // worst case where every input character causes an escape into
   // a different state.
   CheckedInt<size_t> needed =
-    mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(aSrc.Length());
+      mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(aSrc.Length());
   if (!needed.isValid() || needed.value() > UINT32_MAX) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -56,10 +50,11 @@ nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
     size_t read;
     size_t written;
     Tie(result, read, written) =
-      mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
+        mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
     if (result != kInputEmpty && result != kOutputFull) {
       MOZ_RELEASE_ASSERT(written < dst.Length(),
-        "Unmappables with one-byte replacement should not exceed mappable worst case.");
+                         "Unmappables with one-byte replacement should not "
+                         "exceed mappable worst case.");
       dst[written++] = '?';
     }
     totalWritten += written;
@@ -76,8 +71,7 @@ nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::Finish(nsACString& _retval)
-{
+nsScriptableUnicodeConverter::Finish(nsACString& _retval) {
   // The documentation for this method says it should be called after
   // ConvertFromUnicode(). However, our own tests called it after
   // convertFromByteArray(), i.e. when *decoding*.
@@ -100,7 +94,7 @@ nsScriptableUnicodeConverter::Finish(nsACString& _retval)
   size_t written;
   bool hadErrors;
   Tie(result, read, written, hadErrors) =
-    mEncoder->EncodeFromUTF16(src, _retval, true);
+      mEncoder->EncodeFromUTF16(src, _retval, true);
   Unused << hadErrors;
   MOZ_ASSERT(!read);
   MOZ_ASSERT(result == kInputEmpty);
@@ -112,10 +106,9 @@ nsScriptableUnicodeConverter::Finish(nsACString& _retval)
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc, nsAString& _retval)
-{
-  if (!mDecoder)
-    return NS_ERROR_FAILURE;
+nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc,
+                                               nsAString& _retval) {
+  if (!mDecoder) return NS_ERROR_FAILURE;
 
   uint32_t length = aSrc.Length();
 
@@ -128,7 +121,8 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc, nsAString
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto src = MakeSpan(reinterpret_cast<const uint8_t*>(aSrc.BeginReading()), length);
+  auto src =
+      MakeSpan(reinterpret_cast<const uint8_t*>(aSrc.BeginReading()), length);
   uint32_t result;
   size_t read;
   size_t written;
@@ -139,13 +133,13 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc, nsAString
   // TextDecoder.
   if (mDecoder->Encoding() == UTF_8_ENCODING) {
     Tie(result, read, written) =
-      mDecoder->DecodeToUTF16WithoutReplacement(src, _retval, false);
+        mDecoder->DecodeToUTF16WithoutReplacement(src, _retval, false);
     if (result != kInputEmpty) {
       return NS_ERROR_UDEC_ILLEGALINPUT;
     }
   } else {
     Tie(result, read, written, hadErrors) =
-      mDecoder->DecodeToUTF16(src, _retval, false);
+        mDecoder->DecodeToUTF16(src, _retval, false);
   }
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == length);
@@ -160,13 +154,11 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc, nsAString
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertToByteArray(const nsAString& aString,
                                                  uint32_t* aLen,
-                                                 uint8_t** _aData)
-{
-  if (!mEncoder)
-    return NS_ERROR_FAILURE;
+                                                 uint8_t** _aData) {
+  if (!mEncoder) return NS_ERROR_FAILURE;
 
   CheckedInt<size_t> needed =
-    mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(aString.Length());
+      mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(aString.Length());
   if (!needed.isValid() || needed.value() > UINT32_MAX) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -183,7 +175,7 @@ nsScriptableUnicodeConverter::ConvertToByteArray(const nsAString& aString,
     size_t read;
     size_t written;
     Tie(result, read, written) =
-      mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, true);
+        mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, true);
     if (result != kInputEmpty && result != kOutputFull) {
       // There's always room for one byte in the case of
       // an unmappable character, because otherwise
@@ -204,19 +196,16 @@ nsScriptableUnicodeConverter::ConvertToByteArray(const nsAString& aString,
 
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertToInputStream(const nsAString& aString,
-                                                   nsIInputStream** _retval)
-{
+                                                   nsIInputStream** _retval) {
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> inputStream =
-    do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
+      do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
+  if (NS_FAILED(rv)) return rv;
 
   uint8_t* data;
   uint32_t dataLen;
   rv = ConvertToByteArray(aString, &dataLen, &data);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   rv = inputStream->AdoptData(reinterpret_cast<char*>(data), dataLen);
   if (NS_FAILED(rv)) {
@@ -229,8 +218,7 @@ nsScriptableUnicodeConverter::ConvertToInputStream(const nsAString& aString,
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::GetCharset(nsACString& aCharset)
-{
+nsScriptableUnicodeConverter::GetCharset(nsACString& aCharset) {
   if (!mDecoder) {
     aCharset.Truncate();
   } else {
@@ -240,28 +228,24 @@ nsScriptableUnicodeConverter::GetCharset(nsACString& aCharset)
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::SetCharset(const nsACString& aCharset)
-{
+nsScriptableUnicodeConverter::SetCharset(const nsACString& aCharset) {
   return InitConverter(aCharset);
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::GetIsInternal(bool *aIsInternal)
-{
+nsScriptableUnicodeConverter::GetIsInternal(bool* aIsInternal) {
   *aIsInternal = mIsInternal;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::SetIsInternal(const bool aIsInternal)
-{
+nsScriptableUnicodeConverter::SetIsInternal(const bool aIsInternal) {
   mIsInternal = aIsInternal;
   return NS_OK;
 }
 
-nsresult
-nsScriptableUnicodeConverter::InitConverter(const nsACString& aCharset)
-{
+nsresult nsScriptableUnicodeConverter::InitConverter(
+    const nsACString& aCharset) {
   mEncoder = nullptr;
   mDecoder = nullptr;
 

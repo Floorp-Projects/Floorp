@@ -24,49 +24,33 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GridDimension)
 NS_INTERFACE_MAP_END
 
 GridDimension::GridDimension(Grid* aParent)
-  : mParent(aParent)
-  , mLines(new GridLines(this))
-  , mTracks(new GridTracks(this))
-{
+    : mParent(aParent),
+      mLines(new GridLines(this)),
+      mTracks(new GridTracks(this)) {
   MOZ_ASSERT(aParent, "Should never be instantiated with a null Grid");
 }
 
-GridDimension::~GridDimension()
-{
-}
+GridDimension::~GridDimension() {}
 
-JSObject*
-GridDimension::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* GridDimension::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return GridDimension_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-GridLines*
-GridDimension::Lines() const
-{
-  return mLines;
-}
+GridLines* GridDimension::Lines() const { return mLines; }
 
-GridTracks*
-GridDimension::Tracks() const
-{
-  return mTracks;
-}
+GridTracks* GridDimension::Tracks() const { return mTracks; }
 
-void
-GridDimension::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
-{
+void GridDimension::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo) {
   mTracks->SetTrackInfo(aTrackInfo);
 }
 
-void
-GridDimension::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
-                           const ComputedGridLineInfo* aLineInfo,
-                           const nsTArray<RefPtr<GridArea>>& aAreas,
-                           bool aIsRow)
-{
+void GridDimension::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
+                                const ComputedGridLineInfo* aLineInfo,
+                                const nsTArray<RefPtr<GridArea>>& aAreas,
+                                bool aIsRow) {
   mLines->SetLineInfo(aTrackInfo, aLineInfo, aAreas, aIsRow);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

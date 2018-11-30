@@ -26,9 +26,8 @@
 #include <string>
 #include <vector>
 
-class ClearKeySession
-{
-public:
+class ClearKeySession {
+ public:
   explicit ClearKeySession(const std::string& aSessionId,
                            cdm::SessionType aSessionType);
 
@@ -36,8 +35,8 @@ public:
 
   const std::vector<KeyId>& GetKeyIds() const { return mKeyIds; }
 
-  bool Init(cdm::InitDataType aInitDataType,
-            const uint8_t* aInitData, uint32_t aInitDataSize);
+  bool Init(cdm::InitDataType aInitDataType, const uint8_t* aInitData,
+            uint32_t aInitDataSize);
 
   cdm::SessionType Type() const;
 
@@ -45,11 +44,11 @@ public:
 
   const std::string& Id() const { return mSessionId; }
 
-private:
+ private:
   const std::string mSessionId;
   std::vector<KeyId> mKeyIds;
 
   const cdm::SessionType mSessionType;
 };
 
-#endif // __ClearKeySession_h__
+#endif  // __ClearKeySession_h__

@@ -16,14 +16,13 @@
 namespace mozilla {
 namespace net {
 class PNeckoParent;
-} // namespace net
+}  // namespace net
 
 namespace dom {
 
-class UDPSocketParent : public mozilla::net::PUDPSocketParent
-                      , public nsIUDPSocketListener
-{
-public:
+class UDPSocketParent : public mozilla::net::PUDPSocketParent,
+                        public nsIUDPSocketListener {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETLISTENER
 
@@ -32,28 +31,30 @@ public:
 
   bool Init(const IPC::Principal& aPrincipal, const nsACString& aFilter);
 
-  virtual mozilla::ipc::IPCResult RecvBind(const UDPAddressInfo& aAddressInfo,
-                                           const bool& aAddressReuse, const bool& aLoopback,
-                                           const uint32_t& recvBufferSize,
-                                           const uint32_t& sendBufferSize) override;
-  virtual mozilla::ipc::IPCResult RecvConnect(const UDPAddressInfo& aAddressInfo) override;
+  virtual mozilla::ipc::IPCResult RecvBind(
+      const UDPAddressInfo& aAddressInfo, const bool& aAddressReuse,
+      const bool& aLoopback, const uint32_t& recvBufferSize,
+      const uint32_t& sendBufferSize) override;
+  virtual mozilla::ipc::IPCResult RecvConnect(
+      const UDPAddressInfo& aAddressInfo) override;
   void DoSendConnectResponse(const UDPAddressInfo& aAddressInfo);
-  void SendConnectResponse(nsIEventTarget *aThread,
+  void SendConnectResponse(nsIEventTarget* aThread,
                            const UDPAddressInfo& aAddressInfo);
   void DoConnect(nsCOMPtr<nsIUDPSocket>& aSocket,
                  nsCOMPtr<nsIEventTarget>& aReturnThread,
                  const UDPAddressInfo& aAddressInfo);
 
-  virtual mozilla::ipc::IPCResult RecvOutgoingData(const UDPData& aData, const UDPSocketAddr& aAddr) override;
+  virtual mozilla::ipc::IPCResult RecvOutgoingData(
+      const UDPData& aData, const UDPSocketAddr& aAddr) override;
 
   virtual mozilla::ipc::IPCResult RecvClose() override;
   virtual mozilla::ipc::IPCResult RecvRequestDelete() override;
-  virtual mozilla::ipc::IPCResult RecvJoinMulticast(const nsCString& aMulticastAddress,
-                                                    const nsCString& aInterface) override;
-  virtual mozilla::ipc::IPCResult RecvLeaveMulticast(const nsCString& aMulticastAddress,
-                                                     const nsCString& aInterface) override;
+  virtual mozilla::ipc::IPCResult RecvJoinMulticast(
+      const nsCString& aMulticastAddress, const nsCString& aInterface) override;
+  virtual mozilla::ipc::IPCResult RecvLeaveMulticast(
+      const nsCString& aMulticastAddress, const nsCString& aInterface) override;
 
-private:
+ private:
   virtual ~UDPSocketParent();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
@@ -65,8 +66,7 @@ private:
                         const uint32_t& sendBufferSize);
   nsresult ConnectInternal(const nsCString& aHost, const uint16_t& aPort);
   void FireInternalError(uint32_t aLineNo);
-  void SendInternalError(nsIEventTarget *aThread,
-                         uint32_t aLineNo);
+  void SendInternalError(nsIEventTarget* aThread, uint32_t aLineNo);
 
   PBackgroundParent* mBackgroundManager;
 
@@ -76,7 +76,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // !defined(mozilla_dom_UDPSocketParent_h__)
+#endif  // !defined(mozilla_dom_UDPSocketParent_h__)

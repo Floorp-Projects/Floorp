@@ -10,10 +10,12 @@
 #include <vector>
 #include <cstdint>
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 typedef std::vector<uint8_t> Buffer;
 
-} } // namespace mozilla::ct
+}
+}  // namespace mozilla
 
-#endif // Buffer_h
+#endif  // Buffer_h

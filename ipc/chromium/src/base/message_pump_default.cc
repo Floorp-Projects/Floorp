@@ -16,9 +16,7 @@
 namespace base {
 
 MessagePumpDefault::MessagePumpDefault()
-    : keep_running_(true),
-      event_(false, false) {
-}
+    : keep_running_(true), event_(false, false) {}
 
 void MessagePumpDefault::Run(Delegate* delegate) {
   AUTO_PROFILER_LABEL("MessagePumpDefault::Run", OTHER);
@@ -26,34 +24,28 @@ void MessagePumpDefault::Run(Delegate* delegate) {
   DCHECK(keep_running_) << "Quit must have been called outside of Run!";
 
   const MessageLoop* const loop = MessageLoop::current();
-  mozilla::BackgroundHangMonitor hangMonitor(
-    loop->thread_name().c_str(),
-    loop->transient_hang_timeout(),
-    loop->permanent_hang_timeout());
+  mozilla::BackgroundHangMonitor hangMonitor(loop->thread_name().c_str(),
+                                             loop->transient_hang_timeout(),
+                                             loop->permanent_hang_timeout());
 
   for (;;) {
     ScopedNSAutoreleasePool autorelease_pool;
 
     hangMonitor.NotifyActivity();
     bool did_work = delegate->DoWork();
-    if (!keep_running_)
-      break;
+    if (!keep_running_) break;
 
     hangMonitor.NotifyActivity();
     did_work |= delegate->DoDelayedWork(&delayed_work_time_);
-    if (!keep_running_)
-      break;
+    if (!keep_running_) break;
 
-    if (did_work)
-      continue;
+    if (did_work) continue;
 
     hangMonitor.NotifyActivity();
     did_work = delegate->DoIdleWork();
-    if (!keep_running_)
-      break;
+    if (!keep_running_) break;
 
-    if (did_work)
-      continue;
+    if (did_work) continue;
 
     if (delayed_work_time_.is_null()) {
       hangMonitor.NotifyWait();
@@ -84,9 +76,7 @@ void MessagePumpDefault::Run(Delegate* delegate) {
   keep_running_ = true;
 }
 
-void MessagePumpDefault::Quit() {
-  keep_running_ = false;
-}
+void MessagePumpDefault::Quit() { keep_running_ = false; }
 
 void MessagePumpDefault::ScheduleWork() {
   // Since this can be called on any thread, we need to ensure that our Run

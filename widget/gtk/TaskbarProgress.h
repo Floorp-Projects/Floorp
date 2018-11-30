@@ -12,16 +12,15 @@
 
 class nsWindow;
 
-class TaskbarProgress final : public nsIGtkTaskbarProgress
-{
-public:
+class TaskbarProgress final : public nsIGtkTaskbarProgress {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGTKTASKBARPROGRESS
   NS_DECL_NSITASKBARPROGRESS
 
   TaskbarProgress();
 
-protected:
+ protected:
   ~TaskbarProgress();
 
   // We track the progress value so we can avoid updating the X window property
@@ -31,4 +30,4 @@ protected:
   RefPtr<nsWindow> mPrimaryWindow;
 };
 
-#endif // #ifndef TaskbarProgress_h_
+#endif  // #ifndef TaskbarProgress_h_

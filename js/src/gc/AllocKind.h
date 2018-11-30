@@ -76,17 +76,17 @@ namespace gc {
     D(STRING,              String,        JSString,          JSString,          true,   true,  true)
 // clang-format on
 
-#define FOR_EACH_NONOBJECT_ALLOCKIND(D) \
-    FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
-    FOR_EACH_NURSERY_STRING_ALLOCKIND(D)
+#define FOR_EACH_NONOBJECT_ALLOCKIND(D)      \
+  FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
+  FOR_EACH_NURSERY_STRING_ALLOCKIND(D)
 
-#define FOR_EACH_ALLOCKIND(D)    \
-    FOR_EACH_OBJECT_ALLOCKIND(D) \
-    FOR_EACH_NONOBJECT_ALLOCKIND(D)
+#define FOR_EACH_ALLOCKIND(D)  \
+  FOR_EACH_OBJECT_ALLOCKIND(D) \
+  FOR_EACH_NONOBJECT_ALLOCKIND(D)
 
 #define DEFINE_ALLOC_KIND(allocKind, _1, _2, _3, _4, _5, _6) allocKind,
 enum class AllocKind : uint8_t {
-    // clang-format off
+  // clang-format off
     FOR_EACH_OBJECT_ALLOCKIND(DEFINE_ALLOC_KIND)
 
     OBJECT_LIMIT,
@@ -99,7 +99,7 @@ enum class AllocKind : uint8_t {
 
     FIRST = 0,
     OBJECT_FIRST = FUNCTION // Hardcoded to first object kind.
-    // clang-format on
+  // clang-format on
 };
 #undef DEFINE_ALLOC_KIND
 
@@ -108,82 +108,76 @@ static_assert(int(AllocKind::FIRST) == 0,
 static_assert(int(AllocKind::OBJECT_FIRST) == 0,
               "OBJECT_FIRST must be defined as the first object kind");
 
-inline bool
-IsAllocKind(AllocKind kind)
-{
-    return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
+inline bool IsAllocKind(AllocKind kind) {
+  return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
 }
 
-inline bool
-IsValidAllocKind(AllocKind kind)
-{
-    return kind >= AllocKind::FIRST && kind <= AllocKind::LAST;
+inline bool IsValidAllocKind(AllocKind kind) {
+  return kind >= AllocKind::FIRST && kind <= AllocKind::LAST;
 }
 
-const char*
-AllocKindName(AllocKind kind);
+const char* AllocKindName(AllocKind kind);
 
-inline bool
-IsObjectAllocKind(AllocKind kind)
-{
-    return kind >= AllocKind::OBJECT_FIRST && kind <= AllocKind::OBJECT_LAST;
+inline bool IsObjectAllocKind(AllocKind kind) {
+  return kind >= AllocKind::OBJECT_FIRST && kind <= AllocKind::OBJECT_LAST;
 }
 
-inline bool
-IsShapeAllocKind(AllocKind kind)
-{
-    return kind == AllocKind::SHAPE || kind == AllocKind::ACCESSOR_SHAPE;
+inline bool IsShapeAllocKind(AllocKind kind) {
+  return kind == AllocKind::SHAPE || kind == AllocKind::ACCESSOR_SHAPE;
 }
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over all alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT))
-AllAllocKinds()
-{
-    return mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT);
+inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST,
+                                             AllocKind::LIMIT))
+AllAllocKinds() {
+  return mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT);
 }
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over all object alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT))
-ObjectAllocKinds()
-{
-    return mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT);
+inline decltype(mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST,
+                                             AllocKind::OBJECT_LIMIT))
+ObjectAllocKinds() {
+  return mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST,
+                                      AllocKind::OBJECT_LIMIT);
 }
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over alloc kinds from |first| to |limit|, exclusive.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT))
-SomeAllocKinds(AllocKind first = AllocKind::FIRST, AllocKind limit = AllocKind::LIMIT)
-{
-    MOZ_ASSERT(IsAllocKind(first), "|first| is not a valid AllocKind!");
-    MOZ_ASSERT(IsAllocKind(limit), "|limit| is not a valid AllocKind!");
-    return mozilla::MakeEnumeratedRange(first, limit);
+inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST,
+                                             AllocKind::LIMIT))
+SomeAllocKinds(AllocKind first = AllocKind::FIRST,
+               AllocKind limit = AllocKind::LIMIT) {
+  MOZ_ASSERT(IsAllocKind(first), "|first| is not a valid AllocKind!");
+  MOZ_ASSERT(IsAllocKind(limit), "|limit| is not a valid AllocKind!");
+  return mozilla::MakeEnumeratedRange(first, limit);
 }
 
 // AllAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
 // with each index corresponding to a particular alloc kind.
-template<typename ValueType> using AllAllocKindArray =
+template <typename ValueType>
+using AllAllocKindArray =
     mozilla::EnumeratedArray<AllocKind, AllocKind::LIMIT, ValueType>;
 
 // ObjectAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
 // with each index corresponding to a particular object alloc kind.
-template<typename ValueType> using ObjectAllocKindArray =
+template <typename ValueType>
+using ObjectAllocKindArray =
     mozilla::EnumeratedArray<AllocKind, AllocKind::OBJECT_LIMIT, ValueType>;
 
-static inline JS::TraceKind
-MapAllocToTraceKind(AllocKind kind)
-{
-    static const JS::TraceKind map[] = {
-#define EXPAND_ELEMENT(allocKind, traceKind, type, sizedType, bgFinal, nursery, compact) \
-        JS::TraceKind::traceKind,
-FOR_EACH_ALLOCKIND(EXPAND_ELEMENT)
+static inline JS::TraceKind MapAllocToTraceKind(AllocKind kind) {
+  static const JS::TraceKind map[] = {
+#define EXPAND_ELEMENT(allocKind, traceKind, type, sizedType, bgFinal, \
+                       nursery, compact)                               \
+  JS::TraceKind::traceKind,
+      FOR_EACH_ALLOCKIND(EXPAND_ELEMENT)
 #undef EXPAND_ELEMENT
-    };
+  };
 
-    static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
-                  "AllocKind-to-TraceKind mapping must be in sync");
-    return map[size_t(kind)];
+  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+                "AllocKind-to-TraceKind mapping must be in sync");
+  return map[size_t(kind)];
 }
 
 /*
@@ -193,58 +187,50 @@ FOR_EACH_ALLOCKIND(EXPAND_ELEMENT)
 static const size_t MAX_BACKGROUND_FINALIZE_KINDS =
     size_t(AllocKind::LIMIT) - size_t(AllocKind::OBJECT_LIMIT) / 2;
 
-static inline bool
-IsNurseryAllocable(AllocKind kind)
-{
-    MOZ_ASSERT(IsValidAllocKind(kind));
+static inline bool IsNurseryAllocable(AllocKind kind) {
+  MOZ_ASSERT(IsValidAllocKind(kind));
 
-    static const bool map[] = {
+  static const bool map[] = {
 #define DEFINE_NURSERY_ALLOCABLE(_1, _2, _3, _4, _5, nursery, _6) nursery,
-        FOR_EACH_ALLOCKIND(DEFINE_NURSERY_ALLOCABLE)
+      FOR_EACH_ALLOCKIND(DEFINE_NURSERY_ALLOCABLE)
 #undef DEFINE_NURSERY_ALLOCABLE
-    };
+  };
 
-    static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
-                  "IsNurseryAllocable sanity check");
-    return map[size_t(kind)];
+  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+                "IsNurseryAllocable sanity check");
+  return map[size_t(kind)];
 }
 
-static inline bool
-IsBackgroundFinalized(AllocKind kind)
-{
-    MOZ_ASSERT(IsValidAllocKind(kind));
+static inline bool IsBackgroundFinalized(AllocKind kind) {
+  MOZ_ASSERT(IsValidAllocKind(kind));
 
-    static const bool map[] = {
+  static const bool map[] = {
 #define DEFINE_BACKGROUND_FINALIZED(_1, _2, _3, _4, bgFinal, _5, _6) bgFinal,
-        FOR_EACH_ALLOCKIND(DEFINE_BACKGROUND_FINALIZED)
+      FOR_EACH_ALLOCKIND(DEFINE_BACKGROUND_FINALIZED)
 #undef DEFINE_BG_FINALIZE
-    };
+  };
 
-    static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
-                  "IsBackgroundFinalized sanity check");
-    return map[size_t(kind)];
+  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+                "IsBackgroundFinalized sanity check");
+  return map[size_t(kind)];
 }
 
-static inline bool
-IsCompactingKind(AllocKind kind)
-{
-    MOZ_ASSERT(IsValidAllocKind(kind));
+static inline bool IsCompactingKind(AllocKind kind) {
+  MOZ_ASSERT(IsValidAllocKind(kind));
 
-    static const bool map[] = {
+  static const bool map[] = {
 #define DEFINE_COMPACTING_KIND(_1, _2, _3, _4, _5, _6, compact) compact,
-        FOR_EACH_ALLOCKIND(DEFINE_COMPACTING_KIND)
+      FOR_EACH_ALLOCKIND(DEFINE_COMPACTING_KIND)
 #undef DEFINE_COMPACTING_KIND
-    };
+  };
 
-    static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
-                  "IsCompactingKind sanity check");
-    return map[size_t(kind)];
+  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+                "IsCompactingKind sanity check");
+  return map[size_t(kind)];
 }
 
-static inline bool
-IsMovableKind(AllocKind kind)
-{
-    return IsNurseryAllocable(kind) || IsCompactingKind(kind);
+static inline bool IsMovableKind(AllocKind kind) {
+  return IsNurseryAllocable(kind) || IsCompactingKind(kind);
 }
 
 } /* namespace gc */

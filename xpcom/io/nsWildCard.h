@@ -25,7 +25,6 @@
 
 /* --------------------------- Public routines ---------------------------- */
 
-
 /*
  * NS_WildCardValid takes a shell expression exp as input. It returns:
  *

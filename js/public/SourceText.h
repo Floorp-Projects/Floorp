@@ -47,236 +47,225 @@
 #ifndef js_SourceText_h
 #define js_SourceText_h
 
-#include "mozilla/Assertions.h" // MOZ_ASSERT
-#include "mozilla/Attributes.h" // MOZ_COLD, MOZ_IS_CLASS_INIT, MOZ_MUST_USE
-#include "mozilla/Likely.h" // MOZ_UNLIKELY
-#include "mozilla/Utf8.h" // mozilla::Utf8Unit
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_COLD, MOZ_IS_CLASS_INIT, MOZ_MUST_USE
+#include "mozilla/Likely.h"      // MOZ_UNLIKELY
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
-#include <stddef.h> // size_t
-#include <stdint.h> // UINT32_MAX
-#include <type_traits> // std::conditional, std::is_same
+#include <stddef.h>     // size_t
+#include <stdint.h>     // UINT32_MAX
+#include <type_traits>  // std::conditional, std::is_same
 
-#include "js/UniquePtr.h" // js::UniquePtr
-#include "js/Utility.h" // JS::FreePolicy
+#include "js/UniquePtr.h"  // js::UniquePtr
+#include "js/Utility.h"    // JS::FreePolicy
 
 namespace JS {
 
 namespace detail {
 
-MOZ_COLD extern JS_PUBLIC_API void
-ReportSourceTooLong(JSContext* cx);
+MOZ_COLD extern JS_PUBLIC_API void ReportSourceTooLong(JSContext* cx);
 
-} // namespace detail
+}  // namespace detail
 
-enum class SourceOwnership
-{
-    Borrowed,
-    TakeOwnership,
+enum class SourceOwnership {
+  Borrowed,
+  TakeOwnership,
 };
 
-template<typename Unit>
-class SourceText final
-{
-  private:
-    static_assert(std::is_same<Unit, mozilla::Utf8Unit>::value ||
-                  std::is_same<Unit, char16_t>::value,
-                  "Unit must be either char16_t or Utf8Unit for "
-                  "SourceText<Unit>");
+template <typename Unit>
+class SourceText final {
+ private:
+  static_assert(std::is_same<Unit, mozilla::Utf8Unit>::value ||
+                    std::is_same<Unit, char16_t>::value,
+                "Unit must be either char16_t or Utf8Unit for "
+                "SourceText<Unit>");
 
-    /** |char16_t| or |Utf8Unit| source units of uncertain validity. */
-    const Unit* units_ = nullptr;
+  /** |char16_t| or |Utf8Unit| source units of uncertain validity. */
+  const Unit* units_ = nullptr;
 
-    /** The length in code units of |units_|. */
-    uint32_t length_ = 0;
+  /** The length in code units of |units_|. */
+  uint32_t length_ = 0;
 
-    /**
-     * Whether this owns |units_| or merely observes source units owned by some
-     * other object.
-     */
-    bool ownsUnits_ = false;
+  /**
+   * Whether this owns |units_| or merely observes source units owned by some
+   * other object.
+   */
+  bool ownsUnits_ = false;
 
-  public:
-    // A C++ character type that can represent the source units -- suitable for
-    // passing to C++ string functions.
-    using CharT =
-        typename std::conditional<std::is_same<Unit, char16_t>::value,
-                                  char16_t,
-                                  char>::type;
+ public:
+  // A C++ character type that can represent the source units -- suitable for
+  // passing to C++ string functions.
+  using CharT = typename std::conditional<std::is_same<Unit, char16_t>::value,
+                                          char16_t, char>::type;
 
-  public:
-    /**
-     * Construct a SourceText.  It must be initialized using |init()| before it
-     * can be used as compilation source text.
-     */
-    SourceText() = default;
+ public:
+  /**
+   * Construct a SourceText.  It must be initialized using |init()| before it
+   * can be used as compilation source text.
+   */
+  SourceText() = default;
 
-    /**
-     * Construct a SourceText from contents extracted from |other|.  This
-     * SourceText will then act exactly as |other| would have acted, had it
-     * not been passed to this function.  |other| will return to its default-
-     * constructed state and must have |init()| called on it to use it.
-     */
-    SourceText(SourceText&& other)
+  /**
+   * Construct a SourceText from contents extracted from |other|.  This
+   * SourceText will then act exactly as |other| would have acted, had it
+   * not been passed to this function.  |other| will return to its default-
+   * constructed state and must have |init()| called on it to use it.
+   */
+  SourceText(SourceText&& other)
       : units_(other.units_),
         length_(other.length_),
-        ownsUnits_(other.ownsUnits_)
-    {
-        other.units_ = nullptr;
-        other.length_ = 0;
-        other.ownsUnits_ = false;
+        ownsUnits_(other.ownsUnits_) {
+    other.units_ = nullptr;
+    other.length_ = 0;
+    other.ownsUnits_ = false;
+  }
+
+  ~SourceText() {
+    if (ownsUnits_) {
+      js_free(const_cast<Unit*>(units_));
+    }
+  }
+
+  /**
+   * Initialize this with source unit data: |char16_t| for UTF-16 source
+   * units, or |Utf8Unit| for UTF-8 source units.
+   *
+   * If |ownership == TakeOwnership|, *this function* takes ownership of
+   * |units|, *even if* this function fails, and you MUST NOT free |units|
+   * yourself.  This single-owner-friendly approach reduces risk of leaks on
+   * failure.
+   *
+   * |units| may be null if |unitsLength == 0|; if so, this will silently be
+   * initialized using non-null, unowned units.
+   */
+  MOZ_IS_CLASS_INIT MOZ_MUST_USE bool init(JSContext* cx, const Unit* units,
+                                           size_t unitsLength,
+                                           SourceOwnership ownership) {
+    MOZ_ASSERT_IF(units == nullptr, unitsLength == 0);
+
+    // Ideally we'd use |Unit| and not cast below, but the risk of a static
+    // initializer is too great.
+    static const CharT emptyString[] = {'\0'};
+
+    // Initialize all fields *before* checking length.  This ensures that
+    // if |ownership == SourceOwnership::TakeOwnership|, |units| will be
+    // freed when |this|'s destructor is called.
+    if (units) {
+      units_ = units;
+      length_ = static_cast<uint32_t>(unitsLength);
+      ownsUnits_ = ownership == SourceOwnership::TakeOwnership;
+    } else {
+      units_ = reinterpret_cast<const Unit*>(emptyString);
+      length_ = 0;
+      ownsUnits_ = false;
     }
 
-    ~SourceText() {
-        if (ownsUnits_) {
-            js_free(const_cast<Unit*>(units_));
-        }
+    // IMPLEMENTATION DETAIL, DO NOT RELY ON: This limit is used so we can
+    // store offsets in |JSScript|s as |uint32_t|.  It could be lifted
+    // fairly easily if desired, as the compiler uses |size_t| internally.
+    if (MOZ_UNLIKELY(unitsLength > UINT32_MAX)) {
+      detail::ReportSourceTooLong(cx);
+      return false;
     }
 
-    /**
-     * Initialize this with source unit data: |char16_t| for UTF-16 source
-     * units, or |Utf8Unit| for UTF-8 source units.
-     *
-     * If |ownership == TakeOwnership|, *this function* takes ownership of
-     * |units|, *even if* this function fails, and you MUST NOT free |units|
-     * yourself.  This single-owner-friendly approach reduces risk of leaks on
-     * failure.
-     *
-     * |units| may be null if |unitsLength == 0|; if so, this will silently be
-     * initialized using non-null, unowned units.
-     */
-    MOZ_IS_CLASS_INIT MOZ_MUST_USE bool
-    init(JSContext* cx, const Unit* units, size_t unitsLength, SourceOwnership ownership) {
-        MOZ_ASSERT_IF(units == nullptr, unitsLength == 0);
+    return true;
+  }
 
-        // Ideally we'd use |Unit| and not cast below, but the risk of a static
-        // initializer is too great.
-        static const CharT emptyString[] = { '\0' };
+  /**
+   * Exactly identical to the |init()| overload above that accepts
+   * |const Unit*|, but instead takes character data: |const CharT*|.
+   *
+   * (We can't just write this to accept |const CharT*|, because then in the
+   * UTF-16 case this overload and the one above would be identical.  So we
+   * use SFINAE to expose the |CharT| overload only if it's different.)
+   */
+  template <typename Char, typename = typename std::enable_if<
+                               std::is_same<Char, CharT>::value &&
+                               !std::is_same<Char, Unit>::value>::type>
+  MOZ_IS_CLASS_INIT MOZ_MUST_USE bool init(JSContext* cx, const Char* chars,
+                                           size_t charsLength,
+                                           SourceOwnership ownership) {
+    return init(cx, reinterpret_cast<const Unit*>(chars), charsLength,
+                ownership);
+  }
 
-        // Initialize all fields *before* checking length.  This ensures that
-        // if |ownership == SourceOwnership::TakeOwnership|, |units| will be
-        // freed when |this|'s destructor is called.
-        if (units) {
-            units_ = units;
-            length_ = static_cast<uint32_t>(unitsLength);
-            ownsUnits_ = ownership == SourceOwnership::TakeOwnership;
-        } else {
-            units_ = reinterpret_cast<const Unit*>(emptyString);
-            length_ = 0;
-            ownsUnits_ = false;
-        }
+  /**
+   * Initialize this using source units transferred out of |data|.
+   */
+  MOZ_MUST_USE bool init(JSContext* cx,
+                         js::UniquePtr<CharT[], JS::FreePolicy> data,
+                         size_t dataLength) {
+    return init(cx, data.release(), dataLength, SourceOwnership::TakeOwnership);
+  }
 
-        // IMPLEMENTATION DETAIL, DO NOT RELY ON: This limit is used so we can
-        // store offsets in |JSScript|s as |uint32_t|.  It could be lifted
-        // fairly easily if desired, as the compiler uses |size_t| internally.
-        if (MOZ_UNLIKELY(unitsLength > UINT32_MAX)) {
-            detail::ReportSourceTooLong(cx);
-            return false;
-        }
+  /**
+   * Access the encapsulated data using a code unit type.
+   *
+   * This function is useful for code that wants to interact with source text
+   * as *code units*, not as string data.  This doesn't matter for UTF-16,
+   * but it's a crucial distinction for UTF-8.  When UTF-8 source text is
+   * encapsulated, |Unit| being |mozilla::Utf8Unit| unambiguously indicates
+   * that the code units are UTF-8.  In contrast |const char*| returned by
+   * |get()| below could hold UTF-8 (or its ASCII subset) or Latin-1 or (in
+   * particularly cursed embeddings) EBCDIC or some other legacy character
+   * set.  Prefer this function to |get()| wherever possible.
+   */
+  const Unit* units() const { return units_; }
 
-        return true;
-    }
+  /**
+   * Access the encapsulated data using a character type.
+   *
+   * This function is useful for interactions with character-centric actions
+   * like interacting with UniqueChars/UniqueTwoByteChars or printing out
+   * text in a debugger, that only work with |CharT|.  But as |CharT| loses
+   * encoding specificity when UTF-8 source text is encapsulated, prefer
+   * |units()| to this function.
+   */
+  const CharT* get() const { return reinterpret_cast<const CharT*>(units_); }
 
-    /**
-     * Exactly identical to the |init()| overload above that accepts
-     * |const Unit*|, but instead takes character data: |const CharT*|.
-     *
-     * (We can't just write this to accept |const CharT*|, because then in the
-     * UTF-16 case this overload and the one above would be identical.  So we
-     * use SFINAE to expose the |CharT| overload only if it's different.)
-     */
-    template<typename Char,
-             typename =
-                typename std::enable_if<std::is_same<Char, CharT>::value &&
-                                        !std::is_same<Char, Unit>::value>::type>
-    MOZ_IS_CLASS_INIT MOZ_MUST_USE bool
-    init(JSContext* cx, const Char* chars, size_t charsLength, SourceOwnership ownership) {
-        return init(cx, reinterpret_cast<const Unit*>(chars), charsLength, ownership);
-    }
+  /**
+   * Returns true if this owns the source units and will free them on
+   * destruction.  If true, it is legal to call |take{Chars,Units}()|.
+   */
+  bool ownsUnits() const { return ownsUnits_; }
 
-    /**
-     * Initialize this using source units transferred out of |data|.
-     */
-    MOZ_MUST_USE bool init(JSContext* cx,
-                           js::UniquePtr<CharT[], JS::FreePolicy> data,
-                           size_t dataLength)
-    {
-        return init(cx, data.release(), dataLength, SourceOwnership::TakeOwnership);
-    }
+  /**
+   * Count of the underlying source units -- code units, not bytes or code
+   * points -- in this.
+   */
+  uint32_t length() const { return length_; }
 
-    /**
-     * Access the encapsulated data using a code unit type.
-     *
-     * This function is useful for code that wants to interact with source text
-     * as *code units*, not as string data.  This doesn't matter for UTF-16,
-     * but it's a crucial distinction for UTF-8.  When UTF-8 source text is
-     * encapsulated, |Unit| being |mozilla::Utf8Unit| unambiguously indicates
-     * that the code units are UTF-8.  In contrast |const char*| returned by
-     * |get()| below could hold UTF-8 (or its ASCII subset) or Latin-1 or (in
-     * particularly cursed embeddings) EBCDIC or some other legacy character
-     * set.  Prefer this function to |get()| wherever possible.
-     */
-    const Unit* units() const { return units_; }
+  /**
+   * Retrieve and take ownership of the underlying source units.  The caller
+   * is now responsible for calling js_free() on the returned value, *but
+   * only after JS script compilation has completed*.
+   *
+   * After underlying source units have been taken, this will continue to
+   * refer to the same data -- it just won't own the data.  get() and
+   * length() will return the same values, but ownsUnits() will be false.
+   * The taken source units must be kept alive until after JS script
+   * compilation completes, as noted above, for this to be safe.
+   *
+   * The caller must check ownsUnits() before calling takeUnits().  Taking
+   * and then free'ing an unowned buffer will have dire consequences.
+   */
+  Unit* takeUnits() {
+    MOZ_ASSERT(ownsUnits_);
+    ownsUnits_ = false;
+    return const_cast<Unit*>(units_);
+  }
 
-    /**
-     * Access the encapsulated data using a character type.
-     *
-     * This function is useful for interactions with character-centric actions
-     * like interacting with UniqueChars/UniqueTwoByteChars or printing out
-     * text in a debugger, that only work with |CharT|.  But as |CharT| loses
-     * encoding specificity when UTF-8 source text is encapsulated, prefer
-     * |units()| to this function.
-     */
-    const CharT* get() const { return reinterpret_cast<const CharT*>(units_); }
+  /**
+   * Akin to |takeUnits()| in all respects, but returns characters rather
+   * than units.
+   */
+  CharT* takeChars() { return reinterpret_cast<CharT*>(takeUnits()); }
 
-    /**
-     * Returns true if this owns the source units and will free them on
-     * destruction.  If true, it is legal to call |take{Chars,Units}()|.
-     */
-    bool ownsUnits() const {
-        return ownsUnits_;
-    }
-
-    /**
-     * Count of the underlying source units -- code units, not bytes or code
-     * points -- in this.
-     */
-    uint32_t length() const {
-        return length_;
-    }
-
-    /**
-     * Retrieve and take ownership of the underlying source units.  The caller
-     * is now responsible for calling js_free() on the returned value, *but
-     * only after JS script compilation has completed*.
-     *
-     * After underlying source units have been taken, this will continue to
-     * refer to the same data -- it just won't own the data.  get() and
-     * length() will return the same values, but ownsUnits() will be false.
-     * The taken source units must be kept alive until after JS script
-     * compilation completes, as noted above, for this to be safe.
-     *
-     * The caller must check ownsUnits() before calling takeUnits().  Taking
-     * and then free'ing an unowned buffer will have dire consequences.
-     */
-    Unit* takeUnits() {
-        MOZ_ASSERT(ownsUnits_);
-        ownsUnits_ = false;
-        return const_cast<Unit*>(units_);
-    }
-
-    /**
-     * Akin to |takeUnits()| in all respects, but returns characters rather
-     * than units.
-     */
-    CharT* takeChars() {
-        return reinterpret_cast<CharT*>(takeUnits());
-    }
-
-  private:
-    SourceText(const SourceText&) = delete;
-    void operator=(const SourceText&) = delete;
+ private:
+  SourceText(const SourceText&) = delete;
+  void operator=(const SourceText&) = delete;
 };
 
-} // namespace JS
+}  // namespace JS
 
 #endif /* js_SourceText_h */

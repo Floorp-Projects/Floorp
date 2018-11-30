@@ -9,12 +9,11 @@
 #include "jsapi.h"
 #include "nsIPrincipal.h"
 
-class nsJSPrincipals : public nsIPrincipal, public JSPrincipals
-{
-public:
+class nsJSPrincipals : public nsIPrincipal, public JSPrincipals {
+ public:
   /* SpiderMonkey security callbacks. */
-  static bool Subsume(JSPrincipals *jsprin, JSPrincipals *other);
-  static void Destroy(JSPrincipals *jsprin);
+  static bool Subsume(JSPrincipals* jsprin, JSPrincipals* other);
+  static void Destroy(JSPrincipals* jsprin);
 
   /* JSReadPrincipalsOp for nsJSPrincipals */
   static bool ReadPrincipals(JSContext* aCx, JSStructuredCloneReader* aReader,
@@ -31,13 +30,13 @@ public:
    * Get a weak reference to nsIPrincipal associated with the given JS
    * principal, and vice-versa.
    */
-  static nsJSPrincipals* get(JSPrincipals *principals) {
-    nsJSPrincipals *self = static_cast<nsJSPrincipals *>(principals);
+  static nsJSPrincipals* get(JSPrincipals* principals) {
+    nsJSPrincipals* self = static_cast<nsJSPrincipals*>(principals);
     MOZ_ASSERT_IF(self, self->debugToken == DEBUG_TOKEN);
     return self;
   }
-  static nsJSPrincipals* get(nsIPrincipal *principal) {
-    nsJSPrincipals *self = static_cast<nsJSPrincipals *>(principal);
+  static nsJSPrincipals* get(nsIPrincipal* principal) {
+    nsJSPrincipals* self = static_cast<nsJSPrincipals*>(principal);
     MOZ_ASSERT_IF(self, self->debugToken == DEBUG_TOKEN);
     return self;
   }
@@ -53,14 +52,11 @@ public:
   /**
    * Return a string that can be used as JS script filename in error reports.
    */
-  virtual nsresult GetScriptLocation(nsACString &aStr) = 0;
+  virtual nsresult GetScriptLocation(nsACString& aStr) = 0;
   static const uint32_t DEBUG_TOKEN = 0x0bf41760;
 
-protected:
-  virtual ~nsJSPrincipals() {
-    setDebugToken(0);
-  }
-
+ protected:
+  virtual ~nsJSPrincipals() { setDebugToken(0); }
 };
 
 #endif /* nsJSPrincipals_h__ */

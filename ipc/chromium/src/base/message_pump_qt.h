@@ -22,24 +22,23 @@ class MessagePumpQt : public QObject {
   Q_OBJECT
 
  public:
-  MessagePumpQt(MessagePumpForUI &pump);
+  MessagePumpQt(MessagePumpForUI& pump);
   ~MessagePumpQt();
 
-  virtual bool event (QEvent *e);
+  virtual bool event(QEvent* e);
   void scheduleDelayedIfNeeded(const TimeTicks& delayed_work_time);
 
  public Q_SLOTS:
   void dispatchDelayed();
 
  private:
-  base::MessagePumpForUI &pump;
+  base::MessagePumpForUI& pump;
   QTimer* mTimer;
 };
 
 // This class implements a MessagePump needed for TYPE_UI MessageLoops on
 // OS_LINUX platforms using QApplication event loop
 class MessagePumpForUI : public MessagePump {
-
  public:
   MessagePumpForUI();
   ~MessagePumpForUI();

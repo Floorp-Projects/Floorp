@@ -22,45 +22,39 @@ LibSecret::LibSecret() {}
 LibSecret::~LibSecret() {}
 
 static const SecretSchema kSchema = {
-  "mozilla.firefox",
-  SECRET_SCHEMA_NONE,
-  { { "string", SECRET_SCHEMA_ATTRIBUTE_STRING }, /* the label */
-    { "NULL", SECRET_SCHEMA_ATTRIBUTE_STRING } }
-};
+    "mozilla.firefox",
+    SECRET_SCHEMA_NONE,
+    {{"string", SECRET_SCHEMA_ATTRIBUTE_STRING}, /* the label */
+     {"NULL", SECRET_SCHEMA_ATTRIBUTE_STRING}}};
 
-nsresult
-GetScopedServices(ScopedSecretService& aSs, ScopedSecretCollection& aSc)
-{
+nsresult GetScopedServices(ScopedSecretService& aSs,
+                           ScopedSecretCollection& aSc) {
   GError* raw_error = nullptr;
   aSs = ScopedSecretService(secret_service_get_sync(
-    static_cast<SecretServiceFlags>(
-      SECRET_SERVICE_OPEN_SESSION), // SecretServiceFlags
-    nullptr,                        // GCancellable
-    &raw_error));
+      static_cast<SecretServiceFlags>(
+          SECRET_SERVICE_OPEN_SESSION),  // SecretServiceFlags
+      nullptr,                           // GCancellable
+      &raw_error));
   ScopedGError error(raw_error);
   if (error || !aSs) {
     MOZ_LOG(gLibSecretLog, LogLevel::Debug, ("Couldn't get a secret service"));
     return NS_ERROR_FAILURE;
   }
 
-  aSc = ScopedSecretCollection(
-    secret_collection_for_alias_sync(aSs.get(),
-                                     "default",
-                                     static_cast<SecretCollectionFlags>(0),
-                                     nullptr, // GCancellable
-                                     &raw_error));
+  aSc = ScopedSecretCollection(secret_collection_for_alias_sync(
+      aSs.get(), "default", static_cast<SecretCollectionFlags>(0),
+      nullptr,  // GCancellable
+      &raw_error));
   error.reset(raw_error);
   if (!aSc) {
-    MOZ_LOG(
-      gLibSecretLog, LogLevel::Debug, ("Couldn't get a secret collection"));
+    MOZ_LOG(gLibSecretLog, LogLevel::Debug,
+            ("Couldn't get a secret collection"));
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-nsresult
-LibSecret::Lock()
-{
+nsresult LibSecret::Lock() {
   ScopedSecretService ss;
   ScopedSecretCollection sc;
   if (NS_FAILED(GetScopedServices(ss, sc))) {
@@ -70,23 +64,20 @@ LibSecret::Lock()
   GError* raw_error = nullptr;
   GList* collections = nullptr;
   ScopedGList collectionList(g_list_append(collections, sc.get()));
-  int numLocked = secret_service_lock_sync(ss.get(),
-                                           collectionList.get(),
-                                           nullptr, // GCancellable
-                                           nullptr, // list of locked items
+  int numLocked = secret_service_lock_sync(ss.get(), collectionList.get(),
+                                           nullptr,  // GCancellable
+                                           nullptr,  // list of locked items
                                            &raw_error);
   ScopedGError error(raw_error);
   if (numLocked != 1) {
-    MOZ_LOG(
-      gLibSecretLog, LogLevel::Debug, ("Couldn't lock secret collection"));
+    MOZ_LOG(gLibSecretLog, LogLevel::Debug,
+            ("Couldn't lock secret collection"));
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-nsresult
-LibSecret::Unlock()
-{
+nsresult LibSecret::Unlock() {
   // Accessing the secret service unlocks it. So calling this separately isn't
   // actually necessary.
   ScopedSecretService ss;
@@ -97,19 +88,14 @@ LibSecret::Unlock()
   return NS_OK;
 }
 
-nsresult
-LibSecret::StoreSecret(const nsACString& aSecret, const nsACString& aLabel)
-{
+nsresult LibSecret::StoreSecret(const nsACString& aSecret,
+                                const nsACString& aLabel) {
   GError* raw_error = nullptr;
-  bool stored = secret_password_store_sync(&kSchema,
-                                           SECRET_COLLECTION_DEFAULT,
-                                           PromiseFlatCString(aLabel).get(),
-                                           PromiseFlatCString(aSecret).get(),
-                                           nullptr, // GCancellable
-                                           &raw_error,
-                                           "string",
-                                           PromiseFlatCString(aLabel).get(),
-                                           nullptr);
+  bool stored = secret_password_store_sync(
+      &kSchema, SECRET_COLLECTION_DEFAULT, PromiseFlatCString(aLabel).get(),
+      PromiseFlatCString(aSecret).get(),
+      nullptr,  // GCancellable
+      &raw_error, "string", PromiseFlatCString(aLabel).get(), nullptr);
   ScopedGError error(raw_error);
   if (raw_error) {
     MOZ_LOG(gLibSecretLog, LogLevel::Debug, ("Error storing secret"));
@@ -119,16 +105,12 @@ LibSecret::StoreSecret(const nsACString& aSecret, const nsACString& aLabel)
   return stored ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-LibSecret::DeleteSecret(const nsACString& aLabel)
-{
+nsresult LibSecret::DeleteSecret(const nsACString& aLabel) {
   GError* raw_error = nullptr;
-  bool r = secret_password_clear_sync(&kSchema,
-                                      nullptr, // GCancellable
-                                      &raw_error,
-                                      "string",
-                                      PromiseFlatCString(aLabel).get(),
-                                      nullptr);
+  bool r = secret_password_clear_sync(
+      &kSchema,
+      nullptr,  // GCancellable
+      &raw_error, "string", PromiseFlatCString(aLabel).get(), nullptr);
   ScopedGError error(raw_error);
   if (raw_error) {
     MOZ_LOG(gLibSecretLog, LogLevel::Debug, ("Error deleting secret"));
@@ -138,22 +120,17 @@ LibSecret::DeleteSecret(const nsACString& aLabel)
   return r ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-LibSecret::RetrieveSecret(const nsACString& aLabel,
-                          /* out */ nsACString& aSecret)
-{
+nsresult LibSecret::RetrieveSecret(const nsACString& aLabel,
+                                   /* out */ nsACString& aSecret) {
   GError* raw_error = nullptr;
   aSecret.Truncate();
-  ScopedPassword s(secret_password_lookup_sync(&kSchema,
-                                               nullptr, // GCancellable
-                                               &raw_error,
-                                               "string",
-                                               PromiseFlatCString(aLabel).get(),
-                                               nullptr));
+  ScopedPassword s(secret_password_lookup_sync(
+      &kSchema,
+      nullptr,  // GCancellable
+      &raw_error, "string", PromiseFlatCString(aLabel).get(), nullptr));
   ScopedGError error(raw_error);
   if (raw_error || !s) {
-    MOZ_LOG(gLibSecretLog,
-            LogLevel::Debug,
+    MOZ_LOG(gLibSecretLog, LogLevel::Debug,
             ("Error retrieving secret or didn't find it"));
     return NS_ERROR_FAILURE;
   }

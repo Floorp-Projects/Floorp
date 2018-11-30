@@ -17,9 +17,8 @@ namespace widget {
  * Helper to emulate native key bindings. Currently only MacOS is supported.
  */
 
-class HeadlessKeyBindings final
-{
-public:
+class HeadlessKeyBindings final {
+ public:
   HeadlessKeyBindings() = default;
 
   static HeadlessKeyBindings& GetInstance();
@@ -30,7 +29,7 @@ public:
   MOZ_MUST_USE nsresult AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent);
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_widget_HeadlessKeyBindings_h
+#endif  // mozilla_widget_HeadlessKeyBindings_h

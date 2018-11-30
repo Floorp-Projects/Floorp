@@ -14,23 +14,20 @@
 namespace mozilla {
 namespace dom {
 
-class WheelEvent : public MouseEvent
-{
-public:
-  WheelEvent(EventTarget* aOwner,
-             nsPresContext* aPresContext,
+class WheelEvent : public MouseEvent {
+ public:
+  WheelEvent(EventTarget* aOwner, nsPresContext* aPresContext,
              WidgetWheelEvent* aWheelEvent);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(WheelEvent, MouseEvent)
 
-  static
-  already_AddRefed<WheelEvent> Constructor(const GlobalObject& aGlobal,
-                                           const nsAString& aType,
-                                           const WheelEventInit& aParam,
-                                           ErrorResult& aRv);
+  static already_AddRefed<WheelEvent> Constructor(const GlobalObject& aGlobal,
+                                                  const nsAString& aType,
+                                                  const WheelEventInit& aParam,
+                                                  ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return WheelEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -42,28 +39,26 @@ public:
   double DeltaZ();
   uint32_t DeltaMode();
 
-  void
-  InitWheelEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
-                 nsGlobalWindowInner* aView, int32_t aDetail,
-                 int32_t aScreenX, int32_t aScreenY,
-                 int32_t aClientX, int32_t aClientY, uint16_t aButton,
-                 EventTarget* aRelatedTarget, const nsAString& aModifiersList,
-                 double aDeltaX, double aDeltaY, double aDeltaZ,
-                 uint32_t aDeltaMode);
+  void InitWheelEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
+                      nsGlobalWindowInner* aView, int32_t aDetail,
+                      int32_t aScreenX, int32_t aScreenY, int32_t aClientX,
+                      int32_t aClientY, uint16_t aButton,
+                      EventTarget* aRelatedTarget,
+                      const nsAString& aModifiersList, double aDeltaX,
+                      double aDeltaY, double aDeltaZ, uint32_t aDeltaMode);
 
-protected:
+ protected:
   ~WheelEvent() {}
 
-private:
+ private:
   int32_t mAppUnitsPerDevPixel;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::WheelEvent>
-NS_NewDOMWheelEvent(mozilla::dom::EventTarget* aOwner,
-                    nsPresContext* aPresContext,
-                    mozilla::WidgetWheelEvent* aEvent);
+already_AddRefed<mozilla::dom::WheelEvent> NS_NewDOMWheelEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetWheelEvent* aEvent);
 
-#endif // mozilla_dom_WheelEvent_h_
+#endif  // mozilla_dom_WheelEvent_h_

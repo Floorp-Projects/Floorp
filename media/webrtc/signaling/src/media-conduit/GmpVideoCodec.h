@@ -14,6 +14,6 @@ class GmpVideoCodec {
   static WebrtcVideoDecoder* CreateDecoder();
 };
 
-}
+}  // namespace mozilla
 
 #endif

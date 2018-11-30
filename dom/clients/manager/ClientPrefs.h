@@ -9,13 +9,11 @@
 namespace mozilla {
 namespace dom {
 
-void
-ClientPrefsInit();
+void ClientPrefsInit();
 
-bool
-ClientPrefsGetAllowUniqueOpaqueOrigin();
+bool ClientPrefsGetAllowUniqueOpaqueOrigin();
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientPrefs_h
+#endif  // _mozilla_dom_ClientPrefs_h

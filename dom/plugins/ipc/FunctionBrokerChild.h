@@ -18,9 +18,8 @@ class FunctionBrokerThread;
  * Dispatches brokered methods to the Parent process to allow functionality
  * that is otherwise blocked by the sandbox.
  */
-class FunctionBrokerChild : public PFunctionBrokerChild
-{
-public:
+class FunctionBrokerChild : public PFunctionBrokerChild {
+ public:
   static bool Initialize(Endpoint<PFunctionBrokerChild>&& aBrokerEndpoint);
   static FunctionBrokerChild* GetInstance();
   static void Destroy();
@@ -30,7 +29,7 @@ public:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   explicit FunctionBrokerChild(FunctionBrokerThread* aThread,
                                Endpoint<PFunctionBrokerChild>&& aEndpoint);
   void ShutdownOnDispatchThread();
@@ -46,8 +45,7 @@ private:
   static FunctionBrokerChild* sInstance;
 };
 
+}  // namespace plugins
+}  // namespace mozilla
 
-} // namespace plugins
-} // namespace mozilla
-
-#endif // mozilla_plugins_functionbrokerchild_h
+#endif  // mozilla_plugins_functionbrokerchild_h

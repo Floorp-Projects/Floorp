@@ -64,20 +64,17 @@ const MozRefCountType DEAD = 0xffffdead;
 // When building code that gets compiled into Gecko, try to use the
 // trace-refcount leak logging facilities.
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
-class RefCountLogger
-{
-public:
+class RefCountLogger {
+ public:
   static void logAddRef(const void* aPointer, MozRefCountType aRefCount,
-                        const char* aTypeName, uint32_t aInstanceSize)
-  {
+                        const char* aTypeName, uint32_t aInstanceSize) {
     MOZ_ASSERT(aRefCount != DEAD);
     NS_LogAddRef(const_cast<void*>(aPointer), aRefCount, aTypeName,
                  aInstanceSize);
   }
 
   static void logRelease(const void* aPointer, MozRefCountType aRefCount,
-                         const char* aTypeName)
-  {
+                         const char* aTypeName) {
     MOZ_ASSERT(aRefCount != DEAD);
     NS_LogRelease(const_cast<void*>(aPointer), aRefCount, aTypeName);
   }
@@ -85,16 +82,12 @@ public:
 #endif
 
 // This is used WeakPtr.h as well as this file.
-enum RefCountAtomicity
-{
-  AtomicRefCount,
-  NonAtomicRefCount
-};
+enum RefCountAtomicity { AtomicRefCount, NonAtomicRefCount };
 
-template<typename T, RefCountAtomicity Atomicity, recordreplay::Behavior Recording>
-class RC
-{
-public:
+template <typename T, RefCountAtomicity Atomicity,
+          recordreplay::Behavior Recording>
+class RC {
+ public:
   explicit RC(T aCount) : mValue(aCount) {}
 
   T operator++() { return ++mValue; }
@@ -104,18 +97,16 @@ public:
 
   operator T() const { return mValue; }
 
-private:
+ private:
   T mValue;
 };
 
-template<typename T, recordreplay::Behavior Recording>
-class RC<T, AtomicRefCount, Recording>
-{
-public:
-  explicit RC(T aCount) : mValue(aCount) { }
+template <typename T, recordreplay::Behavior Recording>
+class RC<T, AtomicRefCount, Recording> {
+ public:
+  explicit RC(T aCount) : mValue(aCount) {}
 
-  T operator++()
-  {
+  T operator++() {
     // Memory synchronization is not required when incrementing a
     // reference count.  The first increment of a reference count on a
     // thread is not important, since the first use of the object on a
@@ -128,8 +119,7 @@ public:
     return mValue.fetch_add(1, std::memory_order_relaxed) + 1;
   }
 
-  T operator--()
-  {
+  T operator--() {
     // Since this may be the last release on this thread, we need
     // release semantics so that prior writes on this thread are visible
     // to the thread that destroys the object when it reads mValue with
@@ -153,30 +143,27 @@ public:
     mValue.store(aValue, std::memory_order_seq_cst);
   }
 
-  operator T() const
-  {
+  operator T() const {
     // Use acquire semantics since we're not sure what the caller is
     // doing.
     AutoRecordAtomicAccess<Recording> record(this);
     return mValue.load(std::memory_order_acquire);
   }
 
-private:
+ private:
   std::atomic<T> mValue;
 };
 
-template<typename T, RefCountAtomicity Atomicity,
-         recordreplay::Behavior Recording = recordreplay::Behavior::Preserve>
-class RefCounted
-{
-protected:
+template <typename T, RefCountAtomicity Atomicity,
+          recordreplay::Behavior Recording = recordreplay::Behavior::Preserve>
+class RefCounted {
+ protected:
   RefCounted() : mRefCnt(0) {}
   ~RefCounted() { MOZ_ASSERT(mRefCnt == detail::DEAD); }
 
-public:
+ public:
   // Compatibility with nsRefPtr.
-  void AddRef() const
-  {
+  void AddRef() const {
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) >= 0);
 #ifndef MOZ_REFCOUNTED_LEAK_CHECKING
@@ -190,8 +177,7 @@ public:
 #endif
   }
 
-  void Release() const
-  {
+  void Release() const {
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) > 0);
 #ifndef MOZ_REFCOUNTED_LEAK_CHECKING
@@ -220,20 +206,19 @@ public:
   void ref() { AddRef(); }
   void deref() { Release(); }
   MozRefCountType refCount() const { return mRefCnt; }
-  bool hasOneRef() const
-  {
+  bool hasOneRef() const {
     MOZ_ASSERT(mRefCnt > 0);
     return mRefCnt == 1;
   }
 
-private:
+ private:
   mutable RC<MozRefCountType, Atomicity, Recording> mRefCnt;
 };
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
 // Passing override for the optional argument marks the typeName and
 // typeSize functions defined by this macro as overrides.
-#define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T, ...) \
+#define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T, ...)           \
   virtual const char* typeName() const __VA_ARGS__ { return #T; } \
   virtual size_t typeSize() const __VA_ARGS__ { return sizeof(*this); }
 #else
@@ -243,18 +228,16 @@ private:
 // Note that this macro is expanded unconditionally because it declares only
 // two small inline functions which will hopefully get eliminated by the linker
 // in non-leak-checking builds.
-#define MOZ_DECLARE_REFCOUNTED_TYPENAME(T) \
+#define MOZ_DECLARE_REFCOUNTED_TYPENAME(T)    \
   const char* typeName() const { return #T; } \
   size_t typeSize() const { return sizeof(*this); }
 
-} // namespace detail
+}  // namespace detail
 
-template<typename T>
-class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount>
-{
-public:
-  ~RefCounted()
-  {
+template <typename T>
+class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount> {
+ public:
+  ~RefCounted() {
     static_assert(IsBaseOf<RefCounted, T>::value,
                   "T must derive from RefCounted<T>");
   }
@@ -269,20 +252,20 @@ namespace external {
  * NOTE: Please do not use this class, use NS_INLINE_DECL_THREADSAFE_REFCOUNTING
  * instead.
  */
-template<typename T, recordreplay::Behavior Recording = recordreplay::Behavior::Preserve>
-class AtomicRefCounted :
-  public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount, Recording>
-{
-public:
-  ~AtomicRefCounted()
-  {
+template <typename T,
+          recordreplay::Behavior Recording = recordreplay::Behavior::Preserve>
+class AtomicRefCounted
+    : public mozilla::detail::RefCounted<T, mozilla::detail::AtomicRefCount,
+                                         Recording> {
+ public:
+  ~AtomicRefCounted() {
     static_assert(IsBaseOf<AtomicRefCounted, T>::value,
                   "T must derive from AtomicRefCounted<T>");
   }
 };
 
-} // namespace external
+}  // namespace external
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_RefCounted_h
+#endif  // mozilla_RefCounted_h

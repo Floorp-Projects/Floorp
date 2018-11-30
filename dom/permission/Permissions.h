@@ -19,11 +19,8 @@ namespace dom {
 
 class Promise;
 
-class Permissions final
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class Permissions final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Permissions)
 
@@ -38,19 +35,20 @@ public:
                                   JS::Handle<JSObject*> aPermission,
                                   ErrorResult& aRv);
 
-  static nsresult RemovePermission(nsIPrincipal* aPrincipal, const char* aPermissionType);
+  static nsresult RemovePermission(nsIPrincipal* aPrincipal,
+                                   const char* aPermissionType);
 
   already_AddRefed<Promise> Revoke(JSContext* aCx,
                                    JS::Handle<JSObject*> aPermission,
                                    ErrorResult& aRv);
 
-private:
+ private:
   ~Permissions();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_permissions_h_
+#endif  // mozilla_dom_permissions_h_

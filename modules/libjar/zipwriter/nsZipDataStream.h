@@ -12,34 +12,30 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
-class nsZipDataStream final : public nsIStreamListener
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
+class nsZipDataStream final : public nsIStreamListener {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 
-    nsZipDataStream()
-    {
-    }
+  nsZipDataStream() {}
 
-    nsresult Init(nsZipWriter *aWriter, nsIOutputStream *aStream,
-                  nsZipHeader *aHeader, int32_t aCompression);
+  nsresult Init(nsZipWriter *aWriter, nsIOutputStream *aStream,
+                nsZipHeader *aHeader, int32_t aCompression);
 
-    nsresult ReadStream(nsIInputStream *aStream);
+  nsresult ReadStream(nsIInputStream *aStream);
 
-private:
+ private:
+  ~nsZipDataStream() {}
 
-    ~nsZipDataStream() {}
+  nsCOMPtr<nsIStreamListener> mOutput;
+  nsCOMPtr<nsIOutputStream> mStream;
+  RefPtr<nsZipWriter> mWriter;
+  RefPtr<nsZipHeader> mHeader;
 
-    nsCOMPtr<nsIStreamListener> mOutput;
-    nsCOMPtr<nsIOutputStream> mStream;
-    RefPtr<nsZipWriter> mWriter;
-    RefPtr<nsZipHeader> mHeader;
-
-    nsresult CompleteEntry();
-    nsresult ProcessData(nsIRequest *aRequest, nsISupports *aContext,
-                         char *aBuffer, uint64_t aOffset, uint32_t aCount);
+  nsresult CompleteEntry();
+  nsresult ProcessData(nsIRequest *aRequest, nsISupports *aContext,
+                       char *aBuffer, uint64_t aOffset, uint32_t aCount);
 };
 
 #endif

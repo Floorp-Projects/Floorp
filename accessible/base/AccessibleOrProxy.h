@@ -20,18 +20,16 @@ namespace a11y {
  * This class stores an Accessible* or a ProxyAccessible* in a safe manner
  * with size sizeof(void*).
  */
-class AccessibleOrProxy
-{
-public:
-  MOZ_IMPLICIT AccessibleOrProxy(Accessible* aAcc) :
-    mBits(reinterpret_cast<uintptr_t>(aAcc)) {}
-  MOZ_IMPLICIT AccessibleOrProxy(ProxyAccessible* aProxy) :
-    mBits(aProxy ? (reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY) : 0) {}
+class AccessibleOrProxy {
+ public:
+  MOZ_IMPLICIT AccessibleOrProxy(Accessible* aAcc)
+      : mBits(reinterpret_cast<uintptr_t>(aAcc)) {}
+  MOZ_IMPLICIT AccessibleOrProxy(ProxyAccessible* aProxy)
+      : mBits(aProxy ? (reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY) : 0) {}
   MOZ_IMPLICIT AccessibleOrProxy(decltype(nullptr)) : mBits(0) {}
 
   bool IsProxy() const { return mBits & IS_PROXY; }
-  ProxyAccessible* AsProxy() const
-  {
+  ProxyAccessible* AsProxy() const {
     if (IsProxy()) {
       return reinterpret_cast<ProxyAccessible*>(mBits & ~IS_PROXY);
     }
@@ -40,8 +38,7 @@ public:
   }
 
   bool IsAccessible() const { return !IsProxy(); }
-  Accessible* AsAccessible() const
-  {
+  Accessible* AsAccessible() const {
     if (IsAccessible()) {
       return reinterpret_cast<Accessible*>(mBits);
     }
@@ -51,8 +48,7 @@ public:
 
   bool IsNull() const { return mBits == 0; }
 
-  uint32_t ChildCount() const
-  {
+  uint32_t ChildCount() const {
     if (IsProxy()) {
       return AsProxy()->ChildrenCount();
     }
@@ -64,8 +60,7 @@ public:
    * Return the child object either an accessible or a proxied accessible at
    * the given index.
    */
-  AccessibleOrProxy ChildAt(uint32_t aIdx)
-  {
+  AccessibleOrProxy ChildAt(uint32_t aIdx) {
     if (IsProxy()) {
       return AsProxy()->ChildAt(aIdx);
     }
@@ -76,8 +71,7 @@ public:
   /**
    * Return the first child object.
    */
-  AccessibleOrProxy FirstChild()
-  {
+  AccessibleOrProxy FirstChild() {
     if (IsProxy()) {
       return AsProxy()->FirstChild();
     }
@@ -88,8 +82,7 @@ public:
   /**
    * Return the first child object.
    */
-  AccessibleOrProxy LastChild()
-  {
+  AccessibleOrProxy LastChild() {
     if (IsProxy()) {
       return AsProxy()->LastChild();
     }
@@ -97,8 +90,7 @@ public:
     return AsAccessible()->LastChild();
   }
 
-  role Role() const
-  {
+  role Role() const {
     if (IsProxy()) {
       return AsProxy()->Role();
     }
@@ -112,12 +104,12 @@ public:
   uintptr_t Bits() const { return mBits; }
   void SetBits(uintptr_t aBits) { mBits = aBits; }
 
-private:
+ private:
   uintptr_t mBits;
   static const uintptr_t IS_PROXY = 0x1;
 };
 
-}
-}
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

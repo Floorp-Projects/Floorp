@@ -84,11 +84,9 @@
  * as a singleton.
  */
 
-class GenericClassInfo : public nsIClassInfo
-{
-public:
-  struct ClassInfoData
-  {
+class GenericClassInfo : public nsIClassInfo {
+ public:
+  struct ClassInfoData {
     // This function pointer uses NS_CALLBACK_ because it's always set to an
     // NS_IMETHOD function, which uses __stdcall on Win32.
     typedef NS_CALLBACK_(nsresult, GetInterfacesProc)(uint32_t* aCountP,
@@ -109,71 +107,69 @@ public:
 
   explicit GenericClassInfo(const ClassInfoData* aData) : mData(aData) {}
 
-private:
+ private:
   const ClassInfoData* mData;
 };
 
 #define NS_CLASSINFO_NAME(_class) g##_class##_classInfoGlobal
 #define NS_CI_INTERFACE_GETTER_NAME(_class) _class##_GetInterfacesHelper
-#define NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
-  extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)                    \
-     (uint32_t *, nsIID ***);
+#define NS_DECL_CI_INTERFACE_GETTER(_class) \
+  extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t*, nsIID***);
 
-#define NS_IMPL_CLASSINFO(_class, _getscriptablehelper, _flags, _cid)         \
-  NS_DECL_CI_INTERFACE_GETTER(_class)                                         \
-  static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = {   \
-    NS_CI_INTERFACE_GETTER_NAME(_class),                                      \
-    _getscriptablehelper,                                                     \
-    _flags | nsIClassInfo::SINGLETON_CLASSINFO,                               \
-    _cid,                                                                     \
-  };                                                                          \
-  mozilla::AlignedStorage2<GenericClassInfo> k##_class##ClassInfoDataPlace;   \
+#define NS_IMPL_CLASSINFO(_class, _getscriptablehelper, _flags, _cid)       \
+  NS_DECL_CI_INTERFACE_GETTER(_class)                                       \
+  static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = { \
+      NS_CI_INTERFACE_GETTER_NAME(_class),                                  \
+      _getscriptablehelper,                                                 \
+      _flags | nsIClassInfo::SINGLETON_CLASSINFO,                           \
+      _cid,                                                                 \
+  };                                                                        \
+  mozilla::AlignedStorage2<GenericClassInfo> k##_class##ClassInfoDataPlace; \
   nsIClassInfo* NS_CLASSINFO_NAME(_class) = nullptr;
 
-#define NS_IMPL_QUERY_CLASSINFO(_class)                                       \
-  if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                              \
-    if (!NS_CLASSINFO_NAME(_class))                                           \
-      NS_CLASSINFO_NAME(_class) = new (k##_class##ClassInfoDataPlace.addr())  \
-        GenericClassInfo(&k##_class##ClassInfoData);                          \
-    foundInterface = NS_CLASSINFO_NAME(_class);                               \
+#define NS_IMPL_QUERY_CLASSINFO(_class)                                      \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                               \
+    if (!NS_CLASSINFO_NAME(_class))                                          \
+      NS_CLASSINFO_NAME(_class) = new (k##_class##ClassInfoDataPlace.addr()) \
+          GenericClassInfo(&k##_class##ClassInfoData);                       \
+    foundInterface = NS_CLASSINFO_NAME(_class);                              \
   } else
 
-#define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                                 \
-NS_IMETHODIMP                                                                 \
-NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t *count, nsIID ***array)          \
-{                                                                             \
-    *count = _c;                                                              \
-    *array = (nsIID **)moz_xmalloc(sizeof (nsIID *) * _c);                    \
+#define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                              \
+  NS_IMETHODIMP                                                            \
+  NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t * count, nsIID * **array) { \
+    *count = _c;                                                           \
+    *array = (nsIID**)moz_xmalloc(sizeof(nsIID*) * _c);                    \
     uint32_t i = 0;
 
-#define NS_CLASSINFO_HELPER_ENTRY(_interface)                                 \
-    (*array)[i++] = NS_GET_IID(_interface).Clone();                           \
+#define NS_CLASSINFO_HELPER_ENTRY(_interface) \
+  (*array)[i++] = NS_GET_IID(_interface).Clone();
 
-#define NS_CLASSINFO_HELPER_END                                               \
-    MOZ_ASSERT(i == *count, "Incorrent number of entries");                   \
-    return NS_OK;                                                             \
-}
+#define NS_CLASSINFO_HELPER_END                           \
+  MOZ_ASSERT(i == *count, "Incorrent number of entries"); \
+  return NS_OK;                                           \
+  }
 
-#define NS_IMPL_CI_INTERFACE_GETTER(aClass, ...)                              \
-  static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                               \
-                "Need more arguments to NS_IMPL_CI_INTERFACE_GETTER");        \
-  NS_CLASSINFO_HELPER_BEGIN(aClass, MOZ_ARG_COUNT(__VA_ARGS__))               \
-    MOZ_FOR_EACH(NS_CLASSINFO_HELPER_ENTRY, (), (__VA_ARGS__))                \
+#define NS_IMPL_CI_INTERFACE_GETTER(aClass, ...)                       \
+  static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                        \
+                "Need more arguments to NS_IMPL_CI_INTERFACE_GETTER"); \
+  NS_CLASSINFO_HELPER_BEGIN(aClass, MOZ_ARG_COUNT(__VA_ARGS__))        \
+  MOZ_FOR_EACH(NS_CLASSINFO_HELPER_ENTRY, (), (__VA_ARGS__))           \
   NS_CLASSINFO_HELPER_END
 
-#define NS_IMPL_QUERY_INTERFACE_CI(aClass, ...)                               \
-  static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                               \
-                "Need more arguments to NS_IMPL_QUERY_INTERFACE_CI");         \
-  NS_INTERFACE_MAP_BEGIN(aClass)                                              \
-    MOZ_FOR_EACH(NS_INTERFACE_MAP_ENTRY, (), (__VA_ARGS__))                   \
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, MOZ_ARG_1(__VA_ARGS__))     \
-    NS_IMPL_QUERY_CLASSINFO(aClass)                                           \
+#define NS_IMPL_QUERY_INTERFACE_CI(aClass, ...)                           \
+  static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                           \
+                "Need more arguments to NS_IMPL_QUERY_INTERFACE_CI");     \
+  NS_INTERFACE_MAP_BEGIN(aClass)                                          \
+    MOZ_FOR_EACH(NS_INTERFACE_MAP_ENTRY, (), (__VA_ARGS__))               \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, MOZ_ARG_1(__VA_ARGS__)) \
+    NS_IMPL_QUERY_CLASSINFO(aClass)                                       \
   NS_INTERFACE_MAP_END
 
-#define NS_IMPL_ISUPPORTS_CI(aClass, ...)                                     \
-  NS_IMPL_ADDREF(aClass)                                                      \
-  NS_IMPL_RELEASE(aClass)                                                     \
-  NS_IMPL_QUERY_INTERFACE_CI(aClass, __VA_ARGS__)                             \
+#define NS_IMPL_ISUPPORTS_CI(aClass, ...)         \
+  NS_IMPL_ADDREF(aClass)                          \
+  NS_IMPL_RELEASE(aClass)                         \
+  NS_IMPL_QUERY_INTERFACE_CI(aClass, __VA_ARGS__) \
   NS_IMPL_CI_INTERFACE_GETTER(aClass, __VA_ARGS__)
 
-#endif // nsIClassInfoImpl_h__
+#endif  // nsIClassInfoImpl_h__

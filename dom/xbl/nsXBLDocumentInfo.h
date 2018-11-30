@@ -17,9 +17,8 @@
 
 class nsXBLPrototypeBinding;
 
-class nsXBLDocumentInfo final : public nsSupportsWeakReference
-{
-public:
+class nsXBLDocumentInfo final : public nsSupportsWeakReference {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   explicit nsXBLDocumentInfo(nsIDocument* aDocument);
@@ -47,21 +46,23 @@ public:
 
   void MarkInCCGeneration(uint32_t aGeneration);
 
-  static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo,
+  static nsresult ReadPrototypeBindings(nsIURI* aURI,
+                                        nsXBLDocumentInfo** aDocInfo,
                                         nsIDocument* aBoundDocument);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXBLDocumentInfo)
 
-private:
+ private:
   virtual ~nsXBLDocumentInfo();
 
   nsCOMPtr<nsIDocument> mDocument;
   bool mScriptAccess;
   bool mIsChrome;
   // the binding table owns each nsXBLPrototypeBinding
-  nsAutoPtr<nsClassHashtable<nsCStringHashKey, nsXBLPrototypeBinding>> mBindingTable;
+  nsAutoPtr<nsClassHashtable<nsCStringHashKey, nsXBLPrototypeBinding>>
+      mBindingTable;
 
   // non-owning pointer to the first binding in the table
   nsXBLPrototypeBinding* mFirstBinding;

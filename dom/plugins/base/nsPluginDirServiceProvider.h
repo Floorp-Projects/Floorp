@@ -8,7 +8,7 @@
 
 #include "nsIDirectoryService.h"
 
-#if defined (XP_WIN)
+#if defined(XP_WIN)
 #include "nsCOMArray.h"
 #endif
 
@@ -18,23 +18,23 @@ class nsISimpleEnumerator;
 // class nsPluginDirServiceProvider
 //*****************************************************************************
 
-class nsPluginDirServiceProvider : public nsIDirectoryServiceProvider
-{
-public:
-   nsPluginDirServiceProvider();
+class nsPluginDirServiceProvider : public nsIDirectoryServiceProvider {
+ public:
+  nsPluginDirServiceProvider();
 
-   NS_DECL_THREADSAFE_ISUPPORTS
-   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
 #ifdef XP_WIN
-   static nsresult GetPLIDDirectories(nsISimpleEnumerator **aEnumerator);
-private:
-   static nsresult GetPLIDDirectoriesWithRootKey(uint32_t aKey,
-     nsCOMArray<nsIFile> &aDirs);
+  static nsresult GetPLIDDirectories(nsISimpleEnumerator **aEnumerator);
+
+ private:
+  static nsresult GetPLIDDirectoriesWithRootKey(uint32_t aKey,
+                                                nsCOMArray<nsIFile> &aDirs);
 #endif
 
-protected:
-   virtual ~nsPluginDirServiceProvider();
+ protected:
+  virtual ~nsPluginDirServiceProvider();
 };
 
-#endif // nsPluginDirServiceProvider_h_
+#endif  // nsPluginDirServiceProvider_h_

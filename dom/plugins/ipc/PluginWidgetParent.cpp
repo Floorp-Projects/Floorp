@@ -22,29 +22,29 @@ namespace mozilla {
 namespace dom {
 // For nsWindow
 const wchar_t* kPluginWidgetContentParentProperty =
-  L"kPluginWidgetParentProperty";
-} }
+    L"kPluginWidgetParentProperty";
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 namespace plugins {
 
 // This macro returns IPC_OK() to prevent an abort in the child process when
 // ipc message delivery fails.
-#define ENSURE_CHANNEL {                                      \
-  if (!mWidget) {                                             \
-    NS_WARNING("called on an invalid remote widget.");        \
-    return IPC_OK();                                          \
-  }                                                           \
-}
+#define ENSURE_CHANNEL                                   \
+  {                                                      \
+    if (!mWidget) {                                      \
+      NS_WARNING("called on an invalid remote widget."); \
+      return IPC_OK();                                   \
+    }                                                    \
+  }
 
-PluginWidgetParent::PluginWidgetParent()
-{
+PluginWidgetParent::PluginWidgetParent() {
   PWLOG("PluginWidgetParent::PluginWidgetParent()\n");
   MOZ_COUNT_CTOR(PluginWidgetParent);
 }
 
-PluginWidgetParent::~PluginWidgetParent()
-{
+PluginWidgetParent::~PluginWidgetParent() {
   PWLOG("PluginWidgetParent::~PluginWidgetParent()\n");
   MOZ_COUNT_DTOR(PluginWidgetParent);
   // A destroy call can actually get skipped if a widget is associated
@@ -53,15 +53,11 @@ PluginWidgetParent::~PluginWidgetParent()
   KillWidget();
 }
 
-mozilla::dom::TabParent*
-PluginWidgetParent::GetTabParent()
-{
+mozilla::dom::TabParent* PluginWidgetParent::GetTabParent() {
   return static_cast<mozilla::dom::TabParent*>(Manager());
 }
 
-void
-PluginWidgetParent::SetParent(nsIWidget* aParent)
-{
+void PluginWidgetParent::SetParent(nsIWidget* aParent) {
   // This will trigger sync send messages to the plugin process window
   // procedure and a cascade of events to that window related to focus
   // and activation.
@@ -75,10 +71,9 @@ PluginWidgetParent::SetParent(nsIWidget* aParent)
 // bypass this code on Window, and reuse a bit of it on Linux. Content still
 // makes use of some of the utility functions as well.
 
-mozilla::ipc::IPCResult
-PluginWidgetParent::RecvCreate(nsresult* aResult, uint64_t* aScrollCaptureId,
-                               uintptr_t* aPluginInstanceId)
-{
+mozilla::ipc::IPCResult PluginWidgetParent::RecvCreate(
+    nsresult* aResult, uint64_t* aScrollCaptureId,
+    uintptr_t* aPluginInstanceId) {
   PWLOG("PluginWidgetParent::RecvCreate()\n");
 
   *aScrollCaptureId = 0;
@@ -120,9 +115,7 @@ PluginWidgetParent::RecvCreate(nsresult* aResult, uint64_t* aScrollCaptureId,
   return IPC_OK();
 }
 
-void
-PluginWidgetParent::KillWidget()
-{
+void PluginWidgetParent::KillWidget() {
   PWLOG("PluginWidgetParent::KillWidget() widget=%p\n", (void*)mWidget.get());
   if (mWidget) {
     mWidget->UnregisterPluginWindowForRemoteUpdates();
@@ -133,9 +126,7 @@ PluginWidgetParent::KillWidget()
   }
 }
 
-void
-PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy) {
   PWLOG("PluginWidgetParent::ActorDestroy(%d)\n", aWhy);
   KillWidget();
 }
@@ -143,24 +134,19 @@ PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy)
 // Called by TabParent's Destroy() in response to an early tear down (Early
 // in that this is happening before layout in the child has had a chance
 // to destroy the child widget.) when the tab is closing.
-void
-PluginWidgetParent::ParentDestroy()
-{
+void PluginWidgetParent::ParentDestroy() {
   PWLOG("PluginWidgetParent::ParentDestroy()\n");
 }
 
-mozilla::ipc::IPCResult
-PluginWidgetParent::RecvSetFocus(const bool& aRaise)
-{
+mozilla::ipc::IPCResult PluginWidgetParent::RecvSetFocus(const bool& aRaise) {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvSetFocus(%d)\n", aRaise);
   mWidget->SetFocus(aRaise);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PluginWidgetParent::RecvGetNativePluginPort(uintptr_t* value)
-{
+mozilla::ipc::IPCResult PluginWidgetParent::RecvGetNativePluginPort(
+    uintptr_t* value) {
   ENSURE_CHANNEL;
   *value = (uintptr_t)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
   NS_ASSERTION(*value, "no native port??");
@@ -168,9 +154,8 @@ PluginWidgetParent::RecvGetNativePluginPort(uintptr_t* value)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PluginWidgetParent::RecvSetNativeChildWindow(const uintptr_t& aChildWindow)
-{
+mozilla::ipc::IPCResult PluginWidgetParent::RecvSetNativeChildWindow(
+    const uintptr_t& aChildWindow) {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvSetNativeChildWindow(%p)\n",
         (void*)aChildWindow);
@@ -178,5 +163,5 @@ PluginWidgetParent::RecvSetNativeChildWindow(const uintptr_t& aChildWindow)
   return IPC_OK();
 }
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla

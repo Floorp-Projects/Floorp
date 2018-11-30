@@ -9,35 +9,32 @@
 #include "mozilla/Attributes.h"
 #include "nsBlockFrame.h"
 
-class nsSelectsAreaFrame final : public nsBlockFrame
-{
-public:
+class nsSelectsAreaFrame final : public nsBlockFrame {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
   friend nsContainerFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell,
                                                   ComputedStyle* aStyle,
                                                   nsFrameState aFlags);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  void BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
+  void BuildDisplayListInternal(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists);
 
-  virtual void Reflow(nsPresContext*           aCX,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+                      nsReflowStatus& aStatus) override;
 
   nscoord BSizeOfARow() const { return mBSizeOfARow; }
 
-protected:
-  explicit nsSelectsAreaFrame(ComputedStyle* aStyle) :
-    nsBlockFrame(aStyle, kClassID),
-    // initialize to wacky value so first call of
-    // nsSelectsAreaFrame::Reflow will always invalidate
-    mBSizeOfARow(nscoord_MIN)
-  {}
+ protected:
+  explicit nsSelectsAreaFrame(ComputedStyle* aStyle)
+      : nsBlockFrame(aStyle, kClassID),
+        // initialize to wacky value so first call of
+        // nsSelectsAreaFrame::Reflow will always invalidate
+        mBSizeOfARow(nscoord_MIN) {}
 
   // We cache the block size of a single row so that changes to the
   // "size" attribute, padding, etc. can all be handled with only one

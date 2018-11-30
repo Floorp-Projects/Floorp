@@ -21,13 +21,14 @@
 class nsIContent;
 class nsPresContext;
 
-template<class E> class nsCOMArray;
+template <class E>
+class nsCOMArray;
 
 namespace mozilla {
 namespace dom {
 class Event;
 class EventTarget;
-} // namespace dom
+}  // namespace dom
 
 /**
  * About event dispatching:
@@ -49,25 +50,21 @@ class EventTarget;
  * is called right after calling event listener for the current event target.
  */
 
-class EventChainVisitor
-{
-public:
-  EventChainVisitor(nsPresContext* aPresContext,
-                    WidgetEvent* aEvent,
+class EventChainVisitor {
+ public:
+  EventChainVisitor(nsPresContext* aPresContext, WidgetEvent* aEvent,
                     dom::Event* aDOMEvent,
                     nsEventStatus aEventStatus = nsEventStatus_eIgnore)
-    : mPresContext(aPresContext)
-    , mEvent(aEvent)
-    , mDOMEvent(aDOMEvent)
-    , mEventStatus(aEventStatus)
-    , mItemFlags(0)
-  {
-  }
+      : mPresContext(aPresContext),
+        mEvent(aEvent),
+        mDOMEvent(aDOMEvent),
+        mEventStatus(aEventStatus),
+        mItemFlags(0) {}
 
   /**
    * The prescontext, possibly nullptr.
    */
-  nsPresContext* const  mPresContext;
+  nsPresContext* const mPresContext;
 
   /**
    * The WidgetEvent which is being dispatched. Never nullptr.
@@ -78,13 +75,13 @@ public:
    * The DOM Event assiciated with the mEvent. Possibly nullptr if a DOM Event
    * is not (yet) created.
    */
-  dom::Event*           mDOMEvent;
+  dom::Event* mDOMEvent;
 
   /**
    * The status of the event.
    * @see nsEventStatus.h
    */
-  nsEventStatus         mEventStatus;
+  nsEventStatus mEventStatus;
 
   /**
    * Bits for items in the event target chain.
@@ -96,7 +93,7 @@ public:
    *
    * @note Using uint16_t because that is used also in EventTargetChainItem.
    */
-  uint16_t              mItemFlags;
+  uint16_t mItemFlags;
 
   /**
    * Data for items in the event target chain.
@@ -109,39 +106,33 @@ public:
   nsCOMPtr<nsISupports> mItemData;
 };
 
-class EventChainPreVisitor : public EventChainVisitor
-{
-public:
-  EventChainPreVisitor(nsPresContext* aPresContext,
-                       WidgetEvent* aEvent,
-                       dom::Event* aDOMEvent,
-                       nsEventStatus aEventStatus,
+class EventChainPreVisitor : public EventChainVisitor {
+ public:
+  EventChainPreVisitor(nsPresContext* aPresContext, WidgetEvent* aEvent,
+                       dom::Event* aDOMEvent, nsEventStatus aEventStatus,
                        bool aIsInAnon,
                        dom::EventTarget* aTargetInKnownToBeHandledScope)
-    : EventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus)
-    , mCanHandle(true)
-    , mAutomaticChromeDispatch(true)
-    , mForceContentDispatch(false)
-    , mRelatedTargetIsInAnon(false)
-    , mOriginalTargetIsInAnon(aIsInAnon)
-    , mWantsWillHandleEvent(false)
-    , mMayHaveListenerManager(true)
-    , mWantsPreHandleEvent(false)
-    , mRootOfClosedTree(false)
-    , mItemInShadowTree(false)
-    , mParentIsSlotInClosedTree(false)
-    , mParentIsChromeHandler(false)
-    , mRelatedTargetRetargetedInCurrentScope(false)
-    , mIgnoreBecauseOfShadowDOM(false)
-    , mParentTarget(nullptr)
-    , mEventTargetAtParent(nullptr)
-    , mRetargetedRelatedTarget(nullptr)
-    , mTargetInKnownToBeHandledScope(aTargetInKnownToBeHandledScope)
-  {
-  }
+      : EventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
+        mCanHandle(true),
+        mAutomaticChromeDispatch(true),
+        mForceContentDispatch(false),
+        mRelatedTargetIsInAnon(false),
+        mOriginalTargetIsInAnon(aIsInAnon),
+        mWantsWillHandleEvent(false),
+        mMayHaveListenerManager(true),
+        mWantsPreHandleEvent(false),
+        mRootOfClosedTree(false),
+        mItemInShadowTree(false),
+        mParentIsSlotInClosedTree(false),
+        mParentIsChromeHandler(false),
+        mRelatedTargetRetargetedInCurrentScope(false),
+        mIgnoreBecauseOfShadowDOM(false),
+        mParentTarget(nullptr),
+        mEventTargetAtParent(nullptr),
+        mRetargetedRelatedTarget(nullptr),
+        mTargetInKnownToBeHandledScope(aTargetInKnownToBeHandledScope) {}
 
-  void Reset()
-  {
+  void Reset() {
     mItemFlags = 0;
     mItemData = nullptr;
     mCanHandle = true;
@@ -164,21 +155,16 @@ public:
     mRetargetedTouchTargets.reset();
   }
 
-  dom::EventTarget* GetParentTarget()
-  {
-    return mParentTarget;
-  }
+  dom::EventTarget* GetParentTarget() { return mParentTarget; }
 
-  void SetParentTarget(dom::EventTarget* aParentTarget, bool aIsChromeHandler)
-  {
+  void SetParentTarget(dom::EventTarget* aParentTarget, bool aIsChromeHandler) {
     mParentTarget = aParentTarget;
     if (mParentTarget) {
       mParentIsChromeHandler = aIsChromeHandler;
     }
   }
 
-  void IgnoreCurrentTargetBecauseOfShadowDOMRetargeting()
-  {
+  void IgnoreCurrentTargetBecauseOfShadowDOMRetargeting() {
     mCanHandle = false;
     mIgnoreBecauseOfShadowDOM = true;
     SetParentTarget(nullptr, false);
@@ -191,44 +177,44 @@ public:
    * construction of the event target chain is complete. The target that sets
    * mCanHandle to false is NOT included in the event target chain.
    */
-  bool                  mCanHandle;
+  bool mCanHandle;
 
   /**
    * If mCanHandle is false and mAutomaticChromeDispatch is also false
    * event will not be dispatched to the chrome event handler.
    */
-  bool                  mAutomaticChromeDispatch;
+  bool mAutomaticChromeDispatch;
 
   /**
    * If mForceContentDispatch is set to true,
    * content dispatching is not disabled for this event target.
    * FIXME! This is here for backward compatibility. Bug 329119
    */
-  bool                  mForceContentDispatch;
+  bool mForceContentDispatch;
 
   /**
    * true if it is known that related target is or is a descendant of an
    * element which is anonymous for events.
    */
-  bool                  mRelatedTargetIsInAnon;
+  bool mRelatedTargetIsInAnon;
 
   /**
    * true if the original target of the event is inside anonymous content.
    * This is set before calling GetEventTargetParent on event targets.
    */
-  bool                  mOriginalTargetIsInAnon;
+  bool mOriginalTargetIsInAnon;
 
   /**
    * Whether or not EventTarget::WillHandleEvent will be
    * called. Default is false;
    */
-  bool                  mWantsWillHandleEvent;
+  bool mWantsWillHandleEvent;
 
   /**
    * If it is known that the current target doesn't have a listener manager
    * when GetEventTargetParent is called, set this to false.
    */
-  bool                  mMayHaveListenerManager;
+  bool mMayHaveListenerManager;
 
   /**
    * Whether or not EventTarget::PreHandleEvent will be called. Default is
@@ -271,13 +257,14 @@ public:
    * to not show up in the event path.
    */
   bool mIgnoreBecauseOfShadowDOM;
-private:
+
+ private:
   /**
    * Parent item in the event target chain.
    */
   dom::EventTarget* mParentTarget;
 
-public:
+ public:
   /**
    * If the event needs to be retargeted, this is the event target,
    * which should be used when the event is handled at mParentTarget.
@@ -305,14 +292,11 @@ public:
   dom::EventTarget* mTargetInKnownToBeHandledScope;
 };
 
-class EventChainPostVisitor : public mozilla::EventChainVisitor
-{
-public:
+class EventChainPostVisitor : public mozilla::EventChainVisitor {
+ public:
   explicit EventChainPostVisitor(EventChainVisitor& aOther)
-    : EventChainVisitor(aOther.mPresContext, aOther.mEvent,
-                        aOther.mDOMEvent, aOther.mEventStatus)
-  {
-  }
+      : EventChainVisitor(aOther.mPresContext, aOther.mEvent, aOther.mDOMEvent,
+                          aOther.mEventStatus) {}
 };
 
 /**
@@ -321,9 +305,8 @@ public:
  * before handling the system event group.
  * This is used in nsPresShell.
  */
-class MOZ_STACK_CLASS EventDispatchingCallback
-{
-public:
+class MOZ_STACK_CLASS EventDispatchingCallback {
+ public:
   virtual void HandleEvent(EventChainPostVisitor& aVisitor) = 0;
 };
 
@@ -331,9 +314,8 @@ public:
  * The generic class for event dispatching.
  * Must not be used outside Gecko!
  */
-class EventDispatcher
-{
-public:
+class EventDispatcher {
+ public:
   /**
    * aTarget should QI to EventTarget.
    * If the target of aEvent is set before calling this method, the target of
@@ -350,10 +332,8 @@ public:
    * eVoidEvent.
    * @note Use this method when dispatching a WidgetEvent.
    */
-  static nsresult Dispatch(nsISupports* aTarget,
-                           nsPresContext* aPresContext,
-                           WidgetEvent* aEvent,
-                           dom::Event* aDOMEvent = nullptr,
+  static nsresult Dispatch(nsISupports* aTarget, nsPresContext* aPresContext,
+                           WidgetEvent* aEvent, dom::Event* aDOMEvent = nullptr,
                            nsEventStatus* aEventStatus = nullptr,
                            EventDispatchingCallback* aCallback = nullptr,
                            nsTArray<dom::EventTarget*>* aTargets = nullptr);
@@ -366,8 +346,7 @@ public:
    * Otherwise this works like EventDispatcher::Dispatch.
    * @note Use this method when dispatching a dom::Event.
    */
-  static nsresult DispatchDOMEvent(nsISupports* aTarget,
-                                   WidgetEvent* aEvent,
+  static nsresult DispatchDOMEvent(nsISupports* aTarget, WidgetEvent* aEvent,
                                    dom::Event* aDOMEvent,
                                    nsPresContext* aPresContext,
                                    nsEventStatus* aEventStatus);
@@ -375,12 +354,10 @@ public:
   /**
    * Creates a DOM Event.  Returns null if the event type is unsupported.
    */
-  static already_AddRefed<dom::Event> CreateEvent(dom::EventTarget* aOwner,
-                                                  nsPresContext* aPresContext,
-                                                  WidgetEvent* aEvent,
-                                                  const nsAString& aEventType,
-                                                  dom::CallerType aCallerType =
-                                                    dom::CallerType::System);
+  static already_AddRefed<dom::Event> CreateEvent(
+      dom::EventTarget* aOwner, nsPresContext* aPresContext,
+      WidgetEvent* aEvent, const nsAString& aEventType,
+      dom::CallerType aCallerType = dom::CallerType::System);
 
   static void GetComposedPathFor(WidgetEvent* aEvent,
                                  nsTArray<RefPtr<dom::EventTarget>>& aPath);
@@ -391,7 +368,7 @@ public:
   static void Shutdown();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_EventDispatcher_h_
+#endif  // mozilla_EventDispatcher_h_
 #endif

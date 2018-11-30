@@ -9,9 +9,8 @@
 namespace mozilla {
 namespace layers {
 
-/* static */ nsIScrollableFrame::ScrollUnit
-KeyboardScrollAction::GetScrollUnit(KeyboardScrollAction::KeyboardScrollActionType aDeltaType)
-{
+/* static */ nsIScrollableFrame::ScrollUnit KeyboardScrollAction::GetScrollUnit(
+    KeyboardScrollAction::KeyboardScrollActionType aDeltaType) {
   switch (aDeltaType) {
     case KeyboardScrollAction::eScrollCharacter:
       return nsIScrollableFrame::LINES;
@@ -28,16 +27,11 @@ KeyboardScrollAction::GetScrollUnit(KeyboardScrollAction::KeyboardScrollActionTy
 }
 
 KeyboardScrollAction::KeyboardScrollAction()
-  : mType(KeyboardScrollAction::eScrollCharacter)
-  , mForward(false)
-{
-}
+    : mType(KeyboardScrollAction::eScrollCharacter), mForward(false) {}
 
-KeyboardScrollAction::KeyboardScrollAction(KeyboardScrollActionType aType, bool aForward)
-  : mType(aType)
-  , mForward(aForward)
-{
-}
+KeyboardScrollAction::KeyboardScrollAction(KeyboardScrollActionType aType,
+                                           bool aForward)
+    : mType(aType), mForward(aForward) {}
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

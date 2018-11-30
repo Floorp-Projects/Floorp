@@ -33,33 +33,26 @@
 namespace mozilla {
 namespace dom {
 class Element;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-
-class nsBaseContentList : public nsINodeList
-{
-public:
+class nsBaseContentList : public nsINodeList {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsINodeList
   virtual int32_t IndexOf(nsIContent* aContent) override;
   virtual nsIContent* Item(uint32_t aIndex) override;
 
-  uint32_t Length() override {
-    return mElements.Length();
-  }
+  uint32_t Length() override { return mElements.Length(); }
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsBaseContentList)
 
-  void AppendElement(nsIContent *aContent)
-  {
+  void AppendElement(nsIContent* aContent) {
     mElements.AppendElement(aContent);
   }
-  void MaybeAppendElement(nsIContent* aContent)
-  {
-    if (aContent)
-      AppendElement(aContent);
+  void MaybeAppendElement(nsIContent* aContent) {
+    if (aContent) AppendElement(aContent);
   }
 
   /**
@@ -68,30 +61,23 @@ public:
    * @param aContent Element to insert, must not be null
    * @param aIndex Index to insert the element at.
    */
-  void InsertElementAt(nsIContent* aContent, int32_t aIndex)
-  {
+  void InsertElementAt(nsIContent* aContent, int32_t aIndex) {
     NS_ASSERTION(aContent, "Element to insert must not be null");
     mElements.InsertElementAt(aIndex, aContent);
   }
 
-  void RemoveElement(nsIContent *aContent)
-  {
+  void RemoveElement(nsIContent* aContent) {
     mElements.RemoveElement(aContent);
   }
 
-  void Reset() {
-    mElements.Clear();
-  }
+  void Reset() { mElements.Clear(); }
 
-  virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush);
+  virtual int32_t IndexOf(nsIContent* aContent, bool aDoFlush);
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-    override = 0;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override = 0;
 
-  void SetCapacity(uint32_t aCapacity)
-  {
-    mElements.SetCapacity(aCapacity);
-  }
+  void SetCapacity(uint32_t aCapacity) { mElements.SetCapacity(aCapacity); }
 
   virtual void LastRelease() {}
 
@@ -100,43 +86,35 @@ public:
   // don't need to make this virtual.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-protected:
+ protected:
   virtual ~nsBaseContentList();
 
   /**
    * To be called from non-destructor locations (e.g. unlink) that want to
    * remove from caches.  Cacheable subclasses should override.
    */
-  virtual void RemoveFromCaches()
-  {
-  }
+  virtual void RemoveFromCaches() {}
 
   AutoTArray<nsCOMPtr<nsIContent>, 10> mElements;
 };
 
-
-class nsSimpleContentList : public nsBaseContentList
-{
-public:
-  explicit nsSimpleContentList(nsINode* aRoot) : nsBaseContentList(),
-                                                 mRoot(aRoot)
-  {
-  }
+class nsSimpleContentList : public nsBaseContentList {
+ public:
+  explicit nsSimpleContentList(nsINode* aRoot)
+      : nsBaseContentList(), mRoot(aRoot) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSimpleContentList,
                                            nsBaseContentList)
 
-  virtual nsINode* GetParentObject() override
-  {
-    return mRoot;
-  }
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual nsINode* GetParentObject() override { return mRoot; }
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-protected:
+ protected:
   virtual ~nsSimpleContentList() {}
 
-private:
+ private:
   // This has to be a strong reference, the root might go away before the list.
   nsCOMPtr<nsINode> mRoot;
 };
@@ -144,47 +122,39 @@ private:
 // Used for returning lists that will always be empty, such as the applets list
 // in HTML Documents
 class nsEmptyContentList final : public nsBaseContentList,
-                                 public nsIHTMLCollection
-{
-public:
-  explicit nsEmptyContentList(nsINode* aRoot) : nsBaseContentList(),
-                                                mRoot(aRoot)
-  {
-  }
+                                 public nsIHTMLCollection {
+ public:
+  explicit nsEmptyContentList(nsINode* aRoot)
+      : nsBaseContentList(), mRoot(aRoot) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsEmptyContentList,
                                            nsBaseContentList)
 
-  virtual nsINode* GetParentObject() override
-  {
-    return mRoot;
-  }
+  virtual nsINode* GetParentObject() override { return mRoot; }
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual JSObject* GetWrapperPreserveColorInternal() override
-  {
+  virtual JSObject* GetWrapperPreserveColorInternal() override {
     return nsWrapperCache::GetWrapperPreserveColor();
   }
-  virtual void PreserveWrapperInternal(nsISupports* aScriptObjectHolder) override
-  {
+  virtual void PreserveWrapperInternal(
+      nsISupports* aScriptObjectHolder) override {
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
 
-  uint32_t Length() final
-  {
-    return 0;
-  }
+  uint32_t Length() final { return 0; }
   virtual nsIContent* Item(uint32_t aIndex) override;
   virtual mozilla::dom::Element* GetElementAt(uint32_t index) override;
-  virtual mozilla::dom::Element*
-  GetFirstNamedElement(const nsAString& aName, bool& aFound) override;
+  virtual mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
+                                                      bool& aFound) override;
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
-protected:
+ protected:
   virtual ~nsEmptyContentList() {}
-private:
+
+ private:
   // This has to be a strong reference, the root might go away before the list.
   nsCOMPtr<nsINode> mRoot;
 };
@@ -193,41 +163,31 @@ private:
  * Class that's used as the key to hash nsContentList implementations
  * for fast retrieval
  */
-struct nsContentListKey
-{
+struct nsContentListKey {
   // We have to take an aIsHTMLDocument arg for two reasons:
   // 1) We don't want to include nsIDocument.h in this header.
   // 2) We need to do that to make nsContentList::RemoveFromHashtable
   //    work, because by the time it's called the document of the
   //    list's root node might have changed.
-  nsContentListKey(nsINode* aRootNode,
-                   int32_t aMatchNameSpaceId,
-                   const nsAString& aTagname,
-                   bool aIsHTMLDocument)
-    : mRootNode(aRootNode),
-      mMatchNameSpaceId(aMatchNameSpaceId),
-      mTagname(aTagname),
-      mIsHTMLDocument(aIsHTMLDocument),
-      mHash(mozilla::AddToHash(mozilla::HashString(aTagname), mRootNode,
-                               mMatchNameSpaceId, mIsHTMLDocument))
-  {
-  }
+  nsContentListKey(nsINode* aRootNode, int32_t aMatchNameSpaceId,
+                   const nsAString& aTagname, bool aIsHTMLDocument)
+      : mRootNode(aRootNode),
+        mMatchNameSpaceId(aMatchNameSpaceId),
+        mTagname(aTagname),
+        mIsHTMLDocument(aIsHTMLDocument),
+        mHash(mozilla::AddToHash(mozilla::HashString(aTagname), mRootNode,
+                                 mMatchNameSpaceId, mIsHTMLDocument)) {}
 
   nsContentListKey(const nsContentListKey& aContentListKey)
-    : mRootNode(aContentListKey.mRootNode),
-      mMatchNameSpaceId(aContentListKey.mMatchNameSpaceId),
-      mTagname(aContentListKey.mTagname),
-      mIsHTMLDocument(aContentListKey.mIsHTMLDocument),
-      mHash(aContentListKey.mHash)
-  {
-  }
+      : mRootNode(aContentListKey.mRootNode),
+        mMatchNameSpaceId(aContentListKey.mMatchNameSpaceId),
+        mTagname(aContentListKey.mTagname),
+        mIsHTMLDocument(aContentListKey.mIsHTMLDocument),
+        mHash(aContentListKey.mHash) {}
 
-  inline uint32_t GetHash(void) const
-  {
-    return mHash;
-  }
+  inline uint32_t GetHash(void) const { return mHash; }
 
-  nsINode* const mRootNode; // Weak ref
+  nsINode* const mRootNode;  // Weak ref
   const int32_t mMatchNameSpaceId;
   const nsAString& mTagname;
   bool mIsHTMLDocument;
@@ -260,9 +220,8 @@ struct nsContentListKey
  */
 class nsContentList : public nsBaseContentList,
                       public nsIHTMLCollection,
-                      public nsStubMutationObserver
-{
-public:
+                      public nsStubMutationObserver {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   /**
@@ -283,12 +242,9 @@ public:
    * @param aLiveList Whether the created list should be a live list observing
    *                  mutations to the DOM tree.
    */
-  nsContentList(nsINode* aRootNode,
-                int32_t aMatchNameSpaceId,
-                nsAtom* aHTMLMatchAtom,
-                nsAtom* aXMLMatchAtom,
-                bool aDeep = true,
-                bool aLiveList = true);
+  nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
+                nsAtom* aHTMLMatchAtom, nsAtom* aXMLMatchAtom,
+                bool aDeep = true, bool aLiveList = true);
 
   /**
    * @param aRootNode The node under which to limit our search.
@@ -308,50 +264,40 @@ public:
    * @param aLiveList Whether the created list should be a live list observing
    *                  mutations to the DOM tree.
    */
-  nsContentList(nsINode* aRootNode,
-                nsContentListMatchFunc aFunc,
-                nsContentListDestroyFunc aDestroyFunc,
-                void* aData,
-                bool aDeep = true,
-                nsAtom* aMatchAtom = nullptr,
+  nsContentList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
+                nsContentListDestroyFunc aDestroyFunc, void* aData,
+                bool aDeep = true, nsAtom* aMatchAtom = nullptr,
                 int32_t aMatchNameSpaceId = kNameSpaceID_None,
-                bool aFuncMayDependOnAttr = true,
-                bool aLiveList = true);
+                bool aFuncMayDependOnAttr = true, bool aLiveList = true);
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
   using nsWrapperCache::PreserveWrapper;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-protected:
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+ protected:
   virtual ~nsContentList();
 
-  virtual JSObject* GetWrapperPreserveColorInternal() override
-  {
+  virtual JSObject* GetWrapperPreserveColorInternal() override {
     return nsWrapperCache::GetWrapperPreserveColor();
   }
-  virtual void PreserveWrapperInternal(nsISupports* aScriptObjectHolder) override
-  {
+  virtual void PreserveWrapperInternal(
+      nsISupports* aScriptObjectHolder) override {
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
-public:
 
+ public:
   // nsBaseContentList overrides
-  virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush) override;
+  virtual int32_t IndexOf(nsIContent* aContent, bool aDoFlush) override;
   virtual int32_t IndexOf(nsIContent* aContent) override;
-  virtual nsINode* GetParentObject() override
-  {
-    return mRootNode;
-  }
+  virtual nsINode* GetParentObject() override { return mRootNode; }
 
-  uint32_t Length() final
-  {
-    return Length(true);
-  }
+  uint32_t Length() final { return Length(true); }
   nsIContent* Item(uint32_t aIndex) final;
   virtual mozilla::dom::Element* GetElementAt(uint32_t index) override;
-  virtual mozilla::dom::Element*
-  GetFirstNamedElement(const nsAString& aName, bool& aFound) override
-  {
+  virtual mozilla::dom::Element* GetFirstNamedElement(const nsAString& aName,
+                                                      bool& aFound) override {
     mozilla::dom::Element* item = NamedItem(aName, true);
     aFound = !!item;
     return item;
@@ -361,8 +307,7 @@ public:
   // nsContentList public methods
   uint32_t Length(bool aDoFlush);
   nsIContent* Item(uint32_t aIndex, bool aDoFlush);
-  mozilla::dom::Element*
-  NamedItem(const nsAString& aName, bool aDoFlush);
+  mozilla::dom::Element* NamedItem(const nsAString& aName, bool aDoFlush);
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -371,8 +316,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  static nsContentList* FromSupports(nsISupports* aSupports)
-  {
+  static nsContentList* FromSupports(nsISupports* aSupports) {
     nsINodeList* list = static_cast<nsINodeList*>(aSupports);
 #ifdef DEBUG
     {
@@ -387,41 +331,38 @@ public:
     return static_cast<nsContentList*>(list);
   }
 
-  bool MatchesKey(const nsContentListKey& aKey) const
-  {
+  bool MatchesKey(const nsContentListKey& aKey) const {
     // The root node is most commonly the same: the document.  And the
     // most common namespace id is kNameSpaceID_Unknown.  So check the
     // string first.  Cases in which whether our root's ownerDocument
     // is HTML changes are extremely rare, so check those last.
     MOZ_ASSERT(mXMLMatchAtom,
                "How did we get here with a null match atom on our list?");
-    return
-      mXMLMatchAtom->Equals(aKey.mTagname) &&
-      mRootNode == aKey.mRootNode &&
-      mMatchNameSpaceId == aKey.mMatchNameSpaceId &&
-      mIsHTMLDocument == aKey.mIsHTMLDocument;
+    return mXMLMatchAtom->Equals(aKey.mTagname) &&
+           mRootNode == aKey.mRootNode &&
+           mMatchNameSpaceId == aKey.mMatchNameSpaceId &&
+           mIsHTMLDocument == aKey.mIsHTMLDocument;
   }
 
   /**
    * Sets the state to LIST_DIRTY and clears mElements array.
    * @note This is the only acceptable way to set state to LIST_DIRTY.
    */
-  void SetDirty()
-  {
+  void SetDirty() {
     mState = LIST_DIRTY;
     Reset();
   }
 
   virtual void LastRelease() override;
 
-protected:
+ protected:
   /**
    * Returns whether the element matches our criterion
    *
    * @param  aElement the element to attempt to match
    * @return whether we match
    */
-  bool Match(mozilla::dom::Element *aElement);
+  bool Match(mozilla::dom::Element* aElement);
   /**
    * See if anything in the subtree rooted at aContent, including
    * aContent itself, matches our criterion.
@@ -429,7 +370,7 @@ protected:
    * @param  aContent the root of the subtree to match against
    * @return whether we match something in the tree rooted at aContent
    */
-  bool MatchSelf(nsIContent *aContent);
+  bool MatchSelf(nsIContent* aContent);
 
   /**
    * Populate our list.  Stop once we have at least aNeededLength
@@ -452,8 +393,7 @@ protected:
    *                 criterion.
    *         false otherwise.
    */
-  bool MayContainRelevantNodes(nsINode* aContainer)
-  {
+  bool MayContainRelevantNodes(nsINode* aContainer) {
     return mDeep || aContainer == mRootNode;
   }
 
@@ -473,12 +413,9 @@ protected:
    * Needed because if subclasses want to have cache behavior they can't just
    * override RemoveFromHashtable(), since we call that in our destructor.
    */
-  virtual void RemoveFromCaches() override
-  {
-    RemoveFromHashtable();
-  }
+  virtual void RemoveFromCaches() override { RemoveFromHashtable(); }
 
-  nsINode* mRootNode; // Weak ref
+  nsINode* mRootNode;  // Weak ref
   int32_t mMatchNameSpaceId;
   RefPtr<nsAtom> mHTMLMatchAtom;
   RefPtr<nsAtom> mXMLMatchAtom;
@@ -542,27 +479,23 @@ protected:
 };
 
 /**
- * A class of cacheable content list; cached on the combination of aRootNode + aFunc + aDataString
+ * A class of cacheable content list; cached on the combination of aRootNode +
+ * aFunc + aDataString
  */
 class nsCacheableFuncStringContentList;
 
 class MOZ_STACK_CLASS nsFuncStringCacheKey {
-public:
-  nsFuncStringCacheKey(nsINode* aRootNode,
-                       nsContentListMatchFunc aFunc,
-                       const nsAString& aString) :
-    mRootNode(aRootNode),
-    mFunc(aFunc),
-    mString(aString)
-    {}
+ public:
+  nsFuncStringCacheKey(nsINode* aRootNode, nsContentListMatchFunc aFunc,
+                       const nsAString& aString)
+      : mRootNode(aRootNode), mFunc(aFunc), mString(aString) {}
 
-  uint32_t GetHash(void) const
-  {
+  uint32_t GetHash(void) const {
     uint32_t hash = mozilla::HashString(mString);
     return mozilla::AddToHash(hash, mRootNode, mFunc);
   }
 
-private:
+ private:
   friend class nsCacheableFuncStringContentList;
 
   nsINode* const mRootNode;
@@ -573,64 +506,55 @@ private:
 // aDestroyFunc is allowed to be null
 // aDataAllocator must always return a non-null pointer
 class nsCacheableFuncStringContentList : public nsContentList {
-public:
+ public:
   virtual ~nsCacheableFuncStringContentList();
 
   bool Equals(const nsFuncStringCacheKey* aKey) {
     return mRootNode == aKey->mRootNode && mFunc == aKey->mFunc &&
-      mString == aKey->mString;
+           mString == aKey->mString;
   }
 
-  enum ContentListType {
-    eNodeList,
-    eHTMLCollection
-  };
+  enum ContentListType { eNodeList, eHTMLCollection };
 #ifdef DEBUG
   ContentListType mType;
 #endif
 
-protected:
-  nsCacheableFuncStringContentList(nsINode* aRootNode,
-                                   nsContentListMatchFunc aFunc,
-                                   nsContentListDestroyFunc aDestroyFunc,
-                                   nsFuncStringContentListDataAllocator aDataAllocator,
-                                   const nsAString& aString,
-                                   mozilla::DebugOnly<ContentListType> aType) :
-    nsContentList(aRootNode, aFunc, aDestroyFunc, nullptr),
+ protected:
+  nsCacheableFuncStringContentList(
+      nsINode* aRootNode, nsContentListMatchFunc aFunc,
+      nsContentListDestroyFunc aDestroyFunc,
+      nsFuncStringContentListDataAllocator aDataAllocator,
+      const nsAString& aString, mozilla::DebugOnly<ContentListType> aType)
+      : nsContentList(aRootNode, aFunc, aDestroyFunc, nullptr),
 #ifdef DEBUG
-    mType(aType),
+        mType(aType),
 #endif
-    mString(aString)
-  {
+        mString(aString) {
     mData = (*aDataAllocator)(aRootNode, &mString);
     MOZ_ASSERT(mData);
   }
 
-  virtual void RemoveFromCaches() override {
-    RemoveFromFuncStringHashtable();
-  }
+  virtual void RemoveFromCaches() override { RemoveFromFuncStringHashtable(); }
   void RemoveFromFuncStringHashtable();
 
   nsString mString;
 };
 
 class nsCachableElementsByNameNodeList
-  : public nsCacheableFuncStringContentList
-{
-public:
-  nsCachableElementsByNameNodeList(nsINode* aRootNode,
-                                   nsContentListMatchFunc aFunc,
-                                   nsContentListDestroyFunc aDestroyFunc,
-                                   nsFuncStringContentListDataAllocator aDataAllocator,
-                                   const nsAString& aString)
-    : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
-                                       aDataAllocator, aString, eNodeList)
-  {
-  }
+    : public nsCacheableFuncStringContentList {
+ public:
+  nsCachableElementsByNameNodeList(
+      nsINode* aRootNode, nsContentListMatchFunc aFunc,
+      nsContentListDestroyFunc aDestroyFunc,
+      nsFuncStringContentListDataAllocator aDataAllocator,
+      const nsAString& aString)
+      : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
+                                         aDataAllocator, aString, eNodeList) {}
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
 #ifdef DEBUG
   static const ContentListType sType;
@@ -638,63 +562,58 @@ public:
 };
 
 class nsCacheableFuncStringHTMLCollection
-  : public nsCacheableFuncStringContentList
-{
-public:
-  nsCacheableFuncStringHTMLCollection(nsINode* aRootNode,
-                                      nsContentListMatchFunc aFunc,
-                                      nsContentListDestroyFunc aDestroyFunc,
-                                      nsFuncStringContentListDataAllocator aDataAllocator,
-                                      const nsAString& aString)
-    : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
-                                       aDataAllocator, aString, eHTMLCollection)
-  {
-  }
+    : public nsCacheableFuncStringContentList {
+ public:
+  nsCacheableFuncStringHTMLCollection(
+      nsINode* aRootNode, nsContentListMatchFunc aFunc,
+      nsContentListDestroyFunc aDestroyFunc,
+      nsFuncStringContentListDataAllocator aDataAllocator,
+      const nsAString& aString)
+      : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
+                                         aDataAllocator, aString,
+                                         eHTMLCollection) {}
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
 #ifdef DEBUG
   static const ContentListType sType;
 #endif
 };
 
-class nsLabelsNodeList final : public nsContentList
-{
-public:
-  nsLabelsNodeList(nsINode* aRootNode,
-                   nsContentListMatchFunc aFunc,
-                   nsContentListDestroyFunc aDestroyFunc,
-                   void* aData)
-    : nsContentList(aRootNode, aFunc, aDestroyFunc, aData)
-  {
-  }
+class nsLabelsNodeList final : public nsContentList {
+ public:
+  nsLabelsNodeList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
+                   nsContentListDestroyFunc aDestroyFunc, void* aData)
+      : nsContentList(aRootNode, aFunc, aDestroyFunc, aData) {}
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
- /**
-  * Reset root, mutation observer, and clear content list
-  * if the root has been changed.
-  *
-  * @param aRootNode The node under which to limit our search.
-  */
+  /**
+   * Reset root, mutation observer, and clear content list
+   * if the root has been changed.
+   *
+   * @param aRootNode The node under which to limit our search.
+   */
   void MaybeResetRoot(nsINode* aRootNode);
 
-private:
- /**
-  * Start searching at the last one if we already have nodes, otherwise
-  * start searching at the root.
-  *
-  * @param aNeededLength The list of length should have when we are
-  *                      done (unless it exhausts the document).
-  * @param aExpectedElementsIfDirty is for debugging only to
-  *        assert that mElements has expected number of entries.
-  */
+ private:
+  /**
+   * Start searching at the last one if we already have nodes, otherwise
+   * start searching at the root.
+   *
+   * @param aNeededLength The list of length should have when we are
+   *                      done (unless it exhausts the document).
+   * @param aExpectedElementsIfDirty is for debugging only to
+   *        assert that mElements has expected number of entries.
+   */
   void PopulateSelf(uint32_t aNeededLength,
                     uint32_t aExpectedElementsIfDirty = 0) override;
 };
-#endif // nsContentList_h___
+#endif  // nsContentList_h___

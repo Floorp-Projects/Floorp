@@ -15,31 +15,26 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-struct DOMAnimatedString final : public SVGAnimatedString
-{
+struct DOMAnimatedString final : public SVGAnimatedString {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
   DOMAnimatedString(nsSVGClass* aVal, nsSVGElement* aSVGElement)
-    : SVGAnimatedString(aSVGElement)
-    , mVal(aVal)
-  {}
+      : SVGAnimatedString(aSVGElement), mVal(aVal) {}
 
-  nsSVGClass* mVal; // kept alive because it belongs to content
+  nsSVGClass* mVal;  // kept alive because it belongs to content
 
-  void GetBaseVal(nsAString& aResult) override
-  {
+  void GetBaseVal(nsAString& aResult) override {
     mVal->GetBaseValue(aResult, mSVGElement);
   }
 
-  void SetBaseVal(const nsAString& aValue) override
-  {
+  void SetBaseVal(const nsAString& aValue) override {
     mVal->SetBaseValue(aValue, mSVGElement, true);
   }
 
   void GetAnimVal(nsAString& aResult) override;
 
-private:
+ private:
   ~DOMAnimatedString() {}
 };
 
@@ -48,26 +43,21 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMAnimatedString, mSVGElement)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMAnimatedString)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMAnimatedString)
 
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMAnimatedString)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-already_AddRefed<SVGAnimatedString>
-nsSVGClass::ToDOMAnimatedString(nsSVGElement* aSVGElement)
-{
+already_AddRefed<SVGAnimatedString> nsSVGClass::ToDOMAnimatedString(
+    nsSVGElement* aSVGElement) {
   RefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
   return result.forget();
 }
 
 /* Implementation */
 
-void
-nsSVGClass::SetBaseValue(const nsAString& aValue,
-                         nsSVGElement *aSVGElement,
-                         bool aDoSetAttr)
-{
+void nsSVGClass::SetBaseValue(const nsAString& aValue,
+                              nsSVGElement* aSVGElement, bool aDoSetAttr) {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
   aSVGElement->SetMayHaveClass();
@@ -79,15 +69,13 @@ nsSVGClass::SetBaseValue(const nsAString& aValue,
   }
 }
 
-void
-nsSVGClass::GetBaseValue(nsAString& aValue, const nsSVGElement *aSVGElement) const
-{
+void nsSVGClass::GetBaseValue(nsAString& aValue,
+                              const nsSVGElement* aSVGElement) const {
   aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue);
 }
 
-void
-nsSVGClass::GetAnimValue(nsAString& aResult, const nsSVGElement *aSVGElement) const
-{
+void nsSVGClass::GetAnimValue(nsAString& aResult,
+                              const nsSVGElement* aSVGElement) const {
   if (mAnimVal) {
     aResult = *mAnimVal;
     return;
@@ -96,9 +84,8 @@ nsSVGClass::GetAnimValue(nsAString& aResult, const nsSVGElement *aSVGElement) co
   aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aResult);
 }
 
-void
-nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
-{
+void nsSVGClass::SetAnimValue(const nsAString& aValue,
+                              nsSVGElement* aSVGElement) {
   if (mAnimVal && mAnimVal->Equals(aValue)) {
     return;
   }
@@ -110,25 +97,18 @@ nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
   aSVGElement->DidAnimateClass();
 }
 
-void
-DOMAnimatedString::GetAnimVal(nsAString& aResult)
-{
+void DOMAnimatedString::GetAnimVal(nsAString& aResult) {
   mSVGElement->FlushAnimations();
   mVal->GetAnimValue(aResult, mSVGElement);
 }
 
-UniquePtr<nsISMILAttr>
-nsSVGClass::ToSMILAttr(nsSVGElement *aSVGElement)
-{
+UniquePtr<nsISMILAttr> nsSVGClass::ToSMILAttr(nsSVGElement* aSVGElement) {
   return MakeUnique<SMILString>(this, aSVGElement);
 }
 
-nsresult
-nsSVGClass::SMILString::ValueFromString(const nsAString& aStr,
-                                        const dom::SVGAnimationElement* /*aSrcElement*/,
-                                        nsSMILValue& aValue,
-                                        bool& aPreventCachingOfSandwich) const
-{
+nsresult nsSVGClass::SMILString::ValueFromString(
+    const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
+    nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   nsSMILValue val(SMILStringType::Singleton());
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
@@ -137,27 +117,21 @@ nsSVGClass::SMILString::ValueFromString(const nsAString& aStr,
   return NS_OK;
 }
 
-nsSMILValue
-nsSVGClass::SMILString::GetBaseValue() const
-{
+nsSMILValue nsSVGClass::SMILString::GetBaseValue() const {
   nsSMILValue val(SMILStringType::Singleton());
   mSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                        *static_cast<nsAString*>(val.mU.mPtr));
   return val;
 }
 
-void
-nsSVGClass::SMILString::ClearAnimValue()
-{
+void nsSVGClass::SMILString::ClearAnimValue() {
   if (mVal->mAnimVal) {
     mVal->mAnimVal = nullptr;
     mSVGElement->DidAnimateClass();
   }
 }
 
-nsresult
-nsSVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue)
-{
+nsresult nsSVGClass::SMILString::SetAnimValue(const nsSMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILStringType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILStringType::Singleton()) {

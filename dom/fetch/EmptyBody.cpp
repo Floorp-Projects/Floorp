@@ -37,37 +37,30 @@ EmptyBody::EmptyBody(nsIGlobalObject* aGlobal,
                      mozilla::ipc::PrincipalInfo* aPrincipalInfo,
                      AbortSignalImpl* aAbortSignalImpl,
                      already_AddRefed<nsIInputStream> aBodyStream)
-  : FetchBody<EmptyBody>(aGlobal)
-  , mPrincipalInfo(aPrincipalInfo)
-  , mAbortSignalImpl(aAbortSignalImpl)
-  , mBodyStream(std::move(aBodyStream))
-{}
+    : FetchBody<EmptyBody>(aGlobal),
+      mPrincipalInfo(aPrincipalInfo),
+      mAbortSignalImpl(aAbortSignalImpl),
+      mBodyStream(std::move(aBodyStream)) {}
 
 EmptyBody::~EmptyBody() = default;
 
-/* static */ already_AddRefed<EmptyBody>
-EmptyBody::Create(nsIGlobalObject* aGlobal,
-                  mozilla::ipc::PrincipalInfo* aPrincipalInfo,
-                  AbortSignalImpl* aAbortSignalImpl,
-                  const nsACString& aMimeType,
-                  ErrorResult& aRv)
-{
+/* static */ already_AddRefed<EmptyBody> EmptyBody::Create(
+    nsIGlobalObject* aGlobal, mozilla::ipc::PrincipalInfo* aPrincipalInfo,
+    AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
+    ErrorResult& aRv) {
   nsCOMPtr<nsIInputStream> bodyStream;
   aRv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), EmptyCString());
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<EmptyBody> emptyBody = new EmptyBody(aGlobal, aPrincipalInfo,
-                                              aAbortSignalImpl,
-                                              bodyStream.forget());
+  RefPtr<EmptyBody> emptyBody = new EmptyBody(
+      aGlobal, aPrincipalInfo, aAbortSignalImpl, bodyStream.forget());
   emptyBody->OverrideMimeType(aMimeType);
   return emptyBody.forget();
 }
 
-void
-EmptyBody::GetBody(nsIInputStream** aStream, int64_t* aBodyLength)
-{
+void EmptyBody::GetBody(nsIInputStream** aStream, int64_t* aBodyLength) {
   MOZ_ASSERT(aStream);
 
   if (aBodyLength) {
@@ -78,5 +71,5 @@ EmptyBody::GetBody(nsIInputStream** aStream, int64_t* aBodyLength)
   bodyStream.forget(aStream);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

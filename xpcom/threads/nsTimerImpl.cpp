@@ -38,58 +38,37 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
-static TimerThread*     gThread = nullptr;
+static TimerThread* gThread = nullptr;
 
 // This module prints info about the precision of timers.
 static mozilla::LazyLogModule sTimerLog("nsTimerImpl");
 
-mozilla::LogModule*
-GetTimerLog()
-{
-  return sTimerLog;
-}
+mozilla::LogModule* GetTimerLog() { return sTimerLog; }
 
-TimeStamp
-NS_GetTimerDeadlineHintOnCurrentThread(TimeStamp aDefault, uint32_t aSearchBound)
-{
+TimeStamp NS_GetTimerDeadlineHintOnCurrentThread(TimeStamp aDefault,
+                                                 uint32_t aSearchBound) {
   return gThread
-           ? gThread->FindNextFireTimeForCurrentThread(aDefault, aSearchBound)
-           : TimeStamp();
+             ? gThread->FindNextFireTimeForCurrentThread(aDefault, aSearchBound)
+             : TimeStamp();
 }
 
-already_AddRefed<nsITimer>
-NS_NewTimer()
-{
-  return NS_NewTimer(nullptr);
-}
+already_AddRefed<nsITimer> NS_NewTimer() { return NS_NewTimer(nullptr); }
 
-already_AddRefed<nsITimer>
-NS_NewTimer(nsIEventTarget* aTarget)
-{
+already_AddRefed<nsITimer> NS_NewTimer(nsIEventTarget* aTarget) {
   return nsTimer::WithEventTarget(aTarget).forget();
 }
 
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
-NS_NewTimerWithObserver(nsIObserver* aObserver,
-                        uint32_t aDelay,
-                        uint32_t aType,
-                        nsIEventTarget* aTarget)
-{
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithObserver(
+    nsIObserver* aObserver, uint32_t aDelay, uint32_t aType,
+    nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
-  MOZ_TRY(NS_NewTimerWithObserver(getter_AddRefs(timer),
-                                  aObserver,
-                                  aDelay,
-                                  aType,
-                                  aTarget));
+  MOZ_TRY(NS_NewTimerWithObserver(getter_AddRefs(timer), aObserver, aDelay,
+                                  aType, aTarget));
   return std::move(timer);
 }
-nsresult
-NS_NewTimerWithObserver(nsITimer** aTimer,
-                        nsIObserver* aObserver,
-                        uint32_t aDelay,
-                        uint32_t aType,
-                        nsIEventTarget* aTarget)
-{
+nsresult NS_NewTimerWithObserver(nsITimer** aTimer, nsIObserver* aObserver,
+                                 uint32_t aDelay, uint32_t aType,
+                                 nsIEventTarget* aTarget) {
   auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->Init(aObserver, aDelay, aType));
@@ -97,27 +76,17 @@ NS_NewTimerWithObserver(nsITimer** aTimer,
   return NS_OK;
 }
 
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
-NS_NewTimerWithCallback(nsITimerCallback* aCallback,
-                        uint32_t aDelay,
-                        uint32_t aType,
-                        nsIEventTarget* aTarget)
-{
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithCallback(
+    nsITimerCallback* aCallback, uint32_t aDelay, uint32_t aType,
+    nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
-  MOZ_TRY(NS_NewTimerWithCallback(getter_AddRefs(timer),
-                                  aCallback,
-                                  aDelay,
-                                  aType,
-                                  aTarget));
+  MOZ_TRY(NS_NewTimerWithCallback(getter_AddRefs(timer), aCallback, aDelay,
+                                  aType, aTarget));
   return std::move(timer);
 }
-nsresult
-NS_NewTimerWithCallback(nsITimer** aTimer,
-                        nsITimerCallback* aCallback,
-                        uint32_t aDelay,
-                        uint32_t aType,
-                        nsIEventTarget* aTarget)
-{
+nsresult NS_NewTimerWithCallback(nsITimer** aTimer, nsITimerCallback* aCallback,
+                                 uint32_t aDelay, uint32_t aType,
+                                 nsIEventTarget* aTarget) {
   auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->InitWithCallback(aCallback, aDelay, aType));
@@ -125,27 +94,17 @@ NS_NewTimerWithCallback(nsITimer** aTimer,
   return NS_OK;
 }
 
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
-NS_NewTimerWithCallback(nsITimerCallback* aCallback,
-                        const TimeDuration& aDelay,
-                        uint32_t aType,
-                        nsIEventTarget* aTarget)
-{
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithCallback(
+    nsITimerCallback* aCallback, const TimeDuration& aDelay, uint32_t aType,
+    nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
-  MOZ_TRY(NS_NewTimerWithCallback(getter_AddRefs(timer),
-                                  aCallback,
-                                  aDelay,
-                                  aType,
-                                  aTarget));
+  MOZ_TRY(NS_NewTimerWithCallback(getter_AddRefs(timer), aCallback, aDelay,
+                                  aType, aTarget));
   return std::move(timer);
 }
-nsresult
-NS_NewTimerWithCallback(nsITimer** aTimer,
-                        nsITimerCallback* aCallback,
-                        const TimeDuration& aDelay,
-                        uint32_t aType,
-                        nsIEventTarget* aTarget)
-{
+nsresult NS_NewTimerWithCallback(nsITimer** aTimer, nsITimerCallback* aCallback,
+                                 const TimeDuration& aDelay, uint32_t aType,
+                                 nsIEventTarget* aTarget) {
   auto timer = nsTimer::WithEventTarget(aTarget);
 
   MOZ_TRY(timer->InitHighResolutionWithCallback(aCallback, aDelay, aType));
@@ -153,74 +112,48 @@ NS_NewTimerWithCallback(nsITimer** aTimer,
   return NS_OK;
 }
 
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
-NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
-                            void* aClosure,
-                            uint32_t aDelay,
-                            uint32_t aType,
-                            const char* aNameString,
-                            nsIEventTarget* aTarget)
-{
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithFuncCallback(
+    nsTimerCallbackFunc aCallback, void* aClosure, uint32_t aDelay,
+    uint32_t aType, const char* aNameString, nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
-  MOZ_TRY(NS_NewTimerWithFuncCallback(getter_AddRefs(timer),
-                                      aCallback,
-                                      aClosure,
-                                      aDelay,
-                                      aType,
-                                      aNameString,
+  MOZ_TRY(NS_NewTimerWithFuncCallback(getter_AddRefs(timer), aCallback,
+                                      aClosure, aDelay, aType, aNameString,
                                       aTarget));
   return std::move(timer);
 }
-nsresult
-NS_NewTimerWithFuncCallback(nsITimer** aTimer,
-                            nsTimerCallbackFunc aCallback,
-                            void* aClosure,
-                            uint32_t aDelay,
-                            uint32_t aType,
-                            const char* aNameString,
-                            nsIEventTarget* aTarget)
-{
+nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
+                                     nsTimerCallbackFunc aCallback,
+                                     void* aClosure, uint32_t aDelay,
+                                     uint32_t aType, const char* aNameString,
+                                     nsIEventTarget* aTarget) {
   auto timer = nsTimer::WithEventTarget(aTarget);
 
-  MOZ_TRY(timer->InitWithNamedFuncCallback(aCallback, aClosure,
-                                           aDelay, aType,
+  MOZ_TRY(timer->InitWithNamedFuncCallback(aCallback, aClosure, aDelay, aType,
                                            aNameString));
   timer.forget(aTimer);
   return NS_OK;
 }
 
-mozilla::Result<nsCOMPtr<nsITimer>, nsresult>
-NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
-            void* aClosure,
-            uint32_t aDelay,
-            uint32_t aType,
-            nsTimerNameCallbackFunc aNameCallback,
-            nsIEventTarget* aTarget)
-{
+mozilla::Result<nsCOMPtr<nsITimer>, nsresult> NS_NewTimerWithFuncCallback(
+    nsTimerCallbackFunc aCallback, void* aClosure, uint32_t aDelay,
+    uint32_t aType, nsTimerNameCallbackFunc aNameCallback,
+    nsIEventTarget* aTarget) {
   nsCOMPtr<nsITimer> timer;
-  MOZ_TRY(NS_NewTimerWithFuncCallback(getter_AddRefs(timer),
-                                      aCallback,
-                                      aClosure,
-                                      aDelay,
-                                      aType,
-                                      aNameCallback,
+  MOZ_TRY(NS_NewTimerWithFuncCallback(getter_AddRefs(timer), aCallback,
+                                      aClosure, aDelay, aType, aNameCallback,
                                       aTarget));
   return std::move(timer);
 }
-nsresult
-NS_NewTimerWithFuncCallback(nsITimer** aTimer,
-                            nsTimerCallbackFunc aCallback,
-                            void* aClosure,
-                            uint32_t aDelay,
-                            uint32_t aType,
-                            nsTimerNameCallbackFunc aNameCallback,
-                            nsIEventTarget* aTarget)
-{
+nsresult NS_NewTimerWithFuncCallback(nsITimer** aTimer,
+                                     nsTimerCallbackFunc aCallback,
+                                     void* aClosure, uint32_t aDelay,
+                                     uint32_t aType,
+                                     nsTimerNameCallbackFunc aNameCallback,
+                                     nsIEventTarget* aTarget) {
   auto timer = nsTimer::WithEventTarget(aTarget);
 
-  MOZ_TRY(timer->InitWithNameableFuncCallback(aCallback, aClosure,
-                                              aDelay, aType,
-                                              aNameCallback));
+  MOZ_TRY(timer->InitWithNameableFuncCallback(aCallback, aClosure, aDelay,
+                                              aType, aNameCallback));
   timer.forget(aTimer);
   return NS_OK;
 }
@@ -260,11 +193,7 @@ NS_NewTimerWithFuncCallback(nsITimer** aTimer,
 //
 static mozilla::LazyLogModule sTimerFiringsLog("TimerFirings");
 
-mozilla::LogModule*
-GetTimerFiringsLog()
-{
-  return sTimerFiringsLog;
-}
+mozilla::LogModule* GetTimerFiringsLog() { return sTimerFiringsLog; }
 
 #include <math.h>
 
@@ -272,10 +201,9 @@ double nsTimerImpl::sDeltaSumSquared = 0;
 double nsTimerImpl::sDeltaSum = 0;
 double nsTimerImpl::sDeltaNum = 0;
 
-static void
-myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
-                   double* meanResult, double* stdDevResult)
-{
+static void myNS_MeanAndStdDev(double n, double sumOfValues,
+                               double sumOfSquaredValues, double* meanResult,
+                               double* stdDevResult) {
   double mean = 0.0, var = 0.0, stdDev = 0.0;
   if (n > 0.0 && sumOfValues >= 0) {
     mean = sumOfValues / n;
@@ -296,8 +224,7 @@ NS_IMPL_QUERY_INTERFACE(nsTimer, nsITimer)
 NS_IMPL_ADDREF(nsTimer)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-nsTimer::Release(void)
-{
+nsTimer::Release(void) {
   nsrefcnt count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "nsTimer");
 
@@ -311,23 +238,20 @@ nsTimer::Release(void)
   return count;
 }
 
-nsTimerImpl::nsTimerImpl(nsITimer* aTimer, nsIEventTarget* aTarget) :
-  mEventTarget(aTarget),
-  mHolder(nullptr),
-  mType(0),
-  mGeneration(0),
-  mITimer(aTimer),
-  mMutex("nsTimerImpl::mMutex")
-{
+nsTimerImpl::nsTimerImpl(nsITimer* aTimer, nsIEventTarget* aTarget)
+    : mEventTarget(aTarget),
+      mHolder(nullptr),
+      mType(0),
+      mGeneration(0),
+      mITimer(aTimer),
+      mMutex("nsTimerImpl::mMutex") {
   // XXX some code creates timers during xpcom shutdown, when threads are no
   // longer available, so we cannot turn this on yet.
-  //MOZ_ASSERT(mEventTarget);
+  // MOZ_ASSERT(mEventTarget);
 }
 
-//static
-nsresult
-nsTimerImpl::Startup()
-{
+// static
+nsresult nsTimerImpl::Startup() {
   nsresult rv;
 
   gThread = new TimerThread();
@@ -342,18 +266,16 @@ nsTimerImpl::Startup()
   return rv;
 }
 
-void
-nsTimerImpl::Shutdown()
-{
+void nsTimerImpl::Shutdown() {
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
     double mean = 0, stddev = 0;
     myNS_MeanAndStdDev(sDeltaNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
 
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-           ("sDeltaNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n",
-            sDeltaNum, sDeltaSum, sDeltaSumSquared));
+            ("sDeltaNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n",
+             sDeltaNum, sDeltaSum, sDeltaSumSquared));
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-           ("mean: %fms, stddev: %fms\n", mean, stddev));
+            ("mean: %fms, stddev: %fms\n", mean, stddev));
   }
 
   if (!gThread) {
@@ -364,19 +286,14 @@ nsTimerImpl::Shutdown()
   NS_RELEASE(gThread);
 }
 
-nsresult
-nsTimerImpl::InitCommon(uint32_t aDelayMS, uint32_t aType,
-                        Callback&& aNewCallback)
-{
-  return InitCommon(TimeDuration::FromMilliseconds(aDelayMS),
-                    aType, std::move(aNewCallback));
+nsresult nsTimerImpl::InitCommon(uint32_t aDelayMS, uint32_t aType,
+                                 Callback&& aNewCallback) {
+  return InitCommon(TimeDuration::FromMilliseconds(aDelayMS), aType,
+                    std::move(aNewCallback));
 }
 
-
-nsresult
-nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
-                        Callback&& newCallback)
-{
+nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
+                                 Callback&& newCallback) {
   mMutex.AssertCurrentThreadOwns();
 
   if (NS_WARN_IF(!gThread)) {
@@ -399,18 +316,16 @@ nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
   return gThread->AddTimer(this);
 }
 
-nsresult
-nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
-                                        void* aClosure,
-                                        uint32_t aDelay,
-                                        uint32_t aType,
-                                        const Callback::Name& aName)
-{
+nsresult nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
+                                                 void* aClosure,
+                                                 uint32_t aDelay,
+                                                 uint32_t aType,
+                                                 const Callback::Name& aName) {
   if (NS_WARN_IF(!aFunc)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  Callback cb; // Goes out of scope after the unlock, prevents deadlock
+  Callback cb;  // Goes out of scope after the unlock, prevents deadlock
   cb.mType = Callback::Type::Function;
   cb.mCallback.c = aFunc;
   cb.mClosure = aClosure;
@@ -420,48 +335,34 @@ nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
   return InitCommon(aDelay, aType, std::move(cb));
 }
 
-nsresult
-nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
-                                       void* aClosure,
-                                       uint32_t aDelay,
-                                       uint32_t aType,
-                                       const char* aNameString)
-{
+nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
+                                                void* aClosure, uint32_t aDelay,
+                                                uint32_t aType,
+                                                const char* aNameString) {
   Callback::Name name(aNameString);
   return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
 }
 
-nsresult
-nsTimerImpl::InitWithNameableFuncCallback(nsTimerCallbackFunc aFunc,
-                                          void* aClosure,
-                                          uint32_t aDelay,
-                                          uint32_t aType,
-                                          nsTimerNameCallbackFunc aNameFunc)
-{
+nsresult nsTimerImpl::InitWithNameableFuncCallback(
+    nsTimerCallbackFunc aFunc, void* aClosure, uint32_t aDelay, uint32_t aType,
+    nsTimerNameCallbackFunc aNameFunc) {
   Callback::Name name(aNameFunc);
   return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
 }
 
-nsresult
-nsTimerImpl::InitWithCallback(nsITimerCallback* aCallback,
-                              uint32_t aDelay,
-                              uint32_t aType)
-{
-  return InitHighResolutionWithCallback(aCallback,
-                                        TimeDuration::FromMilliseconds(aDelay),
-                                        aType);
+nsresult nsTimerImpl::InitWithCallback(nsITimerCallback* aCallback,
+                                       uint32_t aDelay, uint32_t aType) {
+  return InitHighResolutionWithCallback(
+      aCallback, TimeDuration::FromMilliseconds(aDelay), aType);
 }
 
-nsresult
-nsTimerImpl::InitHighResolutionWithCallback(nsITimerCallback* aCallback,
-                                            const TimeDuration& aDelay,
-                                            uint32_t aType)
-{
+nsresult nsTimerImpl::InitHighResolutionWithCallback(
+    nsITimerCallback* aCallback, const TimeDuration& aDelay, uint32_t aType) {
   if (NS_WARN_IF(!aCallback)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  Callback cb; // Goes out of scope after the unlock, prevents deadlock
+  Callback cb;  // Goes out of scope after the unlock, prevents deadlock
   cb.mType = Callback::Type::Interface;
   cb.mCallback.i = aCallback;
   NS_ADDREF(cb.mCallback.i);
@@ -470,14 +371,13 @@ nsTimerImpl::InitHighResolutionWithCallback(nsITimerCallback* aCallback,
   return InitCommon(aDelay, aType, std::move(cb));
 }
 
-nsresult
-nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay, uint32_t aType)
-{
+nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay,
+                           uint32_t aType) {
   if (NS_WARN_IF(!aObserver)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  Callback cb; // Goes out of scope after the unlock, prevents deadlock
+  Callback cb;  // Goes out of scope after the unlock, prevents deadlock
   cb.mType = Callback::Type::Observer;
   cb.mCallback.o = aObserver;
   NS_ADDREF(cb.mCallback.o);
@@ -486,16 +386,12 @@ nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay, uint32_t aType)
   return InitCommon(aDelay, aType, std::move(cb));
 }
 
-nsresult
-nsTimerImpl::Cancel()
-{
+nsresult nsTimerImpl::Cancel() {
   CancelImpl(false);
   return NS_OK;
 }
 
-void
-nsTimerImpl::CancelImpl(bool aClearITimer)
-{
+void nsTimerImpl::CancelImpl(bool aClearITimer) {
   Callback cbTrash;
   RefPtr<nsITimer> timerTrash;
 
@@ -512,22 +408,23 @@ nsTimerImpl::CancelImpl(bool aClearITimer)
     // again.
     if (aClearITimer &&
         (mCallbackDuringFire.mType == Callback::Type::Unknown)) {
-      MOZ_RELEASE_ASSERT(mITimer, "mITimer was nulled already! "
+      MOZ_RELEASE_ASSERT(
+          mITimer,
+          "mITimer was nulled already! "
           "This indicates that someone has messed up the refcount on nsTimer!");
       timerTrash.swap(mITimer);
     }
   }
 }
 
-nsresult
-nsTimerImpl::SetDelay(uint32_t aDelay)
-{
+nsresult nsTimerImpl::SetDelay(uint32_t aDelay) {
   MutexAutoLock lock(mMutex);
   if (GetCallback().mType == Callback::Type::Unknown && !IsRepeating()) {
     // This may happen if someone tries to re-use a one-shot timer
     // by re-setting delay instead of reinitializing the timer.
-    NS_ERROR("nsITimer->SetDelay() called when the "
-             "one-shot timer is not set up.");
+    NS_ERROR(
+        "nsITimer->SetDelay() called when the "
+        "one-shot timer is not set up.");
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -546,17 +443,13 @@ nsTimerImpl::SetDelay(uint32_t aDelay)
   return NS_OK;
 }
 
-nsresult
-nsTimerImpl::GetDelay(uint32_t* aDelay)
-{
+nsresult nsTimerImpl::GetDelay(uint32_t* aDelay) {
   MutexAutoLock lock(mMutex);
   *aDelay = mDelay.ToMilliseconds();
   return NS_OK;
 }
 
-nsresult
-nsTimerImpl::SetType(uint32_t aType)
-{
+nsresult nsTimerImpl::SetType(uint32_t aType) {
   MutexAutoLock lock(mMutex);
   mType = (uint8_t)aType;
   // XXX if this is called, we should change the actual type.. this could effect
@@ -565,27 +458,19 @@ nsTimerImpl::SetType(uint32_t aType)
   return NS_OK;
 }
 
-nsresult
-nsTimerImpl::GetType(uint32_t* aType)
-{
+nsresult nsTimerImpl::GetType(uint32_t* aType) {
   MutexAutoLock lock(mMutex);
   *aType = mType;
   return NS_OK;
 }
 
-
-nsresult
-nsTimerImpl::GetClosure(void** aClosure)
-{
+nsresult nsTimerImpl::GetClosure(void** aClosure) {
   MutexAutoLock lock(mMutex);
   *aClosure = GetCallback().mClosure;
   return NS_OK;
 }
 
-
-nsresult
-nsTimerImpl::GetCallback(nsITimerCallback** aCallback)
-{
+nsresult nsTimerImpl::GetCallback(nsITimerCallback** aCallback) {
   MutexAutoLock lock(mMutex);
   if (GetCallback().mType == Callback::Type::Interface) {
     NS_IF_ADDREF(*aCallback = GetCallback().mCallback.i);
@@ -596,19 +481,13 @@ nsTimerImpl::GetCallback(nsITimerCallback** aCallback)
   return NS_OK;
 }
 
-
-nsresult
-nsTimerImpl::GetTarget(nsIEventTarget** aTarget)
-{
+nsresult nsTimerImpl::GetTarget(nsIEventTarget** aTarget) {
   MutexAutoLock lock(mMutex);
   NS_IF_ADDREF(*aTarget = mEventTarget);
   return NS_OK;
 }
 
-
-nsresult
-nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
-{
+nsresult nsTimerImpl::SetTarget(nsIEventTarget* aTarget) {
   MutexAutoLock lock(mMutex);
   if (NS_WARN_IF(mCallback.mType != Callback::Type::Unknown)) {
     return NS_ERROR_ALREADY_INITIALIZED;
@@ -622,16 +501,12 @@ nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
   return NS_OK;
 }
 
-nsresult
-nsTimerImpl::GetAllowedEarlyFiringMicroseconds(uint32_t* aValueOut)
-{
+nsresult nsTimerImpl::GetAllowedEarlyFiringMicroseconds(uint32_t* aValueOut) {
   *aValueOut = gThread ? gThread->AllowedEarlyFiringMicroseconds() : 0;
   return NS_OK;
 }
 
-void
-nsTimerImpl::Fire(int32_t aGeneration)
-{
+void nsTimerImpl::Fire(int32_t aGeneration) {
   uint8_t oldType;
   uint32_t oldDelay;
   TimeStamp oldTimeout;
@@ -659,20 +534,20 @@ nsTimerImpl::Fire(int32_t aGeneration)
 
   TimeStamp now = TimeStamp::Now();
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
-    TimeDuration   delta = now - oldTimeout;
-    int32_t       d = delta.ToMilliseconds(); // delta in ms
+    TimeDuration delta = now - oldTimeout;
+    int32_t d = delta.ToMilliseconds();  // delta in ms
     sDeltaSum += abs(d);
     sDeltaSumSquared += double(d) * double(d);
     sDeltaNum++;
 
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-           ("[this=%p] expected delay time %4ums\n", this, oldDelay));
+            ("[this=%p] expected delay time %4ums\n", this, oldDelay));
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-           ("[this=%p] actual delay time   %4dms\n", this, oldDelay + d));
+            ("[this=%p] actual delay time   %4dms\n", this, oldDelay + d));
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-           ("[this=%p] (mType is %d)       -------\n", this, oldType));
+            ("[this=%p] (mType is %d)       -------\n", this, oldType));
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-           ("[this=%p]     delta           %4dms\n", this, d));
+            ("[this=%p]     delta           %4dms\n", this, d));
   }
 
   if (MOZ_LOG_TEST(GetTimerFiringsLog(), LogLevel::Debug)) {
@@ -690,11 +565,10 @@ nsTimerImpl::Fire(int32_t aGeneration)
       mCallbackDuringFire.mCallback.o->Observe(mITimer, NS_TIMER_CALLBACK_TOPIC,
                                                nullptr);
       break;
-    default:
-      ;
+    default:;
   }
 
-  Callback trash; // Swap into here to dispose of callback after the unlock
+  Callback trash;  // Swap into here to dispose of callback after the unlock
   MutexAutoLock lock(mMutex);
   if (aGeneration == mGeneration && IsRepeating()) {
     // Repeating timer has not been re-init or canceled; reschedule
@@ -712,8 +586,8 @@ nsTimerImpl::Fire(int32_t aGeneration)
   mCallbackDuringFire.swap(trash);
 
   MOZ_LOG(GetTimerLog(), LogLevel::Debug,
-         ("[this=%p] Took %fms to fire timer callback\n",
-          this, (TimeStamp::Now() - now).ToMilliseconds()));
+          ("[this=%p] Took %fms to fire timer callback\n", this,
+           (TimeStamp::Now() - now).ToMilliseconds()));
 }
 
 #if defined(HAVE_DLADDR) && defined(HAVE___CXA_DEMANGLE)
@@ -726,18 +600,28 @@ nsTimerImpl::Fire(int32_t aGeneration)
 #endif
 
 // See the big comment above GetTimerFiringsLog() to understand this code.
-void
-nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType, uint32_t aDelay)
-{
+void nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType,
+                            uint32_t aDelay) {
   const char* typeStr;
   switch (aType) {
-    case nsITimer::TYPE_ONE_SHOT:                     typeStr = "ONE_SHOT  "; break;
-    case nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY:        typeStr = "ONE_LOW   "; break;
-    case nsITimer::TYPE_REPEATING_SLACK:              typeStr = "SLACK     "; break;
-    case nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY: typeStr = "SLACK_LOW "; break;
-    case nsITimer::TYPE_REPEATING_PRECISE:          /* fall through */
-    case nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP:   typeStr = "PRECISE   "; break;
-    default:                              MOZ_CRASH("bad type");
+    case nsITimer::TYPE_ONE_SHOT:
+      typeStr = "ONE_SHOT  ";
+      break;
+    case nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY:
+      typeStr = "ONE_LOW   ";
+      break;
+    case nsITimer::TYPE_REPEATING_SLACK:
+      typeStr = "SLACK     ";
+      break;
+    case nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY:
+      typeStr = "SLACK_LOW ";
+      break;
+    case nsITimer::TYPE_REPEATING_PRECISE: /* fall through */
+    case nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP:
+      typeStr = "PRECISE   ";
+      break;
+    default:
+      MOZ_CRASH("bad type");
   }
 
   switch (aCallback.mType) {
@@ -787,8 +671,8 @@ nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType, uint32_t aDelay
         } else if (info.dli_fname) {
           // The "#0: " prefix is necessary for fix_linux_stack.py to interpret
           // this string as something to convert.
-          snprintf(buf, buflen, "#0: ???[%s +0x%" PRIxPTR "]\n",
-                   info.dli_fname, uintptr_t(addr) - uintptr_t(info.dli_fbase));
+          snprintf(buf, buflen, "#0: ???[%s +0x%" PRIxPTR "]\n", info.dli_fname,
+                   uintptr_t(addr) - uintptr_t(info.dli_fbase));
           name = buf;
 
         } else {
@@ -800,8 +684,8 @@ nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType, uint32_t aDelay
       }
 
       MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d]    fn timer (%s %5d ms): %s%s\n",
-               getpid(), typeStr, aDelay, annotation, name));
+              ("[%d]    fn timer (%s %5d ms): %s%s\n", getpid(), typeStr,
+               aDelay, annotation, name));
 
       if (needToFreeName) {
         free(const_cast<char*>(name));
@@ -812,31 +696,28 @@ nsTimerImpl::LogFiring(const Callback& aCallback, uint8_t aType, uint32_t aDelay
 
     case Callback::Type::Interface: {
       MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d] iface timer (%s %5d ms): %p\n",
-               getpid(), typeStr, aDelay, aCallback.mCallback.i));
+              ("[%d] iface timer (%s %5d ms): %p\n", getpid(), typeStr, aDelay,
+               aCallback.mCallback.i));
       break;
     }
 
     case Callback::Type::Observer: {
       MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d]   obs timer (%s %5d ms): %p\n",
-               getpid(), typeStr, aDelay, aCallback.mCallback.o));
+              ("[%d]   obs timer (%s %5d ms): %p\n", getpid(), typeStr, aDelay,
+               aCallback.mCallback.o));
       break;
     }
 
     case Callback::Type::Unknown:
     default: {
       MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
-              ("[%d]   ??? timer (%s, %5d ms)\n",
-               getpid(), typeStr, aDelay));
+              ("[%d]   ??? timer (%s, %5d ms)\n", getpid(), typeStr, aDelay));
       break;
     }
   }
 }
 
-void
-nsTimerImpl::GetName(nsACString& aName)
-{
+void nsTimerImpl::GetName(nsACString& aName) {
   MutexAutoLock lock(mMutex);
   Callback& cb(GetCallback());
   switch (cb.mType) {
@@ -846,8 +727,8 @@ nsTimerImpl::GetName(nsACString& aName)
       } else if (cb.mName.is<Callback::NameFunc>()) {
         static const size_t buflen = 1024;
         char buf[buflen];
-        cb.mName.as<Callback::NameFunc>()(
-            mITimer, /* aAnonymize = */ true, cb.mClosure, buf, buflen);
+        cb.mName.as<Callback::NameFunc>()(mITimer, /* aAnonymize = */ true,
+                                          cb.mClosure, buf, buflen);
         aName.Assign(buf);
       } else {
         MOZ_ASSERT(cb.mName.is<Callback::NameNothing>());
@@ -877,34 +758,23 @@ nsTimerImpl::GetName(nsACString& aName)
   }
 }
 
-void
-nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder)
-{
-  mHolder = aHolder;
-}
+void nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder) { mHolder = aHolder; }
 
-nsTimer::~nsTimer()
-{
-}
+nsTimer::~nsTimer() {}
 
-size_t
-nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-/* static */ RefPtr<nsTimer>
-nsTimer::WithEventTarget(nsIEventTarget* aTarget)
-{
+/* static */ RefPtr<nsTimer> nsTimer::WithEventTarget(nsIEventTarget* aTarget) {
   if (!aTarget) {
     aTarget = mozilla::GetCurrentThreadEventTarget();
   }
   return do_AddRef(new nsTimer(aTarget));
 }
 
-/* static */ nsresult
-nsTimer::XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
+/* static */ nsresult nsTimer::XPCOMConstructor(nsISupports* aOuter,
+                                                REFNSIID aIID, void** aResult) {
   *aResult = nullptr;
   if (aOuter != nullptr) {
     return NS_ERROR_NO_AGGREGATION;
@@ -919,16 +789,8 @@ nsTimer::XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 const nsTimerImpl::Callback::NameNothing nsTimerImpl::Callback::Nothing = 0;
 
 #ifdef MOZ_TASK_TRACER
-void
-nsTimerImpl::GetTLSTraceInfo()
-{
-  mTracedTask.GetTLSTraceInfo();
-}
+void nsTimerImpl::GetTLSTraceInfo() { mTracedTask.GetTLSTraceInfo(); }
 
-TracedTaskCommon
-nsTimerImpl::GetTracedTask()
-{
-  return mTracedTask;
-}
+TracedTaskCommon nsTimerImpl::GetTracedTask() { return mTracedTask; }
 
 #endif

@@ -9,17 +9,15 @@
 
 #include "nsString.h"
 
-class nsContentTypeParser
-{
-public:
+class nsContentTypeParser {
+ public:
   explicit nsContentTypeParser(const nsAString& aString);
 
   nsresult GetParameter(const char* aParameterName, nsAString& aResult) const;
   nsresult GetType(nsAString& aResult) const;
 
-private:
+ private:
   NS_ConvertUTF16toUTF8 mString;
 };
 
 #endif
-

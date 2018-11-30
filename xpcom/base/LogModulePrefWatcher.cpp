@@ -15,8 +15,9 @@
 
 static const char kLoggingPrefPrefix[] = "logging.";
 static const char kLoggingConfigPrefPrefix[] = "logging.config";
-static const int  kLoggingConfigPrefixLen = sizeof(kLoggingConfigPrefPrefix) - 1;
-static const char kLoggingPrefClearOnStartup[] = "logging.config.clear_on_startup";
+static const int kLoggingConfigPrefixLen = sizeof(kLoggingConfigPrefPrefix) - 1;
+static const char kLoggingPrefClearOnStartup[] =
+    "logging.config.clear_on_startup";
 static const char kLoggingPrefLogFile[] = "logging.config.LOG_FILE";
 static const char kLoggingPrefAddTimestamp[] = "logging.config.add_timestamp";
 static const char kLoggingPrefSync[] = "logging.config.sync";
@@ -33,12 +34,11 @@ NS_IMPL_ISUPPORTS(LogModulePrefWatcher, nsIObserver)
  * If logging after restart is desired, set the logging.config.clear_on_startup
  * pref to false, or use the MOZ_LOG_FILE and MOZ_LOG_MODULES env vars.
  */
-void ResetExistingPrefs()
-{
+void ResetExistingPrefs() {
   uint32_t count;
   char** names;
-  nsresult rv = Preferences::GetRootBranch()->
-      GetChildList(kLoggingPrefPrefix, &count, &names);
+  nsresult rv = Preferences::GetRootBranch()->GetChildList(kLoggingPrefPrefix,
+                                                           &count, &names);
   if (NS_SUCCEEDED(rv) && count) {
     for (size_t i = 0; i < count; i++) {
       // Clearing the pref will cause it to reload, thus resetting the log level
@@ -52,9 +52,7 @@ void ResetExistingPrefs()
  * Loads the log level from the given pref and updates the corresponding
  * LogModule.
  */
-static void
-LoadPrefValue(const char* aName)
-{
+static void LoadPrefValue(const char* aName) {
   LogLevel logLevel = LogLevel::Disabled;
 
   nsresult rv;
@@ -108,9 +106,7 @@ LoadPrefValue(const char* aName)
   LogModule::Get(moduleName)->SetLevel(logLevel);
 }
 
-void
-LoadExistingPrefs()
-{
+void LoadExistingPrefs() {
   nsIPrefBranch* root = Preferences::GetRootBranch();
   if (!root) {
     return;
@@ -127,20 +123,17 @@ LoadExistingPrefs()
   }
 }
 
-LogModulePrefWatcher::LogModulePrefWatcher()
-{
-}
+LogModulePrefWatcher::LogModulePrefWatcher() {}
 
-void
-LogModulePrefWatcher::RegisterPrefWatcher()
-{
+void LogModulePrefWatcher::RegisterPrefWatcher() {
   RefPtr<LogModulePrefWatcher> prefWatcher = new LogModulePrefWatcher();
   Preferences::AddStrongObserver(prefWatcher, kLoggingPrefPrefix);
 
   nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
+      mozilla::services::GetObserverService();
   if (observerService && XRE_IsParentProcess()) {
-    observerService->AddObserver(prefWatcher, "browser-delayed-startup-finished", false);
+    observerService->AddObserver(prefWatcher,
+                                 "browser-delayed-startup-finished", false);
   }
 
   LoadExistingPrefs();
@@ -148,8 +141,7 @@ LogModulePrefWatcher::RegisterPrefWatcher()
 
 NS_IMETHODIMP
 LogModulePrefWatcher::Observe(nsISupports* aSubject, const char* aTopic,
-                              const char16_t* aData)
-{
+                              const char16_t* aData) {
   if (strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic) == 0) {
     NS_LossyConvertUTF16toASCII prefName(aData);
     LoadPrefValue(prefName.get());
@@ -159,7 +151,7 @@ LogModulePrefWatcher::Observe(nsISupports* aSubject, const char* aTopic,
       ResetExistingPrefs();
     }
     nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+        mozilla::services::GetObserverService();
     if (observerService) {
       observerService->RemoveObserver(this, "browser-delayed-startup-finished");
     }
@@ -168,4 +160,4 @@ LogModulePrefWatcher::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

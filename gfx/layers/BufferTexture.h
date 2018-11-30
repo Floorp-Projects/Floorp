@@ -20,25 +20,21 @@ bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
                                   LayersBackend aLayersBackend,
                                   bool aSupportsTextureDirectMapping);
 
-class BufferTextureData : public TextureData
-{
-public:
-  static BufferTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+class BufferTextureData : public TextureData {
+ public:
+  static BufferTextureData* Create(gfx::IntSize aSize,
+                                   gfx::SurfaceFormat aFormat,
                                    gfx::BackendType aMoz2DBackend,
                                    LayersBackend aLayersBackend,
                                    TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags,
                                    LayersIPCChannel* aAllocator);
 
-  static BufferTextureData* CreateForYCbCr(KnowsCompositor* aAllocator,
-                                           gfx::IntSize aYSize,
-                                           uint32_t aYStride,
-                                           gfx::IntSize aCbCrSize,
-                                           uint32_t aCbCrStride,
-                                           StereoMode aStereoMode,
-                                           gfx::ColorDepth aColorDepth,
-                                           YUVColorSpace aYUVColorSpace,
-                                           TextureFlags aTextureFlags);
+  static BufferTextureData* CreateForYCbCr(
+      KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
+      gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
+      gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+      TextureFlags aTextureFlags);
 
   virtual bool Lock(OpenMode aMode) override { return true; }
 
@@ -68,7 +64,7 @@ public:
 
   Maybe<StereoMode> GetStereoMode() const;
 
-protected:
+ protected:
   gfx::IntSize GetSize() const;
 
   gfx::SurfaceFormat GetFormat() const;
@@ -82,16 +78,15 @@ protected:
   virtual uint8_t* GetBuffer() = 0;
   virtual size_t GetBufferSize() = 0;
 
-  BufferTextureData(const BufferDescriptor& aDescriptor, gfx::BackendType aMoz2DBackend)
-  : mDescriptor(aDescriptor)
-  , mMoz2DBackend(aMoz2DBackend)
-  {}
+  BufferTextureData(const BufferDescriptor& aDescriptor,
+                    gfx::BackendType aMoz2DBackend)
+      : mDescriptor(aDescriptor), mMoz2DBackend(aMoz2DBackend) {}
 
   BufferDescriptor mDescriptor;
   gfx::BackendType mMoz2DBackend;
 };
 
-} // namespace
-} // namespace
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

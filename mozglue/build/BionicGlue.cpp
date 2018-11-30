@@ -15,7 +15,7 @@
 
 #include <vector>
 
-#define NS_EXPORT __attribute__ ((visibility("default")))
+#define NS_EXPORT __attribute__((visibility("default")))
 
 #if ANDROID_VERSION < 17 || defined(MOZ_WIDGET_ANDROID)
 /* Android doesn't have pthread_atfork(), so we need to use our own. */
@@ -32,11 +32,11 @@ struct AtForkFuncs {
  * static buffer for small sizes, and force the initial vector capacity to
  * a size enough to store one atfork function table. */
 template <typename T>
-struct SpecialAllocator: public std::allocator<T>
-{
-  SpecialAllocator(): bufUsed(false) {}
+struct SpecialAllocator : public std::allocator<T> {
+  SpecialAllocator() : bufUsed(false) {}
 
-  inline typename std::allocator<T>::pointer allocate(typename std::allocator<T>::size_type n, const void * = 0) {
+  inline typename std::allocator<T>::pointer allocate(
+      typename std::allocator<T>::size_type n, const void * = 0) {
     if (!bufUsed && n == 1) {
       bufUsed = true;
       return buf.addr();
@@ -44,19 +44,20 @@ struct SpecialAllocator: public std::allocator<T>
     return reinterpret_cast<T *>(::operator new(sizeof(T) * n));
   }
 
-  inline void deallocate(typename std::allocator<T>::pointer p, typename std::allocator<T>::size_type n) {
+  inline void deallocate(typename std::allocator<T>::pointer p,
+                         typename std::allocator<T>::size_type n) {
     if (p == buf.addr())
       bufUsed = false;
     else
       ::operator delete(p);
   }
 
-  template<typename U>
+  template <typename U>
   struct rebind {
     typedef SpecialAllocator<U> other;
   };
 
-private:
+ private:
   mozilla::AlignedStorage2<T> buf;
   bool bufUsed;
 };
@@ -65,50 +66,39 @@ static std::vector<AtForkFuncs, SpecialAllocator<AtForkFuncs> > atfork;
 #endif
 
 #if ANDROID_VERSION < 17 || defined(MOZ_WIDGET_ANDROID)
-extern "C" NS_EXPORT int
-pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))
-{
+extern "C" NS_EXPORT int pthread_atfork(void (*prepare)(void),
+                                        void (*parent)(void),
+                                        void (*child)(void)) {
   AtForkFuncs funcs;
   funcs.prepare = prepare;
   funcs.parent = parent;
   funcs.child = child;
-  if (!atfork.capacity())
-    atfork.reserve(1);
+  if (!atfork.capacity()) atfork.reserve(1);
   atfork.push_back(funcs);
   return 0;
 }
 
 extern "C" NS_EXPORT pid_t __fork(void);
 
-extern "C" NS_EXPORT pid_t
-fork(void)
-{
+extern "C" NS_EXPORT pid_t fork(void) {
   pid_t pid;
-  for (auto it = atfork.rbegin();
-       it < atfork.rend(); ++it)
-    if (it->prepare)
-      it->prepare();
+  for (auto it = atfork.rbegin(); it < atfork.rend(); ++it)
+    if (it->prepare) it->prepare();
 
   switch ((pid = syscall(__NR_clone, SIGCHLD, NULL, NULL, NULL, NULL))) {
-  case 0:
-    for (auto it = atfork.begin();
-         it < atfork.end(); ++it)
-      if (it->child)
-        it->child();
-    break;
-  default:
-    for (auto it = atfork.begin();
-         it < atfork.end(); ++it)
-      if (it->parent)
-        it->parent();
+    case 0:
+      for (auto it = atfork.begin(); it < atfork.end(); ++it)
+        if (it->child) it->child();
+      break;
+    default:
+      for (auto it = atfork.begin(); it < atfork.end(); ++it)
+        if (it->parent) it->parent();
   }
   return pid;
 }
 #endif
 
-extern "C" NS_EXPORT int
-raise(int sig)
-{
+extern "C" NS_EXPORT int raise(int sig) {
   // Bug 741272: Bionic incorrectly uses kill(), which signals the
   // process, and thus could signal another thread (and let this one
   // return "successfully" from raising a fatal signal).
@@ -123,15 +113,14 @@ raise(int sig)
 
 /* Flash plugin uses symbols that are not present in Android >= 4.4 */
 namespace android {
-  namespace VectorImpl {
-    NS_EXPORT void reservedVectorImpl1(void) { }
-    NS_EXPORT void reservedVectorImpl2(void) { }
-    NS_EXPORT void reservedVectorImpl3(void) { }
-    NS_EXPORT void reservedVectorImpl4(void) { }
-    NS_EXPORT void reservedVectorImpl5(void) { }
-    NS_EXPORT void reservedVectorImpl6(void) { }
-    NS_EXPORT void reservedVectorImpl7(void) { }
-    NS_EXPORT void reservedVectorImpl8(void) { }
-  }
-}
-
+namespace VectorImpl {
+NS_EXPORT void reservedVectorImpl1(void) {}
+NS_EXPORT void reservedVectorImpl2(void) {}
+NS_EXPORT void reservedVectorImpl3(void) {}
+NS_EXPORT void reservedVectorImpl4(void) {}
+NS_EXPORT void reservedVectorImpl5(void) {}
+NS_EXPORT void reservedVectorImpl6(void) {}
+NS_EXPORT void reservedVectorImpl7(void) {}
+NS_EXPORT void reservedVectorImpl8(void) {}
+}  // namespace VectorImpl
+}  // namespace android

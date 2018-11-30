@@ -21,69 +21,46 @@ namespace dom {
 class FileSystem;
 class OwningFileOrDirectory;
 
-class FileSystemEntry
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class FileSystemEntry : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemEntry)
 
-  static already_AddRefed<FileSystemEntry>
-  Create(nsIGlobalObject* aGlobalObject,
-         const OwningFileOrDirectory& aFileOrDirectory,
-         FileSystem* aFileSystem);
+  static already_AddRefed<FileSystemEntry> Create(
+      nsIGlobalObject* aGlobalObject,
+      const OwningFileOrDirectory& aFileOrDirectory, FileSystem* aFileSystem);
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mParent;
-  }
+  nsIGlobalObject* GetParentObject() const { return mParent; }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual bool
-  IsFile() const
-  {
-    return false;
-  }
+  virtual bool IsFile() const { return false; }
 
-  virtual bool
-  IsDirectory() const
-  {
-    return false;
-  }
+  virtual bool IsDirectory() const { return false; }
 
-  virtual void
-  GetName(nsAString& aName, ErrorResult& aRv) const = 0;
+  virtual void GetName(nsAString& aName, ErrorResult& aRv) const = 0;
 
-  virtual void
-  GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const = 0;
+  virtual void GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const = 0;
 
-  void
-  GetParent(const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-            const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback);
+  void GetParent(
+      const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback);
 
-  FileSystem*
-  Filesystem() const
-  {
-    return mFileSystem;
-  }
+  FileSystem* Filesystem() const { return mFileSystem; }
 
-protected:
-  FileSystemEntry(nsIGlobalObject* aGlobalObject,
-                  FileSystemEntry* aParentEntry,
+ protected:
+  FileSystemEntry(nsIGlobalObject* aGlobalObject, FileSystemEntry* aParentEntry,
                   FileSystem* aFileSystem);
   virtual ~FileSystemEntry();
 
-private:
+ private:
   nsCOMPtr<nsIGlobalObject> mParent;
   RefPtr<FileSystemEntry> mParentEntry;
   RefPtr<FileSystem> mFileSystem;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileSystemEntry_h
+#endif  // mozilla_dom_FileSystemEntry_h

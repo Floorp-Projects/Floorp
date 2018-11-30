@@ -20,59 +20,53 @@
 namespace mozilla {
 
 struct BrowserCompartmentMatcher : public js::CompartmentFilter {
-  bool match(JS::Compartment* aC) const override
-  {
+  bool match(JS::Compartment* aC) const override {
     return !xpc::MightBeWebContentCompartment(aC);
   }
 };
 
 WindowDestroyedEvent::WindowDestroyedEvent(nsGlobalWindowInner* aWindow,
                                            uint64_t aID, const char* aTopic)
-  : mozilla::Runnable("WindowDestroyedEvent")
-  , mID(aID)
-  , mPhase(Phase::Destroying)
-  , mTopic(aTopic)
-  , mIsInnerWindow(true)
-{
+    : mozilla::Runnable("WindowDestroyedEvent"),
+      mID(aID),
+      mPhase(Phase::Destroying),
+      mTopic(aTopic),
+      mIsInnerWindow(true) {
   mWindow = do_GetWeakReference(aWindow);
 }
 
 WindowDestroyedEvent::WindowDestroyedEvent(nsGlobalWindowOuter* aWindow,
                                            uint64_t aID, const char* aTopic)
-  : mozilla::Runnable("WindowDestroyedEvent")
-  , mID(aID)
-  , mPhase(Phase::Destroying)
-  , mTopic(aTopic)
-  , mIsInnerWindow(false)
-{
+    : mozilla::Runnable("WindowDestroyedEvent"),
+      mID(aID),
+      mPhase(Phase::Destroying),
+      mTopic(aTopic),
+      mIsInnerWindow(false) {
   mWindow = do_GetWeakReference(aWindow);
 }
 
 NS_IMETHODIMP
-WindowDestroyedEvent::Run()
-{
+WindowDestroyedEvent::Run() {
   AUTO_PROFILER_LABEL("WindowDestroyedEvent::Run", OTHER);
 
-  nsCOMPtr<nsIObserverService> observerService =
-    services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (!observerService) {
     return NS_OK;
   }
 
   nsCOMPtr<nsISupportsPRUint64> wrapper =
-    do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
+      do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
   if (wrapper) {
     wrapper->SetData(mID);
     observerService->NotifyObservers(wrapper, mTopic.get(), nullptr);
   }
 
   switch (mPhase) {
-    case Phase::Destroying:
-    {
+    case Phase::Destroying: {
       bool skipNukeCrossCompartment = false;
 #ifndef DEBUG
       nsCOMPtr<nsIAppStartup> appStartup =
-        do_GetService(NS_APPSTARTUP_CONTRACTID);
+          do_GetService(NS_APPSTARTUP_CONTRACTID);
 
       if (appStartup) {
         appStartup->GetShuttingDown(&skipNukeCrossCompartment);
@@ -96,18 +90,17 @@ WindowDestroyedEvent::Run()
         nsCOMPtr<nsIRunnable> copy(this);
         NS_IdleDispatchToCurrentThread(copy.forget(), 1000);
       }
-    }
-    break;
+    } break;
 
-    case Phase::Nuking:
-    {
+    case Phase::Nuking: {
       nsCOMPtr<nsISupports> window = do_QueryReferent(mWindow);
       if (window) {
         nsGlobalWindowInner* currentInner;
         if (mIsInnerWindow) {
           currentInner = nsGlobalWindowInner::FromSupports(window);
         } else {
-          nsGlobalWindowOuter* outer = nsGlobalWindowOuter::FromSupports(window);
+          nsGlobalWindowOuter* outer =
+              nsGlobalWindowOuter::FromSupports(window);
           currentInner = outer->GetCurrentInnerWindowInternal();
         }
         NS_ENSURE_TRUE(currentInner, NS_OK);
@@ -119,27 +112,28 @@ WindowDestroyedEvent::Run()
           JS::Compartment* cpt = JS::GetCompartmentForRealm(realm);
 
           nsCOMPtr<nsIPrincipal> pc =
-            nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
+              nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
 
           if (BasePrincipal::Cast(pc)->AddonPolicy()) {
             // We want to nuke all references to the add-on compartment.
-            xpc::NukeAllWrappersForCompartment(cx, cpt,
-                                               mIsInnerWindow ? js::DontNukeWindowReferences
-                                                              : js::NukeWindowReferences);
+            xpc::NukeAllWrappersForCompartment(
+                cx, cpt,
+                mIsInnerWindow ? js::DontNukeWindowReferences
+                               : js::NukeWindowReferences);
           } else {
             // We only want to nuke wrappers for the chrome->content case
-            js::NukeCrossCompartmentWrappers(cx, BrowserCompartmentMatcher(), cpt,
-                                             mIsInnerWindow ? js::DontNukeWindowReferences
-                                                            : js::NukeWindowReferences,
-                                             js::NukeIncomingReferences);
+            js::NukeCrossCompartmentWrappers(
+                cx, BrowserCompartmentMatcher(), cpt,
+                mIsInnerWindow ? js::DontNukeWindowReferences
+                               : js::NukeWindowReferences,
+                js::NukeIncomingReferences);
           }
         }
       }
-    }
-    break;
+    } break;
   }
 
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -1,5 +1,3 @@
 #include "structures.h"
 
-void test() {
-  vfork();
-}
+void test() { vfork(); }

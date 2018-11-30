@@ -2,12 +2,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 /**
  * MODULE NOTES:
- * 
+ *
  *  This class does two primary jobs:
- *    1) It iterates the tokens provided during the 
+ *    1) It iterates the tokens provided during the
  *       tokenization process, identifing where elements
  *       begin and end (doing validation and normalization).
  *    2) It controls and coordinates with an instance of
@@ -29,13 +29,13 @@
  *        the correct section.
  *    4)  In the case of tags that belong in the BODY, we must
  *        ensure that our underlying document state reflects
- *        the appropriate context for our tag. 
+ *        the appropriate context for our tag.
  *
- *        For example,if we see a <TR>, we must ensure our 
+ *        For example,if we see a <TR>, we must ensure our
  *        document contains a table into which the row can
- *        be placed. This may result in "implicit containers" 
+ *        be placed. This may result in "implicit containers"
  *        created to ensure a well-formed document.
- *         
+ *
  */
 
 #ifndef NS_PARSER__
@@ -57,345 +57,332 @@ class nsIDTD;
 class nsIRunnable;
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4275 )
+#pragma warning(disable : 4275)
 #endif
-
 
 class nsParser final : public nsIParser,
                        public nsIStreamListener,
-                       public nsSupportsWeakReference
-{
-    /**
-     * Destructor
-     * @update  gess5/11/98
-     */
-    virtual ~nsParser();
+                       public nsSupportsWeakReference {
+  /**
+   * Destructor
+   * @update  gess5/11/98
+   */
+  virtual ~nsParser();
 
-  public:
-    /**
-     * Called on module init
-     */
-    static nsresult Init();
+ public:
+  /**
+   * Called on module init
+   */
+  static nsresult Init();
 
-    /**
-     * Called on module shutdown
-     */
-    static void Shutdown();
+  /**
+   * Called on module shutdown
+   */
+  static void Shutdown();
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsParser, nsIParser)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsParser, nsIParser)
 
-    /**
-     * default constructor
-     * @update	gess5/11/98
-     */
-    nsParser();
+  /**
+   * default constructor
+   * @update	gess5/11/98
+   */
+  nsParser();
 
-    /**
-     * Select given content sink into parser for parser output
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or nullptr
-     */
-    NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink) override;
+  /**
+   * Select given content sink into parser for parser output
+   * @update	gess5/11/98
+   * @param   aSink is the new sink to be used by parser
+   * @return  old sink, or nullptr
+   */
+  NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink) override;
 
-    /**
-     * retrive the sink set into the parser 
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or nullptr
-     */
-    NS_IMETHOD_(nsIContentSink*) GetContentSink(void) override;
-    
-    /**
-     *  Call this method once you've created a parser, and want to instruct it
-     *  about the command which caused the parser to be constructed. For example,
-     *  this allows us to select a DTD which can do, say, view-source.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aCommand -- ptrs to string that contains command
-     *  @return	 nada
-     */
-    NS_IMETHOD_(void) GetCommand(nsCString& aCommand) override;
-    NS_IMETHOD_(void) SetCommand(const char* aCommand) override;
-    NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand) override;
+  /**
+   * retrive the sink set into the parser
+   * @update	gess5/11/98
+   * @param   aSink is the new sink to be used by parser
+   * @return  old sink, or nullptr
+   */
+  NS_IMETHOD_(nsIContentSink*) GetContentSink(void) override;
 
-    /**
-     *  Call this method once you've created a parser, and want to instruct it
-     *  about what charset to load
-     *  
-     *  @update  ftang 4/23/99
-     *  @param   aCharset- the charset of a document
-     *  @param   aCharsetSource- the source of the charset
-     *  @return	 nada
-     */
-    virtual void SetDocumentCharset(NotNull<const Encoding*> aCharset,
-                                    int32_t aSource) override;
+  /**
+   *  Call this method once you've created a parser, and want to instruct it
+   *  about the command which caused the parser to be constructed. For example,
+   *  this allows us to select a DTD which can do, say, view-source.
+   *
+   *  @update  gess 3/25/98
+   *  @param   aCommand -- ptrs to string that contains command
+   *  @return	 nada
+   */
+  NS_IMETHOD_(void) GetCommand(nsCString& aCommand) override;
+  NS_IMETHOD_(void) SetCommand(const char* aCommand) override;
+  NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand) override;
 
-    NotNull<const Encoding*> GetDocumentCharset(int32_t& aSource)
-    {
-         aSource = mCharsetSource;
-         return mCharset;
-    }
+  /**
+   *  Call this method once you've created a parser, and want to instruct it
+   *  about what charset to load
+   *
+   *  @update  ftang 4/23/99
+   *  @param   aCharset- the charset of a document
+   *  @param   aCharsetSource- the source of the charset
+   *  @return	 nada
+   */
+  virtual void SetDocumentCharset(NotNull<const Encoding*> aCharset,
+                                  int32_t aSource) override;
 
-    /**
-     * Cause parser to parse input from given URL 
-     * @update	gess5/11/98
-     * @param   aURL is a descriptor for source document
-     * @param   aListener is a listener to forward notifications to
-     * @return  TRUE if all went well -- FALSE otherwise
-     */
-    NS_IMETHOD Parse(nsIURI* aURL,
-                     nsIRequestObserver* aListener = nullptr,
-                     void* aKey = 0,
-                     nsDTDMode aMode = eDTDMode_autodetect) override;
+  NotNull<const Encoding*> GetDocumentCharset(int32_t& aSource) {
+    aSource = mCharsetSource;
+    return mCharset;
+  }
 
-    /**
-     * This method needs documentation
-     */
-    NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                             nsTArray<nsString>& aTagStack) override;
-                             
-    /**
-     * This method gets called when the tokens have been consumed, and it's time
-     * to build the model via the content sink.
-     * @update	gess5/11/98
-     * @return  YES if model building went well -- NO otherwise.
-     */
-    NS_IMETHOD BuildModel(void) override;
+  /**
+   * Cause parser to parse input from given URL
+   * @update	gess5/11/98
+   * @param   aURL is a descriptor for source document
+   * @param   aListener is a listener to forward notifications to
+   * @return  TRUE if all went well -- FALSE otherwise
+   */
+  NS_IMETHOD Parse(nsIURI* aURL, nsIRequestObserver* aListener = nullptr,
+                   void* aKey = 0,
+                   nsDTDMode aMode = eDTDMode_autodetect) override;
 
-    NS_IMETHOD        ContinueInterruptedParsing() override;
-    NS_IMETHOD_(void) BlockParser() override;
-    NS_IMETHOD_(void) UnblockParser() override;
-    NS_IMETHOD_(void) ContinueInterruptedParsingAsync() override;
-    NS_IMETHOD        Terminate(void) override;
+  /**
+   * This method needs documentation
+   */
+  NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
+                           nsTArray<nsString>& aTagStack) override;
 
-    /**
-     * Call this to query whether the parser is enabled or not.
-     *
-     *  @update  vidur 4/12/99
-     *  @return  current state
-     */
-    NS_IMETHOD_(bool) IsParserEnabled() override;
+  /**
+   * This method gets called when the tokens have been consumed, and it's time
+   * to build the model via the content sink.
+   * @update	gess5/11/98
+   * @return  YES if model building went well -- NO otherwise.
+   */
+  NS_IMETHOD BuildModel(void) override;
 
-    /**
-     * Call this to query whether the parser thinks it's done with parsing.
-     *
-     *  @update  rickg 5/12/01
-     *  @return  complete state
-     */
-    NS_IMETHOD_(bool) IsComplete() override;
+  NS_IMETHOD ContinueInterruptedParsing() override;
+  NS_IMETHOD_(void) BlockParser() override;
+  NS_IMETHOD_(void) UnblockParser() override;
+  NS_IMETHOD_(void) ContinueInterruptedParsingAsync() override;
+  NS_IMETHOD Terminate(void) override;
 
-    /**
-     *  This rather arcane method (hack) is used as a signal between the
-     *  DTD and the parser. It allows the DTD to tell the parser that content
-     *  that comes through (parser::parser(string)) but not consumed should
-     *  propagate into the next string based parse call.
-     *  
-     *  @update  gess 9/1/98
-     *  @param   aState determines whether we propagate unused string content.
-     *  @return  current state
-     */
-    void SetUnusedInput(nsString& aBuffer);
+  /**
+   * Call this to query whether the parser is enabled or not.
+   *
+   *  @update  vidur 4/12/99
+   *  @return  current state
+   */
+  NS_IMETHOD_(bool) IsParserEnabled() override;
 
-    /**
-     * This method gets called (automatically) during incremental parsing
-     * @update	gess5/11/98
-     * @return  TRUE if all went well, otherwise FALSE
-     */
-    virtual nsresult ResumeParse(bool allowIteration = true, 
-                                 bool aIsFinalChunk = false,
-                                 bool aCanInterrupt = true);
+  /**
+   * Call this to query whether the parser thinks it's done with parsing.
+   *
+   *  @update  rickg 5/12/01
+   *  @return  complete state
+   */
+  NS_IMETHOD_(bool) IsComplete() override;
 
-     //*********************************************
-      // These methods are callback methods used by
-      // net lib to let us know about our inputstream.
-      //*********************************************
-    // nsIRequestObserver methods:
-    NS_DECL_NSIREQUESTOBSERVER
+  /**
+   *  This rather arcane method (hack) is used as a signal between the
+   *  DTD and the parser. It allows the DTD to tell the parser that content
+   *  that comes through (parser::parser(string)) but not consumed should
+   *  propagate into the next string based parse call.
+   *
+   *  @update  gess 9/1/98
+   *  @param   aState determines whether we propagate unused string content.
+   *  @return  current state
+   */
+  void SetUnusedInput(nsString& aBuffer);
 
-    // nsIStreamListener methods:
-    NS_DECL_NSISTREAMLISTENER
+  /**
+   * This method gets called (automatically) during incremental parsing
+   * @update	gess5/11/98
+   * @return  TRUE if all went well, otherwise FALSE
+   */
+  virtual nsresult ResumeParse(bool allowIteration = true,
+                               bool aIsFinalChunk = false,
+                               bool aCanInterrupt = true);
 
-    void              PushContext(CParserContext& aContext);
-    CParserContext*   PopContext();
-    CParserContext*   PeekContext() {return mParserContext;}
+  //*********************************************
+  // These methods are callback methods used by
+  // net lib to let us know about our inputstream.
+  //*********************************************
+  // nsIRequestObserver methods:
+  NS_DECL_NSIREQUESTOBSERVER
 
-    /** 
-     * Get the channel associated with this parser
-     * @update harishd,gagan 07/17/01
-     * @param aChannel out param that will contain the result
-     * @return NS_OK if successful
-     */
-    NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
+  // nsIStreamListener methods:
+  NS_DECL_NSISTREAMLISTENER
 
-    /** 
-     * Get the DTD associated with this parser
-     * @update vidur 9/29/99
-     * @param aDTD out param that will contain the result
-     * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
-     */
-    NS_IMETHOD GetDTD(nsIDTD** aDTD) override;
-  
-    /**
-     * Get the nsIStreamListener for this parser
-     */
-    virtual nsIStreamListener* GetStreamListener() override;
+  void PushContext(CParserContext& aContext);
+  CParserContext* PopContext();
+  CParserContext* PeekContext() { return mParserContext; }
 
-    void SetSinkCharset(NotNull<const Encoding*> aCharset);
+  /**
+   * Get the channel associated with this parser
+   * @update harishd,gagan 07/17/01
+   * @param aChannel out param that will contain the result
+   * @return NS_OK if successful
+   */
+  NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
 
-    /**
-     *  Removes continue parsing events
-     *  @update  kmcclusk 5/18/98
-     */
+  /**
+   * Get the DTD associated with this parser
+   * @update vidur 9/29/99
+   * @param aDTD out param that will contain the result
+   * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
+   */
+  NS_IMETHOD GetDTD(nsIDTD** aDTD) override;
 
-    NS_IMETHOD CancelParsingEvents() override;
+  /**
+   * Get the nsIStreamListener for this parser
+   */
+  virtual nsIStreamListener* GetStreamListener() override;
 
-    /**
-     * Return true.
-     */
-    virtual bool IsInsertionPointDefined() override;
+  void SetSinkCharset(NotNull<const Encoding*> aCharset);
 
-    /**
-     * No-op.
-     */
-    virtual void PushDefinedInsertionPoint() override;
+  /**
+   *  Removes continue parsing events
+   *  @update  kmcclusk 5/18/98
+   */
 
-    /**
-     * No-op.
-     */
-    virtual void PopDefinedInsertionPoint() override;
+  NS_IMETHOD CancelParsingEvents() override;
 
-    /**
-     * No-op.
-     */
-    virtual void MarkAsNotScriptCreated(const char* aCommand) override;
+  /**
+   * Return true.
+   */
+  virtual bool IsInsertionPointDefined() override;
 
-    /**
-     * Always false.
-     */
-    virtual bool IsScriptCreated() override;
+  /**
+   * No-op.
+   */
+  virtual void PushDefinedInsertionPoint() override;
 
-    /**  
-     *  Set to parser state to indicate whether parsing tokens can be interrupted
-     *  @param aCanInterrupt true if parser can be interrupted, false if it can
-     *                       not be interrupted.
-     *  @update  kmcclusk 5/18/98
-     */
-    void SetCanInterrupt(bool aCanInterrupt);
+  /**
+   * No-op.
+   */
+  virtual void PopDefinedInsertionPoint() override;
 
-    /**
-     * This is called when the final chunk has been
-     * passed to the parser and the content sink has
-     * interrupted token processing. It schedules
-     * a ParserContinue PL_Event which will ask the parser
-     * to HandleParserContinueEvent when it is handled.
-     * @update	kmcclusk6/1/2001
-     */
-    nsresult PostContinueEvent();
+  /**
+   * No-op.
+   */
+  virtual void MarkAsNotScriptCreated(const char* aCommand) override;
 
-    /**
-     *  Fired when the continue parse event is triggered.
-     *  @update  kmcclusk 5/18/98
-     */
-    void HandleParserContinueEvent(class nsParserContinueEvent *);
+  /**
+   * Always false.
+   */
+  virtual bool IsScriptCreated() override;
 
-    virtual void Reset() override {
-      Cleanup();
-      Initialize();
-    }
+  /**
+   *  Set to parser state to indicate whether parsing tokens can be interrupted
+   *  @param aCanInterrupt true if parser can be interrupted, false if it can
+   *                       not be interrupted.
+   *  @update  kmcclusk 5/18/98
+   */
+  void SetCanInterrupt(bool aCanInterrupt);
 
-    bool IsScriptExecuting() {
-      return mSink && mSink->IsScriptExecuting();
-    }
+  /**
+   * This is called when the final chunk has been
+   * passed to the parser and the content sink has
+   * interrupted token processing. It schedules
+   * a ParserContinue PL_Event which will ask the parser
+   * to HandleParserContinueEvent when it is handled.
+   * @update	kmcclusk6/1/2001
+   */
+  nsresult PostContinueEvent();
 
-    bool IsOkToProcessNetworkData() {
-      return !IsScriptExecuting() && !mProcessingNetworkData;
-    }
+  /**
+   *  Fired when the continue parse event is triggered.
+   *  @update  kmcclusk 5/18/98
+   */
+  void HandleParserContinueEvent(class nsParserContinueEvent*);
+
+  virtual void Reset() override {
+    Cleanup();
+    Initialize();
+  }
+
+  bool IsScriptExecuting() { return mSink && mSink->IsScriptExecuting(); }
+
+  bool IsOkToProcessNetworkData() {
+    return !IsScriptExecuting() && !mProcessingNetworkData;
+  }
 
  protected:
+  void Initialize(bool aConstructor = false);
+  void Cleanup();
 
-    void Initialize(bool aConstructor = false);
-    void Cleanup();
+  /**
+   *
+   * @update	gess5/18/98
+   * @param
+   * @return
+   */
+  nsresult WillBuildModel(nsString& aFilename);
 
-    /**
-     * 
-     * @update	gess5/18/98
-     * @param 
-     * @return
-     */
-    nsresult WillBuildModel(nsString& aFilename);
+  /**
+   *
+   * @update	gess5/18/98
+   * @param
+   * @return
+   */
+  nsresult DidBuildModel(nsresult anErrorCode);
 
-    /**
-     * 
-     * @update	gess5/18/98
-     * @param 
-     * @return
-     */
-    nsresult DidBuildModel(nsresult anErrorCode);
+ private:
+  /*******************************************
+    These are the tokenization methods...
+   *******************************************/
 
-private:
+  /**
+   *  Part of the code sandwich, this gets called right before
+   *  the tokenization process begins. The main reason for
+   *  this call is to allow the delegate to do initialization.
+   *
+   *  @update  gess 3/25/98
+   *  @param
+   *  @return  TRUE if it's ok to proceed
+   */
+  bool WillTokenize(bool aIsFinalChunk = false);
 
-    /*******************************************
-      These are the tokenization methods...
-     *******************************************/
+  /**
+   *  This is the primary control routine. It iteratively
+   *  consumes tokens until an error occurs or you run out
+   *  of data.
+   *
+   *  @update  gess 3/25/98
+   *  @return  error code
+   */
+  nsresult Tokenize(bool aIsFinalChunk = false);
 
-    /**
-     *  Part of the code sandwich, this gets called right before
-     *  the tokenization process begins. The main reason for
-     *  this call is to allow the delegate to do initialization.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   
-     *  @return  TRUE if it's ok to proceed
-     */
-    bool WillTokenize(bool aIsFinalChunk = false);
+  /**
+   * Pushes XML fragment parsing data to expat without an input stream.
+   */
+  nsresult Parse(const nsAString& aSourceBuffer, void* aKey, bool aLastCall);
 
-   
-    /**
-     *  This is the primary control routine. It iteratively
-     *  consumes tokens until an error occurs or you run out
-     *  of data.
-     *  
-     *  @update  gess 3/25/98
-     *  @return  error code 
-     */
-    nsresult Tokenize(bool aIsFinalChunk = false);
+ protected:
+  //*********************************************
+  // And now, some data members...
+  //*********************************************
 
-    /**
-     * Pushes XML fragment parsing data to expat without an input stream.
-     */
-    nsresult Parse(const nsAString& aSourceBuffer,
-                   void* aKey,
-                   bool aLastCall);
+  CParserContext* mParserContext;
+  nsCOMPtr<nsIDTD> mDTD;
+  nsCOMPtr<nsIRequestObserver> mObserver;
+  nsCOMPtr<nsIContentSink> mSink;
+  nsIRunnable* mContinueEvent;  // weak ref
 
-protected:
-    //*********************************************
-    // And now, some data members...
-    //*********************************************
-    
-      
-    CParserContext*              mParserContext;
-    nsCOMPtr<nsIDTD>             mDTD;
-    nsCOMPtr<nsIRequestObserver> mObserver;
-    nsCOMPtr<nsIContentSink>     mSink;
-    nsIRunnable*                 mContinueEvent;  // weak ref
+  eParserCommands mCommand;
+  nsresult mInternalState;
+  nsresult mStreamStatus;
+  int32_t mCharsetSource;
 
-    eParserCommands     mCommand;
-    nsresult            mInternalState;
-    nsresult            mStreamStatus;
-    int32_t             mCharsetSource;
-    
-    uint16_t            mFlags;
-    uint32_t            mBlocked;
+  uint16_t mFlags;
+  uint32_t mBlocked;
 
-    nsString            mUnusedInput;
-    NotNull<const Encoding*> mCharset;
-    nsCString           mCommandStr;
+  nsString mUnusedInput;
+  NotNull<const Encoding*> mCharset;
+  nsCString mCommandStr;
 
-    bool                mProcessingNetworkData;
-    bool                mIsAboutBlank;
+  bool mProcessingNetworkData;
+  bool mIsAboutBlank;
 };
 
-#endif 
-
+#endif

@@ -31,15 +31,14 @@ namespace mozilla {
 namespace dom {
 class SVGSVGElement;
 class SVGDocument;
-} // namespace dom
+}  // namespace dom
 
 namespace image {
 
 class SVGDocumentWrapper final : public nsIStreamListener,
                                  public nsIObserver,
-                                 nsSupportsWeakReference
-{
-public:
+                                 nsSupportsWeakReference {
+ public:
   SVGDocumentWrapper();
 
   NS_DECL_ISUPPORTS
@@ -47,10 +46,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIOBSERVER
 
-  enum Dimension {
-    eWidth,
-    eHeight
-  };
+  enum Dimension { eWidth, eHeight };
 
   /**
    * Returns the wrapped document, or nullptr on failure. (No AddRef.)
@@ -73,8 +69,7 @@ public:
   /**
    * Returns the nsIPresShell for the wrapped document.
    */
-  inline nsIPresShell* GetPresShell()
-    { return mViewer->GetPresShell(); }
+  inline nsIPresShell* GetPresShell() { return mViewer->GetPresShell(); }
 
   /**
    * Modifier to update the viewport dimensions of the wrapped document. This
@@ -99,7 +94,7 @@ public:
    *
    * @return true if the document has any SMIL animations. Else, false.
    */
-  bool      IsAnimated();
+  bool IsAnimated();
 
   /**
    * Indicates whether we should currently ignore rendering invalidations sent
@@ -124,24 +119,23 @@ public:
    */
   void FlushLayout();
 
-private:
+ private:
   ~SVGDocumentWrapper();
 
-  nsresult SetupViewer(nsIRequest* aRequest,
-                       nsIContentViewer** aViewer,
+  nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
                        nsILoadGroup** aLoadGroup);
-  void     DestroyViewer();
-  void     RegisterForXPCOMShutdown();
-  void     UnregisterForXPCOMShutdown();
+  void DestroyViewer();
+  void RegisterForXPCOMShutdown();
+  void UnregisterForXPCOMShutdown();
 
-  nsCOMPtr<nsIContentViewer>  mViewer;
-  nsCOMPtr<nsILoadGroup>      mLoadGroup;
+  nsCOMPtr<nsIContentViewer> mViewer;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
-  bool                        mIgnoreInvalidation;
-  bool                        mRegisteredForXPCOMShutdown;
+  bool mIgnoreInvalidation;
+  bool mRegisteredForXPCOMShutdown;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_SVGDocumentWrapper_h
+#endif  // mozilla_image_SVGDocumentWrapper_h

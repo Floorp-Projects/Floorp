@@ -16,13 +16,11 @@ class nsAnonymousContentList;
 namespace mozilla {
 namespace dom {
 
-class XBLChildrenElement : public nsXMLElement
-{
-public:
-  explicit XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsXMLElement(std::move(aNodeInfo))
-  {
-  }
+class XBLChildrenElement : public nsXMLElement {
+ public:
+  explicit XBLChildrenElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : nsXMLElement(std::move(aNodeInfo)) {}
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(XBLChildrenElement, nsXMLElement)
@@ -30,8 +28,7 @@ public:
   // nsINode interface methods
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  void AppendInsertedChild(nsIContent* aChild, bool aNotify)
-  {
+  void AppendInsertedChild(nsIContent* aChild, bool aNotify) {
     // Appending an inserted child causes the inserted
     // children to be projected instead of default content.
     MaybeRemoveDefaultContent(aNotify);
@@ -40,8 +37,7 @@ public:
     aChild->SetXBLInsertionPoint(this);
   }
 
-  void InsertInsertedChildAt(nsIContent* aChild, uint32_t aIndex)
-  {
+  void InsertInsertedChildAt(nsIContent* aChild, uint32_t aIndex) {
     // Inserting an inserted child causes the inserted
     // children to be projected instead of default content.
     MaybeRemoveDefaultContent(true);
@@ -50,11 +46,10 @@ public:
     aChild->SetXBLInsertionPoint(this);
   }
 
-  void RemoveInsertedChild(nsIContent* aChild)
-  {
+  void RemoveInsertedChild(nsIContent* aChild) {
     // Can't use this assertion as we cheat for dynamic insertions and
     // only insert in the innermost insertion point.
-    //NS_ASSERTION(mInsertedChildren.Contains(aChild),
+    // NS_ASSERTION(mInsertedChildren.Contains(aChild),
     //             "Removing child that's not there");
     mInsertedChildren.RemoveElement(aChild);
 
@@ -66,8 +61,7 @@ public:
     MaybeSetupDefaultContent();
   }
 
-  void ClearInsertedChildren()
-  {
+  void ClearInsertedChildren() {
     for (auto* child : mInsertedChildren) {
       if (child->GetXBLInsertionPoint() == this) {
         child->SetXBLInsertionPoint(nullptr);
@@ -83,57 +77,42 @@ public:
     MaybeSetupDefaultContent();
   }
 
-  void MaybeSetupDefaultContent()
-  {
+  void MaybeSetupDefaultContent() {
     if (!HasInsertedChildren()) {
       for (nsIContent* child = static_cast<nsINode*>(this)->GetFirstChild();
-           child;
-           child = child->GetNextSibling()) {
+           child; child = child->GetNextSibling()) {
         child->SetXBLInsertionPoint(this);
       }
     }
   }
 
-  void MaybeRemoveDefaultContent(bool aNotify)
-  {
+  void MaybeRemoveDefaultContent(bool aNotify) {
     if (!HasInsertedChildren() && HasChildren()) {
       DoRemoveDefaultContent(aNotify);
     }
   }
 
-  uint32_t InsertedChildrenLength()
-  {
-    return mInsertedChildren.Length();
-  }
+  uint32_t InsertedChildrenLength() { return mInsertedChildren.Length(); }
 
-  bool HasInsertedChildren()
-  {
-    return !mInsertedChildren.IsEmpty();
-  }
+  bool HasInsertedChildren() { return !mInsertedChildren.IsEmpty(); }
 
-  int32_t IndexOfInsertedChild(nsIContent* aChild)
-  {
+  int32_t IndexOfInsertedChild(nsIContent* aChild) {
     return mInsertedChildren.IndexOf(aChild);
   }
 
-  bool Includes(nsIContent* aChild)
-  {
+  bool Includes(nsIContent* aChild) {
     NS_ASSERTION(!mIncludes.IsEmpty(),
                  "Shouldn't check for includes on default insertion point");
     return mIncludes.Contains(aChild->NodeInfo()->NameAtom());
   }
 
-  bool IsDefaultInsertion()
-  {
-    return mIncludes.IsEmpty();
-  }
+  bool IsDefaultInsertion() { return mIncludes.IsEmpty(); }
 
-  nsIContent* InsertedChild(uint32_t aIndex)
-  {
+  nsIContent* InsertedChild(uint32_t aIndex) {
     return mInsertedChildren[aIndex];
   }
 
-protected:
+ protected:
   ~XBLChildrenElement();
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,
@@ -141,21 +120,17 @@ protected:
 
   void DoRemoveDefaultContent(bool aNotify);
 
-private:
-  nsTArray<nsIContent*> mInsertedChildren; // WEAK
+ private:
+  nsTArray<nsIContent*> mInsertedChildren;  // WEAK
   nsTArray<RefPtr<nsAtom> > mIncludes;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsAnonymousContentList final : public nsINodeList
-{
-public:
-  explicit nsAnonymousContentList(nsIContent* aParent)
-    : mParent(aParent)
-  {
-  }
+class nsAnonymousContentList final : public nsINodeList {
+ public:
+  explicit nsAnonymousContentList(nsIContent* aParent) : mParent(aParent) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsAnonymousContentList)
@@ -166,18 +141,15 @@ public:
   virtual nsIContent* Item(uint32_t aIndex) override;
   uint32_t Length() override;
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  bool IsListFor(nsIContent* aContent) {
-    return mParent == aContent;
-  }
+  bool IsListFor(nsIContent* aContent) { return mParent == aContent; }
 
-private:
-  virtual ~nsAnonymousContentList()
-  {
-  }
+ private:
+  virtual ~nsAnonymousContentList() {}
 
   nsCOMPtr<nsIContent> mParent;
 };
 
-#endif // nsXBLChildrenElement_h___
+#endif  // nsXBLChildrenElement_h___

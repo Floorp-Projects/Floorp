@@ -7,12 +7,10 @@
 
 namespace mozilla {
 
-bool
-SsrcGenerator::GenerateSsrc(uint32_t* ssrc)
-{
+bool SsrcGenerator::GenerateSsrc(uint32_t* ssrc) {
   do {
-    SECStatus rv = PK11_GenerateRandom(
-        reinterpret_cast<unsigned char*>(ssrc), sizeof(uint32_t));
+    SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(ssrc),
+                                       sizeof(uint32_t));
     if (rv != SECSuccess) {
       return false;
     }
@@ -21,4 +19,4 @@ SsrcGenerator::GenerateSsrc(uint32_t* ssrc)
 
   return true;
 }
-} // namespace mozilla
+}  // namespace mozilla

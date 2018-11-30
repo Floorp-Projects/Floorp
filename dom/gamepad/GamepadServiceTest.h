@@ -19,33 +19,32 @@ class GamepadTestChannelChild;
 class Promise;
 
 // Service for testing purposes
-class GamepadServiceTest final : public DOMEventTargetHelper
-{
-public:
+class GamepadServiceTest final : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(GamepadServiceTest,
                                            DOMEventTargetHelper)
 
   GamepadMappingType NoMapping() const { return GamepadMappingType::_empty; }
-  GamepadMappingType StandardMapping() const { return GamepadMappingType::Standard; }
+  GamepadMappingType StandardMapping() const {
+    return GamepadMappingType::Standard;
+  }
   GamepadHand NoHand() const { return GamepadHand::_empty; }
   GamepadHand LeftHand() const { return GamepadHand::Left; }
   GamepadHand RightHand() const { return GamepadHand::Right; }
 
   already_AddRefed<Promise> AddGamepad(const nsAString& aID,
                                        GamepadMappingType aMapping,
-                                       GamepadHand aHand,
-                                       uint32_t aNumButtons,
-                                       uint32_t aNumAxes,
-                                       uint32_t aNumHaptics,
+                                       GamepadHand aHand, uint32_t aNumButtons,
+                                       uint32_t aNumAxes, uint32_t aNumHaptics,
                                        ErrorResult& aRv);
   void RemoveGamepad(uint32_t aIndex);
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, bool aTouched);
-  void NewButtonValueEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, bool aTouched,
-                           double aValue);
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
+                      bool aTouched);
+  void NewButtonValueEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
+                           bool aTouched, double aValue);
   void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
-  void NewPoseMove(uint32_t aIndex,
-                   const Nullable<Float32Array>& aOrient,
+  void NewPoseMove(uint32_t aIndex, const Nullable<Float32Array>& aOrient,
                    const Nullable<Float32Array>& aPos,
                    const Nullable<Float32Array>& aAngVelocity,
                    const Nullable<Float32Array>& aAngAcceleration,
@@ -53,12 +52,12 @@ public:
                    const Nullable<Float32Array>& aLinAcceleration);
   void Shutdown();
 
-  static already_AddRefed<GamepadServiceTest> CreateTestService(nsPIDOMWindowInner* aWindow);
+  static already_AddRefed<GamepadServiceTest> CreateTestService(
+      nsPIDOMWindowInner* aWindow);
   nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
   JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
 
-private:
-
+ private:
   // Hold a reference to the gamepad service so we don't have to worry about
   // execution order in tests.
   RefPtr<GamepadManager> mService;
@@ -75,10 +74,9 @@ private:
   ~GamepadServiceTest();
   void InitPBackgroundActor();
   void DestroyPBackgroundActor();
-
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

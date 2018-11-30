@@ -13,37 +13,34 @@ namespace js {
 
 class GlobalObject;
 
-class NumberObject : public NativeObject
-{
-    /* Stores this Number object's [[PrimitiveValue]]. */
-    static const unsigned PRIMITIVE_VALUE_SLOT = 0;
+class NumberObject : public NativeObject {
+  /* Stores this Number object's [[PrimitiveValue]]. */
+  static const unsigned PRIMITIVE_VALUE_SLOT = 0;
 
-  public:
-    static const unsigned RESERVED_SLOTS = 1;
+ public:
+  static const unsigned RESERVED_SLOTS = 1;
 
-    static const Class class_;
+  static const Class class_;
 
-    /*
-     * Creates a new Number object boxing the given number.
-     * If proto is nullptr, then Number.prototype will be used instead.
-     */
-    static inline NumberObject* create(JSContext* cx, double d,
-                                       HandleObject proto = nullptr);
+  /*
+   * Creates a new Number object boxing the given number.
+   * If proto is nullptr, then Number.prototype will be used instead.
+   */
+  static inline NumberObject* create(JSContext* cx, double d,
+                                     HandleObject proto = nullptr);
 
-    double unbox() const {
-        return getFixedSlot(PRIMITIVE_VALUE_SLOT).toNumber();
-    }
+  double unbox() const { return getFixedSlot(PRIMITIVE_VALUE_SLOT).toNumber(); }
 
-  private:
-    inline void setPrimitiveValue(double d) {
-        setFixedSlot(PRIMITIVE_VALUE_SLOT, NumberValue(d));
-    }
+ private:
+  inline void setPrimitiveValue(double d) {
+    setFixedSlot(PRIMITIVE_VALUE_SLOT, NumberValue(d));
+  }
 
-    /* For access to init, as Number.prototype is special. */
-    friend JSObject*
-    js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);
+  /* For access to init, as Number.prototype is special. */
+  friend JSObject* js::InitNumberClass(JSContext* cx,
+                                       Handle<GlobalObject*> global);
 };
 
-} // namespace js
+}  // namespace js
 
 #endif /* vm_NumberObject_h */

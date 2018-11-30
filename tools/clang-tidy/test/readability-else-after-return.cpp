@@ -1,6 +1,4 @@
-void f() {
-
-}
+void f() {}
 
 void foo() {
   if (true)

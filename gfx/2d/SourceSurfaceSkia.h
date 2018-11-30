@@ -20,9 +20,8 @@ namespace gfx {
 class DrawTargetSkia;
 class SnapshotLock;
 
-class SourceSurfaceSkia : public DataSourceSurface
-{
-public:
+class SourceSurfaceSkia : public DataSourceSurface {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceSkia, override)
 
   SourceSurfaceSkia();
@@ -36,13 +35,14 @@ public:
   // from one place at a time. Therefore it doesn't need to hold the ChangeMutex
   // as mSurface is never read to directly and is just there to keep the object
   // alive, which itself is refcounted in a thread-safe manner.
-  void GiveSurface(sk_sp<SkSurface> &aSurface) { mSurface = aSurface; mDrawTarget = nullptr; }
+  void GiveSurface(sk_sp<SkSurface>& aSurface) {
+    mSurface = aSurface;
+    mDrawTarget = nullptr;
+  }
 
   sk_sp<SkImage> GetImage();
 
-  bool InitFromData(unsigned char* aData,
-                    const IntSize &aSize,
-                    int32_t aStride,
+  bool InitFromData(unsigned char* aData, const IntSize& aSize, int32_t aStride,
                     SurfaceFormat aFormat);
 
   bool InitFromImage(const sk_sp<SkImage>& aImage,
@@ -54,13 +54,13 @@ public:
   /**
    * The caller is responsible for ensuring aMappedSurface is not null.
    */
-  virtual bool Map(MapType, MappedSurface *aMappedSurface) override;
+  virtual bool Map(MapType, MappedSurface* aMappedSurface) override;
 
   virtual void Unmap() override;
 
   virtual int32_t Stride() override { return mStride; }
 
-private:
+ private:
   friend class DrawTargetSkia;
 
   void DrawTargetWillChange();
@@ -76,7 +76,7 @@ private:
   bool mIsMapped;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACESKIA_H_ */

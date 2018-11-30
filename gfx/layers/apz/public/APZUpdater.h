@@ -10,7 +10,7 @@
 #include <deque>
 #include <unordered_map>
 
-#include "base/platform_thread.h"   // for PlatformThreadId
+#include "base/platform_thread.h"  // for PlatformThreadId
 #include "LayersTypes.h"
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/WebRenderScrollData.h"
@@ -24,7 +24,7 @@ namespace mozilla {
 
 namespace wr {
 struct WrWindowId;
-} // namespace wr
+}  // namespace wr
 
 namespace layers {
 
@@ -43,9 +43,8 @@ class WebRenderScrollData;
 class APZUpdater {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZUpdater)
 
-public:
-  APZUpdater(const RefPtr<APZCTreeManager>& aApz,
-             bool aIsUsingWebRender);
+ public:
+  APZUpdater(const RefPtr<APZCTreeManager>& aApz, bool aIsUsingWebRender);
 
   bool HasTreeManager(const RefPtr<APZCTreeManager>& aApz);
   void SetWebRenderWindowId(const wr::WindowId& aWindowId);
@@ -66,18 +65,16 @@ public:
   void UpdateFocusState(LayersId aRootLayerTreeId,
                         LayersId aOriginatingLayersId,
                         const FocusTarget& aFocusTarget);
-  void UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                            Layer* aRoot,
-                            bool aIsFirstPaint,
-                            LayersId aOriginatingLayersId,
+  void UpdateHitTestingTree(LayersId aRootLayerTreeId, Layer* aRoot,
+                            bool aIsFirstPaint, LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
   /**
    * This should be called (in the WR-enabled case) when the compositor receives
    * a new WebRenderScrollData for a layers id. The |aScrollData| parameter is
-   * the scroll data for |aOriginatingLayersId| and |aEpoch| is the corresponding
-   * epoch for the transaction that transferred the scroll data. This function
-   * will store the new scroll data and update the focus state and hit-testing
-   * tree.
+   * the scroll data for |aOriginatingLayersId| and |aEpoch| is the
+   * corresponding epoch for the transaction that transferred the scroll data.
+   * This function will store the new scroll data and update the focus state and
+   * hit-testing tree.
    */
   void UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
                                     LayersId aOriginatingLayersId,
@@ -134,35 +131,36 @@ public:
   bool IsUpdaterThread() const;
 
   /**
-   * Dispatches the given task to the APZ "controller thread", but does it *from*
-   * the updater thread. That is, if the thread on which this function is called
-   * is not the updater thread, the task is first dispatched to the updater thread.
-   * When the updater thread runs it (or if this is called directly on the updater
-   * thread), that is when the task gets dispatched to the controller thread.
-   * The controller thread then actually runs the task.
+   * Dispatches the given task to the APZ "controller thread", but does it
+   * *from* the updater thread. That is, if the thread on which this function is
+   * called is not the updater thread, the task is first dispatched to the
+   * updater thread. When the updater thread runs it (or if this is called
+   * directly on the updater thread), that is when the task gets dispatched to
+   * the controller thread. The controller thread then actually runs the task.
    * The layers id argument should be the id of the layer tree that is
    * requesting this task to be run; in most cases this will probably just be
    * the root layers id of the compositor.
    */
-  void RunOnControllerThread(LayersId aLayersId, already_AddRefed<Runnable> aTask);
+  void RunOnControllerThread(LayersId aLayersId,
+                             already_AddRefed<Runnable> aTask);
 
-protected:
+ protected:
   virtual ~APZUpdater();
 
   bool UsingWebRenderUpdaterThread() const;
-  static already_AddRefed<APZUpdater> GetUpdater(const wr::WrWindowId& aWindowId);
+  static already_AddRefed<APZUpdater> GetUpdater(
+      const wr::WrWindowId& aWindowId);
 
   void ProcessQueue();
 
-private:
+ private:
   RefPtr<APZCTreeManager> mApz;
   bool mIsUsingWebRender;
 
   // Map from layers id to WebRenderScrollData. This can only be touched on
   // the updater thread.
-  std::unordered_map<LayersId,
-                     WebRenderScrollData,
-                     LayersId::HashFn> mScrollData;
+  std::unordered_map<LayersId, WebRenderScrollData, LayersId::HashFn>
+      mScrollData;
 
   // Stores epoch state for a particular layers id. This structure is only
   // accessed on the updater thread.
@@ -171,7 +169,8 @@ private:
     wr::Epoch mRequired;
     // The epoch for the most recent scene built and swapped in on the WR side.
     Maybe<wr::Epoch> mBuilt;
-    // True if and only if the layers id is the root layers id for the compositor
+    // True if and only if the layers id is the root layers id for the
+    // compositor
     bool mIsRoot;
 
     EpochState();
@@ -191,16 +190,14 @@ private:
 
   // Map from layers id to epoch state.
   // This data structure can only be touched on the updater thread.
-  std::unordered_map<LayersId,
-                     EpochState,
-                     LayersId::HashFn> mEpochData;
+  std::unordered_map<LayersId, EpochState, LayersId::HashFn> mEpochData;
 
-  // Used to manage the mapping from a WR window id to APZUpdater. These are only
-  // used if WebRender is enabled. Both sWindowIdMap and mWindowId should only
-  // be used while holding the sWindowIdLock. Note that we use a StaticAutoPtr
-  // wrapper on sWindowIdMap to avoid a static initializer for the unordered_map.
-  // This also avoids the initializer/memory allocation in cases where we're
-  // not using WebRender.
+  // Used to manage the mapping from a WR window id to APZUpdater. These are
+  // only used if WebRender is enabled. Both sWindowIdMap and mWindowId should
+  // only be used while holding the sWindowIdLock. Note that we use a
+  // StaticAutoPtr wrapper on sWindowIdMap to avoid a static initializer for the
+  // unordered_map. This also avoids the initializer/memory allocation in cases
+  // where we're not using WebRender.
   static StaticMutex sWindowIdLock;
   static StaticAutoPtr<std::unordered_map<uint64_t, APZUpdater*>> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
@@ -233,7 +230,7 @@ private:
   std::deque<QueuedTask> mUpdaterQueue;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_APZUpdater_h
+#endif  // mozilla_layers_APZUpdater_h

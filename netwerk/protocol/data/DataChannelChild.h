@@ -16,28 +16,27 @@
 namespace mozilla {
 namespace net {
 
-class DataChannelChild : public nsDataChannel
-                       , public nsIChildChannel
-                       , public PDataChannelChild
-{
-public:
-    explicit DataChannelChild(nsIURI *uri);
+class DataChannelChild : public nsDataChannel,
+                         public nsIChildChannel,
+                         public PDataChannelChild {
+ public:
+  explicit DataChannelChild(nsIURI *uri);
 
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSICHILDCHANNEL
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSICHILDCHANNEL
 
-protected:
-    virtual void ActorDestroy(ActorDestroyReason why) override;
+ protected:
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
-private:
-    ~DataChannelChild() = default;
+ private:
+  ~DataChannelChild() = default;
 
-    void AddIPDLReference();
+  void AddIPDLReference();
 
-    bool mIPCOpen;
+  bool mIPCOpen;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif /* NS_DATACHANNELCHILD_H */

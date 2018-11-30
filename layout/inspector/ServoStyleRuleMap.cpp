@@ -22,23 +22,19 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-void
-ServoStyleRuleMap::EnsureTable(ServoStyleSet& aStyleSet)
-{
+void ServoStyleRuleMap::EnsureTable(ServoStyleSet& aStyleSet) {
   if (!IsEmpty()) {
     return;
   }
   aStyleSet.EnumerateStyleSheetArrays(
-    [this](const nsTArray<RefPtr<StyleSheet>>& aArray) {
-      for (auto& sheet : aArray) {
-        FillTableFromStyleSheet(*sheet);
-      }
-    });
+      [this](const nsTArray<RefPtr<StyleSheet>>& aArray) {
+        for (auto& sheet : aArray) {
+          FillTableFromStyleSheet(*sheet);
+        }
+      });
 }
 
-void
-ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources)
-{
+void ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources) {
   if (!IsEmpty() || !aXBLResources.GetServoStyles()) {
     return;
   }
@@ -47,9 +43,7 @@ ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources)
   }
 }
 
-void
-ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot)
-{
+void ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot) {
   if (!IsEmpty()) {
     return;
   }
@@ -58,17 +52,13 @@ ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot)
   }
 }
 
-void
-ServoStyleRuleMap::SheetAdded(StyleSheet& aStyleSheet)
-{
+void ServoStyleRuleMap::SheetAdded(StyleSheet& aStyleSheet) {
   if (!IsEmpty()) {
     FillTableFromStyleSheet(aStyleSheet);
   }
 }
 
-void
-ServoStyleRuleMap::SheetRemoved(StyleSheet& aStyleSheet)
-{
+void ServoStyleRuleMap::SheetRemoved(StyleSheet& aStyleSheet) {
   // Invalidate all data inside. This isn't strictly necessary since
   // we should always get update from document before new queries come.
   // But it is probably still safer if we try to avoid having invalid
@@ -78,18 +68,15 @@ ServoStyleRuleMap::SheetRemoved(StyleSheet& aStyleSheet)
   mTable.Clear();
 }
 
-void
-ServoStyleRuleMap::RuleAdded(StyleSheet& aStyleSheet, css::Rule& aStyleRule)
-{
+void ServoStyleRuleMap::RuleAdded(StyleSheet& aStyleSheet,
+                                  css::Rule& aStyleRule) {
   if (!IsEmpty()) {
     FillTableFromRule(aStyleRule);
   }
 }
 
-void
-ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
-                               css::Rule& aStyleRule)
-{
+void ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
+                                    css::Rule& aStyleRule) {
   if (IsEmpty()) {
     return;
   }
@@ -121,17 +108,14 @@ ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
   }
 }
 
-size_t
-ServoStyleRuleMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t ServoStyleRuleMap::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
   n += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
 
-void
-ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
-{
+void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
   switch (aRule.Type()) {
     case CSSRule_Binding::STYLE_RULE: {
       auto& rule = static_cast<CSSStyleRule&>(aRule);
@@ -155,20 +139,16 @@ ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
   }
 }
 
-void
-ServoStyleRuleMap::FillTableFromRuleList(ServoCSSRuleList& aRuleList)
-{
+void ServoStyleRuleMap::FillTableFromRuleList(ServoCSSRuleList& aRuleList) {
   for (uint32_t i : IntegerRange(aRuleList.Length())) {
     FillTableFromRule(*aRuleList.GetRule(i));
   }
 }
 
-void
-ServoStyleRuleMap::FillTableFromStyleSheet(StyleSheet& aSheet)
-{
+void ServoStyleRuleMap::FillTableFromStyleSheet(StyleSheet& aSheet) {
   if (aSheet.IsComplete()) {
     FillTableFromRuleList(*aSheet.GetCssRulesInternal());
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

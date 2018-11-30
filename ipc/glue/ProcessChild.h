@@ -20,37 +20,30 @@ namespace mozilla {
 namespace ipc {
 
 class ProcessChild : public ChildProcess {
-protected:
+ protected:
   typedef base::ProcessId ProcessId;
 
-public:
+ public:
   explicit ProcessChild(ProcessId aParentPid);
   virtual ~ProcessChild();
 
   virtual bool Init(int aArgc, char* aArgv[]) = 0;
-  virtual void CleanUp()
-  { }
+  virtual void CleanUp() {}
 
-  static MessageLoop* message_loop() {
-    return gProcessChild->mUILoop;
-  }
+  static MessageLoop* message_loop() { return gProcessChild->mUILoop; }
 
-    /**
+  /**
    * Exit *now*.  Do not shut down XPCOM, do not pass Go, do not run
    * static destructors, do not collect $200.
    */
   static void QuickExit();
 
-protected:
-  static ProcessChild* current() {
-    return gProcessChild;
-  }
+ protected:
+  static ProcessChild* current() { return gProcessChild; }
 
-  ProcessId ParentPid() {
-    return mParentPid;
-  }
+  ProcessId ParentPid() { return mParentPid; }
 
-private:
+ private:
   static ProcessChild* gProcessChild;
 
   MessageLoop* mUILoop;
@@ -59,8 +52,7 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(ProcessChild);
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-
-#endif // ifndef mozilla_ipc_ProcessChild_h
+#endif  // ifndef mozilla_ipc_ProcessChild_h

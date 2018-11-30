@@ -9,9 +9,7 @@
 
 #include "nsIDocument.h"
 
-void
-nsIPresShell::SetNeedLayoutFlush()
-{
+void nsIPresShell::SetNeedLayoutFlush() {
   mNeedLayoutFlush = true;
   if (nsIDocument* doc = mDocument->GetDisplayDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
@@ -26,9 +24,7 @@ nsIPresShell::SetNeedLayoutFlush()
 #endif
 }
 
-void
-nsIPresShell::SetNeedStyleFlush()
-{
+void nsIPresShell::SetNeedStyleFlush() {
   mNeedStyleFlush = true;
   if (nsIDocument* doc = mDocument->GetDisplayDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
@@ -43,16 +39,12 @@ nsIPresShell::SetNeedStyleFlush()
 #endif
 }
 
-void
-nsIPresShell::EnsureStyleFlush()
-{
+void nsIPresShell::EnsureStyleFlush() {
   SetNeedStyleFlush();
   ObserveStyleFlushes();
 }
 
-void
-nsIPresShell::SetNeedThrottledAnimationFlush()
-{
+void nsIPresShell::SetNeedThrottledAnimationFlush() {
   mNeedThrottledAnimationFlush = true;
   if (nsIDocument* doc = mDocument->GetDisplayDocument()) {
     if (nsIPresShell* shell = doc->GetShell()) {
@@ -61,4 +53,4 @@ nsIPresShell::SetNeedThrottledAnimationFlush()
   }
 }
 
-#endif // nsIPresShellInlines_h
+#endif  // nsIPresShellInlines_h

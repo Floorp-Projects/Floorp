@@ -27,25 +27,22 @@ class SyncObject;
 class WorkerThread;
 
 class JobScheduler {
-public:
+ public:
   /// Return one of the queues that the drawing worker threads pull from, chosen
   /// pseudo-randomly.
-  static MultiThreadedJobQueue* GetDrawingQueue()
-  {
-    return sSingleton->mDrawingQueues[
-      sSingleton->mNextQueue++ % sSingleton->mDrawingQueues.size()
-    ];
+  static MultiThreadedJobQueue* GetDrawingQueue() {
+    return sSingleton->mDrawingQueues[sSingleton->mNextQueue++ %
+                                      sSingleton->mDrawingQueues.size()];
   }
 
   /// Return one of the queues that the drawing worker threads pull from with a
   /// hash to choose the queue.
   ///
-  /// Calling this function several times with the same hash will yield the same queue.
-  static MultiThreadedJobQueue* GetDrawingQueue(uint32_t aHash)
-  {
-    return sSingleton->mDrawingQueues[
-      aHash % sSingleton->mDrawingQueues.size()
-    ];
+  /// Calling this function several times with the same hash will yield the same
+  /// queue.
+  static MultiThreadedJobQueue* GetDrawingQueue(uint32_t aHash) {
+    return sSingleton
+        ->mDrawingQueues[aHash % sSingleton->mDrawingQueues.size()];
   }
 
   /// Return the task queue associated to the worker the task is pinned to if
@@ -64,7 +61,8 @@ public:
   /// This will block until worker threads are joined and deleted.
   static void ShutDown();
 
-  /// Returns true if there is a successfully initialized JobScheduler singleton.
+  /// Returns true if there is a successfully initialized JobScheduler
+  /// singleton.
   static bool IsEnabled() { return !!sSingleton; }
 
   /// Submit a task buffer to its associated queue.
@@ -81,14 +79,15 @@ public:
   /// Process commands until the command buffer needs to block on a sync object,
   /// completes, yields, or encounters an error.
   ///
-  /// Can be used on any thread. Worker threads basically loop over this, but the
-  /// main thread can also dequeue pending task buffers and process them alongside
-  /// the worker threads if it is about to block until completion anyway.
+  /// Can be used on any thread. Worker threads basically loop over this, but
+  /// the main thread can also dequeue pending task buffers and process them
+  /// alongside the worker threads if it is about to block until completion
+  /// anyway.
   ///
   /// The caller looses ownership of the task buffer.
   static JobStatus ProcessJob(Job* aJobs);
 
-protected:
+ protected:
   static JobScheduler* sSingleton;
 
   // queues of Job that are ready to be processed
@@ -101,25 +100,27 @@ protected:
 /// The ownership of tasks can change when they are passed to certain methods
 /// of JobScheduler and SyncObject. See the docuumentaion of these classes.
 class Job {
-public:
-  Job(SyncObject* aStart, SyncObject* aCompletion, WorkerThread* aThread = nullptr);
+ public:
+  Job(SyncObject* aStart, SyncObject* aCompletion,
+      WorkerThread* aThread = nullptr);
 
   virtual ~Job();
 
   virtual JobStatus Run() = 0;
 
   /// For use in JobScheduler::SubmitJob. Don't use it anywhere else.
-  //already_AddRefed<SyncObject> GetAndResetStartSync();
+  // already_AddRefed<SyncObject> GetAndResetStartSync();
   SyncObject* GetStartSync() { return mStartSync; }
 
   bool IsPinnedToAThread() const { return !!mPinToThread; }
 
   WorkerThread* GetWorkerThread() { return mPinToThread; }
 
-protected:
+ protected:
   // An intrusive linked list of tasks waiting for a sync object to enter the
-  // signaled state. When the task is not waiting for a sync object, mNextWaitingJob
-  // should be null. This is only accessed from the thread that owns the task.
+  // signaled state. When the task is not waiting for a sync object,
+  // mNextWaitingJob should be null. This is only accessed from the thread that
+  // owns the task.
   Job* mNextWaitingJob;
 
   RefPtr<SyncObject> mStartSync;
@@ -135,12 +136,11 @@ class EventObject;
 ///
 /// Typically used as the final task, so that the main thread can block on the
 /// corresponfing EventObject until all of the tasks are processed.
-class SetEventJob : public Job
-{
-public:
-  explicit SetEventJob(EventObject* aEvent,
-                        SyncObject* aStart, SyncObject* aCompletion = nullptr,
-                        WorkerThread* aPinToWorker = nullptr);
+class SetEventJob : public Job {
+ public:
+  explicit SetEventJob(EventObject* aEvent, SyncObject* aStart,
+                       SyncObject* aCompletion = nullptr,
+                       WorkerThread* aPinToWorker = nullptr);
 
   ~SetEventJob();
 
@@ -148,35 +148,35 @@ public:
 
   EventObject* GetEvent() { return mEvent; }
 
-protected:
+ protected:
   RefPtr<EventObject> mEvent;
 };
 
-/// A synchronization object that can be used to express dependencies and ordering between
-/// tasks.
+/// A synchronization object that can be used to express dependencies and
+/// ordering between tasks.
 ///
-/// Jobs can register to SyncObjects in order to asynchronously wait for a signal.
-/// In practice, Job objects usually start with a sync object (startSyc) and end
-/// with another one (completionSync).
-/// a Job never gets processed before its startSync is in the signaled state, and
-/// signals its completionSync as soon as it finishes. This is how dependencies
-/// between tasks is expressed.
+/// Jobs can register to SyncObjects in order to asynchronously wait for a
+/// signal. In practice, Job objects usually start with a sync object (startSyc)
+/// and end with another one (completionSync). a Job never gets processed before
+/// its startSync is in the signaled state, and signals its completionSync as
+/// soon as it finishes. This is how dependencies between tasks is expressed.
 class SyncObject final : public external::AtomicRefCounted<SyncObject> {
-public:
+ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SyncObject)
 
   /// Create a synchronization object.
   ///
-  /// aNumPrerequisites represents the number of times the object must be signaled
-  /// before actually entering the signaled state (in other words, it means the
-  /// number of dependencies of this sync object).
+  /// aNumPrerequisites represents the number of times the object must be
+  /// signaled before actually entering the signaled state (in other words, it
+  /// means the number of dependencies of this sync object).
   ///
-  /// Explicitly specifying the number of prerequisites when creating sync objects
-  /// makes it easy to start scheduling some of the prerequisite tasks while
-  /// creating the others, which is how we typically use the task scheduler.
-  /// Automatically determining the number of prerequisites using Job's constructor
-  /// brings the risk that the sync object enters the signaled state while we
-  /// are still adding prerequisites which is hard to fix without using muteces.
+  /// Explicitly specifying the number of prerequisites when creating sync
+  /// objects makes it easy to start scheduling some of the prerequisite tasks
+  /// while creating the others, which is how we typically use the task
+  /// scheduler. Automatically determining the number of prerequisites using
+  /// Job's constructor brings the risk that the sync object enters the signaled
+  /// state while we are still adding prerequisites which is hard to fix without
+  /// using muteces.
   explicit SyncObject(uint32_t aNumPrerequisites = 1);
 
   ~SyncObject();
@@ -211,7 +211,7 @@ public:
   /// specified in the constructor (does nothin in release builds).
   void FreezePrerequisites();
 
-private:
+ private:
   // Called by Job's constructor
   void AddSubsequent(Job* aJob);
   void AddPrerequisite(Job* aJob);
@@ -233,9 +233,8 @@ private:
 };
 
 /// Base class for worker threads.
-class WorkerThread
-{
-public:
+class WorkerThread {
+ public:
   static WorkerThread* Create(MultiThreadedJobQueue* aJobQueue);
 
   virtual ~WorkerThread() {}
@@ -244,7 +243,7 @@ public:
 
   MultiThreadedJobQueue* GetJobQueue() { return mQueue; }
 
-protected:
+ protected:
   explicit WorkerThread(MultiThreadedJobQueue* aJobQueue);
 
   virtual void SetName(const char* aName) {}
@@ -252,7 +251,7 @@ protected:
   MultiThreadedJobQueue* mQueue;
 };
 
-} // namespace
-} // namespace
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

@@ -12,26 +12,28 @@
 namespace js {
 namespace jit {
 
-class CodeGeneratorX64 : public CodeGeneratorX86Shared
-{
-  protected:
-    CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
+class CodeGeneratorX64 : public CodeGeneratorX86Shared {
+ protected:
+  CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
-    Operand ToOperand64(const LInt64Allocation& a);
-    ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToTempValue(LInstruction* ins, size_t pos);
+  Operand ToOperand64(const LInt64Allocation& a);
+  ValueOperand ToValue(LInstruction* ins, size_t pos);
+  ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
-    void storeUnboxedValue(const LAllocation* value, MIRType valueType,
-                           Operand dest, MIRType slotType);
+  void storeUnboxedValue(const LAllocation* value, MIRType valueType,
+                         Operand dest, MIRType slotType);
 
-    void wasmStore(const wasm::MemoryAccessDesc& access, const LAllocation* value, Operand dstAddr);
-    template <typename T> void emitWasmLoad(T* ins);
-    template <typename T> void emitWasmStore(T* ins);
+  void wasmStore(const wasm::MemoryAccessDesc& access, const LAllocation* value,
+                 Operand dstAddr);
+  template <typename T>
+  void emitWasmLoad(T* ins);
+  template <typename T>
+  void emitWasmStore(T* ins);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_x64_CodeGenerator_x64_h */

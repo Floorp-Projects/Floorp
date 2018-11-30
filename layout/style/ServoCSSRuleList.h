@@ -17,25 +17,22 @@ namespace mozilla {
 
 namespace dom {
 class CSSStyleRule;
-} // namespace dom
+}  // namespace dom
 class StyleSheet;
 namespace css {
 class GroupRule;
 class Rule;
-} // namespace css
+}  // namespace css
 
-class ServoCSSRuleList final : public dom::CSSRuleList
-{
-public:
+class ServoCSSRuleList final : public dom::CSSRuleList {
+ public:
   ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
-                   StyleSheet* aSheet,
-                   css::GroupRule* aParentRule);
+                   StyleSheet* aSheet, css::GroupRule* aParentRule);
   css::GroupRule* GetParentRule() const { return mParentRule; }
   void DropSheetReference();
   void DropParentRuleReference();
 
-  void DropReferences()
-  {
+  void DropReferences() {
     DropSheetReference();
     DropParentRuleReference();
   }
@@ -54,7 +51,7 @@ public:
 
   uint16_t GetDOMCSSRuleType(uint32_t aIndex) const;
 
-private:
+ private:
   virtual ~ServoCSSRuleList();
 
   // XXX Is it possible to have an address lower than or equal to 255?
@@ -69,7 +66,7 @@ private:
     return reinterpret_cast<css::Rule*>(aInt);
   }
 
-  template<typename Func>
+  template <typename Func>
   void EnumerateInstantiatedRules(Func aCallback);
 
   void DropAllRules();
@@ -86,6 +83,6 @@ private:
   nsTArray<uintptr_t> mRules;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ServoCSSRuleList_h
+#endif  // mozilla_ServoCSSRuleList_h

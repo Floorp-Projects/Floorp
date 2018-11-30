@@ -16,19 +16,16 @@ template <typename T>
 class DynamicallyLinkedFunctionPtr;
 
 template <typename R, typename... Args>
-class DynamicallyLinkedFunctionPtr<R (__stdcall*)(Args...)>
-{
-  typedef R (__stdcall* FunctionPtrT)(Args...);
+class DynamicallyLinkedFunctionPtr<R(__stdcall*)(Args...)> {
+  typedef R(__stdcall* FunctionPtrT)(Args...);
 
-public:
+ public:
   DynamicallyLinkedFunctionPtr(const wchar_t* aLibName, const char* aFuncName)
-    : mModule(NULL)
-    , mFunction(nullptr)
-  {
+      : mModule(NULL), mFunction(nullptr) {
     mModule = ::LoadLibraryW(aLibName);
     if (mModule) {
-      mFunction = reinterpret_cast<FunctionPtrT>(
-                    ::GetProcAddress(mModule, aFuncName));
+      mFunction =
+          reinterpret_cast<FunctionPtrT>(::GetProcAddress(mModule, aFuncName));
 
       if (!mFunction) {
         // Since the function doesn't exist, there is no point in holding a
@@ -40,34 +37,30 @@ public:
   }
 
   DynamicallyLinkedFunctionPtr(const DynamicallyLinkedFunctionPtr&) = delete;
-  DynamicallyLinkedFunctionPtr& operator=(const DynamicallyLinkedFunctionPtr&) = delete;
+  DynamicallyLinkedFunctionPtr& operator=(const DynamicallyLinkedFunctionPtr&) =
+      delete;
 
   DynamicallyLinkedFunctionPtr(DynamicallyLinkedFunctionPtr&&) = delete;
-  DynamicallyLinkedFunctionPtr& operator=(DynamicallyLinkedFunctionPtr&&) = delete;
+  DynamicallyLinkedFunctionPtr& operator=(DynamicallyLinkedFunctionPtr&&) =
+      delete;
 
-  ~DynamicallyLinkedFunctionPtr()
-  {
+  ~DynamicallyLinkedFunctionPtr() {
     if (mModule) {
       ::FreeLibrary(mModule);
     }
   }
 
-  R operator()(Args... args) const
-  {
+  R operator()(Args... args) const {
     return mFunction(std::forward<Args>(args)...);
   }
 
-  explicit operator bool() const
-  {
-    return !!mFunction;
-  }
+  explicit operator bool() const { return !!mFunction; }
 
-private:
-  HMODULE       mModule;
-  FunctionPtrT  mFunction;
+ private:
+  HMODULE mModule;
+  FunctionPtrT mFunction;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_DynamicallyLinkedFunctionPtr_h
-
+#endif  // mozilla_DynamicallyLinkedFunctionPtr_h

@@ -16,13 +16,11 @@ struct MutexData {
   mozilla::Atomic<int32_t> mCount;
 };
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 
-static void
-InitMutex(pthread_mutex_t* mMutex)
-{
+static void InitMutex(pthread_mutex_t* mMutex) {
   pthread_mutexattr_t mutexAttributes;
   pthread_mutexattr_init(&mutexAttributes);
   // Make the mutex reentrant so it behaves the same as a win32 mutex
@@ -39,9 +37,7 @@ InitMutex(pthread_mutex_t* mMutex)
 }
 
 CrossProcessMutex::CrossProcessMutex(const char*)
-    : mMutex(nullptr)
-    , mCount(nullptr)
-{
+    : mMutex(nullptr), mCount(nullptr) {
   mSharedBuffer = new ipc::SharedMemoryBasic;
   if (!mSharedBuffer->Create(sizeof(MutexData))) {
     MOZ_CRASH();
@@ -67,9 +63,7 @@ CrossProcessMutex::CrossProcessMutex(const char*)
 }
 
 CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
-    : mMutex(nullptr)
-    , mCount(nullptr)
-{
+    : mMutex(nullptr), mCount(nullptr) {
   mSharedBuffer = new ipc::SharedMemoryBasic;
 
   if (!mSharedBuffer->IsHandleValid(aHandle)) {
@@ -103,8 +97,7 @@ CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
   MOZ_COUNT_CTOR(CrossProcessMutex);
 }
 
-CrossProcessMutex::~CrossProcessMutex()
-{
+CrossProcessMutex::~CrossProcessMutex() {
   int32_t count = --(*mCount);
 
   if (count == 0) {
@@ -115,23 +108,18 @@ CrossProcessMutex::~CrossProcessMutex()
   MOZ_COUNT_DTOR(CrossProcessMutex);
 }
 
-void
-CrossProcessMutex::Lock()
-{
+void CrossProcessMutex::Lock() {
   MOZ_ASSERT(*mCount > 0, "Attempting to lock mutex with zero ref count");
   pthread_mutex_lock(mMutex);
 }
 
-void
-CrossProcessMutex::Unlock()
-{
+void CrossProcessMutex::Unlock() {
   MOZ_ASSERT(*mCount > 0, "Attempting to unlock mutex with zero ref count");
   pthread_mutex_unlock(mMutex);
 }
 
-CrossProcessMutexHandle
-CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
-{
+CrossProcessMutexHandle CrossProcessMutex::ShareToProcess(
+    base::ProcessId aTargetPid) {
   CrossProcessMutexHandle result = ipc::SharedMemoryBasic::NULLHandle();
 
   if (mSharedBuffer && !mSharedBuffer->ShareToProcess(aTargetPid, &result)) {
@@ -141,4 +129,4 @@ CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
   return result;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

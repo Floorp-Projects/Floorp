@@ -5,12 +5,10 @@
 #pragma once
 
 /*
- * Helper class to allow smart pointers to stack objects to be constructed for ease of unit testing.
- * Recycled here to help expose a shared_ptr interface to objects which are really raw pointers.
+ * Helper class to allow smart pointers to stack objects to be constructed for
+ * ease of unit testing. Recycled here to help expose a shared_ptr interface to
+ * objects which are really raw pointers.
  */
-struct null_deleter
-{
-    void operator()(void const *) const
-    {
-    }
+struct null_deleter {
+  void operator()(void const *) const {}
 };

@@ -18,14 +18,16 @@ namespace gfx {
 
 // See TiledRegion.cpp for documentation on TiledRegionImpl.
 class TiledRegionImpl {
-public:
+ public:
   void Clear() { mRects.Clear(); }
   bool AddRect(const pixman_box32_t& aRect);
   bool Intersects(const pixman_box32_t& aRect) const;
   bool Contains(const pixman_box32_t& aRect) const;
-  operator ArrayView<pixman_box32_t>() const { return ArrayView<pixman_box32_t>(mRects); }
+  operator ArrayView<pixman_box32_t>() const {
+    return ArrayView<pixman_box32_t>(mRects);
+  }
 
-private:
+ private:
   nsTArray<pixman_box32_t> mRects;
 };
 
@@ -40,29 +42,22 @@ private:
  * Tiled regions convert implicitly to the underlying regular region type.
  * The only way to remove parts from a TiledRegion is by calling SetEmpty().
  */
-template<typename RegionT>
+template <typename RegionT>
 class TiledRegion {
-public:
+ public:
   typedef typename RegionT::RectType RectT;
 
-  TiledRegion()
-    : mCoversBounds(false)
-  {}
+  TiledRegion() : mCoversBounds(false) {}
 
   TiledRegion(const TiledRegion& aOther)
-    : mBounds(aOther.mBounds)
-    , mImpl(aOther.mImpl)
-    , mCoversBounds(false)
-  {}
+      : mBounds(aOther.mBounds), mImpl(aOther.mImpl), mCoversBounds(false) {}
 
   TiledRegion(TiledRegion&& aOther)
-    : mBounds(aOther.mBounds)
-    , mImpl(std::move(aOther.mImpl))
-    , mCoversBounds(false)
-  {}
+      : mBounds(aOther.mBounds),
+        mImpl(std::move(aOther.mImpl)),
+        mCoversBounds(false) {}
 
-  RegionT GetRegion() const
-  {
+  RegionT GetRegion() const {
     if (mBounds.IsEmpty()) {
       return RegionT();
     }
@@ -73,8 +68,7 @@ public:
     return RegionT(mImpl);
   }
 
-  TiledRegion& operator=(const TiledRegion& aOther)
-  {
+  TiledRegion& operator=(const TiledRegion& aOther) {
     if (&aOther != this) {
       mBounds = aOther.mBounds;
       mImpl = aOther.mImpl;
@@ -83,8 +77,7 @@ public:
     return *this;
   }
 
-  void Add(const RectT& aRect)
-  {
+  void Add(const RectT& aRect) {
     if (aRect.IsEmpty()) {
       return;
     }
@@ -105,8 +98,7 @@ public:
     }
   }
 
-  void Add(const RegionT& aRegion)
-  {
+  void Add(const RegionT& aRegion) {
     Maybe<RectT> newBounds = mBounds.SafeUnion(aRegion.GetBounds());
     if (!newBounds) {
       return;
@@ -135,8 +127,7 @@ public:
 
   bool IsEmpty() const { return mBounds.IsEmpty(); }
 
-  void SetEmpty()
-  {
+  void SetEmpty() {
     mBounds.SetEmpty();
     mImpl.Clear();
     mCoversBounds = false;
@@ -145,8 +136,7 @@ public:
   RectT GetBounds() const { return mBounds; }
   bool CoversBounds() const { return mCoversBounds; }
 
-  bool Intersects(const RectT& aRect) const
-  {
+  bool Intersects(const RectT& aRect) const {
     if (aRect.IsEmpty()) {
       return true;
     }
@@ -160,8 +150,7 @@ public:
     return mImpl.Intersects(RectToBox(aRect));
   }
 
-  bool Contains(const RectT& aRect) const
-  {
+  bool Contains(const RectT& aRect) const {
     if (aRect.IsEmpty()) {
       return true;
     }
@@ -174,19 +163,16 @@ public:
     return mImpl.Contains(RectToBox(aRect));
   }
 
-private:
-
-  void FallBackToBounds()
-  {
+ private:
+  void FallBackToBounds() {
     mCoversBounds = true;
     mImpl.Clear();
   }
 
-  static pixman_box32_t RectToBox(const RectT& aRect)
-  {
+  static pixman_box32_t RectToBox(const RectT& aRect) {
     MOZ_ASSERT(!aRect.IsEmpty());
     MOZ_ASSERT(!aRect.Overflows());
-    return { aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost() };
+    return {aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost()};
   }
 
   RectT mBounds;
@@ -202,7 +188,7 @@ private:
 
 typedef TiledRegion<IntRegion> TiledIntRegion;
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_TILEDREGION_H_ */

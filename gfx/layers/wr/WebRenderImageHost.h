@@ -7,7 +7,7 @@
 #ifndef MOZILLA_GFX_WEBRENDERIMAGEHOST_H
 #define MOZILLA_GFX_WEBRENDERIMAGEHOST_H
 
-#include "CompositableHost.h"           // for CompositableHost
+#include "CompositableHost.h"               // for CompositableHost
 #include "mozilla/layers/ImageComposite.h"  // for ImageComposite
 
 namespace mozilla {
@@ -18,44 +18,43 @@ class WebRenderBridgeParent;
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
  */
-class WebRenderImageHost : public CompositableHost,
-                           public ImageComposite
-{
-public:
+class WebRenderImageHost : public CompositableHost, public ImageComposite {
+ public:
   explicit WebRenderImageHost(const TextureInfo& aTextureInfo);
   ~WebRenderImageHost();
 
-  virtual CompositableType GetType() override { return mTextureInfo.mCompositableType; }
+  virtual CompositableType GetType() override {
+    return mTextureInfo.mCompositableType;
+  }
 
-  virtual void Composite(Compositor* aCompositor,
-                         LayerComposite* aLayer,
-                         EffectChain& aEffectChain,
-                         float aOpacity,
-                         const gfx::Matrix4x4& aTransform,
-                         const gfx::SamplingFilter aSamplingFilter,
-                         const gfx::IntRect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr,
-                         const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
+  virtual void Composite(
+      Compositor* aCompositor, LayerComposite* aLayer,
+      EffectChain& aEffectChain, float aOpacity,
+      const gfx::Matrix4x4& aTransform,
+      const gfx::SamplingFilter aSamplingFilter, const gfx::IntRect& aClipRect,
+      const nsIntRegion* aVisibleRegion = nullptr,
+      const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
 
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures) override;
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                          TextureHost* aTextureOnWhite) override;
   virtual void RemoveTextureHost(TextureHost* aTexture) override;
 
-  virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) override;
+  virtual TextureHost* GetAsTextureHost(
+      gfx::IntRect* aPictureRect = nullptr) override;
 
-  virtual void Attach(Layer* aLayer,
-                      TextureSourceProvider* aProvider,
+  virtual void Attach(Layer* aLayer, TextureSourceProvider* aProvider,
                       AttachFlags aFlags = NO_FLAGS) override;
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetTextureSourceProvider(
+      TextureSourceProvider* aProvider) override;
 
   gfx::IntSize GetImageSize() override;
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
+  virtual void PrintInfo(std::stringstream& aStream,
+                         const char* aPrefix) override;
 
-  virtual void Dump(std::stringstream& aStream,
-                    const char* aPrefix = "",
+  virtual void Dump(std::stringstream& aStream, const char* aPrefix = "",
                     bool aDumpHtml = false) override;
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
@@ -66,10 +65,7 @@ public:
 
   virtual void CleanupResources() override;
 
-  uint32_t GetDroppedFrames() override
-  {
-    return GetDroppedFramesAndReset();
-  }
+  uint32_t GetDroppedFrames() override { return GetDroppedFramesAndReset(); }
 
   virtual WebRenderImageHost* AsWebRenderImageHost() override { return this; }
 
@@ -79,14 +75,11 @@ public:
 
   void ClearWrBridge();
 
-  void EnableUseAsyncImagePipeline()
-  {
-    mUseAsyncImagePipeline = true;
-  }
+  void EnableUseAsyncImagePipeline() { mUseAsyncImagePipeline = true; }
 
   TextureHost* GetCurrentTextureHost() { return mCurrentTextureHost; }
 
-protected:
+ protected:
   // ImageComposite
   virtual TimeStamp GetCompositionTime() const override;
 
@@ -100,7 +93,7 @@ protected:
   CompositableTextureHostRef mCurrentTextureHost;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_WEBRENDERIMAGEHOST_H
+#endif  // MOZILLA_GFX_WEBRENDERIMAGEHOST_H

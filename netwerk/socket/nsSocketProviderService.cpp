@@ -15,13 +15,13 @@
 #include "nsUDPSocketProvider.h"
 #include "mozilla/ClearOnShutdown.h"
 
-mozilla::StaticRefPtr<nsSocketProviderService> nsSocketProviderService::gSingleton;
+mozilla::StaticRefPtr<nsSocketProviderService>
+    nsSocketProviderService::gSingleton;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 already_AddRefed<nsISocketProviderService>
-nsSocketProviderService::GetOrCreate()
-{
+nsSocketProviderService::GetOrCreate() {
   RefPtr<nsSocketProviderService> inst;
   if (gSingleton) {
     inst = gSingleton;
@@ -32,8 +32,8 @@ nsSocketProviderService::GetOrCreate()
       mozilla::ClearOnShutdown(&gSingleton);
     } else {
       NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "net::nsSocketProviderService::GetOrCreate",
-        []() -> void { mozilla::ClearOnShutdown(&gSingleton); }));
+          "net::nsSocketProviderService::GetOrCreate",
+          []() -> void { mozilla::ClearOnShutdown(&gSingleton); }));
     }
   }
   return inst.forget();
@@ -44,16 +44,13 @@ NS_IMPL_ISUPPORTS(nsSocketProviderService, nsISocketProviderService)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsSocketProviderService::GetSocketProvider(const char         *type,
-                                           nsISocketProvider **result)
-{
+nsSocketProviderService::GetSocketProvider(const char *type,
+                                           nsISocketProvider **result) {
   nsCOMPtr<nsISocketProvider> inst;
-  if (!nsCRT::strcmp(type, "ssl") &&
-      XRE_IsParentProcess() &&
+  if (!nsCRT::strcmp(type, "ssl") && XRE_IsParentProcess() &&
       EnsureNSSInitializedChromeOrContent()) {
     inst = new nsSSLSocketProvider();
-  } else if (!nsCRT::strcmp(type, "starttls") &&
-             XRE_IsParentProcess() &&
+  } else if (!nsCRT::strcmp(type, "starttls") && XRE_IsParentProcess() &&
              EnsureNSSInitializedChromeOrContent()) {
     inst = new nsTLSSocketProvider();
   } else if (!nsCRT::strcmp(type, "socks")) {

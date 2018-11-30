@@ -11,9 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-void
-ServiceWorkerContainerChild::ActorDestroy(ActorDestroyReason aReason)
-{
+void ServiceWorkerContainerChild::ActorDestroy(ActorDestroyReason aReason) {
   if (mWorkerHolderToken) {
     mWorkerHolderToken->RemoveListener(this);
     mWorkerHolderToken = nullptr;
@@ -25,46 +23,38 @@ ServiceWorkerContainerChild::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-void
-ServiceWorkerContainerChild::WorkerShuttingDown()
-{
-  MaybeStartTeardown();
-}
+void ServiceWorkerContainerChild::WorkerShuttingDown() { MaybeStartTeardown(); }
 
-ServiceWorkerContainerChild::ServiceWorkerContainerChild(WorkerHolderToken* aWorkerHolderToken)
-  : mWorkerHolderToken(aWorkerHolderToken)
-  , mOwner(nullptr)
-  , mTeardownStarted(false)
-{
+ServiceWorkerContainerChild::ServiceWorkerContainerChild(
+    WorkerHolderToken* aWorkerHolderToken)
+    : mWorkerHolderToken(aWorkerHolderToken),
+      mOwner(nullptr),
+      mTeardownStarted(false) {
   if (mWorkerHolderToken) {
     mWorkerHolderToken->AddListener(this);
   }
 }
 
-void
-ServiceWorkerContainerChild::SetOwner(RemoteServiceWorkerContainerImpl* aOwner)
-{
+void ServiceWorkerContainerChild::SetOwner(
+    RemoteServiceWorkerContainerImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(!mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner);
   mOwner = aOwner;
 }
 
-void
-ServiceWorkerContainerChild::RevokeOwner(RemoteServiceWorkerContainerImpl* aOwner)
-{
+void ServiceWorkerContainerChild::RevokeOwner(
+    RemoteServiceWorkerContainerImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner == mOwner);
   mOwner = nullptr;
 }
 
-void
-ServiceWorkerContainerChild::MaybeStartTeardown()
-{
+void ServiceWorkerContainerChild::MaybeStartTeardown() {
   if (mTeardownStarted) {
     return;
   }
   mTeardownStarted = true;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

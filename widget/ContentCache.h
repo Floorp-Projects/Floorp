@@ -25,7 +25,7 @@ class ContentCacheInParent;
 
 namespace dom {
 class TabParent;
-} // namespace dom
+}  // namespace dom
 
 /**
  * ContentCache stores various information of the child content.
@@ -33,29 +33,23 @@ class TabParent;
  * content process.
  */
 
-class ContentCache
-{
-public:
+class ContentCache {
+ public:
   typedef InfallibleTArray<LayoutDeviceIntRect> RectArray;
   typedef widget::IMENotification IMENotification;
 
   ContentCache();
 
-protected:
+ protected:
   // Whole text in the target
   nsString mText;
 
   // Start offset of the composition string.
   uint32_t mCompositionStart;
 
-  enum
-  {
-    ePrevCharRect = 1,
-    eNextCharRect = 0
-  };
+  enum { ePrevCharRect = 1, eNextCharRect = 0 };
 
-  struct Selection final
-  {
+  struct Selection final {
     // Following values are offset in "flat text".
     uint32_t mAnchor;
     uint32_t mFocus;
@@ -73,14 +67,9 @@ protected:
     // Whole rect of selected text. This is empty if the selection is collapsed.
     LayoutDeviceIntRect mRect;
 
-    Selection()
-      : mAnchor(UINT32_MAX)
-      , mFocus(UINT32_MAX)
-    {
-    }
+    Selection() : mAnchor(UINT32_MAX), mFocus(UINT32_MAX) {}
 
-    void Clear()
-    {
+    void Clear() {
       mAnchor = mFocus = UINT32_MAX;
       mWritingMode = WritingMode();
       ClearAnchorCharRects();
@@ -88,71 +77,60 @@ protected:
       mRect.SetEmpty();
     }
 
-    void ClearAnchorCharRects()
-    {
+    void ClearAnchorCharRects() {
       for (size_t i = 0; i < ArrayLength(mAnchorCharRects); i++) {
         mAnchorCharRects[i].SetEmpty();
       }
     }
-    void ClearFocusCharRects()
-    {
+    void ClearFocusCharRects() {
       for (size_t i = 0; i < ArrayLength(mFocusCharRects); i++) {
         mFocusCharRects[i].SetEmpty();
       }
     }
 
-    bool IsValid() const
-    {
+    bool IsValid() const {
       return mAnchor != UINT32_MAX && mFocus != UINT32_MAX;
     }
-    bool Collapsed() const
-    {
+    bool Collapsed() const {
       NS_ASSERTION(IsValid(),
                    "The caller should check if the selection is valid");
       return mFocus == mAnchor;
     }
-    bool Reversed() const
-    {
+    bool Reversed() const {
       NS_ASSERTION(IsValid(),
                    "The caller should check if the selection is valid");
       return mFocus < mAnchor;
     }
-    uint32_t StartOffset() const
-    {
+    uint32_t StartOffset() const {
       NS_ASSERTION(IsValid(),
                    "The caller should check if the selection is valid");
       return Reversed() ? mFocus : mAnchor;
     }
-    uint32_t EndOffset() const
-    {
+    uint32_t EndOffset() const {
       NS_ASSERTION(IsValid(),
                    "The caller should check if the selection is valid");
       return Reversed() ? mAnchor : mFocus;
     }
-    uint32_t Length() const
-    {
+    uint32_t Length() const {
       NS_ASSERTION(IsValid(),
                    "The caller should check if the selection is valid");
       return Reversed() ? mAnchor - mFocus : mFocus - mAnchor;
     }
-    LayoutDeviceIntRect StartCharRect() const
-    {
+    LayoutDeviceIntRect StartCharRect() const {
       NS_ASSERTION(IsValid(),
                    "The caller should check if the selection is valid");
-      return Reversed() ? mFocusCharRects[eNextCharRect] :
-                          mAnchorCharRects[eNextCharRect];
+      return Reversed() ? mFocusCharRects[eNextCharRect]
+                        : mAnchorCharRects[eNextCharRect];
     }
-    LayoutDeviceIntRect EndCharRect() const
-    {
+    LayoutDeviceIntRect EndCharRect() const {
       NS_ASSERTION(IsValid(),
                    "The caller should check if the selection is valid");
-      return Reversed() ? mAnchorCharRects[eNextCharRect] :
-                          mFocusCharRects[eNextCharRect];
+      return Reversed() ? mAnchorCharRects[eNextCharRect]
+                        : mFocusCharRects[eNextCharRect];
     }
   } mSelection;
 
-  bool IsSelectionValid() const
-  {
+  bool IsSelectionValid() const {
     return mSelection.IsValid() && mSelection.EndOffset() <= mText.Length();
   }
 
@@ -160,97 +138,71 @@ protected:
   // to query it.  If there is no text, this is caret rect.
   LayoutDeviceIntRect mFirstCharRect;
 
-  struct Caret final
-  {
+  struct Caret final {
     uint32_t mOffset;
     LayoutDeviceIntRect mRect;
 
-    Caret()
-      : mOffset(UINT32_MAX)
-    {
-    }
+    Caret() : mOffset(UINT32_MAX) {}
 
-    void Clear()
-    {
+    void Clear() {
       mOffset = UINT32_MAX;
       mRect.SetEmpty();
     }
 
     bool IsValid() const { return mOffset != UINT32_MAX; }
 
-    uint32_t Offset() const
-    {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the caret is valid");
+    uint32_t Offset() const {
+      NS_ASSERTION(IsValid(), "The caller should check if the caret is valid");
       return mOffset;
     }
   } mCaret;
 
-  struct TextRectArray final
-  {
+  struct TextRectArray final {
     uint32_t mStart;
     RectArray mRects;
 
-    TextRectArray()
-      : mStart(UINT32_MAX)
-    {
-    }
+    TextRectArray() : mStart(UINT32_MAX) {}
 
-    void Clear()
-    {
+    void Clear() {
       mStart = UINT32_MAX;
       mRects.Clear();
     }
 
-    bool IsValid() const
-    {
+    bool IsValid() const {
       if (mStart == UINT32_MAX) {
         return false;
       }
       CheckedInt<uint32_t> endOffset =
-        CheckedInt<uint32_t>(mStart) + mRects.Length();
+          CheckedInt<uint32_t>(mStart) + mRects.Length();
       return endOffset.isValid();
     }
-    bool HasRects() const
-    {
-      return IsValid() && !mRects.IsEmpty();
-    }
-    uint32_t StartOffset() const
-    {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the caret is valid");
+    bool HasRects() const { return IsValid() && !mRects.IsEmpty(); }
+    uint32_t StartOffset() const {
+      NS_ASSERTION(IsValid(), "The caller should check if the caret is valid");
       return mStart;
     }
-    uint32_t EndOffset() const
-    {
-      NS_ASSERTION(IsValid(),
-                   "The caller should check if the caret is valid");
+    uint32_t EndOffset() const {
+      NS_ASSERTION(IsValid(), "The caller should check if the caret is valid");
       if (!IsValid()) {
         return UINT32_MAX;
       }
       return mStart + mRects.Length();
     }
-    bool InRange(uint32_t aOffset) const
-    {
-      return IsValid() &&
-             StartOffset() <= aOffset && aOffset < EndOffset();
+    bool InRange(uint32_t aOffset) const {
+      return IsValid() && StartOffset() <= aOffset && aOffset < EndOffset();
     }
-    bool InRange(uint32_t aOffset, uint32_t aLength) const
-    {
-      CheckedInt<uint32_t> endOffset =
-        CheckedInt<uint32_t>(aOffset) + aLength;
+    bool InRange(uint32_t aOffset, uint32_t aLength) const {
+      CheckedInt<uint32_t> endOffset = CheckedInt<uint32_t>(aOffset) + aLength;
       if (NS_WARN_IF(!endOffset.isValid())) {
         return false;
       }
       return InRange(aOffset) && aOffset + aLength <= EndOffset();
     }
-    bool IsOverlappingWith(uint32_t aOffset, uint32_t aLength) const
-    {
+    bool IsOverlappingWith(uint32_t aOffset, uint32_t aLength) const {
       if (!HasRects() || aOffset == UINT32_MAX || !aLength) {
         return false;
       }
-      CheckedInt<uint32_t> endOffset =
-        CheckedInt<uint32_t>(aOffset) + aLength;
+      CheckedInt<uint32_t> endOffset = CheckedInt<uint32_t>(aOffset) + aLength;
       if (NS_WARN_IF(!endOffset.isValid())) {
         return false;
       }
@@ -259,8 +211,7 @@ protected:
     LayoutDeviceIntRect GetRect(uint32_t aOffset) const;
     LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
     LayoutDeviceIntRect GetUnionRectAsFarAsPossible(
-                          uint32_t aOffset, uint32_t aLength,
-                          bool aRoundToExistingOffset) const;
+        uint32_t aOffset, uint32_t aLength, bool aRoundToExistingOffset) const;
   } mTextRectArray;
 
   LayoutDeviceIntRect mEditorRect;
@@ -269,9 +220,8 @@ protected:
   friend struct IPC::ParamTraits<ContentCache>;
 };
 
-class ContentCacheInChild final : public ContentCache
-{
-public:
+class ContentCacheInChild final : public ContentCache {
+ public:
   ContentCacheInChild();
 
   /**
@@ -299,29 +249,22 @@ public:
    * SetSelection() modifies selection with specified raw data. And also this
    * tries to retrieve text rects too.
    */
-  void SetSelection(nsIWidget* aWidget,
-                    uint32_t aStartOffset,
-                    uint32_t aLength,
-                    bool aReversed,
-                    const WritingMode& aWritingMode);
+  void SetSelection(nsIWidget* aWidget, uint32_t aStartOffset, uint32_t aLength,
+                    bool aReversed, const WritingMode& aWritingMode);
 
-private:
-  bool QueryCharRect(nsIWidget* aWidget,
-                     uint32_t aOffset,
+ private:
+  bool QueryCharRect(nsIWidget* aWidget, uint32_t aOffset,
                      LayoutDeviceIntRect& aCharRect) const;
-  bool QueryCharRectArray(nsIWidget* aWidget,
-                          uint32_t aOffset,
-                          uint32_t aLength,
-                          RectArray& aCharRectArray) const;
+  bool QueryCharRectArray(nsIWidget* aWidget, uint32_t aOffset,
+                          uint32_t aLength, RectArray& aCharRectArray) const;
   bool CacheCaret(nsIWidget* aWidget,
                   const IMENotification* aNotification = nullptr);
   bool CacheTextRects(nsIWidget* aWidget,
                       const IMENotification* aNotification = nullptr);
 };
 
-class ContentCacheInParent final : public ContentCache
-{
-public:
+class ContentCacheInParent final : public ContentCache {
+ public:
   explicit ContentCacheInParent(dom::TabParent& aTabParent);
 
   /**
@@ -329,8 +272,7 @@ public:
    * the content process.  This doesn't copy composition information because
    * it's managed by TabParent itself.
    */
-  void AssignContent(const ContentCache& aOther,
-                     nsIWidget* aWidget,
+  void AssignContent(const ContentCache& aOther, nsIWidget* aWidget,
                      const IMENotification* aNotification = nullptr);
 
   /**
@@ -392,8 +334,7 @@ public:
    * @return            Whether the composition is actually committed
    *                    synchronously.
    */
-  bool RequestIMEToCommitComposition(nsIWidget* aWidget,
-                                     bool aCancel,
+  bool RequestIMEToCommitComposition(nsIWidget* aWidget, bool aCancel,
                                      nsAString& aCommittedString);
 
   /**
@@ -401,10 +342,9 @@ public:
    * hasn't been handled all sending events yet, this stores the notification
    * and flush it later.
    */
-  void MaybeNotifyIME(nsIWidget* aWidget,
-                      const IMENotification& aNotification);
+  void MaybeNotifyIME(nsIWidget* aWidget, const IMENotification& aNotification);
 
-private:
+ private:
   IMENotification mPendingSelectionChange;
   IMENotification mPendingTextChange;
   IMENotification mPendingLayoutChange;
@@ -415,8 +355,7 @@ private:
   nsTArray<EventMessage> mDispatchedEventMessages;
   nsTArray<EventMessage> mReceivedEventMessages;
   // Log of RequestIMEToCommitComposition() in the last 2 compositions.
-  enum class RequestIMEToCommitCompositionResult : uint8_t
-  {
+  enum class RequestIMEToCommitCompositionResult : uint8_t {
     eToOldCompositionReceived,
     eToCommittedCompositionReceived,
     eReceivedAfterTabParentBlur,
@@ -424,8 +363,8 @@ private:
     eHandledAsynchronously,
     eHandledSynchronously,
   };
-  const char* ToReadableText(RequestIMEToCommitCompositionResult aResult) const
-  {
+  const char* ToReadableText(
+      RequestIMEToCommitCompositionResult aResult) const {
     switch (aResult) {
       case RequestIMEToCommitCompositionResult::eToOldCompositionReceived:
         return "Commit request is not handled because it's for "
@@ -449,8 +388,8 @@ private:
     }
   }
   nsTArray<RequestIMEToCommitCompositionResult>
-    mRequestIMEToCommitCompositionResults;
-#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      mRequestIMEToCommitCompositionResults;
+#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   // mTabParent is owner of the instance.
   dom::TabParent& MOZ_NON_OWNING_REF mTabParent;
@@ -497,14 +436,11 @@ private:
    * offset or range is out of bounds, the result is computed with the existing
    * cache forcibly.
    */
-  bool GetCaretRect(uint32_t aOffset,
-                    bool aRoundToExistingOffset,
+  bool GetCaretRect(uint32_t aOffset, bool aRoundToExistingOffset,
                     LayoutDeviceIntRect& aCaretRect) const;
-  bool GetTextRect(uint32_t aOffset,
-                   bool aRoundToExistingOffset,
+  bool GetTextRect(uint32_t aOffset, bool aRoundToExistingOffset,
                    LayoutDeviceIntRect& aTextRect) const;
-  bool GetUnionTextRects(uint32_t aOffset,
-                         uint32_t aLength,
+  bool GetUnionTextRects(uint32_t aOffset, uint32_t aLength,
                          bool aRoundToExistingOffset,
                          LayoutDeviceIntRect& aUnionTextRect) const;
 
@@ -521,9 +457,9 @@ private:
    * Append event message log to aLog.
    */
   void AppendEventMessageLog(nsACString& aLog) const;
-#endif // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#endif  // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ContentCache_h
+#endif  // mozilla_ContentCache_h

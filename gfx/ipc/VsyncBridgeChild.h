@@ -14,16 +14,15 @@ namespace gfx {
 
 class VsyncIOThreadHolder;
 
-class VsyncBridgeChild final : public PVsyncBridgeChild
-{
+class VsyncBridgeChild final : public PVsyncBridgeChild {
   friend class NotifyVsyncTask;
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncBridgeChild)
 
-  static RefPtr<VsyncBridgeChild> Create(RefPtr<VsyncIOThreadHolder> aThread,
-                                         const uint64_t& aProcessToken,
-                                         Endpoint<PVsyncBridgeChild>&& aEndpoint);
+  static RefPtr<VsyncBridgeChild> Create(
+      RefPtr<VsyncIOThreadHolder> aThread, const uint64_t& aProcessToken,
+      Endpoint<PVsyncBridgeChild>&& aEndpoint);
 
   void Close();
 
@@ -35,7 +34,7 @@ public:
 
   virtual void HandleFatalError(const char* aMsg) const override;
 
-private:
+ private:
   VsyncBridgeChild(RefPtr<VsyncIOThreadHolder>, const uint64_t& aProcessToken);
   ~VsyncBridgeChild();
 
@@ -45,13 +44,13 @@ private:
 
   bool IsOnVsyncIOThread() const;
 
-private:
+ private:
   RefPtr<VsyncIOThreadHolder> mThread;
   MessageLoop* mLoop;
   uint64_t mProcessToken;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // include_gfx_ipc_VsyncBridgeChild_h
+#endif  // include_gfx_ipc_VsyncBridgeChild_h

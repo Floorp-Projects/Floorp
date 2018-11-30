@@ -18,20 +18,18 @@ namespace ipc {
 class FileDescriptor;
 
 // If you want to serialize an inputStream, please use AutoIPCStream.
-class InputStreamHelper
-{
-public:
-  static void
-  SerializeInputStream(nsIInputStream* aInputStream,
-                       InputStreamParams& aParams,
-                       nsTArray<FileDescriptor>& aFileDescriptors);
+class InputStreamHelper {
+ public:
+  static void SerializeInputStream(nsIInputStream* aInputStream,
+                                   InputStreamParams& aParams,
+                                   nsTArray<FileDescriptor>& aFileDescriptors);
 
-  static already_AddRefed<nsIInputStream>
-  DeserializeInputStream(const InputStreamParams& aParams,
-                         const nsTArray<FileDescriptor>& aFileDescriptors);
+  static already_AddRefed<nsIInputStream> DeserializeInputStream(
+      const InputStreamParams& aParams,
+      const nsTArray<FileDescriptor>& aFileDescriptors);
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_InputStreamUtils_h
+#endif  // mozilla_ipc_InputStreamUtils_h

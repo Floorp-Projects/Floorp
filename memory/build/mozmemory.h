@@ -28,18 +28,14 @@
 // On OSX, malloc/malloc.h contains the declaration for malloc_good_size,
 // which will call back in jemalloc, through the zone allocator so just use it.
 #ifndef XP_DARWIN
-MOZ_MEMORY_API size_t
-malloc_good_size_impl(size_t size);
+MOZ_MEMORY_API size_t malloc_good_size_impl(size_t size);
 
 // Note: the MOZ_GLUE_IN_PROGRAM ifdef below is there to avoid -Werror turning
 // the protective if into errors. MOZ_GLUE_IN_PROGRAM is what triggers MFBT_API
 // to use weak imports.
-static inline size_t
-_malloc_good_size(size_t size)
-{
+static inline size_t _malloc_good_size(size_t size) {
 #if defined(MOZ_GLUE_IN_PROGRAM) && !defined(IMPL_MFBT)
-  if (!malloc_good_size)
-    return size;
+  if (!malloc_good_size) return size;
 #endif
   return malloc_good_size_impl(size);
 }
@@ -47,14 +43,14 @@ _malloc_good_size(size_t size)
 #define malloc_good_size _malloc_good_size
 #endif
 
-#define MALLOC_DECL(name, return_type, ...)                                    \
+#define MALLOC_DECL(name, return_type, ...) \
   MOZ_JEMALLOC_API return_type name(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 
 #endif
 
-#define MALLOC_DECL(name, return_type, ...)                                    \
+#define MALLOC_DECL(name, return_type, ...) \
   MOZ_JEMALLOC_API return_type name(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_ARENA
 #include "malloc_decls.h"
@@ -65,4 +61,4 @@ _malloc_good_size(size_t size)
 #define moz_create_arena() moz_create_arena_with_params(NULL)
 #endif
 
-#endif // mozmemory_h
+#endif  // mozmemory_h

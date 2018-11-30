@@ -10,7 +10,8 @@
 #include <atomic>
 #include "mozilla/MemoryReporting.h"
 
-template<class T> struct already_AddRefed;
+template <class T>
+struct already_AddRefed;
 
 /*
  * Add a canary field to protect against double-frees of nsStringBuffer and
@@ -18,7 +19,7 @@ template<class T> struct already_AddRefed;
  * beta.
  */
 #if (defined(DEBUG) || defined(NIGHTLY_BUILD)) && !defined(MOZ_ASAN)
-# define STRING_BUFFER_CANARY 1
+#define STRING_BUFFER_CANARY 1
 #endif
 
 #ifdef STRING_BUFFER_CANARY
@@ -37,9 +38,8 @@ enum nsStringBufferCanary : uint32_t {
  * tracking.  NOTE: A string buffer can be modified only if its reference
  * count is 1.
  */
-class nsStringBuffer
-{
-private:
+class nsStringBuffer {
+ private:
   friend class CheckStaticAtomSizes;
 
   std::atomic<uint32_t> mRefCount;
@@ -49,8 +49,7 @@ private:
   uint32_t mCanary;
 #endif
 
-public:
-
+ public:
   /**
    * Allocates a new string buffer, with given size in bytes and a
    * reference count of one.  When the string buffer is no longer needed,
@@ -96,12 +95,10 @@ public:
    * pointer.  The data pointer must have been returned previously by a
    * call to the nsStringBuffer::Data method.
    */
-  static nsStringBuffer* FromData(void* aData)
-  {
+  static nsStringBuffer* FromData(void* aData) {
     nsStringBuffer* sb = reinterpret_cast<nsStringBuffer*>(aData) - 1;
 #ifdef STRING_BUFFER_CANARY
-    if (MOZ_UNLIKELY(sb->mCanary != CANARY_OK))
-      sb->FromDataCanaryCheckFailed();
+    if (MOZ_UNLIKELY(sb->mCanary != CANARY_OK)) sb->FromDataCanaryCheckFailed();
 #endif
     return sb;
   }
@@ -109,8 +106,7 @@ public:
   /**
    * This method returns the data pointer for this string buffer.
    */
-  void* Data() const
-  {
+  void* Data() const {
     return const_cast<char*>(reinterpret_cast<const char*>(this + 1));
   }
 
@@ -119,10 +115,7 @@ public:
    * This value is the same value that was originally passed to Alloc (or
    * Realloc).
    */
-  uint32_t StorageSize() const
-  {
-    return mStorageSize;
-  }
+  uint32_t StorageSize() const { return mStorageSize; }
 
   /**
    * If this method returns false, then the caller can be sure that their
@@ -132,8 +125,7 @@ public:
    * consumers may rely on the data in this buffer being immutable and
    * other threads may access this buffer simultaneously.
    */
-  bool IsReadonly() const
-  {
+  bool IsReadonly() const {
     // This doesn't lead to the destruction of the buffer, so we don't
     // need to perform acquire memory synchronization for the normal
     // reason that a reference count needs acquire synchronization
@@ -188,7 +180,8 @@ public:
   /**
    * This measures the size only if the StringBuffer is unshared.
    */
-  size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThisIfUnshared(
+      mozilla::MallocSizeOf aMallocSizeOf) const;
 
   /**
    * This measures the size regardless of whether the StringBuffer is
@@ -199,7 +192,8 @@ public:
    * please explain clearly in a comment why it's safe and won't lead to
    * double-counting.
    */
-  size_t SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThisEvenIfShared(
+      mozilla::MallocSizeOf aMallocSizeOf) const;
 
 #ifdef STRING_BUFFER_CANARY
   /*

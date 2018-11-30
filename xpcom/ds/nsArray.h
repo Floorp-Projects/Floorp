@@ -15,14 +15,16 @@
 #include "mozilla/Attributes.h"
 
 // {35C66FD1-95E9-4e0a-80C5-C3BD2B375481}
-#define NS_ARRAY_CID \
-{ 0x35c66fd1, 0x95e9, 0x4e0a, \
-  { 0x80, 0xc5, 0xc3, 0xbd, 0x2b, 0x37, 0x54, 0x81 } }
+#define NS_ARRAY_CID                                 \
+  {                                                  \
+    0x35c66fd1, 0x95e9, 0x4e0a, {                    \
+      0x80, 0xc5, 0xc3, 0xbd, 0x2b, 0x37, 0x54, 0x81 \
+    }                                                \
+  }
 
 // nsArray without any refcounting declarations
-class nsArrayBase : public nsIMutableArray
-{
-public:
+class nsArrayBase : public nsIMutableArray {
+ public:
   NS_DECL_NSIARRAY
   NS_DECL_NSIARRAYEXTENSIONS
   NS_DECL_NSIMUTABLEARRAY
@@ -35,41 +37,43 @@ public:
      instead.  */
   static nsresult XPCOMConstructor(nsISupports* aOuter, const nsIID& aIID,
                                    void** aResult);
-protected:
+
+ protected:
   nsArrayBase() {}
   nsArrayBase(const nsArrayBase& aOther);
-  explicit nsArrayBase(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray) {}
+  explicit nsArrayBase(const nsCOMArray_base& aBaseArray)
+      : mArray(aBaseArray) {}
   virtual ~nsArrayBase();
 
   nsCOMArray_base mArray;
 };
 
-class nsArray final : public nsArrayBase
-{
+class nsArray final : public nsArrayBase {
   friend class nsArrayBase;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
 
-private:
+ private:
   nsArray() : nsArrayBase() {}
   nsArray(const nsArray& aOther);
-  explicit nsArray(const nsCOMArray_base& aBaseArray) : nsArrayBase(aBaseArray) {}
+  explicit nsArray(const nsCOMArray_base& aBaseArray)
+      : nsArrayBase(aBaseArray) {}
   ~nsArray() {}
 };
 
-class nsArrayCC final : public nsArrayBase
-{
+class nsArrayCC final : public nsArrayBase {
   friend class nsArrayBase;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsArrayCC, nsIMutableArray)
 
-private:
+ private:
   nsArrayCC() : nsArrayBase() {}
   nsArrayCC(const nsArrayCC& aOther);
-  explicit nsArrayCC(const nsCOMArray_base& aBaseArray) : nsArrayBase(aBaseArray) {}
+  explicit nsArrayCC(const nsCOMArray_base& aBaseArray)
+      : nsArrayBase(aBaseArray) {}
   ~nsArrayCC() {}
 };
 

@@ -25,12 +25,12 @@
 #include "mozilla/HangTypes.h"
 
 #ifdef __GNUC__
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
 
 #if defined(MOZ_VALGRIND)
-# include <valgrind/valgrind.h>
+#include <valgrind/valgrind.h>
 #endif
 
 #include <string.h>
@@ -44,7 +44,7 @@
 #endif
 
 #ifdef __GNUC__
-# pragma GCC diagnostic pop // -Wshadow
+#pragma GCC diagnostic pop  // -Wshadow
 #endif
 
 #if defined(XP_LINUX) || defined(XP_MACOSX)
@@ -57,7 +57,7 @@
 #endif
 #if defined(__arm__) && !defined(__NR_rt_tgsigqueueinfo)
 // Some NDKs don't define this constant even though the kernel supports it.
-#define __NR_rt_tgsigqueueinfo (__NR_SYSCALL_BASE+363)
+#define __NR_rt_tgsigqueueinfo (__NR_SYSCALL_BASE + 363)
 #endif
 #ifndef SYS_rt_tgsigqueueinfo
 #define SYS_rt_tgsigqueueinfo __NR_rt_tgsigqueueinfo
@@ -67,18 +67,15 @@
 namespace mozilla {
 
 ThreadStackHelper::ThreadStackHelper()
-  : mStackToFill(nullptr)
-  , mMaxStackSize(16)
-  , mMaxBufferSize(512)
-  , mDesiredStackSize(0)
-  , mDesiredBufferSize(0)
-{
+    : mStackToFill(nullptr),
+      mMaxStackSize(16),
+      mMaxBufferSize(512),
+      mDesiredStackSize(0),
+      mDesiredBufferSize(0) {
   mThreadId = profiler_current_thread_id();
 }
 
-bool
-ThreadStackHelper::PrepareStackBuffer(HangStack& aStack)
-{
+bool ThreadStackHelper::PrepareStackBuffer(HangStack& aStack) {
   // If we need to grow because we used more than we could store last time,
   // increase our maximum sizes for this time.
   if (mDesiredBufferSize > mMaxBufferSize) {
@@ -109,20 +106,19 @@ ThreadStackHelper::PrepareStackBuffer(HangStack& aStack)
 }
 
 namespace {
-template<typename T>
-class ScopedSetPtr
-{
-private:
+template <typename T>
+class ScopedSetPtr {
+ private:
   T*& mPtr;
-public:
+
+ public:
   ScopedSetPtr(T*& p, T* val) : mPtr(p) { mPtr = val; }
   ~ScopedSetPtr() { mPtr = nullptr; }
 };
-} // namespace
+}  // namespace
 
-void
-ThreadStackHelper::GetStack(HangStack& aStack, nsACString& aRunnableName, bool aStackWalk)
-{
+void ThreadStackHelper::GetStack(HangStack& aStack, nsACString& aRunnableName,
+                                 bool aStackWalk) {
   aRunnableName.AssignLiteral("???");
 
   if (!PrepareStackBuffer(aStack)) {
@@ -133,13 +129,13 @@ ThreadStackHelper::GetStack(HangStack& aStack, nsACString& aRunnableName, bool a
   runnableName[0] = '\0';
 
   ScopedSetPtr<HangStack> _stackGuard(mStackToFill, &aStack);
-  ScopedSetPtr<Array<char, nsThread::kRunnableNameBufSize>>
-    _runnableGuard(mRunnableNameBuffer, &runnableName);
+  ScopedSetPtr<Array<char, nsThread::kRunnableNameBufSize>> _runnableGuard(
+      mRunnableNameBuffer, &runnableName);
 
   // XXX: We don't need to pass in ProfilerFeature::StackWalk to trigger
   // stackwalking, as that is instead controlled by the last argument.
-  profiler_suspend_and_sample_thread(
-    mThreadId, ProfilerFeature::Privacy, *this, aStackWalk);
+  profiler_suspend_and_sample_thread(mThreadId, ProfilerFeature::Privacy, *this,
+                                     aStackWalk);
 
   // Copy the name buffer allocation into the output string. We explicitly set
   // the last byte to null in case we read in some corrupted data without a null
@@ -148,9 +144,7 @@ ThreadStackHelper::GetStack(HangStack& aStack, nsACString& aRunnableName, bool a
   aRunnableName.AssignASCII(runnableName.cbegin());
 }
 
-void
-ThreadStackHelper::SetIsMainThread()
-{
+void ThreadStackHelper::SetIsMainThread() {
   MOZ_RELEASE_ASSERT(mRunnableNameBuffer);
 
   // NOTE: We cannot allocate any memory in this callback, as the target
@@ -164,12 +158,11 @@ ThreadStackHelper::SetIsMainThread()
   *mRunnableNameBuffer = nsThread::sMainThreadRunnableName;
 }
 
-void
-ThreadStackHelper::TryAppendFrame(HangEntry aFrame)
-{
+void ThreadStackHelper::TryAppendFrame(HangEntry aFrame) {
   MOZ_RELEASE_ASSERT(mStackToFill);
 
-  // We deduplicate identical Content, Jit, Wasm, ChromeScript and Suppressed frames.
+  // We deduplicate identical Content, Jit, Wasm, ChromeScript and Suppressed
+  // frames.
   switch (aFrame.type()) {
     case HangEntry::THangEntryContent:
     case HangEntry::THangEntryJit:
@@ -195,23 +188,17 @@ ThreadStackHelper::TryAppendFrame(HangEntry aFrame)
   }
 }
 
-void
-ThreadStackHelper::CollectNativeLeafAddr(void* aAddr)
-{
+void ThreadStackHelper::CollectNativeLeafAddr(void* aAddr) {
   MOZ_RELEASE_ASSERT(mStackToFill);
   TryAppendFrame(HangEntryProgCounter(reinterpret_cast<uintptr_t>(aAddr)));
 }
 
-void
-ThreadStackHelper::CollectJitReturnAddr(void* aAddr)
-{
+void ThreadStackHelper::CollectJitReturnAddr(void* aAddr) {
   MOZ_RELEASE_ASSERT(mStackToFill);
   TryAppendFrame(HangEntryJit());
 }
 
-void
-ThreadStackHelper::CollectWasmFrame(const char* aLabel)
-{
+void ThreadStackHelper::CollectWasmFrame(const char* aLabel) {
   MOZ_RELEASE_ASSERT(mStackToFill);
   // We don't want to collect WASM frames, as they are probably for content, so
   // we just add a "(content wasm)" frame.
@@ -220,13 +207,11 @@ ThreadStackHelper::CollectWasmFrame(const char* aLabel)
 
 namespace {
 
-bool
-IsChromeJSScript(JSScript* aScript)
-{
+bool IsChromeJSScript(JSScript* aScript) {
   // May be called from another thread or inside a signal handler.
   // We assume querying the script is safe but we must not manipulate it.
   nsIScriptSecurityManager* const secman =
-    nsScriptSecurityManager::GetScriptSecurityManager();
+      nsScriptSecurityManager::GetScriptSecurityManager();
   NS_ENSURE_TRUE(secman, false);
 
   JSPrincipals* const principals = JS_GetScriptPrincipals(aScript);
@@ -236,8 +221,8 @@ IsChromeJSScript(JSScript* aScript)
 // Get the full path after the URI scheme, if the URI matches the scheme.
 // For example, GetFullPathForScheme("a://b/c/d/e", "a://") returns "b/c/d/e".
 template <size_t LEN>
-const char*
-GetFullPathForScheme(const char* filename, const char (&scheme)[LEN]) {
+const char* GetFullPathForScheme(const char* filename,
+                                 const char (&scheme)[LEN]) {
   // Account for the null terminator included in LEN.
   if (!strncmp(filename, scheme, LEN - 1)) {
     return filename + LEN - 1;
@@ -248,8 +233,8 @@ GetFullPathForScheme(const char* filename, const char (&scheme)[LEN]) {
 // Get the full path after a URI component, if the URI contains the component.
 // For example, GetPathAfterComponent("a://b/c/d/e", "/c/") returns "d/e".
 template <size_t LEN>
-const char*
-GetPathAfterComponent(const char* filename, const char (&component)[LEN]) {
+const char* GetPathAfterComponent(const char* filename,
+                                  const char (&component)[LEN]) {
   const char* found = nullptr;
   const char* next = strstr(filename, component);
   while (next) {
@@ -262,11 +247,10 @@ GetPathAfterComponent(const char* filename, const char (&component)[LEN]) {
   return found;
 }
 
-} // namespace
+}  // namespace
 
-void
-ThreadStackHelper::CollectProfilingStackFrame(const js::ProfilingStackFrame& aFrame)
-{
+void ThreadStackHelper::CollectProfilingStackFrame(
+    const js::ProfilingStackFrame& aFrame) {
   // For non-js frames we just include the raw label.
   if (!aFrame.isJsFrame()) {
     const char* frameLabel = aFrame.label();
@@ -290,7 +274,8 @@ ThreadStackHelper::CollectProfilingStackFrame(const js::ProfilingStackFrame& aFr
     // Let's make sure we don't deadlock here, by asserting that `label`'s
     // backing data matches.
     MOZ_RELEASE_ASSERT(label.BeginReading() == frameLabel,
-        "String copy performed during ThreadStackHelper::CollectProfilingStackFrame");
+                       "String copy performed during "
+                       "ThreadStackHelper::CollectProfilingStackFrame");
     TryAppendFrame(label);
     return;
   }
@@ -340,7 +325,7 @@ ThreadStackHelper::CollectProfilingStackFrame(const js::ProfilingStackFrame& aFr
     }
   }
 
-  char buffer[128]; // Enough to fit longest js file name from the tree
+  char buffer[128];  // Enough to fit longest js file name from the tree
   size_t len = SprintfLiteral(buffer, "%s:%u", basename, lineno);
   if (len < sizeof(buffer)) {
     mDesiredBufferSize += len + 1;
@@ -361,4 +346,4 @@ ThreadStackHelper::CollectProfilingStackFrame(const js::ProfilingStackFrame& aFr
   TryAppendFrame(HangEntryChromeScript());
 }
 
-} // namespace mozilla
+}  // namespace mozilla

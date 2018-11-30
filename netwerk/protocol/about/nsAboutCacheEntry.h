@@ -18,80 +18,68 @@ class nsIInputStream;
 class nsILoadContextInfo;
 class nsIURI;
 
-class nsAboutCacheEntry final : public nsIAboutModule
-{
-public:
+class nsAboutCacheEntry final : public nsIAboutModule {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIABOUTMODULE
+
+ private:
+  virtual ~nsAboutCacheEntry() = default;
+
+  class Channel final : public nsICacheEntryOpenCallback,
+                        public nsICacheEntryMetaDataVisitor,
+                        public nsIStreamListener,
+                        public nsIChannel {
+   public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIABOUTMODULE
+    NS_DECL_NSICACHEENTRYOPENCALLBACK
+    NS_DECL_NSICACHEENTRYMETADATAVISITOR
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+    NS_FORWARD_SAFE_NSICHANNEL(mChannel)
+    NS_FORWARD_SAFE_NSIREQUEST(mChannel)
 
-private:
-    virtual ~nsAboutCacheEntry() = default;
+    Channel() : mBuffer(nullptr), mWaitingForData(false), mHexDumpState(0) {}
 
-    class Channel final : public nsICacheEntryOpenCallback
-                        , public nsICacheEntryMetaDataVisitor
-                        , public nsIStreamListener
-                        , public nsIChannel
-    {
-    public:
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSICACHEENTRYOPENCALLBACK
-        NS_DECL_NSICACHEENTRYMETADATAVISITOR
-        NS_DECL_NSIREQUESTOBSERVER
-        NS_DECL_NSISTREAMLISTENER
-        NS_FORWARD_SAFE_NSICHANNEL(mChannel)
-        NS_FORWARD_SAFE_NSIREQUEST(mChannel)
+   private:
+    virtual ~Channel() = default;
 
-        Channel()
-            : mBuffer(nullptr)
-            , mWaitingForData(false)
-            , mHexDumpState(0)
-        {}
+   public:
+    MOZ_MUST_USE nsresult Init(nsIURI *uri, nsILoadInfo *aLoadInfo);
 
-    private:
-        virtual ~Channel() = default;
+    MOZ_MUST_USE nsresult GetContentStream(nsIURI *, nsIInputStream **);
+    MOZ_MUST_USE nsresult OpenCacheEntry(nsIURI *);
+    MOZ_MUST_USE nsresult OpenCacheEntry();
+    MOZ_MUST_USE nsresult WriteCacheEntryDescription(nsICacheEntry *);
+    MOZ_MUST_USE nsresult WriteCacheEntryUnavailable();
+    MOZ_MUST_USE nsresult ParseURI(nsIURI *uri, nsACString &storageName,
+                                   nsILoadContextInfo **loadInfo,
+                                   nsCString &enahnceID, nsIURI **cacheUri);
+    void CloseContent();
 
-    public:
-        MOZ_MUST_USE nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
+    static MOZ_MUST_USE nsresult PrintCacheData(
+        nsIInputStream *aInStream, void *aClosure, const char *aFromSegment,
+        uint32_t aToOffset, uint32_t aCount, uint32_t *aWriteCount);
 
-        MOZ_MUST_USE nsresult GetContentStream(nsIURI *, nsIInputStream **);
-        MOZ_MUST_USE nsresult OpenCacheEntry(nsIURI *);
-        MOZ_MUST_USE nsresult OpenCacheEntry();
-        MOZ_MUST_USE nsresult WriteCacheEntryDescription(nsICacheEntry *);
-        MOZ_MUST_USE nsresult WriteCacheEntryUnavailable();
-        MOZ_MUST_USE nsresult ParseURI(nsIURI *uri, nsACString &storageName,
-                                       nsILoadContextInfo **loadInfo,
-                                       nsCString &enahnceID,
-                                       nsIURI **cacheUri);
-        void CloseContent();
+   private:
+    nsCString mStorageName, mEnhanceId;
+    nsCOMPtr<nsILoadContextInfo> mLoadInfo;
+    nsCOMPtr<nsIURI> mCacheURI;
 
-        static MOZ_MUST_USE nsresult
-        PrintCacheData(nsIInputStream *aInStream,
-                       void *aClosure,
-                       const char *aFromSegment,
-                       uint32_t aToOffset,
-                       uint32_t aCount,
-                       uint32_t *aWriteCount);
+    nsCString *mBuffer;
+    nsCOMPtr<nsIAsyncOutputStream> mOutputStream;
+    bool mWaitingForData;
+    uint32_t mHexDumpState;
 
-    private:
-        nsCString mStorageName, mEnhanceId;
-        nsCOMPtr<nsILoadContextInfo> mLoadInfo;
-        nsCOMPtr<nsIURI> mCacheURI;
-
-        nsCString *mBuffer;
-        nsCOMPtr<nsIAsyncOutputStream> mOutputStream;
-        bool mWaitingForData;
-        uint32_t mHexDumpState;
-
-        nsCOMPtr<nsIChannel> mChannel;
-    };
+    nsCOMPtr<nsIChannel> mChannel;
+  };
 };
 
 #define NS_ABOUT_CACHE_ENTRY_MODULE_CID              \
-{ /* 7fa5237d-b0eb-438f-9e50-ca0166e63788 */         \
-    0x7fa5237d,                                      \
-    0xb0eb,                                          \
-    0x438f,                                          \
-    {0x9e, 0x50, 0xca, 0x01, 0x66, 0xe6, 0x37, 0x88} \
-}
+  { /* 7fa5237d-b0eb-438f-9e50-ca0166e63788 */       \
+    0x7fa5237d, 0xb0eb, 0x438f, {                    \
+      0x9e, 0x50, 0xca, 0x01, 0x66, 0xe6, 0x37, 0x88 \
+    }                                                \
+  }
 
-#endif // nsAboutCacheEntry_h__
+#endif  // nsAboutCacheEntry_h__

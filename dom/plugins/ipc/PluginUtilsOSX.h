@@ -16,16 +16,18 @@ namespace plugins {
 namespace PluginUtilsOSX {
 
 // Need to call back into the browser's message loop to process event.
-typedef void (*RemoteProcessEvents) (void*);
+typedef void (*RemoteProcessEvents)(void*);
 
-NPError ShowCocoaContextMenu(void* aMenu, int aX, int aY, void* pluginModule, RemoteProcessEvents remoteEvent);
+NPError ShowCocoaContextMenu(void* aMenu, int aX, int aY, void* pluginModule,
+                             RemoteProcessEvents remoteEvent);
 
 void InvokeNativeEventLoop();
 
 // Need to call back and send a cocoa draw event to the plugin.
-typedef void (*DrawPluginFunc) (CGContextRef, void*, nsIntRect aUpdateRect);
+typedef void (*DrawPluginFunc)(CGContextRef, void*, nsIntRect aUpdateRect);
 
-void* GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance, double aContentsScaleFactor);
+void* GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance,
+                 double aContentsScaleFactor);
 void ReleaseCGLayer(void* cgLayer);
 void Repaint(void* cgLayer, nsIntRect aRect);
 
@@ -40,7 +42,7 @@ bool SetProcessName(const char* aProcessName);
  * Swapping still occurs regardless if the buffers are initialized.
  */
 class nsDoubleBufferCARenderer {
-public:
+ public:
   nsDoubleBufferCARenderer() : mCALayer(nullptr), mContentsScaleFactor(1.0) {}
   // Returns width in "display pixels".  A "display pixel" is the smallest
   // fully addressable part of a display.  But in HiDPI modes each "display
@@ -64,7 +66,7 @@ public:
   bool HasFrontSurface();
   bool HasCALayer();
 
-  void SetCALayer(void *aCALayer);
+  void SetCALayer(void* aCALayer);
   // aWidth and aHeight are in "display pixels".  Multiply by
   // aContentsScaleFactor to get device pixels.
   bool InitFrontSurface(size_t aWidth, size_t aHeight,
@@ -77,16 +79,16 @@ public:
 
   double GetContentsScaleFactor() { return mContentsScaleFactor; }
 
-private:
-  void *mCALayer;
+ private:
+  void* mCALayer;
   RefPtr<nsCARenderer> mCARenderer;
   RefPtr<MacIOSurface> mFrontSurface;
   RefPtr<MacIOSurface> mBackSurface;
   double mContentsScaleFactor;
 };
 
-} // namespace PluginUtilsOSX
-} // namespace plugins
-} // namespace mozilla
+}  // namespace PluginUtilsOSX
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif //dom_plugins_PluginUtilsOSX_h
+#endif  // dom_plugins_PluginUtilsOSX_h

@@ -14,12 +14,11 @@
 // nsSVGDataParser: a simple base class for parsing values
 // for path and transform values.
 //
-class nsSVGDataParser
-{
-public:
+class nsSVGDataParser {
+ public:
   explicit nsSVGDataParser(const nsAString& aValue);
 
-protected:
+ protected:
   static bool IsAlpha(char16_t aCh) {
     // Exclude non-ascii characters before calling isalpha
     return (aCh & 0x7f) == aCh && isalpha(aCh);
@@ -35,5 +34,4 @@ protected:
   const mozilla::RangedPtr<const char16_t> mEnd;
 };
 
-
-#endif // __NS_SVGDATAPARSER_H__
+#endif  // __NS_SVGDATAPARSER_H__

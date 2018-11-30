@@ -12,9 +12,8 @@
 
 class nsIBaseWindow;
 
-class nsResizerFrame final : public nsTitleBarFrame
-{
-protected:
+class nsResizerFrame final : public nsTitleBarFrame {
+ protected:
   typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
 
@@ -23,10 +22,11 @@ protected:
     int8_t mVertical;
   };
 
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsResizerFrame)
 
-  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell,
+                                      ComputedStyle* aStyle);
 
   explicit nsResizerFrame(ComputedStyle* aStyle);
 
@@ -36,8 +36,9 @@ public:
 
   virtual void MouseClicked(mozilla::WidgetMouseEvent* aEvent) override;
 
-protected:
-  nsIContent* GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWindow);
+ protected:
+  nsIContent* GetContentToResize(nsIPresShell* aPresShell,
+                                 nsIBaseWindow** aWindow);
 
   Direction GetDirection();
 
@@ -53,23 +54,25 @@ protected:
    * @param aMovement the amount the mouse was moved
    * @param aResizerDirection resizer direction returned by GetDirection
    */
-  static void AdjustDimensions(int32_t* aPos, int32_t* aSize,
-                               int32_t aMinSize, int32_t aMaxSize,
-                               int32_t aMovement, int8_t aResizerDirection);
+  static void AdjustDimensions(int32_t* aPos, int32_t* aSize, int32_t aMinSize,
+                               int32_t aMaxSize, int32_t aMovement,
+                               int8_t aResizerDirection);
 
   struct SizeInfo {
     nsString width, height;
   };
-  static void SizeInfoDtorFunc(void *aObject, nsAtom *aPropertyName,
-                               void *aPropertyValue, void *aData);
+  static void SizeInfoDtorFunc(void* aObject, nsAtom* aPropertyName,
+                               void* aPropertyValue, void* aData);
   static void ResizeContent(nsIContent* aContent, const Direction& aDirection,
-                            const SizeInfo& aSizeInfo, SizeInfo* aOriginalSizeInfo);
-  static void MaybePersistOriginalSize(nsIContent* aContent, const SizeInfo& aSizeInfo);
+                            const SizeInfo& aSizeInfo,
+                            SizeInfo* aOriginalSizeInfo);
+  static void MaybePersistOriginalSize(nsIContent* aContent,
+                                       const SizeInfo& aSizeInfo);
   static void RestoreOriginalSize(nsIContent* aContent);
 
-protected:
+ protected:
   LayoutDeviceIntRect mMouseDownRect;
   LayoutDeviceIntPoint mMouseDownPoint;
-}; // class nsResizerFrame
+};  // class nsResizerFrame
 
 #endif /* nsResizerFrame_h___ */

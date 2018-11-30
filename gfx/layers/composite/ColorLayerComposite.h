@@ -7,41 +7,35 @@
 #ifndef GFX_ColorLayerComposite_H
 #define GFX_ColorLayerComposite_H
 
-#include "Layers.h"                     // for ColorLayer, etc
-#include "mozilla/Attributes.h"         // for override
+#include "Layers.h"                                // for ColorLayer, etc
+#include "mozilla/Attributes.h"                    // for override
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
-#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
+#include "nsISupportsImpl.h"                       // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {
 
 class CompositableHost;
 
-class ColorLayerComposite : public ColorLayer,
-                            public LayerComposite
-{
-public:
-  explicit ColorLayerComposite(LayerManagerComposite *aManager)
-    : ColorLayer(aManager, nullptr)
-    , LayerComposite(aManager)
-  {
+class ColorLayerComposite : public ColorLayer, public LayerComposite {
+ public:
+  explicit ColorLayerComposite(LayerManagerComposite* aManager)
+      : ColorLayer(aManager, nullptr), LayerComposite(aManager) {
     MOZ_COUNT_CTOR(ColorLayerComposite);
     mImplData = static_cast<LayerComposite*>(this);
   }
 
-protected:
-  ~ColorLayerComposite()
-  {
+ protected:
+  ~ColorLayerComposite() {
     MOZ_COUNT_DTOR(ColorLayerComposite);
     Destroy();
   }
 
-public:
+ public:
   // LayerComposite Implementation
   virtual Layer* GetLayer() override { return this; }
 
-  virtual void SetLayerManager(HostLayerManager* aManager) override
-  {
+  virtual void SetLayerManager(HostLayerManager* aManager) override {
     LayerComposite::SetLayerManager(aManager);
     mManager = aManager;
   }
@@ -51,7 +45,7 @@ public:
   virtual void RenderLayer(const gfx::IntRect& aClipRect,
                            const Maybe<gfx::Polygon>& aGeometry) override;
 
-  virtual void CleanupResources() override {};
+  virtual void CleanupResources() override{};
 
   virtual void GenEffectChain(EffectChain& aEffect) override;
 
@@ -62,7 +56,7 @@ public:
   virtual const char* Name() const override { return "ColorLayerComposite"; }
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_ColorLayerComposite_H */

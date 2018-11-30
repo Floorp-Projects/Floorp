@@ -14,69 +14,51 @@ namespace dom {
 namespace cache {
 
 // Declared in ActorUtils.h
-void
-DeallocPCacheParent(PCacheParent* aActor)
-{
-  delete aActor;
-}
+void DeallocPCacheParent(PCacheParent* aActor) { delete aActor; }
 
 CacheParent::CacheParent(cache::Manager* aManager, CacheId aCacheId)
-  : mManager(aManager)
-  , mCacheId(aCacheId)
-{
+    : mManager(aManager), mCacheId(aCacheId) {
   MOZ_COUNT_CTOR(cache::CacheParent);
   MOZ_DIAGNOSTIC_ASSERT(mManager);
   mManager->AddRefCacheId(mCacheId);
 }
 
-CacheParent::~CacheParent()
-{
+CacheParent::~CacheParent() {
   MOZ_COUNT_DTOR(cache::CacheParent);
   MOZ_DIAGNOSTIC_ASSERT(!mManager);
 }
 
-void
-CacheParent::ActorDestroy(ActorDestroyReason aReason)
-{
+void CacheParent::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_DIAGNOSTIC_ASSERT(mManager);
   mManager->ReleaseCacheId(mCacheId);
   mManager = nullptr;
 }
 
-PCacheOpParent*
-CacheParent::AllocPCacheOpParent(const CacheOpArgs& aOpArgs)
-{
+PCacheOpParent* CacheParent::AllocPCacheOpParent(const CacheOpArgs& aOpArgs) {
   if (aOpArgs.type() != CacheOpArgs::TCacheMatchArgs &&
       aOpArgs.type() != CacheOpArgs::TCacheMatchAllArgs &&
       aOpArgs.type() != CacheOpArgs::TCachePutAllArgs &&
       aOpArgs.type() != CacheOpArgs::TCacheDeleteArgs &&
-      aOpArgs.type() != CacheOpArgs::TCacheKeysArgs)
-  {
+      aOpArgs.type() != CacheOpArgs::TCacheKeysArgs) {
     MOZ_CRASH("Invalid operation sent to Cache actor!");
   }
 
   return new CacheOpParent(Manager(), mCacheId, aOpArgs);
 }
 
-bool
-CacheParent::DeallocPCacheOpParent(PCacheOpParent* aActor)
-{
+bool CacheParent::DeallocPCacheOpParent(PCacheOpParent* aActor) {
   delete aActor;
   return true;
 }
 
-mozilla::ipc::IPCResult
-CacheParent::RecvPCacheOpConstructor(PCacheOpParent* aActor,
-                                     const CacheOpArgs& aOpArgs)
-{
+mozilla::ipc::IPCResult CacheParent::RecvPCacheOpConstructor(
+    PCacheOpParent* aActor, const CacheOpArgs& aOpArgs) {
   auto actor = static_cast<CacheOpParent*>(aActor);
   actor->Execute(mManager);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CacheParent::RecvTeardown()
-{
+mozilla::ipc::IPCResult CacheParent::RecvTeardown() {
   if (!Send__delete__(this)) {
     // child process is gone, warn and allow actor to clean up normally
     NS_WARNING("Cache failed to send delete.");
@@ -84,6 +66,6 @@ CacheParent::RecvTeardown()
   return IPC_OK();
 }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

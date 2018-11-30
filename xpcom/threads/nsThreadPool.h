@@ -19,11 +19,8 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 
-class nsThreadPool final
-  : public nsIThreadPool
-  , public nsIRunnable
-{
-public:
+class nsThreadPool final : public nsIThreadPool, public nsIRunnable {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
   NS_DECL_NSITHREADPOOL
@@ -31,7 +28,7 @@ public:
 
   nsThreadPool();
 
-private:
+ private:
   ~nsThreadPool();
 
   void ShutdownThread(nsIThread* aThread);
@@ -39,26 +36,25 @@ private:
   nsresult PutEvent(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags);
 
   nsCOMArray<nsIThread> mThreads;
-  mozilla::Mutex        mMutex;
-  mozilla::CondVar      mEventsAvailable;
-  mozilla::EventQueue   mEvents;
-  uint32_t              mThreadLimit;
-  uint32_t              mIdleThreadLimit;
-  uint32_t              mIdleThreadTimeout;
-  uint32_t              mIdleCount;
-  uint32_t              mStackSize;
+  mozilla::Mutex mMutex;
+  mozilla::CondVar mEventsAvailable;
+  mozilla::EventQueue mEvents;
+  uint32_t mThreadLimit;
+  uint32_t mIdleThreadLimit;
+  uint32_t mIdleThreadTimeout;
+  uint32_t mIdleCount;
+  uint32_t mStackSize;
   nsCOMPtr<nsIThreadPoolListener> mListener;
-  bool                  mShutdown;
-  nsCString             mName;
-  nsThreadPoolNaming    mThreadNaming;
+  bool mShutdown;
+  nsCString mName;
+  nsThreadPoolNaming mThreadNaming;
 };
 
-#define NS_THREADPOOL_CID                          \
-{ /* 547ec2a8-315e-4ec4-888e-6e4264fe90eb */       \
-  0x547ec2a8,                                      \
-  0x315e,                                          \
-  0x4ec4,                                          \
-  {0x88, 0x8e, 0x6e, 0x42, 0x64, 0xfe, 0x90, 0xeb} \
-}
+#define NS_THREADPOOL_CID                            \
+  { /* 547ec2a8-315e-4ec4-888e-6e4264fe90eb */       \
+    0x547ec2a8, 0x315e, 0x4ec4, {                    \
+      0x88, 0x8e, 0x6e, 0x42, 0x64, 0xfe, 0x90, 0xeb \
+    }                                                \
+  }
 
 #endif  // nsThreadPool_h__

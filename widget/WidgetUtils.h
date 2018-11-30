@@ -34,15 +34,13 @@ gfx::Matrix ComputeTransformForRotation(const nsIntRect& aBounds,
 gfx::Matrix ComputeTransformForUnRotation(const nsIntRect& aBounds,
                                           ScreenRotation aRotation);
 
-nsIntRect RotateRect(nsIntRect aRect,
-                     const nsIntRect& aBounds,
+nsIntRect RotateRect(nsIntRect aRect, const nsIntRect& aBounds,
                      ScreenRotation aRotation);
 
 namespace widget {
 
-class WidgetUtils
-{
-public:
+class WidgetUtils {
+ public:
   /**
    * Shutdown() is called when "xpcom-will-shutdown" is notified.  This is
    * useful when you need to observe the notification in XP level code under
@@ -54,7 +52,8 @@ public:
    * Starting at the docshell item for the passed in DOM window this looks up
    * the docshell tree until it finds a docshell item that has a widget.
    */
-  static already_AddRefed<nsIWidget> DOMWindowToWidget(nsPIDOMWindowOuter* aDOMWindow);
+  static already_AddRefed<nsIWidget> DOMWindowToWidget(
+      nsPIDOMWindowOuter* aDOMWindow);
 
   /**
    * Compute our keyCode value (NS_VK_*) from an ASCII character.
@@ -77,14 +76,13 @@ public:
    *                            NS_VK_[A-Z].
    *                            Note that must not be nullptr.
    */
-  static void GetLatinCharCodeForKeyCode(uint32_t aKeyCode,
-                                         bool aIsCapsLock,
+  static void GetLatinCharCodeForKeyCode(uint32_t aKeyCode, bool aIsCapsLock,
                                          uint32_t* aUnshiftedCharCode,
                                          uint32_t* aShiftedCharCode);
 
   /**
-  * Does device have touch support
-  */
+   * Does device have touch support
+   */
   static uint32_t IsTouchDeviceSupportPresent();
 
   /**
@@ -96,10 +94,9 @@ public:
    * Get branchShortName from string bundle
    */
   static void GetBrandShortName(nsAString& aBrandName);
-
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // mozilla_WidgetUtils_h
+#endif  // mozilla_WidgetUtils_h

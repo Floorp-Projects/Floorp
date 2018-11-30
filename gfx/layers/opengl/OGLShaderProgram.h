@@ -7,18 +7,18 @@
 #ifndef GFX_OGLSHADERPROGRAM_H
 #define GFX_OGLSHADERPROGRAM_H
 
-#include "GLContext.h"                  // for fast inlines of glUniform*
+#include "GLContext.h"  // for fast inlines of glUniform*
 #include "gfxTypes.h"
 #include "ImageTypes.h"
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Pair.h"               // for Pair
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
-#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
+#include "mozilla/Pair.h"        // for Pair
+#include "mozilla/RefPtr.h"      // for RefPtr
+#include "mozilla/gfx/Matrix.h"  // for Matrix4x4
+#include "mozilla/gfx/Rect.h"    // for Rect
 #include "mozilla/gfx/Types.h"
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsTArray.h"                   // for nsTArray
+#include "nsDebug.h"   // for NS_ASSERTION
+#include "nsPoint.h"   // for nsIntPoint
+#include "nsTArray.h"  // for nsTArray
 #include "mozilla/layers/CompositorTypes.h"
 
 #include <string>
@@ -29,26 +29,26 @@ namespace layers {
 class Layer;
 
 enum ShaderFeatures {
-  ENABLE_RENDER_COLOR=0x01,
-  ENABLE_TEXTURE_RECT=0x02,
-  ENABLE_TEXTURE_EXTERNAL=0x04,
-  ENABLE_TEXTURE_YCBCR=0x08,
-  ENABLE_TEXTURE_NV12=0x10,
-  ENABLE_TEXTURE_COMPONENT_ALPHA=0x20,
-  ENABLE_TEXTURE_NO_ALPHA=0x40,
-  ENABLE_TEXTURE_RB_SWAP=0x80,
-  ENABLE_OPACITY=0x100,
-  ENABLE_BLUR=0x200,
-  ENABLE_COLOR_MATRIX=0x400,
-  ENABLE_MASK=0x800,
-  ENABLE_NO_PREMUL_ALPHA=0x1000,
-  ENABLE_DEAA=0x2000,
-  ENABLE_DYNAMIC_GEOMETRY=0x4000,
-  ENABLE_MASK_TEXTURE_RECT=0x8000,
+  ENABLE_RENDER_COLOR = 0x01,
+  ENABLE_TEXTURE_RECT = 0x02,
+  ENABLE_TEXTURE_EXTERNAL = 0x04,
+  ENABLE_TEXTURE_YCBCR = 0x08,
+  ENABLE_TEXTURE_NV12 = 0x10,
+  ENABLE_TEXTURE_COMPONENT_ALPHA = 0x20,
+  ENABLE_TEXTURE_NO_ALPHA = 0x40,
+  ENABLE_TEXTURE_RB_SWAP = 0x80,
+  ENABLE_OPACITY = 0x100,
+  ENABLE_BLUR = 0x200,
+  ENABLE_COLOR_MATRIX = 0x400,
+  ENABLE_MASK = 0x800,
+  ENABLE_NO_PREMUL_ALPHA = 0x1000,
+  ENABLE_DEAA = 0x2000,
+  ENABLE_DYNAMIC_GEOMETRY = 0x4000,
+  ENABLE_MASK_TEXTURE_RECT = 0x8000,
 };
 
 class KnownUniform {
-public:
+ public:
   // this needs to be kept in sync with strings in 'AddUniforms'
   enum KnownUniformName {
     NotAKnownUniform = -1,
@@ -90,8 +90,7 @@ public:
     KnownUniformCount
   };
 
-  KnownUniform()
-  {
+  KnownUniform() {
     mName = NotAKnownUniform;
     mNameString = nullptr;
     mLocation = -1;
@@ -118,9 +117,7 @@ public:
 
   bool UpdateUniform(float f1, float f2) {
     if (mLocation == -1) return false;
-    if (mValue.f16v[0] != f1 ||
-        mValue.f16v[1] != f2)
-    {
+    if (mValue.f16v[0] != f1 || mValue.f16v[1] != f2) {
       mValue.f16v[0] = f1;
       mValue.f16v[1] = f2;
       return true;
@@ -130,11 +127,8 @@ public:
 
   bool UpdateUniform(float f1, float f2, float f3, float f4) {
     if (mLocation == -1) return false;
-    if (mValue.f16v[0] != f1 ||
-        mValue.f16v[1] != f2 ||
-        mValue.f16v[2] != f3 ||
-        mValue.f16v[3] != f4)
-    {
+    if (mValue.f16v[0] != f1 || mValue.f16v[1] != f2 || mValue.f16v[2] != f3 ||
+        mValue.f16v[3] != f4) {
       mValue.f16v[0] = f1;
       mValue.f16v[1] = f2;
       mValue.f16v[2] = f3;
@@ -144,27 +138,27 @@ public:
     return false;
   }
 
-  bool UpdateUniform(int cnt, const float *fp) {
+  bool UpdateUniform(int cnt, const float* fp) {
     if (mLocation == -1) return false;
     switch (cnt) {
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 9:
-    case 16:
-      if (memcmp(mValue.f16v, fp, sizeof(float) * cnt) != 0) {
-        memcpy(mValue.f16v, fp, sizeof(float) * cnt);
-        return true;
-      }
-      return false;
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 9:
+      case 16:
+        if (memcmp(mValue.f16v, fp, sizeof(float) * cnt) != 0) {
+          memcpy(mValue.f16v, fp, sizeof(float) * cnt);
+          return true;
+        }
+        return false;
     }
 
     MOZ_ASSERT_UNREACHABLE("cnt must be 1 2 3 4 9 or 16");
     return false;
   }
 
-  bool UpdateArrayUniform(int cnt, const float *fp) {
+  bool UpdateArrayUniform(int cnt, const float* fp) {
     if (mLocation == -1) return false;
     if (cnt > 16) {
       return false;
@@ -184,8 +178,8 @@ public:
     }
 
     float fp[12];
-    float *d = fp;
-    for(int i=0; i < cnt; i++) {
+    float* d = fp;
+    for (int i = 0; i < cnt; i++) {
       // Note: Do not want to make assumptions about .x, .y, .z member packing.
       // If gfx::Point3D is updated to make this guarantee, SIMD optimizations
       // may be possible
@@ -202,7 +196,7 @@ public:
   }
 
   KnownUniformName mName;
-  const char *mNameString;
+  const char* mNameString;
   int32_t mLocation;
 
   union {
@@ -212,15 +206,12 @@ public:
   } mValue;
 };
 
-class ShaderConfigOGL
-{
-public:
+class ShaderConfigOGL {
+ public:
   ShaderConfigOGL()
-    : mFeatures(0)
-    , mMultiplier(1)
-    , mCompositionOp(gfx::CompositionOp::OP_OVER)
-  {
-  }
+      : mFeatures(0),
+        mMultiplier(1),
+        mCompositionOp(gfx::CompositionOp::OP_OVER) {}
 
   void SetRenderColor(bool aEnabled);
   void SetTextureTarget(GLenum aTarget);
@@ -240,8 +231,7 @@ public:
   void SetDynamicGeometry(bool aEnabled);
   void SetColorMultiplier(uint32_t aMultiplier);
 
-  bool operator< (const ShaderConfigOGL& other) const
-  {
+  bool operator<(const ShaderConfigOGL& other) const {
     return mFeatures < other.mFeatures ||
            (mFeatures == other.mFeatures &&
             (int)mCompositionOp < (int)other.mCompositionOp) ||
@@ -250,9 +240,8 @@ public:
             mMultiplier < other.mMultiplier);
   }
 
-public:
-  void SetFeature(int aBitmask, bool aState)
-  {
+ public:
+  void SetFeature(int aBitmask, bool aState) {
     if (aState)
       mFeatures |= aBitmask;
     else
@@ -264,10 +253,8 @@ public:
   gfx::CompositionOp mCompositionOp;
 };
 
-static inline ShaderConfigOGL
-ShaderConfigFromTargetAndFormat(GLenum aTarget,
-                                gfx::SurfaceFormat aFormat)
-{
+static inline ShaderConfigOGL ShaderConfigFromTargetAndFormat(
+    GLenum aTarget, gfx::SurfaceFormat aFormat) {
   ShaderConfigOGL config;
   config.SetTextureTarget(aTarget);
   config.SetRBSwap(aFormat == gfx::SurfaceFormat::B8G8R8A8 ||
@@ -284,8 +271,7 @@ ShaderConfigFromTargetAndFormat(GLenum aTarget,
  * It is used by ShaderProgramOGL.
  * Use the factory method GetProfileFor to create instances.
  */
-struct ProgramProfileOGL
-{
+struct ProgramProfileOGL {
   /**
    * Factory method; creates an instance of this class for the given
    * ShaderConfigOGL
@@ -300,39 +286,37 @@ struct ProgramProfileOGL
   nsTArray<Pair<nsCString, GLuint>> mAttributes;
 
   KnownUniform mUniforms[KnownUniform::KnownUniformCount];
-  nsTArray<const char *> mDefines;
+  nsTArray<const char*> mDefines;
   size_t mTextureCount;
 
-  ProgramProfileOGL() :
-    mTextureCount(0)
-  {}
+  ProgramProfileOGL() : mTextureCount(0) {}
 
  private:
-  static void BuildMixBlender(const ShaderConfigOGL& aConfig, std::ostringstream& fs);
+  static void BuildMixBlender(const ShaderConfigOGL& aConfig,
+                              std::ostringstream& fs);
 };
-
 
 #if defined(DEBUG)
 #define CHECK_CURRENT_PROGRAM 1
-#define ASSERT_THIS_PROGRAM                                             \
-  do {                                                                  \
-    GLuint currentProgram;                                              \
-    mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram);       \
-    MOZ_ASSERT(currentProgram == mProgram,                              \
-                 "SetUniform with wrong program active!");              \
+#define ASSERT_THIS_PROGRAM                                       \
+  do {                                                            \
+    GLuint currentProgram;                                        \
+    mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram); \
+    MOZ_ASSERT(currentProgram == mProgram,                        \
+               "SetUniform with wrong program active!");          \
   } while (0)
 #else
-#define ASSERT_THIS_PROGRAM                                             \
-  do { } while (0)
+#define ASSERT_THIS_PROGRAM \
+  do {                      \
+  } while (0)
 #endif
 
 /**
  * Represents an OGL shader program. The details of a program are represented
  * by a ProgramProfileOGL
  */
-class ShaderProgramOGL
-{
-public:
+class ShaderProgramOGL {
+ public:
   typedef mozilla::gl::GLContext GLContext;
 
   ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile);
@@ -340,7 +324,8 @@ public:
   ~ShaderProgramOGL();
 
   bool HasInitialized() {
-    NS_ASSERTION(mProgramState != STATE_OK || mProgram > 0, "Inconsistent program state");
+    NS_ASSERTION(mProgramState != STATE_OK || mProgram > 0,
+                 "Inconsistent program state");
     return mProgramState == STATE_OK;
   }
 
@@ -348,13 +333,13 @@ public:
 
   bool Initialize();
 
-  GLint CreateShader(GLenum aShaderType, const char *aShaderSource);
+  GLint CreateShader(GLenum aShaderType, const char* aShaderSource);
 
   /**
    * Creates a program and stores its id.
    */
-  bool CreateProgram(const char *aVertexShaderString,
-                     const char *aFragmentShaderString);
+  bool CreateProgram(const char* aVertexShaderString,
+                     const char* aFragmentShaderString);
 
   /**
    * The following set of methods set a uniform argument to the shader program.
@@ -382,20 +367,21 @@ public:
   }
 
   void SetViewportSize(const gfx::IntSize& aSize) {
-    float vals[2] = { (float)aSize.width, (float)aSize.height };
+    float vals[2] = {(float)aSize.width, (float)aSize.height};
     SetUniform(KnownUniform::ViewportSize, 2, vals);
   }
 
   void SetVisibleCenter(const gfx::Point& aVisibleCenter) {
-    float vals[2] = { aVisibleCenter.x, aVisibleCenter.y };
+    float vals[2] = {aVisibleCenter.x, aVisibleCenter.y};
     SetUniform(KnownUniform::VisibleCenter, 2, vals);
   }
 
   void SetLayerRects(const gfx::Rect* aRects) {
-    float vals[16] = { aRects[0].X(), aRects[0].Y(), aRects[0].Width(), aRects[0].Height(),
-                       aRects[1].X(), aRects[1].Y(), aRects[1].Width(), aRects[1].Height(),
-                       aRects[2].X(), aRects[2].Y(), aRects[2].Width(), aRects[2].Height(),
-                       aRects[3].X(), aRects[3].Y(), aRects[3].Width(), aRects[3].Height() };
+    float vals[16] = {
+        aRects[0].X(), aRects[0].Y(), aRects[0].Width(), aRects[0].Height(),
+        aRects[1].X(), aRects[1].Y(), aRects[1].Width(), aRects[1].Height(),
+        aRects[2].X(), aRects[2].Y(), aRects[2].Width(), aRects[2].Height(),
+        aRects[3].X(), aRects[3].Y(), aRects[3].Width(), aRects[3].Height()};
     SetUniform(KnownUniform::LayerRects, 16, vals);
   }
 
@@ -409,20 +395,21 @@ public:
   }
 
   void SetTextureRects(const gfx::Rect* aRects) {
-    float vals[16] = { aRects[0].X(), aRects[0].Y(), aRects[0].Width(), aRects[0].Height(),
-                       aRects[1].X(), aRects[1].Y(), aRects[1].Width(), aRects[1].Height(),
-                       aRects[2].X(), aRects[2].Y(), aRects[2].Width(), aRects[2].Height(),
-                       aRects[3].X(), aRects[3].Y(), aRects[3].Width(), aRects[3].Height() };
+    float vals[16] = {
+        aRects[0].X(), aRects[0].Y(), aRects[0].Width(), aRects[0].Height(),
+        aRects[1].X(), aRects[1].Y(), aRects[1].Width(), aRects[1].Height(),
+        aRects[2].X(), aRects[2].Y(), aRects[2].Width(), aRects[2].Height(),
+        aRects[3].X(), aRects[3].Y(), aRects[3].Width(), aRects[3].Height()};
     SetUniform(KnownUniform::TextureRects, 16, vals);
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {
-    float vals[4] = { float(aOffset.x), float(aOffset.y) };
+    float vals[4] = {float(aOffset.x), float(aOffset.y)};
     SetUniform(KnownUniform::RenderTargetOffset, 2, vals);
   }
 
   void SetRenderOffset(float aX, float aY) {
-    float vals[2] = { aX, aY };
+    float vals[2] = {aX, aY};
     SetUniform(KnownUniform::RenderTargetOffset, 2, vals);
   }
 
@@ -430,9 +417,7 @@ public:
     SetUniform(KnownUniform::LayerOpacity, aOpacity);
   }
 
-  void SetTextureUnit(GLint aUnit) {
-    SetUniform(KnownUniform::Texture, aUnit);
-  }
+  void SetTextureUnit(GLint aUnit) { SetUniform(KnownUniform::Texture, aUnit); }
   void SetYTextureUnit(GLint aUnit) {
     SetUniform(KnownUniform::YTexture, aUnit);
   }
@@ -476,8 +461,7 @@ public:
     SetUniform(KnownUniform::RenderColor, aColor);
   }
 
-  void SetColorMatrix(const gfx::Matrix5x4& aColorMatrix)
-  {
+  void SetColorMatrix(const gfx::Matrix5x4& aColorMatrix) {
     SetMatrixUniform(KnownUniform::ColorMatrix, &aColorMatrix._11);
     SetUniform(KnownUniform::ColorMatrixVector, 4, &aColorMatrix._51);
   }
@@ -517,29 +501,25 @@ public:
     SetUniform(KnownUniform::BlurOffset, 2, f);
   }
 
-  size_t GetTextureCount() const {
-    return mProfile.mTextureCount;
-  }
+  size_t GetTextureCount() const { return mProfile.mTextureCount; }
 
-protected:
+ protected:
   RefPtr<GLContext> mGL;
   // the OpenGL id of the program
   GLuint mProgram;
   ProgramProfileOGL mProfile;
-  enum {
-    STATE_NEW,
-    STATE_OK,
-    STATE_ERROR
-  } mProgramState;
+  enum { STATE_NEW, STATE_OK, STATE_ERROR } mProgramState;
 
 #ifdef CHECK_CURRENT_PROGRAM
   static int sCurrentProgramKey;
 #endif
 
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, float aFloatValue)
-  {
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform,
+                  float aFloatValue) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(aFloatValue)) {
@@ -547,9 +527,12 @@ protected:
     }
   }
 
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx::Color& aColor) {
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform,
+                  const gfx::Color& aColor) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(aColor.r, aColor.g, aColor.b, aColor.a)) {
@@ -557,29 +540,43 @@ protected:
     }
   }
 
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, const float *aFloatValues)
-  {
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength,
+                  const float* aFloatValues) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(aLength, aFloatValues)) {
       switch (aLength) {
-      case 1: mGL->fUniform1fv(ku.mLocation, 1, ku.mValue.f16v); break;
-      case 2: mGL->fUniform2fv(ku.mLocation, 1, ku.mValue.f16v); break;
-      case 3: mGL->fUniform3fv(ku.mLocation, 1, ku.mValue.f16v); break;
-      case 4: mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v); break;
-      case 16: mGL->fUniform4fv(ku.mLocation, 4, ku.mValue.f16v); break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Bogus aLength param");
+        case 1:
+          mGL->fUniform1fv(ku.mLocation, 1, ku.mValue.f16v);
+          break;
+        case 2:
+          mGL->fUniform2fv(ku.mLocation, 1, ku.mValue.f16v);
+          break;
+        case 3:
+          mGL->fUniform3fv(ku.mLocation, 1, ku.mValue.f16v);
+          break;
+        case 4:
+          mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v);
+          break;
+        case 16:
+          mGL->fUniform4fv(ku.mLocation, 4, ku.mValue.f16v);
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Bogus aLength param");
       }
     }
   }
 
-  void SetArrayUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, float *aFloatValues)
-  {
+  void SetArrayUniform(KnownUniform::KnownUniformName aKnownUniform,
+                       int aLength, float* aFloatValues) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateArrayUniform(aLength, aFloatValues)) {
@@ -587,10 +584,12 @@ protected:
     }
   }
 
-  void SetArrayUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, const gfx::Point3D *aPointValues)
-  {
+  void SetArrayUniform(KnownUniform::KnownUniformName aKnownUniform,
+                       int aLength, const gfx::Point3D* aPointValues) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateArrayUniform(aLength, aPointValues)) {
@@ -598,9 +597,12 @@ protected:
     }
   }
 
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, GLint aIntValue) {
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform,
+                  GLint aIntValue) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(aIntValue)) {
@@ -608,9 +610,12 @@ protected:
     }
   }
 
-  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const float *aFloatValues) {
+  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform,
+                        const float* aFloatValues) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(16, aFloatValues)) {
@@ -618,9 +623,12 @@ protected:
     }
   }
 
-  void SetMatrix3fvUniform(KnownUniform::KnownUniformName aKnownUniform, const float *aFloatValues) {
+  void SetMatrix3fvUniform(KnownUniform::KnownUniformName aKnownUniform,
+                           const float* aFloatValues) {
     ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
+    NS_ASSERTION(
+        aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount,
+        "Invalid known uniform");
 
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(9, aFloatValues)) {
@@ -628,12 +636,13 @@ protected:
     }
   }
 
-  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform, const gfx::Matrix4x4& aMatrix) {
+  void SetMatrixUniform(KnownUniform::KnownUniformName aKnownUniform,
+                        const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(aKnownUniform, &aMatrix._11);
   }
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_OGLSHADERPROGRAM_H */

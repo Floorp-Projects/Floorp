@@ -16,9 +16,8 @@ namespace a11y {
  * - gets name, role
  * - support basic state
  */
-class ImageAccessible : public LinkableAccessible
-{
-public:
+class ImageAccessible : public LinkableAccessible {
+ public:
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
@@ -35,18 +34,17 @@ public:
   nsIntPoint Position(uint32_t aCoordType);
   nsIntSize Size();
 
-protected:
+ protected:
   virtual ~ImageAccessible();
 
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
-private:
+ private:
   /**
    * Return whether the element has a longdesc URI.
    */
-  bool HasLongDesc() const
-  {
+  bool HasLongDesc() const {
     nsCOMPtr<nsIURI> uri = GetLongDescURI();
     return uri;
   }
@@ -68,20 +66,16 @@ private:
    * @returns  true if index is valid for longdesc action.
    */
   inline bool IsLongDescIndex(uint8_t aIndex) const;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcasting method
 
-inline ImageAccessible*
-Accessible::AsImage()
-{
+inline ImageAccessible* Accessible::AsImage() {
   return IsImage() ? static_cast<ImageAccessible*>(this) : nullptr;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

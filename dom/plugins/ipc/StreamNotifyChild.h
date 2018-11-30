@@ -14,30 +14,26 @@ namespace plugins {
 
 class BrowserStreamChild;
 
-class StreamNotifyChild : public PStreamNotifyChild
-{
+class StreamNotifyChild : public PStreamNotifyChild {
   friend class PluginInstanceChild;
   friend class BrowserStreamChild;
 
-public:
+ public:
   explicit StreamNotifyChild(const nsCString& aURL)
-    : mURL(aURL)
-    , mClosure(nullptr)
-    , mBrowserStream(nullptr)
-  { }
+      : mURL(aURL), mClosure(nullptr), mBrowserStream(nullptr) {}
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  void SetValid(void* aClosure) {
-    mClosure = aClosure;
-  }
+  void SetValid(void* aClosure) { mClosure = aClosure; }
 
   void NPP_URLNotify(NPReason reason);
 
-private:
-  virtual mozilla::ipc::IPCResult Recv__delete__(const NPReason& reason) override;
+ private:
+  virtual mozilla::ipc::IPCResult Recv__delete__(
+      const NPReason& reason) override;
 
-  mozilla::ipc::IPCResult RecvRedirectNotify(const nsCString& url, const int32_t& status) override;
+  mozilla::ipc::IPCResult RecvRedirectNotify(const nsCString& url,
+                                             const int32_t& status) override;
 
   /**
    * If a stream is created for this this URLNotify, we associate the objects
@@ -58,7 +54,7 @@ private:
   BrowserStreamChild* mBrowserStream;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
 #endif

@@ -21,37 +21,27 @@
 // Auxiliary method to convert file descriptors to ids
 #if defined(XP_WIN32)
 #include <io.h>
-inline intptr_t
-FileDescriptorToHandle(int aFd)
-{
-  return _get_osfhandle(aFd);
-}
+inline intptr_t FileDescriptorToHandle(int aFd) { return _get_osfhandle(aFd); }
 #else
-inline intptr_t
-FileDescriptorToHandle(int aFd)
-{
-  return aFd;
-}
+inline intptr_t FileDescriptorToHandle(int aFd) { return aFd; }
 #endif /* if not XP_WIN32 */
 
 using namespace mozilla;
 
 namespace {
 
-struct DebugFilesAutoLockTraits
-{
+struct DebugFilesAutoLockTraits {
   typedef PRLock* type;
   typedef const PRLock* const_type;
   static const_type empty() { return nullptr; }
   static void release(type aL) { PR_Unlock(aL); }
 };
 
-class DebugFilesAutoLock : public Scoped<DebugFilesAutoLockTraits>
-{
+class DebugFilesAutoLock : public Scoped<DebugFilesAutoLockTraits> {
   static PRLock* Lock;
-public:
-  static PRLock* getDebugFileIDsLock()
-  {
+
+ public:
+  static PRLock* getDebugFileIDsLock() {
     // On windows this static is not thread safe, but we know that the first
     // call is from
     // * An early registration of a debug FD or
@@ -68,8 +58,7 @@ public:
   }
 
   DebugFilesAutoLock()
-    : Scoped<DebugFilesAutoLockTraits>(getDebugFileIDsLock())
-  {
+      : Scoped<DebugFilesAutoLockTraits>(getDebugFileIDsLock()) {
     PR_Lock(get());
   }
 };
@@ -86,11 +75,11 @@ PRLock* DebugFilesAutoLock::Lock;
 // never deallocated (except in the destructor).
 // All operations are essentially O(N) but N is not expected to be large
 // enough to matter.
-template <typename T, size_t chunk_size=64>
+template <typename T, size_t chunk_size = 64>
 class ChunkedList {
   struct ListChunk {
-    static const size_t kLength = \
-      (chunk_size - sizeof(ListChunk*)) / sizeof(mozilla::Atomic<T>);
+    static const size_t kLength =
+        (chunk_size - sizeof(ListChunk*)) / sizeof(mozilla::Atomic<T>);
 
     mozilla::Atomic<T> mElements[kLength];
     mozilla::UniquePtr<ListChunk> mNext;
@@ -101,7 +90,7 @@ class ChunkedList {
   ListChunk mList;
   mozilla::Atomic<size_t> mLength;
 
-public:
+ public:
   ChunkedList() : mLength(0) {}
 
   ~ChunkedList() {
@@ -116,9 +105,8 @@ public:
   // Add an element at the end of the last chunk of the list. Create a new
   // chunk if there is not enough room.
   // This is not thread-safe with another thread calling Add or Remove.
-  void Add(T aValue)
-  {
-    ListChunk *list = &mList;
+  void Add(T aValue) {
+    ListChunk* list = &mList;
     size_t position = mLength;
     for (; position >= ListChunk::kLength; position -= ListChunk::kLength) {
       if (!list->mNext) {
@@ -135,19 +123,18 @@ public:
   // Remove an element from the list by replacing it with the last element
   // of the list, and then shrinking the list.
   // This is not thread-safe with another thread calling Add or Remove.
-  void Remove(T aValue)
-  {
+  void Remove(T aValue) {
     if (!mLength) {
       return;
     }
-    ListChunk *list = &mList;
+    ListChunk* list = &mList;
     size_t last = mLength - 1;
     do {
       size_t position = 0;
       // Look for an element matching the given value.
       for (; position < ListChunk::kLength; position++) {
         if (aValue == list->mElements[position]) {
-          ListChunk *last_list = list;
+          ListChunk* last_list = list;
           // Look for the last element in the list, starting from where we are
           // instead of starting over.
           for (; last >= ListChunk::kLength; last -= ListChunk::kLength) {
@@ -169,9 +156,8 @@ public:
   // Returns whether the list contains the given value. It is meant to be safe
   // to use without locking, with the tradeoff of being not entirely accurate
   // if another thread adds or removes an element while this function runs.
-  bool Contains(T aValue)
-  {
-    ListChunk *list = &mList;
+  bool Contains(T aValue) {
+    ListChunk* list = &mList;
     // Fix the range of the lookup to whatever the list length is when the
     // function is called.
     size_t length = mLength;
@@ -195,47 +181,37 @@ typedef ChunkedList<intptr_t> FdList;
 
 // Return a list used to hold the IDs of the current debug files. On unix
 // an ID is a file descriptor. On Windows it is a file HANDLE.
-FdList&
-getDebugFileIDs()
-{
+FdList& getDebugFileIDs() {
   static FdList DebugFileIDs;
   return DebugFileIDs;
 }
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 
 // Auxiliary Method to test if a file descriptor is registered to be ignored
 // by the poisoning IO interposer
-bool
-IsDebugFile(intptr_t aFileID)
-{
+bool IsDebugFile(intptr_t aFileID) {
   return getDebugFileIDs().Contains(aFileID);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 extern "C" {
 
-void
-MozillaRegisterDebugHandle(intptr_t aHandle)
-{
+void MozillaRegisterDebugHandle(intptr_t aHandle) {
   DebugFilesAutoLock lockedScope;
   FdList& DebugFileIDs = getDebugFileIDs();
   MOZ_ASSERT(!DebugFileIDs.Contains(aHandle));
   DebugFileIDs.Add(aHandle);
 }
 
-void
-MozillaRegisterDebugFD(int aFd)
-{
+void MozillaRegisterDebugFD(int aFd) {
   MozillaRegisterDebugHandle(FileDescriptorToHandle(aFd));
 }
 
-void
-MozillaRegisterDebugFILE(FILE* aFile)
-{
+void MozillaRegisterDebugFILE(FILE* aFile) {
   int fd = fileno(aFile);
   if (fd == 1 || fd == 2) {
     return;
@@ -243,24 +219,18 @@ MozillaRegisterDebugFILE(FILE* aFile)
   MozillaRegisterDebugFD(fd);
 }
 
-void
-MozillaUnRegisterDebugHandle(intptr_t aHandle)
-{
+void MozillaUnRegisterDebugHandle(intptr_t aHandle) {
   DebugFilesAutoLock lockedScope;
   FdList& DebugFileIDs = getDebugFileIDs();
   MOZ_ASSERT(DebugFileIDs.Contains(aHandle));
   DebugFileIDs.Remove(aHandle);
 }
 
-void
-MozillaUnRegisterDebugFD(int aFd)
-{
+void MozillaUnRegisterDebugFD(int aFd) {
   MozillaUnRegisterDebugHandle(FileDescriptorToHandle(aFd));
 }
 
-void
-MozillaUnRegisterDebugFILE(FILE* aFile)
-{
+void MozillaUnRegisterDebugFILE(FILE* aFile) {
   int fd = fileno(aFile);
   if (fd == 1 || fd == 2) {
     return;
@@ -272,15 +242,11 @@ MozillaUnRegisterDebugFILE(FILE* aFile)
 }  // extern "C"
 
 #ifdef MOZ_REPLACE_MALLOC
-void
-DebugFdRegistry::RegisterHandle(intptr_t aHandle)
-{
+void DebugFdRegistry::RegisterHandle(intptr_t aHandle) {
   MozillaRegisterDebugHandle(aHandle);
 }
 
-void
-DebugFdRegistry::UnRegisterHandle(intptr_t aHandle)
-{
+void DebugFdRegistry::UnRegisterHandle(intptr_t aHandle) {
   MozillaUnRegisterDebugHandle(aHandle);
 }
 #endif

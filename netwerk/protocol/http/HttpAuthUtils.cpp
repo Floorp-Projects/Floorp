@@ -15,12 +15,8 @@ namespace auth {
 
 namespace detail {
 
-bool
-MatchesBaseURI(const nsACString& matchScheme,
-               const nsACString& matchHost,
-               int32_t             matchPort,
-               nsDependentCSubstring const& url)
-{
+bool MatchesBaseURI(const nsACString& matchScheme, const nsACString& matchHost,
+                    int32_t matchPort, nsDependentCSubstring const& url) {
   // check if scheme://host:port matches baseURI
 
   // parse the base URI
@@ -46,8 +42,10 @@ MatchesBaseURI(const nsACString& matchScheme,
 
     nsDependentCSubstring ipv6Literal;
     t.Claim(ipv6Literal, mozilla::Tokenizer::INCLUDE_LAST);
-    if (!matchHost.Equals(ipv6Literal, nsCaseInsensitiveUTF8StringComparator()) &&
-        !matchHost.Equals(ipv6BareLiteral, nsCaseInsensitiveUTF8StringComparator())) {
+    if (!matchHost.Equals(ipv6Literal,
+                          nsCaseInsensitiveUTF8StringComparator()) &&
+        !matchHost.Equals(ipv6BareLiteral,
+                          nsCaseInsensitiveUTF8StringComparator())) {
       return false;
     }
 
@@ -65,7 +63,7 @@ MatchesBaseURI(const nsACString& matchScheme,
     bool port = token.Equals(mozilla::Tokenizer::Token::Char(':'));
 
     if (eof || port) {
-      if (!ipv6) { // Match already performed above.
+      if (!ipv6) {  // Match already performed above.
         nsDependentCSubstring hostName;
         t.Claim(hostName);
 
@@ -76,7 +74,8 @@ MatchesBaseURI(const nsACString& matchScheme,
            pref:      bar.com       bar.com      bar.com     .bar.com   .bar.com
            result:     accept        accept       reject       accept     reject
           */
-          if (!StringEndsWith(matchHost, hostName, nsCaseInsensitiveUTF8StringComparator())) {
+          if (!StringEndsWith(matchHost, hostName,
+                              nsCaseInsensitiveUTF8StringComparator())) {
             return false;
           }
           if (matchHost.Length() > hostName.Length() &&
@@ -111,12 +110,9 @@ MatchesBaseURI(const nsACString& matchScheme,
   return true;
 }
 
-} // namespace detail
+}  // namespace detail
 
-
-bool
-URIMatchesPrefPattern(nsIURI *uri, const char *pref)
-{
+bool URIMatchesPrefPattern(nsIURI* uri, const char* pref) {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs) {
     return false;
@@ -170,6 +166,6 @@ URIMatchesPrefPattern(nsIURI *uri, const char *pref)
   return false;
 }
 
-} // namespace auth
-} // namespace net
-} // namespace mozilla
+}  // namespace auth
+}  // namespace net
+}  // namespace mozilla

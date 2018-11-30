@@ -25,32 +25,27 @@ namespace widget {
 
 static LazyLogModule sScreenLog("WidgetScreen");
 
-static void
-monitors_changed(GdkScreen* aScreen, gpointer aClosure)
-{
+static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Received monitors-changed event"));
   ScreenHelperGTK* self = static_cast<ScreenHelperGTK*>(aClosure);
   self->RefreshScreens();
 }
 
-static GdkFilterReturn
-root_window_event_filter(GdkXEvent* aGdkXEvent, GdkEvent* aGdkEvent,
-                         gpointer aClosure)
-{
+static GdkFilterReturn root_window_event_filter(GdkXEvent* aGdkXEvent,
+                                                GdkEvent* aGdkEvent,
+                                                gpointer aClosure) {
 #ifdef MOZ_X11
   ScreenHelperGTK* self = static_cast<ScreenHelperGTK*>(aClosure);
-  XEvent *xevent = static_cast<XEvent*>(aGdkXEvent);
+  XEvent* xevent = static_cast<XEvent*>(aGdkXEvent);
 
   switch (xevent->type) {
-    case PropertyNotify:
-      {
-        XPropertyEvent *propertyEvent = &xevent->xproperty;
-        if (propertyEvent->atom == self->NetWorkareaAtom()) {
-          MOZ_LOG(sScreenLog, LogLevel::Debug, ("Work area size changed"));
-          self->RefreshScreens();
-        }
+    case PropertyNotify: {
+      XPropertyEvent* propertyEvent = &xevent->xproperty;
+      if (propertyEvent->atom == self->NetWorkareaAtom()) {
+        MOZ_LOG(sScreenLog, LogLevel::Debug, ("Work area size changed"));
+        self->RefreshScreens();
       }
-      break;
+    } break;
     default:
       break;
   }
@@ -60,16 +55,18 @@ root_window_event_filter(GdkXEvent* aGdkXEvent, GdkEvent* aGdkEvent,
 }
 
 ScreenHelperGTK::ScreenHelperGTK()
-  : mRootWindow(nullptr)
+    : mRootWindow(nullptr)
 #ifdef MOZ_X11
-  , mNetWorkareaAtom(0)
+      ,
+      mNetWorkareaAtom(0)
 #endif
 {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("ScreenHelperGTK created"));
-  GdkScreen *defaultScreen = gdk_screen_get_default();
+  GdkScreen* defaultScreen = gdk_screen_get_default();
   if (!defaultScreen) {
     // Sometimes we don't initial X (e.g., xpcshell)
-    MOZ_LOG(sScreenLog, LogLevel::Debug, ("defaultScreen is nullptr, running headless"));
+    MOZ_LOG(sScreenLog, LogLevel::Debug,
+            ("defaultScreen is nullptr, running headless"));
     return;
   }
   mRootWindow = gdk_get_default_root_window();
@@ -88,18 +85,16 @@ ScreenHelperGTK::ScreenHelperGTK()
   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     mNetWorkareaAtom =
-      XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
+        XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
   }
 #endif
   RefreshScreens();
 }
 
-ScreenHelperGTK::~ScreenHelperGTK()
-{
+ScreenHelperGTK::~ScreenHelperGTK() {
   if (mRootWindow) {
-    g_signal_handlers_disconnect_by_func(gdk_screen_get_default(),
-                                         FuncToGpointer(monitors_changed),
-                                         this);
+    g_signal_handlers_disconnect_by_func(
+        gdk_screen_get_default(), FuncToGpointer(monitors_changed), this);
 
     gdk_window_remove_filter(mRootWindow, root_window_event_filter, this);
     g_object_unref(mRootWindow);
@@ -107,29 +102,25 @@ ScreenHelperGTK::~ScreenHelperGTK()
   }
 }
 
-gint
-ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum)
-{
+gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum) {
   // Since GDK 3.10
-  static auto sGdkScreenGetMonitorScaleFactorPtr = (gint (*)(GdkScreen*, gint))
-    dlsym(RTLD_DEFAULT, "gdk_screen_get_monitor_scale_factor");
+  static auto sGdkScreenGetMonitorScaleFactorPtr =
+      (gint(*)(GdkScreen*, gint))dlsym(RTLD_DEFAULT,
+                                       "gdk_screen_get_monitor_scale_factor");
   if (sGdkScreenGetMonitorScaleFactorPtr) {
-    GdkScreen *screen = gdk_screen_get_default();
+    GdkScreen* screen = gdk_screen_get_default();
     return sGdkScreenGetMonitorScaleFactorPtr(screen, aMonitorNum);
   }
   return 1;
 }
 
-static uint32_t
-GetGTKPixelDepth()
-{
-  GdkVisual * visual = gdk_screen_get_system_visual(gdk_screen_get_default());
+static uint32_t GetGTKPixelDepth() {
+  GdkVisual* visual = gdk_screen_get_system_visual(gdk_screen_get_default());
   return gdk_visual_get_depth(visual);
 }
 
-static already_AddRefed<Screen>
-MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
-{
+static already_AddRefed<Screen> MakeScreen(GdkScreen* aScreen,
+                                           gint aMonitorNum) {
   GdkRectangle monitor;
   GdkRectangle workarea;
   gdk_screen_get_monitor_geometry(aScreen, aMonitorNum, &monitor);
@@ -139,27 +130,25 @@ MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
   // gdk_screen_get_monitor_geometry / workarea returns application pixels
   // (desktop pixels), so we need to convert it to device pixels with
   // gdkScaleFactor.
-  LayoutDeviceIntRect rect(monitor.x * gdkScaleFactor,
-                           monitor.y * gdkScaleFactor,
-                           monitor.width * gdkScaleFactor,
-                           monitor.height * gdkScaleFactor);
-  LayoutDeviceIntRect availRect(workarea.x * gdkScaleFactor,
-                                workarea.y * gdkScaleFactor,
-                                workarea.width * gdkScaleFactor,
-                                workarea.height * gdkScaleFactor);
+  LayoutDeviceIntRect rect(
+      monitor.x * gdkScaleFactor, monitor.y * gdkScaleFactor,
+      monitor.width * gdkScaleFactor, monitor.height * gdkScaleFactor);
+  LayoutDeviceIntRect availRect(
+      workarea.x * gdkScaleFactor, workarea.y * gdkScaleFactor,
+      workarea.width * gdkScaleFactor, workarea.height * gdkScaleFactor);
   uint32_t pixelDepth = GetGTKPixelDepth();
 
   // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
   DesktopToLayoutDeviceScale contentsScale(1.0);
 #ifdef MOZ_WAYLAND
-    GdkDisplay* gdkDisplay = gdk_display_get_default();
-    if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
-      contentsScale.scale = gdkScaleFactor;
-    }
+  GdkDisplay* gdkDisplay = gdk_display_get_default();
+  if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
+    contentsScale.scale = gdkScaleFactor;
+  }
 #endif
 
-  CSSToLayoutDeviceScale defaultCssScale(
-    gdkScaleFactor * gfxPlatformGtk::GetFontScaleFactor());
+  CSSToLayoutDeviceScale defaultCssScale(gdkScaleFactor *
+                                         gfxPlatformGtk::GetFontScaleFactor());
 
   float dpi = 96.0f;
   gint heightMM = gdk_screen_get_monitor_height_mm(aScreen, aMonitorNum);
@@ -168,27 +157,22 @@ MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
   }
 
   MOZ_LOG(sScreenLog, LogLevel::Debug,
-           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
-            rect.x, rect.y, rect.width, rect.height,
-            availRect.x, availRect.y, availRect.width, availRect.height,
-            pixelDepth, contentsScale.scale, defaultCssScale.scale, dpi));
-  RefPtr<Screen> screen = new Screen(rect, availRect,
-                                     pixelDepth, pixelDepth,
-                                     contentsScale, defaultCssScale,
-                                     dpi);
+          ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]", rect.x, rect.y,
+           rect.width, rect.height, availRect.x, availRect.y, availRect.width,
+           availRect.height, pixelDepth, contentsScale.scale,
+           defaultCssScale.scale, dpi));
+  RefPtr<Screen> screen = new Screen(rect, availRect, pixelDepth, pixelDepth,
+                                     contentsScale, defaultCssScale, dpi);
   return screen.forget();
 }
 
-void
-ScreenHelperGTK::RefreshScreens()
-{
+void ScreenHelperGTK::RefreshScreens() {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing screens"));
   AutoTArray<RefPtr<Screen>, 4> screenList;
 
-  GdkScreen *defaultScreen = gdk_screen_get_default();
+  GdkScreen* defaultScreen = gdk_screen_get_default();
   gint numScreens = gdk_screen_get_n_monitors(defaultScreen);
-  MOZ_LOG(sScreenLog, LogLevel::Debug,
-          ("GDK reports %d screens", numScreens));
+  MOZ_LOG(sScreenLog, LogLevel::Debug, ("GDK reports %d screens", numScreens));
 
   for (gint i = 0; i < numScreens; i++) {
     screenList.AppendElement(MakeScreen(defaultScreen, i));
@@ -198,5 +182,5 @@ ScreenHelperGTK::RefreshScreens()
   screenManager.Refresh(std::move(screenList));
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

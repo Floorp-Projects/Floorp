@@ -28,11 +28,12 @@ namespace wasm {
 // null-terminated char16_t array) into serialized bytes. If there is an error
 // other than out-of-memory an error message string will be stored in 'error'.
 
-extern MOZ_MUST_USE bool
-TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, Uint32Vector* offsets,
-             UniqueChars* error);
+extern MOZ_MUST_USE bool TextToBinary(const char16_t* text,
+                                      uintptr_t stackLimit, Bytes* bytes,
+                                      Uint32Vector* offsets,
+                                      UniqueChars* error);
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_text_to_binary_h
+#endif  // wasm_text_to_binary_h

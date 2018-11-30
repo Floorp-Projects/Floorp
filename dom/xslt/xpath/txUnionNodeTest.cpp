@@ -10,55 +10,47 @@
 #include "txExprResult.h"
 #include "txSingleNodeContext.h"
 
-nsresult
-txUnionNodeTest::matches(const txXPathNode& aNode, txIMatchContext* aContext,
-                         bool& aMatched)
-{
-    uint32_t i, len = mNodeTests.Length();
-    for (i = 0; i < len; ++i) {
-        nsresult rv = mNodeTests[i]->matches(aNode, aContext, aMatched);
-        NS_ENSURE_SUCCESS(rv, rv);
+nsresult txUnionNodeTest::matches(const txXPathNode& aNode,
+                                  txIMatchContext* aContext, bool& aMatched) {
+  uint32_t i, len = mNodeTests.Length();
+  for (i = 0; i < len; ++i) {
+    nsresult rv = mNodeTests[i]->matches(aNode, aContext, aMatched);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-        if (aMatched) {
-            return NS_OK;
-        }
+    if (aMatched) {
+      return NS_OK;
     }
+  }
 
-    aMatched = false;
-    return NS_OK;
+  aMatched = false;
+  return NS_OK;
 }
 
-double
-txUnionNodeTest::getDefaultPriority()
-{
-    NS_ERROR("Don't call getDefaultPriority on txUnionPattern");
-    return mozilla::UnspecifiedNaN<double>();
+double txUnionNodeTest::getDefaultPriority() {
+  NS_ERROR("Don't call getDefaultPriority on txUnionPattern");
+  return mozilla::UnspecifiedNaN<double>();
 }
 
-bool
-txUnionNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
-{
-    uint32_t i, len = mNodeTests.Length();
-    for (i = 0; i < len; ++i) {
-        if (mNodeTests[i]->isSensitiveTo(aContext)) {
-            return true;
-        }
+bool txUnionNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext) {
+  uint32_t i, len = mNodeTests.Length();
+  for (i = 0; i < len; ++i) {
+    if (mNodeTests[i]->isSensitiveTo(aContext)) {
+      return true;
     }
+  }
 
-    return false;
+  return false;
 }
 
 #ifdef TX_TO_STRING
-void
-txUnionNodeTest::toString(nsAString& aDest)
-{
-    aDest.Append('(');
-    for (uint32_t i = 0; i < mNodeTests.Length(); ++i) {
-        if (i != 0) {
-            aDest.AppendLiteral(" | ");
-        }
-        mNodeTests[i]->toString(aDest);
+void txUnionNodeTest::toString(nsAString& aDest) {
+  aDest.Append('(');
+  for (uint32_t i = 0; i < mNodeTests.Length(); ++i) {
+    if (i != 0) {
+      aDest.AppendLiteral(" | ");
     }
-    aDest.Append(')');
+    mNodeTests[i]->toString(aDest);
+  }
+  aDest.Append(')');
 }
 #endif

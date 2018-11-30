@@ -22,10 +22,8 @@ using namespace mozilla::a11y;
 // IUnknown
 
 STDMETHODIMP
-ia2AccessibleImage::QueryInterface(REFIID iid, void** ppv)
-{
-  if (!ppv)
-    return E_INVALIDARG;
+ia2AccessibleImage::QueryInterface(REFIID iid, void** ppv) {
+  if (!ppv) return E_INVALIDARG;
 
   *ppv = nullptr;
 
@@ -41,21 +39,17 @@ ia2AccessibleImage::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleImage
 
 STDMETHODIMP
-ia2AccessibleImage::get_description(BSTR* aDescription)
-{
-  if (!aDescription)
-    return E_INVALIDARG;
+ia2AccessibleImage::get_description(BSTR* aDescription) {
+  if (!aDescription) return E_INVALIDARG;
 
   *aDescription = nullptr;
 
   ImageAccessibleWrap* acc = static_cast<ImageAccessibleWrap*>(this);
-  if (acc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
   acc->Name(description);
-  if (description.IsEmpty())
-    return S_FALSE;
+  if (description.IsEmpty()) return S_FALSE;
 
   *aDescription = ::SysAllocStringLen(description.get(), description.Length());
   return *aDescription ? S_OK : E_OUTOFMEMORY;
@@ -63,22 +57,19 @@ ia2AccessibleImage::get_description(BSTR* aDescription)
 
 STDMETHODIMP
 ia2AccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
-                                      long* aX,
-                                      long* aY)
-{
-  if (!aX || !aY)
-    return E_INVALIDARG;
+                                      long* aX, long* aY) {
+  if (!aX || !aY) return E_INVALIDARG;
 
   *aX = 0;
   *aY = 0;
 
   ImageAccessibleWrap* imageAcc = static_cast<ImageAccessibleWrap*>(this);
-  if (imageAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (imageAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  uint32_t geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
-    nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
-    nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
+  uint32_t geckoCoordType =
+      (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
+          ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
+          : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
   nsIntPoint pos = imageAcc->Position(geckoCoordType);
   *aX = pos.x;
@@ -87,21 +78,17 @@ ia2AccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
 }
 
 STDMETHODIMP
-ia2AccessibleImage::get_imageSize(long* aHeight, long* aWidth)
-{
-  if (!aHeight || !aWidth)
-    return E_INVALIDARG;
+ia2AccessibleImage::get_imageSize(long* aHeight, long* aWidth) {
+  if (!aHeight || !aWidth) return E_INVALIDARG;
 
   *aHeight = 0;
   *aWidth = 0;
 
   ImageAccessibleWrap* imageAcc = static_cast<ImageAccessibleWrap*>(this);
-  if (imageAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (imageAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsIntSize size = imageAcc->Size();
   *aHeight = size.width;
   *aWidth = size.height;
   return S_OK;
 }
-

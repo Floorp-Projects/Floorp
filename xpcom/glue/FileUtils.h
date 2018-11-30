@@ -7,12 +7,12 @@
 #ifndef mozilla_FileUtils_h
 #define mozilla_FileUtils_h
 
-#include "nscore.h" // nullptr
+#include "nscore.h"  // nullptr
 
 #if defined(XP_UNIX)
-# include <unistd.h>
+#include <unistd.h>
 #elif defined(XP_WIN)
-# include <io.h>
+#include <io.h>
 #endif
 #include "prio.h"
 #include "prlink.h"
@@ -37,12 +37,10 @@ typedef const char* pathstr_t;
  *
  * Instances |close()| their fds when they go out of scope.
  */
-struct ScopedCloseFDTraits
-{
+struct ScopedCloseFDTraits {
   typedef int type;
   static type empty() { return -1; }
-  static void release(type aFd)
-  {
+  static void release(type aFd) {
     if (aFd != -1) {
       while (close(aFd) == -1 && errno == EINTR) {
       }
@@ -58,12 +56,10 @@ typedef Scoped<ScopedCloseFDTraits> ScopedClose;
  *
  * Instances |PR_Close| their fds when they go out of scope.
  **/
-struct ScopedClosePRFDTraits
-{
+struct ScopedClosePRFDTraits {
   typedef PRFileDesc* type;
   static type empty() { return nullptr; }
-  static void release(type aFd)
-  {
+  static void release(type aFd) {
     if (aFd) {
       PR_Close(aFd);
     }
@@ -72,12 +68,10 @@ struct ScopedClosePRFDTraits
 typedef Scoped<ScopedClosePRFDTraits> AutoFDClose;
 
 /* RAII wrapper for FILE descriptors */
-struct ScopedCloseFileTraits
-{
+struct ScopedCloseFileTraits {
   typedef FILE* type;
   static type empty() { return nullptr; }
-  static void release(type aFile)
-  {
+  static void release(type aFile) {
     if (aFile) {
       fclose(aFile);
     }
@@ -86,9 +80,9 @@ struct ScopedCloseFileTraits
 typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
 
 /**
- * Fallocate efficiently and continuously allocates files via fallocate-type APIs.
- * This is useful for avoiding fragmentation.
- * On sucess the file be padded with zeros to grow to aLength.
+ * Fallocate efficiently and continuously allocates files via fallocate-type
+ * APIs. This is useful for avoiding fragmentation. On sucess the file be padded
+ * with zeros to grow to aLength.
  *
  * @param aFD file descriptor.
  * @param aLength length of file to grow to.
@@ -126,7 +120,7 @@ void ReadAheadFile(nsIFile* aFile, const size_t aOffset = 0,
 PathString GetLibraryName(pathstr_t aDirectory, const char* aLib);
 PathString GetLibraryFilePathname(pathstr_t aName, PRFuncPtr aAddr);
 
-#endif // MOZILLA_INTERNAL_API
+#endif  // MOZILLA_INTERNAL_API
 
 /**
  * Use readahead to preload shared libraries into the file cache before loading.
@@ -168,15 +162,16 @@ void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                const size_t aCount = SIZE_MAX);
 
 #if defined(XP_UNIX)
-#define MOZ_TEMP_FAILURE_RETRY(exp) (__extension__({ \
-  typeof (exp) _rc; \
-  do { \
-    _rc = (exp); \
-  } while (_rc == -1 && errno == EINTR); \
-  _rc; \
-}))
+#define MOZ_TEMP_FAILURE_RETRY(exp)        \
+  (__extension__({                         \
+    typeof(exp) _rc;                       \
+    do {                                   \
+      _rc = (exp);                         \
+    } while (_rc == -1 && errno == EINTR); \
+    _rc;                                   \
+  }))
 #endif
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

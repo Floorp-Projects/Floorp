@@ -24,9 +24,8 @@ class CompositorScreenshotGrabberImpl;
  * steps using CompositingRenderTargets and Compositor::BlitFromRenderTarget,
  * and readback is done using AsyncReadbackBuffers.
  */
-class CompositorScreenshotGrabber final
-{
-public:
+class CompositorScreenshotGrabber final {
+ public:
   CompositorScreenshotGrabber();
   ~CompositorScreenshotGrabber();
 
@@ -49,12 +48,12 @@ public:
   // Destroy all Compositor-related resources that this class is holding on to.
   void Destroy();
 
-private:
+ private:
   // non-null while ProfilerScreenshots::IsEnabled() returns true
   UniquePtr<CompositorScreenshotGrabberImpl> mImpl;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_CompositorScreenshotGrabber_h
+#endif  // mozilla_layers_CompositorScreenshotGrabber_h

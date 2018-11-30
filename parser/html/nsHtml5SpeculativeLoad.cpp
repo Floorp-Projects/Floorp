@@ -9,17 +9,15 @@
 using namespace mozilla;
 
 nsHtml5SpeculativeLoad::nsHtml5SpeculativeLoad()
-  : mOpCode(eSpeculativeLoadUninitialized)
-  , mIsAsync(false)
-  , mIsDefer(false)
-  , mEncoding(nullptr)
-{
+    : mOpCode(eSpeculativeLoadUninitialized),
+      mIsAsync(false),
+      mIsDefer(false),
+      mEncoding(nullptr) {
   MOZ_COUNT_CTOR(nsHtml5SpeculativeLoad);
   new (&mCharsetOrSrcset) nsString;
 }
 
-nsHtml5SpeculativeLoad::~nsHtml5SpeculativeLoad()
-{
+nsHtml5SpeculativeLoad::~nsHtml5SpeculativeLoad() {
   MOZ_COUNT_DTOR(nsHtml5SpeculativeLoad);
   NS_ASSERTION(mOpCode != eSpeculativeLoadUninitialized,
                "Uninitialized speculative load.");
@@ -28,27 +26,23 @@ nsHtml5SpeculativeLoad::~nsHtml5SpeculativeLoad()
   }
 }
 
-void
-nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
-{
+void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
   switch (mOpCode) {
     case eSpeculativeLoadBase:
       aExecutor->SetSpeculationBase(mUrlOrSizes);
       break;
     case eSpeculativeLoadCSP:
       aExecutor->AddSpeculationCSP(
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
       break;
     case eSpeculativeLoadMetaReferrer:
       aExecutor->SetSpeculationReferrerPolicy(mReferrerPolicyOrIntegrity);
       break;
     case eSpeculativeLoadImage:
       aExecutor->PreloadImage(
-        mUrlOrSizes,
-        mCrossOriginOrMedia,
-        mCharsetOrSrcset,
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-        mReferrerPolicyOrIntegrity);
+          mUrlOrSizes, mCrossOriginOrMedia, mCharsetOrSrcset,
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+          mReferrerPolicyOrIntegrity);
       break;
     case eSpeculativeLoadOpenPicture:
       aExecutor->PreloadOpenPicture();
@@ -58,90 +52,64 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
       break;
     case eSpeculativeLoadPictureSource:
       aExecutor->PreloadPictureSource(
-        mCharsetOrSrcset,
-        mUrlOrSizes,
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-        mCrossOriginOrMedia);
+          mCharsetOrSrcset, mUrlOrSizes,
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+          mCrossOriginOrMedia);
       break;
     case eSpeculativeLoadScript:
       aExecutor->PreloadScript(
-        mUrlOrSizes,
-        mCharsetOrSrcset,
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-        mCrossOriginOrMedia,
-        mReferrerPolicyOrIntegrity,
-        mScriptReferrerPolicy,
-        false,
-        mIsAsync,
-        mIsDefer,
-        false);
+          mUrlOrSizes, mCharsetOrSrcset,
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+          mCrossOriginOrMedia, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, false, mIsAsync, mIsDefer, false);
       break;
     case eSpeculativeLoadScriptFromHead:
       aExecutor->PreloadScript(
-        mUrlOrSizes,
-        mCharsetOrSrcset,
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-        mCrossOriginOrMedia,
-        mReferrerPolicyOrIntegrity,
-        mScriptReferrerPolicy,
-        true,
-        mIsAsync,
-        mIsDefer,
-        false);
+          mUrlOrSizes, mCharsetOrSrcset,
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+          mCrossOriginOrMedia, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, true, mIsAsync, mIsDefer, false);
       break;
     case eSpeculativeLoadNoModuleScript:
       aExecutor->PreloadScript(
-        mUrlOrSizes,
-        mCharsetOrSrcset,
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-        mCrossOriginOrMedia,
-        mReferrerPolicyOrIntegrity,
-        mScriptReferrerPolicy,
-        false,
-        mIsAsync,
-        mIsDefer,
-        true);
+          mUrlOrSizes, mCharsetOrSrcset,
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+          mCrossOriginOrMedia, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, false, mIsAsync, mIsDefer, true);
       break;
     case eSpeculativeLoadNoModuleScriptFromHead:
       aExecutor->PreloadScript(
-        mUrlOrSizes,
-        mCharsetOrSrcset,
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-        mCrossOriginOrMedia,
-        mReferrerPolicyOrIntegrity,
-        mScriptReferrerPolicy,
-        true,
-        mIsAsync,
-        mIsDefer,
-        true);
+          mUrlOrSizes, mCharsetOrSrcset,
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+          mCrossOriginOrMedia, mReferrerPolicyOrIntegrity,
+          mScriptReferrerPolicy, true, mIsAsync, mIsDefer, true);
       break;
     case eSpeculativeLoadStyle:
       aExecutor->PreloadStyle(
-        mUrlOrSizes,
-        mCharsetOrSrcset,
-        mCrossOriginOrMedia,
-        mReferrerPolicyOrIntegrity,
-        mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
+          mUrlOrSizes, mCharsetOrSrcset, mCrossOriginOrMedia,
+          mReferrerPolicyOrIntegrity,
+          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
       break;
     case eSpeculativeLoadManifest:
       aExecutor->ProcessOfflineManifest(mUrlOrSizes);
       break;
     case eSpeculativeLoadSetDocumentCharset: {
       NS_ASSERTION(mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
-                       .Length() == 1,
+                           .Length() == 1,
                    "Unexpected charset source string");
       int32_t intSource =
-        (int32_t)
-          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.First();
+          (int32_t)mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
+              .First();
       aExecutor->SetDocumentCharsetAndSource(WrapNotNull(mEncoding), intSource);
     } break;
     case eSpeculativeLoadSetDocumentMode: {
       NS_ASSERTION(mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
-                       .Length() == 1,
+                           .Length() == 1,
                    "Unexpected document mode string");
       nsHtml5DocumentMode mode =
-        (nsHtml5DocumentMode)
-          mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.First();
+          (nsHtml5DocumentMode)
+              mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
+                  .First();
       aExecutor->SetDocumentMode(mode);
     } break;
     case eSpeculativeLoadPreconnect:

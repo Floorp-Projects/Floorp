@@ -15,7 +15,7 @@ namespace recordreplay {
 // Initialize weak pointer state.
 void InitializeWeakPointers();
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_WeakPointer_h
+#endif  // mozilla_recordreplay_WeakPointer_h

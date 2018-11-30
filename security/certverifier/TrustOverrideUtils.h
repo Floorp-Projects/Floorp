@@ -18,16 +18,15 @@ struct DataAndLength {
   uint32_t len;
 };
 
-template<size_t T>
-static bool
-CertDNIsInList(const CERTCertificate* aCert, const DataAndLength (&aDnList)[T])
-{
+template <size_t T>
+static bool CertDNIsInList(const CERTCertificate* aCert,
+                           const DataAndLength (&aDnList)[T]) {
   MOZ_ASSERT(aCert);
   if (!aCert) {
     return false;
   }
 
-  for (auto& dn: aDnList) {
+  for (auto& dn : aDnList) {
     if (aCert->derSubject.len == dn.len &&
         mozilla::ArrayEqual(aCert->derSubject.data, dn.data, dn.len)) {
       return true;
@@ -36,16 +35,15 @@ CertDNIsInList(const CERTCertificate* aCert, const DataAndLength (&aDnList)[T])
   return false;
 }
 
-template<size_t T>
-static bool
-CertSPKIIsInList(const CERTCertificate* aCert, const DataAndLength (&aSpkiList)[T])
-{
+template <size_t T>
+static bool CertSPKIIsInList(const CERTCertificate* aCert,
+                             const DataAndLength (&aSpkiList)[T]) {
   MOZ_ASSERT(aCert);
   if (!aCert) {
     return false;
   }
 
-  for (auto& spki: aSpkiList) {
+  for (auto& spki : aSpkiList) {
     if (aCert->derPublicKey.len == spki.len &&
         mozilla::ArrayEqual(aCert->derPublicKey.data, spki.data, spki.len)) {
       return true;
@@ -54,11 +52,10 @@ CertSPKIIsInList(const CERTCertificate* aCert, const DataAndLength (&aSpkiList)[
   return false;
 }
 
-template<size_t T, size_t R>
-static bool
-CertMatchesStaticData(const CERTCertificate* cert,
-                      const unsigned char (&subject)[T],
-                      const unsigned char (&spki)[R]) {
+template <size_t T, size_t R>
+static bool CertMatchesStaticData(const CERTCertificate* cert,
+                                  const unsigned char (&subject)[T],
+                                  const unsigned char (&spki)[R]) {
   MOZ_ASSERT(cert);
   if (!cert) {
     return false;
@@ -79,51 +76,49 @@ CertMatchesStaticData(const CERTCertificate* cert,
 // |whitelist| of SPKI entries, and if a match is found, then this returns
 // "not distrusted." Otherwise, due to the precondition holding, the chain is
 // "distrusted."
-template<size_t T>
-static nsresult
-CheckForSymantecDistrust(const nsCOMPtr<nsIX509CertList>& intCerts,
-                         const nsCOMPtr<nsIX509Cert>& eeCert,
-                         const PRTime& permitAfterDate,
-                         const DataAndLength (&whitelist)[T],
-                         /* out */ bool& isDistrusted)
-{
-    // PRECONDITION: The rootCert is already verified as being one of the
-    // affected Symantec roots
+template <size_t T>
+static nsresult CheckForSymantecDistrust(
+    const nsCOMPtr<nsIX509CertList>& intCerts,
+    const nsCOMPtr<nsIX509Cert>& eeCert, const PRTime& permitAfterDate,
+    const DataAndLength (&whitelist)[T],
+    /* out */ bool& isDistrusted) {
+  // PRECONDITION: The rootCert is already verified as being one of the
+  // affected Symantec roots
 
-    // Check the preference to see if this is enabled before proceeding.
-    // TODO in Bug 1437754
+  // Check the preference to see if this is enabled before proceeding.
+  // TODO in Bug 1437754
 
-    isDistrusted = true;
+  isDistrusted = true;
 
-    // Only check the validity period if we're asked
-    if (permitAfterDate > 0) {
-      // We need to verify the age of the end entity
-      nsCOMPtr<nsIX509CertValidity> validity;
-      nsresult rv = eeCert->GetValidity(getter_AddRefs(validity));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      PRTime notBefore;
-      rv = validity->GetNotBefore(&notBefore);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      // If the end entity's notBefore date is after the permitAfter date, this
-      // algorithm doesn't apply, so exit false before we do any iterating.
-      if (notBefore >= permitAfterDate) {
-        isDistrusted = false;
-        return NS_OK;
-      }
+  // Only check the validity period if we're asked
+  if (permitAfterDate > 0) {
+    // We need to verify the age of the end entity
+    nsCOMPtr<nsIX509CertValidity> validity;
+    nsresult rv = eeCert->GetValidity(getter_AddRefs(validity));
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
-    // Look for one of the intermediates to be in the whitelist
-    RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
+    PRTime notBefore;
+    rv = validity->GetNotBefore(&notBefore);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
-    return intCertList->ForEachCertificateInChain(
-      [&isDistrusted, &whitelist] (nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
-                                   /* out */ bool& aContinue) {
+    // If the end entity's notBefore date is after the permitAfter date, this
+    // algorithm doesn't apply, so exit false before we do any iterating.
+    if (notBefore >= permitAfterDate) {
+      isDistrusted = false;
+      return NS_OK;
+    }
+  }
+
+  // Look for one of the intermediates to be in the whitelist
+  RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
+
+  return intCertList->ForEachCertificateInChain(
+      [&isDistrusted, &whitelist](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
+                                  /* out */ bool& aContinue) {
         // We need an owning handle when calling nsIX509Cert::GetCert().
         UniqueCERTCertificate nssCert(aCert->GetCert());
         if (CertSPKIIsInList(nssCert.get(), whitelist)) {
@@ -132,7 +127,7 @@ CheckForSymantecDistrust(const nsCOMPtr<nsIX509CertList>& intCerts,
           aContinue = false;
         }
         return NS_OK;
-    });
+      });
 }
 
-#endif // TrustOverrides_h
+#endif  // TrustOverrides_h

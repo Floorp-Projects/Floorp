@@ -16,21 +16,20 @@ namespace ipc {
  * SHMEM_FUZZER_ENABLE_LOGGING=1       (optional)
  * SHMEM_FUZZER_MUTATION_PROBABILITY=2 (optional)
  * SHMEM_FUZZER_MUTATION_FACTOR=500    (optional)
-*/
+ */
 
-class SharedMemoryFuzzer
-{
-public:
+class SharedMemoryFuzzer {
+ public:
   static void* MutateSharedMemory(void* aMemory, size_t aSize);
 
-private:
+ private:
   static uint64_t MutationProbability();
   static uint64_t MutationFactor();
   static bool IsEnabled();
   static bool IsLoggingEnabled();
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
 #endif

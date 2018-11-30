@@ -8,24 +8,19 @@
 
 #include "mozilla/ipc/ProcessChild.h"
 
-
 namespace mozilla {
 namespace gfx {
 
 using namespace ipc;
 
-
-VRGPUParent::VRGPUParent(ProcessId aChildProcessId)
-{
+VRGPUParent::VRGPUParent(ProcessId aChildProcessId) {
   MOZ_COUNT_CTOR(VRGPUParent);
   MOZ_ASSERT(NS_IsMainThread());
 
   SetOtherProcessId(aChildProcessId);
 }
 
-void
-VRGPUParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #if !defined(MOZ_WIDGET_ANDROID)
   if (mVRService) {
     mVRService->Stop();
@@ -34,34 +29,22 @@ VRGPUParent::ActorDestroy(ActorDestroyReason aWhy)
 #endif
 
   MessageLoop::current()->PostTask(
-  NewRunnableMethod("gfx::VRGPUParent::DeferredDestroy",
-                    this,
-                    &VRGPUParent::DeferredDestroy));
+      NewRunnableMethod("gfx::VRGPUParent::DeferredDestroy", this,
+                        &VRGPUParent::DeferredDestroy));
 }
 
-void
-VRGPUParent::DeferredDestroy()
-{
-  mSelfRef = nullptr;
-}
+void VRGPUParent::DeferredDestroy() { mSelfRef = nullptr; }
 
-/* static */ RefPtr<VRGPUParent>
-VRGPUParent::CreateForGPU(Endpoint<PVRGPUParent>&& aEndpoint)
-{
+/* static */ RefPtr<VRGPUParent> VRGPUParent::CreateForGPU(
+    Endpoint<PVRGPUParent>&& aEndpoint) {
   RefPtr<VRGPUParent> vcp = new VRGPUParent(aEndpoint.OtherPid());
-  MessageLoop::current()->PostTask(
-    NewRunnableMethod<Endpoint<PVRGPUParent>&&>(
-    "gfx::VRGPUParent::Bind",
-    vcp,
-    &VRGPUParent::Bind,
-    std::move(aEndpoint)));
+  MessageLoop::current()->PostTask(NewRunnableMethod<Endpoint<PVRGPUParent>&&>(
+      "gfx::VRGPUParent::Bind", vcp, &VRGPUParent::Bind, std::move(aEndpoint)));
 
   return vcp;
 }
 
-void
-VRGPUParent::Bind(Endpoint<PVRGPUParent>&& aEndpoint)
-{
+void VRGPUParent::Bind(Endpoint<PVRGPUParent>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
     return;
   }
@@ -69,9 +52,7 @@ VRGPUParent::Bind(Endpoint<PVRGPUParent>&& aEndpoint)
   mSelfRef = this;
 }
 
-mozilla::ipc::IPCResult
-VRGPUParent::RecvStartVRService()
-{
+mozilla::ipc::IPCResult VRGPUParent::RecvStartVRService() {
 #if !defined(MOZ_WIDGET_ANDROID)
   mVRService = VRService::Create();
   MOZ_ASSERT(mVRService);
@@ -82,9 +63,7 @@ VRGPUParent::RecvStartVRService()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-VRGPUParent::RecvStopVRService()
-{
+mozilla::ipc::IPCResult VRGPUParent::RecvStopVRService() {
 #if !defined(MOZ_WIDGET_ANDROID)
   if (mVRService) {
     mVRService->Stop();
@@ -95,5 +74,5 @@ VRGPUParent::RecvStopVRService()
   return IPC_OK();
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

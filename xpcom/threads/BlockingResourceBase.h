@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #ifndef mozilla_BlockingResourceBase_h
 #define mozilla_BlockingResourceBase_h
 
@@ -38,7 +37,8 @@
 namespace mozilla {
 
 #ifdef DEBUG
-template <class T> class DeadlockDetector;
+template <class T>
+class DeadlockDetector;
 #endif
 
 /**
@@ -46,11 +46,15 @@ template <class T> class DeadlockDetector;
  * Base class of resources that might block clients trying to acquire them.
  * Does debugging and deadlock detection in DEBUG builds.
  **/
-class BlockingResourceBase
-{
-public:
+class BlockingResourceBase {
+ public:
   // Needs to be kept in sync with kResourceTypeNames.
-  enum BlockingResourceType { eMutex, eReentrantMonitor, eCondVar, eRecursiveMutex };
+  enum BlockingResourceType {
+    eMutex,
+    eReentrantMonitor,
+    eCondVar,
+    eRecursiveMutex
+  };
 
   /**
    * kResourceTypeName
@@ -58,11 +62,9 @@ public:
    */
   static const char* const kResourceTypeName[];
 
-
 #ifdef DEBUG
 
-  static size_t
-  SizeOfDeadlockDetector(MallocSizeOf aMallocSizeOf);
+  static size_t SizeOfDeadlockDetector(MallocSizeOf aMallocSizeOf);
 
   /**
    * Print
@@ -83,9 +85,7 @@ public:
    */
   bool Print(nsACString& aOut) const;
 
-  size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     // NB: |mName| is not reported as it's expected to be a static string.
     //     If we switch to a nsString it should be added to the tally.
     //     |mChainPrev| is not reported because its memory is not owned.
@@ -96,7 +96,7 @@ public:
   // ``DDT'' = ``Deadlock Detector Type''
   typedef DeadlockDetector<BlockingResourceBase> DDT;
 
-protected:
+ protected:
 #ifdef MOZ_CALLSTACK_DISABLED
   typedef bool AcquisitionState;
 #else
@@ -130,7 +130,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    **/
-  void Acquire(); //NS_NEEDS_RESOURCE(this)
+  void Acquire();  // NS_NEEDS_RESOURCE(this)
 
   /**
    * Release
@@ -141,7 +141,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    **/
-  void Release();             //NS_NEEDS_RESOURCE(this)
+  void Release();  // NS_NEEDS_RESOURCE(this)
 
   /**
    * ResourceChainFront
@@ -151,10 +151,9 @@ protected:
    * @return the front of the resource acquisition chain, i.e., the last
    *         resource acquired.
    */
-  static BlockingResourceBase* ResourceChainFront()
-  {
-    return
-      (BlockingResourceBase*)PR_GetThreadPrivate(sResourceAcqnChainFrontTPI);
+  static BlockingResourceBase* ResourceChainFront() {
+    return (BlockingResourceBase*)PR_GetThreadPrivate(
+        sResourceAcqnChainFrontTPI);
   }
 
   /**
@@ -163,10 +162,9 @@ protected:
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
   static BlockingResourceBase* ResourceChainPrev(
-      const BlockingResourceBase* aResource)
-  {
+      const BlockingResourceBase* aResource) {
     return aResource->mChainPrev;
-  } //NS_NEEDS_RESOURCE(this)
+  }  // NS_NEEDS_RESOURCE(this)
 
   /**
    * ResourceChainAppend
@@ -175,11 +173,10 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  void ResourceChainAppend(BlockingResourceBase* aPrev)
-  {
+  void ResourceChainAppend(BlockingResourceBase* aPrev) {
     mChainPrev = aPrev;
     PR_SetThreadPrivate(sResourceAcqnChainFrontTPI, this);
-  } //NS_NEEDS_RESOURCE(this)
+  }  // NS_NEEDS_RESOURCE(this)
 
   /**
    * ResourceChainRemove
@@ -187,11 +184,10 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  void ResourceChainRemove()
-  {
+  void ResourceChainRemove() {
     NS_ASSERTION(this == ResourceChainFront(), "not at chain front");
     PR_SetThreadPrivate(sResourceAcqnChainFrontTPI, mChainPrev);
-  } //NS_NEEDS_RESOURCE(this)
+  }  // NS_NEEDS_RESOURCE(this)
 
   /**
    * GetAcquisitionState
@@ -199,10 +195,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  AcquisitionState GetAcquisitionState()
-  {
-    return mAcquired;
-  }
+  AcquisitionState GetAcquisitionState() { return mAcquired; }
 
   /**
    * SetAcquisitionState
@@ -210,8 +203,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  void SetAcquisitionState(const AcquisitionState& aAcquisitionState)
-  {
+  void SetAcquisitionState(const AcquisitionState& aAcquisitionState) {
     mAcquired = aAcquisitionState;
   }
 
@@ -221,8 +213,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  void ClearAcquisitionState()
-  {
+  void ClearAcquisitionState() {
 #ifdef MOZ_CALLSTACK_DISABLED
     mAcquired = false;
 #else
@@ -236,8 +227,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  bool IsAcquired() const
-  {
+  bool IsAcquired() const {
 #ifdef MOZ_CALLSTACK_DISABLED
     return mAcquired;
 #else
@@ -253,7 +243,7 @@ protected:
    **/
   BlockingResourceBase* mChainPrev;
 
-private:
+ private:
   /**
    * mName
    * A descriptive name for this resource.  Used in error
@@ -319,14 +309,14 @@ private:
    */
   static void Shutdown();
 
-  static void StackWalkCallback(uint32_t aFrameNumber, void* aPc,
-                                void* aSp, void* aClosure);
+  static void StackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
+                                void* aClosure);
   static void GetStackTrace(AcquisitionState& aState);
 
-#  ifdef MOZILLA_INTERNAL_API
+#ifdef MOZILLA_INTERNAL_API
   // so it can call BlockingResourceBase::Shutdown()
   friend void LogTerm();
-#  endif  // ifdef MOZILLA_INTERNAL_API
+#endif  // ifdef MOZILLA_INTERNAL_API
 
 #else  // non-DEBUG implementation
 
@@ -337,8 +327,6 @@ private:
 #endif
 };
 
+}  // namespace mozilla
 
-} // namespace mozilla
-
-
-#endif // mozilla_BlockingResourceBase_h
+#endif  // mozilla_BlockingResourceBase_h

@@ -12,42 +12,36 @@
 namespace mozilla {
 namespace dom {
 
-class EmptyBlobImpl final : public BaseBlobImpl
-{
-public:
+class EmptyBlobImpl final : public BaseBlobImpl {
+ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(EmptyBlobImpl, BaseBlobImpl)
 
   explicit EmptyBlobImpl(const nsAString& aContentType)
-    : BaseBlobImpl(aContentType, 0 /* aLength */)
-  {
+      : BaseBlobImpl(aContentType, 0 /* aLength */) {
     mImmutable = true;
   }
 
-  EmptyBlobImpl(const nsAString& aName,
-                const nsAString& aContentType,
+  EmptyBlobImpl(const nsAString& aName, const nsAString& aContentType,
                 int64_t aLastModifiedDate)
-    : BaseBlobImpl(aName, aContentType, 0, aLastModifiedDate)
-  {
+      : BaseBlobImpl(aName, aContentType, 0, aLastModifiedDate) {
     mImmutable = true;
   }
 
   virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;
 
-  virtual already_AddRefed<BlobImpl>
-  CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType, ErrorResult& aRv) override;
+  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
+                                                 uint64_t aLength,
+                                                 const nsAString& aContentType,
+                                                 ErrorResult& aRv) override;
 
-  virtual bool IsMemoryFile() const override
-  {
-    return true;
-  }
+  virtual bool IsMemoryFile() const override { return true; }
 
-private:
+ private:
   ~EmptyBlobImpl() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_EmptyBlobImpl_h
+#endif  // mozilla_dom_EmptyBlobImpl_h
