@@ -57,6 +57,31 @@ permalink: /changelog/
   )
   ```
 
+* **concept-storage**, **browser-storage-sync**, **services-logins-sync**:
+  * Added a new interface, `SyncableStore<AuthType>`, which allows a storage layer to be used with `feature-sync`.
+  * Added a `SyncableStore<SyncAuthInfo>` implementation for `browser-storage-sync`
+  * Added a `SyncableStore<SyncUnlockInfo>` implementation for `services-logins-sync`.
+
+* **feature-sync**:
+  * 🆕 New component: A component which orchestrates synchronization of groups of similar `SyncableStore` objects using a `FirefoxAccount`.
+  * Here is an example of configuring and synchronizing a places-backed `HistoryStorage` (provided by `browser-storage-sync` component):
+
+  ```Kotlin
+  val historyStorage = PlacesHistoryStorage(context)
+  val featureSync = FirefoxSyncFeature(Dispatchers.IO + job) { authInfo ->
+      SyncAuthInfo(
+          fxaAccessToken = authInfo.fxaAccessToken,
+          kid = authInfo.kid,
+          syncKey = authInfo.syncKey,
+          tokenserverURL = authInfo.tokenServerUrl
+      )
+  }.also {
+      it.addSyncable("placesHistory", historyStorage)
+  }
+  val syncResult = featureSync.sync().await()
+  assert(syncResults["placesHistory"]!!.status is SyncOk)
+  ```
+
 * **service-firefox-accounts**:
   * ⚠️ **This is a breaking change**
   * We've simplified the API to provide the FxA configuration:

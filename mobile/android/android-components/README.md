@@ -112,6 +112,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Storage**](components/feature/storage/README.md) -A component that connects a (concept) storage implementation with its various consumers, like a (concept) engine implementation for history tracking.
 
+* 🔴 [**Sync**](components/feature/sync/README.md) -A component that provides synchronization orchestration for groups of (concept) SyncableStore objects.
+
 * 🔴 [**Tabs**](components/feature/tabs/README.md) - A component that connects a tabs tray implementation with the session and toolbar modules.
 
 * 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
