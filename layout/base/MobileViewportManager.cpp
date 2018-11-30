@@ -239,7 +239,7 @@ ZoomToResolution(CSSToScreenScale aZoom,
     / aCssToDev * ParentLayerToLayerScale(1);
 }
 
-CSSToScreenScale
+void
 MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
                                         const ScreenIntSize& aDisplaySize,
                                         const CSSSize& aViewport,
@@ -249,6 +249,7 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
       mPresShell->GetPresContext()->CSSToDevPixelScale();
   LayoutDeviceToLayerScale res(mPresShell->GetResolution());
   CSSToScreenScale zoom = ResolutionToZoom(res, cssToDev);
+  Maybe<CSSToScreenScale> newZoom;
 
   if (mIsFirstPaint) {
     ScreenIntSize compositionSize = GetCompositionSize(aDisplaySize);
@@ -283,47 +284,50 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
     MOZ_ASSERT(aViewportInfo.GetMinZoom() <= defaultZoom &&
       defaultZoom <= aViewportInfo.GetMaxZoom());
 
-    zoom = defaultZoom;
+    // On first paint, we always consider the zoom to have changed.
+    newZoom = Some(defaultZoom);
+  } else {
+    // If this is not a first paint, then in some cases we want to update the pre-
+    // existing resolution so as to maintain how much actual content is visible
+    // within the display width. Note that "actual content" may be different with
+    // respect to CSS pixels because of the CSS viewport size changing.
+    //
+    // aDisplayWidthChangeRatio is non-empty if:
+    // (a) The meta-viewport tag information changes, and so the CSS viewport
+    //     might change as a result. If this happens after the content has been
+    //     painted, we want to adjust the zoom to compensate. OR
+    // (b) The display size changed from a nonzero value to another nonzero value.
+    //     This covers the case where e.g. the device was rotated, and again we
+    //     want to adjust the zoom to compensate.
+    // Note in particular that aDisplayWidthChangeRatio will be None if all that
+    // happened was a change in the full-zoom. In this case, we still want to
+    // compute a new CSS viewport, but we don't want to update the resolution.
+    //
+    // Given the above, the algorithm below accounts for all types of changes I
+    // can conceive of:
+    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
+    //    or a fixed size viewport)
+    // 2. screen size changes, CSS viewport also does (pages with a device-width
+    //    viewport)
+    // 3. screen size remains constant, but CSS viewport changes (meta viewport
+    //    tag is added or removed)
+    // 4. neither screen size nor CSS viewport changes
+    if (aDisplayWidthChangeRatio) {
+      newZoom = Some(ScaleZoomWithDisplayWidth(zoom, aDisplayWidthChangeRatio.value(),
+        aViewport, mMobileViewportSize));
+    }
+  }
 
-    LayoutDeviceToLayerScale resolution = ZoomToResolution(zoom, cssToDev);
+  // If the zoom has changed, update the pres shell resolution and the
+  // visual viewport size accordingly.
+  if (newZoom) {
+    LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
     mPresShell->SetResolutionAndScaleTo(resolution.scale);
 
-    return zoom;
+    MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
+    UpdateVisualViewportSize(aDisplaySize, *newZoom);
   }
-
-  // If this is not a first paint, then in some cases we want to update the pre-
-  // existing resolution so as to maintain how much actual content is visible
-  // within the display width. Note that "actual content" may be different with
-  // respect to CSS pixels because of the CSS viewport size changing.
-  //
-  // aDisplayWidthChangeRatio is non-empty if:
-  // (a) The meta-viewport tag information changes, and so the CSS viewport
-  //     might change as a result. If this happens after the content has been
-  //     painted, we want to adjust the zoom to compensate. OR
-  // (b) The display size changed from a nonzero value to another nonzero value.
-  //     This covers the case where e.g. the device was rotated, and again we
-  //     want to adjust the zoom to compensate.
-  // Note in particular that aDisplayWidthChangeRatio will be None if all that
-  // happened was a change in the full-zoom. In this case, we still want to
-  // compute a new CSS viewport, but we don't want to update the resolution.
-  //
-  // Given the above, the algorithm below accounts for all types of changes I
-  // can conceive of:
-  // 1. screen size changes, CSS viewport does not (pages with no meta viewport
-  //    or a fixed size viewport)
-  // 2. screen size changes, CSS viewport also does (pages with a device-width
-  //    viewport)
-  // 3. screen size remains constant, but CSS viewport changes (meta viewport
-  //    tag is added or removed)
-  // 4. neither screen size nor CSS viewport changes
-  if (aDisplayWidthChangeRatio) {
-    zoom = ScaleZoomWithDisplayWidth(zoom, aDisplayWidthChangeRatio.value(),
-      aViewport, mMobileViewportSize);
-    mPresShell->SetResolutionAndScaleTo(ZoomToResolution(zoom, cssToDev).scale);
-  }
-
-  return zoom;
 }
 
 
@@ -463,10 +467,7 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
     mIsFirstPaint, mMobileViewportSize != viewport);
 
   if (gfxPrefs::APZAllowZooming()) {
-    CSSToScreenScale zoom = UpdateResolution(viewportInfo, displaySize, viewport,
-      displayWidthChangeRatio);
-    MVM_LOG("%p: New zoom is %f\n", this, zoom.scale);
-    UpdateVisualViewportSize(displaySize, zoom);
+    UpdateResolution(viewportInfo, displaySize, viewport, displayWidthChangeRatio);
   }
   if (gfxPlatform::AsyncPanZoomEnabled()) {
     UpdateDisplayPortMargins();
@@ -517,10 +518,6 @@ MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
       nsLayoutUtils::CalculateScrollableRectForFrame(rootScrollableFrame,
                                                      nullptr);
     CSSSize contentSize = CSSSize::FromAppUnits(scrollableRect.Size());
-    CSSToScreenScale zoom =
-      UpdateResolution(aViewportInfo, aDisplaySize, contentSize, Nothing());
-
-    MVM_LOG("%p: Adapted zoom is %f\n", this, zoom.scale);
-    UpdateVisualViewportSize(aDisplaySize, zoom);
+    UpdateResolution(aViewportInfo, aDisplaySize, contentSize, Nothing());
   }
 }
