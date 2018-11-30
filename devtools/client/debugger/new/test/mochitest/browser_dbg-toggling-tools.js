@@ -6,7 +6,7 @@
 // Tests that you can switch tools, without losing your editor position
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html", "long");
 
   await selectSource(dbg, "long");
   getCM(dbg).scrollTo(0, 284);

@@ -3,12 +3,12 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-import type { ColumnPosition } from "../../types";
+import type { Position } from "../../types";
 
 export function getTokenLocation(
   codeMirror: any,
   tokenEl: HTMLElement
-): ColumnPosition {
+): Position {
   const { left, top, width, height } = tokenEl.getBoundingClientRect();
   const { line, ch } = codeMirror.coordsChar({
     left: left + width / 2,

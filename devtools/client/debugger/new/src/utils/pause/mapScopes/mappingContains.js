@@ -4,12 +4,12 @@
 
 // @flow
 
-import type { Position } from "../../../types";
+import type { PartialPosition } from "../../../types";
 import { positionCmp } from "./positionCmp";
 
 export function mappingContains(
-  mapped: { +start: Position, +end: Position },
-  item: { +start: Position, +end: Position }
+  mapped: { +start: PartialPosition, +end: PartialPosition },
+  item: { +start: PartialPosition, +end: PartialPosition }
 ) {
   return (
     positionCmp(item.start, mapped.start) >= 0 &&
