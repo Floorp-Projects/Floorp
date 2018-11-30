@@ -308,9 +308,7 @@ void MediaStreamTrack::Stop() {
   DOMMediaStream::TrackPort* port = mOwningStream->FindOwnedTrackPort(*this);
   MOZ_ASSERT(port,
              "A MediaStreamTrack must exist in its owning DOMMediaStream");
-  RefPtr<Pledge<bool>> p =
-      port->BlockSourceTrackId(mInputTrackID, BlockingMode::CREATION);
-  Unused << p;
+  Unused << port->BlockSourceTrackId(mInputTrackID, BlockingMode::CREATION);
 
   mReadyState = MediaStreamTrackState::Ended;
 

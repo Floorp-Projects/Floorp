@@ -49,11 +49,6 @@ namespace dom {
 enum class AudioContextOperation;
 }
 
-namespace media {
-template <typename V, typename E>
-class Pledge;
-}
-
 /*
  * MediaStreamGraph is a framework for synchronized audio/video processing
  * and playback. It is designed to be used by other browser components such as
@@ -966,8 +961,8 @@ class MediaInputPort final {
    * Returns a pledge that resolves on the main thread after the track block has
    * been applied by the MSG.
    */
-  already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(
-      TrackID aTrackId, BlockingMode aBlockingMode);
+  RefPtr<GenericPromise> BlockSourceTrackId(TrackID aTrackId,
+                                            BlockingMode aBlockingMode);
 
  private:
   void BlockSourceTrackIdImpl(TrackID aTrackId, BlockingMode aBlockingMode);

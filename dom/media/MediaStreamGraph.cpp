@@ -3011,7 +3011,7 @@ void MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId,
       Pair<TrackID, BlockingMode>(aTrackId, aBlockingMode));
 }
 
-already_AddRefed<Pledge<bool>> MediaInputPort::BlockSourceTrackId(
+RefPtr<GenericPromise> MediaInputPort::BlockSourceTrackId(
     TrackID aTrackId, BlockingMode aBlockingMode) {
   class Message : public ControlMessage {
    public:
@@ -3038,15 +3038,17 @@ already_AddRefed<Pledge<bool>> MediaInputPort::BlockSourceTrackId(
 
   MOZ_ASSERT(IsTrackIDExplicit(aTrackId), "Only explicit TrackID is allowed");
 
-  auto pledge = MakeRefPtr<Pledge<bool>>();
-  nsCOMPtr<nsIRunnable> runnable = NewRunnableFrom([pledge]() {
-    MOZ_ASSERT(NS_IsMainThread());
-    pledge->Resolve(true);
-    return NS_OK;
-  });
+  MozPromiseHolder<GenericPromise> holder;
+  RefPtr<GenericPromise> p = holder.Ensure(__func__);
+  nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableFrom([h = std::move(holder)]() mutable {
+        MOZ_ASSERT(NS_IsMainThread());
+        h.Resolve(true, __func__);
+        return NS_OK;
+      });
   GraphImpl()->AppendMessage(
       MakeUnique<Message>(this, aTrackId, aBlockingMode, runnable.forget()));
-  return pledge.forget();
+  return p;
 }
 
 already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(

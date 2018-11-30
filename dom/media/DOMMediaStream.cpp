@@ -90,14 +90,12 @@ TrackID DOMMediaStream::TrackPort::GetSourceTrackId() const {
   return mInputPort ? mInputPort->GetSourceTrackId() : TRACK_INVALID;
 }
 
-already_AddRefed<Pledge<bool>> DOMMediaStream::TrackPort::BlockSourceTrackId(
+RefPtr<GenericPromise> DOMMediaStream::TrackPort::BlockSourceTrackId(
     TrackID aTrackId, BlockingMode aBlockingMode) {
-  if (mInputPort) {
-    return mInputPort->BlockSourceTrackId(aTrackId, aBlockingMode);
+  if (!mInputPort) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
-  auto rejected = MakeRefPtr<Pledge<bool>>();
-  rejected->Reject(NS_ERROR_FAILURE);
-  return rejected.forget();
+  return mInputPort->BlockSourceTrackId(aTrackId, aBlockingMode);
 }
 
 NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::TrackPort, mTrack)
@@ -828,9 +826,8 @@ already_AddRefed<MediaStreamTrack> DOMMediaStream::CloneDOMTrack(
     // For extra suspenders, make sure that we don't forward data by mistake
     // to the clone when the original has already ended.
     // We only block END_EXISTING to allow any pending clones to end.
-    RefPtr<Pledge<bool, nsresult>> blockingPledge =
-        inputPort->BlockSourceTrackId(inputTrackID, BlockingMode::END_EXISTING);
-    Unused << blockingPledge;
+    Unused << inputPort->BlockSourceTrackId(inputTrackID,
+                                            BlockingMode::END_EXISTING);
   }
 
   return newTrack.forget();
@@ -1042,13 +1039,14 @@ nsresult DOMMediaStream::DispatchTrackEvent(
 void DOMMediaStream::BlockPlaybackTrack(TrackPort* aTrack) {
   MOZ_ASSERT(aTrack);
   ++mTracksPendingRemoval;
-  RefPtr<Pledge<bool>> p = aTrack->BlockSourceTrackId(
-      aTrack->GetTrack()->mTrackID, BlockingMode::CREATION);
-  RefPtr<DOMMediaStream> self = this;
-  p->Then([self](const bool& aIgnore) { self->NotifyPlaybackTrackBlocked(); },
-          [](const nsresult& aIgnore) {
-            NS_ERROR("Could not remove track from MSG");
-          });
+  RefPtr<DOMMediaStream> that = this;
+  aTrack
+      ->BlockSourceTrackId(aTrack->GetTrack()->mTrackID, BlockingMode::CREATION)
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [this, that](bool aIgnore) { NotifyPlaybackTrackBlocked(); },
+             [](const nsresult& aIgnore) {
+               NS_ERROR("Could not remove track from MSG");
+             });
 }
 
 void DOMMediaStream::NotifyPlaybackTrackBlocked() {
