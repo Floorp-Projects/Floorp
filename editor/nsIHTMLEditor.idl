@@ -88,21 +88,17 @@ interface nsIHTMLEditor : nsISupports
 
 
   /**
-   * removeInlineProperty() deletes the properties from all text in the current
-   * selection.  If aProperty is not set on the selection, nothing is done.
+   * removeInlineProperty() removes a property which changes inline style of
+   * text.  E.g., bold, italic, super and sub.
    *
-   * @param aProperty   the property to remove from the selection
-   *                    All atoms are for normal HTML tags (e.g.:
-   *                    nsIEditorProperty::font) except when you want to
-   *                    remove just links and not named anchors.
-   *                    For that, use nsIEditorProperty::href
-   * @param aAttribute  the attribute of the property, if applicable.
-   *                    May be null.
-   *                    Example: aProperty=nsIEditorProptery::font,
-   *                    aAttribute="color"
-   *                    nsIEditProperty::allAttributes is special.
-   *                    It indicates that all content-based text properties
-   *                    are to be removed from the selection.
+   * @param aProperty   Tag name whcih represents the inline style you want to
+   *                    remove.  E.g., "strong", "b", etc.
+   *                    If "href", <a> element which has href attribute will be
+   *                    removed.
+   *                    If "name", <a> element which has non-empty name
+   *                    attribute will be removed.
+   * @param aAttribute  If aProperty is "font", aAttribute should be "face",
+   *                    "size", "color" or "bgcolor".
    */
   void removeInlineProperty(in AString aProperty, in AString aAttribute);
 
