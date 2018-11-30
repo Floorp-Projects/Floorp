@@ -18,9 +18,9 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.eq
 import mozilla.components.support.utils.ThreadUtils
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -47,17 +47,17 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_AUDIO
-import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
-import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
-import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
-import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
-import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_AUDIO
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_IMAGE
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_NONE
+import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
 import org.mozilla.geckoview.WebRequestError
+import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
+import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import org.mozilla.geckoview.createMockedWebResponseInfo
 import org.robolectric.RobolectricTestRunner
 
@@ -1066,15 +1066,26 @@ class GeckoEngineSessionTest {
             }
         })
 
-        delegate.onContextMenu(geckoSession, 0, 0, null, ELEMENT_TYPE_AUDIO, "file.mp3")
+        class MockContextElement(
+            linkUri: String?,
+            title: String?,
+            altText: String?,
+            typeStr: String,
+            srcUri: String?
+        ) : GeckoSession.ContentDelegate.ContextElement(linkUri, title, altText, typeStr, srcUri)
+
+        delegate.onContextMenu(geckoSession, 0, 0,
+            MockContextElement(null, "title", "alt", "HTMLAudioElement", "file.mp3"))
         assertTrue(observedChanged)
 
         observedChanged = false
-        delegate.onContextMenu(geckoSession, 0, 0, null, ELEMENT_TYPE_AUDIO, null)
+        delegate.onContextMenu(geckoSession, 0, 0,
+            MockContextElement(null, "title", "alt", "HTMLAudioElement", null))
         assertFalse(observedChanged)
 
         observedChanged = false
-        delegate.onContextMenu(geckoSession, 0, 0, null, ELEMENT_TYPE_NONE, null)
+        delegate.onContextMenu(geckoSession, 0, 0,
+            MockContextElement(null, "title", "alt", "foobar", null))
         assertFalse(observedChanged)
     }
 
@@ -1083,47 +1094,47 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider)
 
-        var result = engineSession.handleLongClick("file.mp3", ELEMENT_TYPE_AUDIO)
+        var result = engineSession.handleLongClick("file.mp3", TYPE_AUDIO)
         assertNotNull(result)
         assertTrue(result is HitResult.AUDIO && result.src == "file.mp3")
 
-        result = engineSession.handleLongClick("file.mp4", ELEMENT_TYPE_VIDEO)
+        result = engineSession.handleLongClick("file.mp4", TYPE_VIDEO)
         assertNotNull(result)
         assertTrue(result is HitResult.VIDEO && result.src == "file.mp4")
 
-        result = engineSession.handleLongClick("file.png", ELEMENT_TYPE_IMAGE)
+        result = engineSession.handleLongClick("file.png", TYPE_IMAGE)
         assertNotNull(result)
         assertTrue(result is HitResult.IMAGE && result.src == "file.png")
 
-        result = engineSession.handleLongClick("file.png", ELEMENT_TYPE_IMAGE, "https://mozilla.org")
+        result = engineSession.handleLongClick("file.png", TYPE_IMAGE, "https://mozilla.org")
         assertNotNull(result)
         assertTrue(result is HitResult.IMAGE_SRC && result.src == "file.png" && result.uri == "https://mozilla.org")
 
-        result = engineSession.handleLongClick(null, ELEMENT_TYPE_IMAGE)
+        result = engineSession.handleLongClick(null, TYPE_IMAGE)
         assertNotNull(result)
         assertTrue(result is HitResult.UNKNOWN && result.src == "")
 
-        result = engineSession.handleLongClick("tel:+1234567890", ELEMENT_TYPE_NONE)
+        result = engineSession.handleLongClick("tel:+1234567890", TYPE_NONE)
         assertNotNull(result)
         assertTrue(result is HitResult.PHONE && result.src == "tel:+1234567890")
 
-        result = engineSession.handleLongClick("geo:1,-1", ELEMENT_TYPE_NONE)
+        result = engineSession.handleLongClick("geo:1,-1", TYPE_NONE)
         assertNotNull(result)
         assertTrue(result is HitResult.GEO && result.src == "geo:1,-1")
 
-        result = engineSession.handleLongClick("mailto:asa@mozilla.com", ELEMENT_TYPE_NONE)
+        result = engineSession.handleLongClick("mailto:asa@mozilla.com", TYPE_NONE)
         assertNotNull(result)
         assertTrue(result is HitResult.EMAIL && result.src == "mailto:asa@mozilla.com")
 
-        result = engineSession.handleLongClick(null, ELEMENT_TYPE_NONE, "https://mozilla.org")
+        result = engineSession.handleLongClick(null, TYPE_NONE, "https://mozilla.org")
         assertNotNull(result)
         assertTrue(result is HitResult.UNKNOWN && result.src == "https://mozilla.org")
 
-        result = engineSession.handleLongClick("data://foobar", ELEMENT_TYPE_NONE, "https://mozilla.org")
+        result = engineSession.handleLongClick("data://foobar", TYPE_NONE, "https://mozilla.org")
         assertNotNull(result)
         assertTrue(result is HitResult.UNKNOWN && result.src == "data://foobar")
 
-        result = engineSession.handleLongClick(null, ELEMENT_TYPE_NONE, null)
+        result = engineSession.handleLongClick(null, TYPE_NONE, null)
         assertNull(result)
     }
 
