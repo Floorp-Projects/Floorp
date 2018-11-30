@@ -133,7 +133,6 @@ static struct {
     unsigned cpu_flag;
     const char *cpu_flag_name;
     const char *test_name;
-    unsigned int seed;
 } state;
 
 /* float compare support code */
@@ -414,7 +413,6 @@ static void check_cpu_flag(const char *const name, unsigned flag) {
         for (int i = 0; tests[i].func; i++) {
             if (state.test_name && strcmp(tests[i].name, state.test_name))
                 continue;
-            srand(state.seed);
             state.current_test_name = tests[i].name;
             tests[i].func();
         }
@@ -431,7 +429,7 @@ static void print_cpu_name(void) {
 
 int main(int argc, char *argv[]) {
     (void)func_new, (void)func_ref;
-    state.seed = get_seed();
+    unsigned int seed = get_seed();
     int ret = 0;
 
     while (argc > 1) {
@@ -448,21 +446,16 @@ int main(int argc, char *argv[]) {
                 state.bench_pattern = "";
         } else if (!strncmp(argv[1], "--test=", 7)) {
             state.test_name = argv[1] + 7;
-        } else if (!strcmp(argv[1], "--list")) {
-            fprintf(stderr, "checkasm: available tests [");
-            for (int i = 0; tests[i].func; i++)
-                fprintf(stderr, "%s%s", i ? ", ": "", tests[i].name);
-            fprintf(stderr, "]\n");
-            return 0;
         } else {
-            state.seed = strtoul(argv[1], NULL, 10);
+            seed = strtoul(argv[1], NULL, 10);
         }
 
         argc--;
         argv++;
     }
 
-    fprintf(stderr, "checkasm: using random seed %u\n", state.seed);
+    fprintf(stderr, "checkasm: using random seed %u\n", seed);
+    srand(seed);
 
     check_cpu_flag(NULL, 0);
     for (int i = 0; cpus[i].flag; i++)
@@ -528,7 +521,6 @@ void *checkasm_check_func(void *const func, const char *const name, ...) {
     v->ok = 1;
     v->cpu = state.cpu_flag;
     state.current_func_ver = v;
-    srand(state.seed);
 
     if (state.cpu_flag)
         state.num_checked++;
