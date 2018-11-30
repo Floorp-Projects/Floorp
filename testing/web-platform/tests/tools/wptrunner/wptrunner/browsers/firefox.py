@@ -79,7 +79,7 @@ def browser_kwargs(test_type, run_info_data, config, **kwargs):
             "timeout_multiplier": get_timeout_multiplier(test_type,
                                                          run_info_data,
                                                          **kwargs),
-            "leak_check": kwargs["leak_check"],
+            "leak_check": run_info_data["debug"] and (kwargs["leak_check"] is not False),
             "asan": run_info_data.get("asan"),
             "stylo_threads": kwargs["stylo_threads"],
             "chaos_mode_flags": kwargs["chaos_mode_flags"],
