@@ -52,7 +52,7 @@ async function testCheckboxState(testData) {
   info("Install a test addon.");
   await installAddon({
     document,
-    path: "addons/unpacked/install.rdf",
+    path: "addons/unpacked/manifest.json",
     name: ADDON_NAME,
   });
 

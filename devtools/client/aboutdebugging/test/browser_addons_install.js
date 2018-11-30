@@ -31,22 +31,23 @@ function promiseWriteWebManifestForExtension(manifest, dir) {
     dir.path, manifest.applications.gecko.id, files, true);
 }
 
-add_task(async function testLegacyInstallSuccess() {
-  const ADDON_ID = "test-devtools@mozilla.org";
-  const ADDON_NAME = "test-devtools";
-
+add_task(async function testWebextensionInstallSuccess() {
   const { tab, document } = await openAboutDebugging("addons");
   await waitForInitialAddonList(document);
 
   // Install this add-on, and verify that it appears in the about:debugging UI
   await installAddon({
     document,
-    path: "addons/unpacked/install.rdf",
-    name: ADDON_NAME,
+    path: "addons/unpacked/manifest.json",
+    name: "test-devtools",
   });
 
   // Install the add-on, and verify that it disappears in the about:debugging UI
-  await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
+  await uninstallAddon({
+    document,
+    id: "test-devtools@mozilla.org",
+    name: "test-devtools",
+  });
 
   await closeAboutDebugging(tab);
 });

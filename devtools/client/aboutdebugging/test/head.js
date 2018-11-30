@@ -166,7 +166,7 @@ function getTabList(document) {
     document.querySelector("#tabs.targets");
 }
 
-async function installAddon({document, path, file, name, isWebExtension}) {
+async function installAddon({document, path, file, name}) {
   // Mock the file picker to select a test addon
   const MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
@@ -177,32 +177,27 @@ async function installAddon({document, path, file, name, isWebExtension}) {
     MockFilePicker.setFiles([file]);
   }
 
-  let onAddonInstalled;
+  const onAddonInstalled = new Promise(done => {
+    Management.on("startup", function listener(event, extension) {
+      if (extension.name != name) {
+        return;
+      }
 
-  if (isWebExtension) {
-    onAddonInstalled = new Promise(done => {
-      Management.on("startup", function listener(event, extension) {
-        if (extension.name != name) {
-          return;
-        }
-
-        Management.off("startup", listener);
-        done();
-      });
+      Management.off("startup", listener);
+      done();
     });
-  } else {
-    // Wait for a "test-devtools" message sent by the addon's bootstrap.js file
-    onAddonInstalled = new Promise(done => {
-      Services.obs.addObserver(function listener() {
-        Services.obs.removeObserver(listener, "test-devtools");
+  });
+  const AboutDebugging = document.defaultView.AboutDebugging;
 
-        done();
-      }, "test-devtools");
-    });
-  }
+  // List updated twice:
+  // - AddonManager's onInstalled event
+  // - WebExtension's Management's startup event.
+  const onListUpdated = waitForNEvents(AboutDebugging, "addons-updated", 2);
+
   // Trigger the file picker by clicking on the button
   document.getElementById("load-addon-from-file").click();
 
+  await onListUpdated;
   await onAddonInstalled;
   ok(true, "Addon installed and running its bootstrap.js file");
 
@@ -367,7 +362,6 @@ async function setupTestAboutDebuggingWebExtension(name, file) {
     document,
     file,
     name,
-    isWebExtension: true,
   });
 
   // Retrieve the DEBUG button for the addon
