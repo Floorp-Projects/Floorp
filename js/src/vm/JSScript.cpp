@@ -1991,8 +1991,7 @@ ScriptSource::tryCompressOffThread(JSContext* cx)
         HelperThreadState().cpuCount > 1 &&
         HelperThreadState().threadCount >= 2 &&
         CanUseExtraThreads();
-    const size_t TINY_SCRIPT = 256;
-    if (TINY_SCRIPT > length() || !canCompressOffThread) {
+    if (length() < ScriptSource::MinimumCompressibleLength || !canCompressOffThread) {
         return true;
     }
 
