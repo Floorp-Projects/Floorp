@@ -71,6 +71,9 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
 ChromeUtils.defineModuleGetter(this, "URICountListener",
   "resource:///modules/BrowserUsageTelemetry.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "IDNService",
+  "@mozilla.org/network/idn-service;1", "nsIIDNService");
+
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings
                  .createBundle("chrome://browser/locale/browser.properties");
@@ -943,11 +946,24 @@ StorageAccessPermissionPrompt.prototype = {
     return "storage-access-" + this.principal.origin;
   },
 
+  prettifyHostPort(uri) {
+    try {
+      uri = Services.uriFixup.createExposableURI(uri);
+    } catch (e) {
+      // ignore, since we can't do anything better
+    }
+    let host = IDNService.convertToDisplayIDN(uri.host, {});
+    if (uri.port != -1) {
+      host += `:${uri.port}`;
+    }
+    return host;
+  },
+
   get popupOptions() {
     return {
       displayURI: false,
-      name: this.principal.URI.hostPort,
-      secondName: this.topLevelPrincipal.URI.hostPort,
+      name: this.prettifyHostPort(this.principal.URI),
+      secondName: this.prettifyHostPort(this.topLevelPrincipal.URI),
     };
   },
 
@@ -955,7 +971,7 @@ StorageAccessPermissionPrompt.prototype = {
     let document = this.browser.ownerDocument;
     let label =
       gBrowserBundle.formatStringFromName("storageAccess.description.label",
-                                          [this.request.principal.URI.hostPort, "<>"], 2);
+                                          [this.prettifyHostPort(this.request.principal.URI), "<>"], 2);
     let parts = label.split("<>");
     if (parts.length == 1) {
       parts.push("");
