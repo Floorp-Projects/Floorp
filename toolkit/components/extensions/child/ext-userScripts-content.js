@@ -22,6 +22,24 @@ this.userScriptsContent = class extends ExtensionAPI {
 
           context.setUserScriptAPIs(exportedAPIMethods);
         },
+        onBeforeScript: new EventManager({
+          context,
+          name: "userScripts.onBeforeScript",
+          register: fire => {
+            let handler = (event, userScriptMetadata, userScriptSandbox) => {
+              const apiObj = Cu.createObjectIn(context.cloneScope);
+              apiObj.metadata = userScriptMetadata;
+              apiObj.global = userScriptSandbox;
+
+              fire.raw(apiObj);
+            };
+
+            context.userScriptsEvents.on("on-before-script", handler);
+            return () => {
+              context.userScriptsEvents.off("on-before-script", handler);
+            };
+          },
+        }).api(),
       },
     };
   }

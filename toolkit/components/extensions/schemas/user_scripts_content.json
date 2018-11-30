@@ -29,6 +29,31 @@
           }
         ]
       }
+    ],
+    "events": [
+      {
+        "name": "onBeforeScript",
+        "permissions": ["manifest:user_scripts.api_script"],
+        "allowedContexts": ["content", "content_only"],
+        "type": "function",
+        "description": "Event called when a new userScript global has been created",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "userScript",
+            "properties": {
+              "metadata": {
+                "type": "any",
+                "description": "The userScript metadata (as set in userScripts.register)"
+              },
+              "global": {
+                "type": "any",
+                "description": "The userScript global"
+              }
+            }
+          }
+        ]
+      }
     ]
   }
 ]
