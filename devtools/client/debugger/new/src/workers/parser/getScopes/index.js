@@ -27,11 +27,11 @@ export type {
   BindingType
 };
 
-import type { Location } from "../../../types";
+import type { SourceLocation } from "../../../types";
 
 let parsedScopesCache = new Map();
 
-export default function getScopes(location: Location): SourceScope[] {
+export default function getScopes(location: SourceLocation): SourceScope[] {
   const { sourceId } = location;
   let parsedScopes = parsedScopesCache.get(sourceId);
   if (!parsedScopes) {
@@ -50,7 +50,10 @@ export { buildScopeList };
 /**
  * Searches all scopes and their bindings at the specific location.
  */
-function findScopes(scopes: ParsedScope[], location: Location): SourceScope[] {
+function findScopes(
+  scopes: ParsedScope[],
+  location: SourceLocation
+): SourceScope[] {
   // Find inner most in the tree structure.
   let searchInScopes: ?(ParsedScope[]) = scopes;
   const found = [];
@@ -82,7 +85,7 @@ function findScopes(scopes: ParsedScope[], location: Location): SourceScope[] {
   });
 }
 
-function compareLocations(a: Location, b: Location): number {
+function compareLocations(a: SourceLocation, b: SourceLocation): number {
   // According to type of Location.column can be undefined, if will not be the
   // case here, ignoring flow error.
   // $FlowIgnore

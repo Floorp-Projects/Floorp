@@ -19,7 +19,7 @@ import configureStore from "../actions/utils/create-store";
 import reducers from "../reducers";
 import * as selectors from "../selectors";
 import App from "../components/App";
-import { asyncStore } from "./prefs";
+import { asyncStore, prefs } from "./prefs";
 
 function renderPanel(component, store) {
   const root = document.createElement("div");
@@ -43,7 +43,7 @@ export function bootstrapStore(
   initialState: Object
 ) {
   const createStore = configureStore({
-    log: isTesting(),
+    log: prefs.logging || isTesting(),
     timing: isDevelopment(),
     makeThunkArgs: (args, state) => {
       return { ...args, client, ...services, ...toolboxActions };

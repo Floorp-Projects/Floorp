@@ -4,9 +4,9 @@
 
 // @flow
 
-import type { Position } from "../../../types";
+import type { PartialPosition } from "../../../types";
 
-export function locColumn(loc: Position): number {
+export function locColumn(loc: PartialPosition): number {
   if (typeof loc.column !== "number") {
     // This shouldn't really happen with locations from the AST, but
     // the datatype we are using allows null/undefined column.

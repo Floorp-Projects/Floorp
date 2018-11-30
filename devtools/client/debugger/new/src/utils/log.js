@@ -12,7 +12,7 @@
  * @module utils/log
  */
 
-import { isDevelopment } from "devtools-environment";
+import { prefs } from "./prefs";
 
 /**
  * Produces a formatted console log line by imploding args, prefixed by [log]
@@ -24,9 +24,7 @@ import { isDevelopment } from "devtools-environment";
  * @static
  */
 export function log(...args: any[]) {
-  if (!isDevelopment()) {
-    return;
+  if (prefs.logging) {
+    console.log(...args);
   }
-
-  console.log.apply(console, ["[log]", ...args]);
 }

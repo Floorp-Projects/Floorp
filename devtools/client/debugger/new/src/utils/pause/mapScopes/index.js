@@ -36,7 +36,7 @@ import {
 
 import { log } from "../../log";
 import type {
-  Position,
+  PartialPosition,
   Frame,
   Scope,
   Source,
@@ -254,7 +254,7 @@ function batchScopeMappings(
     }
   };
 }
-function buildLocationKey(loc: Position): string {
+function buildLocationKey(loc: PartialPosition): string {
   return `${loc.line}:${locColumn(loc)}`;
 }
 

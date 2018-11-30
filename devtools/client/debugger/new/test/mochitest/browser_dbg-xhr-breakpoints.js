@@ -46,8 +46,7 @@ async function clickPauseOnAny(dbg, expectedEvent) {
 
 // Tests that a basic XHR breakpoint works for get and POST is ignored
 add_task(async function() {
-  const dbg = await initDebugger("doc-xhr.html");
-  await waitForSources(dbg, "fetch.js");
+  const dbg = await initDebugger("doc-xhr.html", "fetch.js");
   await dbg.actions.setXHRBreakpoint("doc", "GET");
   invokeInTab("main", "doc-xhr.html");
   await waitForPaused(dbg);
@@ -65,10 +64,7 @@ add_task(async function() {
 
 // Tests the "pause on any URL" checkbox works properly
 add_task(async function() {
-  const dbg = await initDebugger("doc-xhr.html");
-  await waitForSources(dbg, "fetch.js");
-
-  info("HERE 1");
+  const dbg = await initDebugger("doc-xhr.html", "fetch.js");
 
   // Enable pause on any URL
   await clickPauseOnAny(dbg, "SET_XHR_BREAKPOINT");
@@ -87,7 +83,6 @@ add_task(async function() {
 
   // Disable pause on any URL
   await clickPauseOnAny(dbg, "DISABLE_XHR_BREAKPOINT");
-  info("HERE 4");
   invokeInTab("main", "README.md");
   assertNotPaused(dbg);
 
@@ -113,7 +108,7 @@ add_task(async function() {
   const listItems = getXHRBreakpointsElements(dbg);
   is(listItems.length, 3, "3 XHR breakpoints display in list");
   is(
-    pauseOnAnyCheckbox.checked, true, 
+    pauseOnAnyCheckbox.checked, true,
     "The pause on any is still checked"
   );
   is(

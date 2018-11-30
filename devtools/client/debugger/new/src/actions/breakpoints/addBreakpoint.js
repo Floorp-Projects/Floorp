@@ -94,7 +94,7 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
  * @param location
  * @return {function(ThunkArgs)}
  */
-export function addHiddenBreakpoint(location: Location) {
+export function addHiddenBreakpoint(location: SourceLocation) {
   return ({ dispatch }: ThunkArgs) => {
     return dispatch(addBreakpoint(location, { hidden: true }));
   };
@@ -106,9 +106,9 @@ export function addHiddenBreakpoint(location: Location) {
  *
  * @memberof actions/breakpoints
  * @static
- * @param {Location} $1.location Location  value
+ * @param {SourceLocation} $1.location Location  value
  */
-export function enableBreakpoint(location: Location) {
+export function enableBreakpoint(location: SourceLocation) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const breakpoint = getBreakpoint(getState(), location);
     if (!breakpoint || breakpoint.loading) {
@@ -139,7 +139,7 @@ export function enableBreakpoint(location: Location) {
  */
 
 export function addBreakpoint(
-  location: Location,
+  location: SourceLocation,
   { condition, hidden }: addBreakpointOptions = {}
 ) {
   const breakpoint = createBreakpoint(location, { condition, hidden });

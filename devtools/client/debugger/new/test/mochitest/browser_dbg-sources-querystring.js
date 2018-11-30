@@ -10,13 +10,11 @@ function getLabel(dbg, index) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources-querystring.html");
+  const dbg = await initDebugger("doc-sources-querystring.html", "simple1.js?x=1", "simple1.js?x=2");
   const {
     selectors: { getSelectedSource },
     getState
   } = dbg;
-
-  await waitForSources(dbg, "simple1.js?x=1", "simple1.js?x=2");
 
   // Expand nodes and make sure more sources appear.
   await assertSourceCount(dbg, 2);
@@ -40,4 +38,8 @@ add_task(async function() {
     "simple1.js?x=1",
     "Breakpoint heading is simple1.js?x=1"
   );
+
+  pressKey(dbg, "quickOpen");
+  type(dbg, "simple1.js?x");
+  ok(findElement(dbg, "resultItems")[0].innerText.includes("simple.js?x=1"));
 });

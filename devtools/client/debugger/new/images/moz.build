@@ -12,7 +12,6 @@ DevToolsModules(
     'breakpoint.svg',
     'close.svg',
     'coffeescript.svg',
-    'column-marker.svg',
     'command-chevron.svg',
     'disable-pausing.svg',
     'domain.svg',

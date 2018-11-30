@@ -22,7 +22,7 @@ import { getMappedExpression } from "./expressions";
 import { getExtra } from "./pause";
 
 import type { Action, ThunkArgs } from "./types";
-import type { ColumnPosition } from "../types";
+import type { Position } from "../types";
 import type { AstLocation } from "../workers/parser";
 
 function findExpressionMatch(state, codeMirror, tokenPos) {
@@ -75,7 +75,7 @@ export function updatePreview(
 export function setPreview(
   expression: string,
   location: AstLocation,
-  tokenPos: ColumnPosition,
+  tokenPos: Position,
   cursorPos: ClientRect
 ) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {

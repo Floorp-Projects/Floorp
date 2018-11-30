@@ -18,9 +18,8 @@ async function waitForBreakpoint(dbg, location) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("ember/quickstart/dist/");
+  const dbg = await initDebugger("ember/quickstart/dist/", "ember-application/index.js");
 
-  await waitForSource(dbg, "ember-application/index.js");
   await selectSource(dbg, "ember-application/index.js");
 
   info("1. reload and hit breakpoint")
