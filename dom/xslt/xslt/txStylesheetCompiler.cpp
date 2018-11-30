@@ -210,6 +210,18 @@ txStylesheetCompiler::startElementInternal(int32_t aNamespaceID,
             }
         }
 
+        // xml:base
+        if (attr->mNamespaceID == kNameSpaceID_XML &&
+            attr->mLocalName == nsGkAtoms::base &&
+            !attr->mValue.IsEmpty()) {
+            rv = ensureNewElementContext();
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsAutoString uri;
+            URIUtils::resolveHref(attr->mValue, mElementContext->mBaseURI, uri);
+            mElementContext->mBaseURI = uri;
+        }
+
         // extension-element-prefixes
         if ((attr->mNamespaceID == kNameSpaceID_XSLT &&
              attr->mLocalName == nsGkAtoms::extensionElementPrefixes &&
