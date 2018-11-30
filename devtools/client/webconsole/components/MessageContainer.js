@@ -36,6 +36,7 @@ class MessageContainer extends Component {
       networkMessageUpdate: PropTypes.object,
       getMessage: PropTypes.func.isRequired,
       isPaused: PropTypes.bool.isRequired,
+      pausedExecutionPoint: PropTypes.any,
     };
   }
 
@@ -54,13 +55,16 @@ class MessageContainer extends Component {
     const networkMessageUpdateChanged =
       this.props.networkMessageUpdate !== nextProps.networkMessageUpdate;
     const pausedChanged = this.props.isPaused !== nextProps.isPaused;
+    const executionPointChanged =
+      this.props.pausedExecutionPoint !== nextProps.pausedExecutionPoint;
 
     return repeatChanged
       || openChanged
       || tableDataChanged
       || timestampVisibleChanged
       || networkMessageUpdateChanged
-      || pausedChanged;
+      || pausedChanged
+      || executionPointChanged;
   }
 
   render() {
