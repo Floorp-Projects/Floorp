@@ -119,44 +119,6 @@ class PlatformThread {
   RTC_DISALLOW_COPY_AND_ASSIGN(PlatformThread);
 };
 
-#if defined(WEBRTC_WIN)
-class PlatformUIThread : public PlatformThread {
- public:
-  PlatformUIThread(ThreadRunFunctionDeprecated func, void* obj,
-		  const char* thread_name) :
-  PlatformThread(func, obj, thread_name),
-  hwnd_(nullptr),
-  timerid_(0),
-  timeout_(0) {
- }
- virtual ~PlatformUIThread() {}
-
- void Stop() override;
-
- /**
-  * Request an async callback soon.
-  */
- void RequestCallback();
-
- /**
-  * Request a recurring callback.
-  */
- bool RequestCallbackTimer(unsigned int milliseconds);
-
- protected:
-  void Run() override;
-
- private:
-  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
-  void NativeEventCallback();
-  bool InternalInit();
-
-  HWND hwnd_;
-  UINT_PTR timerid_;
-  unsigned int timeout_;
-};
-#endif
-
 }  // namespace rtc
 
 #endif  // RTC_BASE_PLATFORM_THREAD_H_
