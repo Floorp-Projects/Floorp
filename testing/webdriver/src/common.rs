@@ -70,8 +70,8 @@ impl WebElement {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test::{check_serialize, check_serialize_deserialize};
     use serde_json;
-    use test::{check_serialize, check_serialize_deserialize};
 
     #[test]
     fn test_json_date() {
