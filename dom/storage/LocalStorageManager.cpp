@@ -21,6 +21,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/LocalStorageCommon.h"
 
 // Only allow relatively small amounts of data since performance of
 // the synchronous IO is very bad.
@@ -56,11 +57,14 @@ LocalStorageManager::GetQuota()
 }
 
 NS_IMPL_ISUPPORTS(LocalStorageManager,
-                  nsIDOMStorageManager)
+                  nsIDOMStorageManager,
+                  nsILocalStorageManager)
 
 LocalStorageManager::LocalStorageManager()
   : mCaches(8)
 {
+  MOZ_ASSERT(!NextGenLocalStorageEnabled());
+
   StorageObserver* observer = StorageObserver::Self();
   NS_ASSERTION(observer, "No StorageObserver, cannot observe private data delete notifications!");
 
@@ -367,6 +371,40 @@ LocalStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+LocalStorageManager::GetNextGenLocalStorageEnabled(bool* aResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aResult);
+
+  *aResult = NextGenLocalStorageEnabled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LocalStorageManager::Preload(nsIPrincipal* aPrincipal,
+                             JSContext* aContext,
+                             nsISupports** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(_retval);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+LocalStorageManager::IsPreloaded(nsIPrincipal* aPrincipal,
+                                 JSContext* aContext,
+                                 nsISupports** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(_retval);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 LocalStorageManager::ClearCaches(uint32_t aUnloadFlags,
                                  const OriginAttributesPattern& aPattern,
@@ -473,9 +511,20 @@ LocalStorageManager::Observe(const char* aTopic,
   return NS_ERROR_UNEXPECTED;
 }
 
+// static
+LocalStorageManager*
+LocalStorageManager::Self()
+{
+  MOZ_ASSERT(!NextGenLocalStorageEnabled());
+
+  return sSelf;
+}
+
 LocalStorageManager*
 LocalStorageManager::Ensure()
 {
+  MOZ_ASSERT(!NextGenLocalStorageEnabled());
+
   if (sSelf) {
     return sSelf;
   }

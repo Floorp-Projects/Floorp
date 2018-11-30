@@ -33,7 +33,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Langpack: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  ConsoleAPI: "resource://gre/modules/Console.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 
@@ -105,7 +104,7 @@ const XPI_PERMISSION                  = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-const DB_SCHEMA = 27;
+const DB_SCHEMA = 28;
 
 const NOTIFICATION_TOOLBOX_CONNECTION_CHANGE      = "toolbox-connection-change";
 
@@ -220,18 +219,6 @@ function getFile(path, base = null) {
   let file = base.clone();
   file.appendRelativePath(path);
   return file;
-}
-
-/**
- * Helper function that determines whether an addon of a certain type is a
- * WebExtension.
- *
- * @param {string} type
- *        The add-on type to check.
- * @returns {boolean}
- */
-function isWebExtension(type) {
-  return type == "webextension" || type == "webextension-theme";
 }
 
 /**
@@ -375,6 +362,7 @@ const JSON_FIELDS = Object.freeze([
   "dependencies",
   "enabled",
   "file",
+  "loader",
   "lastModifiedTime",
   "path",
   "runInSafeMode",
@@ -459,6 +447,7 @@ class XPIState {
       dependencies: this.dependencies,
       enabled: this.enabled,
       lastModifiedTime: this.lastModifiedTime,
+      loader: this.loader,
       path: this.relativePath,
       runInSafeMode: this.runInSafeMode,
       signedState: this.signedState,
@@ -472,6 +461,10 @@ class XPIState {
       json.startupData = this.startupData;
     }
     return json;
+  }
+
+  get isWebExtension() {
+    return this.loader == null;
   }
 
   /**
@@ -531,6 +524,8 @@ class XPIState {
 
     this.version = aDBAddon.version;
     this.type = aDBAddon.type;
+    this.loader = aDBAddon.loader;
+
     if (aDBAddon.startupData) {
       this.startupData = aDBAddon.startupData;
     }
@@ -1521,11 +1516,6 @@ class BootstrapScope {
     if (Services.appinfo.inSafeMode && !runInSafeMode)
       return null;
 
-    if (addon.type == "extension" && aMethod == "startup") {
-      logger.debug(`Registering manifest for ${this.file.path}`);
-      Components.manager.addBootstrappedManifestLocation(this.file);
-    }
-
     try {
       if (!this.scope) {
         this.loadBootstrapScope(aReason);
@@ -1538,7 +1528,7 @@ class BootstrapScope {
       let method = undefined;
       let {scope} = this;
       try {
-        method = scope[aMethod] || Cu.evalInSandbox(`${aMethod};`, scope);
+        method = scope[aMethod];
       } catch (e) {
         // An exception will be caught if the expected method is not defined.
         // That will be logged below.
@@ -1597,12 +1587,6 @@ class BootstrapScope {
           XPIDatabase.updateAddonDisabledState(addon);
         }
       }
-
-      if (addon.type == "extension" && aMethod == "shutdown" &&
-          aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
-        logger.debug(`Removing manifest for ${this.file.path}`);
-        Components.manager.removeBootstrappedManifestLocation(this.file);
-      }
     }
   }
 
@@ -1632,33 +1616,31 @@ class BootstrapScope {
 
     logger.debug(`Loading bootstrap scope from ${this.file.path}`);
 
-    if (isWebExtension(this.addon.type)) {
-      this.scope = Extension.getBootstrapScope(this.addon.id, this.file);
-    } else if (this.addon.type === "webextension-langpack") {
-      this.scope = Langpack.getBootstrapScope(this.addon.id, this.file);
-    } else if (this.addon.type === "webextension-dictionary") {
-      this.scope = Dictionary.getBootstrapScope(this.addon.id, this.file);
-    } else {
-      let uri = getURIForResourceInFile(this.file, "bootstrap.js").spec;
+    if (this.addon.isWebExtension) {
+      switch (this.addon.type) {
+        case "extension":
+        case "theme":
+          this.scope = Extension.getBootstrapScope(this.addon.id, this.file);
+          break;
 
-      let principal = Services.scriptSecurityManager.getSystemPrincipal();
-      this.scope =
-        new Cu.Sandbox(principal, { sandboxName: uri,
-                                    addonId: this.addon.id,
-                                    wantGlobalProperties: ["ChromeUtils"],
-                                    metadata: { addonID: this.addon.id, URI: uri } });
+        case "locale":
+          this.scope = Langpack.getBootstrapScope(this.addon.id, this.file);
+          break;
 
-      try {
-        Object.assign(this.scope, BOOTSTRAP_REASONS);
+        case "dictionary":
+          this.scope = Dictionary.getBootstrapScope(this.addon.id, this.file);
+          break;
 
-        XPCOMUtils.defineLazyGetter(
-          this.scope, "console",
-          () => new ConsoleAPI({ consoleID: `addon/${this.addon.id}` }));
-
-        Services.scriptloader.loadSubScript(uri, this.scope);
-      } catch (e) {
-        logger.warn(`Error loading bootstrap.js for ${this.addon.id}`, e);
+        default:
+          throw new Error(`Unknown webextension type ${this.addon.type}`);
       }
+    } else {
+      let loader = AddonManagerPrivate.externalExtensionLoaders.get(this.addon.loader);
+      if (!loader) {
+        throw new Error(`Cannot find loader for ${this.addon.loader}`);
+      }
+
+      this.scope = loader.loadScope(this.addon, this.file);
     }
 
     // Notify the BrowserToolboxProcess that a new addon has been loaded.
@@ -1833,7 +1815,7 @@ class BootstrapScope {
     let reason = XPIInstall.newVersionReason(this.addon.version, newAddon.version);
     let extraArgs = {oldVersion: this.addon.version, newVersion: newAddon.version};
 
-    let callUpdate = isWebExtension(this.addon.type) && isWebExtension(newAddon.type);
+    let callUpdate = this.addon.isWebExtension && newAddon.isWebExtension;
 
     await this._uninstall(reason, callUpdate, extraArgs);
 
@@ -2668,7 +2650,7 @@ var XPIProvider = {
         updateDate: addon.lastModifiedTime,
         scope,
         isSystem,
-        isWebExtension: isWebExtension(addon),
+        isWebExtension: addon.isWebExtension,
       });
     }
 
@@ -2745,7 +2727,6 @@ var XPIInternal = {
   awaitPromise,
   canRunInSafeMode,
   getURIForResourceInFile,
-  isWebExtension,
   isXPI,
   iterDirectory,
 };

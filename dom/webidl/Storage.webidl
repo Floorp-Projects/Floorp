@@ -33,3 +33,41 @@ interface Storage {
   [ChromeOnly]
   readonly attribute boolean isSessionOnly;
 };
+
+/**
+ * Testing methods that exist only for the benefit of automated glass-box
+ * testing.  Will never be exposed to content at large and unlikely to be useful
+ * in a WebDriver context.
+ */
+partial interface Storage {
+  /**
+   * Does a security-check and ensures the underlying database has been opened
+   * without actually calling any database methods.  (Read-only methods will
+   * have a similar effect but also impact the state of the snapshot.)
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void open();
+
+  /**
+   * Automatically ends any explicit snapshot and drops the reference to the
+   * underlying database, but does not otherwise perturb the database.
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void close();
+
+  /**
+   * Ensures the database has been opened and initiates an explicit snapshot.
+   * Snapshots are normally automatically ended and checkpointed back to the
+   * parent, but explicitly opened snapshots must be explicitly ended via
+   * `endExplicitSnapshot` or `close`.
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void beginExplicitSnapshot();
+
+  /**
+   * Ends the explicitly begun snapshot and retains the underlying database.
+   * Compare with `close` which also drops the reference to the database.
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  void endExplicitSnapshot();
+};

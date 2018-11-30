@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
+#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/ipc/IdType.h"
 
 #include "PersistenceType.h"
@@ -24,6 +25,7 @@ class nsIRunnable;
 
 BEGIN_QUOTA_NAMESPACE
 
+class OriginScope;
 class QuotaManager;
 class UsageInfo;
 
@@ -39,13 +41,22 @@ public:
 
   enum Type {
     IDB = 0,
-    //LS,
     //APPCACHE,
     ASMJS,
     DOMCACHE,
     SDB,
+    LS,
     TYPE_MAX
   };
+
+  static Type
+  TypeMax()
+  {
+    if (CachedNextGenLocalStorageEnabled()) {
+      return TYPE_MAX;
+    }
+    return LS;
+  }
 
   virtual Type
   GetType() = 0;
@@ -69,6 +80,13 @@ public:
       case SDB:
         aText.AssignLiteral(SDB_DIRECTORY_NAME);
         break;
+
+      case LS:
+        if (CachedNextGenLocalStorageEnabled()) {
+          aText.AssignLiteral(LS_DIRECTORY_NAME);
+          break;
+        }
+        MOZ_FALLTHROUGH;
 
       case TYPE_MAX:
       default:
@@ -94,10 +112,32 @@ public:
     else if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
       aType = SDB;
     }
+    else if (CachedNextGenLocalStorageEnabled() &&
+             aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
+      aType = LS;
+    }
     else {
       return NS_ERROR_FAILURE;
     }
 
+    return NS_OK;
+  }
+
+  static nsresult
+  NullableTypeFromText(const nsAString& aText, Nullable<Type>* aType)
+  {
+    if (aText.IsVoid()) {
+      *aType = Nullable<Type>();
+      return NS_OK;
+    }
+
+    Type type;
+    nsresult rv = TypeFromText(aText, type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    *aType = Nullable<Type>(type);
     return NS_OK;
   }
 
@@ -127,6 +167,15 @@ public:
                     const nsACString& aOrigin,
                     const AtomicBool& aCanceled,
                     UsageInfo* aUsageInfo) = 0;
+
+  // This method is called when origins are about to be cleared
+  // (except the case when clearing is triggered by the origin eviction).
+  virtual nsresult
+  AboutToClearOrigins(const Nullable<PersistenceType>& aPersistenceType,
+                      const OriginScope& aOriginScope)
+  {
+    return NS_OK;
+  }
 
   virtual void
   OnOriginClearCompleted(PersistenceType aPersistenceType,

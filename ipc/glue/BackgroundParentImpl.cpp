@@ -33,6 +33,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
+#include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/dom/RemoteWorkerParent.h"
@@ -291,6 +292,161 @@ BackgroundParentImpl::DeallocPBackgroundSDBConnectionParent(
   MOZ_ASSERT(aActor);
 
   return mozilla::dom::DeallocPBackgroundSDBConnectionParent(aActor);
+}
+
+BackgroundParentImpl::PBackgroundLSDatabaseParent*
+BackgroundParentImpl::AllocPBackgroundLSDatabaseParent(
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const uint32_t& aPrivateBrowsingId,
+                                            const uint64_t& aDatastoreId)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::AllocPBackgroundLSDatabaseParent(aPrincipalInfo,
+                                                        aPrivateBrowsingId,
+                                                        aDatastoreId);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundLSDatabaseConstructor(
+                                            PBackgroundLSDatabaseParent* aActor,
+                                            const PrincipalInfo& aPrincipalInfo,
+                                            const uint32_t& aPrivateBrowsingId,
+                                            const uint64_t& aDatastoreId)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  if (!mozilla::dom::RecvPBackgroundLSDatabaseConstructor(aActor,
+                                                          aPrincipalInfo,
+                                                          aPrivateBrowsingId,
+                                                          aDatastoreId)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundLSDatabaseParent(
+                                            PBackgroundLSDatabaseParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundLSDatabaseParent(aActor);
+}
+
+BackgroundParentImpl::PBackgroundLSObserverParent*
+BackgroundParentImpl::AllocPBackgroundLSObserverParent(
+                                                    const uint64_t& aObserverId)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::AllocPBackgroundLSObserverParent(aObserverId);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundLSObserverConstructor(
+                                            PBackgroundLSObserverParent* aActor,
+                                            const uint64_t& aObserverId)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  if (!mozilla::dom::RecvPBackgroundLSObserverConstructor(aActor,
+                                                          aObserverId)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundLSObserverParent(
+                                            PBackgroundLSObserverParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundLSObserverParent(aActor);
+}
+
+BackgroundParentImpl::PBackgroundLSRequestParent*
+BackgroundParentImpl::AllocPBackgroundLSRequestParent(
+                                                 const LSRequestParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::AllocPBackgroundLSRequestParent(this, aParams);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundLSRequestConstructor(
+                                             PBackgroundLSRequestParent* aActor,
+                                             const LSRequestParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  if (!mozilla::dom::RecvPBackgroundLSRequestConstructor(aActor, aParams)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundLSRequestParent(
+                                             PBackgroundLSRequestParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundLSRequestParent(aActor);
+}
+
+BackgroundParentImpl::PBackgroundLSSimpleRequestParent*
+BackgroundParentImpl::AllocPBackgroundLSSimpleRequestParent(
+                                           const LSSimpleRequestParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::AllocPBackgroundLSSimpleRequestParent(aParams);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPBackgroundLSSimpleRequestConstructor(
+                                       PBackgroundLSSimpleRequestParent* aActor,
+                                       const LSSimpleRequestParams& aParams)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  if (!mozilla::dom::RecvPBackgroundLSSimpleRequestConstructor(aActor,
+                                                               aParams)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundLSSimpleRequestParent(
+                                       PBackgroundLSSimpleRequestParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::DeallocPBackgroundLSSimpleRequestParent(aActor);
 }
 
 BackgroundParentImpl::PBackgroundLocalStorageCacheParent*

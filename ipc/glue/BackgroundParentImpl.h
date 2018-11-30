@@ -77,6 +77,58 @@ protected:
   DeallocPBackgroundSDBConnectionParent(PBackgroundSDBConnectionParent* aActor)
                                         override;
 
+  virtual PBackgroundLSDatabaseParent*
+  AllocPBackgroundLSDatabaseParent(const PrincipalInfo& aPrincipalInfo,
+                                   const uint32_t& aPrivateBrowsingId,
+                                   const uint64_t& aDatastoreId) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundLSDatabaseConstructor(PBackgroundLSDatabaseParent* aActor,
+                                       const PrincipalInfo& aPrincipalInfo,
+                                       const uint32_t& aPrivateBrowsingId,
+                                       const uint64_t& aDatastoreId) override;
+
+  virtual bool
+  DeallocPBackgroundLSDatabaseParent(PBackgroundLSDatabaseParent* aActor)
+                                     override;
+
+  virtual PBackgroundLSObserverParent*
+  AllocPBackgroundLSObserverParent(const uint64_t& aObserverId) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
+                                       const uint64_t& aObserverId) override;
+
+  virtual bool
+  DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor)
+                                     override;
+
+  virtual PBackgroundLSRequestParent*
+  AllocPBackgroundLSRequestParent(const LSRequestParams& aParams) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
+                                      const LSRequestParams& aParams) override;
+
+  virtual bool
+  DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor)
+                                    override;
+
+  virtual PBackgroundLSSimpleRequestParent*
+  AllocPBackgroundLSSimpleRequestParent(const LSSimpleRequestParams& aParams)
+                                        override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPBackgroundLSSimpleRequestConstructor(
+                                       PBackgroundLSSimpleRequestParent* aActor,
+                                       const LSSimpleRequestParams& aParams)
+                                       override;
+
+  virtual bool
+  DeallocPBackgroundLSSimpleRequestParent(
+                                       PBackgroundLSSimpleRequestParent* aActor)
+                                       override;
+
   virtual PBackgroundLocalStorageCacheParent*
   AllocPBackgroundLocalStorageCacheParent(const PrincipalInfo& aPrincipalInfo,
                                           const nsCString& aOriginKey,

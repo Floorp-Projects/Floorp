@@ -49,6 +49,11 @@ interface nsIDOMStorageManager : nsISupports
                         in AString aDocumentURI,
                         [optional] in bool aPrivate);
   /**
+   * DEPRECATED.  The only good reason to use this was if you were writing a
+   * test and wanted to hackily determine if a preload happened.  That's now
+   * covered by `nsILocalStorageManager.isPreloaded` and you should use that if
+   * that's what you want.  If LSNG is in use, this will throw.
+   *
    * Returns instance of DOM storage object for given principal.
    * If there is no storage managed for the scope, then null is returned and
    * no object is created.  Otherwise, an object (new) for the existing storage

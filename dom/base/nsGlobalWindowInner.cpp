@@ -23,6 +23,8 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
+#include "mozilla/dom/LocalStorageCommon.h"
+#include "mozilla/dom/LSObject.h"
 #include "mozilla/dom/PartitionedLocalStorage.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
@@ -4908,32 +4910,38 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
   if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny &&
       (!mLocalStorage ||
         mLocalStorage->Type() == Storage::ePartitionedLocalStorage)) {
-    nsresult rv;
-    nsCOMPtr<nsIDOMStorageManager> storageManager =
-      do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
-      return nullptr;
-    }
+    RefPtr<Storage> storage;
 
-    nsString documentURI;
-    if (mDoc) {
-      aError = mDoc->GetDocumentURI(documentURI);
-      if (NS_WARN_IF(aError.Failed())) {
+    if (NextGenLocalStorageEnabled()) {
+      aError = LSObject::CreateForWindow(this, getter_AddRefs(storage));
+    } else {
+      nsresult rv;
+      nsCOMPtr<nsIDOMStorageManager> storageManager =
+        do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
+      if (NS_FAILED(rv)) {
+        aError.Throw(rv);
         return nullptr;
       }
+
+      nsString documentURI;
+      if (mDoc) {
+        aError = mDoc->GetDocumentURI(documentURI);
+        if (NS_WARN_IF(aError.Failed())) {
+          return nullptr;
+        }
+      }
+
+      nsIPrincipal *principal = GetPrincipal();
+      if (!principal) {
+        aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return nullptr;
+      }
+
+      aError = storageManager->CreateStorage(this, principal, documentURI,
+                                             IsPrivateBrowsing(),
+                                             getter_AddRefs(storage));
     }
 
-    nsIPrincipal *principal = GetPrincipal();
-    if (!principal) {
-      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
-
-    RefPtr<Storage> storage;
-    aError = storageManager->CreateStorage(this, principal, documentURI,
-                                           IsPrivateBrowsing(),
-                                           getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
     }
@@ -5809,7 +5817,8 @@ nsGlobalWindowInner::ObserveStorageNotification(StorageEvent* aEvent,
     MOZ_DIAGNOSTIC_ASSERT(StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(),
                                                         principal));
 
-    fireMozStorageChanged = mLocalStorage == aEvent->GetStorageArea();
+    fireMozStorageChanged =
+       mLocalStorage && mLocalStorage == aEvent->GetStorageArea();
 
     if (fireMozStorageChanged) {
       eventType.AssignLiteral("MozLocalStorageChanged");
@@ -5821,7 +5830,7 @@ nsGlobalWindowInner::ObserveStorageNotification(StorageEvent* aEvent,
   IgnoredErrorResult error;
   RefPtr<StorageEvent> clonedEvent =
     CloneStorageEvent(eventType, aEvent, error);
-  if (error.Failed()) {
+  if (error.Failed() || !clonedEvent) {
     return;
   }
 
@@ -5856,16 +5865,18 @@ nsGlobalWindowInner::CloneStorageEvent(const nsAString& aType,
   // If null, this is a localStorage event received by IPC.
   if (!storageArea) {
     storage = GetLocalStorage(aRv);
-    if (aRv.Failed() || !storage) {
-      return nullptr;
-    }
+    if (!NextGenLocalStorageEnabled()) {
+      if (aRv.Failed() || !storage) {
+        return nullptr;
+      }
 
-    if (storage->Type() == Storage::eLocalStorage) {
-      RefPtr<LocalStorage> localStorage =
-        static_cast<LocalStorage*>(storage.get());
+      if (storage->Type() == Storage::eLocalStorage) {
+        RefPtr<LocalStorage> localStorage =
+          static_cast<LocalStorage*>(storage.get());
 
-      // We must apply the current change to the 'local' localStorage.
-      localStorage->ApplyEvent(aEvent);
+        // We must apply the current change to the 'local' localStorage.
+        localStorage->ApplyEvent(aEvent);
+      }
     }
   } else if (storageArea->Type() == Storage::eSessionStorage) {
     storage = GetSessionStorage(aRv);
@@ -6790,6 +6801,13 @@ nsGlobalWindowInner::EventListenerAdded(nsAtom* aType)
     ErrorResult rv;
     GetLocalStorage(rv);
     rv.SuppressException();
+
+    if (NextGenLocalStorageEnabled() &&
+        mLocalStorage && mLocalStorage->Type() == Storage::eLocalStorage) {
+      auto object = static_cast<LSObject*>(mLocalStorage.get());
+
+      Unused << NS_WARN_IF(NS_FAILED(object->EnsureObserver()));
+    }
   }
 }
 
@@ -6802,6 +6820,20 @@ nsGlobalWindowInner::EventListenerRemoved(nsAtom* aType)
     mBeforeUnloadListenerCount--;
     MOZ_ASSERT(mBeforeUnloadListenerCount >= 0);
     mTabChild->BeforeUnloadRemoved();
+  }
+
+  if (aType == nsGkAtoms::onstorage) {
+    if (NextGenLocalStorageEnabled() &&
+        mLocalStorage &&
+        mLocalStorage->Type() == Storage::eLocalStorage &&
+        // The remove event is fired even if this isn't the last listener, so
+        // only remove if there are no other listeners left.
+        mListenerManager &&
+        !mListenerManager->HasListenersFor(nsGkAtoms::onstorage)) {
+      auto object = static_cast<LSObject*>(mLocalStorage.get());
+
+      object->DropObserver();
+    }
   }
 }
 
@@ -7964,6 +7996,14 @@ nsGlobalWindowInner::StorageAccessGranted()
 
     MOZ_ASSERT(mLocalStorage &&
                mLocalStorage->Type() == Storage::eLocalStorage);
+
+    if (NextGenLocalStorageEnabled() &&
+        mListenerManager &&
+        mListenerManager->HasListenersFor(nsGkAtoms::onstorage)) {
+      auto object = static_cast<LSObject*>(mLocalStorage.get());
+
+      object->EnsureObserver();
+    }
   }
 }
 
