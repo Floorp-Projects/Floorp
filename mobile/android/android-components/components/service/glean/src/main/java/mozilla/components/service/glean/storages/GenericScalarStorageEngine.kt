@@ -54,11 +54,12 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * Implementor's provided function to convert deserialized 'user' lifetime
      * data to the destination [ScalarType].
      *
+     * @param metricName the name of the metric being deserialized
      * @param value loaded from the storage as [Any]
      *
      * @return data as [ScalarType] or null if deserialization failed
      */
-    protected abstract fun deserializeSingleMetric(value: Any?): ScalarType?
+    protected abstract fun deserializeSingleMetric(metricName: String, value: Any?): ScalarType?
 
     /**
      * Implementor's provided function to serialize 'user' lifetime data as needed by the data type.
@@ -67,11 +68,13 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * @param storeName The metric store name where the data is stored in [SharedPreferences].
      * @param value The value to be stored, passed as a [ScalarType] to be handled correctly by the
      *              implementor.
+     * @param extraSerializationData extra data to be serialized to disk for "User" persisted values
      */
     protected abstract fun serializeSingleMetric(
         userPreferences: SharedPreferences.Editor?,
         storeName: String,
-        value: ScalarType
+        value: ScalarType,
+        extraSerializationData: Any?
     )
 
     /**
@@ -123,7 +126,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
             val storeData = dataStores[Lifetime.User.ordinal].getOrPut(storeName) { mutableMapOf() }
             // Only set the stored value if we're able to deserialize the persisted data.
-            deserializeSingleMetric(metricValue)?.let {
+            deserializeSingleMetric(metricName, metricValue)?.let {
                 storeData[metricName] = it
             } ?: logger.warn("Failed to deserialize $metricStoragePath")
         }
@@ -146,7 +149,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * @return the [ScalarType] recorded in the requested store
      */
     @Synchronized
-    fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<ScalarType>? {
+    open fun getSnapshot(storeName: String, clearStore: Boolean): GenericDataStorage<ScalarType>? {
         val allLifetimes: GenericDataStorage<ScalarType> = mutableMapOf()
 
         // Make sure data with "user" lifetime is loaded before getting the snapshot.
@@ -206,12 +209,14 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      *
      * @param metricData the information about the metric
      * @param value the new value
+     * @param extraSerializationData extra data to be serialized to disk for "User" persisted values
      * @param combine a lambda function to combine the currently stored value and
      *        the new one; this allows to implement new behaviours such as adding.
      */
     protected fun recordScalar(
         metricData: CommonMetricData,
         value: ScalarType,
+        extraSerializationData: Any? = null,
         combine: ScalarRecordingCombiner<ScalarType>
     ) {
         checkNotNull(applicationContext) { "No recording can take place without an application context" }
@@ -229,7 +234,12 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             storeData[entryName] = combinedValue
             // Persist data with "user" lifetime
             if (metricData.lifetime == Lifetime.User) {
-                serializeSingleMetric(userPrefs, "$it#$entryName", combinedValue)
+                serializeSingleMetric(
+                    userPrefs,
+                    "$it#$entryName",
+                    combinedValue,
+                    extraSerializationData
+                )
             }
         }
         userPrefs?.apply()

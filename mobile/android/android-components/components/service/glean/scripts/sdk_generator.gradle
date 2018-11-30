@@ -4,7 +4,7 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-String GLEAN_PARSER_VERSION = "0.9.0"
+String GLEAN_PARSER_VERSION = "0.10.0"
 
 /* This script runs a given Python module as a "main" module, like
  * `python -m module`. However, it first checks that the installed

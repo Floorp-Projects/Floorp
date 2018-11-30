@@ -18,6 +18,7 @@ internal class StorageEngineManager(
         "events" to EventsStorageEngine,
         "string" to StringsStorageEngine,
         "string_list" to StringListsStorageEngine,
+        "timespan" to TimespansStorageEngine,
         "uuid" to UuidsStorageEngine
     ),
     applicationContext: Context

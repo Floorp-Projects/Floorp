@@ -32,7 +32,7 @@ internal open class StringListsStorageEngineImplementation(
         const val MAX_LIST_LENGTH_VALUE = 20
     }
 
-    override fun deserializeSingleMetric(value: Any?): List<String>? {
+    override fun deserializeSingleMetric(metricName: String, value: Any?): List<String>? {
         /*
         Since SharedPreferences doesn't directly support storing of List<> types, we must use
         an intermediate JSONArray which can be deserialized and converted back to List<String>.
@@ -56,7 +56,8 @@ internal open class StringListsStorageEngineImplementation(
     override fun serializeSingleMetric(
         userPreferences: SharedPreferences.Editor?,
         storeName: String,
-        value: List<String>
+        value: List<String>,
+        extraSerializationData: Any?
     ) {
         // Since SharedPreferences doesn't directly support storing of List<> types, we must use
         // an intermediate JSONArray which can be serialized to a String type and stored.
@@ -77,7 +78,7 @@ internal open class StringListsStorageEngineImplementation(
         value: String
     ) {
         // Use a custom combiner to add the string to the existing list rather than overwriting
-        super.recordScalar(metricData, listOf(value)) { currentValue, newValue ->
+        super.recordScalar(metricData, listOf(value), null) { currentValue, newValue ->
             currentValue?.let {
                 if (it.count() + value.count() > MAX_LIST_LENGTH_VALUE) {
                     logger.warn("${metricData.category}.${metricData.name} - " +

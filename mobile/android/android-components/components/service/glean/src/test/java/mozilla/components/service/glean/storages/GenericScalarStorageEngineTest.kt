@@ -27,7 +27,7 @@ class GenericScalarStorageEngineTest {
     private class MockScalarStorageEngine(
         override val logger: Logger = Logger("test")
     ) : GenericScalarStorageEngine<Int>() {
-        override fun deserializeSingleMetric(value: Any?): Int? {
+        override fun deserializeSingleMetric(metricName: String, value: Any?): Int? {
             if (value is String) {
                 return value.toIntOrNull()
             }
@@ -35,7 +35,12 @@ class GenericScalarStorageEngineTest {
             return value as? Int?
         }
 
-        override fun serializeSingleMetric(userPreferences: SharedPreferences.Editor?, storeName: String, value: Int) {
+        override fun serializeSingleMetric(
+            userPreferences: SharedPreferences.Editor?,
+            storeName: String,
+            value: Int,
+            extraSerializationData: Any?
+        ) {
             userPreferences?.putInt(storeName, value)
         }
 

@@ -21,6 +21,8 @@ class GleanApplication : Application() {
         // must be done right after enabling logging.
         Glean.initialize(applicationContext)
 
+        GleanMetrics.Test.testTimespan.start()
+
         // Set a sample value for a metric.
         GleanMetrics.Basic.os.set("Android")
     }

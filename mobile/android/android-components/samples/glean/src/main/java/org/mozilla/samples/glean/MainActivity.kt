@@ -47,5 +47,7 @@ open class MainActivity : AppCompatActivity() {
         buttonSendPing.setOnClickListener {
             Glean.handleEvent(Glean.PingEvent.Background)
         }
+
+        GleanMetrics.Test.testTimespan.stopAndSum()
     }
 }

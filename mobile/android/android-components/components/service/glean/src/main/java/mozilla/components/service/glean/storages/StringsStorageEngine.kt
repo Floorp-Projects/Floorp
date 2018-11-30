@@ -25,14 +25,15 @@ internal open class StringsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsStorageEngine")
 ) : GenericScalarStorageEngine<String>() {
 
-    override fun deserializeSingleMetric(value: Any?): String? {
+    override fun deserializeSingleMetric(metricName: String, value: Any?): String? {
         return value as? String
     }
 
     override fun serializeSingleMetric(
         userPreferences: SharedPreferences.Editor?,
         storeName: String,
-        value: String
+        value: String,
+        extraSerializationData: Any?
     ) {
         userPreferences?.putString(storeName, value)
     }

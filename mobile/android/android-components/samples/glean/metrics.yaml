@@ -54,3 +54,14 @@ test:
       - 1234567890
     notification_emails:
       - telemetry-client-dev@mozilla.com
+
+  test_timespan:
+    type: timespan
+    description: >
+      Testing a timespan
+    time_unit: microsecond
+    lifetime: application
+    bugs:
+      - 1508948
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
