@@ -23,8 +23,8 @@ add_task(async function() {
 });
 
 function testAccordionStateAfterClickingHeader(doc) {
-  const header = doc.querySelector(".flexbox-pane ._header");
-  const content = doc.querySelector(".flexbox-pane ._content");
+  const header = doc.querySelector(".flex-accordion ._header");
+  const content = doc.querySelector(".flex-accordion ._content");
 
   info("Checking initial state of the flexbox panel.");
   is(content.style.display, "block", "The flexbox panel content is 'display: block'.");
@@ -43,7 +43,7 @@ function testAccordionStateAfterClickingHeader(doc) {
 function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
   info("Checking the flexbox accordion state is persistent after switching sidebars.");
 
-  const content = doc.querySelector(".flexbox-pane ._content");
+  const content = doc.querySelector(".flex-accordion ._content");
 
   info("Selecting the computed view.");
   inspector.sidebar.select("computedview");
@@ -67,7 +67,7 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
   info("Re-opening the layout view.");
   const { flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
-  const content = doc.querySelector(".flexbox-pane ._content");
+  const content = doc.querySelector(".flex-accordion ._content");
 
   info("Checking the state of the flexbox panel.");
   ok(!content, "The flexbox panel content is not rendered.");

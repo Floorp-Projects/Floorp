@@ -9,15 +9,14 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URI = URL_ROOT + "doc_flexbox_unauthored_min_dimension.html";
 
-async function checkFlexItemCSSProperty(inspector, doc, selector) {
+async function checkFlexItemCSSProperty(inspector, store, doc, selector) {
   info("Select the container's flex item sizing info.");
-  const onFlexItemSizingRendered = waitForDOM(doc, "ul.flex-item-sizing");
+  const onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
   await selectNode(selector, inspector);
-  const [flexItemSizingContainer] = await onFlexItemSizingRendered;
+  await onUpdate;
 
   info("Check that the minimum size section does not display minimum dimension text.");
-  const [sectionMinRowItem] = [...flexItemSizingContainer.querySelectorAll(
-    ".section.min")];
+  const [sectionMinRowItem] = [...doc.querySelectorAll(".flex-item-sizing .section.min")];
   const minDimension = sectionMinRowItem.querySelector(".css-property-link");
 
   ok(!minDimension, "Minimum dimension property should not be displayed.");
@@ -26,8 +25,10 @@ async function checkFlexItemCSSProperty(inspector, doc, selector) {
 add_task(async function() {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
-  const { document: doc } = flexboxInspector;
+  const { document: doc, store } = flexboxInspector;
 
-  await checkFlexItemCSSProperty(inspector, doc, "#flex-item-with-unauthored-min-width");
-  await checkFlexItemCSSProperty(inspector, doc, "#flex-item-with-unauthored-min-height");
+  await checkFlexItemCSSProperty(inspector, store, doc,
+    "#flex-item-with-unauthored-min-width");
+  await checkFlexItemCSSProperty(inspector, store, doc,
+    "#flex-item-with-unauthored-min-height");
 });
