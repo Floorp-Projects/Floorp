@@ -13,6 +13,12 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.support.base.log.logger.Logger
 
 /**
+ * Maximum number of speculative connections we will open when an app calls into
+ * [AbstractCustomTabsService.mayLaunchUrl] with a list of URLs.
+ */
+private const val MAX_SPECULATIVE_URLS = 50
+
+/**
  * [Service] providing Custom Tabs related functionality.
  */
 abstract class AbstractCustomTabsService : CustomTabsService() {
@@ -44,6 +50,18 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         extras: Bundle?,
         otherLikelyBundles: MutableList<Bundle>?
     ): Boolean {
+        logger.debug("Opening speculative connections")
+
+        // Most likely URL for a future navigation: Open a speculative connection.
+        url?.let { engine.speculativeConnect(it.toString()) }
+
+        // A list of other likely URLs. Let's open a speculative connection for them up to a limit.
+        otherLikelyBundles?.take(MAX_SPECULATIVE_URLS)?.forEach { bundle ->
+            bundle.getParcelable<Uri>(KEY_URL)?.let { uri ->
+                engine.speculativeConnect(uri.toString())
+            }
+        }
+
         return true
     }
 

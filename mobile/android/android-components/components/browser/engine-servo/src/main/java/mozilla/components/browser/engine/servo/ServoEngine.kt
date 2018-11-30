@@ -33,6 +33,13 @@ class ServoEngine(
         return ServoEngineSessionState.fromJSON(json)
     }
 
+    /**
+     * Opens a speculative connection to the host of [url].
+     *
+     * Note: This implementation is a no-op.
+     */
+    override fun speculativeConnect(url: String) = Unit
+
     override fun name(): String = "Servo"
 
     /**

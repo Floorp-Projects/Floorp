@@ -22,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -76,5 +77,20 @@ class AbstractCustomTabsServiceTest {
         assertTrue(stub.warmup(42))
 
         assertTrue(engineAccessed)
+    }
+
+    @Test
+    fun `mayLaunchUrl opens a speculative connection for most likely URL`() {
+        val engine: Engine = mock()
+
+        val customTabsService = object : AbstractCustomTabsService() {
+            override val engine: Engine = engine
+        }
+
+        val stub = customTabsService.onBind(mock(Intent::class.java)) as ICustomTabsService.Stub
+
+        assertTrue(stub.mayLaunchUrl(mock(), Uri.parse("https://www.mozilla.org"), Bundle(), listOf()))
+
+        verify(engine).speculativeConnect("https://www.mozilla.org")
     }
 }

@@ -17,6 +17,9 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.12.1, Sync Logins: 0.12.1, Places: 0.12.1)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **feature-customtabs**
+ * Added support for opening speculative connections for a likely future navigation to a URL (`mayLaunchUrl`)
+
 # 0.35.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.35.0...v0.35.1)
@@ -27,6 +30,8 @@ permalink: /changelog/
   * GeckoView (Nightly: 66.0.20181217093726, Beta: 65.0.20181211223337, Release: 64.0.20181214004633)
   * Mozilla App Services (FxA: **0.12.1** 🔺, Sync Logins: **0.12.1** 🔺, Places: **0.12.1** 🔺)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
+
+* Re-release of 0.34.1 with updated App Services dependencies (0.12.1).
 
 # 0.35.0
 

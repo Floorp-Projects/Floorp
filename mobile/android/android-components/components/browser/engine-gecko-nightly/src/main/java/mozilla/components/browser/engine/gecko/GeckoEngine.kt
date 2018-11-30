@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoWebExecutor
 
 /**
  * Gecko-based implementation of Engine interface.
@@ -22,8 +23,11 @@ import org.mozilla.geckoview.GeckoRuntime
 class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
-    private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context)
+    private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context),
+    executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) }
 ) : Engine {
+    private val executor by lazy { executorProvider.invoke() }
+
     /**
      * Creates a new Gecko-based EngineView.
      */
@@ -43,6 +47,16 @@ class GeckoEngine(
      */
     override fun createSessionState(json: JSONObject): EngineSessionState {
         return GeckoEngineSessionState.fromJSON(json)
+    }
+
+    /**
+     * Opens a speculative connection to the host of [url].
+     *
+     * This is useful if an app thinks it may be making a request to that host in the near future. If no request
+     * is made, the connection will be cleaned up after an unspecified.
+     */
+    override fun speculativeConnect(url: String) {
+        executor.speculativeConnect(url)
     }
 
     override fun name(): String = "Gecko"
