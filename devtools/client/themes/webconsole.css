@@ -111,18 +111,18 @@ a {
 }
 
 .message.paused::before {
-  background: var(--purple-50);
+  background: #d8461f;
   opacity: 0.6;
   width: 100vw;
   height: 1px;
-  bottom: 0px;
+  top: 0px;
   left: -3px;
   display: block;
   content: "";
   position: absolute;
 }
 
-.message.paused ~ .message:not(.command):not(.result) .message-body-wrapper {
+.message.paused ~ .message {
   opacity: 0.5;
 }
 
@@ -215,18 +215,9 @@ a {
 }
 
 .message:hover > .icon.rewindable {
-  background-image: url(resource://devtools/client/debugger/new/images/next-circle.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole/jump.svg);
+  background-size: 14px 14px;
   cursor: pointer;
-  transform: rotate(180deg);
-}
-
-/*
- * we flip the next.svg icon by default because when we're
- * not paused, we would jump back. We remove the transform here
- * because we want to jump forward.
- */
-.message.paused ~ .message:hover .icon.rewindable {
-  transform: none;
 }
 
 .message > .message-body-wrapper {

@@ -9,9 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper(
-  "devtools/client/locales/toolbox.properties"
-);
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 const getFormatStr = (key, a) => L10N.getFormatStr(`toolbox.replay.${key}`, a);
 
 const { div } = dom;
@@ -85,7 +83,6 @@ class WebReplayPlayer extends Component {
       recording: true,
       paused: false,
       messages: [],
-      highlightedMessage: null,
     };
     this.overlayWidth = 0;
   }
@@ -95,30 +92,22 @@ class WebReplayPlayer extends Component {
     this.threadClient.addListener("paused", this.onPaused.bind(this));
     this.threadClient.addListener("resumed", this.onResumed.bind(this));
     this.threadClient.addListener("progress", this.onProgress.bind(this));
-
-    this.toolbox.getPanelWhenReady("webconsole").then(panel => {
-      const consoleFrame = panel.hud.ui;
-      consoleFrame.on("message-hover", this.onConsoleMessageHover.bind(this));
-      consoleFrame.consoleOutput.subscribeToStore(
-        this.onConsoleUpdate.bind(this)
-      );
-    });
+    this.activeConsole._client.addListener(
+      "consoleAPICall",
+      this.onMessage.bind(this)
+    );
   }
 
   componentDidUpdate() {
     this.overlayWidth = this.updateOverlayWidth();
   }
 
-  get toolbox() {
-    return this.props.toolbox;
-  }
-
   get threadClient() {
-    return this.toolbox.threadClient;
+    return this.props.toolbox.threadClient;
   }
 
   get activeConsole() {
-    return this.toolbox.target.activeConsole;
+    return this.props.toolbox.target.activeConsole;
   }
 
   isRecording() {
@@ -175,27 +164,8 @@ class WebReplayPlayer extends Component {
     this.setState(newState);
   }
 
-  onConsoleUpdate(consoleState) {
-    const {
-      messages: { visibleMessages, messagesById },
-    } = consoleState;
-    const messages = visibleMessages.map(id => messagesById.get(id));
-
-    if (visibleMessages != this.state.visibleMessages) {
-      this.setState({ messages, visibleMessages });
-    }
-  }
-
-  onConsoleMessageHover(type, message) {
-    if (type == "mouseleave") {
-      return this.setState({ highlightedMessage: null });
-    }
-
-    if (type == "mouseenter") {
-      return this.setState({ highlightedMessage: message.id });
-    }
-
-    return null;
+  onMessage(_, packet) {
+    this.setState({ messages: this.state.messages.concat(packet.message) });
   }
 
   seek(executionPoint) {
@@ -330,7 +300,7 @@ class WebReplayPlayer extends Component {
   }
 
   renderMessage(message, index) {
-    const { messages, executionPoint, highlightedMessage } = this.state;
+    const { messages, executionPoint } = this.state;
 
     const offset = this.getOffset(message.executionPoint);
     const previousMessage = messages[index - 1];
@@ -348,13 +318,10 @@ class WebReplayPlayer extends Component {
       this.getDistanceFrom(message.executionPoint, executionPoint) >
       markerWidth / 2;
 
-    const isHighlighted = highlightedMessage == message.id;
-
     return dom.a({
       className: classname("message", {
         overlayed: isOverlayed,
         future: isFuture,
-        highlighted: isHighlighted,
       }),
       style: {
         left: `${offset - markerWidth / 2}px`,
