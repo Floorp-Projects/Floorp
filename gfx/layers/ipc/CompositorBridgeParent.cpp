@@ -431,6 +431,7 @@ void CompositorBridgeParent::StopAndClearResources() {
   MOZ_ASSERT((mApzSampler != nullptr) == (mApzcTreeManager != nullptr));
   MOZ_ASSERT((mApzUpdater != nullptr) == (mApzcTreeManager != nullptr));
   if (mApzUpdater) {
+    mApzSampler->Destroy();
     mApzSampler = nullptr;
     mApzUpdater->ClearTree(mRootLayerTreeID);
     mApzUpdater = nullptr;
