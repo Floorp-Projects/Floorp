@@ -231,11 +231,7 @@ var generateCSSLines = function (resisting) {
 
 // __green__.
 // Returns the computed color style corresponding to green.
-var green = (function () {
-  let temp = document.createElement("span");
-  temp.style.backgroundColor = "green";
-  return getComputedStyle(temp).backgroundColor;
-})();
+var green = "rgb(0, 128, 0)";
 
 // __testCSS(resisting)__.
 // Creates a series of divs and CSS using media queries to set their
