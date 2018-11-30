@@ -2827,6 +2827,7 @@ class StaticAnalysis(MachCommandBase):
         with open(paths[0], 'r') as fin:
             process.stdin.write(fin.read())
             process.stdin.close()
+            process.wait();
             return 0
 
     def _run_clang_format_path(self, clang_format, show, paths):
