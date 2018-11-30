@@ -156,10 +156,6 @@ impl SpatialNode {
     }
 
     pub fn set_scroll_origin(&mut self, origin: &LayoutPoint, clamp: ScrollClamping) -> bool {
-        let scrollable_size = self.scrollable_size();
-        let scrollable_width = scrollable_size.width;
-        let scrollable_height = scrollable_size.height;
-
         let scrolling = match self.node_type {
             SpatialNodeType::ScrollFrame(ref mut scrolling) => scrolling,
             _ => {
@@ -170,6 +166,10 @@ impl SpatialNode {
 
         let new_offset = match clamp {
             ScrollClamping::ToContentBounds => {
+                let scrollable_size = scrolling.scrollable_size;
+                let scrollable_width = scrollable_size.width;
+                let scrollable_height = scrollable_size.height;
+
                 if scrollable_height <= 0. && scrollable_width <= 0. {
                     return false;
                 }
@@ -474,12 +474,10 @@ impl SpatialNode {
                 // We don't translate the combined rect by the sticky offset, because sticky
                 // offsets actually adjust the node position itself, whereas scroll offsets
                 // only apply to contents inside the node.
-                state.parent_accumulated_scroll_offset =
-                    info.current_offset + state.parent_accumulated_scroll_offset;
+                state.parent_accumulated_scroll_offset += info.current_offset;
             }
             SpatialNodeType::ScrollFrame(ref scrolling) => {
-                state.parent_accumulated_scroll_offset =
-                    scrolling.offset + state.parent_accumulated_scroll_offset;
+                state.parent_accumulated_scroll_offset += scrolling.offset;
                 state.nearest_scrolling_ancestor_offset = scrolling.offset;
                 state.nearest_scrolling_ancestor_viewport = scrolling.viewport_rect;
             }
@@ -492,13 +490,6 @@ impl SpatialNode {
                     state.nearest_scrolling_ancestor_viewport
                        .translate(&translation);
             }
-        }
-    }
-
-    pub fn scrollable_size(&self) -> LayoutSize {
-        match self.node_type {
-           SpatialNodeType::ScrollFrame(state) => state.scrollable_size,
-            _ => LayoutSize::zero(),
         }
     }
 
