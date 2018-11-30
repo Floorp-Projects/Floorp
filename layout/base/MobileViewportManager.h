@@ -86,12 +86,12 @@ public:
   mozilla::CSSToScreenScale ClampZoom(const mozilla::CSSToScreenScale& aZoom,
                                       const nsViewportInfo& aViewportInfo) const;
 
-  /* Helper to update the given resolution according to changed display and viewport widths. */
-  mozilla::LayoutDeviceToLayerScale
-  ScaleResolutionWithDisplayWidth(const mozilla::LayoutDeviceToLayerScale& aRes,
-                                  const float& aDisplayWidthChangeRatio,
-                                  const mozilla::CSSSize& aNewViewport,
-                                  const mozilla::CSSSize& aOldViewport);
+  /* Helper to update the given zoom according to changed display and viewport widths. */
+  mozilla::CSSToScreenScale
+  ScaleZoomWithDisplayWidth(const mozilla::CSSToScreenScale& aZoom,
+                            const float& aDisplayWidthChangeRatio,
+                            const mozilla::CSSSize& aNewViewport,
+                            const mozilla::CSSSize& aOldViewport);
 
   /* Updates the presShell resolution and returns the new zoom. */
   mozilla::CSSToScreenScale UpdateResolution(const nsViewportInfo& aViewportInfo,
