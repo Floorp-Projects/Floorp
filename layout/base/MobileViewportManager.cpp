@@ -324,8 +324,21 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
   } else {  // aType == UpdateType::ContentSize
     MOZ_ASSERT(aType == UpdateType::ContentSize);
     MOZ_ASSERT(aDisplayWidthChangeRatio.isNothing());
-    if (zoom != intrinsicScale) {
-      newZoom = Some(intrinsicScale);
+
+    // We try to scale down the contents only IF the document has no initial-scale
+    // AND IF it's the initial paint AND IF it's not restored documents.
+    if (mIsFirstPaint && !mRestoreResolution &&
+        !aViewportInfo.IsDefaultZoomValid()) {
+      if (zoom != intrinsicScale) {
+        newZoom = Some(intrinsicScale);
+      }
+    } else {
+      // Even in other scenarios, we want to ensure that zoom level is
+      // not _smaller_ than the intrinsic scale, otherwise we might be
+      // trying to show regions where there is no content to show.
+      if (zoom < intrinsicScale) {
+        newZoom = Some(intrinsicScale);
+      }
     }
   }
 
@@ -513,13 +526,6 @@ MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
     // If the APZ is disabled, we don't scale down wider contents to fit them
     // into device screen because users won't be able to zoom out the tiny
     // contents.
-    return;
-  }
-
-  // We try to scale down the contents only IF the document has no initial-scale
-  // AND IF it's the initial paint AND IF it's not restored documents.
-  if (aViewportInfo.IsDefaultZoomValid() ||
-      !mIsFirstPaint || mRestoreResolution) {
     return;
   }
 
