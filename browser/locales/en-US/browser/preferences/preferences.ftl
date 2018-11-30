@@ -953,6 +953,10 @@ collection-studies =
     .label = Allow { -brand-short-name } to install and run studies
 collection-studies-link = View { -brand-short-name } studies
 
+addon-recommendations =
+    .label = Allow { -brand-short-name } to make personalized extension recommendations
+addon-recommendations-link = Learn more
+
 # This message is displayed above disabled data sharing options in developer builds
 # or builds with no Telemetry support available.
 collection-health-report-disabled = Data reporting is disabled for this build configuration
