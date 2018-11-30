@@ -316,84 +316,78 @@ add_task(async function test_userScripts_no_webext_apis() {
   await extension.unload();
 });
 
-add_task(async function test_userScripts_exported_APIs() {
-  async function background() {
-    const matches = ["http://localhost/*/file_sample.html"];
-
-    await browser.runtime.onMessage.addListener(async (msg, sender) => {
-      return {bgPageReply: true};
-    });
-
-    async function userScript() {
-      // Redefine Promise and Error globals to verify that it doesn't break the WebExtensions internals
-      // that are going to use them.
-      const {Error} = this;
-      this.Promise.resolve = function() {
-        throw new Error("Promise poisoning");
-      };
-      this.Error = {};
-
-      // Explicitly retrieve the custom exported API methods to prevent eslint to raise a no-undef
-      // validation error for them.
-      const {
-        US_sync_api,
-        US_async_api_with_callback,
-        US_send_api_results,
-      } = this;
-      this.userScriptGlobalVar = "global-sandbox-value";
-
-      // Redefine the includes method on the Array prototype, to explicitly verify that the method
-      // redefined in the userScript is not used when accessing arrayParam.includes from the API script.
-      Array.prototype.includes = () => { // eslint-disable-line no-extend-native
-        throw new Error("Unexpected prototype leakage");
-      };
-      const arrayParam = new Array(1, 2, 3); // eslint-disable-line no-array-constructor
-
-      const syncAPIResult = US_sync_api("param1", "param2", arrayParam);
-      const cb = (cbParam) => {
-        return `callback param: ${JSON.stringify(cbParam)}`;
-      };
-      const cb2 = cb;
-      const asyncAPIResult = await US_async_api_with_callback("param3", cb, cb2);
-
-      let expectedError;
-
-      // This is expect to raise an exception due to the window parameter which can't
-      // be cloned.
-      try {
-        US_sync_api(window);
-      } catch (err) {
-        expectedError = err.message;
-      }
-
-      US_send_api_results({syncAPIResult, asyncAPIResult, expectedError});
-    }
-
+// A small utility function used to test the expected behaviors of the userScripts API method
+// wrapper.
+async function test_userScript_APIMethod({
+  apiScript, userScript, userScriptMetadata, testFn,
+  runtimeMessageListener,
+}) {
+  async function backgroundScript(userScriptFn, scriptMetadata, messageListener) {
     await browser.userScripts.register({
       js: [{
-        code: `(${userScript})();`,
+        code: `(${userScriptFn})();`,
       }],
       runAt: "document_end",
-      matches,
-      scriptMetadata: {
-        name: "test-user-script-exported-apis",
-        arrayProperty: ["el1"],
-        objectProperty: {nestedProp: "nestedValue"},
-        nullProperty: null,
-      },
+      matches: ["http://localhost/*/file_sample.html"],
+      scriptMetadata,
     });
+
+    if (messageListener) {
+      browser.runtime.onMessage.addListener(messageListener);
+    }
 
     browser.test.sendMessage("background-ready");
   }
 
-  function apiScript() {
-    // Redefine Promise and Error globals to verify that it doesn't break the WebExtensions internals
-    // that are going to use them.
-    this.Promise = {};
-    this.Error = {};
+  function notifyFinish([failureReason]) {
+    browser.test.assertEq(undefined, failureReason, "should be completed without errors");
+    browser.test.sendMessage("test_userScript_APIMethod:done");
+  }
 
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "http://localhost/*/file_sample.html",
+      ],
+      user_scripts: {
+        api_script: "api-script.js",
+      },
+    },
+    // Defines a background script that receives all the needed test parameters.
+    background: `
+        const metadata = ${JSON.stringify(userScriptMetadata)};
+        (${backgroundScript})(${userScript}, metadata, ${runtimeMessageListener})
+     `,
+    files: {
+      "api-script.js": `(${apiScript})(${notifyFinish})`,
+    },
+  });
+
+  // Load a page in a content process, register the user script and then load a
+  // new page in the existing content process.
+  let url = `${BASE_URL}/file_sample.html`;
+  let contentPage = await ExtensionTestUtils.loadContentPage(`about:blank`);
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+  await contentPage.loadURL(url);
+
+  // Run any additional test-specific assertions.
+  if (testFn) {
+    await testFn({extension, contentPage, url});
+  }
+
+  await extension.awaitMessage("test_userScript_APIMethod:done");
+
+  await extension.unload();
+  await contentPage.close();
+}
+
+add_task(async function test_apiScript_exports_simple_sync_method() {
+  function apiScript(notifyFinish) {
     browser.userScripts.setScriptAPIs({
-      US_sync_api([param1, param2, arrayParam], scriptMetadata, scriptGlobal) {
+      notifyFinish,
+      testAPIMethod([param1, param2, arrayParam], scriptMetadata) {
         browser.test.assertEq("test-user-script-exported-apis", scriptMetadata.name,
                               "Got the expected value for a string scriptMetadata property");
         browser.test.assertEq(null, scriptMetadata.nullProperty,
@@ -409,81 +403,111 @@ add_task(async function test_userScripts_exported_APIs() {
         browser.test.assertEq("param1", param1, "Got the expected parameter value");
         browser.test.assertEq("param2", param2, "Got the expected parameter value");
 
-        browser.test.assertEq(3, arrayParam.length, "Got the expected lenght on the array param");
-        browser.test.assertTrue(arrayParam.includes(1), "Got the expected result when calling arrayParam.includes");
-
-        browser.test.sendMessage("US_sync_api", {param1, param2});
+        browser.test.assertEq(3, arrayParam.length, "Got the expected length on the array param");
+        browser.test.assertTrue(arrayParam.includes(1),
+                                "Got the expected result when calling arrayParam.includes");
 
         return "returned_value";
-      },
-      async US_async_api_with_callback([param, cb, cb2], scriptMetadata, scriptGlobal) {
-        browser.test.assertEq("function", typeof cb, "Got a callback function parameter");
-        browser.test.assertTrue(cb === cb2, "Got the same cloned function for the same function parameter");
-
-        browser.runtime.sendMessage({param}).then(bgPageRes => {
-          // eslint-disable-next-line no-undef
-          const cbResult = cb(cloneInto(bgPageRes, scriptGlobal));
-          browser.test.sendMessage("US_async_api_with_callback", cbResult);
-        });
-
-        return "resolved_value";
-      },
-      async US_send_api_results([results], scriptMetadata, scriptGlobal) {
-        browser.test.sendMessage("US_send_api_results", results);
       },
     });
   }
 
-  let extensionData = {
-    manifest: {
-      permissions: [
-        "http://localhost/*/file_sample.html",
-      ],
-      user_scripts: {
-        api_script: "api-script.js",
-        // The following is an unexpected manifest property, that we expect to be ignored and
-        // to not prevent the test extension from being installed and run as expected.
-        unexpected_manifest_key: "test-unexpected-key",
-      },
-    },
-    background,
-    files: {
-      "api-script.js": apiScript,
-    },
+  function userScript() {
+    const {testAPIMethod, notifyFinish} = this;
+
+    // Redefine the includes method on the Array prototype, to explicitly verify that the method
+    // redefined in the userScript is not used when accessing arrayParam.includes from the API script.
+    Array.prototype.includes = () => { // eslint-disable-line no-extend-native
+      throw new Error("Unexpected prototype leakage");
+    };
+    const arrayParam = new Array(1, 2, 3); // eslint-disable-line no-array-constructor
+    const result = testAPIMethod("param1", "param2", arrayParam);
+
+    if (result !== "returned_value") {
+      notifyFinish(`userScript got an unexpected result value: ${result}`);
+    } else {
+      notifyFinish();
+    }
+  }
+
+  const userScriptMetadata = {
+    name: "test-user-script-exported-apis",
+    arrayProperty: ["el1"],
+    objectProperty: {nestedProp: "nestedValue"},
+    nullProperty: null,
   };
 
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await test_userScript_APIMethod({
+    userScript,
+    apiScript,
+    userScriptMetadata,
+  });
+});
 
-  // Ensure that a content page running in a content process and which has been
-  // already loaded when the content scripts has been registered, it has received
-  // and registered the expected content scripts.
-  let contentPage = await ExtensionTestUtils.loadContentPage(`about:blank`);
+add_task(async function test_apiScript_async_method() {
+  function apiScript(notifyFinish) {
+    const {cloneInto} = this;
 
-  await extension.startup();
+    browser.userScripts.setScriptAPIs({
+      notifyFinish,
+      async testAPIMethod([param, cb, cb2], scriptMetadata, scriptGlobal) {
+        browser.test.assertEq("function", typeof cb, "Got a callback function parameter");
+        browser.test.assertTrue(cb === cb2, "Got the same cloned function for the same function parameter");
 
-  await extension.awaitMessage("background-ready");
+        browser.runtime.sendMessage(param).then(bgPageRes => {
+          const cbResult = cb(cloneInto(bgPageRes, scriptGlobal));
+          browser.test.sendMessage("user-script-callback-return", cbResult);
+        });
 
-  await contentPage.loadURL(`${BASE_URL}/file_sample.html`);
+        return "resolved_value";
+      },
+    });
+  }
 
-  info("Wait the userScript to call the exported US_sync_api method");
-  await extension.awaitMessage("US_sync_api");
+  async function userScript() {
+    // Redefine Promise to verify that it doesn't break the WebExtensions internals
+    // that are going to use them.
+    const {Promise} = this;
+    Promise.resolve = function() {
+      throw new Error("Promise.resolve poisoning");
+    };
+    this.Promise = function() {
+      throw new Error("Promise constructor poisoning");
+    };
 
-  info("Wait the userScript to call the exported US_async_api_with_callback method");
-  const userScriptCallbackResult = await extension.awaitMessage("US_async_api_with_callback");
-  equal(userScriptCallbackResult, `callback param: {"bgPageReply":true}`,
-        "Got the expected results when the userScript callback has been called");
+    const {testAPIMethod, notifyFinish} = this;
 
-  info("Wait the userScript to call the exported US_send_api_results method");
-  const userScriptsAPIResults = await extension.awaitMessage("US_send_api_results");
-  Assert.deepEqual(userScriptsAPIResults, {
-    syncAPIResult: "returned_value",
-    asyncAPIResult: "resolved_value",
-    expectedError: "Only serializable parameters are supported",
-  }, "Got the expected userScript API results");
+    const cb = (cbParam) => {
+      return `callback param: ${JSON.stringify(cbParam)}`;
+    };
+    const cb2 = cb;
+    const asyncAPIResult = await testAPIMethod("param3", cb, cb2);
 
-  await extension.unload();
+    if (asyncAPIResult !== "resolved_value") {
+      notifyFinish(`userScript got an unexpected resolved value: ${asyncAPIResult}`);
+    } else {
+      notifyFinish();
+    }
+  }
 
-  await contentPage.close();
+  async function runtimeMessageListener(param) {
+    if (param !== "param3") {
+      browser.test.fail(`Got an unexpected message: ${param}`);
+    }
+
+    return {bgPageReply: true};
+  }
+
+  await test_userScript_APIMethod({
+    userScript,
+    apiScript,
+    runtimeMessageListener,
+    async testFn({extension}) {
+      const res = await extension.awaitMessage("user-script-callback-return");
+      equal(res, `callback param: ${JSON.stringify({bgPageReply: true})}`,
+            "Got the expected userScript callback return value");
+    },
+  });
 });
 
 // This test verify that a cached script is still able to catch the document
@@ -526,6 +550,9 @@ add_task(async function test_cached_userScript_on_document_start() {
       ],
       user_scripts: {
         api_script: "api-script.js",
+        // The following is an unexpected manifest property, that we expect to be ignored and
+        // to not prevent the test extension from being installed and run as expected.
+        unexpected_manifest_key: "test-unexpected-key",
       },
     },
     background,
