@@ -628,6 +628,8 @@ security.ui.identitypopup:
       - firefox
   click:
     objects: [
+      "tp_add_blocking",
+      "cookies_add_blocking",
       "cb_prefs_button",
       "clear_sitedata",
       "unblock",

@@ -969,15 +969,43 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY contentBlocking.notDetected "No blockable content detected on this page.">
 
 <!ENTITY contentBlocking.trackingProtection3.label "Trackers">
+<!-- LOCALIZATION NOTE (contentBlocking.trackingProtection.allowed.label):
+     This label signals that this type of content blocking is turned
+     OFF and is not blocking tracker content, so this is not
+     a positive thing. It forms the end of the (imaginary) sentence
+     "Trackers [are] Allowed"-->
+<!ENTITY contentBlocking.trackingProtection.allowed.label "Allowed">
+<!-- LOCALIZATION NOTE (contentBlocking.trackingProtection.blocked.label):
+     This label signals that this type of content blocking is turned
+     ON and is successfully blocking tracker content, so this is
+     a positive thing. It forms the end of the (imaginary) sentence
+     "Trackers [are] Blocked"-->
+<!ENTITY contentBlocking.trackingProtection.blocked.label "Blocked">
+
+<!ENTITY contentBlocking.3rdPartyCookies.label "Third-Party Cookies">
+<!ENTITY contentBlocking.3rdPartyCookies.trackers.label "Tracking Cookies">
+<!-- LOCALIZATION NOTE (contentBlocking.3rdPartyCookies.blocked.label):
+     This label signals that this type of content blocking is turned
+     ON and is successfully blocking third-party cookies, so this is
+     a positive thing. It forms the end of the (imaginary) sentence
+     "Third-Party Cookies [are] Blocked"-->
+<!ENTITY contentBlocking.3rdPartyCookies.blocked.label "Blocked">
+<!-- LOCALIZATION NOTE (contentBlocking.tranckingProtection.blocking.label):
+     This label signals that this type of content blocking is turned
+     ON, so this is a positive thing. It forms the verb in the (imaginary) sentence
+     "Firefox is blocking Third-Party Cookies"-->
+<!ENTITY contentBlocking.3rdPartyCookies.blocking.label "Blocking">
+<!-- LOCALIZATION NOTE (contentBlocking.3rdPartyCookies.add.label):
+     This is displayed as a link to preferences, where the user can add
+     this specific type of content blocking. When this text is shown
+     the type of content blocking is currently not enabled. -->
+<!ENTITY contentBlocking.3rdPartyCookies.add.label "Add Blocking…">
 
 <!ENTITY contentBlocking.manageSettings.label "Manage Content Blocking">
 <!ENTITY contentBlocking.manageSettings.accesskey "M">
 
 <!ENTITY contentBlocking.trackersView.label "Trackers">
 <!ENTITY contentBlocking.trackersView.strictInfo.label "To block all trackers, set content blocking to “Strict”.">
-
-<!ENTITY contentBlocking.cookies.label "Cookies">
-<!ENTITY contentBlocking.cookiesView.label "Cookies and Site Data">
 
 <!ENTITY contentBlocking.openBreakageReportView2.label "Report a problem">
 <!ENTITY contentBlocking.breakageReportView.label "Report Problems">
