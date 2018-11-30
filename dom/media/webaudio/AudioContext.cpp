@@ -664,7 +664,7 @@ MediaStreamGraph* AudioContext::Graph() const {
   return Destination()->Stream()->Graph();
 }
 
-MediaStream* AudioContext::DestinationStream() const {
+AudioNodeStream* AudioContext::DestinationStream() const {
   if (Destination()) {
     return Destination()->Stream();
   }
@@ -949,9 +949,8 @@ void AudioContext::SuspendInternal(void* aPromise) {
   if (!mSuspendCalled) {
     streams = GetAllStreams();
   }
-  Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
-                                      streams, AudioContextOperation::Suspend,
-                                      aPromise);
+  Graph()->ApplyAudioContextOperation(DestinationStream(), streams,
+                                      AudioContextOperation::Suspend, aPromise);
 
   mSuspendCalled = true;
 }
@@ -1001,9 +1000,8 @@ void AudioContext::ResumeInternal() {
   if (mSuspendCalled) {
     streams = GetAllStreams();
   }
-  Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
-                                      streams, AudioContextOperation::Resume,
-                                      nullptr);
+  Graph()->ApplyAudioContextOperation(DestinationStream(), streams,
+                                      AudioContextOperation::Resume, nullptr);
   mSuspendCalled = false;
 }
 
@@ -1060,7 +1058,7 @@ already_AddRefed<Promise> AudioContext::Close(ErrorResult& aRv) {
 
   // This can be called when freeing a document, and the streams are dead at
   // this point, so we need extra null-checks.
-  MediaStream* ds = DestinationStream();
+  AudioNodeStream* ds = DestinationStream();
   if (ds) {
     nsTArray<MediaStream*> streams;
     // If mSuspendCalled or mCloseCalled are true then we already suspended
@@ -1069,7 +1067,7 @@ already_AddRefed<Promise> AudioContext::Close(ErrorResult& aRv) {
     if (!mSuspendCalled && !mCloseCalled) {
       streams = GetAllStreams();
     }
-    Graph()->ApplyAudioContextOperation(ds->AsAudioNodeStream(), streams,
+    Graph()->ApplyAudioContextOperation(ds, streams,
                                         AudioContextOperation::Close, promise);
   }
   mCloseCalled = true;
