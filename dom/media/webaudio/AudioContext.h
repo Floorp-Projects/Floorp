@@ -272,7 +272,7 @@ class AudioContext final : public DOMEventTargetHelper,
   bool IsOffline() const { return mIsOffline; }
 
   MediaStreamGraph* Graph() const;
-  MediaStream* DestinationStream() const;
+  AudioNodeStream* DestinationStream() const;
 
   // Nodes register here if they will produce sound even if they have silent
   // or no input connections.  The AudioContext will keep registered nodes
