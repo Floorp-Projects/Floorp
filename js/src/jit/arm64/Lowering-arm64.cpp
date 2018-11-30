@@ -215,7 +215,11 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
 
 void LIRGeneratorARM64::lowerMulI(MMul* mul, MDefinition* lhs,
                                   MDefinition* rhs) {
-  MOZ_CRASH("lowerMulI");
+  LMulI* lir = new(alloc()) LMulI;
+  if (mul->fallible()) {
+      assignSnapshot(lir, Bailout_DoubleOutput);
+  }
+  lowerForALU(lir, mul, lhs, rhs);
 }
 
 void LIRGeneratorARM64::lowerModI(MMod* mod) { MOZ_CRASH("lowerModI"); }
