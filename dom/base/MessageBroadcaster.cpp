@@ -12,24 +12,18 @@ namespace dom {
 
 MessageBroadcaster::MessageBroadcaster(MessageBroadcaster* aParentManager,
                                        MessageManagerFlags aFlags)
-  : MessageListenerManager(nullptr, aParentManager,
-                           aFlags |
-                           MessageManagerFlags::MM_BROADCASTER)
-{
+    : MessageListenerManager(nullptr, aParentManager,
+                             aFlags | MessageManagerFlags::MM_BROADCASTER) {
   if (aParentManager) {
     aParentManager->AddChildManager(this);
   }
 }
 
-void
-MessageBroadcaster::ReleaseCachedProcesses()
-{
+void MessageBroadcaster::ReleaseCachedProcesses() {
   ContentParent::ReleaseCachedProcesses();
 }
 
-void
-MessageBroadcaster::AddChildManager(MessageListenerManager* aManager)
-{
+void MessageBroadcaster::AddChildManager(MessageListenerManager* aManager) {
   mChildManagers.AppendElement(aManager);
 
   RefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
@@ -38,11 +32,9 @@ MessageBroadcaster::AddChildManager(MessageListenerManager* aManager)
   LoadPendingScripts(this, aManager);
 }
 
-void
-MessageBroadcaster::RemoveChildManager(MessageListenerManager* aManager)
-{
+void MessageBroadcaster::RemoveChildManager(MessageListenerManager* aManager) {
   mChildManagers.RemoveElement(aManager);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

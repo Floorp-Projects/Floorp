@@ -10,7 +10,7 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsTArray.h"
-#include "mozilla/dom/BaseKeyframeTypesBinding.h" // CompositeOperationOrAuto
+#include "mozilla/dom/BaseKeyframeTypesBinding.h"  // CompositeOperationOrAuto
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -21,14 +21,12 @@ namespace mozilla {
 /**
  * A property-value pair specified on a keyframe.
  */
-struct PropertyValuePair
-{
+struct PropertyValuePair {
   explicit PropertyValuePair(nsCSSPropertyID aProperty)
-    : mProperty(aProperty) { }
+      : mProperty(aProperty) {}
   PropertyValuePair(nsCSSPropertyID aProperty,
                     RefPtr<RawServoDeclarationBlock>&& aValue)
-    : mProperty(aProperty), mServoDeclarationBlock(std::move(aValue))
-  {
+      : mProperty(aProperty), mServoDeclarationBlock(std::move(aValue)) {
     MOZ_ASSERT(mServoDeclarationBlock, "Should be valid property value");
   }
 
@@ -62,36 +60,31 @@ struct PropertyValuePair
  * per-property arrays from the original list of keyframes objects. As a result,
  * these objects represent the master definition of the effect's values.
  */
-struct Keyframe
-{
+struct Keyframe {
   Keyframe() = default;
   Keyframe(const Keyframe& aOther) = default;
-  Keyframe(Keyframe&& aOther)
-  {
-    *this = std::move(aOther);
-  }
+  Keyframe(Keyframe&& aOther) { *this = std::move(aOther); }
 
   Keyframe& operator=(const Keyframe& aOther) = default;
-  Keyframe& operator=(Keyframe&& aOther)
-  {
-    mOffset         = aOther.mOffset;
+  Keyframe& operator=(Keyframe&& aOther) {
+    mOffset = aOther.mOffset;
     mComputedOffset = aOther.mComputedOffset;
     mTimingFunction = std::move(aOther.mTimingFunction);
-    mComposite      = std::move(aOther.mComposite);
+    mComposite = std::move(aOther.mComposite);
     mPropertyValues = std::move(aOther.mPropertyValues);
     return *this;
   }
 
-  Maybe<double>                 mOffset;
+  Maybe<double> mOffset;
   static constexpr double kComputedOffsetNotSet = -1.0;
-  double                        mComputedOffset = kComputedOffsetNotSet;
-  Maybe<ComputedTimingFunction> mTimingFunction; // Nothing() here means
-                                                 // "linear"
+  double mComputedOffset = kComputedOffsetNotSet;
+  Maybe<ComputedTimingFunction> mTimingFunction;  // Nothing() here means
+                                                  // "linear"
   dom::CompositeOperationOrAuto mComposite =
-                                  dom::CompositeOperationOrAuto::Auto;
-  nsTArray<PropertyValuePair>   mPropertyValues;
+      dom::CompositeOperationOrAuto::Auto;
+  nsTArray<PropertyValuePair> mPropertyValues;
 };
 
-}
+}  // namespace mozilla
 
-#endif // mozilla_dom_Keyframe_h
+#endif  // mozilla_dom_Keyframe_h

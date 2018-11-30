@@ -14,8 +14,7 @@ TEST(Intl_Locale_LocaleService, Negotiate) {
   nsTArray<nsCString> availableLocales;
   nsTArray<nsCString> supportedLocales;
   nsAutoCString defaultLocale("en-US");
-  int32_t strategy =
-    LocaleService::kLangNegStrategyFiltering;
+  int32_t strategy = LocaleService::kLangNegStrategyFiltering;
 
   requestedLocales.AppendElement(NS_LITERAL_CSTRING("sr"));
 
@@ -23,7 +22,8 @@ TEST(Intl_Locale_LocaleService, Negotiate) {
   availableLocales.AppendElement(NS_LITERAL_CSTRING("sr-Latn"));
 
   LocaleService::GetInstance()->NegotiateLanguages(
-      requestedLocales, availableLocales, defaultLocale, strategy, supportedLocales);
+      requestedLocales, availableLocales, defaultLocale, strategy,
+      supportedLocales);
 
   ASSERT_TRUE(supportedLocales.Length() == 2);
   ASSERT_TRUE(supportedLocales[0].EqualsLiteral("sr-Cyrl"));
@@ -35,15 +35,15 @@ TEST(Intl_Locale_LocaleService, UseLSDefaultLocale) {
   nsTArray<nsCString> availableLocales;
   nsTArray<nsCString> supportedLocales;
   nsAutoCString defaultLocale("");
-  int32_t strategy =
-    LocaleService::kLangNegStrategyLookup;
+  int32_t strategy = LocaleService::kLangNegStrategyLookup;
 
   requestedLocales.AppendElement(NS_LITERAL_CSTRING("sr"));
 
   availableLocales.AppendElement(NS_LITERAL_CSTRING("de"));
 
   LocaleService::GetInstance()->NegotiateLanguages(
-      requestedLocales, availableLocales, defaultLocale, strategy, supportedLocales);
+      requestedLocales, availableLocales, defaultLocale, strategy,
+      supportedLocales);
 
   nsAutoCString lsDefaultLocale;
   LocaleService::GetInstance()->GetDefaultLocale(lsDefaultLocale);

@@ -19,11 +19,9 @@ bool gStorageShuttingDown = false;
 
 StaticRefPtr<StorageNotifierService> gStorageNotifierService;
 
-} // anonymous
+}  // namespace
 
-/* static */ StorageNotifierService*
-StorageNotifierService::GetOrCreate()
-{
+/* static */ StorageNotifierService* StorageNotifierService::GetOrCreate() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!gStorageNotifierService && !gStorageShuttingDown) {
     gStorageNotifierService = new StorageNotifierService();
@@ -33,25 +31,20 @@ StorageNotifierService::GetOrCreate()
   return gStorageNotifierService;
 }
 
-StorageNotifierService::StorageNotifierService()
-{
+StorageNotifierService::StorageNotifierService() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gStorageNotifierService);
 }
 
-StorageNotifierService::~StorageNotifierService()
-{
+StorageNotifierService::~StorageNotifierService() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gStorageNotifierService);
   gStorageShuttingDown = true;
 }
 
-/* static */ void
-StorageNotifierService::Broadcast(StorageEvent* aEvent,
-                                  const char16_t* aStorageType,
-                                  bool aPrivateBrowsing,
-                                  bool aImmediateDispatch)
-{
+/* static */ void StorageNotifierService::Broadcast(
+    StorageEvent* aEvent, const char16_t* aStorageType, bool aPrivateBrowsing,
+    bool aImmediateDispatch) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<StorageNotifierService> service = gStorageNotifierService;
@@ -61,8 +54,8 @@ StorageNotifierService::Broadcast(StorageEvent* aEvent,
 
   RefPtr<StorageEvent> event = aEvent;
 
-  nsTObserverArray<RefPtr<StorageNotificationObserver>>::ForwardIterator
-    iter(service->mObservers);
+  nsTObserverArray<RefPtr<StorageNotificationObserver>>::ForwardIterator iter(
+      service->mObservers);
 
   while (iter.HasMore()) {
     RefPtr<StorageNotificationObserver> observer = iter.GetNext();
@@ -85,11 +78,11 @@ StorageNotifierService::Broadcast(StorageEvent* aEvent,
     }
 
     RefPtr<Runnable> r = NS_NewRunnableFunction(
-      "StorageNotifierService::Broadcast",
-      [observer, event, aStorageType, aPrivateBrowsing] () {
-        observer->ObserveStorageNotification(event, aStorageType,
-                                             aPrivateBrowsing);
-      });
+        "StorageNotifierService::Broadcast",
+        [observer, event, aStorageType, aPrivateBrowsing]() {
+          observer->ObserveStorageNotification(event, aStorageType,
+                                               aPrivateBrowsing);
+        });
 
     if (aImmediateDispatch) {
       r->Run();
@@ -102,9 +95,7 @@ StorageNotifierService::Broadcast(StorageEvent* aEvent,
   }
 }
 
-void
-StorageNotifierService::Register(StorageNotificationObserver* aObserver)
-{
+void StorageNotifierService::Register(StorageNotificationObserver* aObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aObserver);
   MOZ_ASSERT(!mObservers.Contains(aObserver));
@@ -112,9 +103,8 @@ StorageNotifierService::Register(StorageNotificationObserver* aObserver)
   mObservers.AppendElement(aObserver);
 }
 
-void
-StorageNotifierService::Unregister(StorageNotificationObserver* aObserver)
-{
+void StorageNotifierService::Unregister(
+    StorageNotificationObserver* aObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aObserver);
 
@@ -124,5 +114,5 @@ StorageNotifierService::Unregister(StorageNotificationObserver* aObserver)
   mObservers.RemoveElement(aObserver);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

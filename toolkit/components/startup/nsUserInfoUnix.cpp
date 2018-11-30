@@ -22,131 +22,120 @@
 #define PW_GECOS pw_gecos
 #endif
 
-nsUserInfo::nsUserInfo()
-{
-}
+nsUserInfo::nsUserInfo() {}
 
-nsUserInfo::~nsUserInfo()
-{
-}
+nsUserInfo::~nsUserInfo() {}
 
-NS_IMPL_ISUPPORTS(nsUserInfo,nsIUserInfo)
+NS_IMPL_ISUPPORTS(nsUserInfo, nsIUserInfo)
 
 NS_IMETHODIMP
-nsUserInfo::GetFullname(nsAString& aFullname)
-{
-    struct passwd *pw = nullptr;
+nsUserInfo::GetFullname(nsAString& aFullname) {
+  struct passwd* pw = nullptr;
 
-    pw = getpwuid (geteuid());
+  pw = getpwuid(geteuid());
 
-    if (!pw || !pw->PW_GECOS) return NS_ERROR_FAILURE;
+  if (!pw || !pw->PW_GECOS) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_sspitzer
-    printf("fullname = %s\n", pw->PW_GECOS);
+  printf("fullname = %s\n", pw->PW_GECOS);
 #endif
 
-    nsAutoCString fullname(pw->PW_GECOS);
+  nsAutoCString fullname(pw->PW_GECOS);
 
-    // now try to parse the GECOS information, which will be in the form
-    // Full Name, <other stuff> - eliminate the ", <other stuff>
-    // also, sometimes GECOS uses "&" to mean "the user name" so do
-    // the appropriate substitution
+  // now try to parse the GECOS information, which will be in the form
+  // Full Name, <other stuff> - eliminate the ", <other stuff>
+  // also, sometimes GECOS uses "&" to mean "the user name" so do
+  // the appropriate substitution
 
-    // truncate at first comma (field delimiter)
-    int32_t index;
-    if ((index = fullname.Find(",")) != kNotFound)
-        fullname.Truncate(index);
+  // truncate at first comma (field delimiter)
+  int32_t index;
+  if ((index = fullname.Find(",")) != kNotFound) fullname.Truncate(index);
 
-    // replace ampersand with username
-    if (pw->pw_name) {
-        nsAutoCString username(pw->pw_name);
-        if (!username.IsEmpty() && nsCRT::IsLower(username.CharAt(0)))
-            username.SetCharAt(nsCRT::ToUpper(username.CharAt(0)), 0);
+  // replace ampersand with username
+  if (pw->pw_name) {
+    nsAutoCString username(pw->pw_name);
+    if (!username.IsEmpty() && nsCRT::IsLower(username.CharAt(0)))
+      username.SetCharAt(nsCRT::ToUpper(username.CharAt(0)), 0);
 
-        fullname.ReplaceSubstring("&", username.get());
-    }
+    fullname.ReplaceSubstring("&", username.get());
+  }
 
-    NS_CopyNativeToUnicode(fullname, aFullname);
+  NS_CopyNativeToUnicode(fullname, aFullname);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUserInfo::GetUsername(nsACString& aUsername)
-{
-    struct passwd *pw = nullptr;
+nsUserInfo::GetUsername(nsACString& aUsername) {
+  struct passwd* pw = nullptr;
 
-    // is this portable?  those are POSIX compliant calls, but I need to check
-    pw = getpwuid(geteuid());
+  // is this portable?  those are POSIX compliant calls, but I need to check
+  pw = getpwuid(geteuid());
 
-    if (!pw || !pw->pw_name) return NS_ERROR_FAILURE;
+  if (!pw || !pw->pw_name) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_sspitzer
-    printf("username = %s\n", pw->pw_name);
+  printf("username = %s\n", pw->pw_name);
 #endif
 
-    aUsername.Assign(pw->pw_name);
+  aUsername.Assign(pw->pw_name);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUserInfo::GetDomain(nsACString& aDomain)
-{
-    nsresult rv = NS_ERROR_FAILURE;
+nsUserInfo::GetDomain(nsACString& aDomain) {
+  nsresult rv = NS_ERROR_FAILURE;
 
-    struct utsname buf;
-    char *domainname = nullptr;
+  struct utsname buf;
+  char* domainname = nullptr;
 
-    if (uname(&buf) < 0) {
-        return rv;
-    }
+  if (uname(&buf) < 0) {
+    return rv;
+  }
 
 #if defined(__linux__)
-    domainname = buf.domainname;
+  domainname = buf.domainname;
 #endif
 
-    if (domainname && domainname[0]) {
-        aDomain.Assign(domainname);
+  if (domainname && domainname[0]) {
+    aDomain.Assign(domainname);
+    rv = NS_OK;
+  } else {
+    // try to get the hostname from the nodename
+    // on machines that use DHCP, domainname may not be set
+    // but the nodename might.
+    if (buf.nodename[0]) {
+      // if the nodename is foo.bar.org, use bar.org as the domain
+      char* pos = strchr(buf.nodename, '.');
+      if (pos) {
+        aDomain.Assign(pos + 1);
         rv = NS_OK;
+      }
     }
-    else {
-        // try to get the hostname from the nodename
-        // on machines that use DHCP, domainname may not be set
-        // but the nodename might.
-        if (buf.nodename[0]) {
-            // if the nodename is foo.bar.org, use bar.org as the domain
-            char *pos = strchr(buf.nodename,'.');
-            if (pos) {
-                aDomain.Assign(pos + 1);
-                rv = NS_OK;
-            }
-        }
-    }
+  }
 
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP
-nsUserInfo::GetEmailAddress(nsACString& aEmailAddress)
-{
-    // use username + "@" + domain for the email address
-    nsresult rv;
+nsUserInfo::GetEmailAddress(nsACString& aEmailAddress) {
+  // use username + "@" + domain for the email address
+  nsresult rv;
 
-    nsCString username;
-    nsCString domain;
+  nsCString username;
+  nsCString domain;
 
-    rv = GetUsername(username);
-    if (NS_FAILED(rv)) return rv;
+  rv = GetUsername(username);
+  if (NS_FAILED(rv)) return rv;
 
-    rv = GetDomain(domain);
-    if (NS_FAILED(rv)) return rv;
+  rv = GetDomain(domain);
+  if (NS_FAILED(rv)) return rv;
 
-    if (username.IsEmpty() || domain.IsEmpty()) {
-        return NS_ERROR_FAILURE;
-    }
+  if (username.IsEmpty() || domain.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
 
-    aEmailAddress = username + NS_LITERAL_CSTRING("@") + domain;
-    return NS_OK;
+  aEmailAddress = username + NS_LITERAL_CSTRING("@") + domain;
+  return NS_OK;
 }
-

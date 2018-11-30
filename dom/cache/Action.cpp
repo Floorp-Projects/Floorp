@@ -10,9 +10,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-void
-Action::CancelOnInitiatingThread()
-{
+void Action::CancelOnInitiatingThread() {
   NS_ASSERT_OWNINGTHREAD(Action);
   // It is possible for cancellation to be duplicated.  For example, an
   // individual Cache could have its Actions canceled and then shutdown
@@ -20,21 +18,12 @@ Action::CancelOnInitiatingThread()
   mCanceled = true;
 }
 
-Action::Action()
-  : mCanceled(false)
-{
-}
+Action::Action() : mCanceled(false) {}
 
-Action::~Action()
-{
-}
+Action::~Action() {}
 
-bool
-Action::IsCanceled() const
-{
-  return mCanceled;
-}
+bool Action::IsCanceled() const { return mCanceled; }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #ifndef nsIPopupContainer_h___
 #define nsIPopupContainer_h___
 
@@ -17,11 +16,10 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-}
+}  // namespace mozilla
 
-class nsIPopupContainer
-{
-public:
+class nsIPopupContainer {
+ public:
   NS_DECL_QUERYFRAME_TARGET(nsIPopupContainer)
 
   virtual nsPopupSetFrame* GetPopupSetFrame() = 0;
@@ -34,4 +32,3 @@ public:
 };
 
 #endif
-

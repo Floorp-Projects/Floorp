@@ -16,20 +16,21 @@ namespace intl {
  * Locale class is a core representation of a single locale.
  *
  * A locale is a data object representing a combination of language, script,
- * region, variant and a set of regional extension preferences that may further specify
- * particular user choices like calendar, numbering system, etc.
+ * region, variant and a set of regional extension preferences that may further
+ * specify particular user choices like calendar, numbering system, etc.
  *
- * A locale can be expressed as a language tag string, like a simple "fr" for French,
- * or a more specific "sr-Cyrl-RS-u-hc-h12" for Serbian in Russia with a Cyrylic script,
- * and hour cycle selected to be `h12`.
+ * A locale can be expressed as a language tag string, like a simple "fr" for
+ * French, or a more specific "sr-Cyrl-RS-u-hc-h12" for Serbian in Russia with a
+ * Cyrylic script, and hour cycle selected to be `h12`.
  *
- * The format of the language tag follows BCP47 standard and implements a subset of it.
- * In the future we expect to extend this class to cover more subtags and extensions.
+ * The format of the language tag follows BCP47 standard and implements a subset
+ * of it. In the future we expect to extend this class to cover more subtags and
+ * extensions.
  *
  * BCP47: https://tools.ietf.org/html/bcp47
  *
- * The aim of this class it aid in validation, parsing and canonicalization of the
- * string.
+ * The aim of this class it aid in validation, parsing and canonicalization of
+ * the string.
  *
  * It allows the user to input any well-formed BCP47 language tag and operate
  * on its subtags in a canonicalized form.
@@ -46,119 +47,112 @@ namespace intl {
  *     ASSERT_TRUE(loc.GetRegion().Equals("AT")); // canonicalized to upper case
  *
  *
- * Note: The file name is `MozLocale` to avoid compilation problems on case-insensitive
- * Windows. The class name is `Locale`.
+ * Note: The file name is `MozLocale` to avoid compilation problems on
+ * case-insensitive Windows. The class name is `Locale`.
  */
 class Locale {
-  public:
-    /**
-     * The constructor expects the input to be a well-formed BCP47-style locale string.
-     *
-     * Two operations are performed on the well-formed language tags:
-     *
-     *  * Case normalization to conform with BCP47 (e.g. "eN-uS" -> "en-US")
-     *  * Underscore delimiters replaced with dashed (e.g. "en_US" -> "en-US")
-     *
-     * If the input language tag string is not well-formed, the Locale will be
-     * created with its flag `mWellFormed` set to false which will make the Locale never match.
-     */
-    explicit Locale(const nsACString& aLocale);
-    explicit Locale(const char* aLocale)
-      : Locale(nsDependentCString(aLocale))
-      { };
+ public:
+  /**
+   * The constructor expects the input to be a well-formed BCP47-style locale
+   * string.
+   *
+   * Two operations are performed on the well-formed language tags:
+   *
+   *  * Case normalization to conform with BCP47 (e.g. "eN-uS" -> "en-US")
+   *  * Underscore delimiters replaced with dashed (e.g. "en_US" -> "en-US")
+   *
+   * If the input language tag string is not well-formed, the Locale will be
+   * created with its flag `mWellFormed` set to false which will make the Locale
+   * never match.
+   */
+  explicit Locale(const nsACString& aLocale);
+  explicit Locale(const char* aLocale) : Locale(nsDependentCString(aLocale)){};
 
-    const nsCString& GetLanguage() const;
-    const nsCString& GetScript() const;
-    const nsCString& GetRegion() const;
-    const nsTArray<nsCString>& GetVariants() const;
+  const nsCString& GetLanguage() const;
+  const nsCString& GetScript() const;
+  const nsCString& GetRegion() const;
+  const nsTArray<nsCString>& GetVariants() const;
 
-    /**
-     * Returns a `true` if the locale is well-formed, such that the
-     * Locale object can validly be matched against others.
-     */
-    bool IsWellFormed() const {
-      return mIsWellFormed;
-    }
+  /**
+   * Returns a `true` if the locale is well-formed, such that the
+   * Locale object can validly be matched against others.
+   */
+  bool IsWellFormed() const { return mIsWellFormed; }
 
-    /**
-     * Returns a canonicalized language tag string of the locale.
-     */
-    const nsCString AsString() const;
+  /**
+   * Returns a canonicalized language tag string of the locale.
+   */
+  const nsCString AsString() const;
 
-    /**
-     * Compares two locales optionally treating one or both of
-     * the locales as a range.
-     *
-     * In case one of the locales is treated as a range, its
-     * empty fields are considered to match all possible
-     * values of the same field on the other locale.
-     *
-     * Example:
-     *
-     * Locale("en").Matches(Locale("en-US"), false, false) // false
-     * Locale("en").Matches(Locale("en-US"), true, false)  // true
-     *
-     * The latter returns true because the region field on the "en"
-     * locale is being treated as a range and matches any region field
-     * value including "US" of the other locale.
-     */
-    bool Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const;
+  /**
+   * Compares two locales optionally treating one or both of
+   * the locales as a range.
+   *
+   * In case one of the locales is treated as a range, its
+   * empty fields are considered to match all possible
+   * values of the same field on the other locale.
+   *
+   * Example:
+   *
+   * Locale("en").Matches(Locale("en-US"), false, false) // false
+   * Locale("en").Matches(Locale("en-US"), true, false)  // true
+   *
+   * The latter returns true because the region field on the "en"
+   * locale is being treated as a range and matches any region field
+   * value including "US" of the other locale.
+   */
+  bool Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const;
 
-    /**
-     * This operation uses CLDR data to build a more specific version
-     * of a generic locale.
-     *
-     * Example:
-     *
-     * Locale("en").AddLikelySubtags().AsString(); // "en-Latn-US"
-     */
-    bool AddLikelySubtags();
+  /**
+   * This operation uses CLDR data to build a more specific version
+   * of a generic locale.
+   *
+   * Example:
+   *
+   * Locale("en").AddLikelySubtags().AsString(); // "en-Latn-US"
+   */
+  bool AddLikelySubtags();
 
-    /**
-     * Clears the variants field of the Locale object.
-     */
-    void ClearVariants();
+  /**
+   * Clears the variants field of the Locale object.
+   */
+  void ClearVariants();
 
-    /**
-     * Clears the region field of the Locale object.
-     */
-    void ClearRegion();
+  /**
+   * Clears the region field of the Locale object.
+   */
+  void ClearRegion();
 
-    /**
-     * Marks the locale as invalid which in turns makes
-     * it to be skipped by most LocaleService operations.
-     */
-    void Invalidate() {
-      mIsWellFormed = false;
-    }
+  /**
+   * Marks the locale as invalid which in turns makes
+   * it to be skipped by most LocaleService operations.
+   */
+  void Invalidate() { mIsWellFormed = false; }
 
-    /**
-     * Compares two locales expecting all fields to match each other.
-     */
-    bool operator== (const Locale& aOther) {
-      // Note: non-well-formed Locale objects are never
-      // treated as equal to anything
-      // (even other non-well-formed ones).
-      return IsWellFormed() &&
-             aOther.IsWellFormed() &&
-             mLanguage.Equals(aOther.mLanguage) &&
-             mScript.Equals(aOther.mScript) &&
-             mRegion.Equals(aOther.mRegion) &&
-             mVariants == aOther.mVariants &&
-             mPrivateUse == aOther.mPrivateUse;
-    }
+  /**
+   * Compares two locales expecting all fields to match each other.
+   */
+  bool operator==(const Locale& aOther) {
+    // Note: non-well-formed Locale objects are never
+    // treated as equal to anything
+    // (even other non-well-formed ones).
+    return IsWellFormed() && aOther.IsWellFormed() &&
+           mLanguage.Equals(aOther.mLanguage) &&
+           mScript.Equals(aOther.mScript) && mRegion.Equals(aOther.mRegion) &&
+           mVariants == aOther.mVariants && mPrivateUse == aOther.mPrivateUse;
+  }
 
-  private:
-    nsAutoCStringN<3> mLanguage;
-    nsAutoCStringN<4> mScript;
-    nsAutoCStringN<2> mRegion;
-    nsTArray<nsCString> mVariants;
-    nsTArray<nsCString> mPrivateUse;
-    bool mIsWellFormed = true;
+ private:
+  nsAutoCStringN<3> mLanguage;
+  nsAutoCStringN<4> mScript;
+  nsAutoCStringN<2> mRegion;
+  nsTArray<nsCString> mVariants;
+  nsTArray<nsCString> mPrivateUse;
+  bool mIsWellFormed = true;
 };
 
-} // intl
-} // namespace mozilla
+}  // namespace intl
+}  // namespace mozilla
 
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::intl::Locale)
 

@@ -14,37 +14,31 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLModElement final : public nsGenericHTMLElement
-{
-public:
+class HTMLModElement final : public nsGenericHTMLElement {
+ public:
   explicit HTMLModElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  void GetCite(nsString& aCite)
-  {
-    GetHTMLURIAttr(nsGkAtoms::cite, aCite);
-  }
-  void SetCite(const nsAString& aCite, ErrorResult& aRv)
-  {
+  void GetCite(nsString& aCite) { GetHTMLURIAttr(nsGkAtoms::cite, aCite); }
+  void SetCite(const nsAString& aCite, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::cite, aCite, aRv);
   }
-  void GetDateTime(DOMString& aDateTime)
-  {
+  void GetDateTime(DOMString& aDateTime) {
     GetHTMLAttr(nsGkAtoms::datetime, aDateTime);
   }
-  void SetDateTime(const nsAString& aDateTime, ErrorResult& aRv)
-  {
+  void SetDateTime(const nsAString& aDateTime, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::datetime, aDateTime, aRv);
   }
 
-protected:
+ protected:
   virtual ~HTMLModElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLModElement_h
+#endif  // mozilla_dom_HTMLModElement_h

@@ -33,16 +33,12 @@ namespace indexedDB {
 class BackgroundCursorChild;
 }
 
-class IDBCursor final
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class IDBCursor final : public nsISupports, public nsWrapperCache {
+ public:
   typedef indexedDB::Key Key;
   typedef indexedDB::StructuredCloneReadInfo StructuredCloneReadInfo;
 
-  enum Direction
-  {
+  enum Direction {
     NEXT = 0,
     NEXT_UNIQUE,
     PREV,
@@ -52,9 +48,8 @@ public:
     DIRECTION_INVALID
   };
 
-private:
-  enum Type
-  {
+ private:
+  enum Type {
     Type_ObjectStore,
     Type_ObjectStoreKey,
     Type_Index,
@@ -92,100 +87,73 @@ private:
   bool mContinueCalled : 1;
   bool mHaveValue : 1;
 
-public:
-  static already_AddRefed<IDBCursor>
-  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
-         const Key& aKey,
-         StructuredCloneReadInfo&& aCloneInfo);
+ public:
+  static already_AddRefed<IDBCursor> Create(
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
+      StructuredCloneReadInfo&& aCloneInfo);
 
-  static already_AddRefed<IDBCursor>
-  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
-         const Key& aKey);
+  static already_AddRefed<IDBCursor> Create(
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey);
 
-  static already_AddRefed<IDBCursor>
-  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
-         const Key& aKey,
-         const Key& aSortKey,
-         const Key& aPrimaryKey,
-         StructuredCloneReadInfo&& aCloneInfo);
+  static already_AddRefed<IDBCursor> Create(
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
+      const Key& aSortKey, const Key& aPrimaryKey,
+      StructuredCloneReadInfo&& aCloneInfo);
 
-  static already_AddRefed<IDBCursor>
-  Create(indexedDB::BackgroundCursorChild* aBackgroundActor,
-         const Key& aKey,
-         const Key& aSortKey,
-         const Key& aPrimaryKey);
+  static already_AddRefed<IDBCursor> Create(
+      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
+      const Key& aSortKey, const Key& aPrimaryKey);
 
-  static Direction
-  ConvertDirection(IDBCursorDirection aDirection);
+  static Direction ConvertDirection(IDBCursorDirection aDirection);
 
-  void
-  AssertIsOnOwningThread() const
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
-  nsPIDOMWindowInner*
-  GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
-  void
-  GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const;
+  void GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const;
 
-  IDBCursorDirection
-  GetDirection() const;
+  IDBCursorDirection GetDirection() const;
 
-  void
-  GetKey(JSContext* aCx,
-         JS::MutableHandle<JS::Value> aResult,
-         ErrorResult& aRv);
+  void GetKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+              ErrorResult& aRv);
 
-  void
-  GetPrimaryKey(JSContext* aCx,
-                JS::MutableHandle<JS::Value> aResult,
-                ErrorResult& aRv);
-
-  void
-  GetValue(JSContext* aCx,
-           JS::MutableHandle<JS::Value> aResult,
-           ErrorResult& aRv);
-
-  void
-  Continue(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
-
-  void
-  ContinuePrimaryKey(JSContext* aCx,
-                     JS::Handle<JS::Value> aKey,
-                     JS::Handle<JS::Value> aPrimaryKey,
+  void GetPrimaryKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                      ErrorResult& aRv);
 
-  void
-  Advance(uint32_t aCount, ErrorResult& aRv);
+  void GetValue(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  Update(JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+  void Continue(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  Delete(JSContext* aCx, ErrorResult& aRv);
+  void ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
+                          JS::Handle<JS::Value> aPrimaryKey, ErrorResult& aRv);
 
-  void
-  Reset();
+  void Advance(uint32_t aCount, ErrorResult& aRv);
 
-  void
-  Reset(Key&& aKey, StructuredCloneReadInfo&& aValue);
+  already_AddRefed<IDBRequest> Update(JSContext* aCx,
+                                      JS::Handle<JS::Value> aValue,
+                                      ErrorResult& aRv);
 
-  void
-  Reset(Key&& aKey);
+  already_AddRefed<IDBRequest> Delete(JSContext* aCx, ErrorResult& aRv);
 
-  void
-  Reset(Key&& aKey, Key&& aSortKey, Key&& aPrimaryKey, StructuredCloneReadInfo&& aValue);
+  void Reset();
 
-  void
-  Reset(Key&& aKey, Key&& aSortKey, Key&& aPrimaryKey);
+  void Reset(Key&& aKey, StructuredCloneReadInfo&& aValue);
 
-  void
-  ClearBackgroundActor()
-  {
+  void Reset(Key&& aKey);
+
+  void Reset(Key&& aKey, Key&& aSortKey, Key&& aPrimaryKey,
+             StructuredCloneReadInfo&& aValue);
+
+  void Reset(Key&& aKey, Key&& aSortKey, Key&& aPrimaryKey);
+
+  void ClearBackgroundActor() {
     AssertIsOnOwningThread();
 
     mBackgroundActor = nullptr;
@@ -195,28 +163,24 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBCursor)
 
   // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
-  IDBCursor(Type aType,
-            indexedDB::BackgroundCursorChild* aBackgroundActor,
+ private:
+  IDBCursor(Type aType, indexedDB::BackgroundCursorChild* aBackgroundActor,
             const Key& aKey);
 
   ~IDBCursor();
 
   // Checks if this is a locale aware cursor (ie. the index's sortKey is unset)
-  bool
-  IsLocaleAware() const;
+  bool IsLocaleAware() const;
 
-  void
-  DropJSObjects();
+  void DropJSObjects();
 
-  bool
-  IsSourceDeleted() const;
+  bool IsSourceDeleted() const;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbcursor_h__
+#endif  // mozilla_dom_idbcursor_h__

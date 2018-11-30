@@ -14,35 +14,29 @@
 namespace mozilla {
 namespace dom {
 
-class FileSystemSecurity final
-{
-public:
+class FileSystemSecurity final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(FileSystemSecurity)
 
-  static already_AddRefed<FileSystemSecurity>
-  Get();
+  static already_AddRefed<FileSystemSecurity> Get();
 
-  static already_AddRefed<FileSystemSecurity>
-  GetOrCreate();
+  static already_AddRefed<FileSystemSecurity> GetOrCreate();
 
-  void
-  GrantAccessToContentProcess(ContentParentId aId,
-                              const nsAString& aDirectoryPath);
+  void GrantAccessToContentProcess(ContentParentId aId,
+                                   const nsAString& aDirectoryPath);
 
-  void
-  Forget(ContentParentId aId);
+  void Forget(ContentParentId aId);
 
-  bool
-  ContentProcessHasAccessTo(ContentParentId aId, const nsAString& aPath);
+  bool ContentProcessHasAccessTo(ContentParentId aId, const nsAString& aPath);
 
-private:
+ private:
   FileSystemSecurity();
   ~FileSystemSecurity();
 
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mPaths;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileSystemSecurity_h
+#endif  // mozilla_dom_FileSystemSecurity_h

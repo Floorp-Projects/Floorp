@@ -11,15 +11,14 @@
 #include "mar.h"
 
 #ifdef XP_WIN
-  typedef WCHAR NS_tchar;
+typedef WCHAR NS_tchar;
 #else
-  typedef char NS_tchar;
+typedef char NS_tchar;
 #endif
 
 // This class provides an API to extract files from an update archive.
-class ArchiveReader
-{
-public:
+class ArchiveReader {
+ public:
   ArchiveReader() {}
   ~ArchiveReader() { Close(); }
 
@@ -32,13 +31,13 @@ public:
   int ExtractFile(const char *item, const NS_tchar *destination);
   int ExtractFileToStream(const char *item, FILE *fp);
 
-private:
+ private:
   int ExtractItemToStream(const MarItem *item, FILE *fp);
 
   MarFile *mArchive = nullptr;
   uint8_t *mInBuf = nullptr;
   uint8_t *mOutBuf = nullptr;
-  size_t mInBufSize  = 262144;
+  size_t mInBufSize = 262144;
   size_t mOutBufSize = 262144;
 };
 

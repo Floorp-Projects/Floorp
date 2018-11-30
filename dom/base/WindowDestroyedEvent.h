@@ -14,23 +14,18 @@
 
 namespace mozilla {
 
-class WindowDestroyedEvent final : public Runnable
-{
-public:
-  WindowDestroyedEvent(nsGlobalWindowInner* aWindow,
-                       uint64_t aID, const char* aTopic);
-  WindowDestroyedEvent(nsGlobalWindowOuter* aWindow,
-                       uint64_t aID, const char* aTopic);
+class WindowDestroyedEvent final : public Runnable {
+ public:
+  WindowDestroyedEvent(nsGlobalWindowInner* aWindow, uint64_t aID,
+                       const char* aTopic);
+  WindowDestroyedEvent(nsGlobalWindowOuter* aWindow, uint64_t aID,
+                       const char* aTopic);
 
-  enum class Phase
-  {
-    Destroying,
-    Nuking
-  };
+  enum class Phase { Destroying, Nuking };
 
   NS_IMETHOD Run() override;
 
-private:
+ private:
   uint64_t mID;
   Phase mPhase;
   nsCString mTopic;
@@ -38,6 +33,6 @@ private:
   bool mIsInnerWindow;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // defined(WindowDestroyedEvent_h)
+#endif  // defined(WindowDestroyedEvent_h)

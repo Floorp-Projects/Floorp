@@ -33,33 +33,19 @@ namespace layers {
 
 using namespace gfx;
 
-void
-PaintTask::DropTextureClients()
-{
-  mClients.Clear();
-}
+void PaintTask::DropTextureClients() { mClients.Clear(); }
 
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;
 
-PaintThread::PaintThread()
-{
-}
+PaintThread::PaintThread() {}
 
-void
-PaintThread::Release()
-{
-}
+void PaintThread::Release() {}
 
-void
-PaintThread::AddRef()
-{
-}
+void PaintThread::AddRef() {}
 
-/* static */ int32_t
-PaintThread::CalculatePaintWorkerCount()
-{
+/* static */ int32_t PaintThread::CalculatePaintWorkerCount() {
   int32_t cpuCores = PR_GetNumberOfProcessors();
   int32_t workerCount = gfxPrefs::LayersOMTPPaintWorkers();
 
@@ -72,9 +58,7 @@ PaintThread::CalculatePaintWorkerCount()
   return workerCount;
 }
 
-/* static */ void
-PaintThread::Start()
-{
+/* static */ void PaintThread::Start() {
   PaintThread::sSingleton = new PaintThread();
 
   if (!PaintThread::sSingleton->Init()) {
@@ -83,9 +67,7 @@ PaintThread::Start()
   }
 }
 
-bool
-PaintThread::Init()
-{
+bool PaintThread::Init() {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<nsIThread> thread;
@@ -101,40 +83,32 @@ PaintThread::Init()
     InitPaintWorkers();
   }
 
-  nsCOMPtr<nsIRunnable> paintInitTask =
-    NewRunnableMethod("PaintThread::InitOnPaintThread",
-                      this, &PaintThread::InitOnPaintThread);
+  nsCOMPtr<nsIRunnable> paintInitTask = NewRunnableMethod(
+      "PaintThread::InitOnPaintThread", this, &PaintThread::InitOnPaintThread);
   SyncRunnable::DispatchToThread(sThread, paintInitTask);
   return true;
 }
 
-void
-PaintThread::InitOnPaintThread()
-{
+void PaintThread::InitOnPaintThread() {
   MOZ_ASSERT(!NS_IsMainThread());
   sThreadId = PlatformThread::CurrentId();
 }
 
-void
-PaintThread::InitPaintWorkers()
-{
+void PaintThread::InitPaintWorkers() {
   MOZ_ASSERT(NS_IsMainThread());
   int32_t count = PaintThread::CalculatePaintWorkerCount();
   if (count != 1) {
-    mPaintWorkers = SharedThreadPool::Get(NS_LITERAL_CSTRING("PaintWorker"), count);
+    mPaintWorkers =
+        SharedThreadPool::Get(NS_LITERAL_CSTRING("PaintWorker"), count);
   }
 }
 
-void
-DestroyPaintThread(UniquePtr<PaintThread>&& pt)
-{
+void DestroyPaintThread(UniquePtr<PaintThread>&& pt) {
   MOZ_ASSERT(PaintThread::IsOnPaintThread());
   pt->ShutdownOnPaintThread();
 }
 
-/* static */ void
-PaintThread::Shutdown()
-{
+/* static */ void PaintThread::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
   UniquePtr<PaintThread> pt(sSingleton.forget());
@@ -143,40 +117,27 @@ PaintThread::Shutdown()
   }
 
   sThread->Dispatch(NewRunnableFunction("DestroyPaintThreadRunnable",
-                                        DestroyPaintThread,
-                                        std::move(pt)));
+                                        DestroyPaintThread, std::move(pt)));
   sThread->Shutdown();
   sThread = nullptr;
 }
 
-void
-PaintThread::ShutdownOnPaintThread()
-{
-  MOZ_ASSERT(IsOnPaintThread());
-}
+void PaintThread::ShutdownOnPaintThread() { MOZ_ASSERT(IsOnPaintThread()); }
 
-/* static */ PaintThread*
-PaintThread::Get()
-{
+/* static */ PaintThread* PaintThread::Get() {
   return PaintThread::sSingleton.get();
 }
 
-/* static */ bool
-PaintThread::IsOnPaintThread()
-{
+/* static */ bool PaintThread::IsOnPaintThread() {
   return sThreadId == PlatformThread::CurrentId();
 }
 
-bool
-PaintThread::IsOnPaintWorkerThread()
-{
+bool PaintThread::IsOnPaintWorkerThread() {
   return (mPaintWorkers && mPaintWorkers->IsOnCurrentThread()) ||
-    (sThreadId == PlatformThread::CurrentId());
+         (sThreadId == PlatformThread::CurrentId());
 }
 
-void
-PaintThread::Dispatch(RefPtr<Runnable>& aRunnable)
-{
+void PaintThread::Dispatch(RefPtr<Runnable>& aRunnable) {
 #ifndef OMTP_FORCE_SYNC
   sThread->Dispatch(aRunnable.forget());
 #else
@@ -184,9 +145,7 @@ PaintThread::Dispatch(RefPtr<Runnable>& aRunnable)
 #endif
 }
 
-void
-PaintThread::UpdateRenderMode()
-{
+void PaintThread::UpdateRenderMode() {
   if (!!mPaintWorkers != gfxPlatform::GetPlatform()->UsesTiling()) {
     if (mPaintWorkers) {
       mPaintWorkers = nullptr;
@@ -196,9 +155,7 @@ PaintThread::UpdateRenderMode()
   }
 }
 
-void
-PaintThread::QueuePaintTask(UniquePtr<PaintTask>&& aTask)
-{
+void PaintThread::QueuePaintTask(UniquePtr<PaintTask>&& aTask) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTask);
 
@@ -212,15 +169,15 @@ PaintThread::QueuePaintTask(UniquePtr<PaintTask>&& aTask)
   cbc->NotifyBeginAsyncPaint(aTask.get());
 
   RefPtr<PaintThread> self = this;
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncPaintTask",
-    [self, cbc, task = std::move(aTask)]() -> void
-  {
-    self->AsyncPaintTask(cbc, task.get());
-  });
+  RefPtr<Runnable> task =
+      NS_NewRunnableFunction("PaintThread::AsyncPaintTask",
+                             [self, cbc, task = std::move(aTask)]() -> void {
+                               self->AsyncPaintTask(cbc, task.get());
+                             });
 
-  nsIEventTarget* paintThread = mPaintWorkers ?
-    static_cast<nsIEventTarget*>(mPaintWorkers.get()) :
-    static_cast<nsIEventTarget*>(sThread.get());
+  nsIEventTarget* paintThread =
+      mPaintWorkers ? static_cast<nsIEventTarget*>(mPaintWorkers.get())
+                    : static_cast<nsIEventTarget*>(sThread.get());
 
 #ifndef OMTP_FORCE_SYNC
   paintThread->Dispatch(task.forget());
@@ -229,12 +186,10 @@ PaintThread::QueuePaintTask(UniquePtr<PaintTask>&& aTask)
 #endif
 }
 
-void
-PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
-                            PaintTask* aTask)
-{
+void PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
+                                 PaintTask* aTask) {
   AUTO_PROFILER_LABEL("PaintThread::AsyncPaintTask", GRAPHICS);
-  
+
   MOZ_ASSERT(IsOnPaintWorkerThread());
   MOZ_ASSERT(aTask);
 
@@ -245,10 +200,12 @@ PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
   target->Flush();
 
   if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
-    // This should ensure the capture drawtarget, which may hold on to UnscaledFont objects,
-    // gets destroyed on the main thread (See bug 1404742). This assumes (unflushed) target
-    // DrawTargets do not themselves hold on to UnscaledFonts.
-    NS_ReleaseOnMainThreadSystemGroup("PaintTask::DrawTargetCapture", aTask->mCapture.forget());
+    // This should ensure the capture drawtarget, which may hold on to
+    // UnscaledFont objects, gets destroyed on the main thread (See bug
+    // 1404742). This assumes (unflushed) target DrawTargets do not themselves
+    // hold on to UnscaledFonts.
+    NS_ReleaseOnMainThreadSystemGroup("PaintTask::DrawTargetCapture",
+                                      aTask->mCapture.forget());
   }
 
   if (aBridge->NotifyFinishedAsyncWorkerPaint(aTask)) {
@@ -256,36 +213,30 @@ PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
   }
 }
 
-void
-PaintThread::QueueEndLayerTransaction(SyncObjectClient* aSyncObject)
-{
+void PaintThread::QueueEndLayerTransaction(SyncObjectClient* aSyncObject) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
 
   if (cbc->NotifyBeginAsyncEndLayerTransaction(aSyncObject)) {
     RefPtr<PaintThread> self = this;
-    RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncEndLayerTransaction",
-      [self, cbc]() -> void
-    {
-      self->AsyncEndLayerTransaction(cbc);
-    });
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "PaintThread::AsyncEndLayerTransaction",
+        [self, cbc]() -> void { self->AsyncEndLayerTransaction(cbc); });
 
-  #ifndef OMTP_FORCE_SYNC
+#ifndef OMTP_FORCE_SYNC
     sThread->Dispatch(task.forget());
-  #else
+#else
     SyncRunnable::DispatchToThread(sThread, task);
-  #endif
+#endif
   }
 }
 
-void
-PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge)
-{
+void PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge) {
   MOZ_ASSERT(IsOnPaintWorkerThread());
 
   aBridge->NotifyFinishedAsyncEndLayerTransaction();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

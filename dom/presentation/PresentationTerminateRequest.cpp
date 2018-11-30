@@ -14,25 +14,18 @@ namespace dom {
 NS_IMPL_ISUPPORTS(PresentationTerminateRequest, nsIPresentationTerminateRequest)
 
 PresentationTerminateRequest::PresentationTerminateRequest(
-                                 nsIPresentationDevice* aDevice,
-                                 const nsAString& aPresentationId,
-                                 nsIPresentationControlChannel* aControlChannel,
-                                 bool aIsFromReceiver)
-  : mPresentationId(aPresentationId)
-  , mDevice(aDevice)
-  , mControlChannel(aControlChannel)
-  , mIsFromReceiver(aIsFromReceiver)
-{
-}
+    nsIPresentationDevice* aDevice, const nsAString& aPresentationId,
+    nsIPresentationControlChannel* aControlChannel, bool aIsFromReceiver)
+    : mPresentationId(aPresentationId),
+      mDevice(aDevice),
+      mControlChannel(aControlChannel),
+      mIsFromReceiver(aIsFromReceiver) {}
 
-PresentationTerminateRequest::~PresentationTerminateRequest()
-{
-}
+PresentationTerminateRequest::~PresentationTerminateRequest() {}
 
 // nsIPresentationTerminateRequest
 NS_IMETHODIMP
-PresentationTerminateRequest::GetDevice(nsIPresentationDevice** aRetVal)
-{
+PresentationTerminateRequest::GetDevice(nsIPresentationDevice** aRetVal) {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
   nsCOMPtr<nsIPresentationDevice> device = mDevice;
@@ -42,8 +35,7 @@ PresentationTerminateRequest::GetDevice(nsIPresentationDevice** aRetVal)
 }
 
 NS_IMETHODIMP
-PresentationTerminateRequest::GetPresentationId(nsAString& aRetVal)
-{
+PresentationTerminateRequest::GetPresentationId(nsAString& aRetVal) {
   aRetVal = mPresentationId;
 
   return NS_OK;
@@ -51,8 +43,7 @@ PresentationTerminateRequest::GetPresentationId(nsAString& aRetVal)
 
 NS_IMETHODIMP
 PresentationTerminateRequest::GetControlChannel(
-                                        nsIPresentationControlChannel** aRetVal)
-{
+    nsIPresentationControlChannel** aRetVal) {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
   nsCOMPtr<nsIPresentationControlChannel> controlChannel = mControlChannel;
@@ -62,12 +53,11 @@ PresentationTerminateRequest::GetControlChannel(
 }
 
 NS_IMETHODIMP
-PresentationTerminateRequest::GetIsFromReceiver(bool* aRetVal)
-{
+PresentationTerminateRequest::GetIsFromReceiver(bool* aRetVal) {
   *aRetVal = mIsFromReceiver;
 
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

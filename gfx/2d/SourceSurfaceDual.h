@@ -3,32 +3,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-     
+
 #ifndef MOZILLA_GFX_SOURCESURFACEDUAL_H_
 #define MOZILLA_GFX_SOURCESURFACEDUAL_H_
-     
+
 #include "2D.h"
-     
+
 namespace mozilla {
 namespace gfx {
 
 class DualSurface;
 class DualPattern;
 
-class SourceSurfaceDual : public SourceSurface
-{
-public:
+class SourceSurfaceDual : public SourceSurface {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceDual, override)
 
   SourceSurfaceDual(DrawTarget *aDTA, DrawTarget *aDTB)
-    : mA(aDTA->Snapshot())
-    , mB(aDTB->Snapshot())
-  { }
+      : mA(aDTA->Snapshot()), mB(aDTB->Snapshot()) {}
 
   SourceSurfaceDual(SourceSurface *aSourceA, SourceSurface *aSourceB)
-    : mA(aSourceA)
-    , mB(aSourceB)
-  { }
+      : mA(aSourceA), mB(aSourceB) {}
 
   virtual SurfaceType GetType() const override { return SurfaceType::DUAL_DT; }
   virtual IntSize GetSize() const override { return mA->GetSize(); }
@@ -41,16 +36,14 @@ public:
     return mA->GetDataSurface();
   }
 
-  SourceSurface* GetFirstSurface() {
+  SourceSurface *GetFirstSurface() {
     MOZ_ASSERT(mA->GetType() == mB->GetType());
     return mA;
   }
 
-  bool SameSurfaceTypes() {
-    return mA->GetType() == mB->GetType();
-  }
+  bool SameSurfaceTypes() { return mA->GetType() == mB->GetType(); }
 
-private:
+ private:
   friend class DualSurface;
   friend class DualPattern;
 
@@ -58,7 +51,7 @@ private:
   RefPtr<SourceSurface> mB;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACEDUAL_H_ */

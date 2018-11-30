@@ -19,27 +19,27 @@ namespace js {
 
 class FreeOp;
 
-class NumberFormatObject : public NativeObject
-{
-  public:
-    static const Class class_;
+class NumberFormatObject : public NativeObject {
+ public:
+  static const Class class_;
 
-    static constexpr uint32_t INTERNALS_SLOT = 0;
-    static constexpr uint32_t UNUMBER_FORMAT_SLOT = 1;
-    static constexpr uint32_t SLOT_COUNT = 2;
+  static constexpr uint32_t INTERNALS_SLOT = 0;
+  static constexpr uint32_t UNUMBER_FORMAT_SLOT = 1;
+  static constexpr uint32_t SLOT_COUNT = 2;
 
-    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
-                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
+  static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                "INTERNALS_SLOT must match self-hosting define for internals "
+                "object slot");
 
-  private:
-    static const ClassOps classOps_;
+ private:
+  static const ClassOps classOps_;
 
-    static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 };
 
-extern JSObject*
-CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global,
-                            MutableHandleObject constructor);
+extern JSObject* CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl,
+                                             Handle<GlobalObject*> global,
+                                             MutableHandleObject constructor);
 
 /**
  * Returns a new instance of the standard built-in NumberFormat constructor.
@@ -48,8 +48,8 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
  *
  * Usage: numberFormat = intl_NumberFormat(locales, options)
  */
-extern MOZ_MUST_USE bool
-intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp);
+extern MOZ_MUST_USE bool intl_NumberFormat(JSContext* cx, unsigned argc,
+                                           Value* vp);
 
 /**
  * Returns an object indicating the supported locales for number formatting
@@ -59,8 +59,9 @@ intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: availableLocales = intl_NumberFormat_availableLocales()
  */
-extern MOZ_MUST_USE bool
-intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
+extern MOZ_MUST_USE bool intl_NumberFormat_availableLocales(JSContext* cx,
+                                                            unsigned argc,
+                                                            Value* vp);
 
 /**
  * Returns the numbering system type identifier per Unicode
@@ -69,8 +70,8 @@ intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: defaultNumberingSystem = intl_numberingSystem(locale)
  */
-extern MOZ_MUST_USE bool
-intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp);
+extern MOZ_MUST_USE bool intl_numberingSystem(JSContext* cx, unsigned argc,
+                                              Value* vp);
 
 /**
  * Returns a string representing the number x according to the effective
@@ -80,9 +81,9 @@ intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts)
  */
-extern MOZ_MUST_USE bool
-intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp);
+extern MOZ_MUST_USE bool intl_FormatNumber(JSContext* cx, unsigned argc,
+                                           Value* vp);
 
-} // namespace js
+}  // namespace js
 
 #endif /* builtin_intl_NumberFormat_h */

@@ -12,9 +12,8 @@
 
 namespace mozilla {
 
-template<>
-struct RefPtrTraits<DBusMessage>
-{
+template <>
+struct RefPtrTraits<DBusMessage> {
   static void AddRef(DBusMessage* aMessage) {
     MOZ_ASSERT(aMessage);
     dbus_message_ref(aMessage);
@@ -25,9 +24,8 @@ struct RefPtrTraits<DBusMessage>
   }
 };
 
-template<>
-struct RefPtrTraits<DBusPendingCall>
-{
+template <>
+struct RefPtrTraits<DBusPendingCall> {
   static void AddRef(DBusPendingCall* aPendingCall) {
     MOZ_ASSERT(aPendingCall);
     dbus_pending_call_ref(aPendingCall);
@@ -46,9 +44,8 @@ struct RefPtrTraits<DBusPendingCall>
  * connection upon the final unref. The caller is responsible
  * for closing the connection.
  */
-template<>
-struct RefPtrTraits<DBusConnection>
-{
+template <>
+struct RefPtrTraits<DBusConnection> {
   static void AddRef(DBusConnection* aConnection) {
     MOZ_ASSERT(aConnection);
     dbus_connection_ref(aConnection);
@@ -68,14 +65,11 @@ struct RefPtrTraits<DBusConnection>
  * Do not use |UniquePtr| with shared DBus connections. For
  * shared connections, use |RefPtr|.
  */
-class DBusConnectionDelete
-{
-public:
-  constexpr DBusConnectionDelete()
-  { }
+class DBusConnectionDelete {
+ public:
+  constexpr DBusConnectionDelete() {}
 
-  void operator()(DBusConnection* aConnection) const
-  {
+  void operator()(DBusConnection* aConnection) const {
     MOZ_ASSERT(aConnection);
     if (dbus_connection_get_is_connected(aConnection)) {
       dbus_connection_close(aConnection);
@@ -84,6 +78,6 @@ public:
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_DBusHelpers_h
+#endif  // mozilla_DBusHelpers_h

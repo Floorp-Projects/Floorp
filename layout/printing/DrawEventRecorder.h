@@ -16,20 +16,19 @@
 namespace mozilla {
 namespace layout {
 
-class PRFileDescStream final : public mozilla::gfx::EventStream
-{
+class PRFileDescStream final : public mozilla::gfx::EventStream {
   // Most writes, as seen in the print IPC use case, are very small (<32 bytes),
   // with a small number of very large (>40KB) writes. Writes larger than this
   // value are not buffered.
   static const size_t kBufferSize = 1024;
-public:
-  PRFileDescStream() : mFd(nullptr), mBuffer(nullptr), mBufferPos(0),
-                       mGood(true) {}
+
+ public:
+  PRFileDescStream()
+      : mFd(nullptr), mBuffer(nullptr), mBufferPos(0), mGood(true) {}
   PRFileDescStream(const PRFileDescStream& other) = delete;
   ~PRFileDescStream() { Close(); }
 
-  void OpenFD(PRFileDesc* aFd)
-  {
+  void OpenFD(PRFileDesc* aFd) {
     MOZ_DIAGNOSTIC_ASSERT(!IsOpen());
     mFd = aFd;
     mGood = !!mFd;
@@ -49,22 +48,19 @@ public:
     }
   }
 
-  bool IsOpen() {
-    return mFd != nullptr;
-  }
+  bool IsOpen() { return mFd != nullptr; }
 
   void Flush() {
     // See comment in Close().
     if (IsOpen() && mBufferPos > 0) {
       PRInt32 length =
-        PR_Write(mFd, static_cast<const void*>(mBuffer.get()), mBufferPos);
+          PR_Write(mFd, static_cast<const void*>(mBuffer.get()), mBufferPos);
       mGood = length >= 0 && static_cast<size_t>(length) == mBufferPos;
       mBufferPos = 0;
     }
   }
 
-  void Seek(PRInt64 aOffset, PRSeekWhence aWhence)
-  {
+  void Seek(PRInt64 aOffset, PRSeekWhence aWhence) {
     Flush();
     PRInt64 pos = PR_Seek64(mFd, aOffset, aWhence);
     mGood = pos != -1;
@@ -83,16 +79,16 @@ public:
         Flush();
         PRInt32 length = PR_Write(mFd, static_cast<const void*>(aData), aSize);
         mGood = length >= 0 && static_cast<size_t>(length) == aSize;
-      // If our write could fit in our buffer, but doesn't because the buffer
-      // is partially full, write to the buffer, flush the buffer, and then
-      // write the rest of the data to the buffer.
+        // If our write could fit in our buffer, but doesn't because the buffer
+        // is partially full, write to the buffer, flush the buffer, and then
+        // write the rest of the data to the buffer.
       } else if (aSize > AvailableBufferSpace()) {
         size_t length = AvailableBufferSpace();
         WriteToBuffer(aData, length);
         Flush();
 
         WriteToBuffer(aData + length, aSize - length);
-      // Write fits in the buffer.
+        // Write fits in the buffer.
       } else {
         WriteToBuffer(aData, aSize);
       }
@@ -109,14 +105,10 @@ public:
     mGood = res >= 0 && (static_cast<size_t>(res) == aSize);
   }
 
-  bool good() {
-    return mGood;
-  }
+  bool good() { return mGood; }
 
-private:
-  size_t AvailableBufferSpace() {
-    return kBufferSize - mBufferPos;
-  }
+ private:
+  size_t AvailableBufferSpace() { return kBufferSize - mBufferPos; }
 
   void WriteToBuffer(const char* aData, size_t aSize) {
     MOZ_ASSERT(aSize <= AvailableBufferSpace());
@@ -130,9 +122,8 @@ private:
   bool mGood;
 };
 
-class DrawEventRecorderPRFileDesc final : public gfx::DrawEventRecorderPrivate
-{
-public:
+class DrawEventRecorderPRFileDesc final : public gfx::DrawEventRecorderPrivate {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPRFileDesc, override)
   explicit DrawEventRecorderPRFileDesc(){};
   ~DrawEventRecorderPRFileDesc();
@@ -156,14 +147,14 @@ public:
    */
   void Close();
 
-private:
+ private:
   void Flush() override;
 
   PRFileDescStream mOutputStream;
 };
 
-}
+}  // namespace layout
 
-}
+}  // namespace mozilla
 
 #endif /* mozilla_layout_printing_DrawEventRecorder_h */

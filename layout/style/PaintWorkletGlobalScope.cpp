@@ -15,32 +15,22 @@ namespace mozilla {
 namespace dom {
 
 PaintWorkletGlobalScope::PaintWorkletGlobalScope(PaintWorkletImpl* aImpl)
-  : mImpl(aImpl)
-{
-}
+    : mImpl(aImpl) {}
 
-bool
-PaintWorkletGlobalScope::WrapGlobalObject(JSContext* aCx,
-                                          JS::MutableHandle<JSObject*> aReflector)
-{
+bool PaintWorkletGlobalScope::WrapGlobalObject(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
   JS::RealmOptions options;
-  return PaintWorkletGlobalScope_Binding::Wrap(aCx, this, this,
-                                              options,
-                                              WorkletPrincipal::GetWorkletPrincipal(),
-                                              true, aReflector);
+  return PaintWorkletGlobalScope_Binding::Wrap(
+      aCx, this, this, options, WorkletPrincipal::GetWorkletPrincipal(), true,
+      aReflector);
 }
 
-void
-PaintWorkletGlobalScope::RegisterPaint(const nsAString& aType,
-                                       VoidFunction& aProcessorCtor)
-{
+void PaintWorkletGlobalScope::RegisterPaint(const nsAString& aType,
+                                            VoidFunction& aProcessorCtor) {
   // Nothing to do here, yet.
 }
 
-WorkletImpl* PaintWorkletGlobalScope::Impl() const
-{
-  return mImpl;
-}
+WorkletImpl* PaintWorkletGlobalScope::Impl() const { return mImpl; }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

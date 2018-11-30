@@ -29,310 +29,284 @@ using namespace js;
 using namespace js::wasm;
 using mozilla::CheckedInt;
 
-Table::Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
-             UniqueAnyFuncArray functions)
-  : maybeObject_(maybeObject),
-    observers_(cx->zone()),
-    functions_(std::move(functions)),
-    kind_(desc.kind),
-    length_(desc.limits.initial),
-    maximum_(desc.limits.maximum)
-{
-    MOZ_ASSERT(kind_ != TableKind::AnyRef);
+Table::Table(JSContext* cx, const TableDesc& desc,
+             HandleWasmTableObject maybeObject, UniqueAnyFuncArray functions)
+    : maybeObject_(maybeObject),
+      observers_(cx->zone()),
+      functions_(std::move(functions)),
+      kind_(desc.kind),
+      length_(desc.limits.initial),
+      maximum_(desc.limits.maximum) {
+  MOZ_ASSERT(kind_ != TableKind::AnyRef);
 }
 
-Table::Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
-             TableAnyRefVector&& objects)
-  : maybeObject_(maybeObject),
-    observers_(cx->zone()),
-    objects_(std::move(objects)),
-    kind_(desc.kind),
-    length_(desc.limits.initial),
-    maximum_(desc.limits.maximum)
-{
-    MOZ_ASSERT(kind_ == TableKind::AnyRef);
+Table::Table(JSContext* cx, const TableDesc& desc,
+             HandleWasmTableObject maybeObject, TableAnyRefVector&& objects)
+    : maybeObject_(maybeObject),
+      observers_(cx->zone()),
+      objects_(std::move(objects)),
+      kind_(desc.kind),
+      length_(desc.limits.initial),
+      maximum_(desc.limits.maximum) {
+  MOZ_ASSERT(kind_ == TableKind::AnyRef);
 }
 
-/* static */ SharedTable
-Table::create(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject)
-{
-    switch (desc.kind) {
-      case TableKind::AnyFunction:
-      case TableKind::TypedFunction: {
-        UniqueAnyFuncArray functions(cx->pod_calloc<FunctionTableElem>(desc.limits.initial));
-        if (!functions) {
-            return nullptr;
-        }
-        return SharedTable(cx->new_<Table>(cx, desc, maybeObject, std::move(functions)));
-      }
-      case TableKind::AnyRef: {
-        TableAnyRefVector objects;
-        if (!objects.resize(desc.limits.initial)) {
-            return nullptr;
-        }
-        return SharedTable(cx->new_<Table>(cx, desc, maybeObject, std::move(objects)));
-      }
-      default:
-        MOZ_CRASH();
-    }
-}
-
-void
-Table::tracePrivate(JSTracer* trc)
-{
-    // If this table has a WasmTableObject, then this method is only called by
-    // WasmTableObject's trace hook so maybeObject_ must already be marked.
-    // TraceEdge is called so that the pointer can be updated during a moving
-    // GC. TraceWeakEdge may sound better, but it is less efficient given that
-    // we know object_ is already marked.
-    if (maybeObject_) {
-        MOZ_ASSERT(!gc::IsAboutToBeFinalized(&maybeObject_));
-        TraceEdge(trc, &maybeObject_, "wasm table object");
-    }
-
-    switch (kind_) {
-      case TableKind::AnyFunction: {
-        for (uint32_t i = 0; i < length_; i++) {
-            if (functions_[i].tls) {
-                functions_[i].tls->instance->trace(trc);
-            } else {
-                MOZ_ASSERT(!functions_[i].code);
-            }
-        }
-        break;
-      }
-      case TableKind::AnyRef: {
-        objects_.trace(trc);
-        break;
-      }
-      case TableKind::TypedFunction: {
-#ifdef DEBUG
-        for (uint32_t i = 0; i < length_; i++) {
-            MOZ_ASSERT(!functions_[i].tls);
-        }
-#endif
-        break;
-      }
-    }
-}
-
-void
-Table::trace(JSTracer* trc)
-{
-    // The trace hook of WasmTableObject will call Table::tracePrivate at
-    // which point we can mark the rest of the children. If there is no
-    // WasmTableObject, call Table::tracePrivate directly. Redirecting through
-    // the WasmTableObject avoids marking the entire Table on each incoming
-    // edge (once per dependent Instance).
-    if (maybeObject_) {
-        TraceEdge(trc, &maybeObject_, "wasm table object");
-    } else {
-        tracePrivate(trc);
-    }
-}
-
-uint8_t*
-Table::functionBase() const
-{
-    if (kind() == TableKind::AnyRef) {
+/* static */ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
+                                       HandleWasmTableObject maybeObject) {
+  switch (desc.kind) {
+    case TableKind::AnyFunction:
+    case TableKind::TypedFunction: {
+      UniqueAnyFuncArray functions(
+          cx->pod_calloc<FunctionTableElem>(desc.limits.initial));
+      if (!functions) {
         return nullptr;
-    }
-    return (uint8_t*)functions_.get();
-}
-
-const FunctionTableElem&
-Table::getAnyFunc(uint32_t index) const
-{
-    MOZ_ASSERT(isFunction());
-    return functions_[index];
-}
-
-JSObject*
-Table::getAnyRef(uint32_t index) const
-{
-    MOZ_ASSERT(!isFunction());
-    return objects_[index];
-}
-
-void
-Table::setAnyFunc(uint32_t index, void* code, const Instance* instance)
-{
-    MOZ_ASSERT(isFunction());
-
-    FunctionTableElem& elem = functions_[index];
-    if (elem.tls) {
-        JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
-    }
-
-    switch (kind_) {
-      case TableKind::AnyFunction:
-        elem.code = code;
-        elem.tls = instance->tlsData();
-        MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(),
-                   "no writeBarrierPost (Table::set)");
-        break;
-      case TableKind::TypedFunction:
-        elem.code = code;
-        elem.tls = nullptr;
-        break;
-      case TableKind::AnyRef:
-        MOZ_CRASH("Bad table type");
-    }
-}
-
-void
-Table::setAnyRef(uint32_t index, JSObject* new_obj)
-{
-    MOZ_ASSERT(!isFunction());
-    objects_[index] = new_obj;
-}
-
-void
-Table::setNull(uint32_t index)
-{
-    switch (kind_) {
-      case TableKind::AnyFunction: {
-        FunctionTableElem& elem = functions_[index];
-        if (elem.tls) {
-            JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
-        }
-
-        elem.code = nullptr;
-        elem.tls = nullptr;
-        break;
       }
-      case TableKind::AnyRef: {
-        objects_[index] = nullptr;
-        break;
-      }
-      case TableKind::TypedFunction: {
-        MOZ_CRASH("Should not happen");
-      }
+      return SharedTable(
+          cx->new_<Table>(cx, desc, maybeObject, std::move(functions)));
     }
+    case TableKind::AnyRef: {
+      TableAnyRefVector objects;
+      if (!objects.resize(desc.limits.initial)) {
+        return nullptr;
+      }
+      return SharedTable(
+          cx->new_<Table>(cx, desc, maybeObject, std::move(objects)));
+    }
+    default:
+      MOZ_CRASH();
+  }
 }
 
-void
-Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex)
-{
-    switch (kind_) {
-      case TableKind::AnyFunction: {
-        FunctionTableElem& dst = functions_[dstIndex];
-        if (dst.tls) {
-            JSObject::writeBarrierPre(dst.tls->instance->objectUnbarriered());
-        }
+void Table::tracePrivate(JSTracer* trc) {
+  // If this table has a WasmTableObject, then this method is only called by
+  // WasmTableObject's trace hook so maybeObject_ must already be marked.
+  // TraceEdge is called so that the pointer can be updated during a moving
+  // GC. TraceWeakEdge may sound better, but it is less efficient given that
+  // we know object_ is already marked.
+  if (maybeObject_) {
+    MOZ_ASSERT(!gc::IsAboutToBeFinalized(&maybeObject_));
+    TraceEdge(trc, &maybeObject_, "wasm table object");
+  }
 
-        FunctionTableElem& src = srcTable.functions_[srcIndex];
-        dst.code = src.code;
-        dst.tls = src.tls;
-
-        if (dst.tls) {
-            MOZ_ASSERT(dst.code);
-            MOZ_ASSERT(dst.tls->instance->objectUnbarriered()->isTenured(),
-                       "no writeBarrierPost (Table::copy)");
+  switch (kind_) {
+    case TableKind::AnyFunction: {
+      for (uint32_t i = 0; i < length_; i++) {
+        if (functions_[i].tls) {
+          functions_[i].tls->instance->trace(trc);
         } else {
-            MOZ_ASSERT(!dst.code);
+          MOZ_ASSERT(!functions_[i].code);
         }
-        break;
       }
-      case TableKind::AnyRef: {
-        objects_[dstIndex] = srcTable.objects_[srcIndex];
-        break;
-      }
-      case TableKind::TypedFunction: {
-        MOZ_CRASH("Bad table type");
-      }
+      break;
     }
+    case TableKind::AnyRef: {
+      objects_.trace(trc);
+      break;
+    }
+    case TableKind::TypedFunction: {
+#ifdef DEBUG
+      for (uint32_t i = 0; i < length_; i++) {
+        MOZ_ASSERT(!functions_[i].tls);
+      }
+#endif
+      break;
+    }
+  }
 }
 
-uint32_t
-Table::grow(uint32_t delta, JSContext* cx)
-{
-    // This isn't just an optimization: movingGrowable() assumes that
-    // onMovingGrowTable does not fire when length == maximum.
-    if (!delta) {
-        return length_;
+void Table::trace(JSTracer* trc) {
+  // The trace hook of WasmTableObject will call Table::tracePrivate at
+  // which point we can mark the rest of the children. If there is no
+  // WasmTableObject, call Table::tracePrivate directly. Redirecting through
+  // the WasmTableObject avoids marking the entire Table on each incoming
+  // edge (once per dependent Instance).
+  if (maybeObject_) {
+    TraceEdge(trc, &maybeObject_, "wasm table object");
+  } else {
+    tracePrivate(trc);
+  }
+}
+
+uint8_t* Table::functionBase() const {
+  if (kind() == TableKind::AnyRef) {
+    return nullptr;
+  }
+  return (uint8_t*)functions_.get();
+}
+
+const FunctionTableElem& Table::getAnyFunc(uint32_t index) const {
+  MOZ_ASSERT(isFunction());
+  return functions_[index];
+}
+
+JSObject* Table::getAnyRef(uint32_t index) const {
+  MOZ_ASSERT(!isFunction());
+  return objects_[index];
+}
+
+void Table::setAnyFunc(uint32_t index, void* code, const Instance* instance) {
+  MOZ_ASSERT(isFunction());
+
+  FunctionTableElem& elem = functions_[index];
+  if (elem.tls) {
+    JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+  }
+
+  switch (kind_) {
+    case TableKind::AnyFunction:
+      elem.code = code;
+      elem.tls = instance->tlsData();
+      MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(),
+                 "no writeBarrierPost (Table::set)");
+      break;
+    case TableKind::TypedFunction:
+      elem.code = code;
+      elem.tls = nullptr;
+      break;
+    case TableKind::AnyRef:
+      MOZ_CRASH("Bad table type");
+  }
+}
+
+void Table::setAnyRef(uint32_t index, JSObject* new_obj) {
+  MOZ_ASSERT(!isFunction());
+  objects_[index] = new_obj;
+}
+
+void Table::setNull(uint32_t index) {
+  switch (kind_) {
+    case TableKind::AnyFunction: {
+      FunctionTableElem& elem = functions_[index];
+      if (elem.tls) {
+        JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+      }
+
+      elem.code = nullptr;
+      elem.tls = nullptr;
+      break;
     }
+    case TableKind::AnyRef: {
+      objects_[index] = nullptr;
+      break;
+    }
+    case TableKind::TypedFunction: {
+      MOZ_CRASH("Should not happen");
+    }
+  }
+}
 
-    uint32_t oldLength = length_;
+void Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
+  switch (kind_) {
+    case TableKind::AnyFunction: {
+      FunctionTableElem& dst = functions_[dstIndex];
+      if (dst.tls) {
+        JSObject::writeBarrierPre(dst.tls->instance->objectUnbarriered());
+      }
 
-    CheckedInt<uint32_t> newLength = oldLength;
-    newLength += delta;
-    if (!newLength.isValid()) {
+      FunctionTableElem& src = srcTable.functions_[srcIndex];
+      dst.code = src.code;
+      dst.tls = src.tls;
+
+      if (dst.tls) {
+        MOZ_ASSERT(dst.code);
+        MOZ_ASSERT(dst.tls->instance->objectUnbarriered()->isTenured(),
+                   "no writeBarrierPost (Table::copy)");
+      } else {
+        MOZ_ASSERT(!dst.code);
+      }
+      break;
+    }
+    case TableKind::AnyRef: {
+      objects_[dstIndex] = srcTable.objects_[srcIndex];
+      break;
+    }
+    case TableKind::TypedFunction: {
+      MOZ_CRASH("Bad table type");
+    }
+  }
+}
+
+uint32_t Table::grow(uint32_t delta, JSContext* cx) {
+  // This isn't just an optimization: movingGrowable() assumes that
+  // onMovingGrowTable does not fire when length == maximum.
+  if (!delta) {
+    return length_;
+  }
+
+  uint32_t oldLength = length_;
+
+  CheckedInt<uint32_t> newLength = oldLength;
+  newLength += delta;
+  if (!newLength.isValid()) {
+    return -1;
+  }
+
+  if (maximum_ && newLength.value() > maximum_.value()) {
+    return -1;
+  }
+
+  MOZ_ASSERT(movingGrowable());
+
+  JSRuntime* rt =
+      cx->runtime();  // Use JSRuntime's MallocProvider to avoid throwing.
+
+  switch (kind_) {
+    case TableKind::AnyFunction: {
+      // Note that realloc does not release functions_'s pointee on failure
+      // which is exactly what we need here.
+      FunctionTableElem* newFunctions = rt->pod_realloc<FunctionTableElem>(
+          functions_.get(), length_, newLength.value());
+      if (!newFunctions) {
         return -1;
-    }
+      }
+      Unused << functions_.release();
+      functions_.reset(newFunctions);
 
-    if (maximum_ && newLength.value() > maximum_.value()) {
+      // Realloc does not zero the delta for us.
+      PodZero(newFunctions + length_, delta);
+      break;
+    }
+    case TableKind::AnyRef: {
+      if (!objects_.resize(newLength.value())) {
         return -1;
-    }
-
-    MOZ_ASSERT(movingGrowable());
-
-    JSRuntime* rt = cx->runtime();  // Use JSRuntime's MallocProvider to avoid throwing.
-
-    switch (kind_) {
-      case TableKind::AnyFunction: {
-        // Note that realloc does not release functions_'s pointee on failure
-        // which is exactly what we need here.
-        FunctionTableElem* newFunctions = rt->pod_realloc<FunctionTableElem>(functions_.get(),
-                                                                             length_,
-                                                                             newLength.value());
-        if (!newFunctions) {
-            return -1;
-        }
-        Unused << functions_.release();
-        functions_.reset(newFunctions);
-
-        // Realloc does not zero the delta for us.
-        PodZero(newFunctions + length_, delta);
-        break;
       }
-      case TableKind::AnyRef: {
-        if (!objects_.resize(newLength.value())) {
-            return -1;
-        }
-        break;
-      }
-      case TableKind::TypedFunction: {
-        MOZ_CRASH("Bad table type");
-      }
+      break;
     }
-
-    length_ = newLength.value();
-
-    for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront()) {
-        r.front()->instance().onMovingGrowTable(this);
+    case TableKind::TypedFunction: {
+      MOZ_CRASH("Bad table type");
     }
+  }
 
-    return oldLength;
+  length_ = newLength.value();
+
+  for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront()) {
+    r.front()->instance().onMovingGrowTable(this);
+  }
+
+  return oldLength;
 }
 
-bool
-Table::movingGrowable() const
-{
-    return !maximum_ || length_ < maximum_.value();
+bool Table::movingGrowable() const {
+  return !maximum_ || length_ < maximum_.value();
 }
 
-bool
-Table::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance)
-{
-    MOZ_ASSERT(movingGrowable());
+bool Table::addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance) {
+  MOZ_ASSERT(movingGrowable());
 
-    // A table can be imported multiple times into an instance, but we only
-    // register the instance as an observer once.
+  // A table can be imported multiple times into an instance, but we only
+  // register the instance as an observer once.
 
-    if (!observers_.put(instance)) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+  if (!observers_.put(instance)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
-size_t
-Table::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    if (isFunction()) {
-        return mallocSizeOf(functions_.get());
-    }
-    return objects_.sizeOfExcludingThis(mallocSizeOf);
+size_t Table::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  if (isFunction()) {
+    return mallocSizeOf(functions_.get());
+  }
+  return objects_.sizeOfExcludingThis(mallocSizeOf);
 }

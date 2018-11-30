@@ -24,67 +24,62 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIHttpChannelInternal,
                                   public nsICachingChannel,
                                   public nsIApplicationCacheChannel,
-                                  public nsIFormPOSTActionChannel
-{
+                                  public nsIFormPOSTActionChannel {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUEST
+  NS_DECL_NSICHANNEL
+  NS_DECL_NSIVIEWSOURCECHANNEL
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSIHTTPCHANNEL
+  NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
+  NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
+  NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
+  NS_FORWARD_SAFE_NSIAPPLICATIONCACHECONTAINER(mApplicationCacheChannel)
+  NS_FORWARD_SAFE_NSIUPLOADCHANNEL(mUploadChannel)
+  NS_FORWARD_SAFE_NSIFORMPOSTACTIONCHANNEL(mPostChannel)
+  NS_FORWARD_SAFE_NSIHTTPCHANNELINTERNAL(mHttpChannelInternal)
 
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSICHANNEL
-    NS_DECL_NSIVIEWSOURCECHANNEL
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIHTTPCHANNEL
-    NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
-    NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
-    NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
-    NS_FORWARD_SAFE_NSIAPPLICATIONCACHECONTAINER(mApplicationCacheChannel)
-    NS_FORWARD_SAFE_NSIUPLOADCHANNEL(mUploadChannel)
-    NS_FORWARD_SAFE_NSIFORMPOSTACTIONCHANNEL(mPostChannel)
-    NS_FORWARD_SAFE_NSIHTTPCHANNELINTERNAL(mHttpChannelInternal)
+  // nsViewSourceChannel methods:
+  nsViewSourceChannel()
+      : mIsDocument(false), mOpened(false), mIsSrcdocChannel(false) {}
 
-    // nsViewSourceChannel methods:
-    nsViewSourceChannel()
-        : mIsDocument(false)
-        , mOpened(false)
-        , mIsSrcdocChannel(false) {}
+  MOZ_MUST_USE nsresult Init(nsIURI* uri);
 
-    MOZ_MUST_USE nsresult Init(nsIURI* uri);
+  MOZ_MUST_USE nsresult InitSrcdoc(nsIURI* aURI, nsIURI* aBaseURI,
+                                   const nsAString& aSrcdoc,
+                                   nsILoadInfo* aLoadInfo);
 
-    MOZ_MUST_USE nsresult InitSrcdoc(nsIURI* aURI,
-                                     nsIURI* aBaseURI,
-                                     const nsAString &aSrcdoc,
-                                     nsILoadInfo* aLoadInfo);
+  // Updates or sets the result principal URI of the underlying channel's
+  // loadinfo to be prefixed with the "view-source:" schema as:
+  //
+  // mChannel.loadInfo.resultPrincipalURI = "view-source:" +
+  //    (mChannel.loadInfo.resultPrincipalURI | mChannel.orignalURI);
+  nsresult UpdateLoadInfoResultPrincipalURI();
 
-    // Updates or sets the result principal URI of the underlying channel's
-    // loadinfo to be prefixed with the "view-source:" schema as:
-    //
-    // mChannel.loadInfo.resultPrincipalURI = "view-source:" +
-    //    (mChannel.loadInfo.resultPrincipalURI | mChannel.orignalURI);
-    nsresult UpdateLoadInfoResultPrincipalURI();
+ protected:
+  ~nsViewSourceChannel() = default;
+  nsTArray<mozilla::Tuple<nsCString, nsCString>> mEmptyArray;
 
-protected:
-    ~nsViewSourceChannel() = default;
-    nsTArray<mozilla::Tuple<nsCString, nsCString>> mEmptyArray;
+  // Clones aURI and prefixes it with "view-source:" schema,
+  nsresult BuildViewSourceURI(nsIURI* aURI, nsIURI** aResult);
 
-    // Clones aURI and prefixes it with "view-source:" schema,
-    nsresult BuildViewSourceURI(nsIURI* aURI, nsIURI** aResult);
-
-    nsCOMPtr<nsIChannel>        mChannel;
-    nsCOMPtr<nsIHttpChannel>    mHttpChannel;
-    nsCOMPtr<nsIHttpChannelInternal>    mHttpChannelInternal;
-    nsCOMPtr<nsICachingChannel> mCachingChannel;
-    nsCOMPtr<nsICacheInfoChannel> mCacheInfoChannel;
-    nsCOMPtr<nsIApplicationCacheChannel> mApplicationCacheChannel;
-    nsCOMPtr<nsIUploadChannel>  mUploadChannel;
-    nsCOMPtr<nsIFormPOSTActionChannel> mPostChannel;
-    nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsIURI>            mOriginalURI;
-    nsCOMPtr<nsIURI>            mBaseURI;
-    nsCString                   mContentType;
-    bool                        mIsDocument; // keeps track of the LOAD_DOCUMENT_URI flag
-    bool                        mOpened;
-    bool                        mIsSrcdocChannel;
+  nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIHttpChannel> mHttpChannel;
+  nsCOMPtr<nsIHttpChannelInternal> mHttpChannelInternal;
+  nsCOMPtr<nsICachingChannel> mCachingChannel;
+  nsCOMPtr<nsICacheInfoChannel> mCacheInfoChannel;
+  nsCOMPtr<nsIApplicationCacheChannel> mApplicationCacheChannel;
+  nsCOMPtr<nsIUploadChannel> mUploadChannel;
+  nsCOMPtr<nsIFormPOSTActionChannel> mPostChannel;
+  nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsIURI> mOriginalURI;
+  nsCOMPtr<nsIURI> mBaseURI;
+  nsCString mContentType;
+  bool mIsDocument;  // keeps track of the LOAD_DOCUMENT_URI flag
+  bool mOpened;
+  bool mIsSrcdocChannel;
 };
 
 #endif /* nsViewSourceChannel_h___ */

@@ -13,23 +13,23 @@ namespace mozilla {
 
 namespace wr {
 
-class RenderTextureHostWrapper final : public RenderTextureHost
-{
-public:
+class RenderTextureHostWrapper final : public RenderTextureHost {
+ public:
   explicit RenderTextureHostWrapper();
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex,
-                           gl::GLContext* aGL,
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
   void ClearCachedResources() override;
 
-  RenderTextureHostWrapper* AsRenderTextureHostWrapper() override { return this; }
+  RenderTextureHostWrapper* AsRenderTextureHostWrapper() override {
+    return this;
+  }
 
   void UpdateRenderTextureHost(RenderTextureHost* aTextureHost);
   bool IsInited() { return mInited; }
 
-private:
+ private:
   ~RenderTextureHostWrapper() override;
 
   bool mInited;
@@ -37,7 +37,7 @@ private:
   RefPtr<RenderTextureHost> mTextureHost;
 };
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_RENDERTEXTUREHOSTWRAPPER_H
+#endif  // MOZILLA_GFX_RENDERTEXTUREHOSTWRAPPER_H

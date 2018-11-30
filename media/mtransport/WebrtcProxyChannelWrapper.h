@@ -35,15 +35,13 @@ class WebrtcProxyChannelChild;
  * WebrtcProxyChannelCallback calls are dispatched to the STS thread.
  * IPDL calls are dispatched to the main thread.
  */
-class WebrtcProxyChannelWrapper : public WebrtcProxyChannelCallback
-{
-public:
+class WebrtcProxyChannelWrapper : public WebrtcProxyChannelCallback {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelWrapper, override)
 
   explicit WebrtcProxyChannelWrapper(WebrtcProxyChannelCallback* aCallbacks);
 
-  virtual void AsyncOpen(const nsCString& aHost,
-                         const int& aPort,
+  virtual void AsyncOpen(const nsCString& aHost, const int& aPort,
                          const std::shared_ptr<NrSocketProxyConfig>& aConfig);
   virtual void SendWrite(nsTArray<uint8_t>&& aReadData);
   virtual void Close();
@@ -53,17 +51,17 @@ public:
   virtual void OnConnected() override;
   virtual void OnRead(nsTArray<uint8_t>&& aReadData) override;
 
-protected:
+ protected:
   RefPtr<WebrtcProxyChannelCallback> mProxyCallbacks;
   RefPtr<WebrtcProxyChannelChild> mWebrtcProxyChannel;
 
-  nsCOMPtr<nsIEventTarget>      mMainThread;
-  nsCOMPtr<nsIEventTarget>      mSocketThread;
+  nsCOMPtr<nsIEventTarget> mMainThread;
+  nsCOMPtr<nsIEventTarget> mSocketThread;
 
   virtual ~WebrtcProxyChannelWrapper();
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // webrtc_proxy_channel_wrapper__
+#endif  // webrtc_proxy_channel_wrapper__

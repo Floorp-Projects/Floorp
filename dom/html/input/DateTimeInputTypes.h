@@ -9,9 +9,8 @@
 
 #include "InputType.h"
 
-class DateTimeInputTypeBase : public ::InputType
-{
-public:
+class DateTimeInputTypeBase : public ::InputType {
+ public:
   ~DateTimeInputTypeBase() override {}
 
   bool IsValueMissing() const override;
@@ -25,10 +24,9 @@ public:
 
   nsresult MinMaxStepAttrChanged() override;
 
-protected:
+ protected:
   explicit DateTimeInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
-    : InputType(aInputElement)
-  {}
+      : InputType(aInputElement) {}
 
   /**
    * Checks preference "dom.forms.datetime" to determine if input date and time
@@ -58,12 +56,10 @@ protected:
 };
 
 // input type=date
-class DateInputType : public DateTimeInputTypeBase
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class DateInputType : public DateTimeInputTypeBase {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) DateInputType(aInputElement);
   }
 
@@ -78,19 +74,16 @@ public:
   bool ConvertNumberToString(mozilla::Decimal aValue,
                              nsAString& aResultString) const override;
 
-private:
+ private:
   explicit DateInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : DateTimeInputTypeBase(aInputElement)
-  {}
+      : DateTimeInputTypeBase(aInputElement) {}
 };
 
 // input type=time
-class TimeInputType : public DateTimeInputTypeBase
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class TimeInputType : public DateTimeInputTypeBase {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) TimeInputType(aInputElement);
   }
 
@@ -99,19 +92,16 @@ public:
   bool ConvertNumberToString(mozilla::Decimal aValue,
                              nsAString& aResultString) const override;
 
-private:
+ private:
   explicit TimeInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : DateTimeInputTypeBase(aInputElement)
-  {}
+      : DateTimeInputTypeBase(aInputElement) {}
 };
 
 // input type=week
-class WeekInputType : public DateTimeInputTypeBase
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class WeekInputType : public DateTimeInputTypeBase {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) WeekInputType(aInputElement);
   }
 
@@ -120,19 +110,16 @@ public:
   bool ConvertNumberToString(mozilla::Decimal aValue,
                              nsAString& aResultString) const override;
 
-private:
+ private:
   explicit WeekInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : DateTimeInputTypeBase(aInputElement)
-  {}
+      : DateTimeInputTypeBase(aInputElement) {}
 };
 
 // input type=month
-class MonthInputType : public DateTimeInputTypeBase
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class MonthInputType : public DateTimeInputTypeBase {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) MonthInputType(aInputElement);
   }
 
@@ -141,19 +128,16 @@ public:
   bool ConvertNumberToString(mozilla::Decimal aValue,
                              nsAString& aResultString) const override;
 
-private:
+ private:
   explicit MonthInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : DateTimeInputTypeBase(aInputElement)
-  {}
+      : DateTimeInputTypeBase(aInputElement) {}
 };
 
 // input type=datetime-local
-class DateTimeLocalInputType : public DateTimeInputTypeBase
-{
-public:
-  static InputType*
-  Create(mozilla::dom::HTMLInputElement* aInputElement, void* aMemory)
-  {
+class DateTimeLocalInputType : public DateTimeInputTypeBase {
+ public:
+  static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
+                           void* aMemory) {
     return new (aMemory) DateTimeLocalInputType(aInputElement);
   }
 
@@ -162,11 +146,9 @@ public:
   bool ConvertNumberToString(mozilla::Decimal aValue,
                              nsAString& aResultString) const override;
 
-private:
+ private:
   explicit DateTimeLocalInputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : DateTimeInputTypeBase(aInputElement)
-  {}
+      : DateTimeInputTypeBase(aInputElement) {}
 };
-
 
 #endif /* DateTimeInputTypes_h__ */

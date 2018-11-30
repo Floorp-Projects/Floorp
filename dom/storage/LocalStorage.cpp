@@ -35,13 +35,12 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(LocalStorage)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(LocalStorage, Storage)
-NS_IMPL_CYCLE_COLLECTION_UNLINK(mManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(LocalStorage, Storage)
-  CycleCollectionNoteChild(cb,
-                           NS_ISUPPORTS_CAST(nsIDOMStorageManager*,
-                                             tmp->mManager.get()),
-                           "mManager");
+  CycleCollectionNoteChild(
+      cb, NS_ISUPPORTS_CAST(nsIDOMStorageManager*, tmp->mManager.get()),
+      "mManager");
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LocalStorage)
@@ -55,31 +54,23 @@ LocalStorage::LocalStorage(nsPIDOMWindowInner* aWindow,
                            LocalStorageManager* aManager,
                            LocalStorageCache* aCache,
                            const nsAString& aDocumentURI,
-                           nsIPrincipal* aPrincipal,
-                           bool aIsPrivate)
-  : Storage(aWindow, aPrincipal)
-  , mManager(aManager)
-  , mCache(aCache)
-  , mDocumentURI(aDocumentURI)
-  , mIsPrivate(aIsPrivate)
-{
+                           nsIPrincipal* aPrincipal, bool aIsPrivate)
+    : Storage(aWindow, aPrincipal),
+      mManager(aManager),
+      mCache(aCache),
+      mDocumentURI(aDocumentURI),
+      mIsPrivate(aIsPrivate) {
   mCache->Preload();
 }
 
-LocalStorage::~LocalStorage()
-{
-}
+LocalStorage::~LocalStorage() {}
 
-int64_t
-LocalStorage::GetOriginQuotaUsage() const
-{
+int64_t LocalStorage::GetOriginQuotaUsage() const {
   return mCache->GetOriginQuotaUsage(this);
 }
 
-uint32_t
-LocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
-                        ErrorResult& aRv)
-{
+uint32_t LocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
+                                 ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return 0;
@@ -90,11 +81,8 @@ LocalStorage::GetLength(nsIPrincipal& aSubjectPrincipal,
   return length;
 }
 
-void
-LocalStorage::Key(uint32_t aIndex, nsAString& aResult,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aRv)
-{
+void LocalStorage::Key(uint32_t aIndex, nsAString& aResult,
+                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -103,11 +91,8 @@ LocalStorage::Key(uint32_t aIndex, nsAString& aResult,
   aRv = mCache->GetKey(this, aIndex, aResult);
 }
 
-void
-LocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void LocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -116,11 +101,8 @@ LocalStorage::GetItem(const nsAString& aKey, nsAString& aResult,
   aRv = mCache->GetItem(this, aKey, aResult);
 }
 
-void
-LocalStorage::SetItem(const nsAString& aKey, const nsAString& aData,
-                      nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv)
-{
+void LocalStorage::SetItem(const nsAString& aKey, const nsAString& aData,
+                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -144,10 +126,9 @@ LocalStorage::SetItem(const nsAString& aKey, const nsAString& aData,
   }
 }
 
-void
-LocalStorage::RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
-                         ErrorResult& aRv)
-{
+void LocalStorage::RemoveItem(const nsAString& aKey,
+                              nsIPrincipal& aSubjectPrincipal,
+                              ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -164,9 +145,7 @@ LocalStorage::RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
   }
 }
 
-void
-LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
-{
+void LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   if (!CanUseStorage(aSubjectPrincipal)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
@@ -182,25 +161,14 @@ LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
   }
 }
 
-void
-LocalStorage::OnChange(const nsAString& aKey,
-                       const nsAString& aOldValue,
-                       const nsAString& aNewValue)
-{
-  NotifyChange(/* aStorage */ this,
-               Principal(),
-               aKey,
-               aOldValue,
-               aNewValue,
-               /* aStorageType */ u"localStorage",
-               mDocumentURI,
-               mIsPrivate,
+void LocalStorage::OnChange(const nsAString& aKey, const nsAString& aOldValue,
+                            const nsAString& aNewValue) {
+  NotifyChange(/* aStorage */ this, Principal(), aKey, aOldValue, aNewValue,
+               /* aStorageType */ u"localStorage", mDocumentURI, mIsPrivate,
                /* aImmediateDispatch */ false);
 }
 
-void
-LocalStorage::ApplyEvent(StorageEvent* aStorageEvent)
-{
+void LocalStorage::ApplyEvent(StorageEvent* aStorageEvent) {
   MOZ_ASSERT(aStorageEvent);
 
   nsAutoString key;
@@ -227,15 +195,11 @@ LocalStorage::ApplyEvent(StorageEvent* aStorageEvent)
   mCache->SetItem(this, key, value, old, LocalStorageCache::E10sPropagated);
 }
 
-bool
-LocalStorage::PrincipalEquals(nsIPrincipal* aPrincipal)
-{
+bool LocalStorage::PrincipalEquals(nsIPrincipal* aPrincipal) {
   return StorageUtils::PrincipalsEqual(mPrincipal, aPrincipal);
 }
 
-void
-LocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
-{
+void LocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys) {
   if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
     // return just an empty array
     aKeys.Clear();
@@ -245,9 +209,7 @@ LocalStorage::GetSupportedNames(nsTArray<nsString>& aKeys)
   mCache->GetKeys(this, aKeys);
 }
 
-bool
-LocalStorage::IsForkOf(const Storage* aOther) const
-{
+bool LocalStorage::IsForkOf(const Storage* aOther) const {
   MOZ_ASSERT(aOther);
   if (aOther->Type() != eLocalStorage) {
     return false;
@@ -256,5 +218,5 @@ LocalStorage::IsForkOf(const Storage* aOther) const
   return mCache == static_cast<const LocalStorage*>(aOther)->mCache;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

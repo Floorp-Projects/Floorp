@@ -19,27 +19,27 @@ class nsIArray;
 class nsNSSCertificateDB final : public nsIX509CertDB
 
 {
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTDB
 
   // This is a separate static method so nsNSSComponent can use it during NSS
   // initialization. Other code should probably not use it.
-  static nsresult
-  FindCertByDBKey(const nsACString& aDBKey, mozilla::UniqueCERTCertificate& cert);
+  static nsresult FindCertByDBKey(const nsACString& aDBKey,
+                                  mozilla::UniqueCERTCertificate& cert);
 
-protected:
+ protected:
   virtual ~nsNSSCertificateDB() {}
 
-private:
+ private:
   // Use this function to generate a default nickname for a user
   // certificate that is to be imported onto a token.
-  static void
-  get_default_nickname(CERTCertificate* cert, nsIInterfaceRequestor* ctx,
-                       nsCString& nickname);
+  static void get_default_nickname(CERTCertificate* cert,
+                                   nsIInterfaceRequestor* ctx,
+                                   nsCString& nickname);
 
-  static nsresult
-  ImportCACerts(int numCACerts, SECItem* CACerts, nsIInterfaceRequestor* ctx);
+  static nsresult ImportCACerts(int numCACerts, SECItem* CACerts,
+                                nsIInterfaceRequestor* ctx);
 
   static void DisplayCertificateAlert(nsIInterfaceRequestor* ctx,
                                       const char* stringID,
@@ -51,15 +51,15 @@ private:
                                 nsIInterfaceRequestor* ctx);
 };
 
-#define NS_X509CERTDB_CID { /* fb0bbc5c-452e-4783-b32c-80124693d871 */ \
-    0xfb0bbc5c,                                                        \
-    0x452e,                                                            \
-    0x4783,                                                            \
-    {0xb3, 0x2c, 0x80, 0x12, 0x46, 0x93, 0xd8, 0x71}                   \
+#define NS_X509CERTDB_CID                            \
+  { /* fb0bbc5c-452e-4783-b32c-80124693d871 */       \
+    0xfb0bbc5c, 0x452e, 0x4783, {                    \
+      0xb3, 0x2c, 0x80, 0x12, 0x46, 0x93, 0xd8, 0x71 \
+    }                                                \
   }
 
-SECStatus
-ChangeCertTrustWithPossibleAuthentication(
-  const mozilla::UniqueCERTCertificate& cert, CERTCertTrust& trust, void* ctx);
+SECStatus ChangeCertTrustWithPossibleAuthentication(
+    const mozilla::UniqueCERTCertificate& cert, CERTCertTrust& trust,
+    void* ctx);
 
-#endif // nsNSSCertificateDB_h
+#endif  // nsNSSCertificateDB_h

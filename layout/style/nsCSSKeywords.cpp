@@ -10,11 +10,12 @@
 #include "nsString.h"
 #include "nsStaticNameTable.h"
 
-// required to make the symbol external, so that TestCSSPropertyLookup.cpp can link with it
+// required to make the symbol external, so that TestCSSPropertyLookup.cpp can
+// link with it
 extern const char* const kCSSRawKeywords[];
 
 // define an array of all CSS keywords
-#define CSS_KEY(_name,_id) #_name,
+#define CSS_KEY(_name, _id) #_name,
 const char* const kCSSRawKeywords[] = {
 #include "nsCSSKeywordList.h"
 };
@@ -23,13 +24,11 @@ const char* const kCSSRawKeywords[] = {
 static int32_t gKeywordTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gKeywordTable;
 
-void
-nsCSSKeywords::AddRefTable(void)
-{
+void nsCSSKeywords::AddRefTable(void) {
   if (0 == gKeywordTableRefCount++) {
     NS_ASSERTION(!gKeywordTable, "pre existing array!");
-    gKeywordTable =
-      new nsStaticCaseInsensitiveNameTable(kCSSRawKeywords, eCSSKeyword_COUNT);
+    gKeywordTable = new nsStaticCaseInsensitiveNameTable(kCSSRawKeywords,
+                                                         eCSSKeyword_COUNT);
 #ifdef DEBUG
     // Partially verify the entries.
     int32_t index = 0;
@@ -37,14 +36,13 @@ nsCSSKeywords::AddRefTable(void)
       nsAutoCString temp(kCSSRawKeywords[index]);
       NS_ASSERTION(-1 == temp.FindChar('_'), "underscore char in table");
     }
-    NS_ASSERTION(index == eCSSKeyword_COUNT, "kCSSRawKeywords and eCSSKeyword_COUNT are out of sync");
+    NS_ASSERTION(index == eCSSKeyword_COUNT,
+                 "kCSSRawKeywords and eCSSKeyword_COUNT are out of sync");
 #endif
   }
 }
 
-void
-nsCSSKeywords::ReleaseTable(void)
-{
+void nsCSSKeywords::ReleaseTable(void) {
   if (0 == --gKeywordTableRefCount) {
     if (gKeywordTable) {
       delete gKeywordTable;
@@ -53,9 +51,7 @@ nsCSSKeywords::ReleaseTable(void)
   }
 }
 
-nsCSSKeyword
-nsCSSKeywords::LookupKeyword(const nsACString& aKeyword)
-{
+nsCSSKeyword nsCSSKeywords::LookupKeyword(const nsACString& aKeyword) {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   if (gKeywordTable) {
     return nsCSSKeyword(gKeywordTable->Lookup(aKeyword));
@@ -63,9 +59,7 @@ nsCSSKeywords::LookupKeyword(const nsACString& aKeyword)
   return eCSSKeyword_UNKNOWN;
 }
 
-nsCSSKeyword
-nsCSSKeywords::LookupKeyword(const nsAString& aKeyword)
-{
+nsCSSKeyword nsCSSKeywords::LookupKeyword(const nsAString& aKeyword) {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   if (gKeywordTable) {
     return nsCSSKeyword(gKeywordTable->Lookup(aKeyword));
@@ -73,9 +67,7 @@ nsCSSKeywords::LookupKeyword(const nsAString& aKeyword)
   return eCSSKeyword_UNKNOWN;
 }
 
-const nsCString&
-nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
-{
+const nsCString& nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword) {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   NS_ASSERTION(0 <= aKeyword && aKeyword < eCSSKeyword_COUNT, "out of range");
   if (gKeywordTable) {
@@ -85,4 +77,3 @@ nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
     return kNullStr;
   }
 }
-

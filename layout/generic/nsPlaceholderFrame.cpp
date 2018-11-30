@@ -26,10 +26,9 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-nsPlaceholderFrame*
-NS_NewPlaceholderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
-                       nsFrameState aTypeBits)
-{
+nsPlaceholderFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
+                                           ComputedStyle* aStyle,
+                                           nsFrameState aTypeBits) {
   return new (aPresShell) nsPlaceholderFrame(aStyle, aTypeBits);
 }
 
@@ -37,38 +36,33 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
 
 #ifdef DEBUG
 NS_QUERYFRAME_HEAD(nsPlaceholderFrame)
-  NS_QUERYFRAME_ENTRY(nsPlaceholderFrame)
+NS_QUERYFRAME_ENTRY(nsPlaceholderFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 #endif
 
-/* virtual */ nsSize
-nsPlaceholderFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
-{
+/* virtual */ nsSize nsPlaceholderFrame::GetXULMinSize(
+    nsBoxLayoutState& aBoxLayoutState) {
   nsSize size(0, 0);
   DISPLAY_MIN_SIZE(this, size);
   return size;
 }
 
-/* virtual */ nsSize
-nsPlaceholderFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
-{
+/* virtual */ nsSize nsPlaceholderFrame::GetXULPrefSize(
+    nsBoxLayoutState& aBoxLayoutState) {
   nsSize size(0, 0);
   DISPLAY_PREF_SIZE(this, size);
   return size;
 }
 
-/* virtual */ nsSize
-nsPlaceholderFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState)
-{
+/* virtual */ nsSize nsPlaceholderFrame::GetXULMaxSize(
+    nsBoxLayoutState& aBoxLayoutState) {
   nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, size);
   return size;
 }
 
-/* virtual */ void
-nsPlaceholderFrame::AddInlineMinISize(gfxContext* aRenderingContext,
-                                      nsIFrame::InlineMinISizeData* aData)
-{
+/* virtual */ void nsPlaceholderFrame::AddInlineMinISize(
+    gfxContext* aRenderingContext, nsIFrame::InlineMinISizeData* aData) {
   // Override AddInlineMinWith so that *nothing* happens.  In
   // particular, we don't want to zero out |aData->mTrailingWhitespace|,
   // since nsLineLayout skips placeholders when trimming trailing
@@ -77,19 +71,15 @@ nsPlaceholderFrame::AddInlineMinISize(gfxContext* aRenderingContext,
 
   // ...but push floats onto the list
   if (mOutOfFlowFrame->IsFloating()) {
-    nscoord floatWidth =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                           mOutOfFlowFrame,
-                                           nsLayoutUtils::MIN_ISIZE);
+    nscoord floatWidth = nsLayoutUtils::IntrinsicForContainer(
+        aRenderingContext, mOutOfFlowFrame, nsLayoutUtils::MIN_ISIZE);
     aData->mFloats.AppendElement(
-      InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
+        InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }
 }
 
-/* virtual */ void
-nsPlaceholderFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
-                                       nsIFrame::InlinePrefISizeData* aData)
-{
+/* virtual */ void nsPlaceholderFrame::AddInlinePrefISize(
+    gfxContext* aRenderingContext, nsIFrame::InlinePrefISizeData* aData) {
   // Override AddInlinePrefWith so that *nothing* happens.  In
   // particular, we don't want to zero out |aData->mTrailingWhitespace|,
   // since nsLineLayout skips placeholders when trimming trailing
@@ -98,21 +88,17 @@ nsPlaceholderFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
 
   // ...but push floats onto the list
   if (mOutOfFlowFrame->IsFloating()) {
-    nscoord floatWidth =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                           mOutOfFlowFrame,
-                                           nsLayoutUtils::PREF_ISIZE);
+    nscoord floatWidth = nsLayoutUtils::IntrinsicForContainer(
+        aRenderingContext, mOutOfFlowFrame, nsLayoutUtils::PREF_ISIZE);
     aData->mFloats.AppendElement(
-      InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
+        InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }
 }
 
-void
-nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
-                           ReflowOutput&     aDesiredSize,
-                           const ReflowInput& aReflowInput,
-                           nsReflowStatus&          aStatus)
-{
+void nsPlaceholderFrame::Reflow(nsPresContext* aPresContext,
+                                ReflowOutput& aDesiredSize,
+                                const ReflowInput& aReflowInput,
+                                nsReflowStatus& aStatus) {
   // NOTE that the ReflowInput passed to this method is not fully initialized,
   // on the grounds that reflowing a placeholder is a rather trivial operation.
   // (See bug 1367711.)
@@ -126,7 +112,6 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
   // we ever add a function like that. (We currently have a "Next" version.)
   if ((GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
       !(mOutOfFlowFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-
     // Unfortunately, this can currently happen when the placeholder is in a
     // later continuation or later IB-split sibling than its out-of-flow (as
     // is the case in some of our existing unit tests). So for now, in that
@@ -158,9 +143,8 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-static nsIFrame::ChildListID
-ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, const nsIFrame* aChild)
-{
+static nsIFrame::ChildListID ChildListIDForOutOfFlow(
+    nsFrameState aPlaceholderState, const nsIFrame* aChild) {
   if (aPlaceholderState & PLACEHOLDER_FOR_FLOAT) {
     return nsIFrame::kFloatList;
   }
@@ -168,8 +152,8 @@ ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, const nsIFrame* aChild)
     return nsIFrame::kPopupList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_FIXEDPOS) {
-    return nsLayoutUtils::MayBeReallyFixedPos(aChild)
-      ? nsIFrame::kFixedList : nsIFrame::kAbsoluteList;
+    return nsLayoutUtils::MayBeReallyFixedPos(aChild) ? nsIFrame::kFixedList
+                                                      : nsIFrame::kAbsoluteList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_ABSPOS) {
     return nsIFrame::kAbsoluteList;
@@ -178,9 +162,8 @@ ChildListIDForOutOfFlow(nsFrameState aPlaceholderState, const nsIFrame* aChild)
   return nsIFrame::kFloatList;
 }
 
-void
-nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
+void nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                     PostDestroyData& aPostDestroyData) {
   nsIFrame* oof = mOutOfFlowFrame;
   if (oof) {
     mOutOfFlowFrame = nullptr;
@@ -201,9 +184,7 @@ nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostD
   nsFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-/* virtual */ bool
-nsPlaceholderFrame::CanContinueTextRun() const
-{
+/* virtual */ bool nsPlaceholderFrame::CanContinueTextRun() const {
   if (!mOutOfFlowFrame) {
     return false;
   }
@@ -212,16 +193,15 @@ nsPlaceholderFrame::CanContinueTextRun() const
   return mOutOfFlowFrame->CanContinueTextRun();
 }
 
-ComputedStyle*
-nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame) const
-{
+ComputedStyle* nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(
+    nsIFrame** aProviderFrame) const {
   MOZ_ASSERT(GetParent(), "How can we not have a parent here?");
 
   Element* parentElement =
-    mContent ? mContent->GetFlattenedTreeParentElement() : nullptr;
+      mContent ? mContent->GetFlattenedTreeParentElement() : nullptr;
   if (parentElement && Servo_Element_IsDisplayContents(parentElement)) {
     RefPtr<ComputedStyle> style =
-      PresShell()->StyleSet()->ResolveServoStyle(*parentElement);
+        PresShell()->StyleSet()->ResolveServoStyle(*parentElement);
     *aProviderFrame = nullptr;
     // See the comment in GetParentComputedStyle to see why returning this as a
     // weak ref is fine.
@@ -231,69 +211,57 @@ nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame
   return GetLayoutParentStyleForOutOfFlow(aProviderFrame);
 }
 
-ComputedStyle*
-nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const
-{
+ComputedStyle* nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(
+    nsIFrame** aProviderFrame) const {
   // Lie about our pseudo so we can step out of all anon boxes and
   // pseudo-elements.  The other option would be to reimplement the
   // {ib} split gunk here.
-  *aProviderFrame = CorrectStyleParentFrame(GetParent(),
-                                            nsGkAtoms::placeholderFrame);
+  *aProviderFrame =
+      CorrectStyleParentFrame(GetParent(), nsGkAtoms::placeholderFrame);
   return *aProviderFrame ? (*aProviderFrame)->Style() : nullptr;
 }
 
-
 #ifdef DEBUG
-static void
-PaintDebugPlaceholder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                      const nsRect& aDirtyRect, nsPoint aPt)
-{
+static void PaintDebugPlaceholder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                                  const nsRect& aDirtyRect, nsPoint aPt) {
   ColorPattern cyan(ToDeviceColor(Color(0.f, 1.f, 1.f, 1.f)));
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
   nscoord x = nsPresContext::CSSPixelsToAppUnits(-5);
-  nsRect r(aPt.x + x, aPt.y,
-           nsPresContext::CSSPixelsToAppUnits(13),
+  nsRect r(aPt.x + x, aPt.y, nsPresContext::CSSPixelsToAppUnits(13),
            nsPresContext::CSSPixelsToAppUnits(3));
   aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
 
   nscoord y = nsPresContext::CSSPixelsToAppUnits(-10);
-  r = nsRect(aPt.x, aPt.y + y,
-             nsPresContext::CSSPixelsToAppUnits(3),
+  r = nsRect(aPt.x, aPt.y + y, nsPresContext::CSSPixelsToAppUnits(3),
              nsPresContext::CSSPixelsToAppUnits(10));
   aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
 }
-#endif // DEBUG
+#endif  // DEBUG
 
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))
 
-void
-nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                     const nsDisplayListSet& aLists)
-{
+void nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                          const nsDisplayListSet& aLists) {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame");
 
 #ifdef DEBUG
   if (GetShowFrameBorders()) {
-    aLists.Outlines()->AppendToTop(
-      MakeDisplayItem<nsDisplayGeneric>(aBuilder, this, PaintDebugPlaceholder,
-                                        "DebugPlaceholder",
-                                        DisplayItemType::TYPE_DEBUG_PLACEHOLDER));
+    aLists.Outlines()->AppendToTop(MakeDisplayItem<nsDisplayGeneric>(
+        aBuilder, this, PaintDebugPlaceholder, "DebugPlaceholder",
+        DisplayItemType::TYPE_DEBUG_PLACEHOLDER));
   }
 #endif
 }
-#endif // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
+#endif  // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsPlaceholderFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsPlaceholderFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("Placeholder"), aResult);
 }
 
-void
-nsPlaceholderFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
-{
+void nsPlaceholderFrame::List(FILE* out, const char* aPrefix,
+                              uint32_t aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
 

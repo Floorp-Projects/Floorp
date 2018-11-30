@@ -12,9 +12,8 @@
 namespace mozilla {
 namespace net {
 
-class CacheControlParser final : Tokenizer
-{
-public:
+class CacheControlParser final : Tokenizer {
+ public:
   explicit CacheControlParser(nsACString const &header);
 
   MOZ_MUST_USE bool MaxAge(uint32_t *seconds);
@@ -23,7 +22,7 @@ public:
   bool NoCache();
   bool NoStore();
 
-private:
+ private:
   void Directive();
   void IgnoreDirective();
   MOZ_MUST_USE bool SecondsValue(uint32_t *seconds, uint32_t defaultVal = 0);
@@ -38,7 +37,7 @@ private:
   bool mNoStore;
 };
 
-} // net
-} // mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

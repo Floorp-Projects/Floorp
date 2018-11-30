@@ -10,12 +10,10 @@
 namespace mozilla {
 namespace net {
 
-class NetworkConnectivityService
-  : public nsINetworkConnectivityService
-  , public nsIObserver
-  , public nsIDNSListener
-{
-public:
+class NetworkConnectivityService : public nsINetworkConnectivityService,
+                                   public nsIObserver,
+                                   public nsIDNSListener {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETWORKCONNECTIVITYSERVICE
   NS_DECL_NSIOBSERVER
@@ -24,7 +22,7 @@ public:
   nsresult Init();
   static already_AddRefed<NetworkConnectivityService> GetSingleton();
 
-private:
+ private:
   NetworkConnectivityService() = default;
   virtual ~NetworkConnectivityService() = default;
 
@@ -41,7 +39,7 @@ private:
   nsCOMPtr<nsICancelable> mDNSv6Request;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // NetworkConnectivityService_h_
+#endif  // NetworkConnectivityService_h_

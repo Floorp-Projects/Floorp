@@ -43,9 +43,7 @@ static const int kDupFdCmd = F_DUPFD;
 // be temporary fds.  This approach has the advantage of being simple
 // (and linear-time, but hopefully there aren't enough fds for that to
 // matter).
-bool
-FileDescriptorShuffle::Init(MappingRef aMapping)
-{
+bool FileDescriptorShuffle::Init(MappingRef aMapping) {
   MOZ_ASSERT(mMapping.IsEmpty());
 
   // Find the maximum destination fd; any source fds not greater than
@@ -90,9 +88,7 @@ FileDescriptorShuffle::Init(MappingRef aMapping)
   return true;
 }
 
-bool
-FileDescriptorShuffle::MapsTo(int aFd) const
-{
+bool FileDescriptorShuffle::MapsTo(int aFd) const {
   // Prune fds that are too large to be a destination, rather than
   // searching; this should be the common case.
   if (aFd > mMaxDst) {
@@ -106,13 +102,12 @@ FileDescriptorShuffle::MapsTo(int aFd) const
   return false;
 }
 
-FileDescriptorShuffle::~FileDescriptorShuffle()
-{
+FileDescriptorShuffle::~FileDescriptorShuffle() {
   for (const auto& fd : mTempFds) {
     mozilla::DebugOnly<int> rv = IGNORE_EINTR(close(fd));
     MOZ_ASSERT(rv == 0);
   }
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

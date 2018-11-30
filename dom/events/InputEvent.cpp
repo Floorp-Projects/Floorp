@@ -11,15 +11,13 @@
 namespace mozilla {
 namespace dom {
 
-InputEvent::InputEvent(EventTarget* aOwner,
-                       nsPresContext* aPresContext,
+InputEvent::InputEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                        InternalEditorInputEvent* aEvent)
-  : UIEvent(aOwner, aPresContext,
-            aEvent ? aEvent :
-                     new InternalEditorInputEvent(false, eVoidEvent, nullptr))
-{
-  NS_ASSERTION(mEvent->mClass == eEditorInputEventClass,
-               "event type mismatch");
+    : UIEvent(aOwner, aPresContext,
+              aEvent
+                  ? aEvent
+                  : new InternalEditorInputEvent(false, eVoidEvent, nullptr)) {
+  NS_ASSERTION(mEvent->mClass == eEditorInputEventClass, "event type mismatch");
 
   if (aEvent) {
     mEventIsInternal = false;
@@ -29,18 +27,13 @@ InputEvent::InputEvent(EventTarget* aOwner,
   }
 }
 
-bool
-InputEvent::IsComposing()
-{
+bool InputEvent::IsComposing() {
   return mEvent->AsEditorInputEvent()->mIsComposing;
 }
 
-already_AddRefed<InputEvent>
-InputEvent::Constructor(const GlobalObject& aGlobal,
-                        const nsAString& aType,
-                        const InputEventInit& aParam,
-                        ErrorResult& aRv)
-{
+already_AddRefed<InputEvent> InputEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const InputEventInit& aParam, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<InputEvent> e = new InputEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
@@ -53,17 +46,15 @@ InputEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<InputEvent>
-NS_NewDOMInputEvent(EventTarget* aOwner,
-                    nsPresContext* aPresContext,
-                    InternalEditorInputEvent* aEvent)
-{
+already_AddRefed<InputEvent> NS_NewDOMInputEvent(
+    EventTarget* aOwner, nsPresContext* aPresContext,
+    InternalEditorInputEvent* aEvent) {
   RefPtr<InputEvent> it = new InputEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

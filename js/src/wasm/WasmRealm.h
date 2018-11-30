@@ -28,54 +28,52 @@ namespace wasm {
 // wasm::Realm tracks every live instance in the realm and must be notified, via
 // registerInstance(), of any new WasmInstanceObject.
 
-class Realm
-{
-    JSRuntime* runtime_;
-    InstanceVector instances_;
+class Realm {
+  JSRuntime* runtime_;
+  InstanceVector instances_;
 
-  public:
-    explicit Realm(JSRuntime* rt);
-    ~Realm();
+ public:
+  explicit Realm(JSRuntime* rt);
+  ~Realm();
 
-    // Before a WasmInstanceObject can be considered fully constructed and
-    // valid, it must be registered with the Realm. If this method fails,
-    // an error has been reported and the instance object must be abandoned.
-    // After a successful registration, an Instance must call
-    // unregisterInstance() before being destroyed.
+  // Before a WasmInstanceObject can be considered fully constructed and
+  // valid, it must be registered with the Realm. If this method fails,
+  // an error has been reported and the instance object must be abandoned.
+  // After a successful registration, an Instance must call
+  // unregisterInstance() before being destroyed.
 
-    bool registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj);
-    void unregisterInstance(Instance& instance);
+  bool registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj);
+  void unregisterInstance(Instance& instance);
 
-    // Return a vector of all live instances in the realm. The lifetime of
-    // these Instances is determined by their owning WasmInstanceObject.
-    // Note that accessing instances()[i]->object() triggers a read barrier
-    // since instances() is effectively a weak list.
+  // Return a vector of all live instances in the realm. The lifetime of
+  // these Instances is determined by their owning WasmInstanceObject.
+  // Note that accessing instances()[i]->object() triggers a read barrier
+  // since instances() is effectively a weak list.
 
-    const InstanceVector& instances() const { return instances_; }
+  const InstanceVector& instances() const { return instances_; }
 
-    // Ensure all Instances in this Realm have profiling labels created.
+  // Ensure all Instances in this Realm have profiling labels created.
 
-    void ensureProfilingLabels(bool profilingEnabled);
+  void ensureProfilingLabels(bool profilingEnabled);
 
-    // about:memory reporting
+  // about:memory reporting
 
-    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* realmTables);
+  void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                              size_t* realmTables);
 };
 
 // Interrupt all running wasm Instances that have been registered with
 // wasm::Realms in the given JSContext.
 
-extern void
-InterruptRunningCode(JSContext* cx);
+extern void InterruptRunningCode(JSContext* cx);
 
 // After a wasm Instance sees an interrupt request and calls
 // CheckForInterrupt(), it should call RunningCodeInterrupted() to clear the
 // interrupt request for all wasm Instances to avoid spurious trapping.
 
-void
-ResetInterruptState(JSContext* cx);
+void ResetInterruptState(JSContext* cx);
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_realm_h
+#endif  // wasm_realm_h

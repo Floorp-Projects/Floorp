@@ -49,10 +49,9 @@ class CallAcknowledge;
 class WebSocketEventService;
 
 extern MOZ_MUST_USE nsresult
-CalculateWebSocketHashedSecret(const nsACString& aKey, nsACString& aHash);
-extern void
-ProcessServerWebSocketExtensions(const nsACString& aExtensions,
-                                 nsACString& aNegotiatedExtensions);
+CalculateWebSocketHashedSecret(const nsACString &aKey, nsACString &aHash);
+extern void ProcessServerWebSocketExtensions(const nsACString &aExtensions,
+                                             nsACString &aNegotiatedExtensions);
 
 // Used to enforce "1 connecting websocket per host" rule, and reconnect delays
 enum wsConnectingState {
@@ -73,11 +72,10 @@ class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIProtocolProxyCallback,
                          public nsIInterfaceRequestor,
                          public nsIChannelEventSink,
-                         public nsINamed
-{
+                         public nsINamed {
   friend class WebSocketFrame;
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIHTTPUPGRADELISTENER
   NS_DECL_NSIREQUESTOBSERVER
@@ -94,15 +92,14 @@ public:
 
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
-  NS_IMETHOD AsyncOpen(nsIURI *aURI,
-                       const nsACString &aOrigin,
-                       uint64_t aWindowID,
-                       nsIWebSocketListener *aListener,
+  NS_IMETHOD AsyncOpen(nsIURI *aURI, const nsACString &aOrigin,
+                       uint64_t aWindowID, nsIWebSocketListener *aListener,
                        nsISupports *aContext) override;
-  NS_IMETHOD Close(uint16_t aCode, const nsACString & aReason) override;
+  NS_IMETHOD Close(uint16_t aCode, const nsACString &aReason) override;
   NS_IMETHOD SendMsg(const nsACString &aMsg) override;
   NS_IMETHOD SendBinaryMsg(const nsACString &aMsg) override;
-  NS_IMETHOD SendBinaryStream(nsIInputStream *aStream, uint32_t length) override;
+  NS_IMETHOD SendBinaryStream(nsIInputStream *aStream,
+                              uint32_t length) override;
   NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo) override;
 
   WebSocketChannel();
@@ -110,27 +107,27 @@ public:
   bool IsOnTargetThread();
 
   // Off main thread URI access.
-  void GetEffectiveURL(nsAString& aEffectiveURL) const override;
+  void GetEffectiveURL(nsAString &aEffectiveURL) const override;
   bool IsEncrypted() const override;
 
-  const static uint32_t kControlFrameMask   = 0x8;
+  const static uint32_t kControlFrameMask = 0x8;
 
   // First byte of the header
-  const static uint8_t kFinalFragBit        = 0x80;
-  const static uint8_t kRsvBitsMask         = 0x70;
-  const static uint8_t kRsv1Bit             = 0x40;
-  const static uint8_t kRsv2Bit             = 0x20;
-  const static uint8_t kRsv3Bit             = 0x10;
-  const static uint8_t kOpcodeBitsMask      = 0x0F;
+  const static uint8_t kFinalFragBit = 0x80;
+  const static uint8_t kRsvBitsMask = 0x70;
+  const static uint8_t kRsv1Bit = 0x40;
+  const static uint8_t kRsv2Bit = 0x20;
+  const static uint8_t kRsv3Bit = 0x10;
+  const static uint8_t kOpcodeBitsMask = 0x0F;
 
   // Second byte of the header
-  const static uint8_t kMaskBit             = 0x80;
+  const static uint8_t kMaskBit = 0x80;
   const static uint8_t kPayloadLengthBitsMask = 0x7F;
 
-protected:
+ protected:
   virtual ~WebSocketChannel();
 
-private:
+ private:
   friend class OutboundEnqueuer;
   friend class nsWSAdmissionManager;
   friend class FailDelayManager;
@@ -154,15 +151,15 @@ private:
   MOZ_MUST_USE nsresult OnNetworkChanged();
   MOZ_MUST_USE nsresult StartPinging();
 
-  void     BeginOpen(bool aCalledFromAdmissionManager);
-  void     BeginOpenInternal();
+  void BeginOpen(bool aCalledFromAdmissionManager);
+  void BeginOpenInternal();
   MOZ_MUST_USE nsresult HandleExtensions();
   MOZ_MUST_USE nsresult SetupRequest();
   MOZ_MUST_USE nsresult ApplyForAdmission();
   MOZ_MUST_USE nsresult DoAdmissionDNS();
   MOZ_MUST_USE nsresult StartWebsocketData();
   uint16_t ResultToCloseCode(nsresult resultCode);
-  void     ReportConnectionTelemetry();
+  void ReportConnectionTelemetry();
 
   void StopSession(nsresult reason);
   void DoStopSession(nsresult reason);
@@ -176,14 +173,13 @@ private:
 
   static void ApplyMask(uint32_t mask, uint8_t *data, uint64_t len);
 
-  bool     IsPersistentFramePtr();
+  bool IsPersistentFramePtr();
   MOZ_MUST_USE nsresult ProcessInput(uint8_t *buffer, uint32_t count);
   MOZ_MUST_USE bool UpdateReadBuffer(uint8_t *buffer, uint32_t count,
                                      uint32_t accumulatedFragments,
                                      uint32_t *available);
 
-  inline void ResetPingTimer()
-  {
+  inline void ResetPingTimer() {
     mPingOutstanding = 0;
     if (mPingTimer) {
       if (!mPingInterval) {
@@ -197,77 +193,77 @@ private:
     }
   }
 
-  nsCOMPtr<nsIEventTarget>                 mSocketThread;
-  nsCOMPtr<nsIHttpChannelInternal>         mChannel;
-  nsCOMPtr<nsIHttpChannel>                 mHttpChannel;
-  nsCOMPtr<nsICancelable>                  mCancelable;
+  nsCOMPtr<nsIEventTarget> mSocketThread;
+  nsCOMPtr<nsIHttpChannelInternal> mChannel;
+  nsCOMPtr<nsIHttpChannel> mHttpChannel;
+  nsCOMPtr<nsICancelable> mCancelable;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
-  nsCOMPtr<nsIRandomGenerator>             mRandomGenerator;
+  nsCOMPtr<nsIRandomGenerator> mRandomGenerator;
 
-  nsCString                       mHashedSecret;
+  nsCString mHashedSecret;
 
   // Used as key for connection managment: Initially set to hostname from URI,
   // then to IP address (unless we're leaving DNS resolution to a proxy server)
-  nsCString                       mAddress;
-  int32_t                         mPort;          // WS server port
+  nsCString mAddress;
+  int32_t mPort;  // WS server port
 
   // Used for off main thread access to the URI string.
-  nsCString                       mHost;
-  nsString                        mEffectiveURL;
+  nsCString mHost;
+  nsString mEffectiveURL;
 
-  nsCOMPtr<nsISocketTransport>    mTransport;
-  nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
-  nsCOMPtr<nsIAsyncOutputStream>  mSocketOut;
+  nsCOMPtr<nsISocketTransport> mTransport;
+  nsCOMPtr<nsIAsyncInputStream> mSocketIn;
+  nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 
-  nsCOMPtr<nsITimer>              mCloseTimer;
-  uint32_t                        mCloseTimeout;  /* milliseconds */
+  nsCOMPtr<nsITimer> mCloseTimer;
+  uint32_t mCloseTimeout; /* milliseconds */
 
-  nsCOMPtr<nsITimer>              mOpenTimer;
-  uint32_t                        mOpenTimeout;  /* milliseconds */
-  wsConnectingState               mConnecting;   /* 0 if not connecting */
-  nsCOMPtr<nsITimer>              mReconnectDelayTimer;
+  nsCOMPtr<nsITimer> mOpenTimer;
+  uint32_t mOpenTimeout;         /* milliseconds */
+  wsConnectingState mConnecting; /* 0 if not connecting */
+  nsCOMPtr<nsITimer> mReconnectDelayTimer;
 
-  nsCOMPtr<nsITimer>              mPingTimer;
+  nsCOMPtr<nsITimer> mPingTimer;
 
-  nsCOMPtr<nsITimer>              mLingeringCloseTimer;
-  const static int32_t            kLingeringCloseTimeout =   1000;
-  const static int32_t            kLingeringCloseThreshold = 50;
+  nsCOMPtr<nsITimer> mLingeringCloseTimer;
+  const static int32_t kLingeringCloseTimeout = 1000;
+  const static int32_t kLingeringCloseThreshold = 50;
 
-  RefPtr<WebSocketEventService>   mService;
+  RefPtr<WebSocketEventService> mService;
 
-  int32_t                         mMaxConcurrentConnections;
+  int32_t mMaxConcurrentConnections;
 
-  uint64_t                        mInnerWindowID;
+  uint64_t mInnerWindowID;
 
   // following members are accessed only on the main thread
-  uint32_t                        mGotUpgradeOK              : 1;
-  uint32_t                        mRecvdHttpUpgradeTransport : 1;
-  uint32_t                        mAutoFollowRedirects       : 1;
-  uint32_t                        mAllowPMCE                 : 1;
-  uint32_t                                                   : 0;
+  uint32_t mGotUpgradeOK : 1;
+  uint32_t mRecvdHttpUpgradeTransport : 1;
+  uint32_t mAutoFollowRedirects : 1;
+  uint32_t mAllowPMCE : 1;
+  uint32_t : 0;
 
   // following members are accessed only on the socket thread
-  uint32_t                        mPingOutstanding           : 1;
-  uint32_t                        mReleaseOnTransmit         : 1;
-  uint32_t                                                   : 0;
+  uint32_t mPingOutstanding : 1;
+  uint32_t mReleaseOnTransmit : 1;
+  uint32_t : 0;
 
-  Atomic<bool>                    mDataStarted;
-  Atomic<bool>                    mRequestedClose;
-  Atomic<bool>                    mClientClosed;
-  Atomic<bool>                    mServerClosed;
-  Atomic<bool>                    mStopped;
-  Atomic<bool>                    mCalledOnStop;
-  Atomic<bool>                    mTCPClosed;
-  Atomic<bool>                    mOpenedHttpChannel;
-  Atomic<bool>                    mIncrementedSessionCount;
-  Atomic<bool>                    mDecrementedSessionCount;
+  Atomic<bool> mDataStarted;
+  Atomic<bool> mRequestedClose;
+  Atomic<bool> mClientClosed;
+  Atomic<bool> mServerClosed;
+  Atomic<bool> mStopped;
+  Atomic<bool> mCalledOnStop;
+  Atomic<bool> mTCPClosed;
+  Atomic<bool> mOpenedHttpChannel;
+  Atomic<bool> mIncrementedSessionCount;
+  Atomic<bool> mDecrementedSessionCount;
 
-  int32_t                         mMaxMessageSize;
-  nsresult                        mStopOnClose;
-  uint16_t                        mServerCloseCode;
-  nsCString                       mServerCloseReason;
-  uint16_t                        mScriptCloseCode;
-  nsCString                       mScriptCloseReason;
+  int32_t mMaxMessageSize;
+  nsresult mStopOnClose;
+  uint16_t mServerCloseCode;
+  nsCString mServerCloseReason;
+  uint16_t mScriptCloseCode;
+  nsCString mScriptCloseReason;
 
   // These are for the read buffers
   const static uint32_t kIncomingBufferInitialSize = 16 * 1024;
@@ -276,43 +272,43 @@ private:
   // increase the buffer temporarily, then drop back down to this size.
   const static uint32_t kIncomingBufferStableSize = 128 * 1024;
 
-  uint8_t                        *mFramePtr;
-  uint8_t                        *mBuffer;
-  uint8_t                         mFragmentOpcode;
-  uint32_t                        mFragmentAccumulator;
-  uint32_t                        mBuffered;
-  uint32_t                        mBufferSize;
+  uint8_t *mFramePtr;
+  uint8_t *mBuffer;
+  uint8_t mFragmentOpcode;
+  uint32_t mFragmentAccumulator;
+  uint32_t mBuffered;
+  uint32_t mBufferSize;
 
   // These are for the send buffers
   const static int32_t kCopyBreak = 1000;
 
-  OutboundMessage                *mCurrentOut;
-  uint32_t                        mCurrentOutSent;
-  nsDeque                         mOutgoingMessages;
-  nsDeque                         mOutgoingPingMessages;
-  nsDeque                         mOutgoingPongMessages;
-  uint32_t                        mHdrOutToSend;
-  uint8_t                        *mHdrOut;
-  uint8_t                         mOutHeader[kCopyBreak + 16];
-  nsAutoPtr<PMCECompression>      mPMCECompressor;
-  uint32_t                        mDynamicOutputSize;
-  uint8_t                        *mDynamicOutput;
-  bool                            mPrivateBrowsing;
+  OutboundMessage *mCurrentOut;
+  uint32_t mCurrentOutSent;
+  nsDeque mOutgoingMessages;
+  nsDeque mOutgoingPingMessages;
+  nsDeque mOutgoingPongMessages;
+  uint32_t mHdrOutToSend;
+  uint8_t *mHdrOut;
+  uint8_t mOutHeader[kCopyBreak + 16];
+  nsAutoPtr<PMCECompression> mPMCECompressor;
+  uint32_t mDynamicOutputSize;
+  uint8_t *mDynamicOutput;
+  bool mPrivateBrowsing;
 
   nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
 
   mozilla::Mutex mMutex;
 };
 
-class WebSocketSSLChannel : public WebSocketChannel
-{
-public:
-    WebSocketSSLChannel() { BaseWebSocketChannel::mEncrypted = true; }
-protected:
-    virtual ~WebSocketSSLChannel() = default;
+class WebSocketSSLChannel : public WebSocketChannel {
+ public:
+  WebSocketSSLChannel() { BaseWebSocketChannel::mEncrypted = true; }
+
+ protected:
+  virtual ~WebSocketSSLChannel() = default;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_WebSocketChannel_h
+#endif  // mozilla_net_WebSocketChannel_h

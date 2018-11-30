@@ -19,7 +19,7 @@ Maybe<PermissionName> TypeToPermissionName(const char* aType);
 
 PermissionState ActionToPermissionState(uint32_t aAction);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

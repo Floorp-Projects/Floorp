@@ -12,28 +12,18 @@
 
 namespace mozilla {
 
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMonitor
-{
-public:
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMonitor {
+ public:
   // In debug builds, check that mMutex is initialized for us as we expect by
   // the compiler.  In non-debug builds, don't declare a constructor so that
   // the compiler can see that the constructor is trivial.
 #ifdef DEBUG
-  StaticMonitor()
-  {
-    MOZ_ASSERT(!mMutex);
-  }
+  StaticMonitor() { MOZ_ASSERT(!mMutex); }
 #endif
 
-  void Lock()
-  {
-    Mutex()->Lock();
-  }
+  void Lock() { Mutex()->Lock(); }
 
-  void Unlock()
-  {
-    Mutex()->Unlock();
-  }
+  void Unlock() { Mutex()->Unlock(); }
 
   void Wait() { CondVar()->Wait(); }
   CVStatus Wait(TimeDuration aDuration) { return CondVar()->Wait(aDuration); }
@@ -41,16 +31,14 @@ public:
   nsresult Notify() { return CondVar()->Notify(); }
   nsresult NotifyAll() { return CondVar()->NotifyAll(); }
 
-  void AssertCurrentThreadOwns()
-  {
+  void AssertCurrentThreadOwns() {
 #ifdef DEBUG
     Mutex()->AssertCurrentThreadOwns();
 #endif
   }
 
-private:
-  OffTheBooksMutex* Mutex()
-  {
+ private:
+  OffTheBooksMutex* Mutex() {
     if (mMutex) {
       return mMutex;
     }
@@ -63,13 +51,13 @@ private:
     return mMutex;
   }
 
-  OffTheBooksCondVar* CondVar()
-  {
+  OffTheBooksCondVar* CondVar() {
     if (mCondVar) {
       return mCondVar;
     }
 
-    OffTheBooksCondVar* condvar = new OffTheBooksCondVar(*Mutex(), "StaticCondVar");
+    OffTheBooksCondVar* condvar =
+        new OffTheBooksCondVar(*Mutex(), "StaticCondVar");
     if (!mCondVar.compareExchange(nullptr, condvar)) {
       delete condvar;
     }
@@ -79,7 +67,6 @@ private:
 
   Atomic<OffTheBooksMutex*> mMutex;
   Atomic<OffTheBooksCondVar*> mCondVar;
-
 
   // Disallow copy constructor, but only in debug mode.  We only define
   // a default constructor in debug mode (see above); if we declared
@@ -95,19 +82,14 @@ private:
   static void operator delete(void*);
 };
 
-class MOZ_STACK_CLASS StaticMonitorAutoLock
-{
-public:
+class MOZ_STACK_CLASS StaticMonitorAutoLock {
+ public:
   explicit StaticMonitorAutoLock(StaticMonitor& aMonitor)
-    : mMonitor(&aMonitor)
-  {
+      : mMonitor(&aMonitor) {
     mMonitor->Lock();
   }
 
-  ~StaticMonitorAutoLock()
-  {
-    mMonitor->Unlock();
-  }
+  ~StaticMonitorAutoLock() { mMonitor->Unlock(); }
 
   void Wait() { mMonitor->Wait(); }
   CVStatus Wait(TimeDuration aDuration) { return mMonitor->Wait(aDuration); }
@@ -115,7 +97,7 @@ public:
   nsresult Notify() { return mMonitor->Notify(); }
   nsresult NotifyAll() { return mMonitor->NotifyAll(); }
 
-private:
+ private:
   StaticMonitorAutoLock();
   StaticMonitorAutoLock(const StaticMonitorAutoLock&);
   StaticMonitorAutoLock& operator=(const StaticMonitorAutoLock&);
@@ -124,6 +106,6 @@ private:
   StaticMonitor* mMonitor;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

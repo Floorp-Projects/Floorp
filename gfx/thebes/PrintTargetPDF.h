@@ -16,26 +16,23 @@ namespace gfx {
 /**
  * PDF printing target.
  */
-class PrintTargetPDF final : public PrintTarget
-{
-public:
-  static already_AddRefed<PrintTargetPDF>
-  CreateOrNull(nsIOutputStream *aStream,
-               const IntSize& aSizeInPoints);
+class PrintTargetPDF final : public PrintTarget {
+ public:
+  static already_AddRefed<PrintTargetPDF> CreateOrNull(
+      nsIOutputStream* aStream, const IntSize& aSizeInPoints);
 
   virtual nsresult EndPage() override;
   virtual void Finish() override;
 
-private:
-  PrintTargetPDF(cairo_surface_t* aCairoSurface,
-                 const IntSize& aSize,
-                 nsIOutputStream *aStream);
+ private:
+  PrintTargetPDF(cairo_surface_t* aCairoSurface, const IntSize& aSize,
+                 nsIOutputStream* aStream);
   virtual ~PrintTargetPDF();
 
   nsCOMPtr<nsIOutputStream> mStream;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_PRINTTARGETPDF_H */

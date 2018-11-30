@@ -15,66 +15,53 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGFETileElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGFETileElement::WrapNode(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return SVGFETileElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGFETileElement::sStringInfo[2] =
-{
-  { nsGkAtoms::result, kNameSpaceID_None, true },
-  { nsGkAtoms::in, kNameSpaceID_None, true }
-};
+nsSVGElement::StringInfo SVGFETileElement::sStringInfo[2] = {
+    {nsGkAtoms::result, kNameSpaceID_None, true},
+    {nsGkAtoms::in, kNameSpaceID_None, true}};
 
 //----------------------------------------------------------------------
 // nsINode methods
 
-
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETileElement)
 
-already_AddRefed<SVGAnimatedString>
-SVGFETileElement::In1()
-{
+already_AddRefed<SVGAnimatedString> SVGFETileElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-void
-SVGFETileElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
-{
+void SVGFETileElement::GetSourceImageNames(
+    nsTArray<nsSVGStringInfo>& aSources) {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-FilterPrimitiveDescription
-SVGFETileElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                                          const IntRect& aFilterSubregion,
-                                          const nsTArray<bool>& aInputsAreTainted,
-                                          nsTArray<RefPtr<SourceSurface>>& aInputImages)
-{
+FilterPrimitiveDescription SVGFETileElement::GetPrimitiveDescription(
+    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    const nsTArray<bool>& aInputsAreTainted,
+    nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   return FilterPrimitiveDescription(AsVariant(TileAttributes()));
 }
 
-bool
-SVGFETileElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                            nsAtom* aAttribute) const
-{
+bool SVGFETileElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                 nsAtom* aAttribute) const {
   return SVGFETileElementBase::AttributeAffectsRendering(aNameSpaceID,
                                                          aAttribute) ||
-           (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::in);
+         (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::in);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-nsSVGElement::StringAttributesInfo
-SVGFETileElement::GetStringInfo()
-{
+nsSVGElement::StringAttributesInfo SVGFETileElement::GetStringInfo() {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

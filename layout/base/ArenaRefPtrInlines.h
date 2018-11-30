@@ -19,27 +19,22 @@
 
 namespace mozilla {
 
-template<typename T>
-void
-ArenaRefPtr<T>::AssertValidType()
-{
-  // If adding new types, please update nsPresArena::ClearArenaRefPtrWithoutDeregistering
-  // as well
+template <typename T>
+void ArenaRefPtr<T>::AssertValidType() {
+  // If adding new types, please update
+  // nsPresArena::ClearArenaRefPtrWithoutDeregistering as well
   static_assert(IsSame<T, ComputedStyle>::value,
                 "ArenaRefPtr<T> template parameter T must be declared in "
                 "nsPresArenaObjectList and explicitly handled in"
                 "nsPresArena.cpp");
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-template<typename T>
-void
-nsPresArena::RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr)
-{
+template <typename T>
+void nsPresArena::RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
   MOZ_ASSERT(!mArenaRefPtrs.Contains(aPtr));
   mArenaRefPtrs.Put(aPtr, T::ArenaObjectID());
 }
-
 
 #endif

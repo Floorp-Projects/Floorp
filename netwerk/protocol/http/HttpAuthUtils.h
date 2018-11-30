@@ -5,10 +5,11 @@
 #ifndef HttpAuthUtils_h__
 #define HttpAuthUtils_h__
 
-
 class nsIURI;
 
-namespace mozilla { namespace net { namespace auth {
+namespace mozilla {
+namespace net {
+namespace auth {
 
 /* Tries to match the given URI against the value of a given pref
  *
@@ -25,8 +26,8 @@ namespace mozilla { namespace net { namespace auth {
  */
 bool URIMatchesPrefPattern(nsIURI *uri, const char *pref);
 
-} // namespace auth
-} // namespace net
-} // namespace mozilla
+}  // namespace auth
+}  // namespace net
+}  // namespace mozilla
 
-#endif // HttpAuthUtils_h__
+#endif  // HttpAuthUtils_h__

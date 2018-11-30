@@ -21,44 +21,31 @@ using namespace mozilla;
 // =======================
 
 NS_QUERYFRAME_HEAD(nsRubyTextFrame)
-  NS_QUERYFRAME_ENTRY(nsRubyTextFrame)
+NS_QUERYFRAME_ENTRY(nsRubyTextFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsRubyContentFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyTextFrame)
 
-nsContainerFrame*
-NS_NewRubyTextFrame(nsIPresShell* aPresShell,
-                    ComputedStyle* aStyle)
-{
+nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
+                                      ComputedStyle* aStyle) {
   return new (aPresShell) nsRubyTextFrame(aStyle);
 }
-
 
 //----------------------------------------------------------------------
 
 // nsRubyTextFrame Method Implementations
 // ======================================
 
-/* virtual */ bool
-nsRubyTextFrame::CanContinueTextRun() const
-{
-  return false;
-}
+/* virtual */ bool nsRubyTextFrame::CanContinueTextRun() const { return false; }
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsRubyTextFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsRubyTextFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("RubyText"), aResult);
 }
 #endif
 
-
-
-/* virtual */ void
-nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                  const nsDisplayListSet& aLists)
-{
+/* virtual */ void nsRubyTextFrame::BuildDisplayList(
+    nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
   if (IsAutoHidden()) {
     return;
   }
@@ -66,12 +53,10 @@ nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsRubyContentFrame::BuildDisplayList(aBuilder, aLists);
 }
 
-/* virtual */ void
-nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
-                        ReflowOutput& aDesiredSize,
-                        const ReflowInput& aReflowInput,
-                        nsReflowStatus& aStatus)
-{
+/* virtual */ void nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
+                                           ReflowOutput& aDesiredSize,
+                                           const ReflowInput& aReflowInput,
+                                           nsReflowStatus& aStatus) {
   // Even if we want to hide this frame, we have to reflow it first.
   // If we leave it dirty, changes to its content will never be
   // propagated to the ancestors, then it won't be displayed even if

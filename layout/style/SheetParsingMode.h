@@ -49,7 +49,7 @@ enum SheetParsingMode : uint8_t {
   eSafeAgentSheetFeatures,
 };
 
-} // namespace css
-} // namespace mozilla
+}  // namespace css
+}  // namespace mozilla
 
-#endif // mozilla_css_SheetParsingMode_h
+#endif  // mozilla_css_SheetParsingMode_h

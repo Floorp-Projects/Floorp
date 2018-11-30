@@ -23,27 +23,24 @@ class MIRGraph;
 class MResumePoint;
 class LNode;
 
-class JSONSpewer : JSONPrinter
-{
-  public:
-    explicit JSONSpewer(GenericPrinter& out)
-      : JSONPrinter(out)
-    { }
+class JSONSpewer : JSONPrinter {
+ public:
+  explicit JSONSpewer(GenericPrinter& out) : JSONPrinter(out) {}
 
-    void beginFunction(JSScript* script);
-    void beginPass(const char * pass);
-    void spewMDef(MDefinition* def);
-    void spewMResumePoint(MResumePoint* rp);
-    void spewMIR(MIRGraph* mir);
-    void spewLIns(LNode* ins);
-    void spewLIR(MIRGraph* mir);
-    void spewRanges(BacktrackingAllocator* regalloc);
-    void endPass();
-    void endFunction();
+  void beginFunction(JSScript* script);
+  void beginPass(const char* pass);
+  void spewMDef(MDefinition* def);
+  void spewMResumePoint(MResumePoint* rp);
+  void spewMIR(MIRGraph* mir);
+  void spewLIns(LNode* ins);
+  void spewLIR(MIRGraph* mir);
+  void spewRanges(BacktrackingAllocator* regalloc);
+  void endPass();
+  void endFunction();
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* JS_JITSPEW */
 

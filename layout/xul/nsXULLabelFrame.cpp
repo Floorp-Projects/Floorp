@@ -13,9 +13,7 @@
 
 using namespace mozilla;
 
-nsIFrame*
-NS_NewXULLabelFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewXULLabelFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
   nsXULLabelFrame* it = new (aPresShell) nsXULLabelFrame(aStyle);
   it->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   return it;
@@ -25,9 +23,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsXULLabelFrame)
 
 // If you make changes to this function, check its counterparts
 // in nsBoxFrame and nsTextBoxFrame
-nsresult
-nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
-{
+nsresult nsXULLabelFrame::RegUnregAccessKey(bool aDoReg) {
   // To filter out <label>s without a control attribute.
   // XXXjag a side-effect is that we filter out anonymous <label>s
   // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
@@ -37,10 +33,10 @@ nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
     return NS_OK;
 
   nsAutoString accessKey;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
+                                 accessKey);
 
-  if (accessKey.IsEmpty())
-    return NS_OK;
+  if (accessKey.IsEmpty()) return NS_OK;
 
   // With a valid PresContext we can get the ESM
   // and register the access key
@@ -58,32 +54,26 @@ nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-void
-nsXULLabelFrame::Init(nsIContent*       aContent,
-                      nsContainerFrame* aParent,
-                      nsIFrame*         aPrevInFlow)
-{
+void nsXULLabelFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
+                           nsIFrame* aPrevInFlow) {
   nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
 
   // register access key
   RegUnregAccessKey(true);
 }
 
-void
-nsXULLabelFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
+void nsXULLabelFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                  PostDestroyData& aPostDestroyData) {
   // unregister access key
   RegUnregAccessKey(false);
   nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-nsresult
-nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
-                                  nsAtom* aAttribute,
-                                  int32_t aModType)
-{
-  nsresult rv = nsBlockFrame::AttributeChanged(aNameSpaceID,
-                                               aAttribute, aModType);
+nsresult nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
+                                           nsAtom* aAttribute,
+                                           int32_t aModType) {
+  nsresult rv =
+      nsBlockFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
@@ -97,9 +87,7 @@ nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
 // Diagnostics
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsXULLabelFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsXULLabelFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("XULLabel"), aResult);
 }
 #endif

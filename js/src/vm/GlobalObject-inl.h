@@ -9,23 +9,22 @@
 
 #include "vm/GlobalObject.h"
 
-#include "mozilla/Assertions.h" // MOZ_ASSERT
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "vm/JSContext.h" // JSContext
-#include "vm/ObjectOperations-inl.h" // js::SetProperty
+#include "vm/JSContext.h"             // JSContext
+#include "vm/ObjectOperations-inl.h"  // js::SetProperty
 
-/* static */ inline bool
-js::GlobalObject::setIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
-                                    HandlePropertyName name, HandleValue value)
-{
-    MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(global));
+/* static */ inline bool js::GlobalObject::setIntrinsicValue(
+    JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName name,
+    HandleValue value) {
+  MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(global));
 
-    RootedObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
-    if (!holder) {
-        return false;
-    }
+  RootedObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
+  if (!holder) {
+    return false;
+  }
 
-    return SetProperty(cx, holder, name, value);
+  return SetProperty(cx, holder, name, value);
 }
 
 #endif /* vm_GlobalObject_inl_h */

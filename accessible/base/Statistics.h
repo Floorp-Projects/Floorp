@@ -13,27 +13,30 @@ namespace mozilla {
 namespace a11y {
 namespace statistics {
 
-  inline void A11yInitialized()
-    { Telemetry::Accumulate(Telemetry::A11Y_INSTANTIATED_FLAG, true); }
+inline void A11yInitialized() {
+  Telemetry::Accumulate(Telemetry::A11Y_INSTANTIATED_FLAG, true);
+}
 
-  inline void A11yConsumers(uint32_t aConsumer)
-    { Telemetry::Accumulate(Telemetry::A11Y_CONSUMERS, aConsumer); }
+inline void A11yConsumers(uint32_t aConsumer) {
+  Telemetry::Accumulate(Telemetry::A11Y_CONSUMERS, aConsumer);
+}
 
-  /**
-   * Report that ISimpleDOM* has been used.
-   */
-  inline void ISimpleDOMUsed()
-    { Telemetry::Accumulate(Telemetry::A11Y_ISIMPLEDOM_USAGE_FLAG, true); }
+/**
+ * Report that ISimpleDOM* has been used.
+ */
+inline void ISimpleDOMUsed() {
+  Telemetry::Accumulate(Telemetry::A11Y_ISIMPLEDOM_USAGE_FLAG, true);
+}
 
-  /**
-   * Report that IAccessibleTable has been used.
-   */
-  inline void IAccessibleTableUsed()
-    { Telemetry::Accumulate(Telemetry::A11Y_IATABLE_USAGE_FLAG, true); }
+/**
+ * Report that IAccessibleTable has been used.
+ */
+inline void IAccessibleTableUsed() {
+  Telemetry::Accumulate(Telemetry::A11Y_IATABLE_USAGE_FLAG, true);
+}
 
-} // namespace statistics
-} // namespace a11y
-} // namespace mozilla
+}  // namespace statistics
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

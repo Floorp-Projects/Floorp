@@ -21,11 +21,8 @@ class Directory;
 class FileSystem;
 class FileSystemEntriesCallback;
 
-class FileSystemDirectoryReader
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class FileSystemDirectoryReader : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemDirectoryReader)
 
@@ -33,24 +30,22 @@ public:
                                      FileSystem* aFileSystem,
                                      Directory* aDirectory);
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
+  nsIGlobalObject* GetParentObject() const {
     return mParentEntry->GetParentObject();
   }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void
-  ReadEntries(FileSystemEntriesCallback& aSuccessCallback,
-              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-              ErrorResult& aRv);
+  virtual void ReadEntries(
+      FileSystemEntriesCallback& aSuccessCallback,
+      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+      ErrorResult& aRv);
 
-protected:
+ protected:
   virtual ~FileSystemDirectoryReader();
 
-private:
+ private:
   RefPtr<FileSystemDirectoryEntry> mParentEntry;
   RefPtr<FileSystem> mFileSystem;
   RefPtr<Directory> mDirectory;
@@ -58,7 +53,7 @@ private:
   bool mAlreadyRead;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileSystemDirectoryReader_h
+#endif  // mozilla_dom_FileSystemDirectoryReader_h

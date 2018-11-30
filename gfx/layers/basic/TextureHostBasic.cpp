@@ -15,21 +15,19 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-already_AddRefed<TextureHost>
-CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
-                       ISurfaceAllocator* aDeallocator,
-                       LayersBackend aBackend,
-                       TextureFlags aFlags)
-{
+already_AddRefed<TextureHost> CreateTextureHostBasic(
+    const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
+    LayersBackend aBackend, TextureFlags aFlags) {
 #ifdef XP_MACOSX
   if (aDesc.type() == SurfaceDescriptor::TSurfaceDescriptorMacIOSurface) {
     const SurfaceDescriptorMacIOSurface& desc =
-      aDesc.get_SurfaceDescriptorMacIOSurface();
+        aDesc.get_SurfaceDescriptorMacIOSurface();
     return MakeAndAddRef<MacIOSurfaceTextureHostBasic>(aFlags, desc);
   }
 #endif
-  return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend, aFlags);
+  return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend,
+                                             aFlags);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

@@ -16,9 +16,7 @@ namespace dom {
 static StaticRefPtr<PerformanceService> gPerformanceService;
 static StaticMutex gPerformanceServiceMutex;
 
-/* static */ PerformanceService*
-PerformanceService::GetOrCreate()
-{
+/* static */ PerformanceService* PerformanceService::GetOrCreate() {
   StaticMutexAutoLock al(gPerformanceServiceMutex);
 
   if (!gPerformanceService) {
@@ -29,18 +27,16 @@ PerformanceService::GetOrCreate()
   return gPerformanceService;
 }
 
-DOMHighResTimeStamp
-PerformanceService::TimeOrigin(const TimeStamp& aCreationTimeStamp) const
-{
+DOMHighResTimeStamp PerformanceService::TimeOrigin(
+    const TimeStamp& aCreationTimeStamp) const {
   return (aCreationTimeStamp - mCreationTimeStamp).ToMilliseconds() +
-           (mCreationEpochTime / PR_USEC_PER_MSEC);
+         (mCreationEpochTime / PR_USEC_PER_MSEC);
 }
 
-PerformanceService::PerformanceService()
-{
+PerformanceService::PerformanceService() {
   mCreationTimeStamp = TimeStamp::Now();
   mCreationEpochTime = PR_Now();
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

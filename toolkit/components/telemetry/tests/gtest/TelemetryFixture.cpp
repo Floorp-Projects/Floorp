@@ -7,26 +7,21 @@
 
 using namespace mozilla;
 
-void
-TelemetryTestFixture::SetUp()
-{
+void TelemetryTestFixture::SetUp() {
   mTelemetry = do_GetService("@mozilla.org/base/telemetry;1");
 
-  mCleanGlobal =
-    dom::SimpleGlobalObject::Create(dom::SimpleGlobalObject::GlobalType::BindingDetail);
+  mCleanGlobal = dom::SimpleGlobalObject::Create(
+      dom::SimpleGlobalObject::GlobalType::BindingDetail);
 
   // The test must fail if we failed getting the global.
-  ASSERT_NE(mCleanGlobal, nullptr) << "SimpleGlobalObject must return a valid global object.";
+  ASSERT_NE(mCleanGlobal, nullptr)
+      << "SimpleGlobalObject must return a valid global object.";
 }
 
 AutoJSContextWithGlobal::AutoJSContextWithGlobal(JSObject* aGlobalObject)
-  : mCx(nullptr)
-{
+    : mCx(nullptr) {
   // The JS API must initialize correctly.
   MOZ_ALWAYS_TRUE(mJsAPI.Init(aGlobalObject));
 }
 
-JSContext* AutoJSContextWithGlobal::GetJSContext() const
-{
-  return mJsAPI.cx();
-}
+JSContext* AutoJSContextWithGlobal::GetJSContext() const { return mJsAPI.cx(); }

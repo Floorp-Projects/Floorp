@@ -19,10 +19,8 @@ IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAnchorAcc)
 
 STDMETHODIMP
 ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
-                          ULONG FAR* aCountFetched)
-{
-  if (!aItems || !aCountFetched)
-    return E_INVALIDARG;
+                          ULONG FAR* aCountFetched) {
+  if (!aItems || !aCountFetched) return E_INVALIDARG;
 
   *aCountFetched = 0;
 
@@ -56,8 +54,7 @@ ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
 }
 
 STDMETHODIMP
-ChildrenEnumVariant::Skip(ULONG aCount)
-{
+ChildrenEnumVariant::Skip(ULONG aCount) {
   if (mAnchorAcc->IsDefunct() || mAnchorAcc->GetChildAt(mCurIndex) != mCurAcc)
     return CO_E_OBJNOTCONNECTED;
 
@@ -68,10 +65,8 @@ ChildrenEnumVariant::Skip(ULONG aCount)
 }
 
 STDMETHODIMP
-ChildrenEnumVariant::Reset()
-{
-  if (mAnchorAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+ChildrenEnumVariant::Reset() {
+  if (mAnchorAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   mCurIndex = 0;
   mCurAcc = mAnchorAcc->GetChildAt(0);
@@ -80,10 +75,8 @@ ChildrenEnumVariant::Reset()
 }
 
 STDMETHODIMP
-ChildrenEnumVariant::Clone(IEnumVARIANT** aEnumVariant)
-{
-  if (!aEnumVariant)
-    return E_INVALIDARG;
+ChildrenEnumVariant::Clone(IEnumVARIANT** aEnumVariant) {
+  if (!aEnumVariant) return E_INVALIDARG;
 
   *aEnumVariant = new ChildrenEnumVariant(*this);
   (*aEnumVariant)->AddRef();

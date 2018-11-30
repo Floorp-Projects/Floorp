@@ -29,39 +29,30 @@ HINSTANCE nsToolkit::mDllInstance = 0;
 // constructor
 //
 //-------------------------------------------------------------------------
-nsToolkit::nsToolkit()  
-{
-    MOZ_COUNT_CTOR(nsToolkit);
+nsToolkit::nsToolkit() {
+  MOZ_COUNT_CTOR(nsToolkit);
 
 #if defined(MOZ_STATIC_COMPONENT_LIBS)
-    nsToolkit::Startup(GetModuleHandle(nullptr));
+  nsToolkit::Startup(GetModuleHandle(nullptr));
 #endif
 }
-
 
 //-------------------------------------------------------------------------
 //
 // destructor
 //
 //-------------------------------------------------------------------------
-nsToolkit::~nsToolkit()
-{
-    MOZ_COUNT_DTOR(nsToolkit);
+nsToolkit::~nsToolkit() { MOZ_COUNT_DTOR(nsToolkit); }
+
+void nsToolkit::Startup(HMODULE hModule) {
+  nsToolkit::mDllInstance = hModule;
+  WinUtils::Initialize();
+  nsUXThemeData::Initialize();
 }
 
-void
-nsToolkit::Startup(HMODULE hModule)
-{
-    nsToolkit::mDllInstance = hModule;
-    WinUtils::Initialize();
-    nsUXThemeData::Initialize();
-}
-
-void
-nsToolkit::Shutdown()
-{
-    delete gToolkit;
-    gToolkit = nullptr;
+void nsToolkit::Shutdown() {
+  delete gToolkit;
+  gToolkit = nullptr;
 }
 
 //-------------------------------------------------------------------------
@@ -71,8 +62,7 @@ nsToolkit::Shutdown()
 //
 //-------------------------------------------------------------------------
 // static
-nsToolkit* nsToolkit::GetToolkit()
-{
+nsToolkit* nsToolkit::GetToolkit() {
   if (!gToolkit) {
     gToolkit = new nsToolkit();
   }

@@ -9,33 +9,28 @@
 
 #include "nsSVGViewportFrame.h"
 
-class nsSVGSymbolFrame final : public nsSVGViewportFrame
-{
-  friend nsIFrame*
-  NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-protected:
-  explicit nsSVGSymbolFrame(ComputedStyle* aStyle)
-    : nsSVGViewportFrame(aStyle, kClassID)
-  {
-  }
+class nsSVGSymbolFrame final : public nsSVGViewportFrame {
+  friend nsIFrame* NS_NewSVGSymbolFrame(nsIPresShell* aPresShell,
+                                        ComputedStyle* aStyle);
 
-public:
+ protected:
+  explicit nsSVGSymbolFrame(ComputedStyle* aStyle)
+      : nsSVGViewportFrame(aStyle, kClassID) {}
+
+ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSVGSymbolFrame)
 
 #ifdef DEBUG
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGSymbol"), aResult);
   }
 #endif
-
 };
 
 #endif

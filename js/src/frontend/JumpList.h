@@ -56,20 +56,20 @@ namespace frontend {
 
 // Offset of a jump target instruction, used for patching jump instructions.
 struct JumpTarget {
-    ptrdiff_t offset;
+  ptrdiff_t offset;
 };
 
 struct JumpList {
-    JumpList() {}
-    // -1 is used to mark the end of jump lists.
-    ptrdiff_t offset = -1;
+  JumpList() {}
+  // -1 is used to mark the end of jump lists.
+  ptrdiff_t offset = -1;
 
-    // Add a jump instruction to the list.
-    void push(jsbytecode* code, ptrdiff_t jumpOffset);
+  // Add a jump instruction to the list.
+  void push(jsbytecode* code, ptrdiff_t jumpOffset);
 
-    // Patch all jump instructions in this list to jump to `target`.  This
-    // clobbers the list.
-    void patchAll(jsbytecode* code, JumpTarget target);
+  // Patch all jump instructions in this list to jump to `target`.  This
+  // clobbers the list.
+  void patchAll(jsbytecode* code, JumpTarget target);
 };
 
 } /* namespace frontend */

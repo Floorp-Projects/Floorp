@@ -11,30 +11,22 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-class nsServerTiming final : public nsIServerTiming
-{
-public:
+class nsServerTiming final : public nsIServerTiming {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERTIMING
 
   nsServerTiming() = default;
 
-  void SetName(const nsACString &aName)
-  {
-    mName = aName;
-  }
+  void SetName(const nsACString &aName) { mName = aName; }
 
-  void SetDuration(double aDuration)
-  {
-    mDuration = aDuration;
-  }
+  void SetDuration(double aDuration) { mDuration = aDuration; }
 
-  void SetDescription(const nsACString &aDescription)
-  {
+  void SetDescription(const nsACString &aDescription) {
     mDescription = aDescription;
   }
 
-private:
+ private:
   virtual ~nsServerTiming() = default;
 
   nsCString mName;
@@ -45,21 +37,18 @@ private:
 namespace mozilla {
 namespace net {
 
-class ServerTimingParser
-{
-public:
-  explicit ServerTimingParser(const nsCString &value)
-    : mValue(value)
-  {}
+class ServerTimingParser {
+ public:
+  explicit ServerTimingParser(const nsCString &value) : mValue(value) {}
   void Parse();
-  nsTArray<nsCOMPtr<nsIServerTiming>>&& TakeServerTimingHeaders();
+  nsTArray<nsCOMPtr<nsIServerTiming>> &&TakeServerTimingHeaders();
 
-private:
+ private:
   nsCString mValue;
   nsTArray<nsCOMPtr<nsIServerTiming>> mServerTimingHeaders;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicLayersImpl.h"
-#include <new>                          // for operator new
-#include "Layers.h"                     // for Layer, etc
-#include "basic/BasicImplData.h"        // for BasicImplData
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/DebugOnly.h"          // for DebugOnly
+#include <new>                    // for operator new
+#include "Layers.h"               // for Layer, etc
+#include "basic/BasicImplData.h"  // for BasicImplData
+#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc
+#include "mozilla/DebugOnly.h"    // for DebugOnly
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "AutoMaskData.h"
@@ -19,14 +19,12 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-bool
-GetMaskData(Layer* aMaskLayer,
-            const Point& aDeviceOffset,
-            AutoMoz2DMaskData* aMaskData)
-{
+bool GetMaskData(Layer* aMaskLayer, const Point& aDeviceOffset,
+                 AutoMoz2DMaskData* aMaskData) {
   if (aMaskLayer) {
     RefPtr<SourceSurface> surface =
-      static_cast<BasicImplData*>(aMaskLayer->ImplData())->GetAsSourceSurface();
+        static_cast<BasicImplData*>(aMaskLayer->ImplData())
+            ->GetAsSourceSurface();
     if (surface) {
       Matrix transform;
       Matrix4x4 effectiveTransform = aMaskLayer->GetEffectiveTransform();
@@ -40,9 +38,8 @@ GetMaskData(Layer* aMaskLayer,
   return false;
 }
 
-already_AddRefed<SourceSurface>
-GetMaskForLayer(Layer* aLayer, Matrix* aMaskTransform)
-{
+already_AddRefed<SourceSurface> GetMaskForLayer(Layer* aLayer,
+                                                Matrix* aMaskTransform) {
   if (!aLayer->GetMaskLayer()) {
     return nullptr;
   }
@@ -59,9 +56,7 @@ GetMaskForLayer(Layer* aLayer, Matrix* aMaskTransform)
   return nullptr;
 }
 
-void
-PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
-{
+void PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer) {
   AutoMoz2DMaskData mask;
   if (GetMaskData(aMaskLayer, Point(), &mask)) {
     aContext->SetMatrix(mask.GetTransform());
@@ -73,14 +68,9 @@ PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
   aContext->Paint(aOpacity);
 }
 
-void
-FillRectWithMask(DrawTarget* aDT,
-                 const Rect& aRect,
-                 const Color& aColor,
-                 const DrawOptions& aOptions,
-                 SourceSurface* aMaskSource,
-                 const Matrix* aMaskTransform)
-{
+void FillRectWithMask(DrawTarget* aDT, const Rect& aRect, const Color& aColor,
+                      const DrawOptions& aOptions, SourceSurface* aMaskSource,
+                      const Matrix* aMaskTransform) {
   if (aMaskSource && aMaskTransform) {
     aDT->PushClipRect(aRect);
     Matrix oldTransform = aDT->GetTransform();
@@ -94,35 +84,25 @@ FillRectWithMask(DrawTarget* aDT,
 
   aDT->FillRect(aRect, ColorPattern(aColor), aOptions);
 }
-void
-FillRectWithMask(DrawTarget* aDT,
-                 const gfx::Point& aDeviceOffset,
-                 const Rect& aRect,
-                 const Color& aColor,
-                 const DrawOptions& aOptions,
-                 Layer* aMaskLayer)
-{
+void FillRectWithMask(DrawTarget* aDT, const gfx::Point& aDeviceOffset,
+                      const Rect& aRect, const Color& aColor,
+                      const DrawOptions& aOptions, Layer* aMaskLayer) {
   AutoMoz2DMaskData mask;
   if (GetMaskData(aMaskLayer, aDeviceOffset, &mask)) {
     const Matrix& maskTransform = mask.GetTransform();
-    FillRectWithMask(aDT, aRect, aColor, aOptions, mask.GetSurface(), &maskTransform);
+    FillRectWithMask(aDT, aRect, aColor, aOptions, mask.GetSurface(),
+                     &maskTransform);
     return;
   }
 
   FillRectWithMask(aDT, aRect, aColor, aOptions);
 }
 
-void
-FillRectWithMask(DrawTarget* aDT,
-                 const Rect& aRect,
-                 SourceSurface* aSurface,
-                 SamplingFilter aSamplingFilter,
-                 const DrawOptions& aOptions,
-                 ExtendMode aExtendMode,
-                 SourceSurface* aMaskSource,
-                 const Matrix* aMaskTransform,
-                 const Matrix* aSurfaceTransform)
-{
+void FillRectWithMask(DrawTarget* aDT, const Rect& aRect,
+                      SourceSurface* aSurface, SamplingFilter aSamplingFilter,
+                      const DrawOptions& aOptions, ExtendMode aExtendMode,
+                      SourceSurface* aMaskSource, const Matrix* aMaskTransform,
+                      const Matrix* aSurfaceTransform) {
   if (aMaskSource && aMaskTransform) {
     aDT->PushClipRect(aRect);
     Matrix oldTransform = aDT->GetTransform();
@@ -145,27 +125,23 @@ FillRectWithMask(DrawTarget* aDT,
     return;
   }
 
-  aDT->FillRect(aRect,
-                SurfacePattern(aSurface, aExtendMode,
-                               aSurfaceTransform ? (*aSurfaceTransform) : Matrix(),
-                               aSamplingFilter), aOptions);
+  aDT->FillRect(
+      aRect,
+      SurfacePattern(aSurface, aExtendMode,
+                     aSurfaceTransform ? (*aSurfaceTransform) : Matrix(),
+                     aSamplingFilter),
+      aOptions);
 }
 
-void
-FillRectWithMask(DrawTarget* aDT,
-                 const gfx::Point& aDeviceOffset,
-                 const Rect& aRect,
-                 SourceSurface* aSurface,
-                 SamplingFilter aSamplingFilter,
-                 const DrawOptions& aOptions,
-                 Layer* aMaskLayer)
-{
+void FillRectWithMask(DrawTarget* aDT, const gfx::Point& aDeviceOffset,
+                      const Rect& aRect, SourceSurface* aSurface,
+                      SamplingFilter aSamplingFilter,
+                      const DrawOptions& aOptions, Layer* aMaskLayer) {
   AutoMoz2DMaskData mask;
   if (GetMaskData(aMaskLayer, aDeviceOffset, &mask)) {
     const Matrix& maskTransform = mask.GetTransform();
     FillRectWithMask(aDT, aRect, aSurface, aSamplingFilter, aOptions,
-                     ExtendMode::CLAMP,
-                     mask.GetSurface(), &maskTransform);
+                     ExtendMode::CLAMP, mask.GetSurface(), &maskTransform);
     return;
   }
 
@@ -173,15 +149,10 @@ FillRectWithMask(DrawTarget* aDT,
                    ExtendMode::CLAMP);
 }
 
-void
-FillPathWithMask(DrawTarget* aDT,
-                 const Path* aPath,
-                 const Rect& aClipRect,
-                 const Color& aColor,
-                 const DrawOptions& aOptions,
-                 SourceSurface* aMaskSource,
-                 const Matrix* aMaskTransform)
-{
+void FillPathWithMask(DrawTarget* aDT, const Path* aPath, const Rect& aClipRect,
+                      const Color& aColor, const DrawOptions& aOptions,
+                      SourceSurface* aMaskSource,
+                      const Matrix* aMaskTransform) {
   if (aMaskSource && aMaskTransform) {
     aDT->PushClipRect(aClipRect);
     Matrix oldTransform = aDT->GetTransform();
@@ -196,18 +167,11 @@ FillPathWithMask(DrawTarget* aDT,
   aDT->Fill(aPath, ColorPattern(aColor), aOptions);
 }
 
-void
-FillPathWithMask(DrawTarget* aDT,
-                 const Path* aPath,
-                 const Rect& aClipRect,
-                 SourceSurface* aSurface,
-                 SamplingFilter aSamplingFilter,
-                 const DrawOptions& aOptions,
-                 ExtendMode aExtendMode,
-                 SourceSurface* aMaskSource,
-                 const Matrix* aMaskTransform,
-                 const Matrix* aSurfaceTransform)
-{
+void FillPathWithMask(DrawTarget* aDT, const Path* aPath, const Rect& aClipRect,
+                      SourceSurface* aSurface, SamplingFilter aSamplingFilter,
+                      const DrawOptions& aOptions, ExtendMode aExtendMode,
+                      SourceSurface* aMaskSource, const Matrix* aMaskTransform,
+                      const Matrix* aSurfaceTransform) {
   if (aMaskSource && aMaskTransform) {
     aDT->PushClipRect(aClipRect);
     Matrix oldTransform = aDT->GetTransform();
@@ -232,18 +196,15 @@ FillPathWithMask(DrawTarget* aDT,
   aDT->Fill(aPath,
             SurfacePattern(aSurface, aExtendMode,
                            aSurfaceTransform ? (*aSurfaceTransform) : Matrix(),
-                           aSamplingFilter), aOptions);
+                           aSamplingFilter),
+            aOptions);
 }
 
-BasicImplData*
-ToData(Layer* aLayer)
-{
+BasicImplData* ToData(Layer* aLayer) {
   return static_cast<BasicImplData*>(aLayer->ImplData());
 }
 
-gfx::CompositionOp
-GetEffectiveOperator(Layer* aLayer)
-{
+gfx::CompositionOp GetEffectiveOperator(Layer* aLayer) {
   CompositionOp op = aLayer->GetEffectiveMixBlendMode();
 
   if (op != CompositionOp::OP_OVER) {
@@ -253,15 +214,11 @@ GetEffectiveOperator(Layer* aLayer)
   return ToData(aLayer)->GetOperator();
 }
 
-ShadowableLayer*
-ToShadowable(Layer* aLayer)
-{
+ShadowableLayer* ToShadowable(Layer* aLayer) {
   return aLayer->AsShadowableLayer();
 }
 
-bool
-ShouldShadow(Layer* aLayer)
-{
+bool ShouldShadow(Layer* aLayer) {
   if (!ToShadowable(aLayer)) {
     MOZ_ASSERT(aLayer->GetType() == Layer::TYPE_READBACK,
                "Only expect not to shadow ReadbackLayers");
@@ -270,6 +227,5 @@ ShouldShadow(Layer* aLayer)
   return true;
 }
 
-
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

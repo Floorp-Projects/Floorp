@@ -8,49 +8,43 @@
 
 #include "nsRemoteClient.h"
 
-class XRemoteClient : public nsRemoteClient
-{
-public:
+class XRemoteClient : public nsRemoteClient {
+ public:
   XRemoteClient();
   ~XRemoteClient();
 
   virtual nsresult Init() override;
   virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
-                                   const char *aProfile,
-                                   int32_t argc, char **argv,
-                                   const char* aDesktopStartupID,
+                                   const char *aProfile, int32_t argc,
+                                   char **argv, const char *aDesktopStartupID,
                                    char **aResponse, bool *aSucceeded) override;
   void Shutdown();
 
-private:
+ private:
+  Window CheckWindow(Window aWindow);
+  Window CheckChildren(Window aWindow);
+  nsresult GetLock(Window aWindow, bool *aDestroyed);
+  nsresult FreeLock(Window aWindow);
+  Window FindBestWindow(const char *aProgram, const char *aUsername,
+                        const char *aProfile);
+  nsresult DoSendCommandLine(Window aWindow, int32_t argc, char **argv,
+                             const char *aDesktopStartupID, char **aResponse,
+                             bool *aDestroyed);
+  bool WaitForResponse(Window aWindow, char **aResponse, bool *aDestroyed,
+                       Atom aCommandAtom);
 
-  Window         CheckWindow      (Window aWindow);
-  Window         CheckChildren    (Window aWindow);
-  nsresult       GetLock          (Window aWindow, bool *aDestroyed);
-  nsresult       FreeLock         (Window aWindow);
-  Window         FindBestWindow   (const char *aProgram,
-                                   const char *aUsername,
-                                   const char *aProfile);
-  nsresult       DoSendCommandLine(Window aWindow,
-                                   int32_t argc, char **argv,
-                                   const char* aDesktopStartupID,
-                                   char **aResponse,
-                                   bool *aDestroyed);
-  bool           WaitForResponse  (Window aWindow, char **aResponse,
-                                   bool *aDestroyed, Atom aCommandAtom);
+  Display *mDisplay;
 
-  Display       *mDisplay;
+  Atom mMozVersionAtom;
+  Atom mMozLockAtom;
+  Atom mMozCommandLineAtom;
+  Atom mMozResponseAtom;
+  Atom mMozWMStateAtom;
+  Atom mMozUserAtom;
+  Atom mMozProfileAtom;
+  Atom mMozProgramAtom;
 
-  Atom           mMozVersionAtom;
-  Atom           mMozLockAtom;
-  Atom           mMozCommandLineAtom;
-  Atom           mMozResponseAtom;
-  Atom           mMozWMStateAtom;
-  Atom           mMozUserAtom;
-  Atom           mMozProfileAtom;
-  Atom           mMozProgramAtom;
+  char *mLockData;
 
-  char          *mLockData;
-
-  bool           mInitialized;
+  bool mInitialized;
 };

@@ -8,13 +8,14 @@
 /**
  * MODULE NOTES:
  * @update  gess 4/1/98
- * 
- * This pure virtual interface is used as the "glue" that connects the parsing 
+ *
+ * This pure virtual interface is used as the "glue" that connects the parsing
  * process to the content model construction process.
  *
  * The icontentsink interface is a very lightweight wrapper that represents the
- * content-sink model building process. There is another one that you may care 
- * about more, which is the IHTMLContentSink interface. (See that file for details).
+ * content-sink model building process. There is another one that you may care
+ * about more, which is the IHTMLContentSink interface. (See that file for
+ * details).
  */
 #include "nsISupports.h"
 #include "nsString.h"
@@ -27,16 +28,20 @@ namespace mozilla {
 class Encoding;
 }
 
-#define NS_ICONTENT_SINK_IID \
-{ 0xcf9a7cbb, 0xfcbc, 0x4e13, \
-  { 0x8e, 0xf5, 0x18, 0xef, 0x2d, 0x3d, 0x58, 0x29 } }
+#define NS_ICONTENT_SINK_IID                         \
+  {                                                  \
+    0xcf9a7cbb, 0xfcbc, 0x4e13, {                    \
+      0x8e, 0xf5, 0x18, 0xef, 0x2d, 0x3d, 0x58, 0x29 \
+    }                                                \
+  }
 
 class nsIContentSink : public nsISupports {
-protected:
+ protected:
   using Encoding = mozilla::Encoding;
-  template <typename T> using NotNull = mozilla::NotNull<T>;
-public:
+  template <typename T>
+  using NotNull = mozilla::NotNull<T>;
 
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_SINK_IID)
 
   /**
@@ -45,7 +50,7 @@ public:
    * parser has been active since we last processed events on the
    * main event loop and this call calibrates that measurement.
    */
-  NS_IMETHOD WillParse(void)=0;
+  NS_IMETHOD WillParse(void) = 0;
 
   /**
    * This method gets called when the parser begins the process
@@ -56,9 +61,7 @@ public:
    *
    * @update 5/7/98 gess
    */
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) {
-    return NS_OK;
-  }
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) { return NS_OK; }
 
   /**
    * This method gets called when the parser concludes the process
@@ -69,9 +72,7 @@ public:
    *
    * @update 5/7/98 gess
    */
-  NS_IMETHOD DidBuildModel(bool aTerminated) {
-    return NS_OK;
-  }
+  NS_IMETHOD DidBuildModel(bool aTerminated) { return NS_OK; }
 
   /**
    * This method gets called when the parser gets i/o blocked,
@@ -80,7 +81,7 @@ public:
    *
    * @update 5/7/98 gess
    */
-  NS_IMETHOD WillInterrupt(void)=0;
+  NS_IMETHOD WillInterrupt(void) = 0;
 
   /**
    * This method gets called when the parser i/o gets unblocked,
@@ -88,7 +89,7 @@ public:
    *
    * @update 5/7/98 gess
    */
-  NS_IMETHOD WillResume(void)=0;
+  NS_IMETHOD WillResume(void) = 0;
 
   /**
    * This method gets called by the parser so that the content
@@ -96,7 +97,7 @@ public:
    * is that the content sink will drop the reference when it
    * gets the DidBuildModel notification i.e. when parsing is done.
    */
-  NS_IMETHOD SetParser(nsParserBase* aParser)=0;
+  NS_IMETHOD SetParser(nsParserBase* aParser) = 0;
 
   /**
    * Flush content so that the content model is in sync with the state
@@ -104,7 +105,7 @@ public:
    *
    * @param aType the type of flush to perform
    */
-  virtual void FlushPendingNotifications(mozilla::FlushType aType)=0;
+  virtual void FlushPendingNotifications(mozilla::FlushType aType) = 0;
 
   /**
    * Set the document character set. This should be passed on to the
@@ -117,17 +118,14 @@ public:
    * the content built by this content sink is being added, if any
    * (IOW, may return null).
    */
-  virtual nsISupports *GetTarget()=0;
-  
+  virtual nsISupports* GetTarget() = 0;
+
   /**
    * Returns true if there's currently script executing that we need to hold
    * parsing for.
    */
-  virtual bool IsScriptExecuting()
-  {
-    return false;
-  }
-  
+  virtual bool IsScriptExecuting() { return false; }
+
   /**
    * Posts a runnable that continues parsing.
    */

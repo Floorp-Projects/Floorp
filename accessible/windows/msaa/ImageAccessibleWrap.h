@@ -14,12 +14,10 @@
 namespace mozilla {
 namespace a11y {
 
-class ImageAccessibleWrap : public ImageAccessible,
-                            public ia2AccessibleImage
-{
-public:
-  ImageAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    ImageAccessible(aContent, aDoc) {}
+class ImageAccessibleWrap : public ImageAccessible, public ia2AccessibleImage {
+ public:
+  ImageAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
+      : ImageAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -27,12 +25,11 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-protected:
+ protected:
   ~ImageAccessibleWrap() {}
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

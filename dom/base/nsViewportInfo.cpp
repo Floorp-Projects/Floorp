@@ -10,9 +10,7 @@
 
 using namespace mozilla;
 
-void
-nsViewportInfo::ConstrainViewportValues()
-{
+void nsViewportInfo::ConstrainViewportValues() {
   if (mDefaultZoom > mMaxZoom) {
     mDefaultZoomValid = false;
     mDefaultZoom = mMaxZoom;
@@ -23,15 +21,12 @@ nsViewportInfo::ConstrainViewportValues()
   }
 }
 
-static const float&
-MinOrMax(const float& aA, const float& aB,
-         const float& (*aMinOrMax)(const float&,
-                                   const float&))
-{
-  MOZ_ASSERT(aA != nsViewportInfo::ExtendToZoom &&
-             aA != nsViewportInfo::DeviceSize &&
-             aB != nsViewportInfo::ExtendToZoom &&
-             aB != nsViewportInfo::DeviceSize);
+static const float& MinOrMax(const float& aA, const float& aB,
+                             const float& (*aMinOrMax)(const float&,
+                                                       const float&)) {
+  MOZ_ASSERT(
+      aA != nsViewportInfo::ExtendToZoom && aA != nsViewportInfo::DeviceSize &&
+      aB != nsViewportInfo::ExtendToZoom && aB != nsViewportInfo::DeviceSize);
   if (aA == nsViewportInfo::Auto) {
     return aB;
   }
@@ -42,16 +37,11 @@ MinOrMax(const float& aA, const float& aB,
 }
 
 // static
-const float&
-nsViewportInfo::Min(const float& aA, const float& aB)
-{
+const float& nsViewportInfo::Min(const float& aA, const float& aB) {
   return MinOrMax(aA, aB, std::min);
 }
 
-//static
-const float&
-nsViewportInfo::Max(const float& aA, const float& aB)
-{
+// static
+const float& nsViewportInfo::Max(const float& aA, const float& aB) {
   return MinOrMax(aA, aB, std::max);
 }
-

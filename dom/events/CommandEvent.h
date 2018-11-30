@@ -14,32 +14,29 @@
 namespace mozilla {
 namespace dom {
 
-class CommandEvent : public Event
-{
-public:
-  CommandEvent(EventTarget* aOwner,
-               nsPresContext* aPresContext,
+class CommandEvent : public Event {
+ public:
+  CommandEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                WidgetCommandEvent* aEvent);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(CommandEvent, Event)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return CommandEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   void GetCommand(nsAString& aCommand);
 
-protected:
+ protected:
   ~CommandEvent() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::CommandEvent>
-NS_NewDOMCommandEvent(mozilla::dom::EventTarget* aOwner,
-                      nsPresContext* aPresContext,
-                      mozilla::WidgetCommandEvent* aEvent);
+already_AddRefed<mozilla::dom::CommandEvent> NS_NewDOMCommandEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetCommandEvent* aEvent);
 
-#endif // mozilla_dom_CommandEvent_h_
+#endif  // mozilla_dom_CommandEvent_h_

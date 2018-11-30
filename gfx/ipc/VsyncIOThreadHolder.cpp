@@ -11,13 +11,11 @@
 namespace mozilla {
 namespace gfx {
 
-VsyncIOThreadHolder::VsyncIOThreadHolder()
-{
+VsyncIOThreadHolder::VsyncIOThreadHolder() {
   MOZ_COUNT_CTOR(VsyncIOThreadHolder);
 }
 
-VsyncIOThreadHolder::~VsyncIOThreadHolder()
-{
+VsyncIOThreadHolder::~VsyncIOThreadHolder() {
   MOZ_COUNT_DTOR(VsyncIOThreadHolder);
 
   if (!mThread) {
@@ -27,23 +25,18 @@ VsyncIOThreadHolder::~VsyncIOThreadHolder()
   if (NS_IsMainThread()) {
     mThread->AsyncShutdown();
   } else {
-    SystemGroup::Dispatch(TaskCategory::Other, NewRunnableMethod(
-      "nsIThread::AsyncShutdown", mThread, &nsIThread::AsyncShutdown));
+    SystemGroup::Dispatch(TaskCategory::Other,
+                          NewRunnableMethod("nsIThread::AsyncShutdown", mThread,
+                                            &nsIThread::AsyncShutdown));
   }
 }
 
-bool
-VsyncIOThreadHolder::Start()
-{
+bool VsyncIOThreadHolder::Start() {
   nsresult rv = NS_NewNamedThread("VsyncIOThread", getter_AddRefs(mThread));
   return NS_SUCCEEDED(rv);
 }
 
-RefPtr<nsIThread>
-VsyncIOThreadHolder::GetThread() const
-{
-  return mThread;
-}
+RefPtr<nsIThread> VsyncIOThreadHolder::GetThread() const { return mThread; }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

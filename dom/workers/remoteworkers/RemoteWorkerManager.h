@@ -19,43 +19,33 @@ class RemoteWorkerController;
 class RemoteWorkerServiceParent;
 
 // This class is used on PBackground thread, on the parent process only.
-class RemoteWorkerManager final
-{
-public:
+class RemoteWorkerManager final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerManager)
 
-  static already_AddRefed<RemoteWorkerManager>
-  GetOrCreate();
+  static already_AddRefed<RemoteWorkerManager> GetOrCreate();
 
-  void
-  RegisterActor(RemoteWorkerServiceParent* aActor);
+  void RegisterActor(RemoteWorkerServiceParent* aActor);
 
-  void
-  UnregisterActor(RemoteWorkerServiceParent* aActor);
+  void UnregisterActor(RemoteWorkerServiceParent* aActor);
 
-  void
-  Launch(RemoteWorkerController* aController,
-         const RemoteWorkerData& aData,
-         base::ProcessId aProcessId);
+  void Launch(RemoteWorkerController* aController,
+              const RemoteWorkerData& aData, base::ProcessId aProcessId);
 
-private:
+ private:
   RemoteWorkerManager();
   ~RemoteWorkerManager();
 
-  RemoteWorkerServiceParent*
-  SelectTargetActor(const RemoteWorkerData& aData,
-                    base::ProcessId aProcessId);
+  RemoteWorkerServiceParent* SelectTargetActor(const RemoteWorkerData& aData,
+                                               base::ProcessId aProcessId);
 
-  void
-  LaunchInternal(RemoteWorkerController* aController,
-                 RemoteWorkerServiceParent* aTargetActor,
-                 const RemoteWorkerData& aData);
+  void LaunchInternal(RemoteWorkerController* aController,
+                      RemoteWorkerServiceParent* aTargetActor,
+                      const RemoteWorkerData& aData);
 
-  void
-  LaunchNewContentProcess();
+  void LaunchNewContentProcess();
 
-  void
-  AsyncCreationFailed(RemoteWorkerController* aController);
+  void AsyncCreationFailed(RemoteWorkerController* aController);
 
   // The list of existing RemoteWorkerServiceParent actors for child processes.
   // Raw pointers because RemoteWorkerServiceParent actors unregister themselves
@@ -74,7 +64,7 @@ private:
   nsTArray<Pending> mPendings;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RemoteWorkerManager_h
+#endif  // mozilla_dom_RemoteWorkerManager_h

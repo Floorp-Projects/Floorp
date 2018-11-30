@@ -18,27 +18,27 @@ namespace ipc {
 class FileDescriptor;
 class InputStreamParams;
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#define NS_IIPCSERIALIZABLEINPUTSTREAM_IID \
-  {0xb0211b14, 0xea6d, 0x40d4, {0x87, 0xb5, 0x7b, 0xe3, 0xdf, 0xac, 0x09, 0xd1}}
+#define NS_IIPCSERIALIZABLEINPUTSTREAM_IID           \
+  {                                                  \
+    0xb0211b14, 0xea6d, 0x40d4, {                    \
+      0x87, 0xb5, 0x7b, 0xe3, 0xdf, 0xac, 0x09, 0xd1 \
+    }                                                \
+  }
 
-class NS_NO_VTABLE nsIIPCSerializableInputStream : public nsISupports
-{
-public:
-  typedef nsTArray<mozilla::ipc::FileDescriptor>
-          FileDescriptorArray;
+class NS_NO_VTABLE nsIIPCSerializableInputStream : public nsISupports {
+ public:
+  typedef nsTArray<mozilla::ipc::FileDescriptor> FileDescriptorArray;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIPCSERIALIZABLEINPUTSTREAM_IID)
 
-  virtual void
-  Serialize(mozilla::ipc::InputStreamParams& aParams,
-            FileDescriptorArray& aFileDescriptors) = 0;
+  virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,
+                         FileDescriptorArray& aFileDescriptors) = 0;
 
-  virtual bool
-  Deserialize(const mozilla::ipc::InputStreamParams& aParams,
-              const FileDescriptorArray& aFileDescriptors) = 0;
+  virtual bool Deserialize(const mozilla::ipc::InputStreamParams& aParams,
+                           const FileDescriptorArray& aFileDescriptors) = 0;
 
   // The number of bytes that are expected to be written when this
   // stream is serialized. A value of Some(N) indicates that N bytes
@@ -48,67 +48,53 @@ public:
   // serializing its contents (eg. a file-backed stream, or a stream
   // backed by an IPC actor), or the length of the stream's contents
   // cannot be determined.
-  virtual mozilla::Maybe<uint64_t>
-  ExpectedSerializedLength() = 0;
+  virtual mozilla::Maybe<uint64_t> ExpectedSerializedLength() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                               NS_IIPCSERIALIZABLEINPUTSTREAM_IID)
 
-#define NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM                                  \
-  virtual void                                                                 \
-  Serialize(mozilla::ipc::InputStreamParams&,                                  \
-            FileDescriptorArray&) override;                                    \
-                                                                               \
-  virtual bool                                                                 \
-  Deserialize(const mozilla::ipc::InputStreamParams&,                          \
-              const FileDescriptorArray&) override;                            \
-                                                                               \
-  virtual mozilla::Maybe<uint64_t>                                             \
-  ExpectedSerializedLength() override;
+#define NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM                      \
+  virtual void Serialize(mozilla::ipc::InputStreamParams&,         \
+                         FileDescriptorArray&) override;           \
+                                                                   \
+  virtual bool Deserialize(const mozilla::ipc::InputStreamParams&, \
+                           const FileDescriptorArray&) override;   \
+                                                                   \
+  virtual mozilla::Maybe<uint64_t> ExpectedSerializedLength() override;
 
-#define NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                          \
-  virtual void                                                                 \
-  Serialize(mozilla::ipc::InputStreamParams& aParams,                          \
-            FileDescriptorArray& aFileDescriptors) override                    \
-  {                                                                            \
-    _to Serialize(aParams, aFileDescriptors);                                  \
-  }                                                                            \
-                                                                               \
-  virtual bool                                                                 \
-  Deserialize(const mozilla::ipc::InputStreamParams& aParams,                  \
-              const FileDescriptorArray& aFileDescriptors) override            \
-  {                                                                            \
-    return _to Deserialize(aParams, aFileDescriptors);                         \
-  }                                                                            \
-                                                                               \
-  virtual mozilla::Maybe<uint64_t>                                             \
-  ExpectedSerializedLength() override                                          \
-  {                                                                            \
-    return _to ExpectedSerializedLength();                                     \
+#define NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                      \
+  virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,         \
+                         FileDescriptorArray& aFileDescriptors) override { \
+    _to Serialize(aParams, aFileDescriptors);                              \
+  }                                                                        \
+                                                                           \
+  virtual bool Deserialize(const mozilla::ipc::InputStreamParams& aParams, \
+                           const FileDescriptorArray& aFileDescriptors)    \
+      override {                                                           \
+    return _to Deserialize(aParams, aFileDescriptors);                     \
+  }                                                                        \
+                                                                           \
+  virtual mozilla::Maybe<uint64_t> ExpectedSerializedLength() override {   \
+    return _to ExpectedSerializedLength();                                 \
   }
 
-#define NS_FORWARD_SAFE_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                     \
-  virtual void                                                                 \
-  Serialize(mozilla::ipc::InputStreamParams& aParams,                          \
-            FileDescriptorArray& aFileDescriptors) override                    \
-  {                                                                            \
-    if (_to) {                                                                 \
-      _to->Serialize(aParams, aFileDescriptors);                               \
-    }                                                                          \
-  }                                                                            \
-                                                                               \
-  virtual bool                                                                 \
-  Deserialize(const mozilla::ipc::InputStreamParams& aParams,                  \
-              const FileDescriptorArray& aFileDescriptors) override            \
-  {                                                                            \
-    return _to ? _to->Deserialize(aParams, aFileDescriptors) : false;          \
-  }                                                                            \
-                                                                               \
-  virtual mozilla::Maybe<uint64_t>                                             \
-  ExpectedSerializedLength() override                                          \
-  {                                                                            \
-    return _to ? _to->ExpectedSerializedLength() : Nothing();                  \
+#define NS_FORWARD_SAFE_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                 \
+  virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,         \
+                         FileDescriptorArray& aFileDescriptors) override { \
+    if (_to) {                                                             \
+      _to->Serialize(aParams, aFileDescriptors);                           \
+    }                                                                      \
+  }                                                                        \
+                                                                           \
+  virtual bool Deserialize(const mozilla::ipc::InputStreamParams& aParams, \
+                           const FileDescriptorArray& aFileDescriptors)    \
+      override {                                                           \
+    return _to ? _to->Deserialize(aParams, aFileDescriptors) : false;      \
+  }                                                                        \
+                                                                           \
+  virtual mozilla::Maybe<uint64_t> ExpectedSerializedLength() override {   \
+    return _to ? _to->ExpectedSerializedLength() : Nothing();              \
   }
 
-#endif // mozilla_ipc_nsIIPCSerializableInputStream_h
+#endif  // mozilla_ipc_nsIIPCSerializableInputStream_h

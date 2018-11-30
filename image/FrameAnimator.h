@@ -23,23 +23,21 @@ namespace image {
 class RasterImage;
 class DrawableSurface;
 
-class AnimationState
-{
-public:
+class AnimationState {
+ public:
   explicit AnimationState(uint16_t aAnimationMode)
-    : mFrameCount(0)
-    , mCurrentAnimationFrameIndex(0)
-    , mLoopRemainingCount(-1)
-    , mLoopCount(-1)
-    , mFirstFrameTimeout(FrameTimeout::FromRawMilliseconds(0))
-    , mAnimationMode(aAnimationMode)
-    , mHasBeenDecoded(false)
-    , mHasRequestedDecode(false)
-    , mIsCurrentlyDecoded(false)
-    , mCompositedFrameInvalid(false)
-    , mCompositedFrameRequested(false)
-    , mDiscarded(false)
-  { }
+      : mFrameCount(0),
+        mCurrentAnimationFrameIndex(0),
+        mLoopRemainingCount(-1),
+        mLoopCount(-1),
+        mFirstFrameTimeout(FrameTimeout::FromRawMilliseconds(0)),
+        mAnimationMode(aAnimationMode),
+        mHasBeenDecoded(false),
+        mHasRequestedDecode(false),
+        mIsCurrentlyDecoded(false),
+        mCompositedFrameInvalid(false),
+        mCompositedFrameRequested(false),
+        mDiscarded(false) {}
 
   /**
    * Call this whenever a decode completes, a decode starts, or the image is
@@ -47,17 +45,17 @@ public:
    * mCompositedFrameInvalid, and mIsCurrentlyDecoded. If aAllowInvalidation
    * is true then returns a rect to invalidate.
    */
-  const gfx::IntRect UpdateState(bool aAnimationFinished,
-                            RasterImage *aImage,
-                            const gfx::IntSize& aSize,
-                            bool aAllowInvalidation = true);
-private:
-  const gfx::IntRect UpdateStateInternal(LookupResult& aResult,
-                                    bool aAnimationFinished,
-                                    const gfx::IntSize& aSize,
-                                    bool aAllowInvalidation = true);
+  const gfx::IntRect UpdateState(bool aAnimationFinished, RasterImage* aImage,
+                                 const gfx::IntSize& aSize,
+                                 bool aAllowInvalidation = true);
 
-public:
+ private:
+  const gfx::IntRect UpdateStateInternal(LookupResult& aResult,
+                                         bool aAnimationFinished,
+                                         const gfx::IntSize& aSize,
+                                         bool aAllowInvalidation = true);
+
+ public:
   /**
    * Call when a decode of this image has been completed.
    */
@@ -90,16 +88,12 @@ public:
   /**
    * Returns whether the composited frame is valid to draw to the screen.
    */
-  bool GetCompositedFrameInvalid() {
-    return mCompositedFrameInvalid;
-  }
+  bool GetCompositedFrameInvalid() { return mCompositedFrameInvalid; }
 
   /**
    * Returns whether the image is currently full decoded..
    */
-  bool GetIsCurrentlyDecoded() {
-    return mIsCurrentlyDecoded;
-  }
+  bool GetIsCurrentlyDecoded() { return mIsCurrentlyDecoded; }
 
   /**
    * Call when you need to re-start animating. Ensures we start from the first
@@ -175,10 +169,12 @@ public:
    * Get or set the timeout for the first frame. This is used to allow animation
    * scheduling even before a full decode runs for this image.
    */
-  void SetFirstFrameTimeout(FrameTimeout aTimeout) { mFirstFrameTimeout = aTimeout; }
+  void SetFirstFrameTimeout(FrameTimeout aTimeout) {
+    mFirstFrameTimeout = aTimeout;
+  }
   FrameTimeout FirstFrameTimeout() const { return mFirstFrameTimeout; }
 
-private:
+ private:
   friend class FrameAnimator;
 
   //! Area of the first frame that needs to be redrawn on subsequent loops.
@@ -259,16 +255,11 @@ private:
  * RefreshResult is used to let callers know how the state of the animation
  * changed during a call to FrameAnimator::RequestRefresh().
  */
-struct RefreshResult
-{
-  RefreshResult()
-    : mFrameAdvanced(false)
-    , mAnimationFinished(false)
-  { }
+struct RefreshResult {
+  RefreshResult() : mFrameAdvanced(false), mAnimationFinished(false) {}
 
   /// Merges another RefreshResult's changes into this RefreshResult.
-  void Accumulate(const RefreshResult& aOther)
-  {
+  void Accumulate(const RefreshResult& aOther) {
     mFrameAdvanced = mFrameAdvanced || aOther.mFrameAdvanced;
     mAnimationFinished = mAnimationFinished || aOther.mAnimationFinished;
     mDirtyRect = mDirtyRect.Union(aOther.mDirtyRect);
@@ -285,21 +276,14 @@ struct RefreshResult
   bool mAnimationFinished : 1;
 };
 
-class FrameAnimator
-{
-public:
+class FrameAnimator {
+ public:
   FrameAnimator(RasterImage* aImage, const gfx::IntSize& aSize)
-    : mImage(aImage)
-    , mSize(aSize)
-    , mLastCompositedFrameIndex(-1)
-  {
-     MOZ_COUNT_CTOR(FrameAnimator);
+      : mImage(aImage), mSize(aSize), mLastCompositedFrameIndex(-1) {
+    MOZ_COUNT_CTOR(FrameAnimator);
   }
 
-  ~FrameAnimator()
-  {
-    MOZ_COUNT_DTOR(FrameAnimator);
-  }
+  ~FrameAnimator() { MOZ_COUNT_DTOR(FrameAnimator); }
 
   /**
    * Call when you need to re-start animating. Ensures we start from the first
@@ -314,8 +298,7 @@ public:
    * Returns the result of that blending, including whether the current frame
    * changed and what the resulting dirty rectangle is.
    */
-  RefreshResult RequestRefresh(AnimationState& aState,
-                               const TimeStamp& aTime,
+  RefreshResult RequestRefresh(AnimationState& aState, const TimeStamp& aTime,
                                bool aAnimationFinished);
 
   /**
@@ -323,18 +306,18 @@ public:
    * not have required compositing). It may not be available because it hasn't
    * been decoded yet, in which case we return an empty LookupResult.
    */
-  LookupResult GetCompositedFrame(AnimationState& aState,
-                                  bool aMarkUsed);
+  LookupResult GetCompositedFrame(AnimationState& aState, bool aMarkUsed);
 
   /**
    * Collect an accounting of the memory occupied by the compositing surfaces we
    * use during animation playback. All of the actual animation frames are
    * stored in the SurfaceCache, so we don't need to report them here.
    */
-  void CollectSizeOfCompositingSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
-                                        MallocSizeOf aMallocSizeOf) const;
+  void CollectSizeOfCompositingSurfaces(
+      nsTArray<SurfaceMemoryCounter>& aCounters,
+      MallocSizeOf aMallocSizeOf) const;
 
-private: // methods
+ private:  // methods
   /**
    * Advances the animation. Typically, this will advance a single frame, but it
    * may advance multiple frames. This may happen if we have infrequently
@@ -351,10 +334,8 @@ private: // methods
    * @returns a RefreshResult that shows whether the frame was successfully
    *          advanced, and its resulting dirty rect.
    */
-  RefreshResult AdvanceFrame(AnimationState& aState,
-                             DrawableSurface& aFrames,
-                             RefPtr<imgFrame>& aCurrentFrame,
-                             TimeStamp aTime);
+  RefreshResult AdvanceFrame(AnimationState& aState, DrawableSurface& aFrames,
+                             RefPtr<imgFrame>& aCurrentFrame, TimeStamp aTime);
 
   /**
    * Get the time the frame we're currently displaying is supposed to end.
@@ -366,8 +347,7 @@ private: // methods
                                       FrameTimeout aCurrentTimeout) const;
 
   bool DoBlend(const RawAccessFrameRef& aPrevFrame,
-               const RawAccessFrameRef& aNextFrame,
-               uint32_t aNextFrameIndex,
+               const RawAccessFrameRef& aNextFrame, uint32_t aNextFrameIndex,
                gfx::IntRect* aDirtyRect);
 
   /** Clears an area of <aFrame> with transparent black.
@@ -384,8 +364,9 @@ private: // methods
                          const gfx::IntRect& aRectToClear);
 
   //! Copy one frame's image and mask into another
-  static bool CopyFrameImage(const uint8_t* aDataSrc, const gfx::IntRect& aRectSrc,
-                             uint8_t* aDataDest, const gfx::IntRect& aRectDest);
+  static bool CopyFrameImage(const uint8_t* aDataSrc,
+                             const gfx::IntRect& aRectSrc, uint8_t* aDataDest,
+                             const gfx::IntRect& aRectDest);
 
   /**
    * Draws one frame's image to into another, at the position specified by
@@ -410,7 +391,7 @@ private: // methods
                               BlendMethod aBlendMethod,
                               const gfx::IntRect& aBlendRect);
 
-private: // data
+ private:  // data
   //! A weak pointer to our owning image.
   RasterImage* mImage;
 
@@ -439,7 +420,7 @@ private: // data
   int32_t mLastCompositedFrameIndex;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_FrameAnimator_h
+#endif  // mozilla_image_FrameAnimator_h

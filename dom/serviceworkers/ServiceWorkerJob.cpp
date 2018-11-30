@@ -15,44 +15,25 @@
 namespace mozilla {
 namespace dom {
 
-ServiceWorkerJob::Type
-ServiceWorkerJob::GetType() const
-{
-  return mType;
-}
+ServiceWorkerJob::Type ServiceWorkerJob::GetType() const { return mType; }
 
-ServiceWorkerJob::State
-ServiceWorkerJob::GetState() const
-{
-  return mState;
-}
+ServiceWorkerJob::State ServiceWorkerJob::GetState() const { return mState; }
 
-bool
-ServiceWorkerJob::Canceled() const
-{
-  return mCanceled;
-}
+bool ServiceWorkerJob::Canceled() const { return mCanceled; }
 
-bool
-ServiceWorkerJob::ResultCallbacksInvoked() const
-{
+bool ServiceWorkerJob::ResultCallbacksInvoked() const {
   return mResultCallbacksInvoked;
 }
 
-bool
-ServiceWorkerJob::IsEquivalentTo(ServiceWorkerJob* aJob) const
-{
+bool ServiceWorkerJob::IsEquivalentTo(ServiceWorkerJob* aJob) const {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
-  return mType == aJob->mType &&
-         mScope.Equals(aJob->mScope) &&
+  return mType == aJob->mType && mScope.Equals(aJob->mScope) &&
          mScriptSpec.Equals(aJob->mScriptSpec) &&
          mPrincipal->Equals(aJob->mPrincipal);
 }
 
-void
-ServiceWorkerJob::AppendResultCallback(Callback* aCallback)
-{
+void ServiceWorkerJob::AppendResultCallback(Callback* aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mState != State::Finished);
   MOZ_DIAGNOSTIC_ASSERT(aCallback);
@@ -62,9 +43,7 @@ ServiceWorkerJob::AppendResultCallback(Callback* aCallback)
   mResultCallbackList.AppendElement(aCallback);
 }
 
-void
-ServiceWorkerJob::StealResultCallbacksFrom(ServiceWorkerJob* aJob)
-{
+void ServiceWorkerJob::StealResultCallbacksFrom(ServiceWorkerJob* aJob) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
   MOZ_ASSERT(aJob->mState == State::Initial);
@@ -81,9 +60,7 @@ ServiceWorkerJob::StealResultCallbacksFrom(ServiceWorkerJob* aJob)
   }
 }
 
-void
-ServiceWorkerJob::Start(Callback* aFinalCallback)
-{
+void ServiceWorkerJob::Start(Callback* aFinalCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!mCanceled);
 
@@ -95,9 +72,8 @@ ServiceWorkerJob::Start(Callback* aFinalCallback)
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Initial);
   mState = State::Started;
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod("ServiceWorkerJob::AsyncExecute",
-                      this, &ServiceWorkerJob::AsyncExecute);
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
+      "ServiceWorkerJob::AsyncExecute", this, &ServiceWorkerJob::AsyncExecute);
 
   // We may have to wait for the PBackground actor to be initialized
   // before proceeding.  We should always be able to get a ServiceWorkerManager,
@@ -109,38 +85,32 @@ ServiceWorkerJob::Start(Callback* aFinalCallback)
   }
 
   // Otherwise start asynchronously.  We should never run a job synchronously.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    NS_DispatchToMainThread(runnable.forget())));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable.forget())));
 }
 
-void
-ServiceWorkerJob::Cancel()
-{
+void ServiceWorkerJob::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mCanceled);
   mCanceled = true;
 }
 
-ServiceWorkerJob::ServiceWorkerJob(Type aType,
-                                   nsIPrincipal* aPrincipal,
+ServiceWorkerJob::ServiceWorkerJob(Type aType, nsIPrincipal* aPrincipal,
                                    const nsACString& aScope,
                                    const nsACString& aScriptSpec)
-  : mType(aType)
-  , mPrincipal(aPrincipal)
-  , mScope(aScope)
-  , mScriptSpec(aScriptSpec)
-  , mState(State::Initial)
-  , mCanceled(false)
-  , mResultCallbacksInvoked(false)
-{
+    : mType(aType),
+      mPrincipal(aPrincipal),
+      mScope(aScope),
+      mScriptSpec(aScriptSpec),
+      mState(State::Initial),
+      mCanceled(false),
+      mResultCallbacksInvoked(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPrincipal);
   MOZ_ASSERT(!mScope.IsEmpty());
   // Some job types may have an empty script spec
 }
 
-ServiceWorkerJob::~ServiceWorkerJob()
-{
+ServiceWorkerJob::~ServiceWorkerJob() {
   MOZ_ASSERT(NS_IsMainThread());
   // Jobs must finish or never be started.  Destroying an actively running
   // job is an error.
@@ -148,9 +118,7 @@ ServiceWorkerJob::~ServiceWorkerJob()
   MOZ_ASSERT_IF(mState == State::Finished, mResultCallbacksInvoked);
 }
 
-void
-ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv)
-{
+void ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Started);
 
@@ -173,16 +141,12 @@ ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv)
   }
 }
 
-void
-ServiceWorkerJob::InvokeResultCallbacks(nsresult aRv)
-{
+void ServiceWorkerJob::InvokeResultCallbacks(nsresult aRv) {
   ErrorResult converted(aRv);
   InvokeResultCallbacks(converted);
 }
 
-void
-ServiceWorkerJob::Finish(ErrorResult& aRv)
-{
+void ServiceWorkerJob::Finish(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Avoid double-completion because it can result on operating on cleaned
@@ -193,11 +157,11 @@ ServiceWorkerJob::Finish(ErrorResult& aRv)
     return;
   }
 
-  // Ensure that we only surface SecurityErr, TypeErr or InvalidStateErr to script.
+  // Ensure that we only surface SecurityErr, TypeErr or InvalidStateErr to
+  // script.
   if (aRv.Failed() && !aRv.ErrorCodeIs(NS_ERROR_DOM_SECURITY_ERR) &&
-                      !aRv.ErrorCodeIs(NS_ERROR_DOM_TYPE_ERR) &&
-                      !aRv.ErrorCodeIs(NS_ERROR_DOM_INVALID_STATE_ERR)) {
-
+      !aRv.ErrorCodeIs(NS_ERROR_DOM_TYPE_ERR) &&
+      !aRv.ErrorCodeIs(NS_ERROR_DOM_INVALID_STATE_ERR)) {
     // Remove the old error code so we can replace it with a TypeError.
     aRv.SuppressException();
 
@@ -229,15 +193,14 @@ ServiceWorkerJob::Finish(ErrorResult& aRv)
   // Async release this object to ensure that our caller methods complete
   // as well.
   NS_ReleaseOnMainThreadSystemGroup("ServiceWorkerJobProxyRunnable",
-    kungFuDeathGrip.forget(), true /* always proxy */);
+                                    kungFuDeathGrip.forget(),
+                                    true /* always proxy */);
 }
 
-void
-ServiceWorkerJob::Finish(nsresult aRv)
-{
+void ServiceWorkerJob::Finish(nsresult aRv) {
   ErrorResult converted(aRv);
   Finish(converted);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

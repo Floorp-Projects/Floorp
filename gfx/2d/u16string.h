@@ -19,6 +19,6 @@ typedef std::u16string u16string;
 typedef std::basic_string<char16_t> u16string;
 #endif
 
-} // mozilla
+}  // namespace mozilla
 
-#endif // mozilla_gfx_u16string_h
+#endif  // mozilla_gfx_u16string_h

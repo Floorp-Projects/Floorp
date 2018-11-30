@@ -13,8 +13,7 @@ namespace mozilla {
 namespace dom {
 
 NS_IMETHODIMP
-MIDIBackgroundRunnable::Run()
-{
+MIDIBackgroundRunnable::Run() {
   AssertIsOnBackgroundThread();
   if (!MIDIPlatformService::IsRunning()) {
     return NS_OK;
@@ -23,33 +22,23 @@ MIDIBackgroundRunnable::Run()
   return NS_OK;
 }
 
-void
-ReceiveRunnable::RunInternal()
-{
+void ReceiveRunnable::RunInternal() {
   MIDIPlatformService::Get()->CheckAndReceive(mPortId, mMsgs);
 }
 
-void
-AddPortRunnable::RunInternal()
-{
+void AddPortRunnable::RunInternal() {
   MIDIPlatformService::Get()->AddPortInfo(mPortInfo);
 }
 
-void
-RemovePortRunnable::RunInternal()
-{
+void RemovePortRunnable::RunInternal() {
   MIDIPlatformService::Get()->RemovePortInfo(mPortInfo);
 }
 
-void
-SetStatusRunnable::RunInternal()
-{
+void SetStatusRunnable::RunInternal() {
   MIDIPlatformService::Get()->UpdateStatus(mPortId, mState, mConnection);
 }
 
-void
-SendPortListRunnable::RunInternal()
-{
+void SendPortListRunnable::RunInternal() {
   // Unlike other runnables, SendPortListRunnable should just exit quietly if
   // the service has died.
   if (!MIDIPlatformService::IsRunning()) {
@@ -58,5 +47,5 @@ SendPortListRunnable::RunInternal()
   MIDIPlatformService::Get()->SendPortList();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -45,10 +45,8 @@ using namespace mozilla::places;
 /**
  * Creates a channel to obtain the default favicon.
  */
-static
-nsresult
-GetDefaultIcon(nsIChannel *aOriginalChannel, nsIChannel **aChannel)
-{
+static nsresult GetDefaultIcon(nsIChannel *aOriginalChannel,
+                               nsIChannel **aChannel) {
   nsCOMPtr<nsIURI> defaultIconURI;
   nsresult rv = NS_NewURI(getter_AddRefs(defaultIconURI),
                           NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
@@ -56,8 +54,10 @@ GetDefaultIcon(nsIChannel *aOriginalChannel, nsIChannel **aChannel)
   nsCOMPtr<nsILoadInfo> loadInfo = aOriginalChannel->GetLoadInfo();
   rv = NS_NewChannelInternal(aChannel, defaultIconURI, loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
-  Unused << (*aChannel)->SetContentType(NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
-  Unused << aOriginalChannel->SetContentType(NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
+  Unused << (*aChannel)->SetContentType(
+      NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
+  Unused << aOriginalChannel->SetContentType(
+      NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
   return NS_OK;
 }
 
@@ -76,25 +76,23 @@ namespace {
  * just fallback to the default favicon.  If anything happens at that point, the
  * world must be against us, so we can do nothing.
  */
-class faviconAsyncLoader : public AsyncStatementCallback
-{
-public:
+class faviconAsyncLoader : public AsyncStatementCallback {
+ public:
   faviconAsyncLoader(nsIChannel *aChannel, nsIStreamListener *aListener,
                      uint16_t aPreferredSize)
-    : mChannel(aChannel)
-    , mListener(aListener)
-    , mPreferredSize(aPreferredSize)
-  {
+      : mChannel(aChannel),
+        mListener(aListener),
+        mPreferredSize(aPreferredSize) {
     MOZ_ASSERT(aChannel, "Not providing a channel will result in crashes!");
-    MOZ_ASSERT(aListener, "Not providing a stream listener will result in crashes!");
+    MOZ_ASSERT(aListener,
+               "Not providing a stream listener will result in crashes!");
     MOZ_ASSERT(aChannel, "Not providing a channel!");
   }
 
   //////////////////////////////////////////////////////////////////////////////
   //// mozIStorageStatementCallback
 
-  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet) override
-  {
+  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet) override {
     nsCOMPtr<mozIStorageRow> row;
     while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
       int32_t width;
@@ -126,20 +124,17 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason) override
-  {
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override {
     MOZ_DIAGNOSTIC_ASSERT(mListener);
     NS_ENSURE_TRUE(mListener, NS_ERROR_UNEXPECTED);
 
     nsresult rv;
     // Ensure we'll break possible cycles with the listener.
-    auto cleanup = MakeScopeExit([&] () {
-      mListener = nullptr;
-    });
+    auto cleanup = MakeScopeExit([&]() { mListener = nullptr; });
 
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     nsCOMPtr<nsIEventTarget> target =
-      nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Other);
+        nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Other);
     if (!mData.IsEmpty()) {
       nsCOMPtr<nsIInputStream> stream;
       rv = NS_NewCStringInputStream(getter_AddRefs(stream), mData);
@@ -169,17 +164,17 @@ public:
     return newChannel->AsyncOpen2(mListener);
   }
 
-protected:
+ protected:
   virtual ~faviconAsyncLoader() {}
 
-private:
+ private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCString mData;
   uint16_t mPreferredSize;
 };
 
-} // namespace
+}  // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsAnnoProtocolHandler
@@ -189,58 +184,48 @@ NS_IMPL_ISUPPORTS(nsAnnoProtocolHandler, nsIProtocolHandler)
 // nsAnnoProtocolHandler::GetScheme
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::GetScheme(nsACString& aScheme)
-{
+nsAnnoProtocolHandler::GetScheme(nsACString &aScheme) {
   aScheme.AssignLiteral("moz-anno");
   return NS_OK;
 }
-
 
 // nsAnnoProtocolHandler::GetDefaultPort
 //
 //    There is no default port for annotation URLs
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::GetDefaultPort(int32_t *aDefaultPort)
-{
+nsAnnoProtocolHandler::GetDefaultPort(int32_t *aDefaultPort) {
   *aDefaultPort = -1;
   return NS_OK;
 }
 
-
 // nsAnnoProtocolHandler::GetProtocolFlags
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::GetProtocolFlags(uint32_t *aProtocolFlags)
-{
+nsAnnoProtocolHandler::GetProtocolFlags(uint32_t *aProtocolFlags) {
   *aProtocolFlags = (URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
                      URI_IS_LOCAL_RESOURCE);
   return NS_OK;
 }
 
-
 // nsAnnoProtocolHandler::NewURI
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::NewURI(const nsACString& aSpec,
-                              const char *aOriginCharset,
-                              nsIURI *aBaseURI, nsIURI **_retval)
-{
+nsAnnoProtocolHandler::NewURI(const nsACString &aSpec,
+                              const char *aOriginCharset, nsIURI *aBaseURI,
+                              nsIURI **_retval) {
   *_retval = nullptr;
   return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
-           .SetSpec(aSpec)
-           .Finalize(_retval);
+      .SetSpec(aSpec)
+      .Finalize(_retval);
 }
-
 
 // nsAnnoProtocolHandler::NewChannel
 //
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::NewChannel2(nsIURI* aURI,
-                                   nsILoadInfo* aLoadInfo,
-                                   nsIChannel** _retval)
-{
+nsAnnoProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
+                                   nsIChannel **_retval) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   // annotation info
@@ -257,11 +242,9 @@ nsAnnoProtocolHandler::NewChannel2(nsIURI* aURI,
 }
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
-{
+nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval) {
   return NewChannel2(aURI, nullptr, _retval);
 }
-
 
 // nsAnnoProtocolHandler::AllowPort
 //
@@ -269,29 +252,24 @@ nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 
 NS_IMETHODIMP
 nsAnnoProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                 bool *_retval)
-{
+                                 bool *_retval) {
   *_retval = false;
   return NS_OK;
 }
-
 
 // nsAnnoProtocolHandler::ParseAnnoURI
 //
 //    Splits an annotation URL into its URI and name parts
 
-nsresult
-nsAnnoProtocolHandler::ParseAnnoURI(nsIURI* aURI,
-                                    nsIURI** aResultURI, nsCString& aName)
-{
+nsresult nsAnnoProtocolHandler::ParseAnnoURI(nsIURI *aURI, nsIURI **aResultURI,
+                                             nsCString &aName) {
   nsresult rv;
   nsAutoCString path;
   rv = aURI->GetPathQueryRef(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t firstColon = path.FindChar(':');
-  if (firstColon <= 0)
-    return NS_ERROR_MALFORMED_URI;
+  if (firstColon <= 0) return NS_ERROR_MALFORMED_URI;
 
   rv = NS_NewURI(aResultURI, Substring(path, firstColon + 1));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -300,49 +278,49 @@ nsAnnoProtocolHandler::ParseAnnoURI(nsIURI* aURI,
   return NS_OK;
 }
 
-nsresult
-nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
-                                         nsILoadInfo* aLoadInfo, nsIChannel **_channel)
-{
+nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI,
+                                                  nsIURI *aAnnotationURI,
+                                                  nsILoadInfo *aLoadInfo,
+                                                  nsIChannel **_channel) {
   // Create our channel.  We'll call SetContentType with the right type when
   // we know what it actually is.
   nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
-    aURI, aLoadInfo, aAnnotationURI,
-    [] (nsIStreamListener* listener, nsIChannel* channel, nsIURI* annotationURI) {
-      auto fallback = [&] () -> RequestOrReason {
-        nsCOMPtr<nsIChannel> chan;
-        nsresult rv = GetDefaultIcon(channel, getter_AddRefs(chan));
-        NS_ENSURE_SUCCESS(rv, Err(rv));
+      aURI, aLoadInfo, aAnnotationURI,
+      [](nsIStreamListener *listener, nsIChannel *channel,
+         nsIURI *annotationURI) {
+        auto fallback = [&]() -> RequestOrReason {
+          nsCOMPtr<nsIChannel> chan;
+          nsresult rv = GetDefaultIcon(channel, getter_AddRefs(chan));
+          NS_ENSURE_SUCCESS(rv, Err(rv));
 
-        rv = chan->AsyncOpen2(listener);
-        NS_ENSURE_SUCCESS(rv, Err(rv));
+          rv = chan->AsyncOpen2(listener);
+          NS_ENSURE_SUCCESS(rv, Err(rv));
 
-        return RequestOrReason(chan.forget());
-      };
+          return RequestOrReason(chan.forget());
+        };
 
-      // Now we go ahead and get our data asynchronously for the favicon.
-      // Ignore the ref part of the URI before querying the database because
-      // we may have added a size fragment for rendering purposes.
-      nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-      nsAutoCString faviconSpec;
-      nsresult rv = annotationURI->GetSpecIgnoringRef(faviconSpec);
-      // Any failures fallback to the default icon channel.
-      if (NS_FAILED(rv) || !faviconService)
-        return fallback();
+        // Now we go ahead and get our data asynchronously for the favicon.
+        // Ignore the ref part of the URI before querying the database because
+        // we may have added a size fragment for rendering purposes.
+        nsFaviconService *faviconService =
+            nsFaviconService::GetFaviconService();
+        nsAutoCString faviconSpec;
+        nsresult rv = annotationURI->GetSpecIgnoringRef(faviconSpec);
+        // Any failures fallback to the default icon channel.
+        if (NS_FAILED(rv) || !faviconService) return fallback();
 
-      uint16_t preferredSize = UINT16_MAX;
-      MOZ_ALWAYS_SUCCEEDS(faviconService->PreferredSizeFromURI(annotationURI, &preferredSize));
-      nsCOMPtr<mozIStorageStatementCallback> callback =
-        new faviconAsyncLoader(channel, listener, preferredSize);
-      if (!callback)
-        return fallback();
+        uint16_t preferredSize = UINT16_MAX;
+        MOZ_ALWAYS_SUCCEEDS(faviconService->PreferredSizeFromURI(
+            annotationURI, &preferredSize));
+        nsCOMPtr<mozIStorageStatementCallback> callback =
+            new faviconAsyncLoader(channel, listener, preferredSize);
+        if (!callback) return fallback();
 
-      rv = faviconService->GetFaviconDataAsync(faviconSpec, callback);
-      if (NS_FAILED(rv))
-        return fallback();
+        rv = faviconService->GetFaviconDataAsync(faviconSpec, callback);
+        if (NS_FAILED(rv)) return fallback();
 
-      return RequestOrReason(nullptr);
-    });
+        return RequestOrReason(nullptr);
+      });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 
   channel.forget(_channel);

@@ -39,14 +39,11 @@ using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 
-nsFrameManager::~nsFrameManager()
-{
+nsFrameManager::~nsFrameManager() {
   NS_ASSERTION(!mPresShell, "nsFrameManager::Destroy never called");
 }
 
-void
-nsFrameManager::Destroy()
-{
+void nsFrameManager::Destroy() {
   NS_ASSERTION(mPresShell, "Frame manager already shut down.");
 
   // Destroy the frame hierarchy.
@@ -61,44 +58,39 @@ nsFrameManager::Destroy()
 }
 
 //----------------------------------------------------------------------
-void
-nsFrameManager::AppendFrames(nsContainerFrame* aParentFrame,
-                             ChildListID       aListID,
-                             nsFrameList&      aFrameList)
-{
+void nsFrameManager::AppendFrames(nsContainerFrame* aParentFrame,
+                                  ChildListID aListID,
+                                  nsFrameList& aFrameList) {
   if (aParentFrame->IsAbsoluteContainer() &&
       aListID == aParentFrame->GetAbsoluteListID()) {
-    aParentFrame->GetAbsoluteContainingBlock()->
-      AppendFrames(aParentFrame, aListID, aFrameList);
+    aParentFrame->GetAbsoluteContainingBlock()->AppendFrames(
+        aParentFrame, aListID, aFrameList);
   } else {
     aParentFrame->AppendFrames(aListID, aFrameList);
   }
 }
 
-void
-nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
-                             ChildListID       aListID,
-                             nsIFrame*         aPrevFrame,
-                             nsFrameList&      aFrameList)
-{
-  MOZ_ASSERT(!aPrevFrame || (!aPrevFrame->GetNextContinuation()
-             || (((aPrevFrame->GetNextContinuation()->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER))
-             && !(aPrevFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER))),
-             "aPrevFrame must be the last continuation in its chain!");
+void nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
+                                  ChildListID aListID, nsIFrame* aPrevFrame,
+                                  nsFrameList& aFrameList) {
+  MOZ_ASSERT(
+      !aPrevFrame ||
+          (!aPrevFrame->GetNextContinuation() ||
+           (((aPrevFrame->GetNextContinuation()->GetStateBits() &
+              NS_FRAME_IS_OVERFLOW_CONTAINER)) &&
+            !(aPrevFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER))),
+      "aPrevFrame must be the last continuation in its chain!");
 
   if (aParentFrame->IsAbsoluteContainer() &&
       aListID == aParentFrame->GetAbsoluteListID()) {
-    aParentFrame->GetAbsoluteContainingBlock()->
-      InsertFrames(aParentFrame, aListID, aPrevFrame, aFrameList);
+    aParentFrame->GetAbsoluteContainingBlock()->InsertFrames(
+        aParentFrame, aListID, aPrevFrame, aFrameList);
   } else {
     aParentFrame->InsertFrames(aListID, aPrevFrame, aFrameList);
   }
 }
 
-void
-nsFrameManager::RemoveFrame(ChildListID     aListID,
-                            nsIFrame*       aOldFrame)
-{
+void nsFrameManager::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   // In case the reflow doesn't invalidate anything since it just leaves
   // a gap where the old frame was, we invalidate it here.  (This is
   // reasonably likely to happen when removing a last child in a way
@@ -108,8 +100,9 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
   aOldFrame->InvalidateFrameForRemoval();
 
   NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
-               // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
-               aOldFrame->IsTextFrame(),
+                   // exception for
+                   // nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
+                   aOldFrame->IsTextFrame(),
                "Must remove first continuation.");
   NS_ASSERTION(!(aOldFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
                  aOldFrame->GetPlaceholderFrame()),
@@ -117,8 +110,8 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
   nsContainerFrame* parentFrame = aOldFrame->GetParent();
   if (parentFrame->IsAbsoluteContainer() &&
       aListID == parentFrame->GetAbsoluteListID()) {
-    parentFrame->GetAbsoluteContainingBlock()->
-      RemoveFrame(parentFrame, aListID, aOldFrame);
+    parentFrame->GetAbsoluteContainingBlock()->RemoveFrame(parentFrame, aListID,
+                                                           aOldFrame);
   } else {
     parentFrame->RemoveFrame(aListID, aOldFrame);
   }
@@ -127,11 +120,10 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
 //----------------------------------------------------------------------
 
 // Capture state for a given frame.
-// Accept a content id here, in some cases we may not have content (scroll position)
-void
-nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
-                                     nsILayoutHistoryState* aState)
-{
+// Accept a content id here, in some cases we may not have content (scroll
+// position)
+void nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
+                                          nsILayoutHistoryState* aState) {
   if (!aFrame || !aState) {
     NS_WARNING("null frame, or state");
     return;
@@ -155,7 +147,7 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   nsIContent* content = aFrame->GetContent();
   nsIDocument* doc = content ? content->GetUncomposedDoc() : nullptr;
   nsresult rv = statefulFrame->GenerateStateKey(content, doc, stateKey);
-  if(NS_FAILED(rv) || stateKey.IsEmpty()) {
+  if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return;
   }
 
@@ -163,11 +155,10 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   aState->AddState(stateKey, std::move(frameState));
 }
 
-void
-nsFrameManager::CaptureFrameState(nsIFrame* aFrame,
-                                  nsILayoutHistoryState* aState)
-{
-  MOZ_ASSERT(nullptr != aFrame && nullptr != aState, "null parameters passed in");
+void nsFrameManager::CaptureFrameState(nsIFrame* aFrame,
+                                       nsILayoutHistoryState* aState) {
+  MOZ_ASSERT(nullptr != aFrame && nullptr != aState,
+             "null parameters passed in");
 
   CaptureFrameStateFor(aFrame, aState);
 
@@ -190,11 +181,10 @@ nsFrameManager::CaptureFrameState(nsIFrame* aFrame,
 }
 
 // Restore state for a given frame.
-// Accept a content id here, in some cases we may not have content (scroll position)
-void
-nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
-                                     nsILayoutHistoryState* aState)
-{
+// Accept a content id here, in some cases we may not have content (scroll
+// position)
+void nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
+                                          nsILayoutHistoryState* aState) {
   if (!aFrame || !aState) {
     NS_WARNING("null frame or state");
     return;
@@ -238,11 +228,10 @@ nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   aState->RemoveState(stateKey);
 }
 
-void
-nsFrameManager::RestoreFrameState(nsIFrame* aFrame,
-                                  nsILayoutHistoryState* aState)
-{
-  MOZ_ASSERT(nullptr != aFrame && nullptr != aState, "null parameters passed in");
+void nsFrameManager::RestoreFrameState(nsIFrame* aFrame,
+                                       nsILayoutHistoryState* aState) {
+  MOZ_ASSERT(nullptr != aFrame && nullptr != aState,
+             "null parameters passed in");
 
   RestoreFrameStateFor(aFrame, aState);
 
@@ -256,8 +245,6 @@ nsFrameManager::RestoreFrameState(nsIFrame* aFrame,
   }
 }
 
-void
-nsFrameManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
-{
+void nsFrameManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   aSizes.mLayoutPresShellSize += aSizes.mState.mMallocSizeOf(this);
 }

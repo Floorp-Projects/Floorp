@@ -13,7 +13,8 @@
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixutil.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 using namespace mozilla::pkix;
 
@@ -23,37 +24,24 @@ using namespace mozilla::pkix;
 // Note that writing to Output always succeeds. If the internal buffer
 // overflows, an error flag is turned on and you won't be able to retrieve
 // the final data.
-class Output
-{
-public:
+class Output {
+ public:
   Output(uint8_t* buffer, size_t length)
-    : begin(buffer)
-    , end(buffer + length)
-    , current(begin)
-    , overflowed(false)
-  {
-  }
+      : begin(buffer),
+        end(buffer + length),
+        current(begin),
+        overflowed(false) {}
 
   template <size_t N>
-  explicit Output(uint8_t (&buffer)[N])
-    : Output(buffer, N)
-  {
-  }
+  explicit Output(uint8_t (&buffer)[N]) : Output(buffer, N) {}
 
-  void Write(Input data)
-  {
-    Write(data.UnsafeGetData(), data.GetLength());
-  }
+  void Write(Input data) { Write(data.UnsafeGetData(), data.GetLength()); }
 
-  void Write(uint8_t b)
-  {
-    Write(&b, 1);
-  }
+  void Write(uint8_t b) { Write(&b, 1); }
 
   bool IsOverflowed() const { return overflowed; }
 
-  Result GetInput(/*out*/ Input& input) const
-  {
+  Result GetInput(/*out*/ Input& input) const {
     if (overflowed || current < begin) {
       return Result::FATAL_ERROR_INVALID_STATE;
     }
@@ -61,7 +49,7 @@ public:
     return input.Init(begin, length);
   }
 
-private:
+ private:
   uint8_t* begin;
   uint8_t* end;
   uint8_t* current;
@@ -70,8 +58,7 @@ private:
   Output(const Output&) = delete;
   void operator=(const Output&) = delete;
 
-  void Write(const uint8_t* data, size_t length)
-  {
+  void Write(const uint8_t* data, size_t length) {
     if (end < current) {
       overflowed = true;
     }
@@ -112,18 +99,15 @@ private:
 
 // python DottedOIDToCode.py id-embeddedSctList 1.3.6.1.4.1.11129.2.4.2
 // See Section 3.3 of RFC 6962.
-static const uint8_t EMBEDDED_SCT_LIST_OID[] = {
-  0x2b, 0x06, 0x01, 0x04, 0x01, 0xd6, 0x79, 0x02, 0x04, 0x02
-};
+static const uint8_t EMBEDDED_SCT_LIST_OID[] = {0x2b, 0x06, 0x01, 0x04, 0x01,
+                                                0xd6, 0x79, 0x02, 0x04, 0x02};
 // Maximum length of DER TLV header
 static const size_t MAX_TLV_HEADER_LENGTH = 4;
 // DER tag of the "extensions [3]" field from TBSCertificate
 static const uint8_t EXTENSIONS_CONTEXT_TAG =
-  der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3;
+    der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3;
 
-Result
-CheckForInputSizeTypeOverflow(size_t length)
-{
+Result CheckForInputSizeTypeOverflow(size_t length) {
   if (length > std::numeric_limits<Input::size_type>::max()) {
     return Result::FATAL_ERROR_INVALID_STATE;
   }
@@ -137,21 +121,16 @@ CheckForInputSizeTypeOverflow(size_t length)
 // manner by breaking the source DER into several parts and then joining
 // the right parts, taking care to update the relevant TLV headers.
 // See WriteOutput for more details on the parts involved.
-class PrecertTBSExtractor
-{
-public:
+class PrecertTBSExtractor {
+ public:
   // |buffer| is the buffer to be used for writing the output. Since the
   // required buffer size is not generally known in advance, it's best
   // to use at least the size of the input certificate DER.
   PrecertTBSExtractor(Input der, uint8_t* buffer, size_t bufferLength)
-    : mDER(der)
-    , mOutput(buffer, bufferLength)
-  {
-  }
+      : mDER(der), mOutput(buffer, bufferLength) {}
 
   // Performs the extraction.
-  Result Init()
-  {
+  Result Init() {
     Reader tbsReader;
     Result rv = GetTBSCertificate(tbsReader);
     if (rv != Success) {
@@ -173,25 +152,20 @@ public:
 
   // Use to retrieve the result after a successful call to Init.
   // The returned Input points to the buffer supplied in the constructor.
-  Input GetPrecertTBS()
-  {
-    return mPrecertTBS;
-  }
+  Input GetPrecertTBS() { return mPrecertTBS; }
 
-private:
-  Result GetTBSCertificate(Reader& tbsReader)
-  {
+ private:
+  Result GetTBSCertificate(Reader& tbsReader) {
     Reader certificateReader;
-    Result rv = der::ExpectTagAndGetValueAtEnd(mDER, der::SEQUENCE,
-                                               certificateReader);
+    Result rv =
+        der::ExpectTagAndGetValueAtEnd(mDER, der::SEQUENCE, certificateReader);
     if (rv != Success) {
       return rv;
     }
     return ExpectTagAndGetValue(certificateReader, der::SEQUENCE, tbsReader);
   }
 
-  Result ExtractTLVsBeforeExtensions(Reader& tbsReader)
-  {
+  Result ExtractTLVsBeforeExtensions(Reader& tbsReader) {
     Reader::Mark tbsBegin = tbsReader.GetMark();
     while (!tbsReader.AtEnd()) {
       if (tbsReader.Peek(EXTENSIONS_CONTEXT_TAG)) {
@@ -207,16 +181,14 @@ private:
     return tbsReader.GetInput(tbsBegin, mTLVsBeforeExtensions);
   }
 
-  Result ExtractOptionalExtensionsExceptSCTs(Reader& tbsReader)
-  {
+  Result ExtractOptionalExtensionsExceptSCTs(Reader& tbsReader) {
     if (!tbsReader.Peek(EXTENSIONS_CONTEXT_TAG)) {
       return Success;
     }
 
     Reader extensionsContextReader;
-    Result rv = der::ExpectTagAndGetValueAtEnd(tbsReader,
-                                               EXTENSIONS_CONTEXT_TAG,
-                                               extensionsContextReader);
+    Result rv = der::ExpectTagAndGetValueAtEnd(
+        tbsReader, EXTENSIONS_CONTEXT_TAG, extensionsContextReader);
     if (rv != Success) {
       return rv;
     }
@@ -231,8 +203,8 @@ private:
     while (!extensionsReader.AtEnd()) {
       Reader::Mark extensionTLVBegin = extensionsReader.GetMark();
       Reader extension;
-      rv = der::ExpectTagAndGetValue(extensionsReader, der::SEQUENCE,
-                                     extension);
+      rv =
+          der::ExpectTagAndGetValue(extensionsReader, der::SEQUENCE, extension);
       if (rv != Success) {
         return rv;
       }
@@ -253,8 +225,7 @@ private:
     return Success;
   }
 
-  Result WriteOutput()
-  {
+  Result WriteOutput() {
     // What should be written here:
     //
     // TBSCertificate ::= SEQUENCE (TLV with header |tbsHeader|)
@@ -289,32 +260,31 @@ private:
       // Since we're getting these extensions from a certificate that has
       // already fit in an Input, this shouldn't overflow.
       size_t extensionsContextLengthAsSizeT =
-        static_cast<size_t>(extensionsHeader.GetLength()) +
-        static_cast<size_t>(extensionsValueLength);
+          static_cast<size_t>(extensionsHeader.GetLength()) +
+          static_cast<size_t>(extensionsValueLength);
       rv = CheckForInputSizeTypeOverflow(extensionsContextLengthAsSizeT);
       if (rv != Success) {
         return rv;
       }
       Input::size_type extensionsContextLength =
-        static_cast<Input::size_type>(extensionsContextLengthAsSizeT);
-      rv = MakeTLVHeader(EXTENSIONS_CONTEXT_TAG,
-                         extensionsContextLength,
-                         extensionsContextHeaderBuffer,
-                         extensionsContextHeader);
+          static_cast<Input::size_type>(extensionsContextLengthAsSizeT);
+      rv =
+          MakeTLVHeader(EXTENSIONS_CONTEXT_TAG, extensionsContextLength,
+                        extensionsContextHeaderBuffer, extensionsContextHeader);
       if (rv != Success) {
         return rv;
       }
       size_t tbsLengthAsSizeT =
-        static_cast<size_t>(mTLVsBeforeExtensions.GetLength()) +
-        static_cast<size_t>(extensionsContextHeader.GetLength()) +
-        static_cast<size_t>(extensionsHeader.GetLength()) +
-        static_cast<size_t>(extensionsValueLength);
+          static_cast<size_t>(mTLVsBeforeExtensions.GetLength()) +
+          static_cast<size_t>(extensionsContextHeader.GetLength()) +
+          static_cast<size_t>(extensionsHeader.GetLength()) +
+          static_cast<size_t>(extensionsValueLength);
       rv = CheckForInputSizeTypeOverflow(tbsLengthAsSizeT);
       if (rv != Success) {
         return rv;
       }
       Input::size_type tbsLength =
-        static_cast<Input::size_type>(tbsLengthAsSizeT);
+          static_cast<Input::size_type>(tbsLengthAsSizeT);
       rv = MakeTLVHeader(der::SEQUENCE, tbsLength, tbsHeaderBuffer, tbsHeader);
       if (rv != Success) {
         return rv;
@@ -344,8 +314,7 @@ private:
 
   Result MakeTLVHeader(uint8_t tag, size_t length,
                        uint8_t (&buffer)[MAX_TLV_HEADER_LENGTH],
-                       /*out*/ Input& header)
-  {
+                       /*out*/ Input& header) {
     Output output(buffer);
     output.Write(tag);
     if (length < 128) {
@@ -370,10 +339,8 @@ private:
   Input mPrecertTBS;
 };
 
-Result
-GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
-                   LogEntry& output)
-{
+Result GetPrecertLogEntry(Input leafCertificate,
+                          Input issuerSubjectPublicKeyInfo, LogEntry& output) {
   assert(leafCertificate.GetLength() > 0);
   assert(issuerSubjectPublicKeyInfo.GetLength() > 0);
   output.Reset();
@@ -381,8 +348,7 @@ GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
   Buffer precertTBSBuffer;
   precertTBSBuffer.resize(leafCertificate.GetLength());
 
-  PrecertTBSExtractor extractor(leafCertificate,
-                                precertTBSBuffer.data(),
+  PrecertTBSExtractor extractor(leafCertificate, precertTBSBuffer.data(),
                                 precertTBSBuffer.size());
   Result rv = extractor.Init();
   if (rv != Success) {
@@ -398,17 +364,15 @@ GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
 
   output.issuerKeyHash.resize(SHA256_LENGTH);
   return DigestBufNSS(issuerSubjectPublicKeyInfo, DigestAlgorithm::sha256,
-                      output.issuerKeyHash.data(),
-                      output.issuerKeyHash.size());
+                      output.issuerKeyHash.data(), output.issuerKeyHash.size());
 }
 
-void
-GetX509LogEntry(Input leafCertificate, LogEntry& output)
-{
+void GetX509LogEntry(Input leafCertificate, LogEntry& output) {
   assert(leafCertificate.GetLength() > 0);
   output.Reset();
   output.type = LogEntry::Type::X509;
   InputToBuffer(leafCertificate, output.leafCertificate);
 }
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

@@ -38,9 +38,8 @@ typedef nsTArray<ChannelPixelLayout> ImagePixelLayout;
  * because we don't want to pollute the layers::Image's interface with methods
  * that are only meaningful to the ImageBitmap.
  */
-class ImageUtils
-{
-public:
+class ImageUtils {
+ public:
   class Impl;
   ImageUtils() = delete;
   ImageUtils(const ImageUtils&) = delete;
@@ -55,11 +54,11 @@ public:
 
   uint32_t GetBufferLength() const;
 
-protected:
+ protected:
   Impl* mImpl;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_ImageBitmapFormatUtils_h */

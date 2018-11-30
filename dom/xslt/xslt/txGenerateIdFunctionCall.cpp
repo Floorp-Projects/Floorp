@@ -16,10 +16,8 @@
 
 /**
  * Creates a new generate-id function call
-**/
-GenerateIdFunctionCall::GenerateIdFunctionCall()
-{
-}
+ **/
+GenerateIdFunctionCall::GenerateIdFunctionCall() {}
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -28,85 +26,74 @@ GenerateIdFunctionCall::GenerateIdFunctionCall()
  * for evaluation
  * @return the result of the evaluation
  * @see FunctionCall.h
-**/
-nsresult
-GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
-                                 txAExprResult** aResult)
-{
-    *aResult = nullptr;
-    if (!requireParams(0, 1, aContext))
-        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
+ **/
+nsresult GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
+                                          txAExprResult** aResult) {
+  *aResult = nullptr;
+  if (!requireParams(0, 1, aContext)) return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-    txExecutionState* es =
-        static_cast<txExecutionState*>(aContext->getPrivateContext());
-    if (!es) {
-        NS_ERROR(
-            "called xslt extension function \"generate-id\" with wrong context");
-        return NS_ERROR_UNEXPECTED;
-    }
+  txExecutionState* es =
+      static_cast<txExecutionState*>(aContext->getPrivateContext());
+  if (!es) {
+    NS_ERROR(
+        "called xslt extension function \"generate-id\" with wrong context");
+    return NS_ERROR_UNEXPECTED;
+  }
 
-    nsresult rv = NS_OK;
-    if (mParams.IsEmpty()) {
-        StringResult* strRes;
-        rv = aContext->recycler()->getStringResult(&strRes);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        txXPathNodeUtils::getXSLTId(aContext->getContextNode(),
-                                    es->getSourceDocument(),
-                                    strRes->mValue);
-
-        *aResult = strRes;
-
-        return NS_OK;
-    }
-
-    RefPtr<txNodeSet> nodes;
-    rv = evaluateToNodeSet(mParams[0], aContext,
-                           getter_AddRefs(nodes));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (nodes->isEmpty()) {
-        aContext->recycler()->getEmptyStringResult(aResult);
-
-        return NS_OK;
-    }
-
+  nsresult rv = NS_OK;
+  if (mParams.IsEmpty()) {
     StringResult* strRes;
     rv = aContext->recycler()->getStringResult(&strRes);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    txXPathNodeUtils::getXSLTId(nodes->get(0), es->getSourceDocument(),
-                                strRes->mValue);
+    txXPathNodeUtils::getXSLTId(aContext->getContextNode(),
+                                es->getSourceDocument(), strRes->mValue);
 
     *aResult = strRes;
 
     return NS_OK;
+  }
+
+  RefPtr<txNodeSet> nodes;
+  rv = evaluateToNodeSet(mParams[0], aContext, getter_AddRefs(nodes));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (nodes->isEmpty()) {
+    aContext->recycler()->getEmptyStringResult(aResult);
+
+    return NS_OK;
+  }
+
+  StringResult* strRes;
+  rv = aContext->recycler()->getStringResult(&strRes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  txXPathNodeUtils::getXSLTId(nodes->get(0), es->getSourceDocument(),
+                              strRes->mValue);
+
+  *aResult = strRes;
+
+  return NS_OK;
 }
 
-Expr::ResultType
-GenerateIdFunctionCall::getReturnType()
-{
-    return STRING_RESULT;
+Expr::ResultType GenerateIdFunctionCall::getReturnType() {
+  return STRING_RESULT;
 }
 
-bool
-GenerateIdFunctionCall::isSensitiveTo(ContextSensitivity aContext)
-{
-    if (aContext & PRIVATE_CONTEXT) {
-        return true;
-    }
+bool GenerateIdFunctionCall::isSensitiveTo(ContextSensitivity aContext) {
+  if (aContext & PRIVATE_CONTEXT) {
+    return true;
+  }
 
-    if (mParams.IsEmpty()) {
-        return !!(aContext & NODE_CONTEXT);
-    }
+  if (mParams.IsEmpty()) {
+    return !!(aContext & NODE_CONTEXT);
+  }
 
-    return argsSensitiveTo(aContext);
+  return argsSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING
-void
-GenerateIdFunctionCall::appendName(nsAString& aDest)
-{
-    aDest.Append(nsGkAtoms::generateId->GetUTF16String());
+void GenerateIdFunctionCall::appendName(nsAString& aDest) {
+  aDest.Append(nsGkAtoms::generateId->GetUTF16String());
 }
 #endif

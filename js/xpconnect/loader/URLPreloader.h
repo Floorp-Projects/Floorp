@@ -30,7 +30,7 @@ class nsZipArchive;
 
 namespace mozilla {
 namespace loader {
-    class InputBuffer;
+class InputBuffer;
 }
 
 using namespace mozilla::loader;
@@ -44,293 +44,271 @@ class ScriptPreloader;
  * read synchronously from disk, and (if startup is not already complete)
  * added to the pre-load list for the next session.
  */
-class URLPreloader final : public nsIObserver
-                         , public nsIMemoryReporter
-{
-    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+class URLPreloader final : public nsIObserver, public nsIMemoryReporter {
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-    URLPreloader();
+  URLPreloader();
 
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-    NS_DECL_NSIMEMORYREPORTER
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEMORYREPORTER
 
-    static URLPreloader& GetSingleton();
+  static URLPreloader& GetSingleton();
 
-    // The type of read operation to perform.
-    enum ReadType
-    {
-        // Read the file and then immediately forget its data.
-        Forget,
-        // Read the file and retain its data for the next caller.
-        Retain,
+  // The type of read operation to perform.
+  enum ReadType {
+    // Read the file and then immediately forget its data.
+    Forget,
+    // Read the file and retain its data for the next caller.
+    Retain,
+  };
+
+  // Helpers to read the contents of files or JAR archive entries with various
+  // representations. If the preloader has not yet been initialized, or the
+  // given location is not supported by the cache, the entries will be read
+  // synchronously, and not stored in the cache.
+  static Result<const nsCString, nsresult> Read(FileLocation& location,
+                                                ReadType readType = Forget);
+
+  static Result<const nsCString, nsresult> ReadURI(nsIURI* uri,
+                                                   ReadType readType = Forget);
+
+  static Result<const nsCString, nsresult> ReadFile(nsIFile* file,
+                                                    ReadType readType = Forget);
+
+  static Result<const nsCString, nsresult> ReadZip(nsZipArchive* archive,
+                                                   const nsACString& path,
+                                                   ReadType readType = Forget);
+
+ private:
+  struct CacheKey;
+
+  Result<const nsCString, nsresult> ReadInternal(const CacheKey& key,
+                                                 ReadType readType);
+
+  Result<const nsCString, nsresult> ReadURIInternal(nsIURI* uri,
+                                                    ReadType readType);
+
+  Result<const nsCString, nsresult> ReadFileInternal(nsIFile* file,
+                                                     ReadType readType);
+
+  static Result<const nsCString, nsresult> Read(const CacheKey& key,
+                                                ReadType readType);
+
+  static bool sInitialized;
+
+  static mozilla::StaticRefPtr<URLPreloader> sSingleton;
+
+ protected:
+  friend class AddonManagerStartup;
+  friend class ScriptPreloader;
+
+  virtual ~URLPreloader();
+
+  Result<Ok, nsresult> WriteCache();
+
+  static URLPreloader& ReInitialize();
+
+  // Clear leftover entries after the cache has been written.
+  void Cleanup();
+
+  // Begins reading files off-thread, and ensures that initialization has
+  // completed before leaving the current scope. The caller *must* ensure that
+  // no code on the main thread access Omnijar, either directly or indirectly,
+  // for the lifetime of this guard object.
+  struct MOZ_RAII AutoBeginReading final {
+    AutoBeginReading() { GetSingleton().BeginBackgroundRead(); }
+
+    ~AutoBeginReading() {
+      auto& reader = GetSingleton();
+
+      MonitorAutoLock mal(reader.mMonitor);
+
+      while (!reader.mReaderInitialized && URLPreloader::sInitialized) {
+        mal.Wait();
+      }
+    }
+  };
+
+ private:
+  // Represents a key for an entry in the URI cache, based on its file or JAR
+  // location.
+  struct CacheKey {
+    // The type of the entry. TypeAppJar and TypeGREJar entries are in the
+    // app-specific or toolkit Omnijar files, and are handled specially.
+    // TypeFile entries are plain files in the filesystem.
+    enum EntryType : uint8_t {
+      TypeAppJar,
+      TypeGREJar,
+      TypeFile,
     };
 
-    // Helpers to read the contents of files or JAR archive entries with various
-    // representations. If the preloader has not yet been initialized, or the
-    // given location is not supported by the cache, the entries will be read
-    // synchronously, and not stored in the cache.
-    static Result<const nsCString, nsresult> Read(FileLocation& location, ReadType readType = Forget);
+    CacheKey() = default;
+    CacheKey(const CacheKey& other) = default;
 
-    static Result<const nsCString, nsresult> ReadURI(nsIURI* uri, ReadType readType = Forget);
+    CacheKey(EntryType type, const nsACString& path)
+        : mType(type), mPath(path) {}
 
-    static Result<const nsCString, nsresult> ReadFile(nsIFile* file, ReadType readType = Forget);
+    explicit CacheKey(nsIFile* file) : mType(TypeFile) {
+      nsString path;
+      MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
+      CopyUTF16toUTF8(path, mPath);
+    }
 
-    static Result<const nsCString, nsresult> ReadZip(nsZipArchive* archive,
-                                                     const nsACString& path,
-                                                     ReadType readType = Forget);
+    explicit inline CacheKey(InputBuffer& buffer);
 
-private:
-    struct CacheKey;
+    // Encodes or decodes the cache key for storage in a session cache file.
+    template <typename Buffer>
+    void Code(Buffer& buffer) {
+      buffer.codeUint8(*reinterpret_cast<uint8_t*>(&mType));
+      buffer.codeString(mPath);
+    }
 
-    Result<const nsCString, nsresult> ReadInternal(const CacheKey& key, ReadType readType);
+    uint32_t Hash() const { return HashGeneric(mType, HashString(mPath)); }
 
-    Result<const nsCString, nsresult> ReadURIInternal(nsIURI* uri, ReadType readType);
+    bool operator==(const CacheKey& other) const {
+      return mType == other.mType && mPath == other.mPath;
+    }
 
-    Result<const nsCString, nsresult> ReadFileInternal(nsIFile* file, ReadType readType);
+    // Returns the Omnijar type for this entry. This may *only* be called
+    // for Omnijar entries.
+    Omnijar::Type OmnijarType() {
+      switch (mType) {
+        case TypeAppJar:
+          return Omnijar::APP;
+        case TypeGREJar:
+          return Omnijar::GRE;
+        default:
+          MOZ_CRASH("Unexpected entry type");
+          return Omnijar::GRE;
+      }
+    }
 
-    static Result<const nsCString, nsresult> Read(const CacheKey& key, ReadType readType);
+    const char* TypeString() {
+      switch (mType) {
+        case TypeAppJar:
+          return "AppJar";
+        case TypeGREJar:
+          return "GREJar";
+        case TypeFile:
+          return "File";
+      }
+      MOZ_ASSERT_UNREACHABLE("no such type");
+      return "";
+    }
 
-    static bool sInitialized;
+    already_AddRefed<nsZipArchive> Archive() {
+      return Omnijar::GetReader(OmnijarType());
+    }
 
-    static mozilla::StaticRefPtr<URLPreloader> sSingleton;
+    Result<FileLocation, nsresult> ToFileLocation();
 
-protected:
-    friend class AddonManagerStartup;
-    friend class ScriptPreloader;
+    EntryType mType = TypeFile;
 
-    virtual ~URLPreloader();
+    // The path of the entry. For Type*Jar entries, this is the path within
+    // the Omnijar archive. For TypeFile entries, this is the full path to
+    // the file.
+    nsCString mPath{};
+  };
 
-    Result<Ok, nsresult> WriteCache();
+  // Represents an entry in the URI cache.
+  struct URLEntry final : public CacheKey, public LinkedListElement<URLEntry> {
+    MOZ_IMPLICIT URLEntry(const CacheKey& key)
+        : CacheKey(key), mData(VoidCString()) {}
 
-    static URLPreloader& ReInitialize();
+    explicit URLEntry(nsIFile* file) : CacheKey(file) {}
 
-    // Clear leftover entries after the cache has been written.
-    void Cleanup();
+    // For use with nsTArray::Sort.
+    //
+    // Sorts entries by the time they were initially read during this
+    // session.
+    struct Comparator final {
+      bool Equals(const URLEntry* a, const URLEntry* b) const {
+        return a->mReadTime == b->mReadTime;
+      }
 
-    // Begins reading files off-thread, and ensures that initialization has
-    // completed before leaving the current scope. The caller *must* ensure that
-    // no code on the main thread access Omnijar, either directly or indirectly,
-    // for the lifetime of this guard object.
-    struct MOZ_RAII AutoBeginReading final
-    {
-        AutoBeginReading()
-        {
-            GetSingleton().BeginBackgroundRead();
-        }
-
-        ~AutoBeginReading()
-        {
-            auto& reader = GetSingleton();
-
-            MonitorAutoLock mal(reader.mMonitor);
-
-            while (!reader.mReaderInitialized && URLPreloader::sInitialized) {
-                mal.Wait();
-            }
-        }
+      bool LessThan(const URLEntry* a, const URLEntry* b) const {
+        return a->mReadTime < b->mReadTime;
+      }
     };
 
-private:
-    // Represents a key for an entry in the URI cache, based on its file or JAR
-    // location.
-    struct CacheKey
-    {
-        // The type of the entry. TypeAppJar and TypeGREJar entries are in the
-        // app-specific or toolkit Omnijar files, and are handled specially.
-        // TypeFile entries are plain files in the filesystem.
-        enum EntryType : uint8_t
-        {
-            TypeAppJar,
-            TypeGREJar,
-            TypeFile,
-        };
+    // Sets the first-used time of this file to the earlier of its current
+    // first-use time or the given timestamp.
+    void UpdateUsedTime(const TimeStamp& time = TimeStamp::Now()) {
+      if (!mReadTime || time < mReadTime) {
+        mReadTime = time;
+      }
+    }
 
-        CacheKey() = default;
-        CacheKey(const CacheKey& other) = default;
+    Result<const nsCString, nsresult> Read();
+    static Result<const nsCString, nsresult> ReadLocation(
+        FileLocation& location);
 
-        CacheKey(EntryType type, const nsACString& path)
-            : mType(type), mPath(path)
-        {}
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+      return (mallocSizeOf(this) +
+              mPath.SizeOfExcludingThisEvenIfShared(mallocSizeOf) +
+              mData.SizeOfExcludingThisEvenIfShared(mallocSizeOf));
+    }
 
-        explicit CacheKey(nsIFile* file)
-          : mType(TypeFile)
-        {
-            nsString path;
-            MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
-            CopyUTF16toUTF8(path, mPath);
-        }
+    // Reads the contents of the file referenced by this entry, or wait for
+    // an off-thread read operation to finish if it is currently pending,
+    // and return the file's contents.
+    Result<const nsCString, nsresult> ReadOrWait(ReadType readType);
 
-        explicit inline CacheKey(InputBuffer& buffer);
+    nsCString mData;
 
-        // Encodes or decodes the cache key for storage in a session cache file.
-        template <typename Buffer>
-        void Code(Buffer& buffer)
-        {
-            buffer.codeUint8(*reinterpret_cast<uint8_t*>(&mType));
-            buffer.codeString(mPath);
-        }
+    TimeStamp mReadTime{};
 
-        uint32_t Hash() const
-        {
-            return HashGeneric(mType, HashString(mPath));
-        }
+    nsresult mResultCode = NS_OK;
+  };
 
-        bool operator==(const CacheKey& other) const
-        {
-            return mType == other.mType && mPath == other.mPath;
-        }
+  // Resolves the given URI to a CacheKey, if the URI is cacheable.
+  Result<CacheKey, nsresult> ResolveURI(nsIURI* uri);
 
-        // Returns the Omnijar type for this entry. This may *only* be called
-        // for Omnijar entries.
-        Omnijar::Type OmnijarType()
-        {
-            switch (mType) {
-            case TypeAppJar:
-                return Omnijar::APP;
-            case TypeGREJar:
-                return Omnijar::GRE;
-            default:
-                MOZ_CRASH("Unexpected entry type");
-                return Omnijar::GRE;
-            }
-        }
+  Result<Ok, nsresult> InitInternal();
 
-        const char* TypeString()
-        {
-            switch (mType) {
-            case TypeAppJar: return "AppJar";
-            case TypeGREJar: return "GREJar";
-            case TypeFile: return "File";
-            }
-            MOZ_ASSERT_UNREACHABLE("no such type");
-            return "";
-        }
+  // Returns a file pointer to the (possibly nonexistent) cache file with the
+  // given suffix.
+  Result<nsCOMPtr<nsIFile>, nsresult> GetCacheFile(const nsAString& suffix);
+  // Finds the correct cache file to use for this session.
+  Result<nsCOMPtr<nsIFile>, nsresult> FindCacheFile();
 
-        already_AddRefed<nsZipArchive> Archive()
-        {
-            return Omnijar::GetReader(OmnijarType());
-        }
+  Result<Ok, nsresult> ReadCache(LinkedList<URLEntry>& pendingURLs);
 
-        Result<FileLocation, nsresult> ToFileLocation();
+  void BackgroundReadFiles();
+  void BeginBackgroundRead();
 
-        EntryType mType = TypeFile;
+  using HashType = nsClassHashtable<nsGenericHashKey<CacheKey>, URLEntry>;
 
-        // The path of the entry. For Type*Jar entries, this is the path within
-        // the Omnijar archive. For TypeFile entries, this is the full path to
-        // the file.
-        nsCString mPath{};
-    };
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-    // Represents an entry in the URI cache.
-    struct URLEntry final : public CacheKey
-                          , public LinkedListElement<URLEntry>
-    {
-        MOZ_IMPLICIT URLEntry(const CacheKey& key)
-            : CacheKey(key)
-            , mData(VoidCString())
-        {}
+  bool mStartupFinished = false;
+  bool mReaderInitialized = false;
 
-        explicit URLEntry(nsIFile* file)
-          : CacheKey(file)
-        {}
+  // Only to be accessed from the cache write thread.
+  bool mCacheWritten = false;
 
-        // For use with nsTArray::Sort.
-        //
-        // Sorts entries by the time they were initially read during this
-        // session.
-        struct Comparator final
-        {
-            bool Equals(const URLEntry* a, const URLEntry* b) const
-            {
-              return a->mReadTime == b->mReadTime;
-            }
+  // The prefix URLs for files in the GRE and App omni jar archives.
+  nsCString mGREPrefix;
+  nsCString mAppPrefix;
 
-            bool LessThan(const URLEntry* a, const URLEntry* b) const
-            {
-                return a->mReadTime < b->mReadTime;
-            }
-        };
+  nsCOMPtr<nsIResProtocolHandler> mResProto;
+  nsCOMPtr<nsIChromeRegistry> mChromeReg;
+  nsCOMPtr<nsIFile> mProfD;
 
-        // Sets the first-used time of this file to the earlier of its current
-        // first-use time or the given timestamp.
-        void UpdateUsedTime(const TimeStamp& time = TimeStamp::Now())
-        {
-          if (!mReadTime || time < mReadTime) {
-            mReadTime = time;
-          }
-        }
+  // Note: We use a RefPtr rather than an nsCOMPtr here because the
+  // AssertNoQueryNeeded checks done by getter_AddRefs happen at a time that
+  // violate data access invariants.
+  RefPtr<nsIThread> mReaderThread;
 
-        Result<const nsCString, nsresult> Read();
-        static Result<const nsCString, nsresult> ReadLocation(FileLocation& location);
+  // A map of URL entries which have were either read this session, or read
+  // from the last session's cache file.
+  HashType mCachedURLs;
 
-        size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-        {
-            return (mallocSizeOf(this) +
-                    mPath.SizeOfExcludingThisEvenIfShared(mallocSizeOf) +
-                    mData.SizeOfExcludingThisEvenIfShared(mallocSizeOf));
-        }
-
-        // Reads the contents of the file referenced by this entry, or wait for
-        // an off-thread read operation to finish if it is currently pending,
-        // and return the file's contents.
-        Result<const nsCString, nsresult> ReadOrWait(ReadType readType);
-
-        nsCString mData;
-
-        TimeStamp mReadTime{};
-
-        nsresult mResultCode = NS_OK;
-    };
-
-    // Resolves the given URI to a CacheKey, if the URI is cacheable.
-    Result<CacheKey, nsresult> ResolveURI(nsIURI* uri);
-
-    Result<Ok, nsresult> InitInternal();
-
-    // Returns a file pointer to the (possibly nonexistent) cache file with the
-    // given suffix.
-    Result<nsCOMPtr<nsIFile>, nsresult> GetCacheFile(const nsAString& suffix);
-    // Finds the correct cache file to use for this session.
-    Result<nsCOMPtr<nsIFile>, nsresult> FindCacheFile();
-
-    Result<Ok, nsresult> ReadCache(LinkedList<URLEntry>& pendingURLs);
-
-    void BackgroundReadFiles();
-    void BeginBackgroundRead();
-
-    using HashType = nsClassHashtable<nsGenericHashKey<CacheKey>, URLEntry>;
-
-    size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
-
-
-    bool mStartupFinished = false;
-    bool mReaderInitialized = false;
-
-    // Only to be accessed from the cache write thread.
-    bool mCacheWritten = false;
-
-    // The prefix URLs for files in the GRE and App omni jar archives.
-    nsCString mGREPrefix;
-    nsCString mAppPrefix;
-
-    nsCOMPtr<nsIResProtocolHandler> mResProto;
-    nsCOMPtr<nsIChromeRegistry> mChromeReg;
-    nsCOMPtr<nsIFile> mProfD;
-
-    // Note: We use a RefPtr rather than an nsCOMPtr here because the
-    // AssertNoQueryNeeded checks done by getter_AddRefs happen at a time that
-    // violate data access invariants.
-    RefPtr<nsIThread> mReaderThread;
-
-    // A map of URL entries which have were either read this session, or read
-    // from the last session's cache file.
-    HashType mCachedURLs;
-
-    Monitor mMonitor{"[URLPreloader::mMutex]"};
+  Monitor mMonitor{"[URLPreloader::mMutex]"};
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // URLPreloader_h
+#endif  // URLPreloader_h

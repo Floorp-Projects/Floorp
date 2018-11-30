@@ -15,12 +15,11 @@
 namespace mozilla {
 
 SimpleTokenBucket::SimpleTokenBucket(size_t bucket_size,
-                                     size_t tokens_per_second) :
-  max_tokens_(bucket_size),
-  num_tokens_(bucket_size),
-  tokens_per_second_(tokens_per_second),
-  last_time_tokens_added_(PR_IntervalNow()) {
-}
+                                     size_t tokens_per_second)
+    : max_tokens_(bucket_size),
+      num_tokens_(bucket_size),
+      tokens_per_second_(tokens_per_second),
+      last_time_tokens_added_(PR_IntervalNow()) {}
 
 size_t SimpleTokenBucket::getTokens(size_t num_requested_tokens) {
   // Only fill if there isn't enough to satisfy the request.
@@ -36,7 +35,7 @@ size_t SimpleTokenBucket::getTokens(size_t num_requested_tokens) {
     PRIntervalTime elapsed_ticks = now - last_time_tokens_added_;
 
     uint32_t elapsed_milli_sec = PR_IntervalToMilliseconds(elapsed_ticks);
-    size_t tokens_to_add = (elapsed_milli_sec * tokens_per_second_)/1000;
+    size_t tokens_to_add = (elapsed_milli_sec * tokens_per_second_) / 1000;
 
     // Only update our timestamp if we added some tokens
     // TODO:(bcampen@mozilla.com) Should we attempt to "save" leftover time?
@@ -58,5 +57,4 @@ size_t SimpleTokenBucket::getTokens(size_t num_requested_tokens) {
   return num_requested_tokens;
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

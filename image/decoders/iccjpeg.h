@@ -23,7 +23,7 @@
 #ifndef mozilla_image_decoders_iccjpeg_h
 #define mozilla_image_decoders_iccjpeg_h
 
-#include <stdio.h>  /* needed to define "FILE", "NULL" */
+#include <stdio.h> /* needed to define "FILE", "NULL" */
 #include "jpeglib.h"
 
 /*
@@ -37,13 +37,11 @@
  *    whether there was a profile and obtain it if so.
  */
 
-
 /*
  * Prepare for reading an ICC profile
  */
 
 extern void setup_read_icc_profile JPP((j_decompress_ptr cinfo));
-
 
 /*
  * See if there was an ICC profile in the JPEG file being read;
@@ -64,4 +62,4 @@ extern void setup_read_icc_profile JPP((j_decompress_ptr cinfo));
 extern boolean read_icc_profile JPP((j_decompress_ptr cinfo,
                                      JOCTET** icc_data_ptr,
                                      unsigned int* icc_data_len));
-#endif // mozilla_image_decoders_iccjpeg_h
+#endif  // mozilla_image_decoders_iccjpeg_h

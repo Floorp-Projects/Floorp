@@ -1,12 +1,12 @@
 template <typename T>
 struct Iterator {
   void operator++() {}
-  const T& operator*() {
-    static T* TT = new T();
+  const T &operator*() {
+    static T *TT = new T();
     return *TT;
   }
   bool operator!=(const Iterator &) { return false; }
-  typedef const T& const_reference;
+  typedef const T &const_reference;
 };
 template <typename T>
 struct View {

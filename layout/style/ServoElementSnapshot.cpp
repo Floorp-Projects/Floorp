@@ -13,25 +13,22 @@
 namespace mozilla {
 
 ServoElementSnapshot::ServoElementSnapshot(const Element& aElement)
-  : mState(0)
-  , mContains(Flags(0))
-  , mIsTableBorderNonzero(false)
-  , mIsMozBrowserFrame(false)
-  , mClassAttributeChanged(false)
-  , mIdAttributeChanged(false)
-  , mOtherAttributeChanged(false)
-{
+    : mState(0),
+      mContains(Flags(0)),
+      mIsTableBorderNonzero(false),
+      mIsMozBrowserFrame(false),
+      mClassAttributeChanged(false),
+      mIdAttributeChanged(false),
+      mOtherAttributeChanged(false) {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
   MOZ_ASSERT(NS_IsMainThread());
   mIsHTMLElementInHTMLDocument =
-    aElement.IsHTMLElement() && aElement.IsInHTMLDocument();
+      aElement.IsHTMLElement() && aElement.IsInHTMLDocument();
   mIsInChromeDocument = nsContentUtils::IsChromeDoc(aElement.OwnerDoc());
   mSupportsLangAttr = aElement.SupportsLangAttr();
 }
 
-void
-ServoElementSnapshot::AddOtherPseudoClassState(const Element& aElement)
-{
+void ServoElementSnapshot::AddOtherPseudoClassState(const Element& aElement) {
   if (HasOtherPseudoClassState()) {
     return;
   }
@@ -42,4 +39,4 @@ ServoElementSnapshot::AddOtherPseudoClassState(const Element& aElement)
   mContains |= Flags::OtherPseudoClassState;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

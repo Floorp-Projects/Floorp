@@ -10,9 +10,8 @@
 namespace mozilla {
 namespace dom {
 
-class DOMPrefs final
-{
-public:
+class DOMPrefs final {
+ public:
   // This must be called on the main-thread.
   static void Initialize();
 
@@ -26,7 +25,7 @@ public:
 #undef DOM_WEBIDL_PREF
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_DOMPrefs_h
+#endif  // mozilla_dom_DOMPrefs_h

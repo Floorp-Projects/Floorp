@@ -16,13 +16,12 @@ namespace net {
 
 // Wrapper class to make replacement of nsHttpChannel's listener
 // from JavaScript possible. It is workaround for bug 433711 and 682305.
-class nsStreamListenerWrapper final : public nsIStreamListener
-                                    , public nsIThreadRetargetableStreamListener
-{
-public:
+class nsStreamListenerWrapper final
+    : public nsIStreamListener,
+      public nsIThreadRetargetableStreamListener {
+ public:
   explicit nsStreamListenerWrapper(nsIStreamListener *listener)
-    : mListener(listener)
-  {
+      : mListener(listener) {
     MOZ_ASSERT(mListener, "no stream listener specified");
   }
 
@@ -31,13 +30,12 @@ public:
   NS_FORWARD_SAFE_NSISTREAMLISTENER(mListener)
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-private:
+ private:
   ~nsStreamListenerWrapper() = default;
   nsCOMPtr<nsIStreamListener> mListener;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsStreamListenerWrapper_h__
-
+#endif  // nsStreamListenerWrapper_h__

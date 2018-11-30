@@ -38,8 +38,7 @@ const char kSwitchValueSeparator[] = "=";
 // Is this what we really want?  It seems crazy to me.  I've left it in
 // for backwards compatibility on Windows.
 static void Lowercase(std::wstring* parameter) {
-  transform(parameter->begin(), parameter->end(), parameter->begin(),
-            tolower);
+  transform(parameter->begin(), parameter->end(), parameter->begin(), tolower);
 }
 #endif
 
@@ -47,8 +46,7 @@ static void Lowercase(std::wstring* parameter) {
 void CommandLine::ParseFromString(const std::wstring& command_line) {
   TrimWhitespace(command_line, TRIM_ALL, &command_line_string_);
 
-  if (command_line_string_.empty())
-    return;
+  if (command_line_string_.empty()) return;
 
   int num_args = 0;
   wchar_t** args = NULL;
@@ -82,8 +80,7 @@ void CommandLine::ParseFromString(const std::wstring& command_line) {
     }
   }
 
-  if (args)
-    LocalFree(args);
+  if (args) LocalFree(args);
 }
 CommandLine::CommandLine(const std::wstring& program) {
   if (!program.empty()) {
@@ -93,8 +90,7 @@ CommandLine::CommandLine(const std::wstring& program) {
 }
 #elif defined(OS_POSIX)
 CommandLine::CommandLine(int argc, const char* const* argv) {
-  for (int i = 0; i < argc; ++i)
-    argv_.push_back(argv[i]);
+  for (int i = 0; i < argc; ++i) argv_.push_back(argv[i]);
   InitFromArgv();
 }
 CommandLine::CommandLine(const std::vector<std::string>& argv) {
@@ -141,18 +137,17 @@ bool CommandLine::IsSwitch(const StringType& parameter_string,
 
   for (size_t i = 0; i < arraysize(kSwitchPrefixes); ++i) {
     StringType prefix(kSwitchPrefixes[i]);
-    if (parameter_string.find(prefix) != 0)
-      continue;
+    if (parameter_string.find(prefix) != 0) continue;
 
     const size_t switch_start = prefix.length();
-    const size_t equals_position = parameter_string.find(
-        kSwitchValueSeparator, switch_start);
+    const size_t equals_position =
+        parameter_string.find(kSwitchValueSeparator, switch_start);
     StringType switch_native;
     if (equals_position == StringType::npos) {
       switch_native = parameter_string.substr(switch_start);
     } else {
-      switch_native = parameter_string.substr(
-          switch_start, equals_position - switch_start);
+      switch_native =
+          parameter_string.substr(switch_start, equals_position - switch_start);
       *switch_value = parameter_string.substr(equals_position + 1);
     }
 #if defined(OS_WIN)
@@ -218,9 +213,7 @@ std::wstring CommandLine::GetSwitchValue(
 std::vector<std::wstring> CommandLine::GetLooseValues() const {
   return loose_values_;
 }
-std::wstring CommandLine::program() const {
-  return program_;
-}
+std::wstring CommandLine::program() const { return program_; }
 #else
 std::vector<std::wstring> CommandLine::GetLooseValues() const {
   std::vector<std::wstring> values;
@@ -234,13 +227,10 @@ std::wstring CommandLine::program() const {
 }
 #endif
 
-
 // static
 std::wstring CommandLine::PrefixedSwitchString(
     const std::wstring& switch_string) {
-  return StringPrintf(L"%ls%ls",
-                      kSwitchPrefixes[0],
-                      switch_string.c_str());
+  return StringPrintf(L"%ls%ls", kSwitchPrefixes[0], switch_string.c_str());
 }
 
 // static
@@ -250,10 +240,8 @@ std::wstring CommandLine::PrefixedSwitchStringWithValue(
     return PrefixedSwitchString(switch_string);
   }
 
-  return StringPrintf(L"%ls%ls%ls%ls",
-                      kSwitchPrefixes[0],
-                      switch_string.c_str(),
-                      kSwitchValueSeparator,
+  return StringPrintf(L"%ls%ls%ls%ls", kSwitchPrefixes[0],
+                      switch_string.c_str(), kSwitchValueSeparator,
                       value_string.c_str());
 }
 
@@ -281,8 +269,8 @@ static std::wstring WindowsStyleQuote(const std::wstring& arg) {
     if (arg[i] == '\\') {
       // Find the extent of this run of backslashes.
       size_t start = i, end = start + 1;
-      for (; end < arg.size() && arg[end] == '\\'; ++end)
-        /* empty */;
+      for (; end < arg.size() && arg[end] == '\\'; ++end) /* empty */
+        ;
       size_t backslash_count = end - start;
 
       // Backslashes are escapes only if the run is followed by a double quote.
@@ -292,8 +280,7 @@ static std::wstring WindowsStyleQuote(const std::wstring& arg) {
         // To quote, we need to output 2x as many backslashes.
         backslash_count *= 2;
       }
-      for (size_t j = 0; j < backslash_count; ++j)
-        out.push_back('\\');
+      for (size_t j = 0; j < backslash_count; ++j) out.push_back('\\');
 
       // Advance i to one before the end to balance i++ in loop.
       i = end - 1;
@@ -313,7 +300,7 @@ void CommandLine::AppendSwitchWithValue(const std::wstring& switch_string,
                                         const std::wstring& value_string) {
   std::wstring quoted_value_string = WindowsStyleQuote(value_string);
   std::wstring combined_switch_string =
-    PrefixedSwitchStringWithValue(switch_string, quoted_value_string);
+      PrefixedSwitchStringWithValue(switch_string, quoted_value_string);
 
   command_line_string_.append(L" ");
   command_line_string_.append(combined_switch_string);
@@ -358,8 +345,8 @@ void CommandLine::AppendSwitchWithValue(const std::wstring& switch_string,
   std::string ascii_switch = WideToASCII(switch_string);
   std::string ascii_value = WideToASCII(value_string);
 
-  argv_.push_back(kSwitchPrefixes[0] + ascii_switch +
-                  kSwitchValueSeparator + ascii_value);
+  argv_.push_back(kSwitchPrefixes[0] + ascii_switch + kSwitchValueSeparator +
+                  ascii_value);
   switches_[ascii_switch] = ascii_value;
 }
 

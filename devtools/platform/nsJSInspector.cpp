@@ -15,11 +15,14 @@
 #include "nsArray.h"
 #include "nsTArray.h"
 
-#define JSINSPECTOR_CONTRACTID \
-  "@mozilla.org/jsinspector;1"
+#define JSINSPECTOR_CONTRACTID "@mozilla.org/jsinspector;1"
 
-#define JSINSPECTOR_CID \
-{ 0xec5aa99c, 0x7abb, 0x4142, { 0xac, 0x5f, 0xaa, 0xb2, 0x41, 0x9e, 0x38, 0xe2 } }
+#define JSINSPECTOR_CID                              \
+  {                                                  \
+    0xec5aa99c, 0x7abb, 0x4142, {                    \
+      0xac, 0x5f, 0xaa, 0xb2, 0x41, 0x9e, 0x38, 0xe2 \
+    }                                                \
+  }
 
 namespace mozilla {
 namespace jsinspector {
@@ -51,20 +54,18 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSInspector)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLastRequestor)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-nsJSInspector::nsJSInspector() : mNestedLoopLevel(0), mRequestors(1), mLastRequestor(JS::NullValue())
-{
-}
+nsJSInspector::nsJSInspector()
+    : mNestedLoopLevel(0), mRequestors(1), mLastRequestor(JS::NullValue()) {}
 
-nsJSInspector::~nsJSInspector()
-{
+nsJSInspector::~nsJSInspector() {
   MOZ_ASSERT(mRequestors.Length() == 0);
   MOZ_ASSERT(mLastRequestor.isNull());
   mozilla::DropJSObjects(this);
 }
 
 NS_IMETHODIMP
-nsJSInspector::EnterNestedEventLoop(JS::Handle<JS::Value> requestor, uint32_t *out)
-{
+nsJSInspector::EnterNestedEventLoop(JS::Handle<JS::Value> requestor,
+                                    uint32_t *out) {
   nsresult rv = NS_OK;
 
   mLastRequestor = requestor;
@@ -90,8 +91,7 @@ nsJSInspector::EnterNestedEventLoop(JS::Handle<JS::Value> requestor, uint32_t *o
 }
 
 NS_IMETHODIMP
-nsJSInspector::ExitNestedEventLoop(uint32_t *out)
-{
+nsJSInspector::ExitNestedEventLoop(uint32_t *out) {
   if (mNestedLoopLevel > 0) {
     mRequestors.RemoveElementAt(--mNestedLoopLevel);
     if (mNestedLoopLevel > 0)
@@ -108,38 +108,31 @@ nsJSInspector::ExitNestedEventLoop(uint32_t *out)
 }
 
 NS_IMETHODIMP
-nsJSInspector::GetEventLoopNestLevel(uint32_t *out)
-{
+nsJSInspector::GetEventLoopNestLevel(uint32_t *out) {
   *out = mNestedLoopLevel;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJSInspector::GetLastNestRequestor(JS::MutableHandle<JS::Value> out)
-{
+nsJSInspector::GetLastNestRequestor(JS::MutableHandle<JS::Value> out) {
   out.set(mLastRequestor);
   return NS_OK;
 }
 
-} // namespace jsinspector
-} // namespace mozilla
+}  // namespace jsinspector
+}  // namespace mozilla
 
 NS_DEFINE_NAMED_CID(JSINSPECTOR_CID);
 
 static const mozilla::Module::CIDEntry kJSInspectorCIDs[] = {
-  { &kJSINSPECTOR_CID, false, nullptr, mozilla::jsinspector::nsJSInspectorConstructor },
-  { nullptr }
-};
+    {&kJSINSPECTOR_CID, false, nullptr,
+     mozilla::jsinspector::nsJSInspectorConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kJSInspectorContracts[] = {
-  { JSINSPECTOR_CONTRACTID, &kJSINSPECTOR_CID },
-  { nullptr }
-};
+    {JSINSPECTOR_CONTRACTID, &kJSINSPECTOR_CID}, {nullptr}};
 
 static const mozilla::Module kJSInspectorModule = {
-  mozilla::Module::kVersion,
-  kJSInspectorCIDs,
-  kJSInspectorContracts
-};
+    mozilla::Module::kVersion, kJSInspectorCIDs, kJSInspectorContracts};
 
 NSMODULE_DEFN(jsinspector) = &kJSInspectorModule;

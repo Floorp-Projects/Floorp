@@ -17,36 +17,29 @@ using namespace mozilla::dom;
 
 namespace {
 
-class JSEnumerator final : public nsIJSEnumerator
-{
+class JSEnumerator final : public nsIJSEnumerator {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIJSENUMERATOR
 
   explicit JSEnumerator(nsISimpleEnumerator* aEnumerator, const nsID& aIID)
-    : mEnumerator(aEnumerator)
-    , mIID(aIID)
-  {}
+      : mEnumerator(aEnumerator), mIID(aIID) {}
 
-private:
+ private:
   ~JSEnumerator() = default;
 
   nsCOMPtr<nsISimpleEnumerator> mEnumerator;
   const nsID mIID;
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-nsresult
-JSEnumerator::Iterator(nsIJSEnumerator** aResult)
-{
+nsresult JSEnumerator::Iterator(nsIJSEnumerator** aResult) {
   RefPtr<JSEnumerator> result(this);
   result.forget(aResult);
   return NS_OK;
 }
 
-nsresult
-JSEnumerator::Next(JSContext* aCx, JS::MutableHandleValue aResult)
-{
+nsresult JSEnumerator::Next(JSContext* aCx, JS::MutableHandleValue aResult) {
   RootedDictionary<IteratorResult> result(aCx);
 
   nsCOMPtr<nsISupports> elem;
@@ -68,20 +61,18 @@ JSEnumerator::Next(JSContext* aCx, JS::MutableHandleValue aResult)
 
 NS_IMPL_ISUPPORTS(JSEnumerator, nsIJSEnumerator)
 
-nsresult
-nsSimpleEnumerator::Iterator(nsIJSEnumerator **aResult)
-{
+nsresult nsSimpleEnumerator::Iterator(nsIJSEnumerator** aResult) {
   auto result = MakeRefPtr<JSEnumerator>(this, DefaultInterface());
   result.forget(aResult);
   return NS_OK;
 }
 
-nsresult
-nsSimpleEnumerator::Entries(const nsIID& aIface, nsIJSEnumerator **aResult)
-{
+nsresult nsSimpleEnumerator::Entries(const nsIID& aIface,
+                                     nsIJSEnumerator** aResult) {
   auto result = MakeRefPtr<JSEnumerator>(this, aIface);
   result.forget(aResult);
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsSimpleEnumerator, nsISimpleEnumerator, nsISimpleEnumeratorBase)
+NS_IMPL_ISUPPORTS(nsSimpleEnumerator, nsISimpleEnumerator,
+                  nsISimpleEnumeratorBase)

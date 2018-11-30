@@ -12,9 +12,7 @@
 typedef nsCString _Fragment;
 typedef nsTArray<nsCString> _PrefixArray;
 
-static RefPtr<Classifier>
-GetClassifier()
-{
+static RefPtr<Classifier> GetClassifier() {
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
@@ -25,16 +23,15 @@ GetClassifier()
   return classifier;
 }
 
-static nsresult
-SetupLookupCacheV4(RefPtr<Classifier> classifier,
-                   const _PrefixArray& aPrefixArray,
-                   const nsACString& aTable)
-{
+static nsresult SetupLookupCacheV4(RefPtr<Classifier> classifier,
+                                   const _PrefixArray& aPrefixArray,
+                                   const nsACString& aTable) {
   RefPtr<LookupCache> lookupCache = classifier->GetLookupCache(aTable, false);
   if (!lookupCache) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<LookupCacheV4> lookupCacheV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
+  RefPtr<LookupCacheV4> lookupCacheV4 =
+      LookupCache::Cast<LookupCacheV4>(lookupCache);
   if (!lookupCacheV4) {
     return NS_ERROR_FAILURE;
   }
@@ -45,17 +42,15 @@ SetupLookupCacheV4(RefPtr<Classifier> classifier,
   return lookupCacheV4->Build(map);
 }
 
-static nsresult
-SetupLookupCacheV2(RefPtr<Classifier> classifier,
-                   const _PrefixArray& aPrefixArray,
-                   const nsACString& aTable)
-{
+static nsresult SetupLookupCacheV2(RefPtr<Classifier> classifier,
+                                   const _PrefixArray& aPrefixArray,
+                                   const nsACString& aTable) {
   RefPtr<LookupCache> lookupCache = classifier->GetLookupCache(aTable, false);
   if (!lookupCache) {
     return NS_ERROR_FAILURE;
   }
   RefPtr<LookupCacheV2> lookupCacheV2 =
-    LookupCache::Cast<LookupCacheV2>(lookupCache);
+      LookupCache::Cast<LookupCacheV2>(lookupCache);
   if (!lookupCacheV2) {
     return NS_ERROR_FAILURE;
   }
@@ -71,12 +66,10 @@ SetupLookupCacheV2(RefPtr<Classifier> classifier,
   return lookupCacheV2->Build(prefixes, completions);
 }
 
-static void
-TestReadNoiseEntries(RefPtr<Classifier> classifier,
-                     const _PrefixArray& aPrefixArray,
-                     const nsCString& aTable,
-                     const nsCString& aFragment)
-{
+static void TestReadNoiseEntries(RefPtr<Classifier> classifier,
+                                 const _PrefixArray& aPrefixArray,
+                                 const nsCString& aTable,
+                                 const nsCString& aFragment) {
   Completion lookupHash;
   lookupHash.FromPlaintext(aFragment);
   RefPtr<LookupResult> result = new LookupResult;
@@ -85,9 +78,8 @@ TestReadNoiseEntries(RefPtr<Classifier> classifier,
   PrefixArray noiseEntries;
   uint32_t noiseCount = 3;
   nsresult rv;
-  rv = classifier->ReadNoiseEntries(result->hash.fixedLengthPrefix,
-                                    aTable, noiseCount,
-                                    noiseEntries);
+  rv = classifier->ReadNoiseEntries(result->hash.fixedLengthPrefix, aTable,
+                                    noiseCount, noiseEntries);
   ASSERT_TRUE(rv == NS_OK);
   EXPECT_TRUE(noiseEntries.Length() > 0);
 
@@ -99,46 +91,47 @@ TestReadNoiseEntries(RefPtr<Classifier> classifier,
     partialHash.Assign(reinterpret_cast<char*>(&noiseEntries[i]), PREFIX_SIZE);
     EXPECT_TRUE(aPrefixArray.Contains(partialHash));
   }
-
 }
 
-TEST(UrlClassifier, ReadNoiseEntriesV4)
-{
+TEST(UrlClassifier, ReadNoiseEntriesV4) {
   RefPtr<Classifier> classifier = GetClassifier();
-  _PrefixArray array = { GeneratePrefix(_Fragment("bravo.com/"), 5),
-                         GeneratePrefix(_Fragment("browsing.com/"), 9),
-                         GeneratePrefix(_Fragment("gound.com/"), 4),
-                         GeneratePrefix(_Fragment("small.com/"), 4),
-                         GeneratePrefix(_Fragment("gdfad.com/"), 4),
-                         GeneratePrefix(_Fragment("afdfound.com/"), 4),
-                         GeneratePrefix(_Fragment("dffa.com/"), 4),
-                       };
+  _PrefixArray array = {
+      GeneratePrefix(_Fragment("bravo.com/"), 5),
+      GeneratePrefix(_Fragment("browsing.com/"), 9),
+      GeneratePrefix(_Fragment("gound.com/"), 4),
+      GeneratePrefix(_Fragment("small.com/"), 4),
+      GeneratePrefix(_Fragment("gdfad.com/"), 4),
+      GeneratePrefix(_Fragment("afdfound.com/"), 4),
+      GeneratePrefix(_Fragment("dffa.com/"), 4),
+  };
   array.Sort();
 
   nsresult rv;
   rv = SetupLookupCacheV4(classifier, array, GTEST_TABLE_V4);
   ASSERT_TRUE(rv == NS_OK);
 
-  TestReadNoiseEntries(classifier, array, GTEST_TABLE_V4, _Fragment("gound.com/"));
+  TestReadNoiseEntries(classifier, array, GTEST_TABLE_V4,
+                       _Fragment("gound.com/"));
 }
 
-TEST(UrlClassifier, ReadNoiseEntriesV2)
-{
+TEST(UrlClassifier, ReadNoiseEntriesV2) {
   RefPtr<Classifier> classifier = GetClassifier();
-  _PrefixArray array = { GeneratePrefix(_Fragment("helloworld.com/"), 4),
-                         GeneratePrefix(_Fragment("firefox.com/"), 4),
-                         GeneratePrefix(_Fragment("chrome.com/"), 4),
-                         GeneratePrefix(_Fragment("safebrowsing.com/"), 4),
-                         GeneratePrefix(_Fragment("opera.com/"), 4),
-                         GeneratePrefix(_Fragment("torbrowser.com/"), 4),
-                         GeneratePrefix(_Fragment("gfaads.com/"), 4),
-                         GeneratePrefix(_Fragment("qggdsas.com/"), 4),
-                         GeneratePrefix(_Fragment("nqtewq.com/"), 4),
-                       };
+  _PrefixArray array = {
+      GeneratePrefix(_Fragment("helloworld.com/"), 4),
+      GeneratePrefix(_Fragment("firefox.com/"), 4),
+      GeneratePrefix(_Fragment("chrome.com/"), 4),
+      GeneratePrefix(_Fragment("safebrowsing.com/"), 4),
+      GeneratePrefix(_Fragment("opera.com/"), 4),
+      GeneratePrefix(_Fragment("torbrowser.com/"), 4),
+      GeneratePrefix(_Fragment("gfaads.com/"), 4),
+      GeneratePrefix(_Fragment("qggdsas.com/"), 4),
+      GeneratePrefix(_Fragment("nqtewq.com/"), 4),
+  };
 
   nsresult rv;
   rv = SetupLookupCacheV2(classifier, array, GTEST_TABLE_V2);
   ASSERT_TRUE(rv == NS_OK);
 
-  TestReadNoiseEntries(classifier, array, GTEST_TABLE_V2, _Fragment("helloworld.com/"));
+  TestReadNoiseEntries(classifier, array, GTEST_TABLE_V2,
+                       _Fragment("helloworld.com/"));
 }

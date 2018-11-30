@@ -14,18 +14,13 @@ namespace mozilla {
 namespace dom {
 
 CSSMediaRule::CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule,
-                           StyleSheet* aSheet,
-                           css::Rule* aParentRule,
-                           uint32_t aLine,
-                           uint32_t aColumn)
-  : ConditionRule(Servo_MediaRule_GetRules(aRawRule).Consume(),
-                  aSheet, aParentRule, aLine, aColumn)
-  , mRawRule(std::move(aRawRule))
-{
-}
+                           StyleSheet* aSheet, css::Rule* aParentRule,
+                           uint32_t aLine, uint32_t aColumn)
+    : ConditionRule(Servo_MediaRule_GetRules(aRawRule).Consume(), aSheet,
+                    aParentRule, aLine, aColumn),
+      mRawRule(std::move(aRawRule)) {}
 
-CSSMediaRule::~CSSMediaRule()
-{
+CSSMediaRule::~CSSMediaRule() {
   if (mMediaList) {
     mMediaList->SetStyleSheet(nullptr);
   }
@@ -40,20 +35,20 @@ NS_INTERFACE_MAP_END_INHERITING(css::ConditionRule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CSSMediaRule)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSMediaRule, css::ConditionRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSMediaRule,
+                                                css::ConditionRule)
   if (tmp->mMediaList) {
     tmp->mMediaList->SetStyleSheet(nullptr);
     tmp->mMediaList = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSMediaRule, css::ConditionRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSMediaRule,
+                                                  css::ConditionRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-/* virtual */ void
-CSSMediaRule::DropSheetReference()
-{
+/* virtual */ void CSSMediaRule::DropSheetReference() {
   if (mMediaList) {
     mMediaList->SetStyleSheet(nullptr);
   }
@@ -61,9 +56,7 @@ CSSMediaRule::DropSheetReference()
 }
 
 #ifdef DEBUG
-/* virtual */ void
-CSSMediaRule::List(FILE* out, int32_t aIndent) const
-{
+/* virtual */ void CSSMediaRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -73,28 +66,20 @@ CSSMediaRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-void
-CSSMediaRule::GetConditionText(nsAString& aConditionText)
-{
+void CSSMediaRule::GetConditionText(nsAString& aConditionText) {
   Media()->GetMediaText(aConditionText);
 }
 
-void
-CSSMediaRule::SetConditionText(const nsAString& aConditionText,
-                               ErrorResult& aRv)
-{
+void CSSMediaRule::SetConditionText(const nsAString& aConditionText,
+                                    ErrorResult& aRv) {
   Media()->SetMediaText(aConditionText);
 }
 
-/* virtual */ void
-CSSMediaRule::GetCssText(nsAString& aCssText) const
-{
+/* virtual */ void CSSMediaRule::GetCssText(nsAString& aCssText) const {
   Servo_MediaRule_GetCssText(mRawRule, &aCssText);
 }
 
-/* virtual */ dom::MediaList*
-CSSMediaRule::Media()
-{
+/* virtual */ dom::MediaList* CSSMediaRule::Media() {
   if (!mMediaList) {
     mMediaList = new MediaList(Servo_MediaRule_GetMedia(mRawRule).Consume());
     mMediaList->SetStyleSheet(GetStyleSheet());
@@ -102,18 +87,16 @@ CSSMediaRule::Media()
   return mMediaList;
 }
 
-/* virtual */ size_t
-CSSMediaRule::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+/* virtual */ size_t CSSMediaRule::SizeOfIncludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);
 }
 
-/* virtual */ JSObject*
-CSSMediaRule::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* CSSMediaRule::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSMediaRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

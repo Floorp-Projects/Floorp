@@ -19,27 +19,24 @@ NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGINGTOOLS_CID);
 NS_DEFINE_NAMED_CID(NS_LAYOUTDEBUGCLH_CID);
 
 static const mozilla::Module::CIDEntry kLayoutDebugCIDs[] = {
-  { &kNS_LAYOUT_DEBUGGINGTOOLS_CID, false, nullptr, nsLayoutDebuggingToolsConstructor },
-  { &kNS_LAYOUTDEBUGCLH_CID, false, nullptr, nsLayoutDebugCLHConstructor },
-  { nullptr }
-};
+    {&kNS_LAYOUT_DEBUGGINGTOOLS_CID, false, nullptr,
+     nsLayoutDebuggingToolsConstructor},
+    {&kNS_LAYOUTDEBUGCLH_CID, false, nullptr, nsLayoutDebugCLHConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kLayoutDebugContracts[] = {
-  { NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID, &kNS_LAYOUT_DEBUGGINGTOOLS_CID },
-  { "@mozilla.org/commandlinehandler/general-startup;1?type=layoutdebug", &kNS_LAYOUTDEBUGCLH_CID },
-  { nullptr }
-};
+    {NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID, &kNS_LAYOUT_DEBUGGINGTOOLS_CID},
+    {"@mozilla.org/commandlinehandler/general-startup;1?type=layoutdebug",
+     &kNS_LAYOUTDEBUGCLH_CID},
+    {nullptr}};
 
 static const mozilla::Module::CategoryEntry kLayoutDebugCategories[] = {
-  { "command-line-handler", "m-layoutdebug", "@mozilla.org/commandlinehandler/general-startup;1?type=layoutdebug" },
-  { nullptr }
-};
+    {"command-line-handler", "m-layoutdebug",
+     "@mozilla.org/commandlinehandler/general-startup;1?type=layoutdebug"},
+    {nullptr}};
 
 static const mozilla::Module kLayoutDebugModule = {
-  mozilla::Module::kVersion,
-  kLayoutDebugCIDs,
-  kLayoutDebugContracts,
-  kLayoutDebugCategories
-};
+    mozilla::Module::kVersion, kLayoutDebugCIDs, kLayoutDebugContracts,
+    kLayoutDebugCategories};
 
 NSMODULE_DEFN(nsLayoutDebugModule) = &kLayoutDebugModule;

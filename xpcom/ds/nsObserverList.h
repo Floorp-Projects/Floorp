@@ -16,32 +16,24 @@
 #include "nsSimpleEnumerator.h"
 #include "mozilla/Attributes.h"
 
-class nsObserverList : public nsCharPtrHashKey
-{
+class nsObserverList : public nsCharPtrHashKey {
   friend class nsObserverService;
 
-public:
-  explicit nsObserverList(const char* aKey) : nsCharPtrHashKey(aKey)
-  {
+ public:
+  explicit nsObserverList(const char* aKey) : nsCharPtrHashKey(aKey) {
     MOZ_COUNT_CTOR(nsObserverList);
   }
 
   nsObserverList(nsObserverList&& aOther)
-    : nsCharPtrHashKey(std::move(aOther))
-    , mObservers(std::move(aOther.mObservers))
-  {
-  }
+      : nsCharPtrHashKey(std::move(aOther)),
+        mObservers(std::move(aOther.mObservers)) {}
 
-  ~nsObserverList()
-  {
-    MOZ_COUNT_DTOR(nsObserverList);
-  }
+  ~nsObserverList() { MOZ_COUNT_DTOR(nsObserverList); }
 
   MOZ_MUST_USE nsresult AddObserver(nsIObserver* aObserver, bool aOwnsWeak);
   MOZ_MUST_USE nsresult RemoveObserver(nsIObserver* aObserver);
 
-  void NotifyObservers(nsISupports* aSubject,
-                       const char* aTopic,
+  void NotifyObservers(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aSomeData);
   void GetObserverList(nsISimpleEnumerator** aEnumerator);
 
@@ -52,23 +44,22 @@ public:
   // Like FillObserverArray(), but only for strongly held observers.
   void AppendStrongObservers(nsCOMArray<nsIObserver>& aArray);
 
-private:
+ private:
   nsMaybeWeakPtrArray<nsIObserver> mObservers;
 };
 
-class nsObserverEnumerator final : public nsSimpleEnumerator
-{
-public:
+class nsObserverEnumerator final : public nsSimpleEnumerator {
+ public:
   NS_DECL_NSISIMPLEENUMERATOR
 
   explicit nsObserverEnumerator(nsObserverList* aObserverList);
 
   const nsID& DefaultInterface() override { return NS_GET_IID(nsIObserver); }
 
-private:
+ private:
   ~nsObserverEnumerator() override = default;
 
-  int32_t mIndex; // Counts up from 0
+  int32_t mIndex;  // Counts up from 0
   nsCOMArray<nsIObserver> mObservers;
 };
 

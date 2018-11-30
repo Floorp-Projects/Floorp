@@ -14,21 +14,21 @@
 namespace mozilla {
 namespace gfx {
 
-class GradientStopsD2D : public GradientStops
-{
-public:
+class GradientStopsD2D : public GradientStops {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsD2D, override)
 
-  GradientStopsD2D(ID2D1GradientStopCollection *aStopCollection, ID3D11Device *aDevice)
-    : mStopCollection(aStopCollection)
-    , mDevice(aDevice)
-  {}
+  GradientStopsD2D(ID2D1GradientStopCollection *aStopCollection,
+                   ID3D11Device *aDevice)
+      : mStopCollection(aStopCollection), mDevice(aDevice) {}
 
   virtual BackendType GetBackendType() const { return BackendType::DIRECT2D; }
 
-  bool IsValid() const final { return mDevice == Factory::GetDirect3D11Device(); }
+  bool IsValid() const final {
+    return mDevice == Factory::GetDirect3D11Device();
+  }
 
-private:
+ private:
   friend class DrawTargetD2D;
   friend class DrawTargetD2D1;
 
@@ -36,7 +36,7 @@ private:
   RefPtr<ID3D11Device> mDevice;
 };
 
-}
-}
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_GRADIENTSTOPSD2D_H_ */

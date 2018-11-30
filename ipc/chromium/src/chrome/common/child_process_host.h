@@ -19,7 +19,7 @@ namespace mozilla {
 namespace ipc {
 class FileDescriptor;
 }
-}
+}  // namespace mozilla
 
 // Plugins/workers and other child processes that live on the IO thread should
 // derive from this class.
@@ -39,9 +39,9 @@ class ChildProcessHost : public IPC::Channel::Listener {
   bool CreateChannel(mozilla::ipc::FileDescriptor& aFileDescriptor);
 
   // IPC::Channel::Listener implementation:
-  virtual void OnMessageReceived(IPC::Message&& msg) override { }
-  virtual void OnChannelConnected(int32_t peer_pid) override { }
-  virtual void OnChannelError() override { }
+  virtual void OnMessageReceived(IPC::Message&& msg) override {}
+  virtual void OnChannelConnected(int32_t peer_pid) override {}
+  virtual void OnChannelError() override {}
 
   bool opening_channel() { return opening_channel_; }
   const std::wstring& channel_id() { return channel_id_; }
@@ -60,6 +60,7 @@ class ChildProcessHost : public IPC::Channel::Listener {
     virtual void OnChannelConnected(int32_t peer_pid) override;
     virtual void OnChannelError() override;
     virtual void GetQueuedMessages(std::queue<IPC::Message>& queue) override;
+
    private:
     ChildProcessHost* host_;
   };

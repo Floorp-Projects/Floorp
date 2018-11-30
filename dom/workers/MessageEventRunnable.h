@@ -17,26 +17,22 @@ class DOMEventTargetHelper;
 
 namespace dom {
 
-class MessageEventRunnable final : public WorkerDebuggeeRunnable
-                                 , public StructuredCloneHolder
-{
-public:
+class MessageEventRunnable final : public WorkerDebuggeeRunnable,
+                                   public StructuredCloneHolder {
+ public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior);
 
-  bool
-  DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                   DOMEventTargetHelper* aTarget, bool aIsMainThread);
+  bool DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                        DOMEventTargetHelper* aTarget, bool aIsMainThread);
 
-private:
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
+ private:
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
-  void
-  DispatchError(JSContext* aCx, DOMEventTargetHelper* aTarget);
+  void DispatchError(JSContext* aCx, DOMEventTargetHelper* aTarget);
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_workers_MessageEventRunnable_h
+#endif  // mozilla_dom_workers_MessageEventRunnable_h

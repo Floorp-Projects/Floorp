@@ -1,4 +1,3 @@
 #include "structures.h"
 
-void f(const std::string Value) {
-}
+void f(const std::string Value) {}

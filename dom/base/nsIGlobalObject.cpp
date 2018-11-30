@@ -13,9 +13,9 @@
 #include "nsThreadUtils.h"
 #include "nsGlobalWindowInner.h"
 
+using mozilla::DOMEventTargetHelper;
 using mozilla::MallocSizeOf;
 using mozilla::Maybe;
-using mozilla::DOMEventTargetHelper;
 using mozilla::dom::BlobURLProtocolHandler;
 using mozilla::dom::ClientInfo;
 using mozilla::dom::ServiceWorker;
@@ -23,49 +23,38 @@ using mozilla::dom::ServiceWorkerDescriptor;
 using mozilla::dom::ServiceWorkerRegistration;
 using mozilla::dom::ServiceWorkerRegistrationDescriptor;
 
-nsIGlobalObject::~nsIGlobalObject()
-{
+nsIGlobalObject::~nsIGlobalObject() {
   UnlinkHostObjectURIs();
   DisconnectEventTargetObjects();
   MOZ_DIAGNOSTIC_ASSERT(mEventTargetObjects.isEmpty());
 }
 
-nsIPrincipal*
-nsIGlobalObject::PrincipalOrNull()
-{
-  JSObject *global = GetGlobalJSObject();
-  if (NS_WARN_IF(!global))
-    return nullptr;
+nsIPrincipal* nsIGlobalObject::PrincipalOrNull() {
+  JSObject* global = GetGlobalJSObject();
+  if (NS_WARN_IF(!global)) return nullptr;
 
   return nsContentUtils::ObjectPrincipal(global);
 }
 
-void
-nsIGlobalObject::RegisterHostObjectURI(const nsACString& aURI)
-{
+void nsIGlobalObject::RegisterHostObjectURI(const nsACString& aURI) {
   MOZ_ASSERT(!mHostObjectURIs.Contains(aURI));
   mHostObjectURIs.AppendElement(aURI);
 }
 
-void
-nsIGlobalObject::UnregisterHostObjectURI(const nsACString& aURI)
-{
+void nsIGlobalObject::UnregisterHostObjectURI(const nsACString& aURI) {
   mHostObjectURIs.RemoveElement(aURI);
 }
 
 namespace {
 
-class UnlinkHostObjectURIsRunnable final : public mozilla::Runnable
-{
-public:
+class UnlinkHostObjectURIsRunnable final : public mozilla::Runnable {
+ public:
   explicit UnlinkHostObjectURIsRunnable(nsTArray<nsCString>& aURIs)
-    : mozilla::Runnable("UnlinkHostObjectURIsRunnable")
-  {
+      : mozilla::Runnable("UnlinkHostObjectURIsRunnable") {
     mURIs.SwapElements(aURIs);
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
     for (uint32_t index = 0; index < mURIs.Length(); ++index) {
@@ -75,17 +64,15 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   ~UnlinkHostObjectURIsRunnable() {}
 
   nsTArray<nsCString> mURIs;
 };
 
-} // namespace
+}  // namespace
 
-void
-nsIGlobalObject::UnlinkHostObjectURIs()
-{
+void nsIGlobalObject::UnlinkHostObjectURIs() {
   if (mHostObjectURIs.IsEmpty()) {
     return;
   }
@@ -102,7 +89,7 @@ nsIGlobalObject::UnlinkHostObjectURIs()
   // BlobURLProtocolHandler is main-thread only.
 
   RefPtr<UnlinkHostObjectURIsRunnable> runnable =
-    new UnlinkHostObjectURIsRunnable(mHostObjectURIs);
+      new UnlinkHostObjectURIsRunnable(mHostObjectURIs);
   MOZ_ASSERT(mHostObjectURIs.IsEmpty());
 
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -111,9 +98,8 @@ nsIGlobalObject::UnlinkHostObjectURIs()
   }
 }
 
-void
-nsIGlobalObject::TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb)
-{
+void nsIGlobalObject::TraverseHostObjectURIs(
+    nsCycleCollectionTraversalCallback& aCb) {
   if (mHostObjectURIs.IsEmpty()) {
     return;
   }
@@ -129,32 +115,28 @@ nsIGlobalObject::TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb)
   }
 }
 
-void
-nsIGlobalObject::AddEventTargetObject(DOMEventTargetHelper* aObject)
-{
+void nsIGlobalObject::AddEventTargetObject(DOMEventTargetHelper* aObject) {
   MOZ_DIAGNOSTIC_ASSERT(aObject);
   MOZ_ASSERT(!aObject->isInList());
   mEventTargetObjects.insertBack(aObject);
 }
 
-void
-nsIGlobalObject::RemoveEventTargetObject(DOMEventTargetHelper* aObject)
-{
+void nsIGlobalObject::RemoveEventTargetObject(DOMEventTargetHelper* aObject) {
   MOZ_DIAGNOSTIC_ASSERT(aObject);
   MOZ_ASSERT(aObject->isInList());
   MOZ_ASSERT(aObject->GetOwnerGlobal() == this);
   aObject->remove();
 }
 
-void
-nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTargetHelper*, bool* aDoneOut)>& aFunc) const
-{
+void nsIGlobalObject::ForEachEventTargetObject(
+    const std::function<void(DOMEventTargetHelper*, bool* aDoneOut)>& aFunc)
+    const {
   // Protect against the function call triggering a mutation of the list
   // while we are iterating by copying the DETH references to a temporary
   // list.
   AutoTArray<RefPtr<DOMEventTargetHelper>, 64> targetList;
-  for (const DOMEventTargetHelper* deth = mEventTargetObjects.getFirst();
-       deth; deth = deth->getNext()) {
+  for (const DOMEventTargetHelper* deth = mEventTargetObjects.getFirst(); deth;
+       deth = deth->getNext()) {
     targetList.AppendElement(const_cast<DOMEventTargetHelper*>(deth));
   }
 
@@ -173,10 +155,8 @@ nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTarge
   }
 }
 
-void
-nsIGlobalObject::DisconnectEventTargetObjects()
-{
-  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
+void nsIGlobalObject::DisconnectEventTargetObjects() {
+  ForEachEventTargetObject([&](DOMEventTargetHelper* aTarget, bool* aDoneOut) {
     aTarget->DisconnectFromOwner();
 
     // Calling DisconnectFromOwner() should result in
@@ -185,55 +165,50 @@ nsIGlobalObject::DisconnectEventTargetObjects()
   });
 }
 
-Maybe<ClientInfo>
-nsIGlobalObject::GetClientInfo() const
-{
+Maybe<ClientInfo> nsIGlobalObject::GetClientInfo() const {
   // By default globals do not expose themselves as a client.  Only real
   // window and worker globals are currently considered clients.
   return Maybe<ClientInfo>();
 }
 
-Maybe<ServiceWorkerDescriptor>
-nsIGlobalObject::GetController() const
-{
+Maybe<ServiceWorkerDescriptor> nsIGlobalObject::GetController() const {
   // By default globals do not have a service worker controller.  Only real
   // window and worker globals can currently be controlled as a client.
   return Maybe<ServiceWorkerDescriptor>();
 }
 
-RefPtr<ServiceWorker>
-nsIGlobalObject::GetOrCreateServiceWorker(const ServiceWorkerDescriptor& aDescriptor)
-{
-  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service workers");
+RefPtr<ServiceWorker> nsIGlobalObject::GetOrCreateServiceWorker(
+    const ServiceWorkerDescriptor& aDescriptor) {
+  MOZ_DIAGNOSTIC_ASSERT(false,
+                        "this global should not have any service workers");
+  return nullptr;
+}
+
+RefPtr<ServiceWorkerRegistration> nsIGlobalObject::GetServiceWorkerRegistration(
+    const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor)
+    const {
+  MOZ_DIAGNOSTIC_ASSERT(false,
+                        "this global should not have any service workers");
   return nullptr;
 }
 
 RefPtr<ServiceWorkerRegistration>
-nsIGlobalObject::GetServiceWorkerRegistration(const mozilla::dom::ServiceWorkerRegistrationDescriptor& aDescriptor) const
-{
-  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service workers");
+nsIGlobalObject::GetOrCreateServiceWorkerRegistration(
+    const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      false, "this global should not have any service worker registrations");
   return nullptr;
 }
 
-RefPtr<ServiceWorkerRegistration>
-nsIGlobalObject::GetOrCreateServiceWorkerRegistration(const ServiceWorkerRegistrationDescriptor& aDescriptor)
-{
-  MOZ_DIAGNOSTIC_ASSERT(false, "this global should not have any service worker registrations");
-  return nullptr;
-}
-
-nsPIDOMWindowInner*
-nsIGlobalObject::AsInnerWindow()
-{
+nsPIDOMWindowInner* nsIGlobalObject::AsInnerWindow() {
   if (MOZ_LIKELY(mIsInnerWindow)) {
-    return static_cast<nsPIDOMWindowInner*>(static_cast<nsGlobalWindowInner*>(this));
+    return static_cast<nsPIDOMWindowInner*>(
+        static_cast<nsGlobalWindowInner*>(this));
   }
   return nullptr;
 }
 
-size_t
-nsIGlobalObject::ShallowSizeOfExcludingThis(MallocSizeOf aSizeOf) const
-{
+size_t nsIGlobalObject::ShallowSizeOfExcludingThis(MallocSizeOf aSizeOf) const {
   size_t rtn = mHostObjectURIs.ShallowSizeOfExcludingThis(aSizeOf);
   return rtn;
 }

@@ -28,130 +28,128 @@ class SourceSurfaceD2D1;
 
 const int32_t kLayerCacheSize1 = 5;
 
-class DrawTargetD2D1 : public DrawTarget
-{
-public:
+class DrawTargetD2D1 : public DrawTarget {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetD2D1, override)
   DrawTargetD2D1();
   virtual ~DrawTargetD2D1();
 
-  virtual DrawTargetType GetType() const override { return DrawTargetType::HARDWARE_RASTER; }
-  virtual BackendType GetBackendType() const override { return BackendType::DIRECT2D1_1; }
+  virtual DrawTargetType GetType() const override {
+    return DrawTargetType::HARDWARE_RASTER;
+  }
+  virtual BackendType GetBackendType() const override {
+    return BackendType::DIRECT2D1_1;
+  }
   virtual already_AddRefed<SourceSurface> Snapshot() override;
-  virtual already_AddRefed<SourceSurface> IntoLuminanceSource(LuminanceType aLuminanceType,
-                                                              float aOpacity) override;
+  virtual already_AddRefed<SourceSurface> IntoLuminanceSource(
+      LuminanceType aLuminanceType, float aOpacity) override;
   virtual IntSize GetSize() const override { return mSize; }
 
   virtual void Flush() override;
-  virtual void DrawSurface(SourceSurface *aSurface,
-                           const Rect &aDest,
+  virtual void DrawSurface(SourceSurface *aSurface, const Rect &aDest,
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions,
                            const DrawOptions &aOptions) override;
-  virtual void DrawFilter(FilterNode *aNode,
-                          const Rect &aSourceRect,
+  virtual void DrawFilter(FilterNode *aNode, const Rect &aSourceRect,
                           const Point &aDestPoint,
                           const DrawOptions &aOptions = DrawOptions()) override;
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
-                                     const Point &aDest,
-                                     const Color &aColor,
-                                     const Point &aOffset,
-                                     Float aSigma,
+                                     const Point &aDest, const Color &aColor,
+                                     const Point &aOffset, Float aSigma,
                                      CompositionOp aOperator) override;
   virtual void ClearRect(const Rect &aRect) override;
-  virtual void MaskSurface(const Pattern &aSource,
-                           SourceSurface *aMask,
-                           Point aOffset,
-                           const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void MaskSurface(
+      const Pattern &aSource, SourceSurface *aMask, Point aOffset,
+      const DrawOptions &aOptions = DrawOptions()) override;
 
-  virtual void CopySurface(SourceSurface *aSurface,
-                           const IntRect &aSourceRect,
+  virtual void CopySurface(SourceSurface *aSurface, const IntRect &aSourceRect,
                            const IntPoint &aDestination) override;
 
-  virtual void FillRect(const Rect &aRect,
-                        const Pattern &aPattern,
+  virtual void FillRect(const Rect &aRect, const Pattern &aPattern,
                         const DrawOptions &aOptions = DrawOptions()) override;
-  virtual void StrokeRect(const Rect &aRect,
+  virtual void StrokeRect(const Rect &aRect, const Pattern &aPattern,
+                          const StrokeOptions &aStrokeOptions = StrokeOptions(),
+                          const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void StrokeLine(const Point &aStart, const Point &aEnd,
                           const Pattern &aPattern,
                           const StrokeOptions &aStrokeOptions = StrokeOptions(),
                           const DrawOptions &aOptions = DrawOptions()) override;
-  virtual void StrokeLine(const Point &aStart,
-                          const Point &aEnd,
-                          const Pattern &aPattern,
-                          const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                          const DrawOptions &aOptions = DrawOptions()) override;
-  virtual void Stroke(const Path *aPath,
-                      const Pattern &aPattern,
+  virtual void Stroke(const Path *aPath, const Pattern &aPattern,
                       const StrokeOptions &aStrokeOptions = StrokeOptions(),
                       const DrawOptions &aOptions = DrawOptions()) override;
-  virtual void Fill(const Path *aPath,
-                    const Pattern &aPattern,
+  virtual void Fill(const Path *aPath, const Pattern &aPattern,
                     const DrawOptions &aOptions = DrawOptions()) override;
-  virtual void FillGlyphs(ScaledFont *aFont,
-                          const GlyphBuffer &aBuffer,
+  virtual void FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
                           const DrawOptions &aOptions = DrawOptions()) override;
-  virtual void Mask(const Pattern &aSource,
-                    const Pattern &aMask,
+  virtual void Mask(const Pattern &aSource, const Pattern &aMask,
                     const DrawOptions &aOptions = DrawOptions()) override;
   virtual void PushClip(const Path *aPath) override;
   virtual void PushClipRect(const Rect &aRect) override;
-  virtual void PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount) override;
+  virtual void PushDeviceSpaceClipRects(const IntRect *aRects,
+                                        uint32_t aCount) override;
 
   virtual void PopClip() override;
-  virtual void PushLayer(bool aOpaque, Float aOpacity,
-                         SourceSurface* aMask,
-                         const Matrix& aMaskTransform,
-                         const IntRect& aBounds = IntRect(),
+  virtual void PushLayer(bool aOpaque, Float aOpacity, SourceSurface *aMask,
+                         const Matrix &aMaskTransform,
+                         const IntRect &aBounds = IntRect(),
                          bool aCopyBackground = false) override;
   virtual void PopLayer() override;
 
-  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
-                                                                  const IntSize &aSize,
-                                                                  int32_t aStride,
-                                                                  SurfaceFormat aFormat) const override;
-  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override;
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(
+      unsigned char *aData, const IntSize &aSize, int32_t aStride,
+      SurfaceFormat aFormat) const override;
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(
+      SourceSurface *aSurface) const override;
 
-  virtual already_AddRefed<SourceSurface>
-    CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const override { return nullptr; }
-  
-  virtual already_AddRefed<DrawTarget>
-    CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override;
-  virtual bool
-    CanCreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override;
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromNativeSurface(
+      const NativeSurface &aSurface) const override {
+    return nullptr;
+  }
 
-  virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override;
+  virtual already_AddRefed<DrawTarget> CreateSimilarDrawTarget(
+      const IntSize &aSize, SurfaceFormat aFormat) const override;
+  virtual bool CanCreateSimilarDrawTarget(const IntSize &aSize,
+                                          SurfaceFormat aFormat) const override;
 
-  virtual already_AddRefed<GradientStops>
-    CreateGradientStops(GradientStop *aStops,
-                        uint32_t aNumStops,
-                        ExtendMode aExtendMode = ExtendMode::CLAMP) const override;
+  virtual already_AddRefed<PathBuilder> CreatePathBuilder(
+      FillRule aFillRule = FillRule::FILL_WINDING) const override;
+
+  virtual already_AddRefed<GradientStops> CreateGradientStops(
+      GradientStop *aStops, uint32_t aNumStops,
+      ExtendMode aExtendMode = ExtendMode::CLAMP) const override;
 
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
 
   virtual bool SupportsRegionClipping() const override { return false; }
-  virtual bool IsCurrentGroupOpaque() override { return CurrentLayer().mIsOpaque; }
+  virtual bool IsCurrentGroupOpaque() override {
+    return CurrentLayer().mIsOpaque;
+  }
 
-  virtual void *GetNativeSurface(NativeSurfaceType aType) override { return nullptr; }
+  virtual void *GetNativeSurface(NativeSurfaceType aType) override {
+    return nullptr;
+  }
 
   virtual void DetachAllSnapshots() override { MarkChanged(); }
 
-  virtual void GetGlyphRasterizationMetrics(ScaledFont *aScaledFont, const uint16_t* aGlyphIndices,
-                                            uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) override;
+  virtual void GetGlyphRasterizationMetrics(
+      ScaledFont *aScaledFont, const uint16_t *aGlyphIndices,
+      uint32_t aNumGlyphs, GlyphMetrics *aGlyphMetrics) override;
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
-  bool Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat);
+  bool Init(ID3D11Texture2D *aTexture, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;
 
   // This function will get an image for a surface, it may adjust the source
   // transform for any transformation of the resulting image relative to the
   // oritingal SourceSurface. By default, the surface and its transform are
   // interpreted in user-space, but may be specified in device-space instead.
-  already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
-                                              ExtendMode aExtendMode, const IntRect* aSourceRect = nullptr,
-                                              bool aUserSpace = true);
+  already_AddRefed<ID2D1Image> GetImageForSurface(
+      SourceSurface *aSurface, Matrix &aSourceTransform, ExtendMode aExtendMode,
+      const IntRect *aSourceRect = nullptr, bool aUserSpace = true);
 
-  already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, ExtendMode aExtendMode) {
+  already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface,
+                                                  ExtendMode aExtendMode) {
     Matrix mat;
     return GetImageForSurface(aSurface, mat, aExtendMode, nullptr);
   }
@@ -172,17 +170,19 @@ public:
   static uint64_t mVRAMUsageDT;
   static uint64_t mVRAMUsageSS;
 
-private:
+ private:
   friend class SourceSurfaceD2D1;
 
   void FlushInternal(bool aHasDependencyMutex = false);
 
-  typedef std::unordered_set<DrawTargetD2D1*> TargetSet;
+  typedef std::unordered_set<DrawTargetD2D1 *> TargetSet;
 
   // This function will mark the surface as changing, and make sure any
   // copy-on-write snapshots are notified.
   void MarkChanged();
-  bool ShouldClipTemporarySurfaceDrawing(CompositionOp aOp, const Pattern& aPattern, bool aClipIsComplex);
+  bool ShouldClipTemporarySurfaceDrawing(CompositionOp aOp,
+                                         const Pattern &aPattern,
+                                         bool aClipIsComplex);
   void PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern);
   void FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern);
   void FlushTransformToDC() {
@@ -191,13 +191,13 @@ private:
       mTransformDirty = false;
     }
   }
-  void AddDependencyOnSource(SourceSurfaceD2D1* aSource);
+  void AddDependencyOnSource(SourceSurfaceD2D1 *aSource);
 
   // Must be called with all clips popped and an identity matrix set.
-  already_AddRefed<ID2D1Image> GetImageForLayerContent(bool aShouldPreserveContent = true);
+  already_AddRefed<ID2D1Image> GetImageForLayerContent(
+      bool aShouldPreserveContent = true);
 
-  ID2D1Image* CurrentTarget()
-  {
+  ID2D1Image *CurrentTarget() {
     if (CurrentLayer().mCurrentList) {
       return CurrentLayer().mCurrentList;
     }
@@ -214,22 +214,28 @@ private:
   already_AddRefed<ID2D1Geometry> GetInverseClippedGeometry();
 
   // This gives the device space clip rect applied to the -current layer-.
-  bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
+  bool GetDeviceSpaceClipRect(D2D1_RECT_F &aClipRect, bool &aIsPixelAligned);
 
   void PopAllClips();
   void PushAllClips();
-  void PushClipsToDC(ID2D1DeviceContext *aDC, bool aForceIgnoreAlpha = false, const D2D1_RECT_F& aMaxRect = D2D1::InfiniteRect());
+  void PushClipsToDC(ID2D1DeviceContext *aDC, bool aForceIgnoreAlpha = false,
+                     const D2D1_RECT_F &aMaxRect = D2D1::InfiniteRect());
   void PopClipsFromDC(ID2D1DeviceContext *aDC);
 
   already_AddRefed<ID2D1Brush> CreateTransparentBlackBrush();
-  already_AddRefed<ID2D1SolidColorBrush> GetSolidColorBrush(const D2D_COLOR_F& aColor);
-  already_AddRefed<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
+  already_AddRefed<ID2D1SolidColorBrush> GetSolidColorBrush(
+      const D2D_COLOR_F &aColor);
+  already_AddRefed<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern,
+                                                     Float aAlpha = 1.0f);
 
-  void PushClipGeometry(ID2D1Geometry* aGeometry, const D2D1_MATRIX_3X2_F& aTransform, bool aPixelAligned = false);
+  void PushClipGeometry(ID2D1Geometry *aGeometry,
+                        const D2D1_MATRIX_3X2_F &aTransform,
+                        bool aPixelAligned = false);
 
-  void PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform,
+  void PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry,
+                    const D2D1_MATRIX_3X2_F &aTransform,
                     bool aPixelAligned = false, bool aForceIgnoreAlpha = false,
-                    const D2D1_RECT_F& aLayerRect = D2D1::InfiniteRect());
+                    const D2D1_RECT_F &aLayerRect = D2D1::InfiniteRect());
 
   // This function is used to determine if the mDC is still valid; if it is
   // stale, we should avoid using it to execute any draw commands.
@@ -252,8 +258,7 @@ private:
   RefPtr<IDWriteRenderingParams> mTextRenderingParams;
 
   // List of pushed clips.
-  struct PushedClip
-  {
+  struct PushedClip {
     D2D1_RECT_F mBounds;
     // If mGeometry is non-null, the mTransform member will be used.
     D2D1_MATRIX_3X2_F mTransform;
@@ -264,9 +269,11 @@ private:
   };
 
   // List of pushed layers.
-  struct PushedLayer
-  {
-    PushedLayer() : mClipsArePushed(false), mIsOpaque(false), mOldPermitSubpixelAA(false) {}
+  struct PushedLayer {
+    PushedLayer()
+        : mClipsArePushed(false),
+          mIsOpaque(false),
+          mOldPermitSubpixelAA(false) {}
 
     std::vector<PushedClip> mPushedClips;
     RefPtr<ID2D1CommandList> mCurrentList;
@@ -276,10 +283,7 @@ private:
     bool mOldPermitSubpixelAA;
   };
   std::vector<PushedLayer> mPushedLayers;
-  PushedLayer& CurrentLayer()
-  {
-    return mPushedLayers.back();
-  }
+  PushedLayer &CurrentLayer() { return mPushedLayers.back(); }
 
   // The latest snapshot of this surface. This needs to be told when this
   // target is modified. We keep it alive as a cache.
@@ -292,15 +296,16 @@ private:
 
   uint32_t mUsedCommandListsSincePurge;
   uint32_t mTransformedGlyphsSinceLastPurge;
-  // When a BlendEffect has been drawn to a command list, and that command list is
-  // subsequently used -again- as an input to a blend effect for a command list,
-  // this causes an infinite recursion inside D2D as it tries to resolve the bounds.
-  // If we resolve the current command list before this happens
-  // we can avoid the subsequent hang. (See bug 1293586)
+  // When a BlendEffect has been drawn to a command list, and that command list
+  // is subsequently used -again- as an input to a blend effect for a command
+  // list, this causes an infinite recursion inside D2D as it tries to resolve
+  // the bounds. If we resolve the current command list before this happens we
+  // can avoid the subsequent hang. (See bug 1293586)
   uint32_t mComplexBlendsWithListInList;
 
   static StaticRefPtr<ID2D1Factory1> mFactory;
-  // This value is uesed to verify if the DrawTarget is created by a stale device.
+  // This value is uesed to verify if the DrawTarget is created by a stale
+  // device.
   uint32_t mDeviceSeq;
 
   // List of effects we use
@@ -308,7 +313,7 @@ private:
   RefPtr<ID2D1Effect> mLuminanceEffect;
 };
 
-}
-}
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_DRAWTARGETD2D_H_ */

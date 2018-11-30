@@ -35,17 +35,15 @@ namespace dom {
 
 class ParentSHistory;
 
-class ChildSHistory
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class ChildSHistory : public nsISupports, public nsWrapperCache {
+ public:
   friend class ParentSHistory;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ChildSHistory)
   nsISupports* GetParentObject() const;
-  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   explicit ChildSHistory(nsDocShell* aDocShell);
 
@@ -74,14 +72,14 @@ public:
 
   ParentSHistory* GetParentIfSameProcess();
 
-private:
+ private:
   virtual ~ChildSHistory();
 
   RefPtr<nsDocShell> mDocShell;
   RefPtr<nsSHistory> mHistory;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_ChildSHistory_h */

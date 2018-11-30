@@ -14,12 +14,12 @@
 namespace mozilla {
 namespace net {
 
-class ExtensionProtocolHandler final : public nsISubstitutingProtocolHandler,
-                                       public nsIProtocolHandlerWithDynamicFlags,
-                                       public SubstitutingProtocolHandler,
-                                       public nsSupportsWeakReference
-{
-public:
+class ExtensionProtocolHandler final
+    : public nsISubstitutingProtocolHandler,
+      public nsIProtocolHandlerWithDynamicFlags,
+      public SubstitutingProtocolHandler,
+      public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPROTOCOLHANDLERWITHDYNAMICFLAGS
   NS_FORWARD_NSIPROTOCOLHANDLER(SubstitutingProtocolHandler::)
@@ -68,14 +68,13 @@ public:
    *         extension and doesn't result in |aTerminateSender| being
    *         set to true.
    */
-  Result<Ok, nsresult> NewFD(nsIURI* aChildURI,
-                             bool* aTerminateSender,
+  Result<Ok, nsresult> NewFD(nsIURI* aChildURI, bool* aTerminateSender,
                              NeckoParent::GetExtensionFDResolver& aResolve);
 
-protected:
+ protected:
   ~ExtensionProtocolHandler() = default;
 
-private:
+ private:
   explicit ExtensionProtocolHandler();
 
   MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
@@ -123,8 +122,7 @@ private:
    *        the file access. The new channel encapsulates a request to
    *        the parent for an IPCStream for the file.
    */
-  void SubstituteRemoteFileChannel(nsIURI* aURI,
-                                   nsILoadInfo* aLoadinfo,
+  void SubstituteRemoteFileChannel(nsIURI* aURI, nsILoadInfo* aLoadinfo,
                                    nsACString& aResolvedFileSpec,
                                    nsIChannel** aRetVal);
 
@@ -226,7 +224,7 @@ private:
   bool mUseRemoteFileChannels;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif /* ExtensionProtocolHandler_h___ */

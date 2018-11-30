@@ -13,11 +13,12 @@ FRAGMENT(JSString, simple) {
   JS::Rooted<JSString*> z(cx, JS_NewStringCopyZ(cx, "z"));
 
   // I expect this will be a non-inlined string.
-  JS::Rooted<JSString*> stars(cx, JS_NewStringCopyZ(cx,
-                                                     "*************************"
-                                                     "*************************"
-                                                     "*************************"
-                                                     "*************************"));
+  JS::Rooted<JSString*> stars(cx,
+                              JS_NewStringCopyZ(cx,
+                                                "*************************"
+                                                "*************************"
+                                                "*************************"
+                                                "*************************"));
 
   // This may well be an inlined string.
   JS::Rooted<JSString*> xz(cx, JS_ConcatStrings(cx, x, z));
@@ -52,7 +53,8 @@ FRAGMENT(JSString, null) {
 }
 
 FRAGMENT(JSString, subclasses) {
-  JS::Rooted<JSFlatString*> flat(cx, JS_FlattenString(cx, JS_NewStringCopyZ(cx, "Hi!")));
+  JS::Rooted<JSFlatString*> flat(
+      cx, JS_FlattenString(cx, JS_NewStringCopyZ(cx, "Hi!")));
 
   breakpoint();
 

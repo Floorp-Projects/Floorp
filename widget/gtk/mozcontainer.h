@@ -44,14 +44,19 @@
  * it is realized.
  */
 
-#define MOZ_CONTAINER_TYPE            (moz_container_get_type())
-#define MOZ_CONTAINER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MOZ_CONTAINER_TYPE, MozContainer))
-#define MOZ_CONTAINER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), MOZ_CONTAINER_TYPE, MozContainerClass))
-#define IS_MOZ_CONTAINER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MOZ_CONTAINER_TYPE))
-#define IS_MOZ_CONTAINER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), MOZ_CONTAINER_TYPE))
-#define MOZ_CONTAINER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), MOZ_CONTAINER_TYPE, MozContainerClass))
+#define MOZ_CONTAINER_TYPE (moz_container_get_type())
+#define MOZ_CONTAINER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), MOZ_CONTAINER_TYPE, MozContainer))
+#define MOZ_CONTAINER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), MOZ_CONTAINER_TYPE, MozContainerClass))
+#define IS_MOZ_CONTAINER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), MOZ_CONTAINER_TYPE))
+#define IS_MOZ_CONTAINER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), MOZ_CONTAINER_TYPE))
+#define MOZ_CONTAINER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), MOZ_CONTAINER_TYPE, MozContainerClass))
 
-typedef struct _MozContainer      MozContainer;
+typedef struct _MozContainer MozContainer;
 typedef struct _MozContainerClass MozContainerClass;
 
 /* Workaround for bug at wayland-util.h,
@@ -62,42 +67,34 @@ struct wl_surface;
 struct wl_subsurface;
 #endif
 
-struct _MozContainer
-{
-    GtkContainer   container;
-    GList         *children;
+struct _MozContainer {
+  GtkContainer container;
+  GList *children;
 
 #ifdef MOZ_WAYLAND
-    struct wl_surface       *surface;
-    struct wl_subsurface    *subsurface;
-    struct wl_egl_window    *eglwindow;
-    gboolean                 needs_clear;
-    gboolean                 parent_surface_committed;
-    gulong                   parent_surface_committed_handler;
+  struct wl_surface *surface;
+  struct wl_subsurface *subsurface;
+  struct wl_egl_window *eglwindow;
+  gboolean needs_clear;
+  gboolean parent_surface_committed;
+  gulong parent_surface_committed_handler;
 #endif
 };
 
-struct _MozContainerClass
-{
-    GtkContainerClass parent_class;
+struct _MozContainerClass {
+  GtkContainerClass parent_class;
 };
 
-GType      moz_container_get_type (void);
-GtkWidget *moz_container_new      (void);
-void       moz_container_put      (MozContainer *container,
-                                   GtkWidget    *child_widget,
-                                   gint          x,
-                                   gint          y);
-void       moz_container_move          (MozContainer *container,
-                                        GtkWidget    *child_widget,
-                                        gint          x,
-                                        gint          y,
-                                        gint          width,
-                                        gint          height);
+GType moz_container_get_type(void);
+GtkWidget *moz_container_new(void);
+void moz_container_put(MozContainer *container, GtkWidget *child_widget, gint x,
+                       gint y);
+void moz_container_move(MozContainer *container, GtkWidget *child_widget,
+                        gint x, gint y, gint width, gint height);
 
 #ifdef MOZ_WAYLAND
-struct wl_surface* moz_container_get_wl_surface(MozContainer *container);
-struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer *container);
+struct wl_surface *moz_container_get_wl_surface(MozContainer *container);
+struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container);
 gboolean moz_container_has_wl_egl_window(MozContainer *container);
 gboolean moz_container_needs_clear(MozContainer *container);
 #endif

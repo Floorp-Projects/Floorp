@@ -60,37 +60,31 @@ const struct {
   int usagePage;
   int usage;
 } kUsagePages[] = {
-  // USB HID usage tables, page 1
-  { kDesktopUsagePage, 4 },  // Joystick
-  { kDesktopUsagePage, 5 }   // Gamepad
+    // USB HID usage tables, page 1
+    {kDesktopUsagePage, 4},  // Joystick
+    {kDesktopUsagePage, 5}   // Gamepad
 };
 
 const struct {
   WORD button;
   int mapped;
-} kXIButtonMap[] = {
-  { XINPUT_GAMEPAD_DPAD_UP, 12 },
-  { XINPUT_GAMEPAD_DPAD_DOWN, 13 },
-  { XINPUT_GAMEPAD_DPAD_LEFT, 14 },
-  { XINPUT_GAMEPAD_DPAD_RIGHT, 15 },
-  { XINPUT_GAMEPAD_START, 9 },
-  { XINPUT_GAMEPAD_BACK, 8 },
-  { XINPUT_GAMEPAD_LEFT_THUMB, 10 },
-  { XINPUT_GAMEPAD_RIGHT_THUMB, 11 },
-  { XINPUT_GAMEPAD_LEFT_SHOULDER, 4 },
-  { XINPUT_GAMEPAD_RIGHT_SHOULDER, 5 },
-  { XINPUT_GAMEPAD_A, 0 },
-  { XINPUT_GAMEPAD_B, 1 },
-  { XINPUT_GAMEPAD_X, 2 },
-  { XINPUT_GAMEPAD_Y, 3 }
-};
+} kXIButtonMap[] = {{XINPUT_GAMEPAD_DPAD_UP, 12},
+                    {XINPUT_GAMEPAD_DPAD_DOWN, 13},
+                    {XINPUT_GAMEPAD_DPAD_LEFT, 14},
+                    {XINPUT_GAMEPAD_DPAD_RIGHT, 15},
+                    {XINPUT_GAMEPAD_START, 9},
+                    {XINPUT_GAMEPAD_BACK, 8},
+                    {XINPUT_GAMEPAD_LEFT_THUMB, 10},
+                    {XINPUT_GAMEPAD_RIGHT_THUMB, 11},
+                    {XINPUT_GAMEPAD_LEFT_SHOULDER, 4},
+                    {XINPUT_GAMEPAD_RIGHT_SHOULDER, 5},
+                    {XINPUT_GAMEPAD_A, 0},
+                    {XINPUT_GAMEPAD_B, 1},
+                    {XINPUT_GAMEPAD_X, 2},
+                    {XINPUT_GAMEPAD_Y, 3}};
 const size_t kNumMappings = ArrayLength(kXIButtonMap);
 
-enum GamepadType {
-  kNoGamepad = 0,
-  kRawInputGamepad,
-  kXInputGamepad
-};
+enum GamepadType { kNoGamepad = 0, kRawInputGamepad, kXInputGamepad };
 
 class WindowsGamepadService;
 // This pointer holds a windows gamepad backend service,
@@ -101,7 +95,7 @@ nsCOMPtr<nsIThread> gMonitorThread = nullptr;
 static bool sIsShutdown = false;
 
 class Gamepad {
-public:
+ public:
   GamepadType type;
 
   // Handle to raw input device
@@ -116,7 +110,6 @@ public:
   // ID from the GamepadService, also used as the index into
   // WindowsGamepadService::mGamepads.
   int id;
-
 
   // Information about the physical device.
   unsigned numAxes;
@@ -134,46 +127,42 @@ public:
   // Used during rescan to find devices that were disconnected.
   bool present;
 
-  Gamepad(uint32_t aNumAxes,
-          uint32_t aNumButtons,
-          bool aHasDpad,
-          GamepadType aType) :
-    type(aType),
-    numAxes(aNumAxes),
-    numButtons(aNumButtons),
-    hasDpad(aHasDpad),
-    present(true)
-  {
+  Gamepad(uint32_t aNumAxes, uint32_t aNumButtons, bool aHasDpad,
+          GamepadType aType)
+      : type(aType),
+        numAxes(aNumAxes),
+        numButtons(aNumButtons),
+        hasDpad(aHasDpad),
+        present(true) {
     buttons.SetLength(numButtons);
     axes.SetLength(numAxes);
   }
-private:
+
+ private:
   Gamepad() {}
 };
 
 // Drop this in favor of decltype when we require a new enough SDK.
-typedef void (WINAPI *XInputEnable_func)(BOOL);
+typedef void(WINAPI* XInputEnable_func)(BOOL);
 
 // RAII class to wrap loading the XInput DLL
 class XInputLoader {
-public:
-  XInputLoader() : module(nullptr),
-                   mXInputGetState(nullptr),
-                   mXInputEnable(nullptr) {
+ public:
+  XInputLoader()
+      : module(nullptr), mXInputGetState(nullptr), mXInputEnable(nullptr) {
     // xinput1_4.dll exists on Windows 8
     // xinput9_1_0.dll exists on Windows 7 and Vista
     // xinput1_3.dll shipped with the DirectX SDK
-    const wchar_t* dlls[] = {L"xinput1_4.dll",
-                             L"xinput9_1_0.dll",
+    const wchar_t* dlls[] = {L"xinput1_4.dll", L"xinput9_1_0.dll",
                              L"xinput1_3.dll"};
     const size_t kNumDLLs = ArrayLength(dlls);
     for (size_t i = 0; i < kNumDLLs; ++i) {
       module = LoadLibraryW(dlls[i]);
       if (module) {
         mXInputEnable = reinterpret_cast<XInputEnable_func>(
-         GetProcAddress(module, "XInputEnable"));
+            GetProcAddress(module, "XInputEnable"));
         mXInputGetState = reinterpret_cast<decltype(XInputGetState)*>(
-         GetProcAddress(module, "XInputGetState"));
+            GetProcAddress(module, "XInputGetState"));
         if (mXInputEnable) {
           mXInputEnable(TRUE);
         }
@@ -183,7 +172,7 @@ public:
   }
 
   ~XInputLoader() {
-    //mXInputEnable = nullptr;
+    // mXInputEnable = nullptr;
     mXInputGetState = nullptr;
 
     if (module) {
@@ -191,44 +180,38 @@ public:
     }
   }
 
-  explicit operator bool() {
-    return module && mXInputGetState;
-  }
+  explicit operator bool() { return module && mXInputGetState; }
 
   HMODULE module;
-  decltype(XInputGetState) *mXInputGetState;
+  decltype(XInputGetState)* mXInputGetState;
   XInputEnable_func mXInputEnable;
 };
 
-bool
-GetPreparsedData(HANDLE handle, nsTArray<uint8_t>& data)
-{
+bool GetPreparsedData(HANDLE handle, nsTArray<uint8_t>& data) {
   UINT size;
-  if (GetRawInputDeviceInfo(handle, RIDI_PREPARSEDDATA, nullptr, &size) == kRawInputError) {
+  if (GetRawInputDeviceInfo(handle, RIDI_PREPARSEDDATA, nullptr, &size) ==
+      kRawInputError) {
     return false;
   }
   data.SetLength(size);
-  return GetRawInputDeviceInfo(handle, RIDI_PREPARSEDDATA,
-                               data.Elements(), &size) > 0;
+  return GetRawInputDeviceInfo(handle, RIDI_PREPARSEDDATA, data.Elements(),
+                               &size) > 0;
 }
 
 /*
  * Given an axis value and a minimum and maximum range,
  * scale it to be in the range -1.0 .. 1.0.
  */
-double
-ScaleAxis(ULONG value, LONG min, LONG max)
-{
-  return  2.0 * (value - min) / (max - min) - 1.0;
+double ScaleAxis(ULONG value, LONG min, LONG max) {
+  return 2.0 * (value - min) / (max - min) - 1.0;
 }
 
 /*
  * Given a value from a d-pad (POV hat in USB HID terminology),
  * represent it as 4 buttons, one for each cardinal direction.
  */
-void
-UnpackDpad(LONG dpad_value, const Gamepad* gamepad, nsTArray<bool>& buttons)
-{
+void UnpackDpad(LONG dpad_value, const Gamepad* gamepad,
+                nsTArray<bool>& buttons) {
   const unsigned kUp = gamepad->numButtons - 4;
   const unsigned kDown = gamepad->numButtons - 3;
   const unsigned kLeft = gamepad->numButtons - 2;
@@ -236,8 +219,8 @@ UnpackDpad(LONG dpad_value, const Gamepad* gamepad, nsTArray<bool>& buttons)
 
   // Different controllers have different ways of representing
   // "nothing is pressed", but they're all outside the range of values.
-  if (dpad_value < gamepad->dpadCaps.LogicalMin
-      || dpad_value > gamepad->dpadCaps.LogicalMax) {
+  if (dpad_value < gamepad->dpadCaps.LogicalMin ||
+      dpad_value > gamepad->dpadCaps.LogicalMax) {
     // Nothing is pressed.
     return;
   }
@@ -266,9 +249,7 @@ UnpackDpad(LONG dpad_value, const Gamepad* gamepad, nsTArray<bool>& buttons)
  * Return true if this USB HID usage page and usage are of a type we
  * know how to handle.
  */
-bool
-SupportedUsage(USHORT page, USHORT usage)
-{
+bool SupportedUsage(USHORT page, USHORT usage) {
   for (unsigned i = 0; i < ArrayLength(kUsagePages); i++) {
     if (page == kUsagePages[i].usagePage && usage == kUsagePages[i].usage) {
       return true;
@@ -278,24 +259,33 @@ SupportedUsage(USHORT page, USHORT usage)
 }
 
 class HIDLoader {
-public:
-  HIDLoader() : mHidD_GetProductString(nullptr),
-                mHidP_GetCaps(nullptr),
-                mHidP_GetButtonCaps(nullptr),
-                mHidP_GetValueCaps(nullptr),
-                mHidP_GetUsages(nullptr),
-                mHidP_GetUsageValue(nullptr),
-                mHidP_GetScaledUsageValue(nullptr),
-                mModule(LoadLibraryW(L"hid.dll"))
-  {
+ public:
+  HIDLoader()
+      : mHidD_GetProductString(nullptr),
+        mHidP_GetCaps(nullptr),
+        mHidP_GetButtonCaps(nullptr),
+        mHidP_GetValueCaps(nullptr),
+        mHidP_GetUsages(nullptr),
+        mHidP_GetUsageValue(nullptr),
+        mHidP_GetScaledUsageValue(nullptr),
+        mModule(LoadLibraryW(L"hid.dll")) {
     if (mModule) {
-      mHidD_GetProductString = reinterpret_cast<decltype(HidD_GetProductString)*>(GetProcAddress(mModule, "HidD_GetProductString"));
-      mHidP_GetCaps = reinterpret_cast<decltype(HidP_GetCaps)*>(GetProcAddress(mModule, "HidP_GetCaps"));
-      mHidP_GetButtonCaps = reinterpret_cast<decltype(HidP_GetButtonCaps)*>(GetProcAddress(mModule, "HidP_GetButtonCaps"));
-      mHidP_GetValueCaps = reinterpret_cast<decltype(HidP_GetValueCaps)*>(GetProcAddress(mModule, "HidP_GetValueCaps"));
-      mHidP_GetUsages = reinterpret_cast<decltype(HidP_GetUsages)*>(GetProcAddress(mModule, "HidP_GetUsages"));
-      mHidP_GetUsageValue = reinterpret_cast<decltype(HidP_GetUsageValue)*>(GetProcAddress(mModule, "HidP_GetUsageValue"));
-      mHidP_GetScaledUsageValue = reinterpret_cast<decltype(HidP_GetScaledUsageValue)*>(GetProcAddress(mModule, "HidP_GetScaledUsageValue"));
+      mHidD_GetProductString =
+          reinterpret_cast<decltype(HidD_GetProductString)*>(
+              GetProcAddress(mModule, "HidD_GetProductString"));
+      mHidP_GetCaps = reinterpret_cast<decltype(HidP_GetCaps)*>(
+          GetProcAddress(mModule, "HidP_GetCaps"));
+      mHidP_GetButtonCaps = reinterpret_cast<decltype(HidP_GetButtonCaps)*>(
+          GetProcAddress(mModule, "HidP_GetButtonCaps"));
+      mHidP_GetValueCaps = reinterpret_cast<decltype(HidP_GetValueCaps)*>(
+          GetProcAddress(mModule, "HidP_GetValueCaps"));
+      mHidP_GetUsages = reinterpret_cast<decltype(HidP_GetUsages)*>(
+          GetProcAddress(mModule, "HidP_GetUsages"));
+      mHidP_GetUsageValue = reinterpret_cast<decltype(HidP_GetUsageValue)*>(
+          GetProcAddress(mModule, "HidP_GetUsageValue"));
+      mHidP_GetScaledUsageValue =
+          reinterpret_cast<decltype(HidP_GetScaledUsageValue)*>(
+              GetProcAddress(mModule, "HidP_GetScaledUsageValue"));
     }
   }
 
@@ -306,33 +296,27 @@ public:
   }
 
   explicit operator bool() {
-    return mModule &&
-      mHidD_GetProductString &&
-      mHidP_GetCaps &&
-      mHidP_GetButtonCaps &&
-      mHidP_GetValueCaps &&
-      mHidP_GetUsages &&
-      mHidP_GetUsageValue &&
-      mHidP_GetScaledUsageValue;
+    return mModule && mHidD_GetProductString && mHidP_GetCaps &&
+           mHidP_GetButtonCaps && mHidP_GetValueCaps && mHidP_GetUsages &&
+           mHidP_GetUsageValue && mHidP_GetScaledUsageValue;
   }
 
-  decltype(HidD_GetProductString) *mHidD_GetProductString;
-  decltype(HidP_GetCaps) *mHidP_GetCaps;
-  decltype(HidP_GetButtonCaps) *mHidP_GetButtonCaps;
-  decltype(HidP_GetValueCaps) *mHidP_GetValueCaps;
-  decltype(HidP_GetUsages) *mHidP_GetUsages;
-  decltype(HidP_GetUsageValue) *mHidP_GetUsageValue;
-  decltype(HidP_GetScaledUsageValue) *mHidP_GetScaledUsageValue;
+  decltype(HidD_GetProductString)* mHidD_GetProductString;
+  decltype(HidP_GetCaps)* mHidP_GetCaps;
+  decltype(HidP_GetButtonCaps)* mHidP_GetButtonCaps;
+  decltype(HidP_GetValueCaps)* mHidP_GetValueCaps;
+  decltype(HidP_GetUsages)* mHidP_GetUsages;
+  decltype(HidP_GetUsageValue)* mHidP_GetUsageValue;
+  decltype(HidP_GetScaledUsageValue)* mHidP_GetScaledUsageValue;
 
-private:
+ private:
   HMODULE mModule;
 };
 
 HWND sHWnd = nullptr;
 
-static void
-DirectInputMessageLoopOnceCallback(nsITimer *aTimer, void* aClosure)
-{
+static void DirectInputMessageLoopOnceCallback(nsITimer* aTimer,
+                                               void* aClosure) {
   MOZ_ASSERT(NS_GetCurrentThread() == gMonitorThread);
   MSG msg;
   while (PeekMessageW(&msg, sHWnd, 0, 0, PM_REMOVE) > 0) {
@@ -348,29 +332,23 @@ DirectInputMessageLoopOnceCallback(nsITimer *aTimer, void* aClosure)
   }
 }
 
-class WindowsGamepadService
-{
+class WindowsGamepadService {
  public:
-  WindowsGamepadService()
-  {
+  WindowsGamepadService() {
     mDirectInputTimer = NS_NewTimer();
     mXInputTimer = NS_NewTimer();
     mDeviceChangeTimer = NS_NewTimer();
   }
-  virtual ~WindowsGamepadService()
-  {
-    Cleanup();
-  }
+  virtual ~WindowsGamepadService() { Cleanup(); }
 
   void DevicesChanged(bool aIsStablizing);
 
-  void StartMessageLoop()
-  {
+  void StartMessageLoop() {
     MOZ_ASSERT(mDirectInputTimer);
-    mDirectInputTimer->InitWithNamedFuncCallback(DirectInputMessageLoopOnceCallback,
-                                                 nullptr, kWindowsGamepadPollInterval,
-                                                 nsITimer::TYPE_ONE_SHOT,
-                                                 "DirectInputMessageLoopOnceCallback");
+    mDirectInputTimer->InitWithNamedFuncCallback(
+        DirectInputMessageLoopOnceCallback, nullptr,
+        kWindowsGamepadPollInterval, nsITimer::TYPE_ONE_SHOT,
+        "DirectInputMessageLoopOnceCallback");
   }
 
   void Startup();
@@ -378,8 +356,8 @@ class WindowsGamepadService
   // Parse gamepad input from a WM_INPUT message.
   bool HandleRawInput(HRAWINPUT handle);
 
-  static void XInputMessageLoopOnceCallback(nsITimer *aTimer, void* aClosure);
-  static void DevicesChangeCallback(nsITimer *aTimer, void* aService);
+  static void XInputMessageLoopOnceCallback(nsITimer* aTimer, void* aClosure);
+  static void DevicesChangeCallback(nsITimer* aTimer, void* aService);
 
  private:
   void ScanForDevices();
@@ -408,17 +386,14 @@ class WindowsGamepadService
   nsCOMPtr<nsITimer> mDeviceChangeTimer;
 };
 
-
-void
-WindowsGamepadService::ScanForRawInputDevices()
-{
+void WindowsGamepadService::ScanForRawInputDevices() {
   if (!mHID) {
     return;
   }
 
   UINT numDevices;
-  if (GetRawInputDeviceList(nullptr, &numDevices, sizeof(RAWINPUTDEVICELIST))
-      == kRawInputError) {
+  if (GetRawInputDeviceList(nullptr, &numDevices, sizeof(RAWINPUTDEVICELIST)) ==
+      kRawInputError) {
     return;
   }
   nsTArray<RAWINPUTDEVICELIST> devices(numDevices);
@@ -436,36 +411,31 @@ WindowsGamepadService::ScanForRawInputDevices()
 }
 
 // static
-void
-WindowsGamepadService::XInputMessageLoopOnceCallback(nsITimer *aTimer,
-                                                     void* aService)
-{
+void WindowsGamepadService::XInputMessageLoopOnceCallback(nsITimer* aTimer,
+                                                          void* aService) {
   MOZ_ASSERT(aService);
   WindowsGamepadService* self = static_cast<WindowsGamepadService*>(aService);
   self->PollXInput();
   if (self->mIsXInputMonitoring) {
     aTimer->Cancel();
-    aTimer->InitWithNamedFuncCallback(XInputMessageLoopOnceCallback, self,
-                                      kWindowsGamepadPollInterval, nsITimer::TYPE_ONE_SHOT,
-                                      "XInputMessageLoopOnceCallback");
+    aTimer->InitWithNamedFuncCallback(
+        XInputMessageLoopOnceCallback, self, kWindowsGamepadPollInterval,
+        nsITimer::TYPE_ONE_SHOT, "XInputMessageLoopOnceCallback");
   }
 }
 
 // static
-void
-WindowsGamepadService::DevicesChangeCallback(nsITimer *aTimer, void* aService)
-{
+void WindowsGamepadService::DevicesChangeCallback(nsITimer* aTimer,
+                                                  void* aService) {
   MOZ_ASSERT(aService);
   WindowsGamepadService* self = static_cast<WindowsGamepadService*>(aService);
   self->DevicesChanged(false);
 }
 
-bool
-WindowsGamepadService::HaveXInputGamepad(unsigned int userIndex)
-{
+bool WindowsGamepadService::HaveXInputGamepad(unsigned int userIndex) {
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    if (mGamepads[i].type == kXInputGamepad
-        && mGamepads[i].userIndex == userIndex) {
+    if (mGamepads[i].type == kXInputGamepad &&
+        mGamepads[i].userIndex == userIndex) {
       mGamepads[i].present = true;
       return true;
     }
@@ -473,14 +443,12 @@ WindowsGamepadService::HaveXInputGamepad(unsigned int userIndex)
   return false;
 }
 
-bool
-WindowsGamepadService::ScanForXInputDevices()
-{
+bool WindowsGamepadService::ScanForXInputDevices() {
   MOZ_ASSERT(mXInput, "XInput should be present!");
 
   bool found = false;
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return found;
   }
@@ -497,29 +465,23 @@ WindowsGamepadService::ScanForXInputDevices()
     }
 
     // Not already present, add it.
-    Gamepad gamepad(kStandardGamepadAxes,
-                    kStandardGamepadButtons,
-                    true,
+    Gamepad gamepad(kStandardGamepadAxes, kStandardGamepadButtons, true,
                     kXInputGamepad);
     gamepad.userIndex = i;
     gamepad.state = state;
-    gamepad.id = service->AddGamepad("xinput",
-                                     GamepadMappingType::Standard,
-                                     GamepadHand::_empty,
-                                     kStandardGamepadButtons,
-                                     kStandardGamepadAxes,
-                                     0); // TODO: Bug 680289, implement gamepad haptics for Windows.
+    gamepad.id = service->AddGamepad(
+        "xinput", GamepadMappingType::Standard, GamepadHand::_empty,
+        kStandardGamepadButtons, kStandardGamepadAxes,
+        0);  // TODO: Bug 680289, implement gamepad haptics for Windows.
     mGamepads.AppendElement(gamepad);
   }
 
   return found;
 }
 
-void
-WindowsGamepadService::ScanForDevices()
-{
+void WindowsGamepadService::ScanForDevices() {
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return;
   }
@@ -535,10 +497,9 @@ WindowsGamepadService::ScanForDevices()
     mXInputTimer->Cancel();
     if (ScanForXInputDevices()) {
       mIsXInputMonitoring = true;
-      mXInputTimer->InitWithNamedFuncCallback(XInputMessageLoopOnceCallback, this,
-                                              kWindowsGamepadPollInterval,
-                                              nsITimer::TYPE_ONE_SHOT,
-                                              "XInputMessageLoopOnceCallback");
+      mXInputTimer->InitWithNamedFuncCallback(
+          XInputMessageLoopOnceCallback, this, kWindowsGamepadPollInterval,
+          nsITimer::TYPE_ONE_SHOT, "XInputMessageLoopOnceCallback");
     } else {
       mIsXInputMonitoring = false;
     }
@@ -553,9 +514,7 @@ WindowsGamepadService::ScanForDevices()
   }
 }
 
-void
-WindowsGamepadService::PollXInput()
-{
+void WindowsGamepadService::PollXInput() {
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
     if (mGamepads[i].type != kXInputGamepad) {
       continue;
@@ -563,9 +522,9 @@ WindowsGamepadService::PollXInput()
 
     XINPUT_STATE state = {};
     DWORD res = mXInput.mXInputGetState(mGamepads[i].userIndex, &state);
-    if (res == ERROR_SUCCESS
-        && state.dwPacketNumber != mGamepads[i].state.dwPacketNumber) {
-        CheckXInputChanges(mGamepads[i], state);
+    if (res == ERROR_SUCCESS &&
+        state.dwPacketNumber != mGamepads[i].state.dwPacketNumber) {
+      CheckXInputChanges(mGamepads[i], state);
     }
   }
 }
@@ -573,7 +532,7 @@ WindowsGamepadService::PollXInput()
 void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
                                                XINPUT_STATE& state) {
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return;
   }
@@ -593,15 +552,15 @@ void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
   // Then triggers
   if (state.Gamepad.bLeftTrigger != gamepad.state.Gamepad.bLeftTrigger) {
     bool pressed =
-      state.Gamepad.bLeftTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
-    service->NewButtonEvent(gamepad.id, kButtonLeftTrigger,
-                            pressed, state.Gamepad.bLeftTrigger / 255.0);
+        state.Gamepad.bLeftTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
+    service->NewButtonEvent(gamepad.id, kButtonLeftTrigger, pressed,
+                            state.Gamepad.bLeftTrigger / 255.0);
   }
   if (state.Gamepad.bRightTrigger != gamepad.state.Gamepad.bRightTrigger) {
     bool pressed =
-      state.Gamepad.bRightTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
-    service->NewButtonEvent(gamepad.id, kButtonRightTrigger,
-                            pressed, state.Gamepad.bRightTrigger / 255.0);
+        state.Gamepad.bRightTrigger >= XINPUT_GAMEPAD_TRIGGER_THRESHOLD;
+    service->NewButtonEvent(gamepad.id, kButtonRightTrigger, pressed,
+                            state.Gamepad.bRightTrigger / 255.0);
   }
 
   // Finally deal with analog sticks
@@ -627,13 +586,12 @@ void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
 
 // Used to sort a list of axes by HID usage.
 class HidValueComparator {
-public:
-  bool Equals(const HIDP_VALUE_CAPS& c1, const HIDP_VALUE_CAPS& c2) const
-  {
-    return c1.UsagePage == c2.UsagePage && c1.Range.UsageMin == c2.Range.UsageMin;
+ public:
+  bool Equals(const HIDP_VALUE_CAPS& c1, const HIDP_VALUE_CAPS& c2) const {
+    return c1.UsagePage == c2.UsagePage &&
+           c1.Range.UsageMin == c2.Range.UsageMin;
   }
-  bool LessThan(const HIDP_VALUE_CAPS& c1, const HIDP_VALUE_CAPS& c2) const
-  {
+  bool LessThan(const HIDP_VALUE_CAPS& c1, const HIDP_VALUE_CAPS& c2) const {
     if (c1.UsagePage == c2.UsagePage) {
       return c1.Range.UsageMin < c2.Range.UsageMin;
     }
@@ -641,11 +599,9 @@ public:
   }
 };
 
-bool
-WindowsGamepadService::GetRawGamepad(HANDLE handle)
-{
+bool WindowsGamepadService::GetRawGamepad(HANDLE handle) {
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return true;
   }
@@ -655,7 +611,8 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
   }
 
   for (unsigned i = 0; i < mGamepads.Length(); i++) {
-    if (mGamepads[i].type == kRawInputGamepad && mGamepads[i].handle == handle) {
+    if (mGamepads[i].type == kRawInputGamepad &&
+        mGamepads[i].handle == handle) {
       mGamepads[i].present = true;
       return true;
     }
@@ -663,7 +620,8 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
 
   RID_DEVICE_INFO rdi = {};
   UINT size = rdi.cbSize = sizeof(RID_DEVICE_INFO);
-  if (GetRawInputDeviceInfo(handle, RIDI_DEVICEINFO, &rdi, &size) == kRawInputError) {
+  if (GetRawInputDeviceInfo(handle, RIDI_DEVICEINFO, &rdi, &size) ==
+      kRawInputError) {
     return false;
   }
   // Ensure that this is a device we care about
@@ -672,13 +630,15 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
   }
 
   // Device name is a mostly-opaque string.
-  if (GetRawInputDeviceInfo(handle, RIDI_DEVICENAME, nullptr, &size) == kRawInputError) {
+  if (GetRawInputDeviceInfo(handle, RIDI_DEVICENAME, nullptr, &size) ==
+      kRawInputError) {
     return false;
   }
 
   nsTArray<wchar_t> devname(size);
   devname.SetLength(size);
-  if (GetRawInputDeviceInfo(handle, RIDI_DEVICENAME, devname.Elements(), &size) == kRawInputError) {
+  if (GetRawInputDeviceInfo(handle, RIDI_DEVICENAME, devname.Elements(),
+                            &size) == kRawInputError) {
     return false;
   }
 
@@ -690,20 +650,23 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
   }
 
   // Product string is a human-readable name.
-  // Per http://msdn.microsoft.com/en-us/library/windows/hardware/ff539681%28v=vs.85%29.aspx
-  // "For USB devices, the maximum string length is 126 wide characters (not including the terminating NULL character)."
-  wchar_t name[128] = { 0 };
+  // Per
+  // http://msdn.microsoft.com/en-us/library/windows/hardware/ff539681%28v=vs.85%29.aspx
+  // "For USB devices, the maximum string length is 126 wide characters (not
+  // including the terminating NULL character)."
+  wchar_t name[128] = {0};
   size = sizeof(name);
   nsTArray<char> gamepad_name;
-  HANDLE hid_handle = CreateFile(devname.Elements(), GENERIC_READ | GENERIC_WRITE,
-    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+  HANDLE hid_handle = CreateFile(
+      devname.Elements(), GENERIC_READ | GENERIC_WRITE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
   if (hid_handle) {
     if (mHID.mHidD_GetProductString(hid_handle, &name, size)) {
       int bytes = WideCharToMultiByte(CP_UTF8, 0, name, -1, nullptr, 0, nullptr,
                                       nullptr);
       gamepad_name.SetLength(bytes);
-      WideCharToMultiByte(CP_UTF8, 0, name, -1, gamepad_name.Elements(),
-                          bytes, nullptr, nullptr);
+      WideCharToMultiByte(CP_UTF8, 0, name, -1, gamepad_name.Elements(), bytes,
+                          nullptr, nullptr);
     }
     CloseHandle(hid_handle);
   }
@@ -713,7 +676,7 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
     strcpy_s(gamepad_name.Elements(), gamepad_name.Length(), kUnknown);
   }
 
-  char gamepad_id[256] = { 0 };
+  char gamepad_id[256] = {0};
   _snprintf_s(gamepad_id, _TRUNCATE, "%04x-%04x-%s", rdi.hid.dwVendorId,
               rdi.hid.dwProductId, gamepad_name.Elements());
 
@@ -723,7 +686,7 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
   }
 
   PHIDP_PREPARSED_DATA parsed =
-    reinterpret_cast<PHIDP_PREPARSED_DATA>(preparsedbytes.Elements());
+      reinterpret_cast<PHIDP_PREPARSED_DATA>(preparsedbytes.Elements());
   HIDP_CAPS caps;
   if (mHID.mHidP_GetCaps(parsed, &caps) != HIDP_STATUS_SUCCESS) {
     return false;
@@ -733,23 +696,23 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
   USHORT count = caps.NumberInputButtonCaps;
   nsTArray<HIDP_BUTTON_CAPS> buttonCaps(count);
   buttonCaps.SetLength(count);
-  if (mHID.mHidP_GetButtonCaps(HidP_Input, buttonCaps.Elements(), &count, parsed)
-      != HIDP_STATUS_SUCCESS) {
+  if (mHID.mHidP_GetButtonCaps(HidP_Input, buttonCaps.Elements(), &count,
+                               parsed) != HIDP_STATUS_SUCCESS) {
     return false;
   }
   uint32_t numButtons = 0;
   for (unsigned i = 0; i < count; i++) {
     // Each buttonCaps is typically a range of buttons.
     numButtons +=
-      buttonCaps[i].Range.UsageMax - buttonCaps[i].Range.UsageMin + 1;
+        buttonCaps[i].Range.UsageMax - buttonCaps[i].Range.UsageMin + 1;
   }
 
   // Enumerate value caps, which represent axes and d-pads.
   count = caps.NumberInputValueCaps;
   nsTArray<HIDP_VALUE_CAPS> valueCaps(count);
   valueCaps.SetLength(count);
-  if (mHID.mHidP_GetValueCaps(HidP_Input, valueCaps.Elements(), &count, parsed)
-      != HIDP_STATUS_SUCCESS) {
+  if (mHID.mHidP_GetValueCaps(HidP_Input, valueCaps.Elements(), &count,
+                              parsed) != HIDP_STATUS_SUCCESS) {
     return false;
   }
   nsTArray<HIDP_VALUE_CAPS> axes;
@@ -759,8 +722,8 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
 
   HidValueComparator comparator;
   for (unsigned i = 0; i < count; i++) {
-    if (valueCaps[i].UsagePage == kDesktopUsagePage
-        && valueCaps[i].Range.UsageMin == kUsageDpad
+    if (valueCaps[i].UsagePage == kDesktopUsagePage &&
+        valueCaps[i].Range.UsageMin == kUsageDpad
         // Don't know how to handle d-pads that return weird values.
         && valueCaps[i].LogicalMax - valueCaps[i].LogicalMin == 7) {
       // d-pad gets special handling.
@@ -778,10 +741,7 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
   uint32_t numAxes = axes.Length();
 
   // Not already present, add it.
-  Gamepad gamepad(numAxes,
-                  numButtons,
-                  true,
-                  kRawInputGamepad);
+  Gamepad gamepad(numAxes, numButtons, true, kRawInputGamepad);
 
   gamepad.handle = handle;
 
@@ -789,25 +749,20 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
     gamepad.axes[i].caps = axes[i];
   }
 
-  gamepad.id = service->AddGamepad(gamepad_id,
-                                   GamepadMappingType::_empty,
-                                   GamepadHand::_empty,
-                                   gamepad.numButtons,
-                                   gamepad.numAxes,
-                                   0);
+  gamepad.id = service->AddGamepad(gamepad_id, GamepadMappingType::_empty,
+                                   GamepadHand::_empty, gamepad.numButtons,
+                                   gamepad.numAxes, 0);
   mGamepads.AppendElement(gamepad);
   return true;
 }
 
-bool
-WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
-{
+bool WindowsGamepadService::HandleRawInput(HRAWINPUT handle) {
   if (!mHID) {
     return false;
   }
 
   RefPtr<GamepadPlatformService> service =
-    GamepadPlatformService::GetParentService();
+      GamepadPlatformService::GetParentService();
   if (!service) {
     return false;
   }
@@ -825,8 +780,8 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
 
   Gamepad* gamepad = nullptr;
   for (unsigned i = 0; i < mGamepads.Length(); i++) {
-    if (mGamepads[i].type == kRawInputGamepad
-        && mGamepads[i].handle == raw->header.hDevice) {
+    if (mGamepads[i].type == kRawInputGamepad &&
+        mGamepads[i].handle == raw->header.hDevice) {
       gamepad = &mGamepads[i];
       break;
     }
@@ -841,21 +796,22 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
     return false;
   }
   PHIDP_PREPARSED_DATA parsed =
-    reinterpret_cast<PHIDP_PREPARSED_DATA>(parsedbytes.Elements());
+      reinterpret_cast<PHIDP_PREPARSED_DATA>(parsedbytes.Elements());
 
   // Get all the pressed buttons.
   nsTArray<USAGE> usages(gamepad->numButtons);
   usages.SetLength(gamepad->numButtons);
   ULONG usageLength = gamepad->numButtons;
   if (mHID.mHidP_GetUsages(HidP_Input, kButtonUsagePage, 0, usages.Elements(),
-                     &usageLength, parsed, (PCHAR)raw->data.hid.bRawData,
-                     raw->data.hid.dwSizeHid) != HIDP_STATUS_SUCCESS) {
+                           &usageLength, parsed, (PCHAR)raw->data.hid.bRawData,
+                           raw->data.hid.dwSizeHid) != HIDP_STATUS_SUCCESS) {
     return false;
   }
 
   nsTArray<bool> buttons(gamepad->numButtons);
   buttons.SetLength(gamepad->numButtons);
-  // If we don't zero out the buttons array first, sometimes it can reuse values.
+  // If we don't zero out the buttons array first, sometimes it can reuse
+  // values.
   memset(buttons.Elements(), 0, gamepad->numButtons * sizeof(bool));
 
   for (unsigned i = 0; i < usageLength; i++) {
@@ -872,7 +828,11 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
   if (gamepad->hasDpad) {
     // Get d-pad position as 4 buttons.
     ULONG value;
-    if (mHID.mHidP_GetUsageValue(HidP_Input, gamepad->dpadCaps.UsagePage, 0, gamepad->dpadCaps.Range.UsageMin, &value, parsed, (PCHAR)raw->data.hid.bRawData, raw->data.hid.dwSizeHid) == HIDP_STATUS_SUCCESS) {
+    if (mHID.mHidP_GetUsageValue(HidP_Input, gamepad->dpadCaps.UsagePage, 0,
+                                 gamepad->dpadCaps.Range.UsageMin, &value,
+                                 parsed, (PCHAR)raw->data.hid.bRawData,
+                                 raw->data.hid.dwSizeHid) ==
+        HIDP_STATUS_SUCCESS) {
       UnpackDpad(static_cast<LONG>(value), gamepad, buttons);
     }
   }
@@ -888,23 +848,23 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
   for (unsigned i = 0; i < gamepad->numAxes; i++) {
     double new_value;
     if (gamepad->axes[i].caps.LogicalMin < 0) {
-LONG value;
-      if (mHID.mHidP_GetScaledUsageValue(HidP_Input, gamepad->axes[i].caps.UsagePage,
-                                   0, gamepad->axes[i].caps.Range.UsageMin,
-                                   &value, parsed,
-                                   (PCHAR)raw->data.hid.bRawData,
-                                   raw->data.hid.dwSizeHid)
-          != HIDP_STATUS_SUCCESS) {
+      LONG value;
+      if (mHID.mHidP_GetScaledUsageValue(
+              HidP_Input, gamepad->axes[i].caps.UsagePage, 0,
+              gamepad->axes[i].caps.Range.UsageMin, &value, parsed,
+              (PCHAR)raw->data.hid.bRawData,
+              raw->data.hid.dwSizeHid) != HIDP_STATUS_SUCCESS) {
         continue;
       }
       new_value = ScaleAxis(value, gamepad->axes[i].caps.LogicalMin,
                             gamepad->axes[i].caps.LogicalMax);
     } else {
       ULONG value;
-      if (mHID.mHidP_GetUsageValue(HidP_Input, gamepad->axes[i].caps.UsagePage, 0,
-                             gamepad->axes[i].caps.Range.UsageMin, &value,
-                             parsed, (PCHAR)raw->data.hid.bRawData,
-                             raw->data.hid.dwSizeHid) != HIDP_STATUS_SUCCESS) {
+      if (mHID.mHidP_GetUsageValue(
+              HidP_Input, gamepad->axes[i].caps.UsagePage, 0,
+              gamepad->axes[i].caps.Range.UsageMin, &value, parsed,
+              (PCHAR)raw->data.hid.bRawData,
+              raw->data.hid.dwSizeHid) != HIDP_STATUS_SUCCESS) {
         continue;
       }
 
@@ -920,21 +880,11 @@ LONG value;
   return true;
 }
 
-void
-WindowsGamepadService::Startup()
-{
-  ScanForDevices();
-}
+void WindowsGamepadService::Startup() { ScanForDevices(); }
 
-void
-WindowsGamepadService::Shutdown()
-{
-  Cleanup();
-}
+void WindowsGamepadService::Shutdown() { Cleanup(); }
 
-void
-WindowsGamepadService::Cleanup()
-{
+void WindowsGamepadService::Cleanup() {
   mIsXInputMonitoring = false;
   if (mDirectInputTimer) {
     mDirectInputTimer->Cancel();
@@ -948,23 +898,18 @@ WindowsGamepadService::Cleanup()
   mGamepads.Clear();
 }
 
-void
-WindowsGamepadService::DevicesChanged(bool aIsStablizing)
-{
+void WindowsGamepadService::DevicesChanged(bool aIsStablizing) {
   if (aIsStablizing) {
     mDeviceChangeTimer->Cancel();
-    mDeviceChangeTimer->InitWithNamedFuncCallback(DevicesChangeCallback, this,
-                                                  kDevicesChangedStableDelay,
-                                                  nsITimer::TYPE_ONE_SHOT,
-                                                  "DevicesChangeCallback");
+    mDeviceChangeTimer->InitWithNamedFuncCallback(
+        DevicesChangeCallback, this, kDevicesChangedStableDelay,
+        nsITimer::TYPE_ONE_SHOT, "DevicesChangeCallback");
   } else {
     ScanForDevices();
   }
 }
 
-bool
-RegisterRawInput(HWND hwnd, bool enable)
-{
+bool RegisterRawInput(HWND hwnd, bool enable) {
   nsTArray<RAWINPUTDEVICE> rid(ArrayLength(kUsagePages));
   rid.SetLength(ArrayLength(kUsagePages));
 
@@ -972,7 +917,7 @@ RegisterRawInput(HWND hwnd, bool enable)
     rid[i].usUsagePage = kUsagePages[i].usagePage;
     rid[i].usUsage = kUsagePages[i].usage;
     rid[i].dwFlags =
-      enable ? RIDEV_EXINPUTSINK | RIDEV_DEVNOTIFY : RIDEV_REMOVE;
+        enable ? RIDEV_EXINPUTSINK | RIDEV_DEVNOTIFY : RIDEV_REMOVE;
     rid[i].hwndTarget = hwnd;
   }
 
@@ -983,42 +928,36 @@ RegisterRawInput(HWND hwnd, bool enable)
   return true;
 }
 
-static
-LRESULT CALLBACK
-GamepadWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  const unsigned int DBT_DEVICEARRIVAL        = 0x8000;
+static LRESULT CALLBACK GamepadWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
+                                          LPARAM lParam) {
+  const unsigned int DBT_DEVICEARRIVAL = 0x8000;
   const unsigned int DBT_DEVICEREMOVECOMPLETE = 0x8004;
-  const unsigned int DBT_DEVNODES_CHANGED     = 0x7;
+  const unsigned int DBT_DEVNODES_CHANGED = 0x7;
 
   switch (msg) {
-  case WM_DEVICECHANGE:
-    if (wParam == DBT_DEVICEARRIVAL ||
-        wParam == DBT_DEVICEREMOVECOMPLETE ||
-        wParam == DBT_DEVNODES_CHANGED) {
-      if (gService) {
-        gService->DevicesChanged(true);
+    case WM_DEVICECHANGE:
+      if (wParam == DBT_DEVICEARRIVAL || wParam == DBT_DEVICEREMOVECOMPLETE ||
+          wParam == DBT_DEVNODES_CHANGED) {
+        if (gService) {
+          gService->DevicesChanged(true);
+        }
       }
-    }
-    break;
-  case WM_INPUT:
-    if (gService) {
-      gService->HandleRawInput(reinterpret_cast<HRAWINPUT>(lParam));
-    }
-    break;
+      break;
+    case WM_INPUT:
+      if (gService) {
+        gService->HandleRawInput(reinterpret_cast<HRAWINPUT>(lParam));
+      }
+      break;
   }
   return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-class StartWindowsGamepadServiceRunnable final : public Runnable
-{
-public:
+class StartWindowsGamepadServiceRunnable final : public Runnable {
+ public:
   StartWindowsGamepadServiceRunnable()
-    : Runnable("StartWindowsGamepadServiceRunnable")
-  {}
+      : Runnable("StartWindowsGamepadServiceRunnable") {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_GetCurrentThread() == gMonitorThread);
     gService = new WindowsGamepadService();
     gService->Startup();
@@ -1035,9 +974,8 @@ public:
         RegisterClassW(&wc);
       }
 
-      sHWnd = CreateWindowW(L"MozillaGamepadClass", L"Gamepad Watcher",
-        0, 0, 0, 0, 0,
-        nullptr, nullptr, hSelf, nullptr);
+      sHWnd = CreateWindowW(L"MozillaGamepadClass", L"Gamepad Watcher", 0, 0, 0,
+                            0, 0, nullptr, nullptr, hSelf, nullptr);
       RegisterRawInput(sHWnd, true);
     }
 
@@ -1046,19 +984,17 @@ public:
 
     return NS_OK;
   }
-private:
+
+ private:
   ~StartWindowsGamepadServiceRunnable() {}
 };
 
-class StopWindowsGamepadServiceRunnable final : public Runnable
-{
+class StopWindowsGamepadServiceRunnable final : public Runnable {
  public:
   StopWindowsGamepadServiceRunnable()
-    : Runnable("StopWindowsGamepadServiceRunnable")
-  {}
+      : Runnable("StopWindowsGamepadServiceRunnable") {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_GetCurrentThread() == gMonitorThread);
     if (sHWnd) {
       RegisterRawInput(sHWnd, false);
@@ -1072,20 +1008,19 @@ class StopWindowsGamepadServiceRunnable final : public Runnable
 
     return NS_OK;
   }
+
  private:
   ~StopWindowsGamepadServiceRunnable() {}
 };
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 namespace dom {
 
 using namespace mozilla::ipc;
 
-void
-StartGamepadMonitoring()
-{
+void StartGamepadMonitoring() {
   AssertIsOnBackgroundThread();
 
   if (gMonitorThread || gService) {
@@ -1097,19 +1032,18 @@ StartGamepadMonitoring()
                            NS_DISPATCH_NORMAL);
 }
 
-void
-StopGamepadMonitoring()
-{
+void StopGamepadMonitoring() {
   AssertIsOnBackgroundThread();
 
   if (sIsShutdown) {
     return;
   }
   sIsShutdown = true;
-  gMonitorThread->Dispatch(new StopWindowsGamepadServiceRunnable(), NS_DISPATCH_NORMAL);
+  gMonitorThread->Dispatch(new StopWindowsGamepadServiceRunnable(),
+                           NS_DISPATCH_NORMAL);
   gMonitorThread->Shutdown();
   gMonitorThread = nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

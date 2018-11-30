@@ -12,5 +12,4 @@
 #include "cairo-xlib.h"
 #include "gfxXlibSurface.h"
 
-
 #endif

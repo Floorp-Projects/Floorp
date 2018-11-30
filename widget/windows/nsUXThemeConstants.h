@@ -8,7 +8,7 @@
 #ifndef nsUXThemeConstants_h
 #define nsUXThemeConstants_h
 
-/* 
+/*
  * The following constants are used to determine how a widget is drawn using
  * Windows' Theme API. For more information on theme parts and states see
  * http://msdn.microsoft.com/en-us/library/bb773210(VS.85).aspx
@@ -18,35 +18,35 @@
 #include <vsstyle.h>
 
 #define THEME_COLOR 204
-#define THEME_FONT  210
+#define THEME_FONT 210
 
 // Generic state constants
-#define TS_NORMAL    1
-#define TS_HOVER     2
-#define TS_ACTIVE    3
-#define TS_DISABLED  4
-#define TS_FOCUSED   5
+#define TS_NORMAL 1
+#define TS_HOVER 2
+#define TS_ACTIVE 3
+#define TS_DISABLED 4
+#define TS_FOCUSED 5
 
 // These constants are reversed for the trackbar (scale) thumb
-#define TKP_FOCUSED   4
-#define TKP_DISABLED  5
+#define TKP_FOCUSED 4
+#define TKP_DISABLED 5
 
 // Toolbarbutton constants
-#define TB_CHECKED       5
+#define TB_CHECKED 5
 #define TB_HOVER_CHECKED 6
 
 // Button constants
-#define BP_BUTTON    1
-#define BP_RADIO     2
-#define BP_CHECKBOX  3
-#define BP_GROUPBOX  4
-#define BP_Count     5
+#define BP_BUTTON 1
+#define BP_RADIO 2
+#define BP_CHECKBOX 3
+#define BP_GROUPBOX 4
+#define BP_Count 5
 
 // Textfield constants
 /* This is the EP_EDITTEXT part */
 #define TFP_TEXTFIELD 1
 #define TFP_EDITBORDER_NOSCROLL 6
-#define TFS_READONLY  6
+#define TFS_READONLY 6
 
 /* These are the state constants for the EDITBORDER parts */
 #define TFS_EDITBORDER_NORMAL 1
@@ -58,54 +58,54 @@
 #define TREEVIEW_BODY 1
 
 // Scrollbar constants
-#define SP_BUTTON          1
-#define SP_THUMBHOR        2
-#define SP_THUMBVERT       3
-#define SP_TRACKSTARTHOR   4
-#define SP_TRACKENDHOR     5
-#define SP_TRACKSTARTVERT  6
-#define SP_TRACKENDVERT    7
-#define SP_GRIPPERHOR      8
-#define SP_GRIPPERVERT     9
+#define SP_BUTTON 1
+#define SP_THUMBHOR 2
+#define SP_THUMBVERT 3
+#define SP_TRACKSTARTHOR 4
+#define SP_TRACKENDHOR 5
+#define SP_TRACKSTARTVERT 6
+#define SP_TRACKENDVERT 7
+#define SP_GRIPPERHOR 8
+#define SP_GRIPPERVERT 9
 
 // Implicit hover state.
 // BASE + 0 = UP, + 1 = DOWN, etc.
-#define SP_BUTTON_IMPLICIT_HOVER_BASE   17
+#define SP_BUTTON_IMPLICIT_HOVER_BASE 17
 
 // Scale constants
-#define TKP_TRACK          1
-#define TKP_TRACKVERT      2
-#define TKP_THUMB          3
-#define TKP_THUMBBOTTOM    4
-#define TKP_THUMBTOP       5
-#define TKP_THUMBVERT      6
-#define TKP_THUMBLEFT      7
-#define TKP_THUMBRIGHT     8
+#define TKP_TRACK 1
+#define TKP_TRACKVERT 2
+#define TKP_THUMB 3
+#define TKP_THUMBBOTTOM 4
+#define TKP_THUMBTOP 5
+#define TKP_THUMBVERT 6
+#define TKP_THUMBLEFT 7
+#define TKP_THUMBRIGHT 8
 
 // Track state contstants
-#define TRS_NORMAL         1
+#define TRS_NORMAL 1
 
 // Track vertical state constants
-#define TRVS_NORMAL        1
+#define TRVS_NORMAL 1
 
 // Spin constants
-#define SPNP_UP            1
-#define SPNP_DOWN          2
+#define SPNP_UP 1
+#define SPNP_DOWN 2
 
 // Tab constants
-#define TABP_TAB             4
-#define TABP_TAB_SELECTED    5
-#define TABP_PANELS          9
-#define TABP_PANEL           10
+#define TABP_TAB 4
+#define TABP_TAB_SELECTED 5
+#define TABP_PANELS 9
+#define TABP_PANEL 10
 
 // Tooltip constants
-#define TTP_STANDARD         1
+#define TTP_STANDARD 1
 
 // Dropdown constants
-#define CBP_DROPMARKER       1
-#define CBP_DROPBORDER       4
+#define CBP_DROPMARKER 1
+#define CBP_DROPBORDER 4
 /* This is actually the 'READONLY' style */
-#define CBP_DROPFRAME        5
+#define CBP_DROPFRAME 5
 #define CBP_DROPMARKER_VISTA 6
 
 // Menu Constants
@@ -127,9 +127,9 @@
 #define MB_ACTIVE 1
 #define MB_INACTIVE 2
 
-#define MS_NORMAL    1
-#define MS_SELECTED  2
-#define MS_DEMOTED   3
+#define MS_NORMAL 1
+#define MS_SELECTED 2
+#define MS_DEMOTED 3
 
 #define MBI_NORMAL 1
 #define MBI_HOT 2
@@ -156,37 +156,36 @@
 #define MSM_DISABLED 2
 
 // Rebar constants
-#define RP_BAND              3
-#define RP_BACKGROUND        6
+#define RP_BAND 3
+#define RP_BACKGROUND 6
 
 // Constants only found in new (98+, 2K+, XP+, etc.) Windows.
 #ifdef DFCS_HOT
 #undef DFCS_HOT
 #endif
-#define DFCS_HOT             0x00001000
+#define DFCS_HOT 0x00001000
 
 #ifdef COLOR_MENUHILIGHT
 #undef COLOR_MENUHILIGHT
 #endif
-#define COLOR_MENUHILIGHT    29
+#define COLOR_MENUHILIGHT 29
 
 #ifdef SPI_GETFLATMENU
 #undef SPI_GETFLATMENU
 #endif
-#define SPI_GETFLATMENU      0x1022
+#define SPI_GETFLATMENU 0x1022
 #ifndef SPI_GETMENUSHOWDELAY
-#define SPI_GETMENUSHOWDELAY      106
-#endif //SPI_GETMENUSHOWDELAY
-#ifndef WS_EX_LAYOUTRTL 
-#define WS_EX_LAYOUTRTL         0x00400000L // Right to left mirroring
+#define SPI_GETMENUSHOWDELAY 106
+#endif  // SPI_GETMENUSHOWDELAY
+#ifndef WS_EX_LAYOUTRTL
+#define WS_EX_LAYOUTRTL 0x00400000L  // Right to left mirroring
 #endif
 
-
 // Our extra constants for passing a little bit more info to the renderer.
-#define DFCS_RTL             0x00010000
+#define DFCS_RTL 0x00010000
 
 // Toolbar separator dimension which can't be gotten from Windows
-#define TB_SEPARATOR_HEIGHT  2
+#define TB_SEPARATOR_HEIGHT 2
 
 namespace mozilla {
 namespace widget {
@@ -235,10 +234,7 @@ enum {
   WP_Count
 };
 
-enum FRAMESTATES {
-  FS_ACTIVE = 1,
-  FS_INACTIVE = 2
-};
+enum FRAMESTATES { FS_ACTIVE = 1, FS_INACTIVE = 2 };
 
 enum {
   BS_NORMAL = 1,
@@ -248,7 +244,9 @@ enum {
   BS_INACTIVE = 5 /* undocumented, inactive caption button */
 };
 
-}}} // mozilla::widget::themeconst
+}  // namespace themeconst
+}  // namespace widget
+}  // namespace mozilla
 
 // If any theme part ends up having a value higher than WP_Count, this will
 // need to change.

@@ -27,78 +27,77 @@ class nsLoadGroup : public nsILoadGroup,
                     public nsILoadGroupChild,
                     public nsISupportsPriority,
                     public nsSupportsWeakReference,
-                    public nsPILoadGroupInternal
-{
-public:
-    NS_DECL_AGGREGATED
+                    public nsPILoadGroupInternal {
+ public:
+  NS_DECL_AGGREGATED
 
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIRequest methods:
-    NS_DECL_NSIREQUEST
+  ////////////////////////////////////////////////////////////////////////////
+  // nsIRequest methods:
+  NS_DECL_NSIREQUEST
 
-    ////////////////////////////////////////////////////////////////////////////
-    // nsILoadGroup methods:
-    NS_DECL_NSILOADGROUP
-    NS_DECL_NSPILOADGROUPINTERNAL
+  ////////////////////////////////////////////////////////////////////////////
+  // nsILoadGroup methods:
+  NS_DECL_NSILOADGROUP
+  NS_DECL_NSPILOADGROUPINTERNAL
 
-    ////////////////////////////////////////////////////////////////////////////
-    // nsILoadGroupChild methods:
-    NS_DECL_NSILOADGROUPCHILD
+  ////////////////////////////////////////////////////////////////////////////
+  // nsILoadGroupChild methods:
+  NS_DECL_NSILOADGROUPCHILD
 
-    ////////////////////////////////////////////////////////////////////////////
-    // nsISupportsPriority methods:
-    NS_DECL_NSISUPPORTSPRIORITY
+  ////////////////////////////////////////////////////////////////////////////
+  // nsISupportsPriority methods:
+  NS_DECL_NSISUPPORTSPRIORITY
 
-    ////////////////////////////////////////////////////////////////////////////
-    // nsLoadGroup methods:
+  ////////////////////////////////////////////////////////////////////////////
+  // nsLoadGroup methods:
 
-    explicit nsLoadGroup(nsISupports* outer);
-    virtual ~nsLoadGroup();
+  explicit nsLoadGroup(nsISupports* outer);
+  virtual ~nsLoadGroup();
 
-    nsresult Init();
+  nsresult Init();
 
-protected:
-    nsresult MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
-    nsresult MergeDefaultLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
+ protected:
+  nsresult MergeLoadFlags(nsIRequest* aRequest, nsLoadFlags& flags);
+  nsresult MergeDefaultLoadFlags(nsIRequest* aRequest, nsLoadFlags& flags);
 
-private:
-    void TelemetryReport();
-    void TelemetryReportChannel(nsITimedChannel *timedChannel,
-                                bool defaultRequest);
+ private:
+  void TelemetryReport();
+  void TelemetryReportChannel(nsITimedChannel* timedChannel,
+                              bool defaultRequest);
 
-protected:
-    uint32_t                        mForegroundCount;
-    uint32_t                        mLoadFlags;
-    uint32_t                        mDefaultLoadFlags;
+ protected:
+  uint32_t mForegroundCount;
+  uint32_t mLoadFlags;
+  uint32_t mDefaultLoadFlags;
 
-    nsCOMPtr<nsILoadGroup>          mLoadGroup; // load groups can contain load groups
-    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    nsCOMPtr<nsIRequestContext>  mRequestContext;
-    nsCOMPtr<nsIRequestContextService> mRequestContextService;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;  // load groups can contain load groups
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+  nsCOMPtr<nsIRequestContext> mRequestContext;
+  nsCOMPtr<nsIRequestContextService> mRequestContextService;
 
-    nsCOMPtr<nsIRequest>            mDefaultLoadRequest;
-    PLDHashTable                    mRequests;
+  nsCOMPtr<nsIRequest> mDefaultLoadRequest;
+  PLDHashTable mRequests;
 
-    nsWeakPtr                       mObserver;
-    nsWeakPtr                       mParentLoadGroup;
+  nsWeakPtr mObserver;
+  nsWeakPtr mParentLoadGroup;
 
-    nsresult                        mStatus;
-    int32_t                         mPriority;
-    bool                            mIsCanceling;
+  nsresult mStatus;
+  int32_t mPriority;
+  bool mIsCanceling;
 
-    /* Telemetry */
-    mozilla::TimeStamp              mDefaultRequestCreationTime;
-    bool                            mDefaultLoadIsTimed;
-    uint32_t                        mTimedRequests;
-    uint32_t                        mCachedRequests;
+  /* Telemetry */
+  mozilla::TimeStamp mDefaultRequestCreationTime;
+  bool mDefaultLoadIsTimed;
+  uint32_t mTimedRequests;
+  uint32_t mCachedRequests;
 
-    /* For nsPILoadGroupInternal */
-    uint32_t                        mTimedNonCachedRequestsUntilOnEndPageLoad;
+  /* For nsPILoadGroupInternal */
+  uint32_t mTimedNonCachedRequestsUntilOnEndPageLoad;
 
-    nsCString                       mUserAgentOverrideCache;
+  nsCString mUserAgentOverrideCache;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // nsLoadGroup_h__
+#endif  // nsLoadGroup_h__

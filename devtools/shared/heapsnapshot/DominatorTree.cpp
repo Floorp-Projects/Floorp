@@ -9,13 +9,11 @@
 namespace mozilla {
 namespace devtools {
 
-dom::Nullable<uint64_t>
-DominatorTree::GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv)
-{
+dom::Nullable<uint64_t> DominatorTree::GetRetainedSize(uint64_t aNodeId,
+                                                       ErrorResult& aRv) {
   JS::ubi::Node::Id id(aNodeId);
   auto node = mHeapSnapshot->getNodeById(id);
-  if (node.isNothing())
-    return dom::Nullable<uint64_t>();
+  if (node.isNothing()) return dom::Nullable<uint64_t>();
 
   auto mallocSizeOf = GetCurrentThreadDebuggerMallocSizeOf();
   JS::ubi::Node::Size size = 0;
@@ -25,65 +23,63 @@ DominatorTree::GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv)
   }
 
   MOZ_ASSERT(size != 0,
-             "The node should not have been unknown since we got it from the heap snapshot.");
+             "The node should not have been unknown since we got it from the "
+             "heap snapshot.");
   return dom::Nullable<uint64_t>(size);
 }
 
-struct NodeAndRetainedSize
-{
+struct NodeAndRetainedSize {
   JS::ubi::Node mNode;
   JS::ubi::Node::Size mSize;
 
   NodeAndRetainedSize(const JS::ubi::Node& aNode, JS::ubi::Node::Size aSize)
-    : mNode(aNode)
-    , mSize(aSize)
-  { }
+      : mNode(aNode), mSize(aSize) {}
 
-  struct Comparator
-  {
-    static bool
-    Equals(const NodeAndRetainedSize& aLhs, const NodeAndRetainedSize& aRhs)
-    {
+  struct Comparator {
+    static bool Equals(const NodeAndRetainedSize& aLhs,
+                       const NodeAndRetainedSize& aRhs) {
       return aLhs.mSize == aRhs.mSize;
     }
 
-    static bool
-    LessThan(const NodeAndRetainedSize& aLhs, const NodeAndRetainedSize& aRhs)
-    {
+    static bool LessThan(const NodeAndRetainedSize& aLhs,
+                         const NodeAndRetainedSize& aRhs) {
       // Use > because we want to sort from greatest to least retained size.
       return aLhs.mSize > aRhs.mSize;
     }
   };
 };
 
-void
-DominatorTree::GetImmediatelyDominated(uint64_t aNodeId,
-                                       dom::Nullable<nsTArray<uint64_t>>& aOutResult,
-                                       ErrorResult& aRv)
-{
+void DominatorTree::GetImmediatelyDominated(
+    uint64_t aNodeId, dom::Nullable<nsTArray<uint64_t>>& aOutResult,
+    ErrorResult& aRv) {
   MOZ_ASSERT(aOutResult.IsNull());
 
   JS::ubi::Node::Id id(aNodeId);
   Maybe<JS::ubi::Node> node = mHeapSnapshot->getNodeById(id);
-  if (node.isNothing())
-    return;
+  if (node.isNothing()) return;
 
   // Get all immediately dominated nodes and their retained sizes.
   MallocSizeOf mallocSizeOf = GetCurrentThreadDebuggerMallocSizeOf();
-  Maybe<JS::ubi::DominatorTree::DominatedSetRange> range = mDominatorTree.getDominatedSet(*node);
-  MOZ_ASSERT(range.isSome(), "The node should be known, since we got it from the heap snapshot.");
+  Maybe<JS::ubi::DominatorTree::DominatedSetRange> range =
+      mDominatorTree.getDominatedSet(*node);
+  MOZ_ASSERT(
+      range.isSome(),
+      "The node should be known, since we got it from the heap snapshot.");
   size_t length = range->length();
   nsTArray<NodeAndRetainedSize> dominatedNodes(length);
   for (const JS::ubi::Node& dominatedNode : *range) {
     JS::ubi::Node::Size retainedSize = 0;
-    if (NS_WARN_IF(!mDominatorTree.getRetainedSize(dominatedNode, mallocSizeOf, retainedSize))) {
+    if (NS_WARN_IF(!mDominatorTree.getRetainedSize(dominatedNode, mallocSizeOf,
+                                                   retainedSize))) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
     MOZ_ASSERT(retainedSize != 0,
-               "retainedSize should not be zero since we know the node is in the dominator tree.");
+               "retainedSize should not be zero since we know the node is in "
+               "the dominator tree.");
 
-    dominatedNodes.AppendElement(NodeAndRetainedSize(dominatedNode, retainedSize));
+    dominatedNodes.AppendElement(
+        NodeAndRetainedSize(dominatedNode, retainedSize));
   }
 
   // Sort them by retained size.
@@ -95,30 +91,26 @@ DominatorTree::GetImmediatelyDominated(uint64_t aNodeId,
   aOutResult.SetValue(nsTArray<uint64_t>(length));
   for (const NodeAndRetainedSize& entry : dominatedNodes) {
     // The root dominates itself, but we don't want to expose that to JS.
-    if (entry.mNode == root)
-      continue;
+    if (entry.mNode == root) continue;
 
     aOutResult.Value().AppendElement(entry.mNode.identifier());
   }
 }
 
-dom::Nullable<uint64_t>
-DominatorTree::GetImmediateDominator(uint64_t aNodeId) const
-{
+dom::Nullable<uint64_t> DominatorTree::GetImmediateDominator(
+    uint64_t aNodeId) const {
   JS::ubi::Node::Id id(aNodeId);
   Maybe<JS::ubi::Node> node = mHeapSnapshot->getNodeById(id);
-  if (node.isNothing())
-    return dom::Nullable<uint64_t>();
+  if (node.isNothing()) return dom::Nullable<uint64_t>();
 
   JS::ubi::Node dominator = mDominatorTree.getImmediateDominator(*node);
-  if (!dominator || dominator == *node)
-    return dom::Nullable<uint64_t>();
+  if (!dominator || dominator == *node) return dom::Nullable<uint64_t>();
 
   return dom::Nullable<uint64_t>(dominator.identifier());
 }
 
-
-/*** Cycle Collection Boilerplate *****************************************************************/
+/*** Cycle Collection Boilerplate
+ * *****************************************************************/
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DominatorTree, mParent, mHeapSnapshot)
 
@@ -130,11 +122,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DominatorTree)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* virtual */ JSObject*
-DominatorTree::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
-{
+/* virtual */ JSObject* DominatorTree::WrapObject(
+    JSContext* aCx, JS::HandleObject aGivenProto) {
   return dom::DominatorTree_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla

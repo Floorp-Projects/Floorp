@@ -14,33 +14,23 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-VRDisplayPresentation::VRDisplayPresentation(VRDisplayClient *aDisplayClient,
-                                             const nsTArray<mozilla::dom::VRLayer>& aLayers,
-                                             uint32_t aGroup)
-  : mDisplayClient(aDisplayClient)
-  , mDOMLayers(aLayers)
-  , mGroup(aGroup)
-{
+VRDisplayPresentation::VRDisplayPresentation(
+    VRDisplayClient* aDisplayClient,
+    const nsTArray<mozilla::dom::VRLayer>& aLayers, uint32_t aGroup)
+    : mDisplayClient(aDisplayClient), mDOMLayers(aLayers), mGroup(aGroup) {
   CreateLayers();
 }
 
-void
-VRDisplayPresentation::UpdateLayers(const nsTArray<mozilla::dom::VRLayer>& aLayers)
-{
+void VRDisplayPresentation::UpdateLayers(
+    const nsTArray<mozilla::dom::VRLayer>& aLayers) {
   mDOMLayers = aLayers;
   CreateLayers();
 }
 
-uint32_t
-VRDisplayPresentation::GetGroup() const
-{
-  return mGroup;
-}
+uint32_t VRDisplayPresentation::GetGroup() const { return mGroup; }
 
-void
-VRDisplayPresentation::CreateLayers()
-{
-  VRManagerChild *manager = VRManagerChild::Get();
+void VRDisplayPresentation::CreateLayers() {
+  VRManagerChild* manager = VRManagerChild::Get();
   if (!manager) {
     // This should not happen, but let's log it and avoid a crash in case
     // of regression.
@@ -48,7 +38,7 @@ VRDisplayPresentation::CreateLayers()
     return;
   }
 
-  unsigned int iLayer=0;
+  unsigned int iLayer = 0;
   for (dom::VRLayer& layer : mDOMLayers) {
     dom::HTMLCanvasElement* canvasElement = layer.mSource;
     if (!canvasElement) {
@@ -58,10 +48,8 @@ VRDisplayPresentation::CreateLayers()
 
     Rect leftBounds(0.0, 0.0, 0.5, 1.0);
     if (layer.mLeftBounds.Length() == 4) {
-      leftBounds.SetRect(layer.mLeftBounds[0],
-                         layer.mLeftBounds[1],
-                         layer.mLeftBounds[2],
-                         layer.mLeftBounds[3]);
+      leftBounds.SetRect(layer.mLeftBounds[0], layer.mLeftBounds[1],
+                         layer.mLeftBounds[2], layer.mLeftBounds[3]);
     } else if (layer.mLeftBounds.Length() != 0) {
       /**
        * We ignore layers with an incorrect number of values.
@@ -73,10 +61,8 @@ VRDisplayPresentation::CreateLayers()
 
     Rect rightBounds(0.5, 0.0, 0.5, 1.0);
     if (layer.mRightBounds.Length() == 4) {
-      rightBounds.SetRect(layer.mRightBounds[0], 
-                          layer.mRightBounds[1],
-                          layer.mRightBounds[2],
-                          layer.mRightBounds[3]);
+      rightBounds.SetRect(layer.mRightBounds[0], layer.mRightBounds[1],
+                          layer.mRightBounds[2], layer.mRightBounds[3]);
     } else if (layer.mRightBounds.Length() != 0) {
       /**
        * We ignore layers with an incorrect number of values.
@@ -96,8 +82,8 @@ VRDisplayPresentation::CreateLayers()
     if (mLayers.Length() <= iLayer) {
       // Not enough layers, let's add one
       RefPtr<VRLayerChild> vrLayer =
-        static_cast<VRLayerChild*>(manager->CreateVRLayer(mDisplayClient->GetDisplayInfo().GetDisplayID(),
-                                                          target, mGroup));
+          static_cast<VRLayerChild*>(manager->CreateVRLayer(
+              mDisplayClient->GetDisplayInfo().GetDisplayID(), target, mGroup));
       if (!vrLayer) {
         NS_WARNING("CreateVRLayer returned null!");
         continue;
@@ -115,9 +101,7 @@ VRDisplayPresentation::CreateLayers()
   mLayers.SetLength(iLayer);
 }
 
-void
-VRDisplayPresentation::DestroyLayers()
-{
+void VRDisplayPresentation::DestroyLayers() {
   for (VRLayerChild* layer : mLayers) {
     if (layer->IsIPCOpen()) {
       Unused << layer->SendDestroy();
@@ -126,22 +110,18 @@ VRDisplayPresentation::DestroyLayers()
   mLayers.Clear();
 }
 
-void
-VRDisplayPresentation::GetDOMLayers(nsTArray<dom::VRLayer>& result)
-{
+void VRDisplayPresentation::GetDOMLayers(nsTArray<dom::VRLayer>& result) {
   result = mDOMLayers;
 }
 
-VRDisplayPresentation::~VRDisplayPresentation()
-{
+VRDisplayPresentation::~VRDisplayPresentation() {
   DestroyLayers();
   mDisplayClient->PresentationDestroyed();
 }
 
-void VRDisplayPresentation::SubmitFrame()
-{
-  for (VRLayerChild *layer : mLayers) {
+void VRDisplayPresentation::SubmitFrame() {
+  for (VRLayerChild* layer : mLayers) {
     layer->SubmitFrame(mDisplayClient->GetDisplayInfo());
-    break; // Currently only one layer supported, submit only the first
+    break;  // Currently only one layer supported, submit only the first
   }
 }

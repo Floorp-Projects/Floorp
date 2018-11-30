@@ -13,36 +13,30 @@
 namespace mozilla {
 namespace dom {
 
-class ServiceWorkerContainerChild final : public PServiceWorkerContainerChild
-                                        , public WorkerHolderToken::Listener
-{
+class ServiceWorkerContainerChild final : public PServiceWorkerContainerChild,
+                                          public WorkerHolderToken::Listener {
   RefPtr<WorkerHolderToken> mWorkerHolderToken;
   RemoteServiceWorkerContainerImpl* mOwner;
   bool mTeardownStarted;
 
   // PServiceWorkerContainerChild
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
   // WorkerHolderToken::Listener
-  void
-  WorkerShuttingDown() override;
+  void WorkerShuttingDown() override;
 
-public:
+ public:
   explicit ServiceWorkerContainerChild(WorkerHolderToken* aWorkerHolderToken);
   ~ServiceWorkerContainerChild() = default;
 
-  void
-  SetOwner(RemoteServiceWorkerContainerImpl* aOwner);
+  void SetOwner(RemoteServiceWorkerContainerImpl* aOwner);
 
-  void
-  RevokeOwner(RemoteServiceWorkerContainerImpl* aOwner);
+  void RevokeOwner(RemoteServiceWorkerContainerImpl* aOwner);
 
-  void
-  MaybeStartTeardown();
+  void MaybeStartTeardown();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkercontainerchild_h__
+#endif  // mozilla_dom_serviceworkercontainerchild_h__

@@ -8,8 +8,8 @@
 
 #include "GLDefs.h"
 #include "mozilla/WeakPtr.h"
-#include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS
-#include "nsISupportsImpl.h" // NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING
+#include "nsCycleCollectionParticipant.h"  // NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS
+#include "nsISupportsImpl.h"  // NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING
 #include "nsWrapperCache.h"
 
 #include "WebGLObjectModel.h"
@@ -24,49 +24,48 @@ class WebGLProgram;
 namespace webgl {
 struct LinkedProgramInfo;
 struct UniformInfo;
-} // namespace webgl
+}  // namespace webgl
 
-class WebGLUniformLocation final
-    : public nsWrapperCache
-    , public WebGLContextBoundObject
-{
-public:
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLUniformLocation)
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLUniformLocation)
+class WebGLUniformLocation final : public nsWrapperCache,
+                                   public WebGLContextBoundObject {
+ public:
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLUniformLocation)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLUniformLocation)
 
-    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto) override;
+  virtual JSObject* WrapObject(JSContext* js,
+                               JS::Handle<JSObject*> givenProto) override;
 
-    WebGLContext* GetParentObject() const {
-        return mContext;
-    }
+  WebGLContext* GetParentObject() const { return mContext; }
 
-    //////
+  //////
 
-    const WeakPtr<const webgl::LinkedProgramInfo> mLinkInfo;
-    webgl::UniformInfo* const mInfo;
-    const GLuint mLoc;
-    const size_t mArrayIndex;
+  const WeakPtr<const webgl::LinkedProgramInfo> mLinkInfo;
+  webgl::UniformInfo* const mInfo;
+  const GLuint mLoc;
+  const size_t mArrayIndex;
 
-    //////
+  //////
 
-    WebGLUniformLocation(WebGLContext* webgl, const webgl::LinkedProgramInfo* linkInfo,
-                         webgl::UniformInfo* info, GLuint loc, size_t arrayIndex);
+  WebGLUniformLocation(WebGLContext* webgl,
+                       const webgl::LinkedProgramInfo* linkInfo,
+                       webgl::UniformInfo* info, GLuint loc, size_t arrayIndex);
 
-    bool ValidateForProgram(const WebGLProgram* prog) const;
-    bool ValidateSizeAndType(uint8_t setterElemSize,
-                             webgl::AttribBaseType setterType) const;
-    bool ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize) const;
+  bool ValidateForProgram(const WebGLProgram* prog) const;
+  bool ValidateSizeAndType(uint8_t setterElemSize,
+                           webgl::AttribBaseType setterType) const;
+  bool ValidateArrayLength(uint8_t setterElemSize,
+                           size_t setterArraySize) const;
 
-    JS::Value GetUniform(JSContext* js) const;
+  JS::Value GetUniform(JSContext* js) const;
 
-    // Needed for certain helper functions like ValidateObject.
-    // `WebGLUniformLocation`s can't be 'Deleted' in the WebGL sense.
-    bool IsDeleted() const { return false; }
+  // Needed for certain helper functions like ValidateObject.
+  // `WebGLUniformLocation`s can't be 'Deleted' in the WebGL sense.
+  bool IsDeleted() const { return false; }
 
-protected:
-    ~WebGLUniformLocation();
+ protected:
+  ~WebGLUniformLocation();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WEBGL_UNIFORM_LOCATION_H_
+#endif  // WEBGL_UNIFORM_LOCATION_H_

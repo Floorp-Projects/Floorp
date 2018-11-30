@@ -22,9 +22,8 @@ namespace mozilla {
  * that drive those decisions. It manages per-frame state to support those
  * heuristics.
  */
-class ActiveLayerTracker
-{
-public:
+class ActiveLayerTracker {
+ public:
   static void Shutdown();
 
   /*
@@ -55,8 +54,7 @@ public:
    * aNewValue and aDOMCSSDecl are used to determine whether the property's
    * value has changed.
    */
-  static void NotifyAnimated(nsIFrame* aFrame,
-                             nsCSSPropertyID aProperty,
+  static void NotifyAnimated(nsIFrame* aFrame, nsCSSPropertyID aProperty,
                              const nsAString& aNewValue,
                              nsDOMCSSDeclaration* aDOMCSSDecl);
   /**
@@ -94,8 +92,7 @@ public:
    * Return true if aFrame's aProperty style should be considered as being
    * animated for constructing active layers.
    */
-  static bool IsStyleAnimated(nsDisplayListBuilder* aBuilder,
-                              nsIFrame* aFrame,
+  static bool IsStyleAnimated(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               nsCSSPropertyID aProperty);
   /**
    * Return true if any of aFrame's offset property styles should be considered
@@ -151,6 +148,6 @@ public:
   static void SetCurrentScrollHandlerFrame(nsIFrame* aFrame);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* ACTIVELAYERTRACKER_H_ */

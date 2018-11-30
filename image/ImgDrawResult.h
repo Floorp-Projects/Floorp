@@ -6,7 +6,7 @@
 #ifndef mozilla_image_ImgDrawResult_h
 #define mozilla_image_ImgDrawResult_h
 
-#include <cstdint> // for uint8_t
+#include <cstdint>  // for uint8_t
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 
@@ -55,8 +55,7 @@ namespace image {
  * NOT_SUPPORTED: The requested operation is not supported, but the image is
  *                otherwise valid.
  */
-enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t
-{
+enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t {
   SUCCESS,
   SUCCESS_NOT_COMPLETE,
   INCOMPLETE,
@@ -70,15 +69,15 @@ enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t
 
 /**
  * You can combine ImgDrawResults with &. By analogy to bitwise-&, the result is
- * ImgDrawResult::SUCCESS only if both operands are ImgDrawResult::SUCCESS. Otherwise,
- * a failing ImgDrawResult is returned; we favor the left operand's failure when
- * deciding which failure to return, with the exception that we always prefer
- * any other kind of failure over ImgDrawResult::BAD_IMAGE, since other failures
- * are recoverable and we want to know if any recoverable failures occurred.
+ * ImgDrawResult::SUCCESS only if both operands are ImgDrawResult::SUCCESS.
+ * Otherwise, a failing ImgDrawResult is returned; we favor the left operand's
+ * failure when deciding which failure to return, with the exception that we
+ * always prefer any other kind of failure over ImgDrawResult::BAD_IMAGE, since
+ * other failures are recoverable and we want to know if any recoverable
+ * failures occurred.
  */
-inline ImgDrawResult
-operator&(const ImgDrawResult aLeft, const ImgDrawResult aRight)
-{
+inline ImgDrawResult operator&(const ImgDrawResult aLeft,
+                               const ImgDrawResult aRight) {
   if (MOZ_LIKELY(aLeft == ImgDrawResult::SUCCESS)) {
     return aRight;
   }
@@ -97,9 +96,8 @@ operator&(const ImgDrawResult aLeft, const ImgDrawResult aRight)
   return aLeft;
 }
 
-inline ImgDrawResult&
-operator&=(ImgDrawResult& aLeft, const ImgDrawResult aRight)
-{
+inline ImgDrawResult& operator&=(ImgDrawResult& aLeft,
+                                 const ImgDrawResult aRight) {
   aLeft = aLeft & aRight;
   return aLeft;
 }
@@ -112,15 +110,14 @@ operator&=(ImgDrawResult& aLeft, const ImgDrawResult aRight)
  */
 struct imgDrawingParams {
   explicit imgDrawingParams(uint32_t aImageFlags = 0)
-    : imageFlags(aImageFlags), result(ImgDrawResult::SUCCESS)
-  {}
+      : imageFlags(aImageFlags), result(ImgDrawResult::SUCCESS) {}
 
-  const uint32_t imageFlags; // imgIContainer::FLAG_* image flags to pass to
-                             // image lib draw calls.
-  ImgDrawResult result;         // To return results from image lib painting.
+  const uint32_t imageFlags;  // imgIContainer::FLAG_* image flags to pass to
+                              // image lib draw calls.
+  ImgDrawResult result;       // To return results from image lib painting.
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_ImgDrawResult_h
+#endif  // mozilla_image_ImgDrawResult_h

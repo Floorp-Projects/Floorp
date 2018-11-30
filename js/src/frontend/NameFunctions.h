@@ -16,8 +16,7 @@ namespace frontend {
 
 class ParseNode;
 
-MOZ_MUST_USE bool
-NameFunctions(JSContext* cx, ParseNode* pn);
+MOZ_MUST_USE bool NameFunctions(JSContext* cx, ParseNode* pn);
 
 } /* namespace frontend */
 } /* namespace js */

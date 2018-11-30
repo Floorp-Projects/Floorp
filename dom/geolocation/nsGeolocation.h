@@ -38,10 +38,13 @@ class nsGeolocationRequest;
 namespace mozilla {
 namespace dom {
 class Geolocation;
-typedef CallbackObjectHolder<PositionCallback, nsIDOMGeoPositionCallback> GeoPositionCallback;
-typedef CallbackObjectHolder<PositionErrorCallback, nsIDOMGeoPositionErrorCallback> GeoPositionErrorCallback;
-} // namespace dom
-} // namespace mozilla
+typedef CallbackObjectHolder<PositionCallback, nsIDOMGeoPositionCallback>
+    GeoPositionCallback;
+typedef CallbackObjectHolder<PositionErrorCallback,
+                             nsIDOMGeoPositionErrorCallback>
+    GeoPositionErrorCallback;
+}  // namespace dom
+}  // namespace mozilla
 
 struct CachedPositionAndAccuracy {
   nsCOMPtr<nsIDOMGeoPosition> position;
@@ -52,10 +55,8 @@ struct CachedPositionAndAccuracy {
  * Singleton that manages the geolocation provider
  */
 class nsGeolocationService final : public nsIGeolocationUpdate,
-                                   public nsIObserver
-{
-public:
-
+                                   public nsIObserver {
+ public:
   static already_AddRefed<nsGeolocationService> GetGeolocationService();
   static mozilla::StaticRefPtr<nsGeolocationService> sService;
 
@@ -63,9 +64,7 @@ public:
   NS_DECL_NSIGEOLOCATIONUPDATE
   NS_DECL_NSIOBSERVER
 
-  nsGeolocationService() {
-      mHigherAccuracy = false;
-  }
+  nsGeolocationService() { mHigherAccuracy = false; }
 
   nsresult Init();
 
@@ -80,17 +79,16 @@ public:
   nsresult StartDevice(nsIPrincipal* aPrincipal);
 
   // Stop the started geolocation device (gps, nmea, etc.)
-  void     StopDevice();
+  void StopDevice();
 
   // create, or reinitalize the callback timer
-  void     SetDisconnectTimer();
+  void SetDisconnectTimer();
 
   // Update the accuracy and notify the provider if changed
-  void     UpdateAccuracy(bool aForceHigh = false);
-  bool     HighAccuracyRequested();
+  void UpdateAccuracy(bool aForceHigh = false);
+  bool HighAccuracyRequested();
 
-private:
-
+ private:
   ~nsGeolocationService();
 
   // Disconnect timer.  When this timer expires, it clears all pending callbacks
@@ -119,11 +117,8 @@ namespace dom {
 /**
  * Can return a geolocation info
  */
-class Geolocation final : public nsIGeolocationUpdate,
-                          public nsWrapperCache
-{
-public:
-
+class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Geolocation)
 
@@ -134,18 +129,17 @@ public:
   nsresult Init(nsPIDOMWindowInner* aContentDom = nullptr);
 
   nsPIDOMWindowInner* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext *aCtx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCtx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   int32_t WatchPosition(PositionCallback& aCallback,
                         PositionErrorCallback* aErrorCallback,
-                        const PositionOptions& aOptions,
-                        CallerType aCallerType,
+                        const PositionOptions& aOptions, CallerType aCallerType,
                         ErrorResult& aRv);
   void GetCurrentPosition(PositionCallback& aCallback,
                           PositionErrorCallback* aErrorCallback,
                           const PositionOptions& aOptions,
-                          CallerType aCallerType,
-                          ErrorResult& aRv);
+                          CallerType aCallerType, ErrorResult& aRv);
   void ClearWatch(int32_t aWatchId);
 
   // A WatchPosition for C++ use.  Returns -1 if we failed to actually watch.
@@ -181,11 +175,11 @@ public:
   // Check to see if any active request requires high accuracy
   bool HighAccuracyRequested();
 
-  // Get the singleton non-window Geolocation instance.  This never returns null.
+  // Get the singleton non-window Geolocation instance.  This never returns
+  // null.
   static already_AddRefed<Geolocation> NonWindowSingleton();
 
-private:
-
+ private:
   ~Geolocation();
 
   nsresult GetCurrentPosition(GeoPositionCallback aCallback,
@@ -195,8 +189,7 @@ private:
   int32_t WatchPosition(GeoPositionCallback aCallback,
                         GeoPositionErrorCallback aErrorCallback,
                         UniquePtr<PositionOptions>&& aOptions,
-                        CallerType aCallerType,
-                        ErrorResult& aRv);
+                        CallerType aCallerType, ErrorResult& aRv);
 
   bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
@@ -227,7 +220,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // the protocols we want to measure
-  enum class ProtocolType: uint8_t { OTHER, HTTP, HTTPS };
+  enum class ProtocolType : uint8_t { OTHER, HTTP, HTTPS };
 
   // the protocol used to load the content
   ProtocolType mProtocolType;
@@ -248,7 +241,7 @@ private:
   static mozilla::StaticRefPtr<Geolocation> sNonWindowSingleton;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* nsGeoLocation_h */

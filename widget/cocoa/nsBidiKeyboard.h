@@ -9,16 +9,15 @@
 
 #include "nsIBidiKeyboard.h"
 
-class nsBidiKeyboard : public nsIBidiKeyboard
-{
-public:
+class nsBidiKeyboard : public nsIBidiKeyboard {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBIDIKEYBOARD
 
   nsBidiKeyboard();
 
-protected:
+ protected:
   virtual ~nsBidiKeyboard();
 };
 
-#endif // nsBidiKeyboard_h_
+#endif  // nsBidiKeyboard_h_

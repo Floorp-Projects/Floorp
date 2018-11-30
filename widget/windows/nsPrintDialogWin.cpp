@@ -23,7 +23,7 @@
 #include "nsQueryObject.h"
 
 static const char* kPageSetupDialogURL =
-  "chrome://global/content/printPageSetup.xul";
+    "chrome://global/content/printPageSetup.xul";
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -32,23 +32,19 @@ using namespace mozilla::widget;
  * ParamBlock
  */
 
-class ParamBlock
-{
-
-public:
+class ParamBlock {
+ public:
   ParamBlock() { mBlock = 0; }
   ~ParamBlock() { NS_IF_RELEASE(mBlock); }
-  nsresult Init()
-  {
+  nsresult Init() {
     return CallCreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &mBlock);
   }
-  nsIDialogParamBlock* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
-  {
+  nsIDialogParamBlock* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN {
     return mBlock;
   }
   operator nsIDialogParamBlock* const() { return mBlock; }
 
-private:
+ private:
   nsIDialogParamBlock* mBlock;
 };
 
@@ -59,8 +55,7 @@ nsPrintDialogServiceWin::nsPrintDialogServiceWin() {}
 nsPrintDialogServiceWin::~nsPrintDialogServiceWin() {}
 
 NS_IMETHODIMP
-nsPrintDialogServiceWin::Init()
-{
+nsPrintDialogServiceWin::Init() {
   nsresult rv;
   mWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   return rv;
@@ -69,8 +64,7 @@ nsPrintDialogServiceWin::Init()
 NS_IMETHODIMP
 nsPrintDialogServiceWin::Show(nsPIDOMWindowOuter* aParent,
                               nsIPrintSettings* aSettings,
-                              nsIWebBrowserPrint* aWebBrowserPrint)
-{
+                              nsIWebBrowserPrint* aWebBrowserPrint) {
   NS_ENSURE_ARG(aParent);
   HWND hWnd = GetHWNDForDOMWindow(aParent);
   NS_ASSERTION(hWnd, "Couldn't get native window for PRint Dialog!");
@@ -80,15 +74,13 @@ nsPrintDialogServiceWin::Show(nsPIDOMWindowOuter* aParent,
 
 NS_IMETHODIMP
 nsPrintDialogServiceWin::ShowPageSetup(nsPIDOMWindowOuter* aParent,
-                                       nsIPrintSettings* aNSSettings)
-{
+                                       nsIPrintSettings* aNSSettings) {
   NS_ENSURE_ARG(aParent);
   NS_ENSURE_ARG(aNSSettings);
 
   ParamBlock block;
   nsresult rv = block.Init();
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   block->SetInt(0, 0);
   rv = DoDialog(aParent, block, aNSSettings, kPageSetupDialogURL);
@@ -104,18 +96,15 @@ nsPrintDialogServiceWin::ShowPageSetup(nsPIDOMWindowOuter* aParent,
   return rv;
 }
 
-nsresult
-nsPrintDialogServiceWin::DoDialog(mozIDOMWindowProxy* aParent,
-                                  nsIDialogParamBlock* aParamBlock,
-                                  nsIPrintSettings* aPS,
-                                  const char* aChromeURL)
-{
+nsresult nsPrintDialogServiceWin::DoDialog(mozIDOMWindowProxy* aParent,
+                                           nsIDialogParamBlock* aParamBlock,
+                                           nsIPrintSettings* aPS,
+                                           const char* aChromeURL) {
   NS_ENSURE_ARG(aParamBlock);
   NS_ENSURE_ARG(aPS);
   NS_ENSURE_ARG(aChromeURL);
 
-  if (!mWatcher)
-    return NS_ERROR_FAILURE;
+  if (!mWatcher) return NS_ERROR_FAILURE;
 
   // get a parent, if at all possible
   // (though we'd rather this didn't fail, it's OK if it does. so there's
@@ -140,19 +129,14 @@ nsPrintDialogServiceWin::DoDialog(mozIDOMWindowProxy* aParent,
   array->AppendElement(blkSupps);
 
   nsCOMPtr<mozIDOMWindowProxy> dialog;
-  nsresult rv = mWatcher->OpenWindow(aParent,
-                                     aChromeURL,
-                                     "_blank",
+  nsresult rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
                                      "centerscreen,chrome,modal,titlebar",
-                                     array,
-                                     getter_AddRefs(dialog));
+                                     array, getter_AddRefs(dialog));
 
   return rv;
 }
 
-HWND
-nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow)
-{
+HWND nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow) {
   nsCOMPtr<nsIWebBrowserChrome> chrome;
 
   // We might be embedded so check this path first
@@ -179,26 +163,21 @@ nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow)
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem = window->GetDocShell();
-  if (!treeItem)
-    return nullptr;
+  if (!treeItem) return nullptr;
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-  if (!treeOwner)
-    return nullptr;
+  if (!treeOwner) return nullptr;
 
   nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome(do_GetInterface(treeOwner));
-  if (!webBrowserChrome)
-    return nullptr;
+  if (!webBrowserChrome) return nullptr;
 
   nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(webBrowserChrome));
-  if (!baseWin)
-    return nullptr;
+  if (!baseWin) return nullptr;
 
   nsCOMPtr<nsIWidget> widget;
   baseWin->GetMainWidget(getter_AddRefs(widget));
-  if (!widget)
-    return nullptr;
+  if (!widget) return nullptr;
 
   return (HWND)widget->GetNativeData(NS_NATIVE_TMP_WINDOW);
 }

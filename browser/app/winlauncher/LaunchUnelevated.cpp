@@ -25,9 +25,8 @@
 #include <shlobj.h>
 #include <shobjidl.h>
 
-static mozilla::LauncherResult<TOKEN_ELEVATION_TYPE>
-GetElevationType(const nsAutoHandle& aToken)
-{
+static mozilla::LauncherResult<TOKEN_ELEVATION_TYPE> GetElevationType(
+    const nsAutoHandle& aToken) {
   DWORD retLen;
   TOKEN_ELEVATION_TYPE elevationType;
   if (!::GetTokenInformation(aToken.get(), TokenElevationType, &elevationType,
@@ -38,9 +37,8 @@ GetElevationType(const nsAutoHandle& aToken)
   return elevationType;
 }
 
-static mozilla::LauncherResult<bool>
-IsHighIntegrity(const nsAutoHandle& aToken)
-{
+static mozilla::LauncherResult<bool> IsHighIntegrity(
+    const nsAutoHandle& aToken) {
   DWORD reqdLen;
   if (!::GetTokenInformation(aToken.get(), TokenIntegrityLevel, nullptr, 0,
                              &reqdLen)) {
@@ -60,18 +58,16 @@ IsHighIntegrity(const nsAutoHandle& aToken)
   auto tokenLabel = reinterpret_cast<PTOKEN_MANDATORY_LABEL>(buf.get());
 
   DWORD subAuthCount = *::GetSidSubAuthorityCount(tokenLabel->Label.Sid);
-  DWORD integrityLevel = *::GetSidSubAuthority(tokenLabel->Label.Sid,
-                                               subAuthCount - 1);
+  DWORD integrityLevel =
+      *::GetSidSubAuthority(tokenLabel->Label.Sid, subAuthCount - 1);
   return integrityLevel > SECURITY_MANDATORY_MEDIUM_RID;
 }
 
-static mozilla::LauncherResult<HANDLE>
-GetMediumIntegrityToken(const nsAutoHandle& aProcessToken)
-{
+static mozilla::LauncherResult<HANDLE> GetMediumIntegrityToken(
+    const nsAutoHandle& aProcessToken) {
   HANDLE rawResult;
   if (!::DuplicateTokenEx(aProcessToken.get(), 0, nullptr,
                           SecurityImpersonation, TokenPrimary, &rawResult)) {
-
     return LAUNCHER_ERROR_FROM_LAST();
   }
 
@@ -106,9 +102,7 @@ namespace mozilla {
 // those of the session.
 // See https://blogs.msdn.microsoft.com/oldnewthing/20131118-00/?p=2643
 
-LauncherVoidResult
-LaunchUnelevated(int aArgc, wchar_t* aArgv[])
-{
+LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
   // We require a single-threaded apartment to talk to Explorer.
   mscom::STARegion sta;
   if (!sta.IsValid()) {
@@ -117,9 +111,9 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
 
   // NB: Explorer is a local server, not an inproc server
   RefPtr<IShellWindows> shellWindows;
-  HRESULT hr = ::CoCreateInstance(CLSID_ShellWindows, nullptr,
-                                  CLSCTX_LOCAL_SERVER, IID_IShellWindows,
-                                  getter_AddRefs(shellWindows));
+  HRESULT hr =
+      ::CoCreateInstance(CLSID_ShellWindows, nullptr, CLSCTX_LOCAL_SERVER,
+                         IID_IShellWindows, getter_AddRefs(shellWindows));
   if (FAILED(hr)) {
     return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
@@ -130,13 +124,15 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   long hwnd;
   RefPtr<IDispatch> dispDesktop;
   hr = shellWindows->FindWindowSW(&loc, &empty, SWC_DESKTOP, &hwnd,
-                                  SWFO_NEEDDISPATCH, getter_AddRefs(dispDesktop));
+                                  SWFO_NEEDDISPATCH,
+                                  getter_AddRefs(dispDesktop));
   if (FAILED(hr)) {
     return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   RefPtr<IServiceProvider> servProv;
-  hr = dispDesktop->QueryInterface(IID_IServiceProvider, getter_AddRefs(servProv));
+  hr = dispDesktop->QueryInterface(IID_IServiceProvider,
+                                   getter_AddRefs(servProv));
   if (FAILED(hr)) {
     return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
@@ -177,7 +173,8 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   }
 
   RefPtr<IShellDispatch2> shellDisp;
-  hr = dispShell->QueryInterface(IID_IShellDispatch2, getter_AddRefs(shellDisp));
+  hr =
+      dispShell->QueryInterface(IID_IShellDispatch2, getter_AddRefs(shellDisp));
   if (FAILED(hr)) {
     return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
@@ -203,9 +200,8 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   return Ok();
 }
 
-LauncherResult<ElevationState>
-GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken)
-{
+LauncherResult<ElevationState> GetElevationState(
+    mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken) {
   aOutMediumIlToken.reset();
 
   const DWORD tokenFlags = TOKEN_QUERY | TOKEN_DUPLICATE |
@@ -231,8 +227,7 @@ GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken
       if ((aFlags & (mozilla::LauncherFlags::eWaitForBrowser |
                      mozilla::LauncherFlags::eNoDeelevate)) ==
           mozilla::LauncherFlags::eWaitForBrowser) {
-        LauncherResult<HANDLE> tokenResult =
-          GetMediumIntegrityToken(token);
+        LauncherResult<HANDLE> tokenResult = GetMediumIntegrityToken(token);
         if (tokenResult.isOk()) {
           aOutMediumIlToken.own(tokenResult.unwrap());
         } else {
@@ -263,8 +258,7 @@ GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken
   }
 
   if (!(aFlags & mozilla::LauncherFlags::eNoDeelevate)) {
-    LauncherResult<HANDLE> tokenResult =
-      GetMediumIntegrityToken(token);
+    LauncherResult<HANDLE> tokenResult = GetMediumIntegrityToken(token);
     if (tokenResult.isOk()) {
       aOutMediumIlToken.own(tokenResult.unwrap());
     } else {
@@ -275,5 +269,4 @@ GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken
   return ElevationState::eHighIntegrityNoUAC;
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

@@ -11,19 +11,12 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPluginHost, nsPluginHost::GetInst)
 NS_DEFINE_NAMED_CID(NS_PLUGIN_HOST_CID);
 
 static const mozilla::Module::CIDEntry kPluginCIDs[] = {
-  { &kNS_PLUGIN_HOST_CID, false, nullptr, nsPluginHostConstructor },
-  { nullptr }
-};
+    {&kNS_PLUGIN_HOST_CID, false, nullptr, nsPluginHostConstructor}, {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kPluginContracts[] = {
-  { MOZ_PLUGIN_HOST_CONTRACTID, &kNS_PLUGIN_HOST_CID },
-  { nullptr }
-};
+    {MOZ_PLUGIN_HOST_CONTRACTID, &kNS_PLUGIN_HOST_CID}, {nullptr}};
 
-static const mozilla::Module kPluginModule = {
-  mozilla::Module::kVersion,
-  kPluginCIDs,
-  kPluginContracts
-};
+static const mozilla::Module kPluginModule = {mozilla::Module::kVersion,
+                                              kPluginCIDs, kPluginContracts};
 
 NSMODULE_DEFN(nsPluginModule) = &kPluginModule;

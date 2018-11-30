@@ -12,30 +12,122 @@
 
 #include "WindowsCFGStatus.h"
 
-// Inspired by https://github.com/trailofbits/cfg-showcase/blob/master/cfg_icall.cpp
+// Inspired by
+// https://github.com/trailofbits/cfg-showcase/blob/master/cfg_icall.cpp
 
 jmp_buf env;
 
-#pragma optimize("", off )
+#pragma optimize("", off)
 void not_entry_point() {
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
-  __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
+  __nop();
 
   longjmp(env, 1);
   return;
 }
-#pragma optimize("", on )
+#pragma optimize("", on)
 
 typedef void (*fn_ptr)();
 
@@ -56,9 +148,7 @@ typedef void (*fn_ptr)();
  * We use setjmp/longjmp because inline asm instructions aren't supported
  * in x64 by MSVC.
  */
-MFBT_API bool
-CFG_DisabledOrCrash()
-{
+MFBT_API bool CFG_DisabledOrCrash() {
   // setjmp returns 0 on the initial call and whatever value is given
   // to longjmp (here it is 1) when it is jumped back to.
   int val = setjmp(env);

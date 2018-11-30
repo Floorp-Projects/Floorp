@@ -14,12 +14,10 @@
 namespace mozilla {
 namespace dom {
 
-class ValidityState final : public nsISupports,
-                            public nsWrapperCache
-{
+class ValidityState final : public nsISupports, public nsWrapperCache {
   ~ValidityState() {}
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ValidityState)
 
@@ -29,62 +27,60 @@ public:
     return mConstraintValidation;
   }
 
-  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // Web IDL methods
-  bool ValueMissing() const
-  {
-    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING);
+  bool ValueMissing() const {
+    return GetValidityState(
+        nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING);
   }
-  bool TypeMismatch() const
-  {
-    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TYPE_MISMATCH);
+  bool TypeMismatch() const {
+    return GetValidityState(
+        nsIConstraintValidation::VALIDITY_STATE_TYPE_MISMATCH);
   }
-  bool PatternMismatch() const
-  {
-    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_PATTERN_MISMATCH);
+  bool PatternMismatch() const {
+    return GetValidityState(
+        nsIConstraintValidation::VALIDITY_STATE_PATTERN_MISMATCH);
   }
-  bool TooLong() const
-  {
+  bool TooLong() const {
     return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TOO_LONG);
   }
-  bool TooShort() const
-  {
+  bool TooShort() const {
     return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TOO_SHORT);
   }
-  bool RangeUnderflow() const
-  {
-    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW);
+  bool RangeUnderflow() const {
+    return GetValidityState(
+        nsIConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW);
   }
-  bool RangeOverflow() const
-  {
-    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_RANGE_OVERFLOW);
+  bool RangeOverflow() const {
+    return GetValidityState(
+        nsIConstraintValidation::VALIDITY_STATE_RANGE_OVERFLOW);
   }
-  bool StepMismatch() const
-  {
-    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_STEP_MISMATCH);
+  bool StepMismatch() const {
+    return GetValidityState(
+        nsIConstraintValidation::VALIDITY_STATE_STEP_MISMATCH);
   }
-  bool BadInput() const
-  {
+  bool BadInput() const {
     return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_BAD_INPUT);
   }
-  bool CustomError() const
-  {
-    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_CUSTOM_ERROR);
+  bool CustomError() const {
+    return GetValidityState(
+        nsIConstraintValidation::VALIDITY_STATE_CUSTOM_ERROR);
   }
-  bool Valid() const
-  {
+  bool Valid() const {
     return !mConstraintValidation || mConstraintValidation->IsValid();
   }
 
-protected:
+ protected:
   explicit ValidityState(nsIConstraintValidation* aConstraintValidation);
 
   /**
-   * Helper function to get a validity state from constraint validation instance.
+   * Helper function to get a validity state from constraint validation
+   * instance.
    */
-  inline bool GetValidityState(nsIConstraintValidation::ValidityStateType aState) const
-  {
+  inline bool GetValidityState(
+      nsIConstraintValidation::ValidityStateType aState) const {
     return mConstraintValidation &&
            mConstraintValidation->GetValidityState(aState);
   }
@@ -92,8 +88,7 @@ protected:
   nsCOMPtr<nsIConstraintValidation> mConstraintValidation;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ValidityState_h
-
+#endif  // mozilla_dom_ValidityState_h

@@ -11,7 +11,7 @@
 // See mozmemory_wrap.h for more details. This file is part of libmozglue, so
 // it needs to use _impl suffixes.
 #define MALLOC_DECL(name, return_type, ...) \
-  MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
+  MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
 #include "malloc_decls.h"
 #include "mozilla/mozalloc.h"
 #endif
@@ -27,15 +27,13 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
-#include "nsWindowsHelpers.h" // For AutoCriticalSection
+#include "nsWindowsHelpers.h"  // For AutoCriticalSection
 
 namespace mozilla {
 namespace glue {
 
 // Copies a null-terminated string. Upon error, returns nullptr.
-static UniquePtr<wchar_t[]>
-CopyString(const UniquePtr<wchar_t[]>& aOther)
-{
+static UniquePtr<wchar_t[]> CopyString(const UniquePtr<wchar_t[]>& aOther) {
   if (!aOther) {
     return nullptr;
   }
@@ -49,9 +47,7 @@ CopyString(const UniquePtr<wchar_t[]>& aOther)
 
 // Creates a UniquePtr<wchar_t[]> from a PCUNICODE_STRING string.
 // Upon error, returns nullptr.
-static UniquePtr<wchar_t[]>
-CopyString(PCUNICODE_STRING aOther)
-{
+static UniquePtr<wchar_t[]> CopyString(PCUNICODE_STRING aOther) {
   if (!aOther || !aOther->Buffer) {
     return nullptr;
   }
@@ -66,9 +62,7 @@ CopyString(PCUNICODE_STRING aOther)
 // Basic wrapper around ::GetModuleFileNameW.
 // Returns the full path of the loaded module specified by aModuleBase.
 // Upon error, returns nullptr.
-static UniquePtr<wchar_t[]>
-GetModuleFullPath(uintptr_t aModuleBase)
-{
+static UniquePtr<wchar_t[]> GetModuleFullPath(uintptr_t aModuleBase) {
   size_t allocated = MAX_PATH;
   auto ret = MakeUnique<wchar_t[]>(allocated);
   size_t len;
@@ -92,9 +86,8 @@ GetModuleFullPath(uintptr_t aModuleBase)
 
 // To track call depth and recursively-loaded modules, we must store this data
 // in thread local storage.
-class TLSData
-{
-public:
+class TLSData {
+ public:
   Vector<ModuleLoadEvent::ModuleInfo, 0, InfallibleAllocPolicy> mModulesLoaded;
   int mCallDepth = 0;
 };
@@ -102,8 +95,7 @@ public:
 static MOZ_THREAD_LOCAL(TLSData*) sTlsData;
 
 // This singleton class does the underlying work for UntrustedDllsHandler
-class UntrustedDllsHandlerImpl
-{
+class UntrustedDllsHandlerImpl {
   // Refcounting gives us a way to synchronize call lifetime vs object lifetime.
   // We don't have access to NS_INLINE_DECL_THREADSAFE_REFCOUNTING from mozglue,
   // but it's easy to roll our own.
@@ -131,23 +123,18 @@ class UntrustedDllsHandlerImpl
   // cannot risk re-entering the loader at this point.
   CRITICAL_SECTION mDataLock;
 
-  UntrustedDllsHandlerImpl()
-  {
-    InitializeCriticalSection(&mDataLock);
-  }
+  UntrustedDllsHandlerImpl() { InitializeCriticalSection(&mDataLock); }
 
-  ~UntrustedDllsHandlerImpl()
-  {
-    { // Scope for lock
+  ~UntrustedDllsHandlerImpl() {
+    {  // Scope for lock
       // Ensure pending ops are complete.
       AutoCriticalSection lock(&mDataLock);
     }
     DeleteCriticalSection(&mDataLock);
   }
 
-public:
-  static RefPtr<UntrustedDllsHandlerImpl> GetInstance()
-  {
+ public:
+  static RefPtr<UntrustedDllsHandlerImpl> GetInstance() {
     if (sInstanceHasBeenSet) {
       return sInstance;
     }
@@ -157,18 +144,11 @@ public:
     return sInstance;
   }
 
-  static void Shutdown()
-  {
-    sInstance = nullptr;
-  }
+  static void Shutdown() { sInstance = nullptr; }
 
-  int32_t AddRef()
-  {
-    return ++mRefCnt;
-  }
+  int32_t AddRef() { return ++mRefCnt; }
 
-  int32_t Release()
-  {
+  int32_t Release() {
     int32_t ret = --mRefCnt;
     if (!ret) {
       delete this;
@@ -178,8 +158,7 @@ public:
 
   // Called after a successful module load at the top level. Now we are safe
   // to package up the event and save for later processing.
-  void OnAfterTopLevelModuleLoad()
-  {
+  void OnAfterTopLevelModuleLoad() {
     // Hold a reference to ensure we don't get deleted during this call.
     RefPtr<UntrustedDllsHandlerImpl> refHolder(this);
     if (!refHolder) {
@@ -193,13 +172,13 @@ public:
       return;
     }
 
-    { // Scope for lock
+    {  // Scope for lock
       // Lock around gModuleHistory to prune out modules we've handled before.
       // Only trivial calls allowed during lock (don't invoke the loader)
       AutoCriticalSection lock(&mDataLock);
 
-      // There will rarely be more than a couple items in tlsData->mModulesLoaded,
-      // so this is efficient enough.
+      // There will rarely be more than a couple items in
+      // tlsData->mModulesLoaded, so this is efficient enough.
       for (auto& module : tlsData->mModulesLoaded) {
         if (module.mFullPath && wcslen(module.mFullPath.get())) {
           bool foundInHistory = false;
@@ -221,7 +200,7 @@ public:
     tlsData->mModulesLoaded.clear();
 
     if (thisEvent.mModules.empty()) {
-      return; // All modules have been filtered out; nothing further to do.
+      return;  // All modules have been filtered out; nothing further to do.
     }
 
     thisEvent.mThreadID = GetCurrentThreadId();
@@ -234,7 +213,8 @@ public:
     auto frames = MakeUnique<void*[]>(kMaxFrames);
 
     // Setting FramesToSkip to 1 so the caller will see itself as the top frame.
-    USHORT frameCount = CaptureStackBackTrace(1, kMaxFrames, frames.get(), nullptr);
+    USHORT frameCount =
+        CaptureStackBackTrace(1, kMaxFrames, frames.get(), nullptr);
     if (thisEvent.mStack.reserve(frameCount)) {
       for (size_t i = 0; i < frameCount; ++i) {
         Unused << thisEvent.mStack.append((uintptr_t)frames[i]);
@@ -248,8 +228,8 @@ public:
   }
 
   // Returns true if aOut is no longer empty.
-  bool TakePendingEvents(Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy>& aOut)
-  {
+  bool TakePendingEvents(
+      Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy>& aOut) {
     // Hold a reference to ensure we don't get deleted during this call.
     RefPtr<UntrustedDllsHandlerImpl> refHolder(this);
     if (!refHolder) {
@@ -266,25 +246,15 @@ Atomic<bool> UntrustedDllsHandlerImpl::sInstanceHasBeenSet;
 StaticRefPtr<UntrustedDllsHandlerImpl> UntrustedDllsHandlerImpl::sInstance;
 
 /* static */
-void
-UntrustedDllsHandler::Init()
-{
-  Unused << sTlsData.init();
-}
+void UntrustedDllsHandler::Init() { Unused << sTlsData.init(); }
 
 #ifdef DEBUG
 /* static */
-void
-UntrustedDllsHandler::Shutdown()
-{
-  UntrustedDllsHandlerImpl::Shutdown();
-}
-#endif // DEBUG
+void UntrustedDllsHandler::Shutdown() { UntrustedDllsHandlerImpl::Shutdown(); }
+#endif  // DEBUG
 
 /* static */
-void
-UntrustedDllsHandler::EnterLoaderCall()
-{
+void UntrustedDllsHandler::EnterLoaderCall() {
   if (!sTlsData.initialized()) {
     return;
   }
@@ -295,9 +265,7 @@ UntrustedDllsHandler::EnterLoaderCall()
 }
 
 /* static */
-void
-UntrustedDllsHandler::ExitLoaderCall()
-{
+void UntrustedDllsHandler::ExitLoaderCall() {
   if (!sTlsData.initialized()) {
     return;
   }
@@ -308,10 +276,8 @@ UntrustedDllsHandler::ExitLoaderCall()
 }
 
 /* static */
-void
-UntrustedDllsHandler::OnAfterModuleLoad(uintptr_t aBaseAddr,
-                                        PUNICODE_STRING aLdrModuleName)
-{
+void UntrustedDllsHandler::OnAfterModuleLoad(uintptr_t aBaseAddr,
+                                             PUNICODE_STRING aLdrModuleName) {
   RefPtr<UntrustedDllsHandlerImpl> p(UntrustedDllsHandlerImpl::GetInstance());
   if (!p) {
     return;
@@ -341,10 +307,8 @@ UntrustedDllsHandler::OnAfterModuleLoad(uintptr_t aBaseAddr,
 }
 
 /* static */
-bool
-UntrustedDllsHandler::TakePendingEvents(
-    Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy>& aOut)
-{
+bool UntrustedDllsHandler::TakePendingEvents(
+    Vector<ModuleLoadEvent, 0, InfallibleAllocPolicy>& aOut) {
   RefPtr<UntrustedDllsHandlerImpl> p(UntrustedDllsHandlerImpl::GetInstance());
   if (!p) {
     return false;
@@ -352,5 +316,5 @@ UntrustedDllsHandler::TakePendingEvents(
   return p->TakePendingEvents(aOut);
 }
 
-} // namespace glue
-} // namespace mozilla
+}  // namespace glue
+}  // namespace mozilla

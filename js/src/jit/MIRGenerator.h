@@ -19,7 +19,7 @@
 #include "jit/JitRealm.h"
 #include "jit/MIR.h"
 #ifdef JS_ION_PERF
-# include "jit/PerfSpewer.h"
+#include "jit/PerfSpewer.h"
 #endif
 #include "jit/RegisterSets.h"
 #include "vm/JSContext.h"
@@ -31,198 +31,161 @@ namespace jit {
 class MIRGraph;
 class OptimizationInfo;
 
-class MIRGenerator
-{
-  public:
-    MIRGenerator(CompileRealm* realm, const JitCompileOptions& options,
-                 TempAllocator* alloc, MIRGraph* graph,
-                 const CompileInfo* info, const OptimizationInfo* optimizationInfo);
+class MIRGenerator {
+ public:
+  MIRGenerator(CompileRealm* realm, const JitCompileOptions& options,
+               TempAllocator* alloc, MIRGraph* graph, const CompileInfo* info,
+               const OptimizationInfo* optimizationInfo);
 
-    void initMinWasmHeapLength(uint32_t init) {
-        minWasmHeapLength_ = init;
-    }
+  void initMinWasmHeapLength(uint32_t init) { minWasmHeapLength_ = init; }
 
-    TempAllocator& alloc() {
-        return *alloc_;
-    }
-    MIRGraph& graph() {
-        return *graph_;
-    }
-    MOZ_MUST_USE bool ensureBallast() {
-        return alloc().ensureBallast();
-    }
-    const JitRuntime* jitRuntime() const {
-        return runtime->jitRuntime();
-    }
-    const CompileInfo& info() const {
-        return *info_;
-    }
-    const OptimizationInfo& optimizationInfo() const {
-        return *optimizationInfo_;
-    }
-    bool hasProfilingScripts() const {
-        return runtime && runtime->profilingScripts();
-    }
+  TempAllocator& alloc() { return *alloc_; }
+  MIRGraph& graph() { return *graph_; }
+  MOZ_MUST_USE bool ensureBallast() { return alloc().ensureBallast(); }
+  const JitRuntime* jitRuntime() const { return runtime->jitRuntime(); }
+  const CompileInfo& info() const { return *info_; }
+  const OptimizationInfo& optimizationInfo() const {
+    return *optimizationInfo_;
+  }
+  bool hasProfilingScripts() const {
+    return runtime && runtime->profilingScripts();
+  }
 
-    template <typename T>
-    T* allocate(size_t count = 1) {
-        size_t bytes;
-        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(count, &bytes))) {
-            return nullptr;
-        }
-        return static_cast<T*>(alloc().allocate(bytes));
+  template <typename T>
+  T* allocate(size_t count = 1) {
+    size_t bytes;
+    if (MOZ_UNLIKELY(!CalculateAllocSize<T>(count, &bytes))) {
+      return nullptr;
     }
+    return static_cast<T*>(alloc().allocate(bytes));
+  }
 
-    // Set an error state and prints a message. Returns false so errors can be
-    // propagated up.
-    mozilla::GenericErrorResult<AbortReason> abort(AbortReason r);
-    mozilla::GenericErrorResult<AbortReason>
-    abort(AbortReason r, const char* message, ...) MOZ_FORMAT_PRINTF(3, 4);
+  // Set an error state and prints a message. Returns false so errors can be
+  // propagated up.
+  mozilla::GenericErrorResult<AbortReason> abort(AbortReason r);
+  mozilla::GenericErrorResult<AbortReason> abort(AbortReason r,
+                                                 const char* message, ...)
+      MOZ_FORMAT_PRINTF(3, 4);
 
-    mozilla::GenericErrorResult<AbortReason>
-    abortFmt(AbortReason r, const char* message, va_list ap) MOZ_FORMAT_PRINTF(3, 0);
+  mozilla::GenericErrorResult<AbortReason> abortFmt(AbortReason r,
+                                                    const char* message,
+                                                    va_list ap)
+      MOZ_FORMAT_PRINTF(3, 0);
 
-    // Collect the evaluation result of phases after IonBuilder, such that
-    // off-thread compilation can report what error got encountered.
-    void setOffThreadStatus(AbortReasonOr<Ok> result) {
-        MOZ_ASSERT(offThreadStatus_.isOk());
-        offThreadStatus_ = result;
+  // Collect the evaluation result of phases after IonBuilder, such that
+  // off-thread compilation can report what error got encountered.
+  void setOffThreadStatus(AbortReasonOr<Ok> result) {
+    MOZ_ASSERT(offThreadStatus_.isOk());
+    offThreadStatus_ = result;
+  }
+  AbortReasonOr<Ok> getOffThreadStatus() const { return offThreadStatus_; }
+
+  MOZ_MUST_USE bool instrumentedProfiling() {
+    if (!instrumentedProfilingIsCached_) {
+      instrumentedProfiling_ = runtime->geckoProfiler().enabled();
+      instrumentedProfilingIsCached_ = true;
     }
-    AbortReasonOr<Ok> getOffThreadStatus() const {
-        return offThreadStatus_;
-    }
+    return instrumentedProfiling_;
+  }
 
-    MOZ_MUST_USE bool instrumentedProfiling() {
-        if (!instrumentedProfilingIsCached_) {
-            instrumentedProfiling_ = runtime->geckoProfiler().enabled();
-            instrumentedProfilingIsCached_ = true;
-        }
-        return instrumentedProfiling_;
-    }
+  bool isProfilerInstrumentationEnabled() {
+    return !compilingWasm() && instrumentedProfiling();
+  }
 
-    bool isProfilerInstrumentationEnabled() {
-        return !compilingWasm() && instrumentedProfiling();
-    }
+  bool isOptimizationTrackingEnabled() {
+    return isProfilerInstrumentationEnabled() && !info().isAnalysis() &&
+           !JitOptions.disableOptimizationTracking;
+  }
 
-    bool isOptimizationTrackingEnabled() {
-        return isProfilerInstrumentationEnabled() && !info().isAnalysis() &&
-               !JitOptions.disableOptimizationTracking;
-    }
+  bool stringsCanBeInNursery() const { return stringsCanBeInNursery_; }
 
-    bool stringsCanBeInNursery() const {
-        return stringsCanBeInNursery_;
-    }
+  bool safeForMinorGC() const { return safeForMinorGC_; }
+  void setNotSafeForMinorGC() { safeForMinorGC_ = false; }
 
-    bool safeForMinorGC() const {
-        return safeForMinorGC_;
-    }
-    void setNotSafeForMinorGC() {
-        safeForMinorGC_ = false;
-    }
+  // Whether the main thread is trying to cancel this build.
+  bool shouldCancel(const char* why) { return cancelBuild_; }
+  void cancel() { cancelBuild_ = true; }
 
-    // Whether the main thread is trying to cancel this build.
-    bool shouldCancel(const char* why) {
-        return cancelBuild_;
-    }
-    void cancel() {
-        cancelBuild_ = true;
-    }
+  bool compilingWasm() const { return info_->compilingWasm(); }
 
-    bool compilingWasm() const {
-        return info_->compilingWasm();
-    }
+  uint32_t wasmMaxStackArgBytes() const {
+    MOZ_ASSERT(compilingWasm());
+    return wasmMaxStackArgBytes_;
+  }
+  void initWasmMaxStackArgBytes(uint32_t n) {
+    MOZ_ASSERT(compilingWasm());
+    MOZ_ASSERT(wasmMaxStackArgBytes_ == 0);
+    wasmMaxStackArgBytes_ = n;
+  }
+  uint32_t minWasmHeapLength() const { return minWasmHeapLength_; }
 
-    uint32_t wasmMaxStackArgBytes() const {
-        MOZ_ASSERT(compilingWasm());
-        return wasmMaxStackArgBytes_;
-    }
-    void initWasmMaxStackArgBytes(uint32_t n) {
-        MOZ_ASSERT(compilingWasm());
-        MOZ_ASSERT(wasmMaxStackArgBytes_ == 0);
-        wasmMaxStackArgBytes_ = n;
-    }
-    uint32_t minWasmHeapLength() const {
-        return minWasmHeapLength_;
-    }
+  void setNeedsOverrecursedCheck() { needsOverrecursedCheck_ = true; }
+  bool needsOverrecursedCheck() const { return needsOverrecursedCheck_; }
 
-    void setNeedsOverrecursedCheck() {
-        needsOverrecursedCheck_ = true;
-    }
-    bool needsOverrecursedCheck() const {
-        return needsOverrecursedCheck_;
-    }
+  void setNeedsStaticStackAlignment() { needsStaticStackAlignment_ = true; }
+  bool needsStaticStackAlignment() const { return needsOverrecursedCheck_; }
 
-    void setNeedsStaticStackAlignment() {
-        needsStaticStackAlignment_ = true;
-    }
-    bool needsStaticStackAlignment() const {
-        return needsOverrecursedCheck_;
-    }
+  bool modifiesFrameArguments() const { return modifiesFrameArguments_; }
 
-    bool modifiesFrameArguments() const {
-        return modifiesFrameArguments_;
-    }
+  typedef Vector<ObjectGroup*, 0, JitAllocPolicy> ObjectGroupVector;
 
-    typedef Vector<ObjectGroup*, 0, JitAllocPolicy> ObjectGroupVector;
+  // When aborting with AbortReason::PreliminaryObjects, all groups with
+  // preliminary objects which haven't been analyzed yet.
+  const ObjectGroupVector& abortedPreliminaryGroups() const {
+    return abortedPreliminaryGroups_;
+  }
 
-    // When aborting with AbortReason::PreliminaryObjects, all groups with
-    // preliminary objects which haven't been analyzed yet.
-    const ObjectGroupVector& abortedPreliminaryGroups() const {
-        return abortedPreliminaryGroups_;
-    }
+ public:
+  CompileRealm* realm;
+  CompileRuntime* runtime;
 
-  public:
-    CompileRealm* realm;
-    CompileRuntime* runtime;
+ protected:
+  const CompileInfo* info_;
+  const OptimizationInfo* optimizationInfo_;
+  TempAllocator* alloc_;
+  MIRGraph* graph_;
+  AbortReasonOr<Ok> offThreadStatus_;
+  ObjectGroupVector abortedPreliminaryGroups_;
+  mozilla::Atomic<bool, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      cancelBuild_;
 
-  protected:
-    const CompileInfo* info_;
-    const OptimizationInfo* optimizationInfo_;
-    TempAllocator* alloc_;
-    MIRGraph* graph_;
-    AbortReasonOr<Ok> offThreadStatus_;
-    ObjectGroupVector abortedPreliminaryGroups_;
-    mozilla::Atomic<bool, mozilla::Relaxed,
-                    mozilla::recordreplay::Behavior::DontPreserve> cancelBuild_;
+  uint32_t wasmMaxStackArgBytes_;
+  bool needsOverrecursedCheck_;
+  bool needsStaticStackAlignment_;
 
-    uint32_t wasmMaxStackArgBytes_;
-    bool needsOverrecursedCheck_;
-    bool needsStaticStackAlignment_;
+  // Keep track of whether frame arguments are modified during execution.
+  // RegAlloc needs to know this as spilling values back to their register
+  // slots is not compatible with that.
+  bool modifiesFrameArguments_;
 
-    // Keep track of whether frame arguments are modified during execution.
-    // RegAlloc needs to know this as spilling values back to their register
-    // slots is not compatible with that.
-    bool modifiesFrameArguments_;
+  bool instrumentedProfiling_;
+  bool instrumentedProfilingIsCached_;
+  bool safeForMinorGC_;
+  bool stringsCanBeInNursery_;
 
-    bool instrumentedProfiling_;
-    bool instrumentedProfilingIsCached_;
-    bool safeForMinorGC_;
-    bool stringsCanBeInNursery_;
+  void addAbortedPreliminaryGroup(ObjectGroup* group);
 
-    void addAbortedPreliminaryGroup(ObjectGroup* group);
-
-    uint32_t minWasmHeapLength_;
+  uint32_t minWasmHeapLength_;
 
 #if defined(JS_ION_PERF)
-    WasmPerfSpewer wasmPerfSpewer_;
+  WasmPerfSpewer wasmPerfSpewer_;
 
-  public:
-    WasmPerfSpewer& perfSpewer() { return wasmPerfSpewer_; }
+ public:
+  WasmPerfSpewer& perfSpewer() { return wasmPerfSpewer_; }
 #endif
 
-  public:
-    const JitCompileOptions options;
+ public:
+  const JitCompileOptions options;
 
-  private:
-    GraphSpewer gs_;
+ private:
+  GraphSpewer gs_;
 
-  public:
-    GraphSpewer& graphSpewer() {
-        return gs_;
-    }
+ public:
+  GraphSpewer& graphSpewer() { return gs_; }
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_MIRGenerator_h */

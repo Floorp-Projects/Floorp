@@ -37,12 +37,12 @@
  * The buffer is empty when |start| == |end|.
  * Invariant: |start| <= |end|
  */
-template<typename CharT>
+template <typename CharT>
 class nsLineBuffer {
-  public:
-    nsLineBuffer() : start(buf), end(buf) { }
+ public:
+  nsLineBuffer() : start(buf), end(buf) {}
 
-  CharT buf[kLineBufferSize+1];
+  CharT buf[kLineBufferSize + 1];
   CharT* start;
   CharT* end;
 };
@@ -69,17 +69,15 @@ class nsLineBuffer {
  *         Input stream returned an error upon read. See
  *         nsIInputStream::read.
  */
-template<typename CharT, class StreamType, class StringType>
-nsresult
-NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
-             StringType & aLine, bool *more)
-{
-  CharT eolchar = 0; // the first eol char or 1 after \r\n or \n\r is found
+template <typename CharT, class StreamType, class StringType>
+nsresult NS_ReadLine(StreamType* aStream, nsLineBuffer<CharT>* aBuffer,
+                     StringType& aLine, bool* more) {
+  CharT eolchar = 0;  // the first eol char or 1 after \r\n or \n\r is found
 
   aLine.Truncate();
 
-  while (true) { // will be returning out of this loop on eol or eof
-    if (aBuffer->start == aBuffer->end) { // buffer is empty.  Read into it.
+  while (true) {  // will be returning out of this loop on eol or eof
+    if (aBuffer->start == aBuffer->end) {  // buffer is empty.  Read into it.
       uint32_t bytesRead;
       nsresult rv = aStream->Read(aBuffer->buf, kLineBufferSize, &bytesRead);
       if (NS_FAILED(rv) || MOZ_UNLIKELY(bytesRead == 0)) {
@@ -103,7 +101,7 @@ NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
      */
     CharT* current = aBuffer->start;
     if (MOZ_LIKELY(eolchar == 0)) {
-      for ( ; current < aBuffer->end; ++current) {
+      for (; current < aBuffer->end; ++current) {
         if (*current == '\n' || *current == '\r') {
           eolchar = *current;
           *current++ = '\0';
@@ -113,7 +111,7 @@ NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
       }
     }
     if (MOZ_LIKELY(eolchar != 0)) {
-      for ( ; current < aBuffer->end; ++current) {
+      for (; current < aBuffer->end; ++current) {
         if ((eolchar == '\r' && *current == '\n') ||
             (eolchar == '\n' && *current == '\r')) {
           eolchar = 1;
@@ -125,10 +123,9 @@ NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
       }
     }
 
-    if (eolchar == 0)
-      aLine.Append(aBuffer->start);
-    aBuffer->start = aBuffer->end; // mark the buffer empty
+    if (eolchar == 0) aLine.Append(aBuffer->start);
+    aBuffer->start = aBuffer->end;  // mark the buffer empty
   }
 }
 
-#endif // nsReadLine_h__
+#endif  // nsReadLine_h__

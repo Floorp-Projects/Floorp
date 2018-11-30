@@ -12,40 +12,45 @@ extern "C" {
  * Method:    pbkdf2SHA256
  * Signature: ([B[BII)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jint, jint);
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256(
+    JNIEnv *, jclass, jbyteArray, jbyteArray, jint, jint);
 
 /*
  * Class:     org_mozilla_gecko_background_nativecode_NativeCrypto
  * Method:    sha1
  * Signature: ([B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1
-  (JNIEnv *, jclass, jbyteArray);
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1(JNIEnv *, jclass,
+                                                               jbyteArray);
 
 /*
  * Class:     org_mozilla_gecko_background_nativecode_NativeCrypto
  * Method:    sha256init
  * Signature: ()[B
  */
-JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init
-  (JNIEnv *, jclass);
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init(JNIEnv *,
+                                                                     jclass);
 
 /*
  * Class:     org_mozilla_gecko_background_nativecode_NativeCrypto
  * Method:    sha256update
  * Signature: ([B[B)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update
-  (JNIEnv *, jclass, jbyteArray, jbyteArray, jint);
+JNIEXPORT void JNICALL
+Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update(
+    JNIEnv *, jclass, jbyteArray, jbyteArray, jint);
 
 /*
  * Class:     org_mozilla_gecko_background_nativecode_NativeCrypto
  * Method:    sha256finalize
  * Signature: ([B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256finalize
-  (JNIEnv *, jclass, jbyteArray);
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256finalize(
+    JNIEnv *, jclass, jbyteArray);
 
 #ifdef __cplusplus
 }

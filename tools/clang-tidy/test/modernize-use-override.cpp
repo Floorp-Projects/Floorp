@@ -1,5 +1,5 @@
 class Base {
-public:
+ public:
   virtual void foo() = 0;
 };
 

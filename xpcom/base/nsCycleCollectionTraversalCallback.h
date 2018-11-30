@@ -13,24 +13,23 @@
 
 class nsCycleCollectionParticipant;
 
-class NS_NO_VTABLE nsCycleCollectionTraversalCallback
-{
-public:
+class NS_NO_VTABLE nsCycleCollectionTraversalCallback {
+ public:
   // You must call DescribeRefCountedNode() with an accurate
   // refcount, otherwise cycle collection will fail, and probably crash.
   // If the callback cares about objname, it should put
   // WANT_DEBUG_INFO in mFlags.
-  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt aRefcount,
-                                           const char* aObjName) = 0;
+  NS_IMETHOD_(void)
+  DescribeRefCountedNode(nsrefcnt aRefcount, const char* aObjName) = 0;
   // Note, aCompartmentAddress is 0 if it is unknown.
-  NS_IMETHOD_(void) DescribeGCedNode(bool aIsMarked,
-                                     const char* aObjName,
-                                     uint64_t aCompartmentAddress = 0) = 0;
+  NS_IMETHOD_(void)
+  DescribeGCedNode(bool aIsMarked, const char* aObjName,
+                   uint64_t aCompartmentAddress = 0) = 0;
 
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild) = 0;
   NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aThing) = 0;
-  NS_IMETHOD_(void) NoteNativeChild(void* aChild,
-                                    nsCycleCollectionParticipant* aHelper) = 0;
+  NS_IMETHOD_(void)
+  NoteNativeChild(void* aChild, nsCycleCollectionParticipant* aHelper) = 0;
 
   // Give a name to the edge associated with the next call to
   // NoteXPCOMChild, NoteJSObject, NoteJSScript, or NoteNativeChild.
@@ -38,8 +37,7 @@ public:
   // flags.
   NS_IMETHOD_(void) NoteNextEdgeName(const char* aName) = 0;
 
-  enum
-  {
+  enum {
     // Values for flags:
 
     // Caller should call NoteNextEdgeName and pass useful objName
@@ -53,10 +51,11 @@ public:
   uint32_t Flags() const { return mFlags; }
   bool WantDebugInfo() const { return (mFlags & WANT_DEBUG_INFO) != 0; }
   bool WantAllTraces() const { return (mFlags & WANT_ALL_TRACES) != 0; }
-protected:
+
+ protected:
   nsCycleCollectionTraversalCallback() : mFlags(0) {}
 
   uint32_t mFlags;
 };
 
-#endif // nsCycleCollectionTraversalCallback_h__
+#endif  // nsCycleCollectionTraversalCallback_h__

@@ -17,14 +17,12 @@ class mozIVisitInfo;
 namespace mozilla {
 namespace places {
 
-
-class PlaceInfo final : public mozIPlaceInfo
-{
-public:
+class PlaceInfo final : public mozIPlaceInfo {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZIPLACEINFO
 
-  typedef nsTArray< nsCOMPtr<mozIVisitInfo> > VisitsArray;
+  typedef nsTArray<nsCOMPtr<mozIVisitInfo> > VisitsArray;
 
   PlaceInfo(int64_t aId, const nsCString& aGUID, already_AddRefed<nsIURI> aURI,
             const nsString& aTitle, int64_t aFrecency);
@@ -32,7 +30,7 @@ public:
             const nsString& aTitle, int64_t aFrecency,
             const VisitsArray& aVisits);
 
-private:
+ private:
   ~PlaceInfo() {}
 
   const int64_t mId;
@@ -44,7 +42,7 @@ private:
   bool mVisitsAvailable;
 };
 
-} // namespace places
-} // namespace mozilla
+}  // namespace places
+}  // namespace mozilla
 
-#endif // mozilla_places_PlaceInfo_h__
+#endif  // mozilla_places_PlaceInfo_h__

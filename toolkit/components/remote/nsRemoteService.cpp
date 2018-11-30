@@ -26,95 +26,84 @@
 #include "nsString.h"
 #include "nsIFile.h"
 
-NS_IMPL_ISUPPORTS(nsRemoteService,
-                  nsIRemoteService,
-                  nsIObserver)
+NS_IMPL_ISUPPORTS(nsRemoteService, nsIRemoteService, nsIObserver)
 
 NS_IMETHODIMP
-nsRemoteService::Startup(const char* aAppName, const char* aProfileName)
-{
-    bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+nsRemoteService::Startup(const char* aAppName, const char* aProfileName) {
+  bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
 #if defined(MOZ_ENABLE_DBUS)
-    if (!useX11Remote) {
-        nsresult rv;
-        mDBusRemoteService = new nsDBusRemoteService();
-        rv = mDBusRemoteService->Startup(aAppName, aProfileName);
-        if (NS_FAILED(rv)) {
-            mDBusRemoteService = nullptr;
-        }
+  if (!useX11Remote) {
+    nsresult rv;
+    mDBusRemoteService = new nsDBusRemoteService();
+    rv = mDBusRemoteService->Startup(aAppName, aProfileName);
+    if (NS_FAILED(rv)) {
+      mDBusRemoteService = nullptr;
     }
+  }
 #endif
-    if (useX11Remote) {
-        mGtkRemoteService = new nsGTKRemoteService();
-        mGtkRemoteService->Startup(aAppName, aProfileName);
-    }
+  if (useX11Remote) {
+    mGtkRemoteService = new nsGTKRemoteService();
+    mGtkRemoteService->Startup(aAppName, aProfileName);
+  }
 
-    if (!mDBusRemoteService && !mGtkRemoteService)
-        return NS_ERROR_FAILURE;
+  if (!mDBusRemoteService && !mGtkRemoteService) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
-    if (obs) {
-        obs->AddObserver(this, "xpcom-shutdown", false);
-        obs->AddObserver(this, "quit-application", false);
-    }
+  nsCOMPtr<nsIObserverService> obs(
+      do_GetService("@mozilla.org/observer-service;1"));
+  if (obs) {
+    obs->AddObserver(this, "xpcom-shutdown", false);
+    obs->AddObserver(this, "quit-application", false);
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRemoteService::RegisterWindow(mozIDOMWindow* aWindow)
-{
-    // Note: RegisterWindow() is not implemented/needed by DBus service.
-    if (mGtkRemoteService) {
-        mGtkRemoteService->RegisterWindow(aWindow);
-    }
-    return NS_OK;
+nsRemoteService::RegisterWindow(mozIDOMWindow* aWindow) {
+  // Note: RegisterWindow() is not implemented/needed by DBus service.
+  if (mGtkRemoteService) {
+    mGtkRemoteService->RegisterWindow(aWindow);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRemoteService::Shutdown()
-{
+nsRemoteService::Shutdown() {
 #if defined(MOZ_ENABLE_DBUS)
-    if (mDBusRemoteService) {
-        mDBusRemoteService->Shutdown();
-        mDBusRemoteService = nullptr;
-    }
+  if (mDBusRemoteService) {
+    mDBusRemoteService->Shutdown();
+    mDBusRemoteService = nullptr;
+  }
 #endif
-    if (mGtkRemoteService) {
-        mGtkRemoteService->Shutdown();
-        mGtkRemoteService = nullptr;
-    }
-    return NS_OK;
+  if (mGtkRemoteService) {
+    mGtkRemoteService->Shutdown();
+    mGtkRemoteService = nullptr;
+  }
+  return NS_OK;
 }
 
-nsRemoteService::~nsRemoteService()
-{
-    Shutdown();
-}
+nsRemoteService::~nsRemoteService() { Shutdown(); }
 
 NS_IMETHODIMP
-nsRemoteService::Observe(nsISupports* aSubject,
-                          const char *aTopic,
-                          const char16_t *aData)
-{
-    // This can be xpcom-shutdown or quit-application, but it's the same either
-    // way.
-    Shutdown();
-    return NS_OK;
+nsRemoteService::Observe(nsISupports* aSubject, const char* aTopic,
+                         const char16_t* aData) {
+  // This can be xpcom-shutdown or quit-application, but it's the same either
+  // way.
+  Shutdown();
+  return NS_OK;
 }
 
 // Set desktop startup ID to the passed ID, if there is one, so that any created
 // windows get created with the right window manager metadata, and any windows
 // that get new tabs and are activated also get the right WM metadata.
 // The timestamp will be used if there is no desktop startup ID, or if we're
-// raising an existing window rather than showing a new window for the first time.
-void
-nsRemoteService::SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                                uint32_t aTimestamp) {
+// raising an existing window rather than showing a new window for the first
+// time.
+void nsRemoteService::SetDesktopStartupIDOrTimestamp(
+    const nsACString& aDesktopStartupID, uint32_t aTimestamp) {
   nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
-  if (!toolkit)
-    return;
+  if (!toolkit) return;
 
   if (!aDesktopStartupID.IsEmpty()) {
     toolkit->SetDesktopStartupID(aDesktopStartupID);
@@ -123,12 +112,10 @@ nsRemoteService::SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartu
   toolkit->SetFocusTimestamp(aTimestamp);
 }
 
-static bool
-FindExtensionParameterInCommand(const char* aParameterName,
-                                const nsACString& aCommand,
-                                char aSeparator,
-                                nsACString* aValue)
-{
+static bool FindExtensionParameterInCommand(const char* aParameterName,
+                                            const nsACString& aCommand,
+                                            char aSeparator,
+                                            nsACString* aValue) {
   nsAutoCString searchFor;
   searchFor.Append(aSeparator);
   searchFor.Append(aParameterName);
@@ -137,8 +124,7 @@ FindExtensionParameterInCommand(const char* aParameterName,
   nsACString::const_iterator start, end;
   aCommand.BeginReading(start);
   aCommand.EndReading(end);
-  if (!FindInReadable(searchFor, start, end))
-    return false;
+  if (!FindInReadable(searchFor, start, end)) return false;
 
   nsACString::const_iterator charStart, charEnd;
   charStart = end;
@@ -153,10 +139,9 @@ FindExtensionParameterInCommand(const char* aParameterName,
   return true;
 }
 
-const char*
-nsRemoteService::HandleCommandLine(const char* aBuffer, nsIDOMWindow* aWindow,
-                                   uint32_t aTimestamp)
-{
+const char* nsRemoteService::HandleCommandLine(const char* aBuffer,
+                                               nsIDOMWindow* aWindow,
+                                               uint32_t aTimestamp) {
   nsCOMPtr<nsICommandLineRunner> cmdline(new nsCommandLine());
 
   // the commandline property is constructed as an array of int32_t
@@ -166,76 +151,70 @@ nsRemoteService::HandleCommandLine(const char* aBuffer, nsIDOMWindow* aWindow,
   // (offset is from the beginning of the buffer)
 
   int32_t argc = TO_LITTLE_ENDIAN32(*reinterpret_cast<const int32_t*>(aBuffer));
-  const char *wd   = aBuffer + ((argc + 1) * sizeof(int32_t));
+  const char* wd = aBuffer + ((argc + 1) * sizeof(int32_t));
 
   nsCOMPtr<nsIFile> lf;
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(wd), true,
-                                      getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return "509 internal error";
+  nsresult rv =
+      NS_NewNativeLocalFile(nsDependentCString(wd), true, getter_AddRefs(lf));
+  if (NS_FAILED(rv)) return "509 internal error";
 
   nsAutoCString desktopStartupID;
 
-  const char **argv = (const char**) malloc(sizeof(char*) * argc);
+  const char** argv = (const char**)malloc(sizeof(char*) * argc);
   if (!argv) return "509 internal error";
 
-  const int32_t *offset = reinterpret_cast<const int32_t*>(aBuffer) + 1;
+  const int32_t* offset = reinterpret_cast<const int32_t*>(aBuffer) + 1;
 
   for (int i = 0; i < argc; ++i) {
     argv[i] = aBuffer + TO_LITTLE_ENDIAN32(offset[i]);
 
     if (i == 0) {
       nsDependentCString cmd(argv[0]);
-      FindExtensionParameterInCommand("DESKTOP_STARTUP_ID",
-                                      cmd, ' ',
+      FindExtensionParameterInCommand("DESKTOP_STARTUP_ID", cmd, ' ',
                                       &desktopStartupID);
     }
   }
 
   rv = cmdline->Init(argc, argv, lf, nsICommandLine::STATE_REMOTE_AUTO);
 
-  free (argv);
+  free(argv);
   if (NS_FAILED(rv)) {
     return "509 internal error";
   }
 
-  if (aWindow)
-    cmdline->SetWindowContext(aWindow);
+  if (aWindow) cmdline->SetWindowContext(aWindow);
 
   SetDesktopStartupIDOrTimestamp(desktopStartupID, aTimestamp);
 
   rv = cmdline->Run();
 
-  if (NS_ERROR_ABORT == rv)
-    return "500 command not parseable";
+  if (NS_ERROR_ABORT == rv) return "500 command not parseable";
 
-  if (NS_FAILED(rv))
-    return "509 internal error";
+  if (NS_FAILED(rv)) return "509 internal error";
 
   return "200 executed command";
 }
 
 // {C0773E90-5799-4eff-AD03-3EBCD85624AC}
-#define NS_REMOTESERVICE_CID \
-  { 0xc0773e90, 0x5799, 0x4eff, { 0xad, 0x3, 0x3e, 0xbc, 0xd8, 0x56, 0x24, 0xac } }
+#define NS_REMOTESERVICE_CID                        \
+  {                                                 \
+    0xc0773e90, 0x5799, 0x4eff, {                   \
+      0xad, 0x3, 0x3e, 0xbc, 0xd8, 0x56, 0x24, 0xac \
+    }                                               \
+  }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRemoteService)
 NS_DEFINE_NAMED_CID(NS_REMOTESERVICE_CID);
 
 static const mozilla::Module::CIDEntry kRemoteCIDs[] = {
-  { &kNS_REMOTESERVICE_CID, false, nullptr, nsRemoteServiceConstructor },
-  { nullptr }
-};
+    {&kNS_REMOTESERVICE_CID, false, nullptr, nsRemoteServiceConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kRemoteContracts[] = {
-  { "@mozilla.org/toolkit/remote-service;1", &kNS_REMOTESERVICE_CID },
-  { nullptr }
-};
+    {"@mozilla.org/toolkit/remote-service;1", &kNS_REMOTESERVICE_CID},
+    {nullptr}};
 
-static const mozilla::Module kRemoteModule = {
-  mozilla::Module::kVersion,
-  kRemoteCIDs,
-  kRemoteContracts
-};
+static const mozilla::Module kRemoteModule = {mozilla::Module::kVersion,
+                                              kRemoteCIDs, kRemoteContracts};
 
 NSMODULE_DEFN(RemoteServiceModule) = &kRemoteModule;

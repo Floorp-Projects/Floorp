@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 // Original authors: jib@mozilla.com, ekr@rtfm.com
 
 // Some of this code is cut-and-pasted from nICEr. Copyright is:
@@ -60,10 +59,10 @@ typedef struct nr_resolver_resource_ nr_resolver_resource;
 
 namespace mozilla {
 
-class NrIceResolver
-{
+class NrIceResolver {
  private:
   ~NrIceResolver();
+
  public:
   NrIceResolver();
 
@@ -73,8 +72,8 @@ class NrIceResolver
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceResolver)
 
   int resolve(nr_resolver_resource *resource,
-              int (*cb)(void *cb_arg, nr_transport_addr *addr),
-              void *cb_arg, void **handle);
+              int (*cb)(void *cb_arg, nr_transport_addr *addr), void *cb_arg,
+              void **handle);
 
  private:
   // Implementations of vtbl functions
@@ -85,24 +84,21 @@ class NrIceResolver
   static void resolve_cb(NR_SOCKET s, int how, void *cb_arg);
   static int cancel(void *obj, void *handle);
 
-  class PendingResolution : public nsIDNSListener
-  {
+  class PendingResolution : public nsIDNSListener {
    public:
-    PendingResolution(nsIEventTarget *thread,
-                      uint16_t port,
-                      int transport,
+    PendingResolution(nsIEventTarget *thread, uint16_t port, int transport,
                       int (*cb)(void *cb_arg, nr_transport_addr *addr),
-                      void *cb_arg) :
-        thread_(thread),
-        port_(port),
-        transport_(transport),
-        cb_(cb), cb_arg_(cb_arg) {}
+                      void *cb_arg)
+        : thread_(thread),
+          port_(port),
+          transport_(transport),
+          cb_(cb),
+          cb_arg_(cb_arg) {}
     NS_IMETHOD OnLookupComplete(nsICancelable *request, nsIDNSRecord *record,
                                 nsresult status) override;
     NS_IMETHOD OnLookupByTypeComplete(nsICancelable *request,
                                       nsIDNSByTypeRecord *res,
-                                      nsresult status) override
-    {
+                                      nsresult status) override {
       return NS_OK;
     }
     int cancel();
@@ -118,7 +114,7 @@ class NrIceResolver
     void *cb_arg_;
   };
 
-  nr_resolver_vtbl* vtbl_;
+  nr_resolver_vtbl *vtbl_;
   nsCOMPtr<nsIEventTarget> sts_thread_;
   nsCOMPtr<nsIDNSService> dns_;
 #ifdef DEBUG

@@ -20,47 +20,48 @@ typedef void NSOpenGLContext;
 namespace mozilla {
 namespace gl {
 
-class GLContextCGL : public GLContext
-{
-    friend class GLContextProviderCGL;
+class GLContextCGL : public GLContext {
+  friend class GLContextProviderCGL;
 
-    NSOpenGLContext* mContext;
+  NSOpenGLContext* mContext;
 
-public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextCGL, override)
-    GLContextCGL(CreateContextFlags flags, const SurfaceCaps& caps,
-                 NSOpenGLContext* context, bool isOffscreen);
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextCGL, override)
+  GLContextCGL(CreateContextFlags flags, const SurfaceCaps& caps,
+               NSOpenGLContext* context, bool isOffscreen);
 
-    ~GLContextCGL();
+  ~GLContextCGL();
 
-    virtual GLContextType GetContextType() const override { return GLContextType::CGL; }
+  virtual GLContextType GetContextType() const override {
+    return GLContextType::CGL;
+  }
 
-    static GLContextCGL* Cast(GLContext* gl) {
-        MOZ_ASSERT(gl->GetContextType() == GLContextType::CGL);
-        return static_cast<GLContextCGL*>(gl);
-    }
+  static GLContextCGL* Cast(GLContext* gl) {
+    MOZ_ASSERT(gl->GetContextType() == GLContextType::CGL);
+    return static_cast<GLContextCGL*>(gl);
+  }
 
-    bool Init() override;
+  bool Init() override;
 
-    NSOpenGLContext* GetNSOpenGLContext() const { return mContext; }
-    CGLContextObj GetCGLContext() const;
+  NSOpenGLContext* GetNSOpenGLContext() const { return mContext; }
+  CGLContextObj GetCGLContext() const;
 
-    virtual bool MakeCurrentImpl() const override;
+  virtual bool MakeCurrentImpl() const override;
 
-    virtual bool IsCurrentImpl() const override;
+  virtual bool IsCurrentImpl() const override;
 
-    virtual GLenum GetPreferredARGB32Format() const override;
+  virtual GLenum GetPreferredARGB32Format() const override;
 
-    virtual bool SetupLookupFunction() override;
+  virtual bool SetupLookupFunction() override;
 
-    virtual bool IsDoubleBuffered() const override;
+  virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SwapBuffers() override;
+  virtual bool SwapBuffers() override;
 
-    virtual void GetWSIInfo(nsCString* const out) const override;
+  virtual void GetWSIInfo(nsCString* const out) const override;
 };
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // GLCONTEXTCGL_H_
+#endif  // GLCONTEXTCGL_H_

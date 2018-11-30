@@ -11,16 +11,13 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-MIDIPortChild::MIDIPortChild(const MIDIPortInfo& aPortInfo, bool aSysexEnabled, MIDIPort* aPort) :
-  MIDIPortInterface(aPortInfo, aSysexEnabled),
-  mDOMPort(aPort),
-  mActorWasAlive(false)
-{
-}
+MIDIPortChild::MIDIPortChild(const MIDIPortInfo& aPortInfo, bool aSysexEnabled,
+                             MIDIPort* aPort)
+    : MIDIPortInterface(aPortInfo, aSysexEnabled),
+      mDOMPort(aPort),
+      mActorWasAlive(false) {}
 
-void
-MIDIPortChild::Teardown()
-{
+void MIDIPortChild::Teardown() {
   if (mDOMPort) {
     mDOMPort->UnsetIPCPort();
     mDOMPort = nullptr;
@@ -28,23 +25,18 @@ MIDIPortChild::Teardown()
   MIDIPortInterface::Shutdown();
 }
 
-void
-MIDIPortChild::ActorDestroy(ActorDestroyReason aWhy)
-{
-}
+void MIDIPortChild::ActorDestroy(ActorDestroyReason aWhy) {}
 
-mozilla::ipc::IPCResult
-MIDIPortChild::RecvReceive(nsTArray<MIDIMessage>&& aMsgs)
-{
+mozilla::ipc::IPCResult MIDIPortChild::RecvReceive(
+    nsTArray<MIDIMessage>&& aMsgs) {
   if (mDOMPort) {
     mDOMPort->Receive(aMsgs);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-MIDIPortChild::RecvUpdateStatus(const uint32_t& aDeviceState, const uint32_t& aConnectionState)
-{
+mozilla::ipc::IPCResult MIDIPortChild::RecvUpdateStatus(
+    const uint32_t& aDeviceState, const uint32_t& aConnectionState) {
   // Either a device is connected, and can have any connection state, or a
   // device is disconnected, and can only be closed or pending.
   MOZ_ASSERT(mDeviceState == MIDIPortDeviceState::Connected ||
@@ -58,9 +50,7 @@ MIDIPortChild::RecvUpdateStatus(const uint32_t& aDeviceState, const uint32_t& aC
   return IPC_OK();
 }
 
-void
-MIDIPortChild::SetActorAlive()
-{
+void MIDIPortChild::SetActorAlive() {
   MOZ_ASSERT(!mActorWasAlive);
   mActorWasAlive = true;
   AddRef();

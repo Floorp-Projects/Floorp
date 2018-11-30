@@ -16,28 +16,28 @@
 namespace mozilla {
 namespace net {
 
-class FileChannelChild : public nsFileChannel
-                       , public nsIChildChannel
-                       , public PFileChannelChild
-{
-public:
+class FileChannelChild : public nsFileChannel,
+                         public nsIChildChannel,
+                         public PFileChannelChild {
+ public:
   explicit FileChannelChild(nsIURI *uri);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICHILDCHANNEL
 
-protected:
+ protected:
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-private:
-  ~FileChannelChild() = default;;
+ private:
+  ~FileChannelChild() = default;
+  ;
 
   void AddIPDLReference();
 
   bool mIPCOpen;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif /* mozilla__net__FileChannelChild_h */

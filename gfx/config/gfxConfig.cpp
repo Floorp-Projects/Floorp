@@ -15,127 +15,98 @@ namespace gfx {
 
 static UniquePtr<gfxConfig> sConfig;
 
-/* static */ FeatureState&
-gfxConfig::GetFeature(Feature aFeature)
-{
+/* static */ FeatureState& gfxConfig::GetFeature(Feature aFeature) {
   return sConfig->GetState(aFeature);
 }
 
-/* static */ bool
-gfxConfig::IsEnabled(Feature aFeature)
-{
+/* static */ bool gfxConfig::IsEnabled(Feature aFeature) {
   const FeatureState& state = sConfig->GetState(aFeature);
   return state.IsEnabled();
 }
 
-/* static */ bool
-gfxConfig::IsDisabledByDefault(Feature aFeature)
-{
+/* static */ bool gfxConfig::IsDisabledByDefault(Feature aFeature) {
   const FeatureState& state = sConfig->GetState(aFeature);
   return state.DisabledByDefault();
 }
 
-/* static */ bool
-gfxConfig::IsForcedOnByUser(Feature aFeature)
-{
+/* static */ bool gfxConfig::IsForcedOnByUser(Feature aFeature) {
   const FeatureState& state = sConfig->GetState(aFeature);
   return state.IsForcedOnByUser();
 }
 
-/* static */ FeatureStatus
-gfxConfig::GetValue(Feature aFeature)
-{
+/* static */ FeatureStatus gfxConfig::GetValue(Feature aFeature) {
   const FeatureState& state = sConfig->GetState(aFeature);
   return state.GetValue();
 }
 
-/* static */ bool
-gfxConfig::SetDefault(Feature aFeature,
-                      bool aEnable,
-                      FeatureStatus aDisableStatus,
-                      const char* aDisableMessage)
-{
+/* static */ bool gfxConfig::SetDefault(Feature aFeature, bool aEnable,
+                                        FeatureStatus aDisableStatus,
+                                        const char* aDisableMessage) {
   FeatureState& state = sConfig->GetState(aFeature);
   return state.SetDefault(aEnable, aDisableStatus, aDisableMessage);
 }
 
-/* static */ void
-gfxConfig::DisableByDefault(Feature aFeature,
-                            FeatureStatus aDisableStatus,
-                            const char* aDisableMessage,
-                            const nsACString& aFailureId)
-{
+/* static */ void gfxConfig::DisableByDefault(Feature aFeature,
+                                              FeatureStatus aDisableStatus,
+                                              const char* aDisableMessage,
+                                              const nsACString& aFailureId) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.DisableByDefault(aDisableStatus, aDisableMessage, aFailureId);
 }
 
-/* static */ void
-gfxConfig::EnableByDefault(Feature aFeature)
-{
+/* static */ void gfxConfig::EnableByDefault(Feature aFeature) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.EnableByDefault();
 }
 
-/* static */ void
-gfxConfig::SetDefaultFromPref(Feature aFeature,
-                              const char* aPrefName,
-                              bool aIsEnablePref,
-                              bool aDefaultValue)
-{
+/* static */ void gfxConfig::SetDefaultFromPref(Feature aFeature,
+                                                const char* aPrefName,
+                                                bool aIsEnablePref,
+                                                bool aDefaultValue) {
   FeatureState& state = sConfig->GetState(aFeature);
   return state.SetDefaultFromPref(aPrefName, aIsEnablePref, aDefaultValue);
 }
 
-/* static */ bool
-gfxConfig::InitOrUpdate(Feature aFeature,
-                        bool aEnable,
-                        FeatureStatus aDisableStatus,
-                        const char* aDisableMessage)
-{
+/* static */ bool gfxConfig::InitOrUpdate(Feature aFeature, bool aEnable,
+                                          FeatureStatus aDisableStatus,
+                                          const char* aDisableMessage) {
   FeatureState& state = sConfig->GetState(aFeature);
   return state.InitOrUpdate(aEnable, aDisableStatus, aDisableMessage);
 }
 
-/* static */ void
-gfxConfig::SetFailed(Feature aFeature, FeatureStatus aStatus, const char* aMessage,
-                     const nsACString& aFailureId)
-{
+/* static */ void gfxConfig::SetFailed(Feature aFeature, FeatureStatus aStatus,
+                                       const char* aMessage,
+                                       const nsACString& aFailureId) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.SetFailed(aStatus, aMessage, aFailureId);
 }
 
-/* static */ void
-gfxConfig::Disable(Feature aFeature, FeatureStatus aStatus, const char* aMessage,
-                   const nsACString& aFailureId)
-{
+/* static */ void gfxConfig::Disable(Feature aFeature, FeatureStatus aStatus,
+                                     const char* aMessage,
+                                     const nsACString& aFailureId) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.Disable(aStatus, aMessage, aFailureId);
 }
 
-/* static */ void
-gfxConfig::UserEnable(Feature aFeature, const char* aMessage)
-{
+/* static */ void gfxConfig::UserEnable(Feature aFeature,
+                                        const char* aMessage) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.UserEnable(aMessage);
 }
 
-/* static */ void
-gfxConfig::UserForceEnable(Feature aFeature, const char* aMessage)
-{
+/* static */ void gfxConfig::UserForceEnable(Feature aFeature,
+                                             const char* aMessage) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.UserForceEnable(aMessage);
 }
 
-/* static */ void
-gfxConfig::UserDisable(Feature aFeature, const char* aMessage, const nsACString& aFailureId)
-{
+/* static */ void gfxConfig::UserDisable(Feature aFeature, const char* aMessage,
+                                         const nsACString& aFailureId) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.UserDisable(aMessage, aFailureId);
 }
 
-/* static */ void
-gfxConfig::Reenable(Feature aFeature, Fallback aFallback)
-{
+/* static */ void gfxConfig::Reenable(Feature aFeature, Fallback aFallback) {
   FeatureState& state = sConfig->GetState(aFeature);
   MOZ_ASSERT(IsFeatureStatusFailure(state.GetValue()));
 
@@ -144,57 +115,45 @@ gfxConfig::Reenable(Feature aFeature, Fallback aFallback)
   state.SetRuntime(FeatureStatus::Available, nullptr);
 }
 
-/* static */ void
-gfxConfig::Reset(Feature aFeature)
-{
+/* static */ void gfxConfig::Reset(Feature aFeature) {
   FeatureState& state = sConfig->GetState(aFeature);
   state.Reset();
 }
 
-/* static */ void
-gfxConfig::Inherit(Feature aFeature, FeatureStatus aStatus)
-{
+/* static */ void gfxConfig::Inherit(Feature aFeature, FeatureStatus aStatus) {
   FeatureState& state = sConfig->GetState(aFeature);
 
   state.Reset();
 
   switch (aStatus) {
-  case FeatureStatus::Unused:
-    break;
-  case FeatureStatus::Available:
-    gfxConfig::EnableByDefault(aFeature);
-    break;
-  case FeatureStatus::ForceEnabled:
-    gfxConfig::EnableByDefault(aFeature);
-    gfxConfig::UserForceEnable(aFeature, "Inherited from parent process");
-    break;
-  default:
-    gfxConfig::SetDefault(
-      aFeature,
-      false,
-      aStatus,
-      "Disabled in parent process");
-    break;
+    case FeatureStatus::Unused:
+      break;
+    case FeatureStatus::Available:
+      gfxConfig::EnableByDefault(aFeature);
+      break;
+    case FeatureStatus::ForceEnabled:
+      gfxConfig::EnableByDefault(aFeature);
+      gfxConfig::UserForceEnable(aFeature, "Inherited from parent process");
+      break;
+    default:
+      gfxConfig::SetDefault(aFeature, false, aStatus,
+                            "Disabled in parent process");
+      break;
   }
 }
 
-/* static */ bool
-gfxConfig::UseFallback(Fallback aFallback)
-{
+/* static */ bool gfxConfig::UseFallback(Fallback aFallback) {
   return sConfig->UseFallbackImpl(aFallback);
 }
 
-/* static */ void
-gfxConfig::EnableFallback(Fallback aFallback, const char* aMessage)
-{
+/* static */ void gfxConfig::EnableFallback(Fallback aFallback,
+                                            const char* aMessage) {
   if (!NS_IsMainThread()) {
     nsCString message(aMessage);
     NS_DispatchToMainThread(
-      NS_NewRunnableFunction("gfxConfig::EnableFallback",
-                             [=]() -> void {
-
-        gfxConfig::EnableFallback(aFallback, message.get());
-      }));
+        NS_NewRunnableFunction("gfxConfig::EnableFallback", [=]() -> void {
+          gfxConfig::EnableFallback(aFallback, message.get());
+        }));
     return;
   }
 
@@ -207,15 +166,11 @@ gfxConfig::EnableFallback(Fallback aFallback, const char* aMessage)
   sConfig->EnableFallbackImpl(aFallback, aMessage);
 }
 
-bool
-gfxConfig::UseFallbackImpl(Fallback aFallback) const
-{
+bool gfxConfig::UseFallbackImpl(Fallback aFallback) const {
   return !!(mFallbackBits & (uint64_t(1) << uint64_t(aFallback)));
 }
 
-void
-gfxConfig::EnableFallbackImpl(Fallback aFallback, const char* aMessage)
-{
+void gfxConfig::EnableFallbackImpl(Fallback aFallback, const char* aMessage) {
   if (!UseFallbackImpl(aFallback)) {
     MOZ_ASSERT(mNumFallbackLogEntries < kNumFallbacks);
 
@@ -234,81 +189,61 @@ struct FeatureInfo {
 };
 static const FeatureInfo sFeatureInfo[] = {
 #define FOR_EACH_FEATURE(name, type, desc) {#name, desc},
-  GFX_FEATURE_MAP(FOR_EACH_FEATURE)
+    GFX_FEATURE_MAP(FOR_EACH_FEATURE)
 #undef FOR_EACH_FEATURE
-  {nullptr, nullptr}
-};
+        {nullptr, nullptr}};
 
-/* static */ void
-gfxConfig::ForEachFeature(const FeatureIterCallback& aCallback)
-{
+/* static */ void gfxConfig::ForEachFeature(
+    const FeatureIterCallback& aCallback) {
   for (size_t i = 0; i < kNumFeatures; i++) {
     FeatureState& state = GetFeature(static_cast<Feature>(i));
     if (!state.IsInitialized()) {
       continue;
     }
 
-    aCallback(sFeatureInfo[i].name,
-              sFeatureInfo[i].description,
-              state);
+    aCallback(sFeatureInfo[i].name, sFeatureInfo[i].description, state);
   }
 }
 
 static const char* sFallbackNames[] = {
 #define FOR_EACH_FALLBACK(name) #name,
-  GFX_FALLBACK_MAP(FOR_EACH_FALLBACK)
+    GFX_FALLBACK_MAP(FOR_EACH_FALLBACK)
 #undef FOR_EACH_FALLBACK
-  nullptr
-};
+        nullptr};
 
-/* static  */ void
-gfxConfig::ForEachFallback(const FallbackIterCallback& aCallback)
-{
+/* static  */ void gfxConfig::ForEachFallback(
+    const FallbackIterCallback& aCallback) {
   sConfig->ForEachFallbackImpl(aCallback);
 }
 
-void
-gfxConfig::ForEachFallbackImpl(const FallbackIterCallback& aCallback)
-{
+void gfxConfig::ForEachFallbackImpl(const FallbackIterCallback& aCallback) {
   for (size_t i = 0; i < mNumFallbackLogEntries; i++) {
     const FallbackLogEntry& entry = mFallbackLog[i];
     aCallback(sFallbackNames[size_t(entry.mFallback)], entry.mMessage);
   }
 }
 
-/* static */ const nsCString&
-gfxConfig::GetFailureId(Feature aFeature)
-{
+/* static */ const nsCString& gfxConfig::GetFailureId(Feature aFeature) {
   const FeatureState& state = sConfig->GetState(aFeature);
   return state.GetFailureId();
 }
 
-/* static */ void
-gfxConfig::ImportChange(Feature aFeature, const FeatureChange& aChange)
-{
+/* static */ void gfxConfig::ImportChange(Feature aFeature,
+                                          const FeatureChange& aChange) {
   if (aChange.type() == FeatureChange::Tnull_t) {
     return;
   }
 
   const FeatureFailure& failure = aChange.get_FeatureFailure();
-  gfxConfig::SetFailed(
-    aFeature,
-    failure.status(),
-    failure.message().get(),
-    failure.failureId());
+  gfxConfig::SetFailed(aFeature, failure.status(), failure.message().get(),
+                       failure.failureId());
 }
 
-/* static */ void
-gfxConfig::Init()
-{
+/* static */ void gfxConfig::Init() {
   sConfig = mozilla::MakeUnique<gfxConfig>();
 }
 
-/* static */ void
-gfxConfig::Shutdown()
-{
-  sConfig = nullptr;
-}
+/* static */ void gfxConfig::Shutdown() { sConfig = nullptr; }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

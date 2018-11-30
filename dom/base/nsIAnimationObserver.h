@@ -11,16 +11,18 @@
 namespace mozilla {
 namespace dom {
 class Animation;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#define NS_IANIMATION_OBSERVER_IID \
-{ 0xed025fc7, 0xdeda, 0x48b9, \
-  { 0x9c, 0x35, 0xf2, 0xb6, 0x1e, 0xeb, 0xd0, 0x8d } }
+#define NS_IANIMATION_OBSERVER_IID                   \
+  {                                                  \
+    0xed025fc7, 0xdeda, 0x48b9, {                    \
+      0x9c, 0x35, 0xf2, 0xb6, 0x1e, 0xeb, 0xd0, 0x8d \
+    }                                                \
+  }
 
-class nsIAnimationObserver : public nsIMutationObserver
-{
-public:
+class nsIAnimationObserver : public nsIMutationObserver {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IANIMATION_OBSERVER_IID)
 
   virtual void AnimationAdded(mozilla::dom::Animation* aAnimation) = 0;
@@ -30,38 +32,26 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAnimationObserver, NS_IANIMATION_OBSERVER_IID)
 
-#define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONADDED                          \
-    virtual void AnimationAdded(mozilla::dom::Animation* aAnimation)         \
-      override;
+#define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONADDED \
+  virtual void AnimationAdded(mozilla::dom::Animation* aAnimation) override;
 
-#define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONCHANGED                        \
-    virtual void AnimationChanged(mozilla::dom::Animation* aAnimation)       \
-      override;
+#define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONCHANGED \
+  virtual void AnimationChanged(mozilla::dom::Animation* aAnimation) override;
 
-#define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONREMOVED                        \
-    virtual void AnimationRemoved(mozilla::dom::Animation* aAnimation)       \
-      override;
+#define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONREMOVED \
+  virtual void AnimationRemoved(mozilla::dom::Animation* aAnimation) override;
 
-#define NS_IMPL_NSIANIMATIONOBSERVER_STUB(class_)                            \
-void                                                                         \
-class_::AnimationAdded(mozilla::dom::Animation* aAnimation)                  \
-{                                                                            \
-}                                                                            \
-void                                                                         \
-class_::AnimationChanged(mozilla::dom::Animation* aAnimation)                \
-{                                                                            \
-}                                                                            \
-void                                                                         \
-class_::AnimationRemoved(mozilla::dom::Animation* aAnimation)                \
-{                                                                            \
-}                                                                            \
-NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(class_)                                \
-NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(class_)
+#define NS_IMPL_NSIANIMATIONOBSERVER_STUB(class_)                       \
+  void class_::AnimationAdded(mozilla::dom::Animation* aAnimation) {}   \
+  void class_::AnimationChanged(mozilla::dom::Animation* aAnimation) {} \
+  void class_::AnimationRemoved(mozilla::dom::Animation* aAnimation) {} \
+  NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(class_)                         \
+  NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(class_)
 
-#define NS_DECL_NSIANIMATIONOBSERVER                                         \
-    NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONADDED                              \
-    NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONCHANGED                            \
-    NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONREMOVED                            \
-    NS_DECL_NSIMUTATIONOBSERVER
+#define NS_DECL_NSIANIMATIONOBSERVER            \
+  NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONADDED   \
+  NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONCHANGED \
+  NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONREMOVED \
+  NS_DECL_NSIMUTATIONOBSERVER
 
-#endif // nsIAnimationObserver_h___
+#endif  // nsIAnimationObserver_h___

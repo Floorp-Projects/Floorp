@@ -26,34 +26,22 @@ namespace mozilla {
  */
 
 template <typename T>
-class SimpleEnumerator final
-{
-public:
-  explicit SimpleEnumerator(nsISimpleEnumerator* aEnum)
-    : mEnum(aEnum)
-  {}
+class SimpleEnumerator final {
+ public:
+  explicit SimpleEnumerator(nsISimpleEnumerator* aEnum) : mEnum(aEnum) {}
 
-  class Entry
-  {
-  public:
-    explicit Entry(T* aPtr)
-      : mPtr(aPtr)
-    {}
+  class Entry {
+   public:
+    explicit Entry(T* aPtr) : mPtr(aPtr) {}
 
-    explicit Entry(nsISimpleEnumerator& aEnum)
-      : mEnum(&aEnum)
-    {
-      ++*this;
-    }
+    explicit Entry(nsISimpleEnumerator& aEnum) : mEnum(&aEnum) { ++*this; }
 
-    const nsCOMPtr<T>& operator*()
-    {
+    const nsCOMPtr<T>& operator*() {
       MOZ_ASSERT(mPtr);
       return mPtr;
     }
 
-    Entry& operator++()
-    {
+    Entry& operator++() {
       MOZ_ASSERT(mEnum);
       nsCOMPtr<nsISupports> next;
       if (NS_SUCCEEDED(mEnum->GetNext(getter_AddRefs(next)))) {
@@ -65,28 +53,21 @@ public:
       return *this;
     }
 
-    bool operator!=(const Entry& aOther) const
-    {
-      return mPtr != aOther.mPtr;
-    }
+    bool operator!=(const Entry& aOther) const { return mPtr != aOther.mPtr; }
 
-  private:
+   private:
     nsCOMPtr<T> mPtr;
     nsCOMPtr<nsISimpleEnumerator> mEnum;
   };
 
-  Entry begin() {
-    return Entry(*mEnum);
-  }
+  Entry begin() { return Entry(*mEnum); }
 
-  Entry end() {
-    return Entry(nullptr);
-  }
+  Entry end() { return Entry(nullptr); }
 
-private:
+ private:
   nsCOMPtr<nsISimpleEnumerator> mEnum;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SimpleEnumerator_h
+#endif  // mozilla_SimpleEnumerator_h

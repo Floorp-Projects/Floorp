@@ -13,7 +13,7 @@ namespace a11y {
 
 typedef class XULMenuitemAccessible XULMenuitemAccessibleWrap;
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

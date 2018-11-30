@@ -14,20 +14,18 @@ namespace jit {
 
 class MIRGraph;
 
-class EffectiveAddressAnalysis
-{
-    MIRGenerator* mir_;
-    MIRGraph& graph_;
+class EffectiveAddressAnalysis {
+  MIRGenerator* mir_;
+  MIRGraph& graph_;
 
-    template <typename AsmJSMemoryAccess>
-    void analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins);
+  template <typename AsmJSMemoryAccess>
+  void analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins);
 
-  public:
-    EffectiveAddressAnalysis(MIRGenerator* mir, MIRGraph& graph)
-      : mir_(mir), graph_(graph)
-    {}
+ public:
+  EffectiveAddressAnalysis(MIRGenerator* mir, MIRGraph& graph)
+      : mir_(mir), graph_(graph) {}
 
-    MOZ_MUST_USE bool analyze();
+  MOZ_MUST_USE bool analyze();
 };
 
 } /* namespace jit */

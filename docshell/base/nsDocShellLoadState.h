@@ -23,9 +23,8 @@ class OriginAttibutes;
  * nsDocShellLoadState contains setup information used in a nsIDocShell::loadURI
  * call.
  */
-class nsDocShellLoadState final
-{
-public:
+class nsDocShellLoadState final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadState);
 
   nsDocShellLoadState();
@@ -127,12 +126,13 @@ public:
   void SetBaseURI(nsIURI* aBaseURI);
 
   // Helper function allowing convenient work with mozilla::Maybe in C++, hiding
-  // resultPrincipalURI and resultPrincipalURIIsSome attributes from the consumer.
-  void
-  GetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>>& aRPURI) const;
+  // resultPrincipalURI and resultPrincipalURIIsSome attributes from the
+  // consumer.
+  void GetMaybeResultPrincipalURI(
+      mozilla::Maybe<nsCOMPtr<nsIURI>>& aRPURI) const;
 
-  void
-  SetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI);
+  void SetMaybeResultPrincipalURI(
+      mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI);
 
   uint32_t LoadFlags() const;
 
@@ -159,26 +159,33 @@ public:
   // inherit our principal from the document the load was requested from, or
   // else if the principal should be set up later in the process (after loads).
   // See comments in function for more info on principal selection algorithm
-  nsresult SetupInheritingPrincipal(uint32_t aItemType, const mozilla::OriginAttributes& aOriginAttributes);
+  nsresult SetupInheritingPrincipal(
+      uint32_t aItemType, const mozilla::OriginAttributes& aOriginAttributes);
 
   // If no triggering principal exists at the moment, create one using referrer
   // information and origin attributes.
-  nsresult SetupTriggeringPrincipal(const mozilla::OriginAttributes& aOriginAttributes);
+  nsresult SetupTriggeringPrincipal(
+      const mozilla::OriginAttributes& aOriginAttributes);
 
-  void SetIsFromProcessingFrameAttributes() { mIsFromProcessingFrameAttributes = true; }
-  bool GetIsFromProcessingFrameAttributes() { return mIsFromProcessingFrameAttributes; }
+  void SetIsFromProcessingFrameAttributes() {
+    mIsFromProcessingFrameAttributes = true;
+  }
+  bool GetIsFromProcessingFrameAttributes() {
+    return mIsFromProcessingFrameAttributes;
+  }
 
   // When loading a document through nsDocShell::LoadURI(), a special set of
   // flags needs to be set based on other values in nsDocShellLoadState. This
   // function calculates those flags, before the LoadState is passed to
   // nsDocShell::InternalLoad.
   void CalculateDocShellInternalLoadFlags();
-protected:
+
+ protected:
   // Destructor can't be defaulted or inlined, as header doesn't have all type
   // includes it needs to do so.
   ~nsDocShellLoadState();
 
-protected:
+ protected:
   // This is the referrer for the load.
   nsCOMPtr<nsIURI> mReferrer;
 

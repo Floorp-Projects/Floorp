@@ -4,40 +4,28 @@
 
 #include "signaling/src/peerconnection/PacketDumper.h"
 #include "signaling/src/peerconnection/PeerConnectionImpl.h"
-#include "mozilla/media/MediaUtils.h" // NewRunnableFrom
-#include "nsThreadUtils.h" // NS_DispatchToMainThread
+#include "mozilla/media/MediaUtils.h"  // NewRunnableFrom
+#include "nsThreadUtils.h"             // NS_DispatchToMainThread
 
 namespace mozilla {
 
-PacketDumper::PacketDumper(PeerConnectionImpl* aPc) :
-  mPc(aPc)
-{
-}
+PacketDumper::PacketDumper(PeerConnectionImpl* aPc) : mPc(aPc) {}
 
-PacketDumper::PacketDumper(const std::string& aPcHandle)
-{
+PacketDumper::PacketDumper(const std::string& aPcHandle) {
   if (!aPcHandle.empty()) {
     PeerConnectionWrapper pcw(aPcHandle);
     mPc = pcw.impl();
   }
 }
 
-PacketDumper::~PacketDumper()
-{
-  RefPtr<Runnable> pcDisposeRunnable =
-    media::NewRunnableFrom(
-        std::bind(
-          [](RefPtr<PeerConnectionImpl> pc) {
-            return NS_OK;
-          },
-          mPc.forget()));
+PacketDumper::~PacketDumper() {
+  RefPtr<Runnable> pcDisposeRunnable = media::NewRunnableFrom(std::bind(
+      [](RefPtr<PeerConnectionImpl> pc) { return NS_OK; }, mPc.forget()));
   NS_DispatchToMainThread(pcDisposeRunnable);
 }
 
-void
-PacketDumper::Dump(size_t level, dom::mozPacketDumpType type, bool sending,
-                   const void* data, size_t size)
-{
+void PacketDumper::Dump(size_t level, dom::mozPacketDumpType type, bool sending,
+                        const void* data, size_t size) {
   // Optimization; avoids making a copy of the buffer, but we need to lock a
   // mutex and check the flags. Could be optimized further, if we really want to
   if (!mPc || !mPc->ShouldDumpPacket(level, type, sending)) {
@@ -49,19 +37,15 @@ PacketDumper::Dump(size_t level, dom::mozPacketDumpType type, bool sending,
   UniquePtr<uint8_t[]> ownedPacket = MakeUnique<uint8_t[]>(size);
   memcpy(ownedPacket.get(), data, size);
 
-  RefPtr<Runnable> dumpRunnable =
-    media::NewRunnableFrom(
-        std::bind(
-          [pc, level, type, sending, size](UniquePtr<uint8_t[]>& packet)
-            -> nsresult
-          {
-            pc->DumpPacket_m(level, type, sending, packet, size);
-            return NS_OK;
-          },
-          std::move(ownedPacket)));
+  RefPtr<Runnable> dumpRunnable = media::NewRunnableFrom(std::bind(
+      [pc, level, type, sending,
+       size](UniquePtr<uint8_t[]>& packet) -> nsresult {
+        pc->DumpPacket_m(level, type, sending, packet, size);
+        return NS_OK;
+      },
+      std::move(ownedPacket)));
 
   NS_DispatchToMainThread(dumpRunnable);
 }
 
-} //namespace mozilla
-
+}  // namespace mozilla

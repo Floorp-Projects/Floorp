@@ -27,8 +27,7 @@ namespace image {
  * DownscalerInvalidRect wraps two invalidation rects: one in terms of the
  * original image size, and one in terms of the target size.
  */
-struct DownscalerInvalidRect
-{
+struct DownscalerInvalidRect {
   nsIntRect mOriginalSizeRect;
   nsIntRect mTargetSizeRect;
 };
@@ -49,16 +48,17 @@ struct DownscalerInvalidRect
  * the image, Downscaler also tracks them. Decoders can call HasInvalidation()
  * and TakeInvalidRect() instead of tracking invalidations themselves.
  */
-class Downscaler
-{
-public:
+class Downscaler {
+ public:
   /// Constructs a new Downscaler which to scale to size @aTargetSize.
   explicit Downscaler(const nsIntSize& aTargetSize);
   ~Downscaler();
 
   const nsIntSize& OriginalSize() const { return mOriginalSize; }
   const nsIntSize& TargetSize() const { return mTargetSize; }
-  const nsIntSize FrameSize() const { return nsIntSize(mFrameRect.Width(), mFrameRect.Height()); }
+  const nsIntSize FrameSize() const {
+    return nsIntSize(mFrameRect.Width(), mFrameRect.Height());
+  }
   const gfxSize& Scale() const { return mScale; }
 
   /**
@@ -80,15 +80,15 @@ public:
    */
   nsresult BeginFrame(const nsIntSize& aOriginalSize,
                       const Maybe<nsIntRect>& aFrameRect,
-                      uint8_t* aOutputBuffer,
-                      bool aHasAlpha,
+                      uint8_t* aOutputBuffer, bool aHasAlpha,
                       bool aFlipVertically = false);
 
-  bool IsFrameComplete() const { return mCurrentInLine >= mOriginalSize.height; }
+  bool IsFrameComplete() const {
+    return mCurrentInLine >= mOriginalSize.height;
+  }
 
   /// Retrieves the buffer into which the Decoder should write each row.
-  uint8_t* RowBuffer()
-  {
+  uint8_t* RowBuffer() {
     return mRowBuffer.get() + mFrameRect.X() * sizeof(uint32_t);
   }
 
@@ -114,7 +114,7 @@ public:
    */
   void ResetForNextProgressivePass();
 
-private:
+ private:
   void DownscaleInputLine();
   void ReleaseWindow();
   void SkipToRow(int32_t aRow);
@@ -150,11 +150,9 @@ private:
  * Skia is disabled that asserts if constructed.
  */
 
-class Downscaler
-{
-public:
-  explicit Downscaler(const nsIntSize&) : mScale(1.0, 1.0)
-  {
+class Downscaler {
+ public:
+  explicit Downscaler(const nsIntSize&) : mScale(1.0, 1.0) {
     MOZ_RELEASE_ASSERT(false, "Skia is not enabled");
   }
 
@@ -162,30 +160,29 @@ public:
   const nsIntSize& TargetSize() const { return mSize; }
   const gfxSize& Scale() const { return mScale; }
 
-  nsresult BeginFrame(const nsIntSize&, const Maybe<nsIntRect>&, uint8_t*, bool, bool = false)
-  {
+  nsresult BeginFrame(const nsIntSize&, const Maybe<nsIntRect>&, uint8_t*, bool,
+                      bool = false) {
     return NS_ERROR_FAILURE;
   }
 
   bool IsFrameComplete() const { return false; }
   uint8_t* RowBuffer() { return nullptr; }
-  void ClearRow() { }
-  void ClearRestOfRow(uint32_t) { }
-  void CommitRow() { }
+  void ClearRow() {}
+  void ClearRestOfRow(uint32_t) {}
+  void CommitRow() {}
   bool HasInvalidation() const { return false; }
   DownscalerInvalidRect TakeInvalidRect() { return DownscalerInvalidRect(); }
-  void ResetForNextProgressivePass() { }
+  void ResetForNextProgressivePass() {}
   const nsIntSize FrameSize() const { return nsIntSize(0, 0); }
-private:
+
+ private:
   nsIntSize mSize;
   gfxSize mScale;
 };
 
-#endif // MOZ_ENABLE_SKIA
+#endif  // MOZ_ENABLE_SKIA
 
+}  // namespace image
+}  // namespace mozilla
 
-
-} // namespace image
-} // namespace mozilla
-
-#endif // mozilla_image_Downscaler_h
+#endif  // mozilla_image_Downscaler_h

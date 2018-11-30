@@ -14,13 +14,12 @@ namespace mozilla {
 namespace gfx {
 
 SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner)
- : mOwner(aOwner),
-   mHasCommandList(false),
-   mShouldResolveToLuminance{false},
-   mLuminanceType{LuminanceType::LUMINANCE},
-   mOpacity{1.0f},
-   mLock("SourceSurfaceCapture.mLock")
-{
+    : mOwner(aOwner),
+      mHasCommandList(false),
+      mShouldResolveToLuminance{false},
+      mLuminanceType{LuminanceType::LUMINANCE},
+      mOpacity{1.0f},
+      mLock("SourceSurfaceCapture.mLock") {
   mSize = mOwner->GetSize();
   mFormat = mOwner->GetFormat();
   mRefDT = mOwner->mRefDT;
@@ -28,42 +27,37 @@ SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner)
   mSurfaceAllocationSize = mOwner->mSurfaceAllocationSize;
 }
 
-SourceSurfaceCapture::SourceSurfaceCapture(DrawTargetCaptureImpl* aOwner,
-                                           LuminanceType aLuminanceType /* = LuminanceType::LINEARRGB */,
-                                           Float aOpacity /* = 1.0f */)
-  : mOwner{aOwner}
-  , mHasCommandList{false}
-  , mShouldResolveToLuminance{true}
-  , mLuminanceType{aLuminanceType}
-  , mOpacity{aOpacity}
-  , mLock{"SourceSurfaceCapture.mLock"}
-{
+SourceSurfaceCapture::SourceSurfaceCapture(
+    DrawTargetCaptureImpl* aOwner,
+    LuminanceType aLuminanceType /* = LuminanceType::LINEARRGB */,
+    Float aOpacity /* = 1.0f */)
+    : mOwner{aOwner},
+      mHasCommandList{false},
+      mShouldResolveToLuminance{true},
+      mLuminanceType{aLuminanceType},
+      mOpacity{aOpacity},
+      mLock{"SourceSurfaceCapture.mLock"} {
   mSize = mOwner->GetSize();
   mFormat = mOwner->GetFormat();
   mRefDT = mOwner->mRefDT;
   mStride = mOwner->mStride;
   mSurfaceAllocationSize = mOwner->mSurfaceAllocationSize;
 
-  // In this case our DrawTarget will not track us, so copy its drawing commands.
+  // In this case our DrawTarget will not track us, so copy its drawing
+  // commands.
   DrawTargetWillChange();
 }
 
-SourceSurfaceCapture::~SourceSurfaceCapture()
-{
-}
+SourceSurfaceCapture::~SourceSurfaceCapture() {}
 
-bool
-SourceSurfaceCapture::IsValid() const
-{
+bool SourceSurfaceCapture::IsValid() const {
   // We must either be able to source a command list, or we must have a cached
   // and rasterized surface.
   MutexAutoLock lock(mLock);
   return (mOwner || mHasCommandList) || mResolved;
 }
 
-RefPtr<SourceSurface>
-SourceSurfaceCapture::Resolve(BackendType aBackendType)
-{
+RefPtr<SourceSurface> SourceSurfaceCapture::Resolve(BackendType aBackendType) {
   MutexAutoLock lock(mLock);
 
   if (!mOwner && !mHasCommandList) {
@@ -91,9 +85,8 @@ SourceSurfaceCapture::Resolve(BackendType aBackendType)
   return mResolved;
 }
 
-RefPtr<SourceSurface>
-SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
-{
+RefPtr<SourceSurface> SourceSurfaceCapture::ResolveImpl(
+    BackendType aBackendType) {
   RefPtr<DrawTarget> dt;
   uint8_t* data = nullptr;
   if (!mSurfaceAllocationSize) {
@@ -108,8 +101,8 @@ SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
       return nullptr;
     }
     BackendType type = Factory::DoesBackendSupportDataDrawtarget(aBackendType)
-                       ? aBackendType
-                       : BackendType::SKIA;
+                           ? aBackendType
+                           : BackendType::SKIA;
     dt = Factory::CreateDrawTargetForData(type, data, mSize, mStride, mFormat);
     if (!dt) {
       free(data);
@@ -118,17 +111,16 @@ SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
   }
 
   if (!dt) {
-    // Make sure we haven't allocated and aren't leaking something, the code right
-    // anove here should have guaranteed that.
+    // Make sure we haven't allocated and aren't leaking something, the code
+    // right anove here should have guaranteed that.
     MOZ_ASSERT(!data);
     return nullptr;
   }
 
   // If we're still attached to a DrawTarget, use its command list rather than
   // our own (which will be empty).
-  CaptureCommandList& commands = mHasCommandList
-                                 ? mCommands
-                                 : mOwner->mCommands;
+  CaptureCommandList& commands =
+      mHasCommandList ? mCommands : mOwner->mCommands;
   for (CaptureCommandList::iterator iter(commands); !iter.Done(); iter.Next()) {
     DrawingCommand* cmd = iter.Get();
     cmd->ExecuteOnDT(dt, nullptr);
@@ -148,9 +140,7 @@ SourceSurfaceCapture::ResolveImpl(BackendType aBackendType)
   return surf.forget();
 }
 
-already_AddRefed<DataSourceSurface>
-SourceSurfaceCapture::GetDataSurface()
-{
+already_AddRefed<DataSourceSurface> SourceSurfaceCapture::GetDataSurface() {
   RefPtr<SourceSurface> surface = Resolve();
   if (!surface) {
     return nullptr;
@@ -158,9 +148,7 @@ SourceSurfaceCapture::GetDataSurface()
   return surface->GetDataSurface();
 }
 
-void
-SourceSurfaceCapture::DrawTargetWillDestroy()
-{
+void SourceSurfaceCapture::DrawTargetWillDestroy() {
   MutexAutoLock lock(mLock);
 
   // The source DrawTarget is going away, so we can just steal its commands.
@@ -169,12 +157,11 @@ SourceSurfaceCapture::DrawTargetWillDestroy()
   mOwner = nullptr;
 }
 
-void
-SourceSurfaceCapture::DrawTargetWillChange()
-{
+void SourceSurfaceCapture::DrawTargetWillChange() {
   MutexAutoLock lock(mLock);
 
-  for (CaptureCommandList::iterator iter(mOwner->mCommands); !iter.Done(); iter.Next()) {
+  for (CaptureCommandList::iterator iter(mOwner->mCommands); !iter.Done();
+       iter.Next()) {
     DrawingCommand* cmd = iter.Get();
     cmd->CloneInto(&mCommands);
   }
@@ -183,5 +170,5 @@ SourceSurfaceCapture::DrawTargetWillChange()
   mOwner = nullptr;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

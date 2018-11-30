@@ -89,7 +89,7 @@
 // That implementation would call malloc by using "malloc_impl".
 
 #if defined(MOZ_MEMORY_IMPL) && !defined(IMPL_MFBT)
-#ifdef MFBT_API // mozilla/Types.h was already included
+#ifdef MFBT_API  // mozilla/Types.h was already included
 #    error mozmemory_wrap.h has to be included before mozilla/Types.h when MOZ_MEMORY_IMPL is set and IMPL_MFBT is not.
 #endif
 #define IMPL_MFBT
@@ -167,4 +167,4 @@
 #define asprintf_impl mozmem_dup_impl(asprintf)
 #endif
 
-#endif // mozmemory_wrap_h
+#endif  // mozmemory_wrap_h

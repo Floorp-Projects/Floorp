@@ -9,14 +9,17 @@
 
 #include <stdint.h>
 
-template<size_t size> struct Non8BitParameters;
-template<> struct Non8BitParameters<4> {
+template <size_t size>
+struct Non8BitParameters;
+template <>
+struct Non8BitParameters<4> {
   static inline size_t mask() { return 0xff00ff00; }
   static inline uint32_t alignMask() { return 0x3; }
   static inline uint32_t numUnicharsPerWord() { return 2; }
 };
 
-template<> struct Non8BitParameters<8> {
+template <>
+struct Non8BitParameters<8> {
   static inline size_t mask() {
     static const uint64_t maskAsUint64 = 0xff00ff00ff00ff00ULL;
     // We have to explicitly cast this 64-bit value to a size_t, or else

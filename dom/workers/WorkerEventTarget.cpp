@@ -11,45 +11,33 @@ namespace dom {
 
 namespace {
 
-class WrappedControlRunnable final : public WorkerControlRunnable
-{
+class WrappedControlRunnable final : public WorkerControlRunnable {
   nsCOMPtr<nsIRunnable> mInner;
 
-  ~WrappedControlRunnable()
-  {
-  }
+  ~WrappedControlRunnable() {}
 
-public:
+ public:
   WrappedControlRunnable(WorkerPrivate* aWorkerPrivate,
                          already_AddRefed<nsIRunnable>&& aInner)
-    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-    , mInner(aInner)
-  {
-  }
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+        mInner(aInner) {}
 
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
+  virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
     // Silence bad assertions, this can be dispatched from any thread.
     return true;
   }
 
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
+  virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
+                            bool aDispatchResult) override {
     // Silence bad assertions, this can be dispatched from any thread.
   }
 
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     mInner->Run();
     return true;
   }
 
-  nsresult
-  Cancel() override
-  {
+  nsresult Cancel() override {
     nsCOMPtr<nsICancelableRunnable> cr = do_QueryInterface(mInner);
 
     // If the inner runnable is not cancellable, then just do the normal
@@ -68,39 +56,33 @@ public:
   }
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 NS_IMPL_ISUPPORTS(WorkerEventTarget, nsIEventTarget, nsISerialEventTarget)
 
 WorkerEventTarget::WorkerEventTarget(WorkerPrivate* aWorkerPrivate,
-                                    Behavior aBehavior)
-  : mMutex("WorkerEventTarget")
-  , mWorkerPrivate(aWorkerPrivate)
-  , mBehavior(aBehavior)
-{
+                                     Behavior aBehavior)
+    : mMutex("WorkerEventTarget"),
+      mWorkerPrivate(aWorkerPrivate),
+      mBehavior(aBehavior) {
   MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
 }
 
-void
-WorkerEventTarget::ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate)
-{
+void WorkerEventTarget::ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate) {
   MutexAutoLock lock(mMutex);
   MOZ_DIAGNOSTIC_ASSERT(!mWorkerPrivate || mWorkerPrivate == aWorkerPrivate);
   mWorkerPrivate = nullptr;
 }
 
 NS_IMETHODIMP
-WorkerEventTarget::DispatchFromScript(nsIRunnable* aRunnable,
-                                      uint32_t aFlags)
-{
+WorkerEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   return Dispatch(runnable.forget(), aFlags);
 }
 
 NS_IMETHODIMP
 WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                            uint32_t aFlags)
-{
+                            uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
 
   MutexAutoLock lock(mMutex);
@@ -111,7 +93,7 @@ WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
   if (mBehavior == Behavior::Hybrid) {
     RefPtr<WorkerRunnable> r =
-      mWorkerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
+        mWorkerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
     if (r->Dispatch()) {
       return NS_OK;
     }
@@ -120,7 +102,7 @@ WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
   }
 
   RefPtr<WorkerControlRunnable> r =
-    new WrappedControlRunnable(mWorkerPrivate, runnable.forget());
+      new WrappedControlRunnable(mWorkerPrivate, runnable.forget());
   if (!r->Dispatch()) {
     return NS_ERROR_FAILURE;
   }
@@ -129,14 +111,12 @@ WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 }
 
 NS_IMETHODIMP
-WorkerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
-{
+WorkerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP_(bool)
-WorkerEventTarget::IsOnCurrentThreadInfallible()
-{
+WorkerEventTarget::IsOnCurrentThreadInfallible() {
   MutexAutoLock lock(mMutex);
 
   if (!mWorkerPrivate) {
@@ -147,12 +127,11 @@ WorkerEventTarget::IsOnCurrentThreadInfallible()
 }
 
 NS_IMETHODIMP
-WorkerEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
-{
+WorkerEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread) {
   MOZ_ASSERT(aIsOnCurrentThread);
   *aIsOnCurrentThread = IsOnCurrentThreadInfallible();
   return NS_OK;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

@@ -17,17 +17,11 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-mozilla::ipc::IPCResult
-WebrtcProxyChannelParent::RecvAsyncOpen(
-        const nsCString& aHost,
-        const int& aPort,
-        const OptionalLoadInfoArgs& aLoadInfoArgs,
-        const nsCString& aAlpn)
-{
-  LOG(("WebrtcProxyChannelParent::RecvAsyncOpen %p to %s:%d\n",
-      this,
-      aHost.get(),
-      aPort));
+mozilla::ipc::IPCResult WebrtcProxyChannelParent::RecvAsyncOpen(
+    const nsCString& aHost, const int& aPort,
+    const OptionalLoadInfoArgs& aLoadInfoArgs, const nsCString& aAlpn) {
+  LOG(("WebrtcProxyChannelParent::RecvAsyncOpen %p to %s:%d\n", this,
+       aHost.get(), aPort));
 
   nsresult rv;
 
@@ -46,12 +40,10 @@ WebrtcProxyChannelParent::RecvAsyncOpen(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebrtcProxyChannelParent::RecvWrite(nsTArray<uint8_t>&& aWriteData)
-{
-  LOG(("WebrtcProxyChannelParent::RecvWrite %p for %zu\n",
-      this,
-      aWriteData.Length()));
+mozilla::ipc::IPCResult WebrtcProxyChannelParent::RecvWrite(
+    nsTArray<uint8_t>&& aWriteData) {
+  LOG(("WebrtcProxyChannelParent::RecvWrite %p for %zu\n", this,
+       aWriteData.Length()));
 
   // Need to check this here in case there are Writes in the queue after OnClose
   if (mChannel) {
@@ -61,9 +53,7 @@ WebrtcProxyChannelParent::RecvWrite(nsTArray<uint8_t>&& aWriteData)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebrtcProxyChannelParent::RecvClose()
-{
+mozilla::ipc::IPCResult WebrtcProxyChannelParent::RecvClose() {
   LOG(("WebrtcProxyChannelParent::RecvClose %p\n", this));
 
   CleanupChannel();
@@ -76,17 +66,14 @@ WebrtcProxyChannelParent::RecvClose()
   return IPC_OK();
 }
 
-void
-WebrtcProxyChannelParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void WebrtcProxyChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("WebrtcProxyChannelParent::ActorDestroy %p for %d\n", this, aWhy));
 
   CleanupChannel();
 }
 
 WebrtcProxyChannelParent::WebrtcProxyChannelParent(
-  nsIAuthPromptProvider* aAuthProvider)
-{
+    nsIAuthPromptProvider* aAuthProvider) {
   MOZ_COUNT_CTOR(WebrtcProxyChannelParent);
 
   LOG(("WebrtcProxyChannelParent::WebrtcProxyChannelParent %p\n", this));
@@ -94,8 +81,7 @@ WebrtcProxyChannelParent::WebrtcProxyChannelParent(
   mChannel = new WebrtcProxyChannel(aAuthProvider, this);
 }
 
-WebrtcProxyChannelParent::~WebrtcProxyChannelParent()
-{
+WebrtcProxyChannelParent::~WebrtcProxyChannelParent() {
   MOZ_COUNT_DTOR(WebrtcProxyChannelParent);
 
   LOG(("WebrtcProxyChannelParent::~WebrtcProxyChannelParent %p\n", this));
@@ -104,9 +90,7 @@ WebrtcProxyChannelParent::~WebrtcProxyChannelParent()
 }
 
 // WebrtcProxyChannelCallback
-void
-WebrtcProxyChannelParent::OnClose(nsresult aReason)
-{
+void WebrtcProxyChannelParent::OnClose(nsresult aReason) {
   LOG(("WebrtcProxyChannelParent::OnClose %p\n", this));
 
   if (mChannel) {
@@ -116,34 +100,28 @@ WebrtcProxyChannelParent::OnClose(nsresult aReason)
   CleanupChannel();
 }
 
-void
-WebrtcProxyChannelParent::OnRead(nsTArray<uint8_t>&& aReadData)
-{
+void WebrtcProxyChannelParent::OnRead(nsTArray<uint8_t>&& aReadData) {
   LOG(("WebrtcProxyChannelParent::OnRead %p %zu\n", this, aReadData.Length()));
 
-  if(mChannel && !SendOnRead(std::move(aReadData))) {
+  if (mChannel && !SendOnRead(std::move(aReadData))) {
     CleanupChannel();
   }
 }
 
-void
-WebrtcProxyChannelParent::OnConnected()
-{
+void WebrtcProxyChannelParent::OnConnected() {
   LOG(("WebrtcProxyChannelParent::OnConnected %p\n", this));
 
-  if(mChannel && !SendOnConnected()) {
+  if (mChannel && !SendOnConnected()) {
     CleanupChannel();
   }
 }
 
-void
-WebrtcProxyChannelParent::CleanupChannel()
-{
+void WebrtcProxyChannelParent::CleanupChannel() {
   if (mChannel) {
     mChannel->Close();
     mChannel = nullptr;
   }
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

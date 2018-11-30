@@ -17,11 +17,9 @@ using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecAndroid, nsIDeviceContextSpec)
 
-already_AddRefed<PrintTarget>
-nsDeviceContextSpecAndroid::MakePrintTarget()
-{
+already_AddRefed<PrintTarget> nsDeviceContextSpecAndroid::MakePrintTarget() {
   nsresult rv =
-    NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
+      NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsAutoCString filename("tmp-printing.pdf");
@@ -29,7 +27,8 @@ nsDeviceContextSpecAndroid::MakePrintTarget()
   rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+  nsCOMPtr<nsIFileOutputStream> stream =
+      do_CreateInstance("@mozilla.org/network/file-output-stream;1");
   rv = stream->Init(mTempFile, -1, -1, 0);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
@@ -40,10 +39,8 @@ nsDeviceContextSpecAndroid::MakePrintTarget()
 }
 
 NS_IMETHODIMP
-nsDeviceContextSpecAndroid::Init(nsIWidget* aWidget,
-                             nsIPrintSettings* aPS,
-                             bool aIsPrintPreview)
-{
+nsDeviceContextSpecAndroid::Init(nsIWidget* aWidget, nsIPrintSettings* aPS,
+                                 bool aIsPrintPreview) {
   mPrintSettings = aPS;
   return NS_OK;
 }
@@ -52,14 +49,12 @@ NS_IMETHODIMP
 nsDeviceContextSpecAndroid::BeginDocument(const nsAString& aTitle,
                                           const nsAString& aPrintToFileName,
                                           int32_t aStartPage,
-                                          int32_t aEndPage)
-{
+                                          int32_t aEndPage) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDeviceContextSpecAndroid::EndDocument()
-{
+nsDeviceContextSpecAndroid::EndDocument() {
   nsString targetPath;
   nsCOMPtr<nsIFile> destFile;
   mPrintSettings->GetToFileName(targetPath);

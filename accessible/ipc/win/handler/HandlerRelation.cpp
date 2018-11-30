@@ -6,7 +6,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #include "HandlerRelation.h"
 #include "mozilla/Assertions.h"
@@ -18,17 +18,13 @@ namespace a11y {
 
 HandlerRelation::HandlerRelation(AccessibleHandler* aHandler,
                                  IARelationData& aData)
-  : mHandler(aHandler)
-  , mData(aData)
-  , mTargets(nullptr)
-{
+    : mHandler(aHandler), mData(aData), mTargets(nullptr) {
   // This instance now owns any pointers, so ensure no one else can
   // manipulate them.
   aData.mType = nullptr;
 }
 
-HandlerRelation::~HandlerRelation()
-{
+HandlerRelation::~HandlerRelation() {
   if (mData.mType) {
     ::SysFreeString(mData.mType);
   }
@@ -43,8 +39,7 @@ HandlerRelation::~HandlerRelation()
 }
 
 HRESULT
-HandlerRelation::GetTargets()
-{
+HandlerRelation::GetTargets() {
   if (mTargets) {
     // Already cached.
     return S_OK;
@@ -56,8 +51,8 @@ HandlerRelation::GetTargets()
   // the type we have cached. This is a bit inefficient because Gecko has
   // to look up the relation twice, but it's significantly faster than
   // marshaling the relation objects regardless.
-  return mHandler->get_relationTargetsOfType(mData.mType, 0,
-                                             &mTargets, &mData.mNTargets);
+  return mHandler->get_relationTargetsOfType(mData.mType, 0, &mTargets,
+                                             &mData.mNTargets);
 }
 
 IMPL_IUNKNOWN1(HandlerRelation, IAccessibleRelation)
@@ -65,8 +60,7 @@ IMPL_IUNKNOWN1(HandlerRelation, IAccessibleRelation)
 /*** IAccessibleRelation ***/
 
 HRESULT
-HandlerRelation::get_relationType(BSTR* aType)
-{
+HandlerRelation::get_relationType(BSTR* aType) {
   if (!aType) {
     return E_INVALIDARG;
   }
@@ -78,15 +72,13 @@ HandlerRelation::get_relationType(BSTR* aType)
 }
 
 HRESULT
-HandlerRelation::get_localizedRelationType(BSTR* aLocalizedType)
-{
+HandlerRelation::get_localizedRelationType(BSTR* aLocalizedType) {
   // This is not implemented as per ia2AccessibleRelation.
   return E_NOTIMPL;
 }
 
 HRESULT
-HandlerRelation::get_nTargets(long* aNTargets)
-{
+HandlerRelation::get_nTargets(long* aNTargets) {
   if (!aNTargets) {
     return E_INVALIDARG;
   }
@@ -98,8 +90,7 @@ HandlerRelation::get_nTargets(long* aNTargets)
 }
 
 HRESULT
-HandlerRelation::get_target(long aIndex, IUnknown** aTarget)
-{
+HandlerRelation::get_target(long aIndex, IUnknown** aTarget) {
   if (!aTarget) {
     return E_INVALIDARG;
   }
@@ -108,7 +99,7 @@ HandlerRelation::get_target(long aIndex, IUnknown** aTarget)
   if (FAILED(hr)) {
     return hr;
   }
-  if ( aIndex >= mData.mNTargets) {
+  if (aIndex >= mData.mNTargets) {
     return E_INVALIDARG;
   }
 
@@ -119,8 +110,7 @@ HandlerRelation::get_target(long aIndex, IUnknown** aTarget)
 
 HRESULT
 HandlerRelation::get_targets(long aMaxTargets, IUnknown** aTargets,
-                             long* aNTargets)
-{
+                             long* aNTargets) {
   if (aMaxTargets == 0 || !aTargets || !aNTargets) {
     return E_INVALIDARG;
   }
@@ -144,5 +134,5 @@ HandlerRelation::get_targets(long aMaxTargets, IUnknown** aTargets,
   return S_OK;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla

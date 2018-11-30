@@ -28,18 +28,20 @@
 #endif
 
 namespace std {
-  template <> struct hash<mozilla::wr::FontKey> {
-    size_t operator()(const mozilla::wr::FontKey& key) const {
-      return hash<size_t>()(mozilla::wr::AsUint64(key));
-    }
-  };
-
-  template <> struct hash<mozilla::wr::FontInstanceKey> {
-    size_t operator()(const mozilla::wr::FontInstanceKey& key) const {
-      return hash<size_t>()(mozilla::wr::AsUint64(key));
-    }
-  };
+template <>
+struct hash<mozilla::wr::FontKey> {
+  size_t operator()(const mozilla::wr::FontKey& key) const {
+    return hash<size_t>()(mozilla::wr::AsUint64(key));
+  }
 };
+
+template <>
+struct hash<mozilla::wr::FontInstanceKey> {
+  size_t operator()(const mozilla::wr::FontInstanceKey& key) const {
+    return hash<size_t>()(mozilla::wr::AsUint64(key));
+  }
+};
+};  // namespace std
 
 namespace mozilla {
 
@@ -54,12 +56,7 @@ struct FontTemplate {
   const VecU8* mVec;
   RefPtr<UnscaledFont> mUnscaledFont;
 
-  FontTemplate()
-    : mData(nullptr)
-    , mSize(0)
-    , mIndex(0)
-    , mVec(nullptr)
-  {}
+  FontTemplate() : mData(nullptr), mSize(0), mIndex(0), mVec(nullptr) {}
 
   ~FontTemplate() {
     if (mVec) {
@@ -77,10 +74,7 @@ struct FontInstanceData {
   size_t mNumVariations;
   RefPtr<ScaledFont> mScaledFont;
 
-  FontInstanceData()
-    : mSize(0)
-    , mNumVariations(0)
-  {}
+  FontInstanceData() : mSize(0), mNumVariations(0) {}
 };
 
 StaticMutex sFontDataTableLock;
@@ -91,7 +85,7 @@ std::unordered_map<WrFontInstanceKey, FontInstanceData> sBlobFontTable;
 static struct FontDeleteLog {
   static const size_t MAX_ENTRIES = 256;
 
-  uint64_t mEntries[MAX_ENTRIES] = { 0 };
+  uint64_t mEntries[MAX_ENTRIES] = {0};
   size_t mNextEntry = 0;
 
   void AddEntry(uint64_t aEntry) {
@@ -99,25 +93,21 @@ static struct FontDeleteLog {
     mNextEntry = (mNextEntry + 1) % MAX_ENTRIES;
   }
 
-  void Add(WrFontKey aKey) {
-    AddEntry(AsUint64(aKey));
-  }
+  void Add(WrFontKey aKey) { AddEntry(AsUint64(aKey)); }
 
   // Store namespace clears as font id 0, since this will never be allocated.
   void Add(WrIdNamespace aNamespace) {
-    AddEntry(AsUint64(WrFontKey { aNamespace, 0 }));
+    AddEntry(AsUint64(WrFontKey{aNamespace, 0}));
   }
 
-  void AddAll() {
-    AddEntry(~0);
-  }
+  void AddAll() { AddEntry(~0); }
 
-  // Find a matching entry in the log, searching backwards starting at the newest
-  // entry and finishing with the oldest entry. Returns a brief description of why
-  // the font was deleted, if known.
+  // Find a matching entry in the log, searching backwards starting at the
+  // newest entry and finishing with the oldest entry. Returns a brief
+  // description of why the font was deleted, if known.
   const char* Find(WrFontKey aKey) {
     uint64_t keyEntry = AsUint64(aKey);
-    uint64_t namespaceEntry = AsUint64(WrFontKey { aKey.mNamespace, 0 });
+    uint64_t namespaceEntry = AsUint64(WrFontKey{aKey.mNamespace, 0});
     size_t offset = mNextEntry;
     do {
       offset = (offset + MAX_ENTRIES - 1) % MAX_ENTRIES;
@@ -133,8 +123,7 @@ static struct FontDeleteLog {
   }
 } sFontDeleteLog;
 
-void
-ClearAllBlobImageResources() {
+void ClearAllBlobImageResources() {
   StaticMutexAutoLock lock(sFontDataTableLock);
   sFontDeleteLog.AddAll();
   sBlobFontTable.clear();
@@ -142,8 +131,7 @@ ClearAllBlobImageResources() {
 }
 
 extern "C" {
-void
-ClearBlobImageResources(WrIdNamespace aNamespace) {
+void ClearBlobImageResources(WrIdNamespace aNamespace) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   sFontDeleteLog.Add(aNamespace);
   for (auto i = sBlobFontTable.begin(); i != sBlobFontTable.end();) {
@@ -162,8 +150,8 @@ ClearBlobImageResources(WrIdNamespace aNamespace) {
   }
 }
 
-void
-AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex, const ArcVecU8 *aVec) {
+void AddFontData(WrFontKey aKey, const uint8_t* aData, size_t aSize,
+                 uint32_t aIndex, const ArcVecU8* aVec) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
@@ -175,26 +163,28 @@ AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex,
   }
 }
 
-void
-AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
+void AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
     FontTemplate& font = sFontDataTable[aKey];
 #ifdef XP_MACOSX
-    font.mUnscaledFont = new UnscaledFontMac(reinterpret_cast<CGFontRef>(aHandle), false);
+    font.mUnscaledFont =
+        new UnscaledFontMac(reinterpret_cast<CGFontRef>(aHandle), false);
 #elif defined(XP_WIN)
-    font.mUnscaledFont = new UnscaledFontDWrite(reinterpret_cast<IDWriteFontFace*>(aHandle), nullptr);
+    font.mUnscaledFont = new UnscaledFontDWrite(
+        reinterpret_cast<IDWriteFontFace*>(aHandle), nullptr);
 #elif defined(ANDROID)
-    font.mUnscaledFont = new UnscaledFontFreeType(reinterpret_cast<const char*>(aHandle), aIndex);
+    font.mUnscaledFont = new UnscaledFontFreeType(
+        reinterpret_cast<const char*>(aHandle), aIndex);
 #else
-    font.mUnscaledFont = new UnscaledFontFontconfig(reinterpret_cast<const char*>(aHandle), aIndex);
+    font.mUnscaledFont = new UnscaledFontFontconfig(
+        reinterpret_cast<const char*>(aHandle), aIndex);
 #endif
   }
 }
 
-void
-DeleteFontData(WrFontKey aKey) {
+void DeleteFontData(WrFontKey aKey) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   sFontDeleteLog.Add(aKey);
   auto i = sFontDataTable.find(aKey);
@@ -203,15 +193,10 @@ DeleteFontData(WrFontKey aKey) {
   }
 }
 
-void
-AddBlobFont(WrFontInstanceKey aInstanceKey,
-            WrFontKey aFontKey,
-            float aSize,
-            const FontInstanceOptions* aOptions,
-            const FontInstancePlatformOptions* aPlatformOptions,
-            const FontVariation* aVariations,
-            size_t aNumVariations)
-{
+void AddBlobFont(WrFontInstanceKey aInstanceKey, WrFontKey aFontKey,
+                 float aSize, const FontInstanceOptions* aOptions,
+                 const FontInstancePlatformOptions* aPlatformOptions,
+                 const FontVariation* aVariations, size_t aNumVariations) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sBlobFontTable.find(aInstanceKey);
   if (i == sBlobFontTable.end()) {
@@ -227,14 +212,14 @@ AddBlobFont(WrFontInstanceKey aInstanceKey,
     if (aNumVariations) {
       font.mNumVariations = aNumVariations;
       font.mVariations.reset(new gfx::FontVariation[aNumVariations]);
-      PodCopy(font.mVariations.get(), reinterpret_cast<const gfx::FontVariation*>(aVariations), aNumVariations);
+      PodCopy(font.mVariations.get(),
+              reinterpret_cast<const gfx::FontVariation*>(aVariations),
+              aNumVariations);
     }
   }
 }
 
-void
-DeleteBlobFont(WrFontInstanceKey aKey)
-{
+void DeleteBlobFont(WrFontInstanceKey aKey) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sBlobFontTable.find(aKey);
   if (i != sBlobFontTable.end()) {
@@ -242,62 +227,65 @@ DeleteBlobFont(WrFontInstanceKey aKey)
   }
 }
 
-} // extern
+}  // extern
 
-static RefPtr<UnscaledFont>
-GetUnscaledFont(Translator* aTranslator, WrFontKey aKey)
-{
+static RefPtr<UnscaledFont> GetUnscaledFont(Translator* aTranslator,
+                                            WrFontKey aKey) {
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
-    gfxDevCrash(LogReason::UnscaledFontNotFound) << "Failed to get UnscaledFont entry for FontKey " << aKey.mHandle
-                                                 << " because " << sFontDeleteLog.Find(aKey);
+    gfxDevCrash(LogReason::UnscaledFontNotFound)
+        << "Failed to get UnscaledFont entry for FontKey " << aKey.mHandle
+        << " because " << sFontDeleteLog.Find(aKey);
     return nullptr;
   }
-  FontTemplate &data = i->second;
+  FontTemplate& data = i->second;
   if (data.mUnscaledFont) {
     return data.mUnscaledFont;
   }
   MOZ_ASSERT(data.mData);
   FontType type =
 #ifdef XP_MACOSX
-    FontType::MAC;
+      FontType::MAC;
 #elif defined(XP_WIN)
-    FontType::DWRITE;
+      FontType::DWRITE;
 #elif defined(ANDROID)
-    FontType::FREETYPE;
+      FontType::FREETYPE;
 #else
-    FontType::FONTCONFIG;
+      FontType::FONTCONFIG;
 #endif
   // makes a copy of the data
-  RefPtr<NativeFontResource> fontResource = Factory::CreateNativeFontResource((uint8_t*)data.mData, data.mSize,
-                                                                              aTranslator->GetReferenceDrawTarget()->GetBackendType(),
-                                                                              type,
-                                                                              aTranslator->GetFontContext());
+  RefPtr<NativeFontResource> fontResource = Factory::CreateNativeFontResource(
+      (uint8_t*)data.mData, data.mSize,
+      aTranslator->GetReferenceDrawTarget()->GetBackendType(), type,
+      aTranslator->GetFontContext());
   RefPtr<UnscaledFont> unscaledFont;
   if (!fontResource) {
-    gfxDevCrash(LogReason::NativeFontResourceNotFound) << "Failed to create NativeFontResource for FontKey " << aKey.mHandle;
+    gfxDevCrash(LogReason::NativeFontResourceNotFound)
+        << "Failed to create NativeFontResource for FontKey " << aKey.mHandle;
   } else {
     // Instance data is only needed for GDI fonts which webrender does not
     // support.
     unscaledFont = fontResource->CreateUnscaledFont(data.mIndex, nullptr, 0);
     if (!unscaledFont) {
-      gfxDevCrash(LogReason::UnscaledFontNotFound) << "Failed to create UnscaledFont for FontKey " << aKey.mHandle;
+      gfxDevCrash(LogReason::UnscaledFontNotFound)
+          << "Failed to create UnscaledFont for FontKey " << aKey.mHandle;
     }
   }
   data.mUnscaledFont = unscaledFont;
   return unscaledFont;
 }
 
-static RefPtr<ScaledFont>
-GetScaledFont(Translator* aTranslator, WrFontInstanceKey aKey)
-{
+static RefPtr<ScaledFont> GetScaledFont(Translator* aTranslator,
+                                        WrFontInstanceKey aKey) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sBlobFontTable.find(aKey);
   if (i == sBlobFontTable.end()) {
-    gfxDevCrash(LogReason::ScaledFontNotFound) << "Failed to get ScaledFont entry for FontInstanceKey " << aKey.mHandle;
+    gfxDevCrash(LogReason::ScaledFontNotFound)
+        << "Failed to get ScaledFont entry for FontInstanceKey "
+        << aKey.mHandle;
     return nullptr;
   }
-  FontInstanceData &data = i->second;
+  FontInstanceData& data = i->second;
   if (data.mScaledFont) {
     return data.mScaledFont;
   }
@@ -305,27 +293,24 @@ GetScaledFont(Translator* aTranslator, WrFontInstanceKey aKey)
   if (!unscaled) {
     return nullptr;
   }
-  RefPtr<ScaledFont> scaled =
-    unscaled->CreateScaledFontFromWRFont(data.mSize,
-                                         data.mOptions.ptrOr(nullptr),
-                                         data.mPlatformOptions.ptrOr(nullptr),
-                                         data.mVariations.get(),
-                                         data.mNumVariations);
+  RefPtr<ScaledFont> scaled = unscaled->CreateScaledFontFromWRFont(
+      data.mSize, data.mOptions.ptrOr(nullptr),
+      data.mPlatformOptions.ptrOr(nullptr), data.mVariations.get(),
+      data.mNumVariations);
   if (!scaled) {
-    gfxDevCrash(LogReason::ScaledFontNotFound) << "Failed to create ScaledFont for FontKey " << aKey.mHandle;
+    gfxDevCrash(LogReason::ScaledFontNotFound)
+        << "Failed to create ScaledFont for FontKey " << aKey.mHandle;
   }
   data.mScaledFont = scaled;
   return data.mScaledFont;
 }
 
 static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
-                                gfx::IntSize aSize,
-                                gfx::SurfaceFormat aFormat,
-                                const uint16_t *aTileSize,
-                                const mozilla::wr::TileOffset *aTileOffset,
-                                const mozilla::wr::LayoutIntRect *aDirtyRect,
-                                Range<uint8_t> aOutput)
-{
+                                gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                                const uint16_t* aTileSize,
+                                const mozilla::wr::TileOffset* aTileOffset,
+                                const mozilla::wr::LayoutIntRect* aDirtyRect,
+                                Range<uint8_t> aOutput) {
   AUTO_PROFILER_TRACING("WebRender", "RasterizeSingleBlob");
   MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
   if (aSize.width <= 0 || aSize.height <= 0) {
@@ -342,13 +327,8 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   bool uninitialized = false;
 
   RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(
-    gfx::BackendType::SKIA,
-    aOutput.begin().get(),
-    aSize,
-    stride,
-    aFormat,
-    uninitialized
-  );
+      gfx::BackendType::SKIA, aOutput.begin().get(), aSize, stride, aFormat,
+      uninitialized);
 
   if (!dt) {
     return false;
@@ -356,27 +336,28 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   auto origin = gfx::IntPoint(0, 0);
   if (aTileOffset) {
-    origin = gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
+    origin =
+        gfx::IntPoint(aTileOffset->x * *aTileSize, aTileOffset->y * *aTileSize);
     dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
   }
 
   auto bounds = gfx::IntRect(origin, aSize);
 
   if (aDirtyRect) {
-    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y, aDirtyRect->size.width, aDirtyRect->size.height);
+    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y,
+               aDirtyRect->size.width, aDirtyRect->size.height);
     dt->PushClipRect(dirty);
-    bounds = bounds.Intersect(IntRect(aDirtyRect->origin.x,
-                                      aDirtyRect->origin.y,
-                                      aDirtyRect->size.width,
-                                      aDirtyRect->size.height));
+    bounds = bounds.Intersect(
+        IntRect(aDirtyRect->origin.x, aDirtyRect->origin.y,
+                aDirtyRect->size.width, aDirtyRect->size.height));
   }
 
   struct Reader {
-    const uint8_t *buf;
+    const uint8_t* buf;
     size_t len;
     size_t pos;
 
-    Reader(const uint8_t *buf, size_t len) : buf(buf), len(len), pos(0) {}
+    Reader(const uint8_t* buf, size_t len) : buf(buf), len(len), pos(0) {}
 
     size_t ReadSize() {
       size_t ret;
@@ -411,15 +392,15 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
       pos += sizeof(ret);
       return ret;
     }
-
   };
 
   // We try hard to not have empty blobs but we can end up with
   // them because of CompositorHitTestInfo and merging.
   MOZ_RELEASE_ASSERT(aBlob.length() >= sizeof(size_t));
-  size_t indexOffset = *(size_t*)(aBlob.end().get()-sizeof(size_t));
+  size_t indexOffset = *(size_t*)(aBlob.end().get() - sizeof(size_t));
   MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - sizeof(size_t));
-  Reader reader(aBlob.begin().get()+indexOffset, aBlob.length()-sizeof(size_t)-indexOffset);
+  Reader reader(aBlob.begin().get() + indexOffset,
+                aBlob.length() - sizeof(size_t) - indexOffset);
 
   bool ret = true;
   size_t offset = 0;
@@ -441,12 +422,14 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     size_t count = fontReader.ReadSize();
     for (size_t i = 0; i < count; i++) {
       layers::BlobFont blobFont = fontReader.ReadBlobFont();
-      RefPtr<ScaledFont> scaledFont = GetScaledFont(&translator, blobFont.mFontInstanceKey);
+      RefPtr<ScaledFont> scaledFont =
+          GetScaledFont(&translator, blobFont.mFontInstanceKey);
       translator.AddScaledFont(blobFont.mScaledFontPtr, scaledFont);
     }
 
     Range<const uint8_t> blob(aBlob.begin() + offset, aBlob.begin() + end);
-    ret = translator.TranslateRecording((char*)blob.begin().get(), blob.length());
+    ret =
+        translator.TranslateRecording((char*)blob.begin().get(), blob.length());
     if (!ret) {
       gfxCriticalNote << "Replay failure: " << translator.GetError();
       MOZ_RELEASE_ASSERT(false);
@@ -459,7 +442,8 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     float r = float(rand()) / RAND_MAX;
     float g = float(rand()) / RAND_MAX;
     float b = float(rand()) / RAND_MAX;
-    dt->FillRect(gfx::Rect(origin.x, origin.y, aSize.width, aSize.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
+    dt->FillRect(gfx::Rect(origin.x, origin.y, aSize.width, aSize.height),
+                 gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
   }
 
   if (aDirtyRect) {
@@ -476,27 +460,21 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   return ret;
 }
 
-} // namespace
-} // namespace
+}  // namespace wr
+}  // namespace mozilla
 
 extern "C" {
 
-bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob,
-                        int32_t width, int32_t height,
-                        mozilla::wr::ImageFormat aFormat,
-                        const uint16_t *aTileSize,
-                        const mozilla::wr::TileOffset *aTileOffset,
-                        const mozilla::wr::LayoutIntRect *aDirtyRect,
-                        mozilla::wr::MutByteSlice output)
-{
-  return mozilla::wr::Moz2DRenderCallback(mozilla::wr::ByteSliceToRange(blob),
-                                          mozilla::gfx::IntSize(width, height),
-                                          mozilla::wr::ImageFormatToSurfaceFormat(aFormat),
-                                          aTileSize,
-                                          aTileOffset,
-                                          aDirtyRect,
-                                          mozilla::wr::MutByteSliceToRange(output));
+bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob, int32_t width,
+                        int32_t height, mozilla::wr::ImageFormat aFormat,
+                        const uint16_t* aTileSize,
+                        const mozilla::wr::TileOffset* aTileOffset,
+                        const mozilla::wr::LayoutIntRect* aDirtyRect,
+                        mozilla::wr::MutByteSlice output) {
+  return mozilla::wr::Moz2DRenderCallback(
+      mozilla::wr::ByteSliceToRange(blob), mozilla::gfx::IntSize(width, height),
+      mozilla::wr::ImageFormatToSurfaceFormat(aFormat), aTileSize, aTileOffset,
+      aDirtyRect, mozilla::wr::MutByteSliceToRange(output));
 }
 
-} // extern
-
+}  // extern

@@ -14,12 +14,11 @@ namespace dom {
 
 /**
  * Implementation for the WebIDL ParentProcessMessageManager interface.
- * ParentProcessMessageManager is used in a parent process to communicate with all the
- * child processes.
+ * ParentProcessMessageManager is used in a parent process to communicate with
+ * all the child processes.
  */
-class ParentProcessMessageManager final : public MessageBroadcaster
-{
-public:
+class ParentProcessMessageManager final : public MessageBroadcaster {
+ public:
   ParentProcessMessageManager();
 
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -27,29 +26,26 @@ public:
 
   // ProcessScriptLoader
   void LoadProcessScript(const nsAString& aUrl, bool aAllowDelayedLoad,
-                         mozilla::ErrorResult& aError)
-  {
+                         mozilla::ErrorResult& aError) {
     LoadScript(aUrl, aAllowDelayedLoad, false, aError);
   }
-  void RemoveDelayedProcessScript(const nsAString& aURL)
-  {
+  void RemoveDelayedProcessScript(const nsAString& aURL) {
     RemoveDelayedScript(aURL);
   }
   void GetDelayedProcessScripts(JSContext* aCx,
                                 nsTArray<nsTArray<JS::Value>>& aScripts,
-                                mozilla::ErrorResult& aError)
-  {
+                                mozilla::ErrorResult& aError) {
     GetDelayedScripts(aCx, aScripts, aError);
   }
 
   // GlobalProcessScriptLoader
   using nsFrameMessageManager::GetInitialProcessData;
 
-private:
+ private:
   virtual ~ParentProcessMessageManager();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ParentProcessMessageManager_h
+#endif  // mozilla_dom_ParentProcessMessageManager_h

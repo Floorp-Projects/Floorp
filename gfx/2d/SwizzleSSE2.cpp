@@ -12,17 +12,17 @@ namespace mozilla {
 namespace gfx {
 
 // Load 1-3 pixels into a 4 pixel vector.
-static MOZ_ALWAYS_INLINE __m128i
-LoadRemainder_SSE2(const uint8_t* aSrc, size_t aLength)
-{
+static MOZ_ALWAYS_INLINE __m128i LoadRemainder_SSE2(const uint8_t* aSrc,
+                                                    size_t aLength) {
   __m128i px;
   if (aLength >= 2) {
     // Load first 2 pixels
     px = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(aSrc));
     // Load third pixel
     if (aLength >= 3) {
-      px = _mm_unpacklo_epi64(px,
-                              _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(aSrc + 2 * 4)));
+      px = _mm_unpacklo_epi64(
+          px,
+          _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(aSrc + 2 * 4)));
     }
   } else {
     // Load single pixel
@@ -32,16 +32,15 @@ LoadRemainder_SSE2(const uint8_t* aSrc, size_t aLength)
 }
 
 // Store 1-3 pixels from a vector into memory without overwriting.
-static MOZ_ALWAYS_INLINE void
-StoreRemainder_SSE2(uint8_t* aDst, size_t aLength, const __m128i& aSrc)
-{
+static MOZ_ALWAYS_INLINE void StoreRemainder_SSE2(uint8_t* aDst, size_t aLength,
+                                                  const __m128i& aSrc) {
   if (aLength >= 2) {
     // Store first 2 pixels
     _mm_storel_epi64(reinterpret_cast<__m128i*>(aDst), aSrc);
     // Store third pixel
     if (aLength >= 3) {
       *reinterpret_cast<uint32_t*>(aDst + 2 * 4) =
-        _mm_cvtsi128_si32(_mm_srli_si128(aSrc, 2 * 4));
+          _mm_cvtsi128_si32(_mm_srli_si128(aSrc, 2 * 4));
     }
   } else {
     // Store single pixel
@@ -50,10 +49,8 @@ StoreRemainder_SSE2(uint8_t* aDst, size_t aLength, const __m128i& aSrc)
 }
 
 // Premultiply vector of 4 pixels using splayed math.
-template<bool aSwapRB, bool aOpaqueAlpha>
-static MOZ_ALWAYS_INLINE __m128i
-PremultiplyVector_SSE2(const __m128i& aSrc)
-{
+template <bool aSwapRB, bool aOpaqueAlpha>
+static MOZ_ALWAYS_INLINE __m128i PremultiplyVector_SSE2(const __m128i& aSrc) {
   // Isolate R and B with mask.
   const __m128i mask = _mm_set1_epi32(0x00FF00FF);
   __m128i rb = _mm_and_si128(mask, aSrc);
@@ -91,11 +88,9 @@ PremultiplyVector_SSE2(const __m128i& aSrc)
   return _mm_or_si128(rb, ga);
 }
 
-template<bool aSwapRB, bool aOpaqueAlpha>
-void Premultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap,
-                      uint8_t* aDst, int32_t aDstGap,
-                      IntSize aSize)
-{
+template <bool aSwapRB, bool aOpaqueAlpha>
+void Premultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                      int32_t aDstGap, IntSize aSize) {
   int32_t alignedRow = 4 * (aSize.width & ~3);
   int32_t remainder = aSize.width & 3;
   // Fold remainder into stride gap.
@@ -125,10 +120,14 @@ void Premultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap,
 }
 
 // Force instantiation of premultiply variants here.
-template void Premultiply_SSE2<false, false>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
-template void Premultiply_SSE2<false, true>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
-template void Premultiply_SSE2<true, false>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
-template void Premultiply_SSE2<true, true>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+template void Premultiply_SSE2<false, false>(const uint8_t*, int32_t, uint8_t*,
+                                             int32_t, IntSize);
+template void Premultiply_SSE2<false, true>(const uint8_t*, int32_t, uint8_t*,
+                                            int32_t, IntSize);
+template void Premultiply_SSE2<true, false>(const uint8_t*, int32_t, uint8_t*,
+                                            int32_t, IntSize);
+template void Premultiply_SSE2<true, true>(const uint8_t*, int32_t, uint8_t*,
+                                           int32_t, IntSize);
 
 // This generates a table of fixed-point reciprocals representing 1/alpha
 // similar to the fallback implementation. However, the reciprocal must fit
@@ -136,29 +135,34 @@ template void Premultiply_SSE2<true, true>(const uint8_t*, int32_t, uint8_t*, in
 // require more bits than for larger alphas. We take advantage of this by
 // shifting the reciprocal down by either 3 or 8 bits depending on whether
 // the alpha value is less than 0x20. This is easy to then undo by multiplying
-// the color component to be unpremultiplying by either 8 or 0x100, respectively.
-// The 16 bit reciprocal is duplicated into both words of a uint32_t here to
-// reduce unpacking overhead.
-#define UNPREMULQ_SSE2(x) (0x10001U * (0xFF0220U / ((x) * ((x) < 0x20 ? 0x100 : 8))))
+// the color component to be unpremultiplying by either 8 or 0x100,
+// respectively. The 16 bit reciprocal is duplicated into both words of a
+// uint32_t here to reduce unpacking overhead.
+#define UNPREMULQ_SSE2(x) \
+  (0x10001U * (0xFF0220U / ((x) * ((x) < 0x20 ? 0x100 : 8))))
 #define UNPREMULQ_SSE2_2(x) UNPREMULQ_SSE2(x), UNPREMULQ_SSE2((x) + 1)
 #define UNPREMULQ_SSE2_4(x) UNPREMULQ_SSE2_2(x), UNPREMULQ_SSE2_2((x) + 2)
 #define UNPREMULQ_SSE2_8(x) UNPREMULQ_SSE2_4(x), UNPREMULQ_SSE2_4((x) + 4)
 #define UNPREMULQ_SSE2_16(x) UNPREMULQ_SSE2_8(x), UNPREMULQ_SSE2_8((x) + 8)
 #define UNPREMULQ_SSE2_32(x) UNPREMULQ_SSE2_16(x), UNPREMULQ_SSE2_16((x) + 16)
-static const uint32_t sUnpremultiplyTable_SSE2[256] =
-{
-  0, UNPREMULQ_SSE2(1), UNPREMULQ_SSE2_2(2), UNPREMULQ_SSE2_4(4),
-  UNPREMULQ_SSE2_8(8), UNPREMULQ_SSE2_16(16), UNPREMULQ_SSE2_32(32),
-  UNPREMULQ_SSE2_32(64), UNPREMULQ_SSE2_32(96), UNPREMULQ_SSE2_32(128),
-  UNPREMULQ_SSE2_32(160), UNPREMULQ_SSE2_32(192), UNPREMULQ_SSE2_32(224)
-};
+static const uint32_t sUnpremultiplyTable_SSE2[256] = {0,
+                                                       UNPREMULQ_SSE2(1),
+                                                       UNPREMULQ_SSE2_2(2),
+                                                       UNPREMULQ_SSE2_4(4),
+                                                       UNPREMULQ_SSE2_8(8),
+                                                       UNPREMULQ_SSE2_16(16),
+                                                       UNPREMULQ_SSE2_32(32),
+                                                       UNPREMULQ_SSE2_32(64),
+                                                       UNPREMULQ_SSE2_32(96),
+                                                       UNPREMULQ_SSE2_32(128),
+                                                       UNPREMULQ_SSE2_32(160),
+                                                       UNPREMULQ_SSE2_32(192),
+                                                       UNPREMULQ_SSE2_32(224)};
 
 // Unpremultiply a vector of 4 pixels using splayed math and a reciprocal table
 // that avoids doing any actual division.
-template<bool aSwapRB>
-static MOZ_ALWAYS_INLINE __m128i
-UnpremultiplyVector_SSE2(const __m128i& aSrc)
-{
+template <bool aSwapRB>
+static MOZ_ALWAYS_INLINE __m128i UnpremultiplyVector_SSE2(const __m128i& aSrc) {
   // Isolate R and B with mask.
   __m128i rb = _mm_and_si128(aSrc, _mm_set1_epi32(0x00FF00FF));
   // Swap R and B if necessary.
@@ -179,10 +183,12 @@ UnpremultiplyVector_SSE2(const __m128i& aSrc)
   // The reciprocals are doubled in each uint32_t entry.
   // Unpack them to a final vector of duplicated reciprocals of
   // the form Q1 Q1 Q2 Q2 Q3 Q3 Q4 Q4.
-  __m128i q12 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a1]),
-                                   _mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a2]));
-  __m128i q34 = _mm_unpacklo_epi32(_mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a3]),
-                                   _mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a4]));
+  __m128i q12 =
+      _mm_unpacklo_epi32(_mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a1]),
+                         _mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a2]));
+  __m128i q34 =
+      _mm_unpacklo_epi32(_mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a3]),
+                         _mm_cvtsi32_si128(sUnpremultiplyTable_SSE2[a4]));
   __m128i q1234 = _mm_unpacklo_epi64(q12, q34);
 
   // Check if the alphas are less than 0x20, so that we can undo
@@ -211,11 +217,9 @@ UnpremultiplyVector_SSE2(const __m128i& aSrc)
   return _mm_or_si128(rb, ga);
 }
 
-template<bool aSwapRB>
-void Unpremultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap,
-                        uint8_t* aDst, int32_t aDstGap,
-                        IntSize aSize)
-{
+template <bool aSwapRB>
+void Unpremultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                        int32_t aDstGap, IntSize aSize) {
   int32_t alignedRow = 4 * (aSize.width & ~3);
   int32_t remainder = aSize.width & 3;
   // Fold remainder into stride gap.
@@ -245,14 +249,14 @@ void Unpremultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap,
 }
 
 // Force instantiation of unpremultiply variants here.
-template void Unpremultiply_SSE2<false>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
-template void Unpremultiply_SSE2<true>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+template void Unpremultiply_SSE2<false>(const uint8_t*, int32_t, uint8_t*,
+                                        int32_t, IntSize);
+template void Unpremultiply_SSE2<true>(const uint8_t*, int32_t, uint8_t*,
+                                       int32_t, IntSize);
 
 // Swizzle a vector of 4 pixels providing swaps and opaquifying.
-template<bool aSwapRB, bool aOpaqueAlpha>
-static MOZ_ALWAYS_INLINE __m128i
-SwizzleVector_SSE2(const __m128i& aSrc)
-{
+template <bool aSwapRB, bool aOpaqueAlpha>
+static MOZ_ALWAYS_INLINE __m128i SwizzleVector_SSE2(const __m128i& aSrc) {
   // Isolate R and B.
   __m128i rb = _mm_and_si128(aSrc, _mm_set1_epi32(0x00FF00FF));
   // Swap R and B.
@@ -289,11 +293,9 @@ SwizzleVector_SSE2<false, false>(const __m128i& aSrc)
 }
 #endif
 
-template<bool aSwapRB, bool aOpaqueAlpha>
-void Swizzle_SSE2(const uint8_t* aSrc, int32_t aSrcGap,
-                  uint8_t* aDst, int32_t aDstGap,
-                  IntSize aSize)
-{
+template <bool aSwapRB, bool aOpaqueAlpha>
+void Swizzle_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
+                  int32_t aDstGap, IntSize aSize) {
   int32_t alignedRow = 4 * (aSize.width & ~3);
   int32_t remainder = aSize.width & 3;
   // Fold remainder into stride gap.
@@ -323,9 +325,10 @@ void Swizzle_SSE2(const uint8_t* aSrc, int32_t aSrcGap,
 }
 
 // Force instantiation of swizzle variants here.
-template void Swizzle_SSE2<true, false>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
-template void Swizzle_SSE2<true, true>(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+template void Swizzle_SSE2<true, false>(const uint8_t*, int32_t, uint8_t*,
+                                        int32_t, IntSize);
+template void Swizzle_SSE2<true, true>(const uint8_t*, int32_t, uint8_t*,
+                                       int32_t, IntSize);
 
-} // namespace gfx
-} // namespace mozilla
-
+}  // namespace gfx
+}  // namespace mozilla

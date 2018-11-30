@@ -20,57 +20,46 @@
 namespace mozilla {
 namespace dom {
 
-class MemoryBlobImpl final : public BaseBlobImpl
-{
-public:
+class MemoryBlobImpl final : public BaseBlobImpl {
+ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MemoryBlobImpl, BaseBlobImpl)
 
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
                  const nsAString& aContentType, int64_t aLastModifiedDate)
-    : BaseBlobImpl(aName, aContentType, aLength, aLastModifiedDate)
-    , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
-  {
+      : BaseBlobImpl(aName, aContentType, aLength, aLastModifiedDate),
+        mDataOwner(new DataOwner(aMemoryBuffer, aLength)) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
   MemoryBlobImpl(void* aMemoryBuffer, uint64_t aLength,
                  const nsAString& aContentType)
-    : BaseBlobImpl(aContentType, aLength)
-    , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
-  {
+      : BaseBlobImpl(aContentType, aLength),
+        mDataOwner(new DataOwner(aMemoryBuffer, aLength)) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
   virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;
 
-  virtual already_AddRefed<BlobImpl>
-  CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType, ErrorResult& aRv) override;
+  virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
+                                                 uint64_t aLength,
+                                                 const nsAString& aContentType,
+                                                 ErrorResult& aRv) override;
 
-  virtual bool IsMemoryFile() const override
-  {
-    return true;
-  }
+  virtual bool IsMemoryFile() const override { return true; }
 
-  size_t GetAllocationSize() const override
-  {
-    return mLength;
-  }
+  size_t GetAllocationSize() const override { return mLength; }
 
-  size_t GetAllocationSize(FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override
-  {
+  size_t GetAllocationSize(
+      FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override {
     return GetAllocationSize();
   }
 
-  class DataOwner final : public mozilla::LinkedListElement<DataOwner>
-  {
-  public:
+  class DataOwner final : public mozilla::LinkedListElement<DataOwner> {
+   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOwner)
     DataOwner(void* aMemoryBuffer, uint64_t aLength)
-      : mData(aMemoryBuffer)
-      , mLength(aLength)
-    {
+        : mData(aMemoryBuffer), mLength(aLength) {
       mozilla::StaticMutexAutoLock lock(sDataOwnerMutex);
 
       if (!sDataOwners) {
@@ -80,7 +69,7 @@ public:
       sDataOwners->insertBack(this);
     }
 
-  private:
+   private:
     // Private destructor, to discourage deletion outside of Release():
     ~DataOwner() {
       mozilla::StaticMutexAutoLock lock(sDataOwnerMutex);
@@ -94,7 +83,7 @@ public:
       free(mData);
     }
 
-  public:
+   public:
     static void EnsureMemoryReporterRegistered();
 
     // sDataOwners and sMemoryReporterRegistered may only be accessed while
@@ -108,17 +97,15 @@ public:
     uint64_t mLength;
   };
 
-  class DataOwnerAdapter final : public nsIInputStream
-                               , public nsISeekableStream
-                               , public nsIIPCSerializableInputStream
-                               , public nsICloneableInputStream
-  {
+  class DataOwnerAdapter final : public nsIInputStream,
+                                 public nsISeekableStream,
+                                 public nsIIPCSerializableInputStream,
+                                 public nsICloneableInputStream {
     typedef MemoryBlobImpl::DataOwner DataOwner;
-  public:
-    static nsresult Create(DataOwner* aDataOwner,
-                           uint32_t aStart,
-                           uint32_t aLength,
-                           nsIInputStream** _retval);
+
+   public:
+    static nsresult Create(DataOwner* aDataOwner, uint32_t aStart,
+                           uint32_t aLength, nsIInputStream** _retval);
 
     NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -132,17 +119,15 @@ public:
     // if the underlying stream doesn't support it.
     NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(mSerializableInputStream->)
 
-  private:
+   private:
     ~DataOwnerAdapter() {}
 
-    DataOwnerAdapter(DataOwner* aDataOwner,
-                     nsIInputStream* aStream)
-      : mDataOwner(aDataOwner)
-      , mStream(aStream)
-      , mSeekableStream(do_QueryInterface(aStream))
-      , mSerializableInputStream(do_QueryInterface(aStream))
-      , mCloneableInputStream(do_QueryInterface(aStream))
-    {
+    DataOwnerAdapter(DataOwner* aDataOwner, nsIInputStream* aStream)
+        : mDataOwner(aDataOwner),
+          mStream(aStream),
+          mSeekableStream(do_QueryInterface(aStream)),
+          mSerializableInputStream(do_QueryInterface(aStream)),
+          mCloneableInputStream(do_QueryInterface(aStream)) {
       MOZ_ASSERT(mSeekableStream, "Somebody gave us the wrong stream!");
     }
 
@@ -153,13 +138,12 @@ public:
     nsCOMPtr<nsICloneableInputStream> mCloneableInputStream;
   };
 
-private:
+ private:
   // Create slice
   MemoryBlobImpl(const MemoryBlobImpl* aOther, uint64_t aStart,
                  uint64_t aLength, const nsAString& aContentType)
-    : BaseBlobImpl(aContentType, aOther->mStart + aStart, aLength)
-    , mDataOwner(aOther->mDataOwner)
-  {
+      : BaseBlobImpl(aContentType, aOther->mStart + aStart, aLength),
+        mDataOwner(aOther->mDataOwner) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
     mImmutable = aOther->mImmutable;
   }
@@ -170,7 +154,7 @@ private:
   RefPtr<DataOwner> mDataOwner;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MemoryBlobImpl_h
+#endif  // mozilla_dom_MemoryBlobImpl_h

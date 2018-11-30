@@ -15,30 +15,21 @@ namespace mozilla {
 namespace dom {
 
 ParentSHistory::ParentSHistory(nsFrameLoader* aFrameLoader)
-  : mFrameLoader(aFrameLoader)
-{
+    : mFrameLoader(aFrameLoader) {
   MOZ_ASSERT(XRE_IsParentProcess());
 }
 
-ParentSHistory::~ParentSHistory()
-{
-}
+ParentSHistory::~ParentSHistory() {}
 
-nsDocShell*
-ParentSHistory::GetDocShell()
-{
+nsDocShell* ParentSHistory::GetDocShell() {
   return nsDocShell::Cast(mFrameLoader->GetExistingDocShell());
 }
 
-TabParent*
-ParentSHistory::GetTabParent()
-{
+TabParent* ParentSHistory::GetTabParent() {
   return static_cast<TabParent*>(mFrameLoader->GetRemoteBrowser());
 }
 
-already_AddRefed<ChildSHistory>
-ParentSHistory::GetChildIfSameProcess()
-{
+already_AddRefed<ChildSHistory> ParentSHistory::GetChildIfSameProcess() {
   if (GetDocShell()) {
     return GetDocShell()->GetSessionHistory();
   }
@@ -54,20 +45,14 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ParentSHistory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ParentSHistory)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ParentSHistory,
-                                      mFrameLoader)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ParentSHistory, mFrameLoader)
 
-JSObject*
-ParentSHistory::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ParentSHistory::WrapObject(JSContext* cx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return ParentSHistory_Binding::Wrap(cx, this, aGivenProto);
 }
 
-nsISupports*
-ParentSHistory::GetParentObject() const
-{
-  return mFrameLoader;
-}
+nsISupports* ParentSHistory::GetParentObject() const { return mFrameLoader; }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

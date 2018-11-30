@@ -34,70 +34,62 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIClassInfo
 
-NS_IMPL_CI_INTERFACE_GETTER(AsyncStatement,
-                            mozIStorageAsyncStatement,
-                            mozIStorageBaseStatement,
-                            mozIStorageBindingParams,
+NS_IMPL_CI_INTERFACE_GETTER(AsyncStatement, mozIStorageAsyncStatement,
+                            mozIStorageBaseStatement, mozIStorageBindingParams,
                             mozilla::storage::StorageBaseStatementInternal)
 
-class AsyncStatementClassInfo : public nsIClassInfo
-{
-public:
+class AsyncStatementClassInfo : public nsIClassInfo {
+ public:
   constexpr AsyncStatementClassInfo() {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
-  GetInterfaces(uint32_t *_count, nsIID ***_array) override
-  {
+  GetInterfaces(uint32_t *_count, nsIID ***_array) override {
     return NS_CI_INTERFACE_GETTER_NAME(AsyncStatement)(_count, _array);
   }
 
   NS_IMETHOD
-  GetScriptableHelper(nsIXPCScriptable **_helper) override
-  {
+  GetScriptableHelper(nsIXPCScriptable **_helper) override {
     static AsyncStatementJSHelper sJSHelper;
     *_helper = &sJSHelper;
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetContractID(nsACString& aContractID) override
-  {
+  GetContractID(nsACString &aContractID) override {
     aContractID.SetIsVoid(true);
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetClassDescription(nsACString& aDesc) override
-  {
+  GetClassDescription(nsACString &aDesc) override {
     aDesc.SetIsVoid(true);
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetClassID(nsCID **_id) override
-  {
+  GetClassID(nsCID **_id) override {
     *_id = nullptr;
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetFlags(uint32_t *_flags) override
-  {
+  GetFlags(uint32_t *_flags) override {
     *_flags = 0;
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetClassIDNoAlloc(nsCID *_cid) override
-  {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  GetClassIDNoAlloc(nsCID *_cid) override { return NS_ERROR_NOT_AVAILABLE; }
 };
 
-NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementClassInfo::AddRef() { return 2; }
-NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementClassInfo::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementClassInfo::AddRef() {
+  return 2;
+}
+NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementClassInfo::Release() {
+  return 1;
+}
 NS_IMPL_QUERY_INTERFACE(AsyncStatementClassInfo, nsIClassInfo)
 
 static AsyncStatementClassInfo sAsyncStatementClassInfo;
@@ -106,26 +98,22 @@ static AsyncStatementClassInfo sAsyncStatementClassInfo;
 //// AsyncStatement
 
 AsyncStatement::AsyncStatement()
-: StorageBaseStatementInternal()
-, mFinalized(false)
-{
-}
+    : StorageBaseStatementInternal(), mFinalized(false) {}
 
-nsresult
-AsyncStatement::initialize(Connection *aDBConnection,
-                           sqlite3 *aNativeConnection,
-                           const nsACString &aSQLStatement)
-{
+nsresult AsyncStatement::initialize(Connection *aDBConnection,
+                                    sqlite3 *aNativeConnection,
+                                    const nsACString &aSQLStatement) {
   MOZ_ASSERT(aDBConnection, "No database connection given!");
-  MOZ_ASSERT(aDBConnection->isConnectionReadyOnThisThread(), "Database connection should be valid");
+  MOZ_ASSERT(aDBConnection->isConnectionReadyOnThisThread(),
+             "Database connection should be valid");
   MOZ_ASSERT(aNativeConnection, "No native connection given!");
 
   mDBConnection = aDBConnection;
   mNativeConnection = aNativeConnection;
   mSQLString = aSQLStatement;
 
-  MOZ_LOG(gStorageLog, LogLevel::Debug, ("Inited async statement '%s' (0x%p)",
-                                      mSQLString.get(), this));
+  MOZ_LOG(gStorageLog, LogLevel::Debug,
+          ("Inited async statement '%s' (0x%p)", mSQLString.get(), this));
 
 #ifdef DEBUG
   // We want to try and test for LIKE and that consumers are using
@@ -150,10 +138,11 @@ AsyncStatement::initialize(Connection *aDBConnection,
       // At this point, we didn't find a LIKE statement followed by ?, :,
       // or @, all of which are valid characters for binding a parameter.
       // We will warn the consumer that they may not be safely using LIKE.
-      NS_WARNING("Unsafe use of LIKE detected!  Please ensure that you "
-                 "are using mozIStorageAsyncStatement::escapeStringForLIKE "
-                 "and that you are binding that result to the statement "
-                 "to prevent SQL injection attacks.");
+      NS_WARNING(
+          "Unsafe use of LIKE detected!  Please ensure that you "
+          "are using mozIStorageAsyncStatement::escapeStringForLIKE "
+          "and that you are binding that result to the statement "
+          "to prevent SQL injection attacks.");
     }
 
     // resetting start and e
@@ -165,9 +154,7 @@ AsyncStatement::initialize(Connection *aDBConnection,
   return NS_OK;
 }
 
-mozIStorageBindingParams *
-AsyncStatement::getParams()
-{
+mozIStorageBindingParams *AsyncStatement::getParams() {
   nsresult rv;
 
   // If we do not have an array object yet, make it.
@@ -208,8 +195,7 @@ AsyncStatement::getParams()
  * the async thread by the last execution of a statement that already lost its
  * main-thread refs.
  */
-AsyncStatement::~AsyncStatement()
-{
+AsyncStatement::~AsyncStatement() {
   destructorAsyncFinalize();
 
   // If we are getting destroyed on the wrong thread, proxy the connection
@@ -220,9 +206,8 @@ AsyncStatement::~AsyncStatement()
     // NS_ProxyRelase only magic forgets for us if mDBConnection is an
     // nsCOMPtr.  Which it is not; it's an nsRefPtr.
     nsCOMPtr<nsIThread> targetThread(mDBConnection->threadOpenedOn);
-    NS_ProxyRelease(
-      "AsyncStatement::mDBConnection",
-      targetThread, mDBConnection.forget());
+    NS_ProxyRelease("AsyncStatement::mDBConnection", targetThread,
+                    mDBConnection.forget());
   }
 }
 
@@ -239,24 +224,16 @@ NS_INTERFACE_MAP_BEGIN(AsyncStatement)
   NS_INTERFACE_MAP_ENTRY(mozilla::storage::StorageBaseStatementInternal)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     foundInterface = static_cast<nsIClassInfo *>(&sAsyncStatementClassInfo);
-  }
-  else
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozIStorageAsyncStatement)
+  } else
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozIStorageAsyncStatement)
 NS_INTERFACE_MAP_END
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// StorageBaseStatementInternal
 
-Connection *
-AsyncStatement::getOwner()
-{
-  return mDBConnection;
-}
+Connection *AsyncStatement::getOwner() { return mDBConnection; }
 
-int
-AsyncStatement::getAsyncStatement(sqlite3_stmt **_stmt)
-{
+int AsyncStatement::getAsyncStatement(sqlite3_stmt **_stmt) {
 #ifdef DEBUG
   // Make sure we are never called on the connection's owning thread.
   bool onOpenedThread = false;
@@ -270,27 +247,24 @@ AsyncStatement::getAsyncStatement(sqlite3_stmt **_stmt)
                                              &mAsyncStatement);
     if (rc != SQLITE_OK) {
       MOZ_LOG(gStorageLog, LogLevel::Error,
-             ("Sqlite statement prepare error: %d '%s'", rc,
-              ::sqlite3_errmsg(mNativeConnection)));
+              ("Sqlite statement prepare error: %d '%s'", rc,
+               ::sqlite3_errmsg(mNativeConnection)));
       MOZ_LOG(gStorageLog, LogLevel::Error,
-             ("Statement was: '%s'", mSQLString.get()));
+              ("Statement was: '%s'", mSQLString.get()));
       *_stmt = nullptr;
       return rc;
     }
-    MOZ_LOG(gStorageLog, LogLevel::Debug, ("Initialized statement '%s' (0x%p)",
-                                        mSQLString.get(),
-                                        mAsyncStatement));
+    MOZ_LOG(gStorageLog, LogLevel::Debug,
+            ("Initialized statement '%s' (0x%p)", mSQLString.get(),
+             mAsyncStatement));
   }
 
   *_stmt = mAsyncStatement;
   return SQLITE_OK;
 }
 
-nsresult
-AsyncStatement::getAsynchronousStatementData(StatementData &_data)
-{
-  if (mFinalized)
-    return NS_ERROR_UNEXPECTED;
+nsresult AsyncStatement::getAsynchronousStatementData(StatementData &_data) {
+  if (mFinalized) return NS_ERROR_UNEXPECTED;
 
   // Pass null for the sqlite3_stmt; it will be requested on demand from the
   // async thread.
@@ -299,16 +273,13 @@ AsyncStatement::getAsynchronousStatementData(StatementData &_data)
   return NS_OK;
 }
 
-already_AddRefed<mozIStorageBindingParams>
-AsyncStatement::newBindingParams(mozIStorageBindingParamsArray *aOwner)
-{
-  if (mFinalized)
-    return nullptr;
+already_AddRefed<mozIStorageBindingParams> AsyncStatement::newBindingParams(
+    mozIStorageBindingParamsArray *aOwner) {
+  if (mFinalized) return nullptr;
 
   nsCOMPtr<mozIStorageBindingParams> params(new AsyncBindingParams(aOwner));
   return params.forget();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// mozIStorageAsyncStatement
@@ -320,19 +291,16 @@ AsyncStatement::newBindingParams(mozIStorageBindingParamsArray *aOwner)
 
 // proxy to StorageBaseStatementInternal using its define helper.
 MIXIN_IMPL_STORAGEBASESTATEMENTINTERNAL(
-  AsyncStatement,
-  if (mFinalized) return NS_ERROR_UNEXPECTED;)
+    AsyncStatement, if (mFinalized) return NS_ERROR_UNEXPECTED;)
 
 NS_IMETHODIMP
-AsyncStatement::Finalize()
-{
-  if (mFinalized)
-    return NS_OK;
+AsyncStatement::Finalize() {
+  if (mFinalized) return NS_OK;
 
   mFinalized = true;
 
-  MOZ_LOG(gStorageLog, LogLevel::Debug, ("Finalizing statement '%s'",
-                                      mSQLString.get()));
+  MOZ_LOG(gStorageLog, LogLevel::Debug,
+          ("Finalizing statement '%s'", mSQLString.get()));
 
   asyncFinalize();
 
@@ -343,17 +311,13 @@ AsyncStatement::Finalize()
 }
 
 NS_IMETHODIMP
-AsyncStatement::BindParameters(mozIStorageBindingParamsArray *aParameters)
-{
-  if (mFinalized)
-    return NS_ERROR_UNEXPECTED;
+AsyncStatement::BindParameters(mozIStorageBindingParamsArray *aParameters) {
+  if (mFinalized) return NS_ERROR_UNEXPECTED;
 
   BindingParamsArray *array = static_cast<BindingParamsArray *>(aParameters);
-  if (array->getOwner() != this)
-    return NS_ERROR_UNEXPECTED;
+  if (array->getOwner() != this) return NS_ERROR_UNEXPECTED;
 
-  if (array->length() == 0)
-    return NS_ERROR_UNEXPECTED;
+  if (array->length() == 0) return NS_ERROR_UNEXPECTED;
 
   mParamsArray = array;
   mParamsArray->lock();
@@ -362,8 +326,7 @@ AsyncStatement::BindParameters(mozIStorageBindingParamsArray *aParameters)
 }
 
 NS_IMETHODIMP
-AsyncStatement::GetState(int32_t *_state)
-{
+AsyncStatement::GetState(int32_t *_state) {
   if (mFinalized)
     *_state = MOZ_STORAGE_STATEMENT_INVALID;
   else
@@ -375,10 +338,8 @@ AsyncStatement::GetState(int32_t *_state)
 ////////////////////////////////////////////////////////////////////////////////
 //// mozIStorageBindingParams
 
-BOILERPLATE_BIND_PROXIES(
-  AsyncStatement,
-  if (mFinalized) return NS_ERROR_UNEXPECTED;
-)
+BOILERPLATE_BIND_PROXIES(AsyncStatement,
+                         if (mFinalized) return NS_ERROR_UNEXPECTED;)
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla

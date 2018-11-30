@@ -27,8 +27,7 @@ using namespace mozilla::ipc;
 using namespace mozilla::widget;
 
 // Keep in sync with `GeckoSession.HistoryDelegate.VisitFlags`.
-enum class GeckoViewVisitFlags : int32_t
-{
+enum class GeckoViewVisitFlags : int32_t {
   VISIT_TOP_LEVEL = 1 << 0,
   VISIT_REDIRECT_TEMPORARY = 1 << 1,
   VISIT_REDIRECT_PERMANENT = 1 << 2,
@@ -42,28 +41,21 @@ enum class GeckoViewVisitFlags : int32_t
 // reduce the number of IPC and JNI calls.
 static const uint32_t GET_VISITS_WAIT_MS = 250;
 
-static inline
-nsIDocument*
-OwnerDocForLink(Link* aLink)
-{
+static inline nsIDocument* OwnerDocForLink(Link* aLink) {
   Element* element = aLink->GetElement();
   return element ? element->OwnerDoc() : nullptr;
 }
 
-GeckoViewHistory::GeckoViewHistory()
-{}
+GeckoViewHistory::GeckoViewHistory() {}
 
 NS_IMPL_ISUPPORTS(GeckoViewHistory, IHistory, nsITimerCallback, nsINamed)
 
-GeckoViewHistory::~GeckoViewHistory()
-{}
+GeckoViewHistory::~GeckoViewHistory() {}
 
 StaticRefPtr<GeckoViewHistory> GeckoViewHistory::sHistory;
 
 /* static */
-already_AddRefed<GeckoViewHistory>
-GeckoViewHistory::GetSingleton()
-{
+already_AddRefed<GeckoViewHistory> GeckoViewHistory::GetSingleton() {
   if (!sHistory) {
     sHistory = new GeckoViewHistory();
     ClearOnShutdown(&sHistory);
@@ -73,31 +65,22 @@ GeckoViewHistory::GetSingleton()
 }
 
 NS_IMETHODIMP
-GeckoViewHistory::GetName(nsACString& aName)
-{
+GeckoViewHistory::GetName(nsACString& aName) {
   aName.AssignLiteral("GeckoViewHistory");
   return NS_OK;
 }
 
 // Handles a request to fetch visited statuses for new tracked URIs in the
 // content process (e10s).
-void
-GeckoViewHistory::QueryVisitedStateInContentProcess()
-{
+void GeckoViewHistory::QueryVisitedStateInContentProcess() {
   // Holds an array of new tracked URIs for a tab in the content process.
-  struct NewURIEntry
-  {
+  struct NewURIEntry {
     explicit NewURIEntry(TabChild* aTabChild, nsIURI* aURI)
-      : mTabChild(aTabChild)
-    {
+        : mTabChild(aTabChild) {
       AddURI(aURI);
     }
 
-    void
-    AddURI(nsIURI* aURI)
-    {
-      SerializeURI(aURI, *mURIs.AppendElement());
-    }
+    void AddURI(nsIURI* aURI) { SerializeURI(aURI, *mURIs.AppendElement()); }
 
     TabChild* mTabChild;
     nsTArray<URIParams> mURIs;
@@ -110,7 +93,8 @@ GeckoViewHistory::QueryVisitedStateInContentProcess()
   // instead, but, since we don't expect to have many tab children, we can avoid
   // the cost of hashing.
   AutoTArray<NewURIEntry, 8> newEntries;
-  for (auto newURIsIter = mNewURIs.Iter(); !newURIsIter.Done(); newURIsIter.Next()) {
+  for (auto newURIsIter = mNewURIs.Iter(); !newURIsIter.Done();
+       newURIsIter.Next()) {
     nsIURI* uri = newURIsIter.Get()->GetKey();
     if (auto entry = mTrackedURIs.Lookup(uri)) {
       TrackedURI& trackedURI = entry.Data();
@@ -121,7 +105,7 @@ GeckoViewHistory::QueryVisitedStateInContentProcess()
 
           TabChild* tabChild = nullptr;
           nsIWidget* widget =
-            nsContentUtils::WidgetForContent(link->GetElement());
+              nsContentUtils::WidgetForContent(link->GetElement());
           if (widget) {
             tabChild = widget->GetOwningTabChild();
           }
@@ -164,25 +148,16 @@ GeckoViewHistory::QueryVisitedStateInContentProcess()
 
 // Handles a request to fetch visited statuses for new tracked URIs in the
 // parent process (non-e10s).
-void
-GeckoViewHistory::QueryVisitedStateInParentProcess()
-{
+void GeckoViewHistory::QueryVisitedStateInParentProcess() {
   // Holds an array of new URIs for a window in the parent process. Unlike
   // the content process case, we don't need to track tab children, since we
   // have the outer window and can send the request directly to Java.
-  struct NewURIEntry
-  {
-    explicit NewURIEntry(nsIWidget* aWidget, nsIURI* aURI)
-      : mWidget(aWidget)
-    {
+  struct NewURIEntry {
+    explicit NewURIEntry(nsIWidget* aWidget, nsIURI* aURI) : mWidget(aWidget) {
       AddURI(aURI);
     }
 
-    void
-    AddURI(nsIURI* aURI)
-    {
-      mURIs.AppendElement(aURI);
-    }
+    void AddURI(nsIURI* aURI) { mURIs.AppendElement(aURI); }
 
     nsCOMPtr<nsIWidget> mWidget;
     nsTArray<nsCOMPtr<nsIURI>> mURIs;
@@ -191,7 +166,8 @@ GeckoViewHistory::QueryVisitedStateInParentProcess()
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsTArray<NewURIEntry> newEntries;
-  for (auto newURIsIter = mNewURIs.Iter(); !newURIsIter.Done(); newURIsIter.Next()) {
+  for (auto newURIsIter = mNewURIs.Iter(); !newURIsIter.Done();
+       newURIsIter.Next()) {
     nsIURI* uri = newURIsIter.Get()->GetKey();
     if (auto entry = mTrackedURIs.Lookup(uri)) {
       TrackedURI& trackedURI = entry.Data();
@@ -201,7 +177,7 @@ GeckoViewHistory::QueryVisitedStateInParentProcess()
           Link* link = linksIter.GetNext();
 
           nsIWidget* widget =
-            nsContentUtils::WidgetForContent(link->GetElement());
+              nsContentUtils::WidgetForContent(link->GetElement());
           if (!widget) {
             linksIter.Remove();
             continue;
@@ -233,8 +209,7 @@ GeckoViewHistory::QueryVisitedStateInParentProcess()
 }
 
 NS_IMETHODIMP
-GeckoViewHistory::Notify(nsITimer* aTimer)
-{
+GeckoViewHistory::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(aTimer == mQueryVisitedStateTimer);
 
   if (mNewURIs.Count() > 0) {
@@ -249,8 +224,7 @@ GeckoViewHistory::Notify(nsITimer* aTimer)
 }
 
 NS_IMETHODIMP
-GeckoViewHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink)
-{
+GeckoViewHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   if (!aLink || !aURI) {
     return NS_OK;
   }
@@ -281,16 +255,15 @@ GeckoViewHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink)
     if (!mQueryVisitedStateTimer) {
       mQueryVisitedStateTimer = NS_NewTimer();
     }
-    Unused << NS_WARN_IF(NS_FAILED(mQueryVisitedStateTimer->InitWithCallback(this,
-      GET_VISITS_WAIT_MS, nsITimer::TYPE_ONE_SHOT)));
+    Unused << NS_WARN_IF(NS_FAILED(mQueryVisitedStateTimer->InitWithCallback(
+        this, GET_VISITS_WAIT_MS, nsITimer::TYPE_ONE_SHOT)));
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GeckoViewHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink)
-{
+GeckoViewHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   if (!aLink || !aURI) {
     return NS_OK;
   }
@@ -325,22 +298,16 @@ GeckoViewHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink)
  * Called from the session handler for the history delegate, after the new
  * visit is recorded.
  */
-class OnVisitedCallback final : public nsIAndroidEventCallback
-{
-public:
+class OnVisitedCallback final : public nsIAndroidEventCallback {
+ public:
   explicit OnVisitedCallback(GeckoViewHistory* aHistory,
-                             nsIGlobalObject* aGlobalObject,
-                             nsIURI* aURI)
-    : mHistory(aHistory)
-    , mGlobalObject(aGlobalObject)
-    , mURI(aURI)
-  {}
+                             nsIGlobalObject* aGlobalObject, nsIURI* aURI)
+      : mHistory(aHistory), mGlobalObject(aGlobalObject), mURI(aURI) {}
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD
-  OnSuccess(JS::HandleValue aData) override
-  {
+  OnSuccess(JS::HandleValue aData) override {
     bool shouldNotify = false;
     {
       // Scope `jsapi`.
@@ -360,18 +327,12 @@ public:
   }
 
   NS_IMETHOD
-  OnError(JS::HandleValue aData) override
-  {
-    return NS_OK;
-  }
+  OnError(JS::HandleValue aData) override { return NS_OK; }
 
-private:
-  virtual ~OnVisitedCallback()
-  {}
+ private:
+  virtual ~OnVisitedCallback() {}
 
-  bool
-  ShouldNotifyVisited(JSContext* aCx, JS::HandleValue aData)
-  {
+  bool ShouldNotifyVisited(JSContext* aCx, JS::HandleValue aData) {
     if (NS_WARN_IF(!aData.isBoolean())) {
       return false;
     }
@@ -386,11 +347,8 @@ private:
 NS_IMPL_ISUPPORTS(OnVisitedCallback, nsIAndroidEventCallback)
 
 NS_IMETHODIMP
-GeckoViewHistory::VisitURI(nsIWidget* aWidget,
-                           nsIURI* aURI,
-                           nsIURI* aLastVisitedURI,
-                           uint32_t aFlags)
-{
+GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
+                           nsIURI* aLastVisitedURI, uint32_t aFlags) {
   if (!aURI) {
     return NS_OK;
   }
@@ -452,23 +410,23 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget,
     flags |= static_cast<int32_t>(GeckoViewVisitFlags::VISIT_TOP_LEVEL);
   }
   if (aFlags & REDIRECT_TEMPORARY) {
-    flags |= static_cast<int32_t>(
-      GeckoViewVisitFlags::VISIT_REDIRECT_TEMPORARY);
+    flags |=
+        static_cast<int32_t>(GeckoViewVisitFlags::VISIT_REDIRECT_TEMPORARY);
   }
   if (aFlags & REDIRECT_PERMANENT) {
-    flags |= static_cast<int32_t>(
-      GeckoViewVisitFlags::VISIT_REDIRECT_PERMANENT);
+    flags |=
+        static_cast<int32_t>(GeckoViewVisitFlags::VISIT_REDIRECT_PERMANENT);
   }
   if (aFlags & REDIRECT_SOURCE) {
     flags |= static_cast<int32_t>(GeckoViewVisitFlags::VISIT_REDIRECT_SOURCE);
   }
   if (aFlags & REDIRECT_SOURCE_PERMANENT) {
     flags |= static_cast<int32_t>(
-      GeckoViewVisitFlags::VISIT_REDIRECT_SOURCE_PERMANENT);
+        GeckoViewVisitFlags::VISIT_REDIRECT_SOURCE_PERMANENT);
   }
   if (aFlags & UNRECOVERABLE_ERROR) {
-    flags |= static_cast<int32_t>(
-      GeckoViewVisitFlags::VISIT_UNRECOVERABLE_ERROR);
+    flags |=
+        static_cast<int32_t>(GeckoViewVisitFlags::VISIT_UNRECOVERABLE_ERROR);
   }
   keys.AppendElement(jni::StringParam(NS_LITERAL_STRING("flags")));
   values.AppendElement(java::sdk::Integer::ValueOf(flags));
@@ -483,25 +441,22 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget,
   }
   auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
 
-  nsCOMPtr<nsIAndroidEventCallback> callback = new OnVisitedCallback(this,
-    dispatcher->GetGlobalObject(), aURI);
+  nsCOMPtr<nsIAndroidEventCallback> callback =
+      new OnVisitedCallback(this, dispatcher->GetGlobalObject(), aURI);
 
-  Unused << NS_WARN_IF(NS_FAILED(dispatcher->Dispatch(u"GeckoView:OnVisited",
-                                                      bundle,
-                                                      callback)));
+  Unused << NS_WARN_IF(NS_FAILED(
+      dispatcher->Dispatch(u"GeckoView:OnVisited", bundle, callback)));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GeckoViewHistory::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
-{
+GeckoViewHistory::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-GeckoViewHistory::NotifyVisited(nsIURI* aURI)
-{
+GeckoViewHistory::NotifyVisited(nsIURI* aURI) {
   if (NS_WARN_IF(!aURI)) {
     return NS_OK;
   }
@@ -529,22 +484,17 @@ GeckoViewHistory::NotifyVisited(nsIURI* aURI)
  * Called from the session handler for the history delegate, with visited
  * statuses for all requested URIs.
  */
-class GetVisitedCallback final : public nsIAndroidEventCallback
-{
-public:
+class GetVisitedCallback final : public nsIAndroidEventCallback {
+ public:
   explicit GetVisitedCallback(GeckoViewHistory* aHistory,
                               nsIGlobalObject* aGlobalObject,
                               const nsTArray<nsCOMPtr<nsIURI>>& aURIs)
-    : mHistory(aHistory)
-    , mGlobalObject(aGlobalObject)
-    , mURIs(aURIs)
-  {}
+      : mHistory(aHistory), mGlobalObject(aGlobalObject), mURIs(aURIs) {}
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD
-  OnSuccess(JS::HandleValue aData) override
-  {
+  OnSuccess(JS::HandleValue aData) override {
     nsTArray<VisitedURI> visitedURIs;
     {
       // Scope `jsapi`.
@@ -562,14 +512,10 @@ public:
   }
 
   NS_IMETHOD
-  OnError(JS::HandleValue aData) override
-  {
-    return NS_OK;
-  }
+  OnError(JS::HandleValue aData) override { return NS_OK; }
 
-private:
-  virtual ~GetVisitedCallback()
-  {}
+ private:
+  virtual ~GetVisitedCallback() {}
 
   /**
    * Unpacks an array of Boolean visited statuses from the session handler into
@@ -581,10 +527,8 @@ private:
    *
    * TODO (bug 1503482): Remove this unboxing.
    */
-  bool
-  ExtractVisitedURIs(JSContext* aCx, JS::HandleValue aData,
-                     nsTArray<VisitedURI>& aVisitedURIs)
-  {
+  bool ExtractVisitedURIs(JSContext* aCx, JS::HandleValue aData,
+                          nsTArray<VisitedURI>& aVisitedURIs) {
     if (aData.isNull()) {
       return true;
     }
@@ -634,10 +578,8 @@ NS_IMPL_ISUPPORTS(GetVisitedCallback, nsIAndroidEventCallback)
  * is always called in the parent process: from `GetVisited` in non-e10s, and
  * from `ContentParent::RecvGetVisited` in e10s.
  */
-void
-GeckoViewHistory::QueryVisitedState(nsIWidget* aWidget,
-                                    const nsTArray<nsCOMPtr<nsIURI>>& aURIs)
-{
+void GeckoViewHistory::QueryVisitedState(
+    nsIWidget* aWidget, const nsTArray<nsCOMPtr<nsIURI>>& aURIs) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<nsWindow> window = nsWindow::From(aWidget);
   if (NS_WARN_IF(!window)) {
@@ -669,12 +611,11 @@ GeckoViewHistory::QueryVisitedState(nsIWidget* aWidget,
 
   auto bundle = java::GeckoBundle::New(bundleKeys, bundleValues);
 
-  nsCOMPtr<nsIAndroidEventCallback> callback = new GetVisitedCallback(this,
-    dispatcher->GetGlobalObject(), aURIs);
+  nsCOMPtr<nsIAndroidEventCallback> callback =
+      new GetVisitedCallback(this, dispatcher->GetGlobalObject(), aURIs);
 
-  Unused << NS_WARN_IF(NS_FAILED(dispatcher->Dispatch(u"GeckoView:GetVisited",
-                                                      bundle,
-                                                      callback)));
+  Unused << NS_WARN_IF(NS_FAILED(
+      dispatcher->Dispatch(u"GeckoView:GetVisited", bundle, callback)));
 }
 
 /**
@@ -682,9 +623,8 @@ GeckoViewHistory::QueryVisitedState(nsIWidget* aWidget,
  * the content process in e10s. This is always called in the parent process,
  * from `VisitedCallback::OnSuccess` and `GetVisitedCallback::OnSuccess`.
  */
-void
-GeckoViewHistory::HandleVisitedState(const nsTArray<VisitedURI>& aVisitedURIs)
-{
+void GeckoViewHistory::HandleVisitedState(
+    const nsTArray<VisitedURI>& aVisitedURIs) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (aVisitedURIs.IsEmpty()) {
     return;
@@ -726,42 +666,40 @@ GeckoViewHistory::HandleVisitedState(const nsTArray<VisitedURI>& aVisitedURIs)
  * `aDocument`. This is mostly copied from `History::DispatchNotifyVisited` and
  * `History::NotifyVisitedForDocument`.
  */
-void
-GeckoViewHistory::DispatchNotifyVisited(nsIURI* aURI, nsIDocument* aDocument)
-{
+void GeckoViewHistory::DispatchNotifyVisited(nsIURI* aURI,
+                                             nsIDocument* aDocument) {
   // Capture strong references to the arguments to capture in the closure.
   RefPtr<GeckoViewHistory> kungFuDeathGrip(this);
   nsCOMPtr<nsIDocument> doc(aDocument);
   nsCOMPtr<nsIURI> uri(aURI);
 
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-    "GeckoViewHistory::DispatchNotifyVisited",
-    [this, kungFuDeathGrip, uri, doc] {
-      nsAutoScriptBlocker scriptBlocker;
-      auto entry = mTrackedURIs.Lookup(uri);
-      if (NS_WARN_IF(!entry)) {
-        return;
-      }
-      TrackedURI& trackedURI = entry.Data();
-      if (!trackedURI.mLinks.IsEmpty()) {
-        nsTObserverArray<Link*>::BackwardIterator iter(trackedURI.mLinks);
-        while (iter.HasMore()) {
-          Link* link = iter.GetNext();
-          if (OwnerDocForLink(link) == doc) {
-            link->SetLinkState(eLinkState_Visited);
-            iter.Remove();
+      "GeckoViewHistory::DispatchNotifyVisited",
+      [this, kungFuDeathGrip, uri, doc] {
+        nsAutoScriptBlocker scriptBlocker;
+        auto entry = mTrackedURIs.Lookup(uri);
+        if (NS_WARN_IF(!entry)) {
+          return;
+        }
+        TrackedURI& trackedURI = entry.Data();
+        if (!trackedURI.mLinks.IsEmpty()) {
+          nsTObserverArray<Link*>::BackwardIterator iter(trackedURI.mLinks);
+          while (iter.HasMore()) {
+            Link* link = iter.GetNext();
+            if (OwnerDocForLink(link) == doc) {
+              link->SetLinkState(eLinkState_Visited);
+              iter.Remove();
+            }
           }
         }
-      }
-      if (trackedURI.mLinks.IsEmpty()) {
-        entry.Remove();
-      }
-    }
-  );
+        if (trackedURI.mLinks.IsEmpty()) {
+          entry.Remove();
+        }
+      });
 
   if (doc) {
-    Unused << NS_WARN_IF(NS_FAILED(doc->Dispatch(TaskCategory::Other,
-                                                 runnable.forget())));
+    Unused << NS_WARN_IF(
+        NS_FAILED(doc->Dispatch(TaskCategory::Other, runnable.forget())));
   } else {
     Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
   }

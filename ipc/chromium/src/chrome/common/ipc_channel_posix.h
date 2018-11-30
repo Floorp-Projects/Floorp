@@ -42,13 +42,11 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
     return old;
   }
   bool Send(Message* message);
-  void GetClientFileDescriptorMapping(int *src_fd, int *dest_fd) const;
+  void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
 
   void ResetFileDescriptor(int fd);
 
-  int GetFileDescriptor() const {
-      return pipe_;
-  }
+  int GetFileDescriptor() const { return pipe_; }
   void CloseClientFileDescriptor();
 
   // See the comment in ipc_channel.h for info on Unsound_IsClosed() and
@@ -115,9 +113,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // array size. Consequently, we pick a number here that is at least
   // CMSG_SPACE(0) on all platforms. And we assert at runtime, in
   // Channel::ChannelImpl::Init, that it's big enough.
-  enum {
-    kControlBufferSlopBytes = 32
-  };
+  enum { kControlBufferSlopBytes = 32 };
 
   // This is a control message buffer large enough to hold all the file
   // descriptors that will be read in when reading Channel::kReadBufferSize
@@ -153,11 +149,9 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
     uint32_t id;
     RefPtr<FileDescriptorSet> fds;
 
-    PendingDescriptors() : id(0) { }
-    PendingDescriptors(uint32_t id, FileDescriptorSet *fds)
-      : id(id),
-        fds(fds)
-    { }
+    PendingDescriptors() : id(0) {}
+    PendingDescriptors(uint32_t id, FileDescriptorSet* fds)
+        : id(id), fds(fds) {}
   };
 
   std::list<PendingDescriptors> pending_fds_;

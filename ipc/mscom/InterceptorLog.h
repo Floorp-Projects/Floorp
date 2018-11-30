@@ -16,9 +16,8 @@ struct IUnknown;
 namespace mozilla {
 namespace mscom {
 
-class InterceptorLog
-{
-public:
+class InterceptorLog {
+ public:
   static bool Init();
   static void QI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
                  IUnknown* aInterface,
@@ -31,8 +30,7 @@ public:
                     const TimeDuration& aGeckoDuration);
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_InterceptorLog_h
-
+#endif  // mozilla_mscom_InterceptorLog_h

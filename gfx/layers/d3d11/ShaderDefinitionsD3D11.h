@@ -12,8 +12,7 @@
 namespace mozilla {
 namespace layers {
 
-struct VertexShaderConstants
-{
+struct VertexShaderConstants {
   float layerTransform[4][4];
   float projection[4][4];
   float renderTargetOffset[4];
@@ -23,8 +22,7 @@ struct VertexShaderConstants
   float backdropTransform[4][4];
 };
 
-struct PixelShaderConstants
-{
+struct PixelShaderConstants {
   float layerColor[4];
   float layerOpacity[4];
   int blendConfig[4];
@@ -32,12 +30,11 @@ struct PixelShaderConstants
   float yuvColorMatrix[3][4];
 };
 
-struct Vertex
-{
-    float position[2];
+struct Vertex {
+  float position[2];
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_d3d11_ShaderDefinitionsD3D11_h
+#endif  // mozilla_gfx_layers_d3d11_ShaderDefinitionsD3D11_h

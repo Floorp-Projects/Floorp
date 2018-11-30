@@ -20,51 +20,29 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Report)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Report::Report(nsPIDOMWindowInner* aWindow,
-               const nsAString& aType,
-               const nsAString& aURL,
-               ReportBody* aBody)
-  : mWindow(aWindow)
-  , mType(aType)
-  , mURL(aURL)
-  , mBody(aBody)
-{
+Report::Report(nsPIDOMWindowInner* aWindow, const nsAString& aType,
+               const nsAString& aURL, ReportBody* aBody)
+    : mWindow(aWindow), mType(aType), mURL(aURL), mBody(aBody) {
   MOZ_ASSERT(aWindow);
 }
 
 Report::~Report() = default;
 
-already_AddRefed<Report>
-Report::Clone()
-{
-  RefPtr<Report> report =
-    new Report(mWindow, mType, mURL, mBody);
+already_AddRefed<Report> Report::Clone() {
+  RefPtr<Report> report = new Report(mWindow, mType, mURL, mBody);
   return report.forget();
 }
 
-JSObject*
-Report::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Report::WrapObject(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) {
   return Report_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Report::GetType(nsAString& aType) const
-{
-  aType = mType;
-}
+void Report::GetType(nsAString& aType) const { aType = mType; }
 
-void
-Report::GetUrl(nsAString& aURL) const
-{
-  aURL = mURL;
-}
+void Report::GetUrl(nsAString& aURL) const { aURL = mURL; }
 
-ReportBody*
-Report::GetBody() const
-{
-  return mBody;
-}
+ReportBody* Report::GetBody() const { return mBody; }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

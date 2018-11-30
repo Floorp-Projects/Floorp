@@ -22,27 +22,27 @@ class GlobalObject;
 
 /******************** Collator ********************/
 
-class CollatorObject : public NativeObject
-{
-  public:
-    static const Class class_;
+class CollatorObject : public NativeObject {
+ public:
+  static const Class class_;
 
-    static constexpr uint32_t INTERNALS_SLOT = 0;
-    static constexpr uint32_t UCOLLATOR_SLOT = 1;
-    static constexpr uint32_t SLOT_COUNT = 2;
+  static constexpr uint32_t INTERNALS_SLOT = 0;
+  static constexpr uint32_t UCOLLATOR_SLOT = 1;
+  static constexpr uint32_t SLOT_COUNT = 2;
 
-    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
-                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
+  static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                "INTERNALS_SLOT must match self-hosting define for internals "
+                "object slot");
 
-  private:
-    static const ClassOps classOps_;
+ private:
+  static const ClassOps classOps_;
 
-    static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 };
 
-extern JSObject*
-CreateCollatorPrototype(JSContext* cx, JS::Handle<JSObject*> Intl,
-                        JS::Handle<GlobalObject*> global);
+extern JSObject* CreateCollatorPrototype(JSContext* cx,
+                                         JS::Handle<JSObject*> Intl,
+                                         JS::Handle<GlobalObject*> global);
 
 /**
  * Returns a new instance of the standard built-in Collator constructor.
@@ -51,8 +51,8 @@ CreateCollatorPrototype(JSContext* cx, JS::Handle<JSObject*> Intl,
  *
  * Usage: collator = intl_Collator(locales, options)
  */
-extern MOZ_MUST_USE bool
-intl_Collator(JSContext* cx, unsigned argc, JS::Value* vp);
+extern MOZ_MUST_USE bool intl_Collator(JSContext* cx, unsigned argc,
+                                       JS::Value* vp);
 
 /**
  * Returns an object indicating the supported locales for collation
@@ -62,8 +62,9 @@ intl_Collator(JSContext* cx, unsigned argc, JS::Value* vp);
  *
  * Usage: availableLocales = intl_Collator_availableLocales()
  */
-extern MOZ_MUST_USE bool
-intl_Collator_availableLocales(JSContext* cx, unsigned argc, JS::Value* vp);
+extern MOZ_MUST_USE bool intl_Collator_availableLocales(JSContext* cx,
+                                                        unsigned argc,
+                                                        JS::Value* vp);
 
 /**
  * Returns an array with the collation type identifiers per Unicode
@@ -73,8 +74,8 @@ intl_Collator_availableLocales(JSContext* cx, unsigned argc, JS::Value* vp);
  *
  * Usage: collations = intl_availableCollations(locale)
  */
-extern MOZ_MUST_USE bool
-intl_availableCollations(JSContext* cx, unsigned argc, JS::Value* vp);
+extern MOZ_MUST_USE bool intl_availableCollations(JSContext* cx, unsigned argc,
+                                                  JS::Value* vp);
 
 /**
  * Compares x and y (which must be String values), and returns a number less
@@ -86,8 +87,8 @@ intl_availableCollations(JSContext* cx, unsigned argc, JS::Value* vp);
  *
  * Usage: result = intl_CompareStrings(collator, x, y)
  */
-extern MOZ_MUST_USE bool
-intl_CompareStrings(JSContext* cx, unsigned argc, JS::Value* vp);
+extern MOZ_MUST_USE bool intl_CompareStrings(JSContext* cx, unsigned argc,
+                                             JS::Value* vp);
 
 /**
  * Returns true if the given locale sorts upper-case before lower-case
@@ -95,9 +96,9 @@ intl_CompareStrings(JSContext* cx, unsigned argc, JS::Value* vp);
  *
  * Usage: result = intl_isUpperCaseFirst(locale)
  */
-extern MOZ_MUST_USE bool
-intl_isUpperCaseFirst(JSContext* cx, unsigned argc, JS::Value* vp);
+extern MOZ_MUST_USE bool intl_isUpperCaseFirst(JSContext* cx, unsigned argc,
+                                               JS::Value* vp);
 
-} // namespace js
+}  // namespace js
 
 #endif /* builtin_intl_Collator_h */

@@ -10,42 +10,34 @@ namespace mozilla {
 namespace dom {
 
 SpeechRecognitionError::SpeechRecognitionError(
-                          mozilla::dom::EventTarget* aOwner,
-                          nsPresContext* aPresContext,
-                          WidgetEvent* aEvent)
-  : Event(aOwner, aPresContext, aEvent)
-  , mError()
-{
-}
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    WidgetEvent* aEvent)
+    : Event(aOwner, aPresContext, aEvent), mError() {}
 
 SpeechRecognitionError::~SpeechRecognitionError() {}
 
-already_AddRefed<SpeechRecognitionError>
-SpeechRecognitionError::Constructor(const GlobalObject& aGlobal,
-                                    const nsAString& aType,
-                                    const SpeechRecognitionErrorInit& aParam,
-                                    ErrorResult& aRv)
-{
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<SpeechRecognitionError> e = new SpeechRecognitionError(t, nullptr, nullptr);
+already_AddRefed<SpeechRecognitionError> SpeechRecognitionError::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const SpeechRecognitionErrorInit& aParam, ErrorResult& aRv) {
+  nsCOMPtr<mozilla::dom::EventTarget> t =
+      do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<SpeechRecognitionError> e =
+      new SpeechRecognitionError(t, nullptr, nullptr);
   bool trusted = e->Init(t);
-  e->InitSpeechRecognitionError(aType, aParam.mBubbles, aParam.mCancelable, aParam.mError, aParam.mMessage);
+  e->InitSpeechRecognitionError(aType, aParam.mBubbles, aParam.mCancelable,
+                                aParam.mError, aParam.mMessage);
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 
-void
-SpeechRecognitionError::InitSpeechRecognitionError(const nsAString& aType,
-                                                   bool aCanBubble,
-                                                   bool aCancelable,
-                                                   SpeechRecognitionErrorCode aError,
-                                                   const nsAString& aMessage)
-{
+void SpeechRecognitionError::InitSpeechRecognitionError(
+    const nsAString& aType, bool aCanBubble, bool aCancelable,
+    SpeechRecognitionErrorCode aError, const nsAString& aMessage) {
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mError = aError;
   mMessage = aMessage;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

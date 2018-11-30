@@ -14,33 +14,32 @@
 namespace mozilla {
 namespace dom {
 struct WebGPUAdapterDescriptor;
-} // namespace dom
+}  // namespace dom
 
 namespace webgpu {
 class Adapter;
 class InstanceProvider;
 
-class Instance final
-    : public nsWrapperCache
-{
-public:
-    WEBGPU_DECL_GOOP(Instance)
+class Instance final : public nsWrapperCache {
+ public:
+  WEBGPU_DECL_GOOP(Instance)
 
-    const nsCOMPtr<nsIGlobalObject> mParent;
+  const nsCOMPtr<nsIGlobalObject> mParent;
 
-    static RefPtr<Instance> Create(nsIGlobalObject* parent);
+  static RefPtr<Instance> Create(nsIGlobalObject* parent);
 
-private:
-    explicit Instance(nsIGlobalObject* parent);
-    virtual ~Instance();
+ private:
+  explicit Instance(nsIGlobalObject* parent);
+  virtual ~Instance();
 
-public:
-    nsIGlobalObject* GetParentObject() const { return mParent.get(); }
+ public:
+  nsIGlobalObject* GetParentObject() const { return mParent.get(); }
 
-    already_AddRefed<Adapter> GetAdapter(const dom::WebGPUAdapterDescriptor& desc) const;
+  already_AddRefed<Adapter> GetAdapter(
+      const dom::WebGPUAdapterDescriptor& desc) const;
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_INSTANCE_H_
+#endif  // WEBGPU_INSTANCE_H_

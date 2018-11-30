@@ -10,122 +10,95 @@
 namespace mozilla {
 namespace gl {
 
-bool
-DoesEGLContextSupportSharingWithEGLImage(GLContext* gl)
-{
-    auto* egl = gl::GLLibraryEGL::Get();
+bool DoesEGLContextSupportSharingWithEGLImage(GLContext* gl) {
+  auto* egl = gl::GLLibraryEGL::Get();
 
-    return egl->HasKHRImageBase() &&
-           egl->HasKHRImageTexture2D() &&
-           gl->IsExtensionSupported(GLContext::OES_EGL_image);
+  return egl->HasKHRImageBase() && egl->HasKHRImageTexture2D() &&
+         gl->IsExtensionSupported(GLContext::OES_EGL_image);
 }
 
-EGLImage
-CreateEGLImage(GLContext* gl, GLuint tex)
-{
-    MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
+EGLImage CreateEGLImage(GLContext* gl, GLuint tex) {
+  MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
 
-    auto* egl = gl::GLLibraryEGL::Get();
+  auto* egl = gl::GLLibraryEGL::Get();
 
-    EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
-    EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
-    EGLImage image = egl->fCreateImage(EGL_DISPLAY(),
-                                       eglContext,
-                                       LOCAL_EGL_GL_TEXTURE_2D,
-                                       clientBuffer,
-                                       nullptr);
-    return image;
+  EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
+  EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
+  EGLImage image =
+      egl->fCreateImage(EGL_DISPLAY(), eglContext, LOCAL_EGL_GL_TEXTURE_2D,
+                        clientBuffer, nullptr);
+  return image;
 }
 
 ////////////////////////////////////////////////////////////////////////
 // EGLImageWrapper
 
-/*static*/ EGLImageWrapper*
-EGLImageWrapper::Create(GLContext* gl, GLuint tex)
-{
-    MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
+/*static*/ EGLImageWrapper* EGLImageWrapper::Create(GLContext* gl, GLuint tex) {
+  MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
 
-    auto* egl = gl::GLLibraryEGL::Get();
+  auto* egl = gl::GLLibraryEGL::Get();
 
-    EGLDisplay display = EGL_DISPLAY();
-    EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
-    EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
-    EGLImage image = egl->fCreateImage(display,
-                                       eglContext,
-                                       LOCAL_EGL_GL_TEXTURE_2D,
-                                       clientBuffer,
-                                       nullptr);
-    if (!image) {
+  EGLDisplay display = EGL_DISPLAY();
+  EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
+  EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
+  EGLImage image = egl->fCreateImage(
+      display, eglContext, LOCAL_EGL_GL_TEXTURE_2D, clientBuffer, nullptr);
+  if (!image) {
 #ifdef DEBUG
-        printf_stderr("Could not create EGL images: ERROR (0x%04x)\n",
-                      egl->fGetError());
+    printf_stderr("Could not create EGL images: ERROR (0x%04x)\n",
+                  egl->fGetError());
 #endif
-        return nullptr;
-    }
+    return nullptr;
+  }
 
-    return new EGLImageWrapper(egl, display, image);
+  return new EGLImageWrapper(egl, display, image);
 }
 
-EGLImageWrapper::EGLImageWrapper(GLLibraryEGL* library,
-                                 EGLDisplay display,
+EGLImageWrapper::EGLImageWrapper(GLLibraryEGL* library, EGLDisplay display,
                                  EGLImage image)
-    : mLibrary(library)
-    , mDisplay(display)
-    , mImage(image)
-    , mSync(0)
-{
-    MOZ_ASSERT(mImage);
+    : mLibrary(library), mDisplay(display), mImage(image), mSync(0) {
+  MOZ_ASSERT(mImage);
 }
 
-EGLImageWrapper::~EGLImageWrapper()
-{
-    mLibrary->fDestroyImage(mDisplay, mImage);
+EGLImageWrapper::~EGLImageWrapper() {
+  mLibrary->fDestroyImage(mDisplay, mImage);
 }
 
-bool
-EGLImageWrapper::FenceSync(GLContext* gl)
-{
-    MOZ_ASSERT(!mSync);
+bool EGLImageWrapper::FenceSync(GLContext* gl) {
+  MOZ_ASSERT(!mSync);
 
-    if (mLibrary->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
-        mSync = mLibrary->fCreateSync(mDisplay,
-                                      LOCAL_EGL_SYNC_FENCE,
-                                      nullptr);
-        // We need to flush to make sure the sync object enters the command stream;
-        // we can't use EGL_SYNC_FLUSH_COMMANDS_BIT at wait time, because the wait
-        // happens on a different thread/context.
-        gl->fFlush();
-    }
+  if (mLibrary->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
+    mSync = mLibrary->fCreateSync(mDisplay, LOCAL_EGL_SYNC_FENCE, nullptr);
+    // We need to flush to make sure the sync object enters the command stream;
+    // we can't use EGL_SYNC_FLUSH_COMMANDS_BIT at wait time, because the wait
+    // happens on a different thread/context.
+    gl->fFlush();
+  }
 
-    if (!mSync) {
-        // we failed to create one, so just do a finish
-        gl->fFinish();
-    }
+  if (!mSync) {
+    // we failed to create one, so just do a finish
+    gl->fFinish();
+  }
 
+  return true;
+}
+
+bool EGLImageWrapper::ClientWaitSync() {
+  if (!mSync) {
+    // if we have no sync object, then we did a Finish() earlier
     return true;
+  }
+
+  // wait at most 1 second; this should really be never/rarely hit
+  const uint64_t ns_per_ms = 1000 * 1000;
+  EGLTime timeout = 1000 * ns_per_ms;
+
+  EGLint result = mLibrary->fClientWaitSync(mDisplay, mSync, 0, timeout);
+  mLibrary->fDestroySync(mDisplay, mSync);
+  mSync = nullptr;
+
+  return result == LOCAL_EGL_CONDITION_SATISFIED;
 }
 
-bool
-EGLImageWrapper::ClientWaitSync()
-{
-    if (!mSync) {
-        // if we have no sync object, then we did a Finish() earlier
-        return true;
-    }
-
-    // wait at most 1 second; this should really be never/rarely hit
-    const uint64_t ns_per_ms = 1000 * 1000;
-    EGLTime timeout = 1000 * ns_per_ms;
-
-    EGLint result = mLibrary->fClientWaitSync(mDisplay,
-                                              mSync,
-                                              0,
-                                              timeout);
-    mLibrary->fDestroySync(mDisplay, mSync);
-    mSync = nullptr;
-
-    return result == LOCAL_EGL_CONDITION_SATISFIED;
-}
-
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla

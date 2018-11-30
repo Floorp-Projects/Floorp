@@ -11,29 +11,24 @@ namespace mozilla {
 static ProfilerLabelEnter sEnter = nullptr;
 static ProfilerLabelExit sExit = nullptr;
 
-void
-RegisterProfilerLabelEnterExit(ProfilerLabelEnter aEnter,
-                               ProfilerLabelExit aExit)
-{
+void RegisterProfilerLabelEnterExit(ProfilerLabelEnter aEnter,
+                                    ProfilerLabelExit aExit) {
   sEnter = aEnter;
   sExit = aExit;
 }
 
-AutoProfilerLabel::AutoProfilerLabel(const char* aLabel,
-                                     const char* aDynamicString
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-{
+AutoProfilerLabel::AutoProfilerLabel(
+    const char* aLabel,
+    const char* aDynamicString MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
   mProfilingStack = sEnter ? sEnter(aLabel, aDynamicString, this) : nullptr;
 }
 
-AutoProfilerLabel::~AutoProfilerLabel()
-{
+AutoProfilerLabel::~AutoProfilerLabel() {
   if (sExit && mProfilingStack) {
     sExit(mProfilingStack);
   }
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

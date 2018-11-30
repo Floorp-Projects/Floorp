@@ -14,11 +14,9 @@ namespace mozilla {
 
 namespace ipc {
 
-void SetThisProcessName(const char *aName)
-{
+void SetThisProcessName(const char *aName) {
   prctl(PR_SET_NAME, (unsigned long)aName, 0uL, 0uL, 0uL);
 }
 
-
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

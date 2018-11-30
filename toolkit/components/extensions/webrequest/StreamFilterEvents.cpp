@@ -28,12 +28,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StreamFilterDataEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
-
 /* static */ already_AddRefed<StreamFilterDataEvent>
 StreamFilterDataEvent::Constructor(EventTarget* aEventTarget,
                                    const nsAString& aType,
-                                   const StreamFilterDataEventInit& aParam)
-{
+                                   const StreamFilterDataEventInit& aParam) {
   RefPtr<StreamFilterDataEvent> event = new StreamFilterDataEvent(aEventTarget);
 
   bool trusted = event->Init(aEventTarget);
@@ -46,11 +44,10 @@ StreamFilterDataEvent::Constructor(EventTarget* aEventTarget,
   return event.forget();
 }
 
-JSObject*
-StreamFilterDataEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* StreamFilterDataEvent::WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return StreamFilterDataEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace extensions
-} // namespace mozilla
+}  // namespace extensions
+}  // namespace mozilla

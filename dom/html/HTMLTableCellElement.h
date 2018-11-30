@@ -14,12 +14,11 @@ namespace dom {
 
 class HTMLTableElement;
 
-class HTMLTableCellElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLTableCellElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-  {
+class HTMLTableCellElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLTableCellElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {
     SetHasWeirdParserInsertionMode();
   }
 
@@ -27,143 +26,102 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableCellElement,
                                        nsGenericHTMLElement)
 
-  uint32_t ColSpan() const
-  {
-    return GetIntAttr(nsGkAtoms::colspan, 1);
-  }
-  void SetColSpan(uint32_t aColSpan, ErrorResult& aError)
-  {
+  uint32_t ColSpan() const { return GetIntAttr(nsGkAtoms::colspan, 1); }
+  void SetColSpan(uint32_t aColSpan, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::colspan, aColSpan, 1, aError);
   }
-  uint32_t RowSpan() const
-  {
-    return GetIntAttr(nsGkAtoms::rowspan, 1);
-  }
-  void SetRowSpan(uint32_t aRowSpan, ErrorResult& aError)
-  {
+  uint32_t RowSpan() const { return GetIntAttr(nsGkAtoms::rowspan, 1); }
+  void SetRowSpan(uint32_t aRowSpan, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::rowspan, aRowSpan, 1, aError);
   }
-  //already_AddRefed<nsDOMTokenList> Headers() const;
-  void GetHeaders(DOMString& aHeaders)
-  {
+  // already_AddRefed<nsDOMTokenList> Headers() const;
+  void GetHeaders(DOMString& aHeaders) {
     GetHTMLAttr(nsGkAtoms::headers, aHeaders);
   }
-  void SetHeaders(const nsAString& aHeaders, ErrorResult& aError)
-  {
+  void SetHeaders(const nsAString& aHeaders, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::headers, aHeaders, aError);
   }
   int32_t CellIndex() const;
 
-  void GetAbbr(DOMString& aAbbr)
-  {
-    GetHTMLAttr(nsGkAtoms::abbr, aAbbr);
-  }
-  void SetAbbr(const nsAString& aAbbr, ErrorResult& aError)
-  {
+  void GetAbbr(DOMString& aAbbr) { GetHTMLAttr(nsGkAtoms::abbr, aAbbr); }
+  void SetAbbr(const nsAString& aAbbr, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::abbr, aAbbr, aError);
   }
   void GetScope(DOMString& aScope);
-  void SetScope(const nsAString& aScope, ErrorResult& aError)
-  {
+  void SetScope(const nsAString& aScope, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::scope, aScope, aError);
   }
   void GetAlign(DOMString& aAlign);
-  void SetAlign(const nsAString& aAlign, ErrorResult& aError)
-  {
+  void SetAlign(const nsAString& aAlign, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
   }
-  void GetAxis(DOMString& aAxis)
-  {
-    GetHTMLAttr(nsGkAtoms::axis, aAxis);
-  }
-  void SetAxis(const nsAString& aAxis, ErrorResult& aError)
-  {
+  void GetAxis(DOMString& aAxis) { GetHTMLAttr(nsGkAtoms::axis, aAxis); }
+  void SetAxis(const nsAString& aAxis, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::axis, aAxis, aError);
   }
-  void GetHeight(DOMString& aHeight)
-  {
+  void GetHeight(DOMString& aHeight) {
     GetHTMLAttr(nsGkAtoms::height, aHeight);
   }
-  void SetHeight(const nsAString& aHeight, ErrorResult& aError)
-  {
+  void SetHeight(const nsAString& aHeight, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::height, aHeight, aError);
   }
-  void GetWidth(DOMString& aWidth)
-  {
-    GetHTMLAttr(nsGkAtoms::width, aWidth);
-  }
-  void SetWidth(const nsAString& aWidth, ErrorResult& aError)
-  {
+  void GetWidth(DOMString& aWidth) { GetHTMLAttr(nsGkAtoms::width, aWidth); }
+  void SetWidth(const nsAString& aWidth, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::width, aWidth, aError);
   }
-  void GetCh(DOMString& aCh)
-  {
-    GetHTMLAttr(nsGkAtoms::_char, aCh);
-  }
-  void SetCh(const nsAString& aCh, ErrorResult& aError)
-  {
+  void GetCh(DOMString& aCh) { GetHTMLAttr(nsGkAtoms::_char, aCh); }
+  void SetCh(const nsAString& aCh, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::_char, aCh, aError);
   }
-  void GetChOff(DOMString& aChOff)
-  {
-    GetHTMLAttr(nsGkAtoms::charoff, aChOff);
-  }
-  void SetChOff(const nsAString& aChOff, ErrorResult& aError)
-  {
+  void GetChOff(DOMString& aChOff) { GetHTMLAttr(nsGkAtoms::charoff, aChOff); }
+  void SetChOff(const nsAString& aChOff, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::charoff, aChOff, aError);
   }
-  bool NoWrap()
-  {
-    return GetBoolAttr(nsGkAtoms::nowrap);
-  }
-  void SetNoWrap(bool aNoWrap, ErrorResult& aError)
-  {
+  bool NoWrap() { return GetBoolAttr(nsGkAtoms::nowrap); }
+  void SetNoWrap(bool aNoWrap, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::nowrap, aNoWrap, aError);
   }
-  void GetVAlign(DOMString& aVAlign)
-  {
+  void GetVAlign(DOMString& aVAlign) {
     GetHTMLAttr(nsGkAtoms::valign, aVAlign);
   }
-  void SetVAlign(const nsAString& aVAlign, ErrorResult& aError)
-  {
+  void SetVAlign(const nsAString& aVAlign, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::valign, aVAlign, aError);
   }
-  void GetBgColor(DOMString& aBgColor)
-  {
+  void GetBgColor(DOMString& aBgColor) {
     GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
   }
-  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError)
-  {
+  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   // Get mapped attributes of ancestor table, if any
   nsMappedAttributes* GetMappedAttributesInheritedFromTable() const;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-protected:
+ protected:
   virtual ~HTMLTableCellElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   HTMLTableElement* GetTable() const;
 
   HTMLTableRowElement* GetRow() const;
 
-private:
+ private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_HTMLTableCellElement_h */

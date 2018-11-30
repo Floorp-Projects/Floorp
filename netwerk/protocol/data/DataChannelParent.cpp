@@ -14,102 +14,83 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(DataChannelParent, nsIParentChannel, nsIStreamListener)
 
-bool
-DataChannelParent::Init(const uint32_t &channelId)
-{
-    nsCOMPtr<nsIChannel> channel;
-    MOZ_ALWAYS_SUCCEEDS(
-        NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel)));
+bool DataChannelParent::Init(const uint32_t &channelId) {
+  nsCOMPtr<nsIChannel> channel;
+  MOZ_ALWAYS_SUCCEEDS(
+      NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel)));
 
-    return true;
+  return true;
 }
 
 NS_IMETHODIMP
-DataChannelParent::SetParentListener(HttpChannelParentListener* aListener)
-{
-    // Nothing to do.
-    return NS_OK;
+DataChannelParent::SetParentListener(HttpChannelParentListener *aListener) {
+  // Nothing to do.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::NotifyTrackingProtectionDisabled()
-{
-    // Nothing to do.
-    return NS_OK;
+DataChannelParent::NotifyTrackingProtectionDisabled() {
+  // Nothing to do.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::NotifyCookieAllowed()
-{
-    // Nothing to do.
-    return NS_OK;
+DataChannelParent::NotifyCookieAllowed() {
+  // Nothing to do.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
-{
-    // Nothing to do.
-    return NS_OK;
+DataChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason) {
+  // Nothing to do.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::NotifyTrackingResource(bool aIsThirdParty)
-{
-    // Nothing to do.
-    return NS_OK;
+DataChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
+  // Nothing to do.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
-                                            const nsACString& aProvider,
-                                            const nsACString& aFullHash)
-{
+DataChannelParent::SetClassifierMatchedInfo(const nsACString &aList,
+                                            const nsACString &aProvider,
+                                            const nsACString &aFullHash) {
   // nothing to do
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::Delete()
-{
-    // Nothing to do.
-    return NS_OK;
+DataChannelParent::Delete() {
+  // Nothing to do.
+  return NS_OK;
 }
 
-void
-DataChannelParent::ActorDestroy(ActorDestroyReason why)
-{
+void DataChannelParent::ActorDestroy(ActorDestroyReason why) {}
+
+NS_IMETHODIMP
+DataChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
+  // We don't have a way to prevent nsBaseChannel from calling AsyncOpen on
+  // the created nsDataChannel. We don't have anywhere to send the data in the
+  // parent, so abort the binding.
+  return NS_BINDING_ABORTED;
 }
 
 NS_IMETHODIMP
-DataChannelParent::OnStartRequest(nsIRequest *aRequest,
-                                  nsISupports *aContext)
-{
-    // We don't have a way to prevent nsBaseChannel from calling AsyncOpen on
-    // the created nsDataChannel. We don't have anywhere to send the data in the
-    // parent, so abort the binding.
-    return NS_BINDING_ABORTED;
+DataChannelParent::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+                                 nsresult aStatusCode) {
+  // See above.
+  MOZ_ASSERT(NS_FAILED(aStatusCode));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::OnStopRequest(nsIRequest *aRequest,
-                                 nsISupports *aContext,
-                                 nsresult aStatusCode)
-{
-    // See above.
-    MOZ_ASSERT(NS_FAILED(aStatusCode));
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-DataChannelParent::OnDataAvailable(nsIRequest *aRequest,
-                                   nsISupports *aContext,
+DataChannelParent::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                                    nsIInputStream *aInputStream,
-                                   uint64_t aOffset,
-                                   uint32_t aCount)
-{
-    // See above.
-    MOZ_CRASH("Should never be called");
+                                   uint64_t aOffset, uint32_t aCount) {
+  // See above.
+  MOZ_CRASH("Should never be called");
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

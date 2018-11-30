@@ -53,9 +53,9 @@
 #include <unistd.h>     // sysconf
 #include <semaphore.h>
 #ifdef __GLIBC__
-#include <execinfo.h>   // backtrace, backtrace_symbols
-#endif  // def __GLIBC__
-#include <strings.h>    // index
+#include <execinfo.h>  // backtrace, backtrace_symbols
+#endif                 // def __GLIBC__
+#include <strings.h>   // index
 #include <errno.h>
 #include <stdarg.h>
 
@@ -69,21 +69,11 @@
 
 using namespace mozilla;
 
-/* static */ int
-Thread::GetCurrentId()
-{
-  return gettid();
-}
+/* static */ int Thread::GetCurrentId() { return gettid(); }
 
-void*
-GetStackTop(void* aGuess)
-{
-  return aGuess;
-}
+void* GetStackTop(void* aGuess) { return aGuess; }
 
-static void
-PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext)
-{
+static void PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext) {
   aRegs.mContext = aContext;
   mcontext_t& mcontext = aContext->uc_mcontext;
 
@@ -114,32 +104,23 @@ PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext)
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[30]);
 
 #else
-# error "bad platform"
+#error "bad platform"
 #endif
 }
 
 #if defined(GP_OS_android)
-# define SYS_tgkill __NR_tgkill
+#define SYS_tgkill __NR_tgkill
 #endif
 
-int
-tgkill(pid_t tgid, pid_t tid, int signalno)
-{
+int tgkill(pid_t tgid, pid_t tid, int signalno) {
   return syscall(SYS_tgkill, tgid, tid, signalno);
 }
 
-class PlatformData
-{
-public:
-  explicit PlatformData(int aThreadId)
-  {
-    MOZ_COUNT_CTOR(PlatformData);
-  }
+class PlatformData {
+ public:
+  explicit PlatformData(int aThreadId) { MOZ_COUNT_CTOR(PlatformData); }
 
-  ~PlatformData()
-  {
-    MOZ_COUNT_DTOR(PlatformData);
-  }
+  ~PlatformData() { MOZ_COUNT_DTOR(PlatformData); }
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -187,36 +168,31 @@ public:
 // The first message is sent using a SIGPROF signal delivery.  The subsequent
 // three are sent using sem_wait/sem_post pairs.  They are named accordingly
 // in the following struct.
-struct SigHandlerCoordinator
-{
-  SigHandlerCoordinator()
-  {
+struct SigHandlerCoordinator {
+  SigHandlerCoordinator() {
     PodZero(&mUContext);
     int r = sem_init(&mMessage2, /* pshared */ 0, 0);
-    r    |= sem_init(&mMessage3, /* pshared */ 0, 0);
-    r    |= sem_init(&mMessage4, /* pshared */ 0, 0);
+    r |= sem_init(&mMessage3, /* pshared */ 0, 0);
+    r |= sem_init(&mMessage4, /* pshared */ 0, 0);
     MOZ_ASSERT(r == 0);
   }
 
-  ~SigHandlerCoordinator()
-  {
+  ~SigHandlerCoordinator() {
     int r = sem_destroy(&mMessage2);
-    r    |= sem_destroy(&mMessage3);
-    r    |= sem_destroy(&mMessage4);
+    r |= sem_destroy(&mMessage3);
+    r |= sem_destroy(&mMessage4);
     MOZ_ASSERT(r == 0);
   }
 
-  sem_t mMessage2; // To sampler: "context is in sSigHandlerCoordinator"
-  sem_t mMessage3; // To samplee: "resume"
-  sem_t mMessage4; // To sampler: "finished with sSigHandlerCoordinator"
-  ucontext_t mUContext; // Context at signal
+  sem_t mMessage2;       // To sampler: "context is in sSigHandlerCoordinator"
+  sem_t mMessage3;       // To samplee: "resume"
+  sem_t mMessage4;       // To sampler: "finished with sSigHandlerCoordinator"
+  ucontext_t mUContext;  // Context at signal
 };
 
 struct SigHandlerCoordinator* Sampler::sSigHandlerCoordinator = nullptr;
 
-static void
-SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
-{
+static void SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext) {
   // Avoid TSan warning about clobbering errno.
   int savedErrno = errno;
 
@@ -227,7 +203,7 @@ SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
   // the comment above, with the meaning "|sSigHandlerCoordinator| is ready
   // for use, please copy your register context into it."
   Sampler::sSigHandlerCoordinator->mUContext =
-    *static_cast<ucontext_t*>(aContext);
+      *static_cast<ucontext_t*>(aContext);
 
   // Send message 2: tell the sampler thread that the context has been copied
   // into |sSigHandlerCoordinator->mUContext|.  sem_post can never fail by
@@ -260,12 +236,12 @@ SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
 }
 
 Sampler::Sampler(PSLockRef aLock)
-  : mMyPid(getpid())
-  // We don't know what the sampler thread's ID will be until it runs, so set
-  // mSamplerTid to a dummy value and fill it in for real in
-  // SuspendAndSampleAndResumeThread().
-  , mSamplerTid(-1)
-{
+    : mMyPid(getpid())
+      // We don't know what the sampler thread's ID will be until it runs, so
+      // set mSamplerTid to a dummy value and fill it in for real in
+      // SuspendAndSampleAndResumeThread().
+      ,
+      mSamplerTid(-1) {
 #if defined(USE_EHABI_STACKWALK)
   mozilla::EHABIStackWalkInit();
 #endif
@@ -285,20 +261,16 @@ Sampler::Sampler(PSLockRef aLock)
   }
 }
 
-void
-Sampler::Disable(PSLockRef aLock)
-{
+void Sampler::Disable(PSLockRef aLock) {
   // Restore old signal handler. This is global state so it's important that
   // we do it now, while gPSMutex is locked.
   sigaction(SIGPROF, &mOldSigprofHandler, 0);
 }
 
-template<typename Func>
-void
-Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
-                                         const RegisteredThread& aRegisteredThread,
-                                         const Func& aProcessRegs)
-{
+template <typename Func>
+void Sampler::SuspendAndSampleAndResumeThread(
+    PSLockRef aLock, const RegisteredThread& aRegisteredThread,
+    const Func& aProcessRegs) {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
   MOZ_ASSERT(!sSigHandlerCoordinator);
@@ -312,7 +284,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.
 
-  SigHandlerCoordinator coord;   // on sampler thread's stack
+  SigHandlerCoordinator coord;  // on sampler thread's stack
   sSigHandlerCoordinator = &coord;
 
   // Send message 1 to the samplee (the thread to be sampled), by
@@ -389,9 +361,7 @@ Sampler::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 ////////////////////////////////////////////////////////////////////////
 // BEGIN SamplerThread target specifics
 
-static void*
-ThreadEntry(void* aArg)
-{
+static void* ThreadEntry(void* aArg) {
   auto thread = static_cast<SamplerThread*>(aArg);
   thread->Run();
   return nullptr;
@@ -399,11 +369,10 @@ ThreadEntry(void* aArg)
 
 SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
                              double aIntervalMilliseconds)
-  : Sampler(aLock)
-  , mActivityGeneration(aActivityGeneration)
-  , mIntervalMicroseconds(
-      std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
-{
+    : Sampler(aLock),
+      mActivityGeneration(aActivityGeneration),
+      mIntervalMicroseconds(
+          std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5)))) {
 #if defined(USE_LUL_STACKWALK)
   lul::LUL* lul = CorePS::Lul(aLock);
   if (!lul) {
@@ -433,14 +402,9 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   }
 }
 
-SamplerThread::~SamplerThread()
-{
-  pthread_join(mThread, nullptr);
-}
+SamplerThread::~SamplerThread() { pthread_join(mThread, nullptr); }
 
-void
-SamplerThread::SleepMicro(uint32_t aMicroseconds)
-{
+void SamplerThread::SleepMicro(uint32_t aMicroseconds) {
   if (aMicroseconds >= 1000000) {
     // Use usleep for larger intervals, because the nanosleep
     // code below only supports intervals < 1 second.
@@ -449,7 +413,7 @@ SamplerThread::SleepMicro(uint32_t aMicroseconds)
   }
 
   struct timespec ts;
-  ts.tv_sec  = 0;
+  ts.tv_sec = 0;
   ts.tv_nsec = aMicroseconds * 1000UL;
 
   int rv = ::nanosleep(&ts, &ts);
@@ -463,9 +427,7 @@ SamplerThread::SleepMicro(uint32_t aMicroseconds)
   MOZ_ASSERT(!rv, "nanosleep call failed");
 }
 
-void
-SamplerThread::Stop(PSLockRef aLock)
-{
+void SamplerThread::Stop(PSLockRef aLock) {
   // Restore old signal handler. This is global state so it's important that
   // we do it now, while gPSMutex is locked. It's safe to do this now even
   // though this SamplerThread is still alive, because the next time the main
@@ -494,9 +456,7 @@ SamplerThread::Stop(PSLockRef aLock)
 // have pthread_atfork.
 
 // In the parent, before the fork, record IsPaused, and then pause.
-static void
-paf_prepare()
-{
+static void paf_prepare() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -508,9 +468,7 @@ paf_prepare()
 }
 
 // In the parent, after the fork, return IsPaused to the pre-fork state.
-static void
-paf_parent()
-{
+static void paf_parent() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -521,19 +479,14 @@ paf_parent()
   }
 }
 
-static void
-PlatformInit(PSLockRef aLock)
-{
+static void PlatformInit(PSLockRef aLock) {
   // Set up the fork handlers.
   pthread_atfork(paf_prepare, paf_parent, nullptr);
 }
 
 #else
 
-static void
-PlatformInit(PSLockRef aLock)
-{
-}
+static void PlatformInit(PSLockRef aLock) {}
 
 #endif
 
@@ -543,12 +496,9 @@ PlatformInit(PSLockRef aLock)
 // profiler_get_backtrace()'s PSAutoLock).
 ucontext_t sSyncUContext;
 
-void
-Registers::SyncPopulate()
-{
+void Registers::SyncPopulate() {
   if (!getcontext(&sSyncUContext)) {
     PopulateRegsFromContext(*this, &sSyncUContext);
   }
 }
 #endif
-

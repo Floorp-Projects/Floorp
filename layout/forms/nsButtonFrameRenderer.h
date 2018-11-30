@@ -19,16 +19,15 @@ class nsDisplayListBuilder;
 class nsPresContext;
 struct nsRect;
 
-
-#define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX  0
-#define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX   NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX
+#define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX 0
+#define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX \
+  NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX
 
 class nsButtonFrameRenderer {
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::ComputedStyle ComputedStyle;
 
-public:
-
+ public:
   nsButtonFrameRenderer();
   ~nsButtonFrameRenderer();
 
@@ -36,27 +35,24 @@ public:
    * Create display list items for the button
    */
   nsresult DisplayButton(nsDisplayListBuilder* aBuilder,
-                         nsDisplayList* aBackground, nsDisplayList* aForeground);
-
+                         nsDisplayList* aBackground,
+                         nsDisplayList* aForeground);
 
   ImgDrawResult PaintInnerFocusBorder(nsDisplayListBuilder* aBuilder,
-                                   nsPresContext* aPresContext,
-                                   gfxContext& aRenderingContext,
-                                   const nsRect& aDirtyRect,
-                                   const nsRect& aRect);
+                                      nsPresContext* aPresContext,
+                                      gfxContext& aRenderingContext,
+                                      const nsRect& aDirtyRect,
+                                      const nsRect& aRect);
 
-  mozilla::Maybe<nsCSSBorderRenderer> CreateInnerFocusBorderRenderer(nsDisplayListBuilder* aBuilder,
-                                                                     nsPresContext* aPresContext,
-                                                                     gfxContext* aRenderingContext,
-                                                                     const nsRect& aDirtyRect,
-                                                                     const nsRect& aRect,
-                                                                     bool* aBorderIsEmpty);
+  mozilla::Maybe<nsCSSBorderRenderer> CreateInnerFocusBorderRenderer(
+      nsDisplayListBuilder* aBuilder, nsPresContext* aPresContext,
+      gfxContext* aRenderingContext, const nsRect& aDirtyRect,
+      const nsRect& aRect, bool* aBorderIsEmpty);
 
   ImgDrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
-                         nsPresContext* aPresContext,
-                         gfxContext& aRenderingContext,
-                         const nsRect& aDirtyRect,
-                         const nsRect& aRect);
+                            nsPresContext* aPresContext,
+                            gfxContext& aRenderingContext,
+                            const nsRect& aDirtyRect, const nsRect& aRect);
 
   void SetFrame(nsFrame* aFrame, nsPresContext* aPresContext);
 
@@ -73,14 +69,11 @@ public:
 
   nsIFrame* GetFrame();
 
-private:
-
+ private:
   // cached style for optional inner focus outline (used on Windows).
   RefPtr<ComputedStyle> mInnerFocusStyle;
 
   nsFrame* mFrame;
 };
 
-
 #endif
-

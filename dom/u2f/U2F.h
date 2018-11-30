@@ -32,16 +32,14 @@ class U2FSignCallback;
 struct RegisterRequest;
 struct RegisteredKey;
 
-class U2FTransaction
-{
+class U2FTransaction {
   typedef Variant<nsMainThreadPtrHandle<U2FRegisterCallback>,
-                  nsMainThreadPtrHandle<U2FSignCallback>> U2FCallback;
+                  nsMainThreadPtrHandle<U2FSignCallback>>
+      U2FCallback;
 
-public:
+ public:
   explicit U2FTransaction(const U2FCallback&& aCallback)
-    : mCallback(std::move(aCallback))
-    , mId(NextId())
-  {
+      : mCallback(std::move(aCallback)), mId(NextId()) {
     MOZ_ASSERT(mId > 0);
   }
 
@@ -67,7 +65,7 @@ public:
   // Unique transaction id.
   uint64_t mId;
 
-private:
+ private:
   // Generates a unique id for new transactions. This doesn't have to be unique
   // forever, it's sufficient to differentiate between temporally close
   // transactions, where messages can intersect. Can overflow.
@@ -77,68 +75,54 @@ private:
   }
 };
 
-class U2F final : public WebAuthnManagerBase
-                , public nsWrapperCache
-{
-public:
+class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(U2F)
 
-  explicit U2F(nsPIDOMWindowInner* aParent)
-    : WebAuthnManagerBase(aParent)
-  { }
+  explicit U2F(nsPIDOMWindowInner* aParent) : WebAuthnManagerBase(aParent) {}
 
-  nsPIDOMWindowInner*
-  GetParentObject() const
-  {
-    return mParent;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mParent; }
 
-  void
-  Init(ErrorResult& aRv);
+  void Init(ErrorResult& aRv);
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  Register(const nsAString& aAppId,
-           const Sequence<RegisterRequest>& aRegisterRequests,
-           const Sequence<RegisteredKey>& aRegisteredKeys,
-           U2FRegisterCallback& aCallback,
-           const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
-           ErrorResult& aRv);
+  void Register(const nsAString& aAppId,
+                const Sequence<RegisterRequest>& aRegisterRequests,
+                const Sequence<RegisteredKey>& aRegisteredKeys,
+                U2FRegisterCallback& aCallback,
+                const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
+                ErrorResult& aRv);
 
-  void
-  Sign(const nsAString& aAppId,
-       const nsAString& aChallenge,
-       const Sequence<RegisteredKey>& aRegisteredKeys,
-       U2FSignCallback& aCallback,
-       const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
-       ErrorResult& aRv);
+  void Sign(const nsAString& aAppId, const nsAString& aChallenge,
+            const Sequence<RegisteredKey>& aRegisteredKeys,
+            U2FSignCallback& aCallback,
+            const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
+            ErrorResult& aRv);
 
   // WebAuthnManagerBase
 
-  void
-  FinishMakeCredential(const uint64_t& aTransactionId,
-                       const WebAuthnMakeCredentialResult& aResult) override;
+  void FinishMakeCredential(
+      const uint64_t& aTransactionId,
+      const WebAuthnMakeCredentialResult& aResult) override;
 
-  void
-  FinishGetAssertion(const uint64_t& aTransactionId,
-                     const WebAuthnGetAssertionResult& aResult) override;
+  void FinishGetAssertion(const uint64_t& aTransactionId,
+                          const WebAuthnGetAssertionResult& aResult) override;
 
-  void
-  RequestAborted(const uint64_t& aTransactionId,
-                 const nsresult& aError) override;
+  void RequestAborted(const uint64_t& aTransactionId,
+                      const nsresult& aError) override;
 
-protected:
+ protected:
   // Cancels the current transaction (by sending a Cancel message to the
   // parent) and rejects it by calling RejectTransaction().
   void CancelTransaction(const nsresult& aError) override;
 
-private:
+ private:
   ~U2F();
 
-  template<typename T, typename C>
+  template <typename T, typename C>
   void ExecuteCallback(T& aResp, nsMainThreadPtrHandle<C>& aCb);
 
   // Clears all information we have about the current transaction.
@@ -152,7 +136,7 @@ private:
   Maybe<U2FTransaction> mTransaction;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_U2F_h
+#endif  // mozilla_dom_U2F_h

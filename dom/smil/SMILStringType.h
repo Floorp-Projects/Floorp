@@ -12,23 +12,21 @@
 
 namespace mozilla {
 
-class SMILStringType : public nsISMILType
-{
-public:
+class SMILStringType : public nsISMILType {
+ public:
   // Singleton for nsSMILValue objects to hold onto.
-  static SMILStringType*
-  Singleton()
-  {
+  static SMILStringType* Singleton() {
     static SMILStringType sSingleton;
     return &sSingleton;
   }
 
-protected:
+ protected:
   // nsISMILType Methods
   // -------------------
   virtual void Init(nsSMILValue& aValue) const override;
   virtual void Destroy(nsSMILValue& aValue) const override;
-  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const override;
+  virtual nsresult Assign(nsSMILValue& aDest,
+                          const nsSMILValue& aSrc) const override;
   virtual bool IsEqual(const nsSMILValue& aLeft,
                        const nsSMILValue& aRight) const override;
   virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
@@ -37,15 +35,14 @@ protected:
                                    const nsSMILValue& aTo,
                                    double& aDistance) const override;
   virtual nsresult Interpolate(const nsSMILValue& aStartVal,
-                               const nsSMILValue& aEndVal,
-                               double aUnitDistance,
+                               const nsSMILValue& aEndVal, double aUnitDistance,
                                nsSMILValue& aResult) const override;
 
-private:
+ private:
   // Private constructor: prevent instances beyond my singleton.
   constexpr SMILStringType() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SMILSTRINGTYPE_H_
+#endif  // MOZILLA_SMILSTRINGTYPE_H_

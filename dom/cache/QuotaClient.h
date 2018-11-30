@@ -16,8 +16,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-already_AddRefed<quota::Client>
-CreateQuotaClient();
+already_AddRefed<quota::Client> CreateQuotaClient();
 
 /**
  * The following functions are used to access the directory padding file. The
@@ -43,21 +42,17 @@ CreateQuotaClient();
  * should be careful not to pass a hook that might lock on something else and
  * trigger a deadlock.
  */
-template<typename Callable>
-nsresult
-MaybeUpdatePaddingFile(nsIFile* aBaseDir,
-                       mozIStorageConnection* aConn,
-                       const int64_t aIncreaseSize,
-                       const int64_t aDecreaseSize,
-                       Callable aCommitHook);
+template <typename Callable>
+nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
+                                const int64_t aIncreaseSize,
+                                const int64_t aDecreaseSize,
+                                Callable aCommitHook);
 
-nsresult
-RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn);
+nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn);
 
-nsresult
-WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir);
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir);
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_QuotaClient_h
+#endif  // mozilla_dom_cache_QuotaClient_h

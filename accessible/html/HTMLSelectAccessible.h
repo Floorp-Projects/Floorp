@@ -12,27 +12,25 @@ namespace mozilla {
 namespace a11y {
 
 /**
-  *  Selects, Listboxes and Comboboxes, are made up of a number of different
-  *  widgets, some of which are shared between the two. This file contains
-  *  all of the widgets for both of the Selects, for HTML only.
-  *
-  *  Listbox:
-  *     - HTMLSelectListAccessible
-  *        - HTMLSelectOptionAccessible
-  *
-  *  Comboboxes:
-  *     - HTMLComboboxAccessible
-  *        - HTMLComboboxListAccessible  [ inserted in accessible tree ]
-  *           - HTMLSelectOptionAccessible(s)
-  */
+ *  Selects, Listboxes and Comboboxes, are made up of a number of different
+ *  widgets, some of which are shared between the two. This file contains
+ *  all of the widgets for both of the Selects, for HTML only.
+ *
+ *  Listbox:
+ *     - HTMLSelectListAccessible
+ *        - HTMLSelectOptionAccessible
+ *
+ *  Comboboxes:
+ *     - HTMLComboboxAccessible
+ *        - HTMLComboboxListAccessible  [ inserted in accessible tree ]
+ *           - HTMLSelectOptionAccessible(s)
+ */
 
 /*
  * The list that contains all the options in the select.
  */
-class HTMLSelectListAccessible : public AccessibleWrap
-{
-public:
-
+class HTMLSelectListAccessible : public AccessibleWrap {
+ public:
   HTMLSelectListAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLSelectListAccessible() {}
 
@@ -56,9 +54,8 @@ public:
 /*
  * Options inside the select, contained within the list
  */
-class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap
-{
-public:
+class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
+ public:
   enum { eAction_Select = 0 };
 
   HTMLSelectOptionAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -81,20 +78,17 @@ public:
   // Widgets
   virtual Accessible* ContainerWidget() const override;
 
-protected:
+ protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
-private:
-
+ private:
   /**
    * Return a select accessible the option belongs to if any.
    */
-  Accessible* GetSelect() const
-  {
+  Accessible* GetSelect() const {
     Accessible* parent = mParent;
-    if (parent && parent->IsHTMLOptGroup())
-      parent = parent->Parent();
+    if (parent && parent->IsHTMLOptGroup()) parent = parent->Parent();
 
     if (parent && parent->IsListControl()) {
       Accessible* combobox = parent->Parent();
@@ -107,11 +101,9 @@ private:
   /**
    * Return a combobox accessible the option belongs to if any.
    */
-  Accessible* GetCombobox() const
-  {
+  Accessible* GetCombobox() const {
     Accessible* parent = mParent;
-    if (parent && parent->IsHTMLOptGroup())
-      parent = parent->Parent();
+    if (parent && parent->IsHTMLOptGroup()) parent = parent->Parent();
 
     if (parent && parent->IsListControl()) {
       Accessible* combobox = parent->Parent();
@@ -125,13 +117,12 @@ private:
 /*
  * Opt Groups inside the select, contained within the list
  */
-class HTMLSelectOptGroupAccessible : public HTMLSelectOptionAccessible
-{
-public:
-
-  HTMLSelectOptGroupAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    HTMLSelectOptionAccessible(aContent, aDoc)
-    { mType = eHTMLOptGroupType; }
+class HTMLSelectOptGroupAccessible : public HTMLSelectOptionAccessible {
+ public:
+  HTMLSelectOptGroupAccessible(nsIContent* aContent, DocAccessible* aDoc)
+      : HTMLSelectOptionAccessible(aContent, aDoc) {
+    mType = eHTMLOptGroupType;
+  }
   virtual ~HTMLSelectOptGroupAccessible() {}
 
   // Accessible
@@ -154,9 +145,8 @@ class HTMLComboboxListAccessible;
 /*
  * A class the represents the HTML Combobox widget.
  */
-class HTMLComboboxAccessible final : public AccessibleWrap
-{
-public:
+class HTMLComboboxAccessible final : public AccessibleWrap {
+ public:
   enum { eAction_Click = 0 };
 
   HTMLComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -183,13 +173,13 @@ public:
   virtual Accessible* CurrentItem() const override;
   virtual void SetCurrentItem(const Accessible* aItem) override;
 
-protected:
+ protected:
   /**
    * Return selected option.
    */
   Accessible* SelectedOption() const;
 
-private:
+ private:
   RefPtr<HTMLComboboxListAccessible> mListAccessible;
 };
 
@@ -198,10 +188,8 @@ private:
  * of the drop down button inside the Select. This is the window
  * that is made visible when the button is pressed.
  */
-class HTMLComboboxListAccessible : public HTMLSelectListAccessible
-{
-public:
-
+class HTMLComboboxListAccessible : public HTMLSelectListAccessible {
+ public:
   HTMLComboboxListAccessible(Accessible* aParent, nsIContent* aContent,
                              DocAccessible* aDoc);
   virtual ~HTMLComboboxListAccessible() {}
@@ -218,7 +206,7 @@ public:
   virtual bool AreItemsOperable() const override;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

@@ -18,8 +18,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-enum Namespace
-{
+enum Namespace {
   DEFAULT_NAMESPACE,
   CHROME_ONLY_NAMESPACE,
   NUMBER_OF_NAMESPACES
@@ -29,8 +28,7 @@ static const Namespace INVALID_NAMESPACE = NUMBER_OF_NAMESPACES;
 typedef int64_t CacheId;
 static const CacheId INVALID_CACHE_ID = -1;
 
-struct QuotaInfo
-{
+struct QuotaInfo {
   nsCOMPtr<nsIFile> mDir;
   nsCString mSuffix;
   nsCString mGroup;
@@ -39,15 +37,10 @@ struct QuotaInfo
 
 typedef std::function<void(nsCOMPtr<nsIInputStream>&&)> InputStreamResolver;
 
-enum class OpenMode : uint8_t
-{
-  Eager,
-  Lazy,
-  NumTypes
-};
+enum class OpenMode : uint8_t { Eager, Lazy, NumTypes };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_Types_h
+#endif  // mozilla_dom_cache_Types_h

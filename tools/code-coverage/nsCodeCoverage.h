@@ -8,19 +8,22 @@
 
 #include "nsICodeCoverage.h"
 
-#define NS_CODECOVERAGE_CID \
-{ 0x93576af0, 0xa62f, 0x4c88, \
-{ 0xbc, 0x12, 0xf1, 0x85, 0x5d, 0x4e, 0x01, 0x73 } }
+#define NS_CODECOVERAGE_CID                          \
+  {                                                  \
+    0x93576af0, 0xa62f, 0x4c88, {                    \
+      0xbc, 0x12, 0xf1, 0x85, 0x5d, 0x4e, 0x01, 0x73 \
+    }                                                \
+  }
 
 class nsCodeCoverage final : nsICodeCoverage {
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICODECOVERAGE
 
   nsCodeCoverage();
 
-private:
+ private:
   ~nsCodeCoverage();
 };
 
-#endif // tools_codecoverage_nscodecoverage_h
+#endif  // tools_codecoverage_nscodecoverage_h

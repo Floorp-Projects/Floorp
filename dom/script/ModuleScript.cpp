@@ -40,10 +40,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleScript)
 
 ModuleScript::ModuleScript(ScriptLoader* aLoader, nsIURI* aBaseURL)
- : mLoader(aLoader),
-   mBaseURL(aBaseURL),
-   mSourceElementAssociated(false)
-{
+    : mLoader(aLoader), mBaseURL(aBaseURL), mSourceElementAssociated(false) {
   MOZ_ASSERT(mLoader);
   MOZ_ASSERT(mBaseURL);
   MOZ_ASSERT(!mModuleRecord);
@@ -51,9 +48,7 @@ ModuleScript::ModuleScript(ScriptLoader* aLoader, nsIURI* aBaseURL)
   MOZ_ASSERT(!HasErrorToRethrow());
 }
 
-void
-ModuleScript::UnlinkModuleRecord()
-{
+void ModuleScript::UnlinkModuleRecord() {
   // Remove module's back reference to this object request if present.
   if (mModuleRecord) {
     MOZ_ASSERT(JS::GetModulePrivate(mModuleRecord).toPrivate() == this);
@@ -62,16 +57,13 @@ ModuleScript::UnlinkModuleRecord()
   }
 }
 
-ModuleScript::~ModuleScript()
-{
+ModuleScript::~ModuleScript() {
   // The object may be destroyed without being unlinked first.
   UnlinkModuleRecord();
   DropJSObjects(this);
 }
 
-void
-ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord)
-{
+void ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord) {
   MOZ_ASSERT(!mModuleRecord);
   MOZ_ASSERT(!HasParseError());
   MOZ_ASSERT(!HasErrorToRethrow());
@@ -84,9 +76,7 @@ ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord)
   HoldJSObjects(this);
 }
 
-void
-ModuleScript::SetParseError(const JS::Value& aError)
-{
+void ModuleScript::SetParseError(const JS::Value& aError) {
   MOZ_ASSERT(!aError.isUndefined());
   MOZ_ASSERT(!HasParseError());
   MOZ_ASSERT(!HasErrorToRethrow());
@@ -96,9 +86,7 @@ ModuleScript::SetParseError(const JS::Value& aError)
   HoldJSObjects(this);
 }
 
-void
-ModuleScript::SetErrorToRethrow(const JS::Value& aError)
-{
+void ModuleScript::SetErrorToRethrow(const JS::Value& aError) {
   MOZ_ASSERT(!aError.isUndefined());
   MOZ_ASSERT(!HasErrorToRethrow());
 
@@ -109,14 +97,12 @@ ModuleScript::SetErrorToRethrow(const JS::Value& aError)
   mErrorToRethrow = aError;
 }
 
-void
-ModuleScript::SetSourceElementAssociated()
-{
+void ModuleScript::SetSourceElementAssociated() {
   MOZ_ASSERT(mModuleRecord);
   MOZ_ASSERT(!mSourceElementAssociated);
 
   mSourceElementAssociated = true;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

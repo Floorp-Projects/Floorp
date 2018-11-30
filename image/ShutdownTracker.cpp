@@ -21,17 +21,15 @@ class ShutdownTrackerImpl;
 // Whether we've observed shutdown starting yet.
 static bool sShutdownHasStarted = false;
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
-struct ShutdownObserver : public nsIObserver
-{
+struct ShutdownObserver : public nsIObserver {
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override
-  {
+  NS_IMETHOD Observe(nsISupports*, const char* aTopic,
+                     const char16_t*) override {
     if (strcmp(aTopic, "xpcom-will-shutdown") != 0) {
       return NS_OK;
     }
@@ -45,31 +43,26 @@ struct ShutdownObserver : public nsIObserver
     return NS_OK;
   }
 
-private:
-  virtual ~ShutdownObserver() { }
+ private:
+  virtual ~ShutdownObserver() {}
 };
 
 NS_IMPL_ISUPPORTS(ShutdownObserver, nsIObserver)
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
 ///////////////////////////////////////////////////////////////////////////////
 
-/* static */ void
-ShutdownTracker::Initialize()
-{
+/* static */ void ShutdownTracker::Initialize() {
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->AddObserver(new ShutdownObserver, "xpcom-will-shutdown", false);
   }
 }
 
-/* static */ bool
-ShutdownTracker::ShutdownHasStarted()
-{
+/* static */ bool ShutdownTracker::ShutdownHasStarted() {
   return sShutdownHasStarted;
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

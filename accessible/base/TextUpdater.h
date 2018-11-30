@@ -16,22 +16,26 @@ namespace a11y {
  * Used to find a difference between old and new text and fire text change
  * events.
  */
-class TextUpdater
-{
-public:
+class TextUpdater {
+ public:
   /**
    * Start text of the text leaf update.
    */
   static void Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
                   const nsAString& aNewText);
 
-private:
-  TextUpdater(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf) :
-    mDocument(aDocument), mTextLeaf(aTextLeaf), mHyperText(nullptr),
-    mTextOffset(-1) { }
+ private:
+  TextUpdater(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf)
+      : mDocument(aDocument),
+        mTextLeaf(aTextLeaf),
+        mHyperText(nullptr),
+        mTextOffset(-1) {}
 
-  ~TextUpdater()
-    { mDocument = nullptr; mTextLeaf = nullptr; mHyperText = nullptr; }
+  ~TextUpdater() {
+    mDocument = nullptr;
+    mTextLeaf = nullptr;
+    mHyperText = nullptr;
+  }
 
   /**
    * Update text of the text leaf accessible, fire text change and value change
@@ -40,7 +44,7 @@ private:
   void DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
                 uint32_t aSkipStart);
 
-private:
+ private:
   TextUpdater();
   TextUpdater(const TextUpdater&);
   TextUpdater& operator=(const TextUpdater&);
@@ -48,8 +52,7 @@ private:
   /**
    * Fire text change events based on difference between strings.
    */
-  void ComputeTextChangeEvents(const nsAString& aStr1,
-                               const nsAString& aStr2,
+  void ComputeTextChangeEvents(const nsAString& aStr1, const nsAString& aStr2,
                                uint32_t* aEntries,
                                nsTArray<RefPtr<AccEvent> >& aEvents);
 
@@ -57,11 +60,9 @@ private:
    * Helper to create text change events for inserted text.
    */
   inline void FireInsertEvent(const nsAString& aText, uint32_t aAddlOffset,
-                              nsTArray<RefPtr<AccEvent> >& aEvents)
-  {
-    RefPtr<AccEvent> event =
-      new AccTextChangeEvent(mHyperText, mTextOffset + aAddlOffset,
-                             aText, true);
+                              nsTArray<RefPtr<AccEvent> >& aEvents) {
+    RefPtr<AccEvent> event = new AccTextChangeEvent(
+        mHyperText, mTextOffset + aAddlOffset, aText, true);
     aEvents.AppendElement(event);
   }
 
@@ -69,11 +70,9 @@ private:
    * Helper to create text change events for removed text.
    */
   inline void FireDeleteEvent(const nsAString& aText, uint32_t aAddlOffset,
-                              nsTArray<RefPtr<AccEvent> >& aEvents)
-  {
-    RefPtr<AccEvent> event =
-      new AccTextChangeEvent(mHyperText, mTextOffset + aAddlOffset,
-                             aText, false);
+                              nsTArray<RefPtr<AccEvent> >& aEvents) {
+    RefPtr<AccEvent> event = new AccTextChangeEvent(
+        mHyperText, mTextOffset + aAddlOffset, aText, false);
     aEvents.AppendElement(event);
   }
 
@@ -83,14 +82,14 @@ private:
    */
   const static uint32_t kMaxStrLen = 1 << 6;
 
-private:
+ private:
   DocAccessible* mDocument;
   TextLeafAccessible* mTextLeaf;
   HyperTextAccessible* mHyperText;
   int32_t mTextOffset;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

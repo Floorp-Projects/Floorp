@@ -49,22 +49,17 @@ namespace {
  * a void type. For this reason, all the functions below are using that return
  * type.
  */
-void
-GetMockedDataDir(nsAString& aMockedDir)
-{
+void GetMockedDataDir(nsAString& aMockedDir) {
   // Get the OS temporary directory.
   nsCOMPtr<nsIFile> tmpDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                       getter_AddRefs(tmpDir));
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
   ASSERT_EQ(NS_SUCCEEDED(rv), true);
   // Return the mocked dir.
   rv = tmpDir->GetPath(aMockedDir);
   ASSERT_EQ(NS_SUCCEEDED(rv), true);
 }
 
-void
-MockAndroidDataDir()
-{
+void MockAndroidDataDir() {
   // Get the OS temporary directory.
   nsAutoString mockedPath;
   GetMockedDataDir(mockedPath);
@@ -72,18 +67,15 @@ MockAndroidDataDir()
   // Set the environment variable to mock.
   // Note: we intentionally leak it with |ToNewCString| as PR_SetEnv forces
   // us to!
-  nsAutoCString mockedEnv(
-    nsPrintfCString("MOZ_ANDROID_DATA_DIR=%s", NS_ConvertUTF16toUTF8(mockedPath).get()));
+  nsAutoCString mockedEnv(nsPrintfCString(
+      "MOZ_ANDROID_DATA_DIR=%s", NS_ConvertUTF16toUTF8(mockedPath).get()));
   ASSERT_EQ(PR_SetEnv(ToNewCString(mockedEnv)), PR_SUCCESS);
 }
 
-void
-WritePersistenceFile(const nsACString& aData)
-{
+void WritePersistenceFile(const nsACString& aData) {
   // Write the file to the temporary directory.
   nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                       getter_AddRefs(file));
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
   ASSERT_EQ(NS_SUCCEEDED(rv), true);
 
   // Append the filename and the extension.
@@ -104,12 +96,9 @@ WritePersistenceFile(const nsACString& aData)
   stream->Close();
 }
 
-void
-RemovePersistenceFile()
-{
+void RemovePersistenceFile() {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                       getter_AddRefs(file));
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
   ASSERT_EQ(NS_SUCCEEDED(rv), true);
 
   // Append the filename and the extension.
@@ -127,13 +116,11 @@ RemovePersistenceFile()
   }
 }
 
-void
-CheckPersistenceFileExists(bool& aFileExists)
-{
+void CheckPersistenceFileExists(bool& aFileExists) {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                       getter_AddRefs(file));
-  ASSERT_EQ(NS_OK, rv) << "NS_GetSpecialDirectory must return a valid directory";
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
+  ASSERT_EQ(NS_OK, rv)
+      << "NS_GetSpecialDirectory must return a valid directory";
 
   // Append the filename and the extension.
   nsAutoString fileName;
@@ -148,35 +135,29 @@ CheckPersistenceFileExists(bool& aFileExists)
  * A helper class to wait for the internal "data loaded"
  * topic.
  */
-class DataLoadedObserver final : public nsIObserver
-{
+class DataLoadedObserver final : public nsIObserver {
   ~DataLoadedObserver() = default;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
 
-  explicit DataLoadedObserver() :
-    mDataLoaded(false)
-  {
+  explicit DataLoadedObserver() : mDataLoaded(false) {
     // The following line can fail to fetch the observer service. However,
     // since we're test code, we're fine with crashing due to that.
     nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+        mozilla::services::GetObserverService();
     observerService->AddObserver(this, kDataLoadedTopic, false);
   }
 
-  void WaitForNotification()
-  {
+  void WaitForNotification() {
     mozilla::SpinEventLoopUntil([&]() { return mDataLoaded; });
   }
 
-  NS_IMETHOD Observe(nsISupports* aSubject,
-                     const char* aTopic,
-                     const char16_t* aData) override
-  {
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override {
     if (!strcmp(aTopic, kDataLoadedTopic)) {
       nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
+          mozilla::services::GetObserverService();
       observerService->RemoveObserver(this, kDataLoadedTopic);
       mDataLoaded = true;
     }
@@ -184,23 +165,20 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   bool mDataLoaded;
 };
 
-NS_IMPL_ISUPPORTS(
-  DataLoadedObserver,
-  nsIObserver
-)
+NS_IMPL_ISUPPORTS(DataLoadedObserver, nsIObserver)
 
-} // Anonymous
+}  // namespace
 
 /**
  * A GeckoView specific test fixture. Please note that this
  * can't live in the above anonymous namespace.
  */
 class TelemetryGeckoViewFixture : public TelemetryTestFixture {
-protected:
+ protected:
   virtual void SetUp() {
     TelemetryTestFixture::SetUp();
     MockAndroidDataDir();
@@ -211,7 +189,7 @@ namespace TelemetryGeckoViewTesting {
 
 void TestDispatchPersist();
 
-} // TelemetryGeckoViewTesting
+}  // namespace TelemetryGeckoViewTesting
 
 /**
  * Test that corrupted JSON files don't crash the Telemetry core.
@@ -251,11 +229,13 @@ TEST_F(TelemetryGeckoViewFixture, ClearPersistenceFiles) {
 
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
-  ASSERT_FALSE(fileExists) << "No persisted measurements must exist on the disk";
+  ASSERT_FALSE(fileExists)
+      << "No persisted measurements must exist on the disk";
 
   WritePersistenceFile(nsDependentCString(kSampleData));
   CheckPersistenceFileExists(fileExists);
-  ASSERT_TRUE(fileExists) << "We should have written the test persistence file to disk";
+  ASSERT_TRUE(fileExists)
+      << "We should have written the test persistence file to disk";
 
   // Init the persistence: this will trigger the measurements to be written
   // to disk off-the-main thread.
@@ -264,7 +244,8 @@ TEST_F(TelemetryGeckoViewFixture, ClearPersistenceFiles) {
   TelemetryGeckoViewPersistence::DeInitPersistence();
 
   CheckPersistenceFileExists(fileExists);
-  ASSERT_FALSE(fileExists) << "ClearPersistenceData must remove the persistence file";
+  ASSERT_FALSE(fileExists)
+      << "ClearPersistenceData must remove the persistence file";
 }
 
 /**
@@ -275,7 +256,8 @@ TEST_F(TelemetryGeckoViewFixture, CheckDataLoadedTopic) {
 
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
-  ASSERT_FALSE(fileExists) << "No persisted measurements must exist on the disk";
+  ASSERT_FALSE(fileExists)
+      << "No persisted measurements must exist on the disk";
 
   // Check that the data loaded topic is notified after attempting the load
   // if no measurement file exists.
@@ -287,9 +269,11 @@ TEST_F(TelemetryGeckoViewFixture, CheckDataLoadedTopic) {
   // Check that the topic is triggered when the measuements file exists.
   WritePersistenceFile(nsDependentCString(kSampleData));
   CheckPersistenceFileExists(fileExists);
-  ASSERT_TRUE(fileExists) << "The persisted measurements must exist on the disk";
+  ASSERT_TRUE(fileExists)
+      << "The persisted measurements must exist on the disk";
 
-  // Check that the data loaded topic is triggered when the measurement file exists.
+  // Check that the data loaded topic is triggered when the measurement file
+  // exists.
   loadingFinished = new DataLoadedObserver();
   TelemetryGeckoViewPersistence::InitPersistence();
   loadingFinished->WaitForNotification();
@@ -309,7 +293,8 @@ TEST_F(TelemetryGeckoViewFixture, PersistScalars) {
 
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
-  ASSERT_FALSE(fileExists) << "No persisted measurements must exist on the disk";
+  ASSERT_FALSE(fileExists)
+      << "No persisted measurements must exist on the disk";
 
   RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
 
@@ -318,11 +303,12 @@ TEST_F(TelemetryGeckoViewFixture, PersistScalars) {
   TelemetryGeckoViewPersistence::InitPersistence();
   loadingFinished->WaitForNotification();
 
-  // Set some scalars: we can only test the parent process as we don't support other
-  // processes in gtests.
+  // Set some scalars: we can only test the parent process as we don't support
+  // other processes in gtests.
   const uint32_t kExpectedUintValue = 37;
   const uint32_t kExpectedKeyedUintValue = 73;
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_ALL_PROCESSES_UINT, kExpectedUintValue);
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_ALL_PROCESSES_UINT,
+                       kExpectedUintValue);
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
                        NS_LITERAL_STRING("gv_key"), kExpectedKeyedUintValue);
 
@@ -334,7 +320,8 @@ TEST_F(TelemetryGeckoViewFixture, PersistScalars) {
   TelemetryGeckoViewPersistence::DeInitPersistence();
 
   CheckPersistenceFileExists(fileExists);
-  ASSERT_TRUE(fileExists) << "The persisted measurements must exist on the disk";
+  ASSERT_TRUE(fileExists)
+      << "The persisted measurements must exist on the disk";
 
   // Clear the in-memory scalars again. They will be restored from the disk.
   Unused << mTelemetry->ClearScalars();
@@ -352,8 +339,9 @@ TEST_F(TelemetryGeckoViewFixture, PersistScalars) {
   // Verify that the scalars were correctly persisted and restored.
   CheckUintScalar("telemetry.test.all_processes_uint", cx.GetJSContext(),
                   scalarsSnapshot, kExpectedUintValue);
-  CheckKeyedUintScalar("telemetry.test.keyed_unsigned_int", "gv_key", cx.GetJSContext(),
-                       keyedScalarsSnapshot, kExpectedKeyedUintValue);
+  CheckKeyedUintScalar("telemetry.test.keyed_unsigned_int", "gv_key",
+                       cx.GetJSContext(), keyedScalarsSnapshot,
+                       kExpectedKeyedUintValue);
 
   // Cleanup/remove the files.
   RemovePersistenceFile();
@@ -367,13 +355,16 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
 
   // Clear the histogram data.
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
-                       NS_LITERAL_CSTRING("TELEMETRY_TEST_MULTIPRODUCT"), false /* is_keyed */);
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_MULTIPRODUCT"),
+                       false /* is_keyed */);
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
-                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_COUNT"), true /* is_keyed */);
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_COUNT"),
+                       true /* is_keyed */);
 
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
-  ASSERT_FALSE(fileExists) << "No persisted measurements must exist on the disk";
+  ASSERT_FALSE(fileExists)
+      << "No persisted measurements must exist on the disk";
 
   RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
 
@@ -382,14 +373,15 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
   TelemetryGeckoViewPersistence::InitPersistence();
   loadingFinished->WaitForNotification();
 
-  // Set some histograms: we can only test the parent process as we don't support other
-  // processes in gtests.
+  // Set some histograms: we can only test the parent process as we don't
+  // support other processes in gtests.
   const uint32_t kExpectedUintValue = 37;
   const nsTArray<uint32_t> keyedSamples({5, 10, 15});
   const uint32_t kExpectedKeyedSum = 5 + 10 + 15;
-  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_MULTIPRODUCT, kExpectedUintValue);
-  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_KEYED_COUNT, NS_LITERAL_CSTRING("gv_key"),
-                        keyedSamples);
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_MULTIPRODUCT,
+                        kExpectedUintValue);
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_KEYED_COUNT,
+                        NS_LITERAL_CSTRING("gv_key"), keyedSamples);
 
   // Dispatch the persisting task: we don't wait for the timer to expire
   // as we need a reliable and reproducible way to kick off this. We ensure
@@ -399,14 +391,16 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
   TelemetryGeckoViewPersistence::DeInitPersistence();
 
   CheckPersistenceFileExists(fileExists);
-  ASSERT_TRUE(fileExists) << "The persisted measurements must exist on the disk";
+  ASSERT_TRUE(fileExists)
+      << "The persisted measurements must exist on the disk";
 
   // Clear the in-memory histograms again. They will be restored from the disk.
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
-                       NS_LITERAL_CSTRING("TELEMETRY_TEST_MULTIPRODUCT"), false /* is_keyed */);
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_MULTIPRODUCT"),
+                       false /* is_keyed */);
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
-                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_COUNT"), true /* is_keyed */);
-
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_COUNT"),
+                       true /* is_keyed */);
 
   // Load the persisted file again.
   TelemetryGeckoViewPersistence::InitPersistence();
@@ -422,30 +416,33 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
 
   // Validate the loaded histogram data.
   JS::RootedValue histogram(cx.GetJSContext());
-  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_MULTIPRODUCT", snapshot, &histogram);
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_MULTIPRODUCT", snapshot,
+              &histogram);
 
   // Get "sum" property from histogram
   JS::RootedValue sum(cx.GetJSContext());
-  GetProperty(cx.GetJSContext(), "sum", histogram,  &sum);
+  GetProperty(cx.GetJSContext(), "sum", histogram, &sum);
 
   // Check that the "sum" stored in the histogram matches with |kExpectedValue|
   uint32_t uSum = 0;
   JS::ToUint32(cx.GetJSContext(), sum, &uSum);
-  ASSERT_EQ(uSum, kExpectedUintValue) << "The histogram is not returning the expected value";
+  ASSERT_EQ(uSum, kExpectedUintValue)
+      << "The histogram is not returning the expected value";
 
   // Validate the keyed histogram data.
-  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_COUNT", keyedSnapshot, &histogram);
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_COUNT", keyedSnapshot,
+              &histogram);
 
   // Get "testkey" property from histogram and check that it stores the correct
   // data.
   JS::RootedValue expectedKeyData(cx.GetJSContext());
-  GetProperty(cx.GetJSContext(), "gv_key", histogram,  &expectedKeyData);
+  GetProperty(cx.GetJSContext(), "gv_key", histogram, &expectedKeyData);
   ASSERT_FALSE(expectedKeyData.isUndefined())
-    << "Cannot find the expected key in the keyed histogram data";
-  GetProperty(cx.GetJSContext(), "sum", expectedKeyData,  &sum);
+      << "Cannot find the expected key in the keyed histogram data";
+  GetProperty(cx.GetJSContext(), "sum", expectedKeyData, &sum);
   JS::ToUint32(cx.GetJSContext(), sum, &uSum);
   ASSERT_EQ(uSum, kExpectedKeyedSum)
-    << "The histogram is not returning the expected sum for 'gv_key'";
+      << "The histogram is not returning the expected sum for 'gv_key'";
 
   // Cleanup/remove the files.
   RemovePersistenceFile();
@@ -498,7 +495,8 @@ TEST_F(TelemetryGeckoViewFixture, EmptyPendingOperations) {
   JS::RootedValue scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
 
-  ASSERT_TRUE(scalarsSnapshot.isUndefined()) << "Scalars snapshot should not contain any data.";
+  ASSERT_TRUE(scalarsSnapshot.isUndefined())
+      << "Scalars snapshot should not contain any data.";
 }
 
 TEST_F(TelemetryGeckoViewFixture, SimpleAppendOperation) {
@@ -508,27 +506,31 @@ TEST_F(TelemetryGeckoViewFixture, SimpleAppendOperation) {
 
   // Set an initial value, so we can test that it is not overwritten.
   uint32_t initialValue = 1;
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, initialValue);
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       initialValue);
 
   // Force loading mode
   TelemetryScalar::DeserializationStarted();
 
   // Add to a scalar
   uint32_t value = 37;
-  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, value);
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       value);
 
   // Verify that this was not yet applied.
   JS::RootedValue scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
 
-  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, initialValue);
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(),
+                  scalarsSnapshot, initialValue);
 
   // Force pending operations to be applied and end load mode
   TelemetryScalar::ApplyPendingOperations();
 
   // Verify recorded operations are applied
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
-  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, initialValue+value);
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(),
+                  scalarsSnapshot, initialValue + value);
 }
 
 TEST_F(TelemetryGeckoViewFixture, ApplyPendingOperationsAfterLoad) {
@@ -549,7 +551,8 @@ TEST_F(TelemetryGeckoViewFixture, ApplyPendingOperationsAfterLoad) {
 
   // Add to a scalar, this should be recorded
   uint32_t addValue = 10;
-  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, addValue);
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       addValue);
 
   // Load persistence file
   RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
@@ -561,14 +564,15 @@ TEST_F(TelemetryGeckoViewFixture, ApplyPendingOperationsAfterLoad) {
 
   // Increment again, now directly applied
   uint32_t val = 1;
-  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, val);
-
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       val);
 
   JS::RootedValue scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
 
   uint32_t expectedValue = 25;
-  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, expectedValue);
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(),
+                  scalarsSnapshot, expectedValue);
 }
 
 TEST_F(TelemetryGeckoViewFixture, MultipleAppendOperations) {
@@ -582,24 +586,28 @@ TEST_F(TelemetryGeckoViewFixture, MultipleAppendOperations) {
   // Modify all kinds of scalars
   uint32_t startValue = 35;
   uint32_t expectedValue = 40;
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, startValue);
-  Telemetry::ScalarSetMaximum(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, startValue + 2);
-  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 3);
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       startValue);
+  Telemetry::ScalarSetMaximum(
+      Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, startValue + 2);
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       3);
 
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_BOOLEAN_KIND, true);
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_STRING_KIND, NS_LITERAL_STRING("Star Wars VI"));
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_STRING_KIND,
+                       NS_LITERAL_STRING("Star Wars VI"));
 
   // Modify all kinds of keyed scalars
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
-      NS_LITERAL_STRING("chewbacca"), startValue);
-  Telemetry::ScalarSetMaximum(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                       NS_LITERAL_STRING("chewbacca"), startValue);
+  Telemetry::ScalarSetMaximum(
+      Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
       NS_LITERAL_STRING("chewbacca"), startValue + 2);
   Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
-      NS_LITERAL_STRING("chewbacca"), 3);
+                       NS_LITERAL_STRING("chewbacca"), 3);
 
   Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_BOOLEAN_KIND,
-      NS_LITERAL_STRING("chewbacca"),
-      true);
+                       NS_LITERAL_STRING("chewbacca"), true);
 
   // Force pending operations to be applied and end load mode
   TelemetryScalar::ApplyPendingOperations();
@@ -609,35 +617,43 @@ TEST_F(TelemetryGeckoViewFixture, MultipleAppendOperations) {
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
   GetScalarsSnapshot(true, cx.GetJSContext(), &keyedScalarsSnapshot);
 
-  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, expectedValue);
-  CheckBoolScalar("telemetry.test.boolean_kind", cx.GetJSContext(), scalarsSnapshot, true);
-  CheckStringScalar("telemetry.test.string_kind", cx.GetJSContext(), scalarsSnapshot, "Star Wars VI");
+  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(),
+                  scalarsSnapshot, expectedValue);
+  CheckBoolScalar("telemetry.test.boolean_kind", cx.GetJSContext(),
+                  scalarsSnapshot, true);
+  CheckStringScalar("telemetry.test.string_kind", cx.GetJSContext(),
+                    scalarsSnapshot, "Star Wars VI");
 
   CheckKeyedUintScalar("telemetry.test.keyed_unsigned_int", "chewbacca",
-      cx.GetJSContext(), keyedScalarsSnapshot, expectedValue);
+                       cx.GetJSContext(), keyedScalarsSnapshot, expectedValue);
   CheckKeyedBoolScalar("telemetry.test.keyed_boolean_kind", "chewbacca",
-      cx.GetJSContext(), keyedScalarsSnapshot, true);
+                       cx.GetJSContext(), keyedScalarsSnapshot, true);
 }
 
 TEST_F(TelemetryGeckoViewFixture, PendingOperationsHighWater) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
   const char* testProbeName = "telemetry.test.unsigned_int_kind";
-  const char* reachedName = "telemetry.pending_operations_highwatermark_reached";
+  const char* reachedName =
+      "telemetry.pending_operations_highwatermark_reached";
 
   Unused << mTelemetry->ClearScalars();
 
   // Setting initial values so we can test them easily
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 0u);
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_PENDING_OPERATIONS_HIGHWATERMARK_REACHED, 0u);
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       0u);
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::TELEMETRY_PENDING_OPERATIONS_HIGHWATERMARK_REACHED,
+      0u);
 
   // Force loading mode
   TelemetryScalar::DeserializationStarted();
 
   // Fill up the pending operations list
   uint32_t expectedValue = 10000;
-  for (uint32_t i=0; i < expectedValue; i++) {
-    Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 1);
+  for (uint32_t i = 0; i < expectedValue; i++) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                         1);
   }
 
   // Nothing should be applied yet
@@ -647,10 +663,12 @@ TEST_F(TelemetryGeckoViewFixture, PendingOperationsHighWater) {
   CheckUintScalar(reachedName, cx.GetJSContext(), scalarsSnapshot, 0);
 
   // Spill over the buffer to immediately apply all operations
-  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND, 1);
+  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       1);
 
   // Now we should see all values
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
-  CheckUintScalar(testProbeName, cx.GetJSContext(), scalarsSnapshot, expectedValue+1);
+  CheckUintScalar(testProbeName, cx.GetJSContext(), scalarsSnapshot,
+                  expectedValue + 1);
   CheckUintScalar(reachedName, cx.GetJSContext(), scalarsSnapshot, 1);
 }

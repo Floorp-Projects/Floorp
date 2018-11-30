@@ -16,9 +16,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGFESpecularLightingElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGFESpecularLightingElement::WrapNode(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SVGFESpecularLightingElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -27,53 +26,45 @@ SVGFESpecularLightingElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGi
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFESpecularLightingElement)
 
-already_AddRefed<SVGAnimatedString>
-SVGFESpecularLightingElement::In1()
-{
+already_AddRefed<SVGAnimatedString> SVGFESpecularLightingElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGFESpecularLightingElement::SurfaceScale()
-{
+SVGFESpecularLightingElement::SurfaceScale() {
   return mNumberAttributes[SURFACE_SCALE].ToDOMAnimatedNumber(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGFESpecularLightingElement::SpecularConstant()
-{
+SVGFESpecularLightingElement::SpecularConstant() {
   return mNumberAttributes[SPECULAR_CONSTANT].ToDOMAnimatedNumber(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGFESpecularLightingElement::SpecularExponent()
-{
+SVGFESpecularLightingElement::SpecularExponent() {
   return mNumberAttributes[SPECULAR_EXPONENT].ToDOMAnimatedNumber(this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGFESpecularLightingElement::KernelUnitLengthX()
-{
+SVGFESpecularLightingElement::KernelUnitLengthX() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-    nsSVGNumberPair::eFirst, this);
+      nsSVGNumberPair::eFirst, this);
 }
 
 already_AddRefed<SVGAnimatedNumber>
-SVGFESpecularLightingElement::KernelUnitLengthY()
-{
+SVGFESpecularLightingElement::KernelUnitLengthY() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-    nsSVGNumberPair::eSecond, this);
+      nsSVGNumberPair::eSecond, this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
 FilterPrimitiveDescription
-SVGFESpecularLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                                                      const IntRect& aFilterSubregion,
-                                                      const nsTArray<bool>& aInputsAreTainted,
-                                                      nsTArray<RefPtr<SourceSurface>>& aInputImages)
-{
+SVGFESpecularLightingElement::GetPrimitiveDescription(
+    nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+    const nsTArray<bool>& aInputsAreTainted,
+    nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   float specularExponent = mNumberAttributes[SPECULAR_EXPONENT].GetAnimValue();
   float specularConstant = mNumberAttributes[SPECULAR_CONSTANT].GetAnimValue();
 
@@ -85,22 +76,22 @@ SVGFESpecularLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInst
   SpecularLightingAttributes atts;
   atts.mLightingConstant = specularConstant;
   atts.mSpecularExponent = specularExponent;
-  if (!AddLightingAttributes(static_cast<DiffuseLightingAttributes*>(&atts), aInstance)) {
+  if (!AddLightingAttributes(static_cast<DiffuseLightingAttributes*>(&atts),
+                             aInstance)) {
     return FilterPrimitiveDescription();
   }
 
   return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
-bool
-SVGFESpecularLightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                        nsAtom* aAttribute) const
-{
-  return SVGFESpecularLightingElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+bool SVGFESpecularLightingElement::AttributeAffectsRendering(
+    int32_t aNameSpaceID, nsAtom* aAttribute) const {
+  return SVGFESpecularLightingElementBase::AttributeAffectsRendering(
+             aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::specularConstant ||
            aAttribute == nsGkAtoms::specularExponent));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

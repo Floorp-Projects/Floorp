@@ -20,146 +20,138 @@ using mozilla::ArrayLength;
 using mozilla::IsAsciiHexDigit;
 using mozilla::Utf8Unit;
 
-BEGIN_TEST(testEmptyWindow)
-{
-    return testUtf8() && testUtf16();
+BEGIN_TEST(testEmptyWindow) { return testUtf8() && testUtf16(); }
+
+bool testUtf8() {
+  // Bad unit with nothing before it.
+  static const char badLeadingUnit[] = "\x80";
+  CHECK(testOmittedWindow(badLeadingUnit, JSMSG_BAD_LEADING_UTF8_UNIT, "0x80"));
+
+  // Bad unit at start of a fresh line.
+  static const char badStartingFreshLine[] = "var x = 5;\n\x98";
+  CHECK(testOmittedWindow(badStartingFreshLine, JSMSG_BAD_LEADING_UTF8_UNIT,
+                          "0x98"));
+
+  // Bad trailing unit in initial code point.
+  static const char badTrailingUnit[] = "\xD8\x20";
+  CHECK(testOmittedWindow(badTrailingUnit, JSMSG_BAD_TRAILING_UTF8_UNIT,
+                          "0xD8 0x20"));
+
+  // Bad trailing unit at start of a fresh line.
+  static const char badTrailingUnitFreshLine[] = "var x = 5;\n\xD8\x20";
+  CHECK(testOmittedWindow(badTrailingUnitFreshLine,
+                          JSMSG_BAD_TRAILING_UTF8_UNIT, "0xD8 0x20"));
+
+  // Overlong in initial code point.
+  static const char overlongInitial[] = "\xC0\x80";
+  CHECK(testOmittedWindow(overlongInitial, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
+                          "0xC0 0x80"));
+
+  // Overlong at start of a fresh line.
+  static const char overlongFreshLine[] = "var x = 5;\n\xC0\x81";
+  CHECK(testOmittedWindow(overlongFreshLine, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
+                          "0xC0 0x81"));
+
+  // Not-enough in initial code point.
+  static const char notEnoughInitial[] = "\xF0";
+  CHECK(
+      testOmittedWindow(notEnoughInitial, JSMSG_NOT_ENOUGH_CODE_UNITS, "0xF0"));
+
+  // Not-enough at start of a fresh line.
+  static const char notEnoughFreshLine[] = "var x = 5;\n\xF0";
+  CHECK(testOmittedWindow(notEnoughFreshLine, JSMSG_NOT_ENOUGH_CODE_UNITS,
+                          "0xF0"));
+
+  return true;
 }
 
-bool
-testUtf8()
-{
-    // Bad unit with nothing before it.
-    static const char badLeadingUnit[] = "\x80";
-    CHECK(testOmittedWindow(badLeadingUnit, JSMSG_BAD_LEADING_UTF8_UNIT, "0x80"));
+bool testUtf16() {
+  // Bad unit with nothing before it.
+  static const char16_t badLeadingUnit[] = u"\xDFFF";
+  CHECK(testOmittedWindow(badLeadingUnit, JSMSG_ILLEGAL_CHARACTER));
 
-    // Bad unit at start of a fresh line.
-    static const char badStartingFreshLine[] = "var x = 5;\n\x98";
-    CHECK(testOmittedWindow(badStartingFreshLine, JSMSG_BAD_LEADING_UTF8_UNIT, "0x98"));
+  // Bad unit at start of a fresh line.
+  static const char16_t badStartingFreshLine[] = u"var x = 5;\n\xDFFF";
+  CHECK(testOmittedWindow(badStartingFreshLine, JSMSG_ILLEGAL_CHARACTER));
 
-    // Bad trailing unit in initial code point.
-    static const char badTrailingUnit[] = "\xD8\x20";
-    CHECK(testOmittedWindow(badTrailingUnit, JSMSG_BAD_TRAILING_UTF8_UNIT, "0xD8 0x20"));
-
-    // Bad trailing unit at start of a fresh line.
-    static const char badTrailingUnitFreshLine[] = "var x = 5;\n\xD8\x20";
-    CHECK(testOmittedWindow(badTrailingUnitFreshLine, JSMSG_BAD_TRAILING_UTF8_UNIT, "0xD8 0x20"));
-
-    // Overlong in initial code point.
-    static const char overlongInitial[] = "\xC0\x80";
-    CHECK(testOmittedWindow(overlongInitial, JSMSG_FORBIDDEN_UTF8_CODE_POINT, "0xC0 0x80"));
-
-    // Overlong at start of a fresh line.
-    static const char overlongFreshLine[] = "var x = 5;\n\xC0\x81";
-    CHECK(testOmittedWindow(overlongFreshLine, JSMSG_FORBIDDEN_UTF8_CODE_POINT, "0xC0 0x81"));
-
-    // Not-enough in initial code point.
-    static const char notEnoughInitial[] = "\xF0";
-    CHECK(testOmittedWindow(notEnoughInitial, JSMSG_NOT_ENOUGH_CODE_UNITS, "0xF0"));
-
-    // Not-enough at start of a fresh line.
-    static const char notEnoughFreshLine[] = "var x = 5;\n\xF0";
-    CHECK(testOmittedWindow(notEnoughFreshLine, JSMSG_NOT_ENOUGH_CODE_UNITS, "0xF0"));
-
-    return true;
+  return true;
 }
 
-bool
-testUtf16()
-{
-    // Bad unit with nothing before it.
-    static const char16_t badLeadingUnit[] = u"\xDFFF";
-    CHECK(testOmittedWindow(badLeadingUnit, JSMSG_ILLEGAL_CHARACTER));
-
-    // Bad unit at start of a fresh line.
-    static const char16_t badStartingFreshLine[] = u"var x = 5;\n\xDFFF";
-    CHECK(testOmittedWindow(badStartingFreshLine, JSMSG_ILLEGAL_CHARACTER));
-
-    return true;
+static bool startsWith(const char* str, const char* prefix) {
+  return std::strncmp(prefix, str, strlen(prefix)) == 0;
 }
 
-static bool
-startsWith(const char* str, const char* prefix)
-{
-    return std::strncmp(prefix, str, strlen(prefix)) == 0;
+static bool equals(const char* str, const char* expected) {
+  return std::strcmp(str, expected) == 0;
 }
 
-static bool
-equals(const char* str, const char* expected)
-{
-    return std::strcmp(str, expected) == 0;
+bool compile(const char16_t* chars, size_t len,
+             JS::MutableHandle<JSScript*> script) {
+  JS::SourceText<char16_t> source;
+  CHECK(source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
+
+  JS::CompileOptions options(cx);
+  return JS::Compile(cx, options, source, script);
 }
 
-bool
-compile(const char16_t* chars, size_t len, JS::MutableHandle<JSScript*> script)
-{
-    JS::SourceText<char16_t> source;
-    CHECK(source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
+bool compile(const char* chars, size_t len,
+             JS::MutableHandle<JSScript*> script) {
+  JS::SourceText<Utf8Unit> source;
+  CHECK(source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
 
-    JS::CompileOptions options(cx);
-    return JS::Compile(cx, options, source, script);
+  JS::CompileOptions options(cx);
+  return JS::CompileDontInflate(cx, options, source, script);
 }
 
-bool
-compile(const char* chars, size_t len, JS::MutableHandle<JSScript*> script)
-{
-    JS::SourceText<Utf8Unit> source;
-    CHECK(source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
+template <typename CharT, size_t N>
+bool testOmittedWindow(const CharT (&chars)[N], unsigned expectedErrorNumber,
+                       const char* badCodeUnits = nullptr) {
+  JS::Rooted<JSScript*> script(cx);
+  CHECK(!compile(chars, N - 1, &script));
 
-    JS::CompileOptions options(cx);
-    return JS::CompileDontInflate(cx, options, source, script);
-}
+  JS::RootedValue exn(cx);
+  CHECK(JS_GetPendingException(cx, &exn));
+  JS_ClearPendingException(cx);
 
-template<typename CharT, size_t N>
-bool
-testOmittedWindow(const CharT (&chars)[N], unsigned expectedErrorNumber,
-                  const char* badCodeUnits = nullptr)
-{
-    JS::Rooted<JSScript*> script(cx);
-    CHECK(!compile(chars, N - 1, &script));
+  js::ErrorReport report(cx);
+  CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
 
-    JS::RootedValue exn(cx);
-    CHECK(JS_GetPendingException(cx, &exn));
-    JS_ClearPendingException(cx);
+  const auto* errorReport = report.report();
 
-    js::ErrorReport report(cx);
-    CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+  CHECK(errorReport->errorNumber == expectedErrorNumber);
 
-    const auto* errorReport = report.report();
+  if (const auto& notes = errorReport->notes) {
+    CHECK(sizeof(CharT) == 1);
+    CHECK(badCodeUnits != nullptr);
 
-    CHECK(errorReport->errorNumber == expectedErrorNumber);
+    auto iter = notes->begin();
+    CHECK(iter != notes->end());
 
-    if (const auto& notes = errorReport->notes) {
-        CHECK(sizeof(CharT) == 1);
-        CHECK(badCodeUnits != nullptr);
+    const char* noteMessage = (*iter)->message().c_str();
 
-        auto iter = notes->begin();
-        CHECK(iter != notes->end());
+    // The prefix ought always be the same.
+    static const char expectedPrefix[] =
+        "the code units comprising this invalid code point were: ";
+    constexpr size_t expectedPrefixLen = ArrayLength(expectedPrefix) - 1;
 
-        const char* noteMessage = (*iter)->message().c_str();
+    CHECK(startsWith(noteMessage, expectedPrefix));
 
-        // The prefix ought always be the same.
-        static const char expectedPrefix[] =
-            "the code units comprising this invalid code point were: ";
-        constexpr size_t expectedPrefixLen = ArrayLength(expectedPrefix) - 1;
+    // The end of the prefix is the bad code units.
+    CHECK(equals(noteMessage + expectedPrefixLen, badCodeUnits));
 
-        CHECK(startsWith(noteMessage, expectedPrefix));
+    ++iter;
+    CHECK(iter == notes->end());
+  } else {
+    CHECK(sizeof(CharT) == 2);
 
-        // The end of the prefix is the bad code units.
-        CHECK(equals(noteMessage + expectedPrefixLen, badCodeUnits));
+    // UTF-16 encoding "errors" are not categorical errors, so the errors
+    // are just of the invalid-character sort, without an accompanying note
+    // spelling out a series of invalid code units.
+    CHECK(!badCodeUnits);
+  }
 
-        ++iter;
-        CHECK(iter == notes->end());
-    } else {
-        CHECK(sizeof(CharT) == 2);
+  CHECK(!errorReport->linebuf());
 
-        // UTF-16 encoding "errors" are not categorical errors, so the errors
-        // are just of the invalid-character sort, without an accompanying note
-        // spelling out a series of invalid code units.
-        CHECK(!badCodeUnits);
-    }
-
-    CHECK(!errorReport->linebuf());
-
-    return true;
+  return true;
 }
 END_TEST(testEmptyWindow)

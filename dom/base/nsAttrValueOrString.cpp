@@ -6,9 +6,7 @@
 
 #include "nsAttrValueOrString.h"
 
-const nsAString&
-nsAttrValueOrString::String() const
-{
+const nsAString& nsAttrValueOrString::String() const {
   if (mStringPtr) {
     return *mStringPtr;
   }

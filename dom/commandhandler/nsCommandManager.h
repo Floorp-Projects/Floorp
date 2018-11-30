@@ -16,14 +16,13 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIController;
-template<class E> class nsCOMArray;
+template <class E>
+class nsCOMArray;
 
-class nsCommandManager
-  : public nsICommandManager
-  , public nsPICommandUpdater
-  , public nsSupportsWeakReference
-{
-public:
+class nsCommandManager : public nsICommandManager,
+                         public nsPICommandUpdater,
+                         public nsSupportsWeakReference {
+ public:
   typedef nsTArray<nsCOMPtr<nsIObserver> > ObserverList;
 
   nsCommandManager();
@@ -34,17 +33,17 @@ public:
   NS_DECL_NSICOMMANDMANAGER
   NS_DECL_NSPICOMMANDUPDATER
 
-protected:
+ protected:
   virtual ~nsCommandManager();
 
   nsresult GetControllerForCommand(const char* aCommand,
                                    mozIDOMWindowProxy* aDirectedToThisWindow,
                                    nsIController** aResult);
 
-protected:
+ protected:
   nsClassHashtable<nsCharPtrHashKey, ObserverList> mObserversTable;
 
-  mozIDOMWindowProxy* mWindow; // weak ptr. The window should always outlive us
+  mozIDOMWindowProxy* mWindow;  // weak ptr. The window should always outlive us
 };
 
-#endif // nsCommandManager_h__
+#endif  // nsCommandManager_h__

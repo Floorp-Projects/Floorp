@@ -11,14 +11,14 @@
 
 namespace mozilla {
 
-class GeckoVRManager
-{
-public:
+class GeckoVRManager {
+ public:
   static void* GetExternalContext() {
-    return reinterpret_cast<void*>(mozilla::java::GeckoVRManager::GetExternalContext());
+    return reinterpret_cast<void*>(
+        mozilla::java::GeckoVRManager::GetExternalContext());
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_GeckoVRManager_h_
+#endif  // mozilla_GeckoVRManager_h_

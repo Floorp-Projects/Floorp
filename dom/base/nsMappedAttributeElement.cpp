@@ -7,34 +7,25 @@
 #include "nsMappedAttributeElement.h"
 #include "nsIDocument.h"
 
-
-bool
-nsMappedAttributeElement::SetAndSwapMappedAttribute(nsAtom* aName,
-                                                    nsAttrValue& aValue,
-                                                    bool* aValueWasSet,
-                                                    nsresult* aRetval)
-{
+bool nsMappedAttributeElement::SetAndSwapMappedAttribute(nsAtom* aName,
+                                                         nsAttrValue& aValue,
+                                                         bool* aValueWasSet,
+                                                         nsresult* aRetval) {
   nsHTMLStyleSheet* sheet = OwnerDoc()->GetAttributeStyleSheet();
-  *aRetval = mAttrs.SetAndSwapMappedAttr(aName, aValue,
-                                         this, sheet, aValueWasSet);
+  *aRetval =
+      mAttrs.SetAndSwapMappedAttr(aName, aValue, this, sheet, aValueWasSet);
   return true;
 }
 
 nsMapRuleToAttributesFunc
-nsMappedAttributeElement::GetAttributeMappingFunction() const
-{
+nsMappedAttributeElement::GetAttributeMappingFunction() const {
   return &MapNoAttributesInto;
 }
 
-void
-nsMappedAttributeElement::MapNoAttributesInto(const nsMappedAttributes*,
-                                              mozilla::MappedDeclarations&)
-{
-}
+void nsMappedAttributeElement::MapNoAttributesInto(
+    const nsMappedAttributes*, mozilla::MappedDeclarations&) {}
 
-void
-nsMappedAttributeElement::NodeInfoChanged(nsIDocument* aOldDoc)
-{
+void nsMappedAttributeElement::NodeInfoChanged(nsIDocument* aOldDoc) {
   nsHTMLStyleSheet* sheet = OwnerDoc()->GetAttributeStyleSheet();
   mAttrs.SetMappedAttrStyleSheet(sheet);
   nsMappedAttributeElementBase::NodeInfoChanged(aOldDoc);

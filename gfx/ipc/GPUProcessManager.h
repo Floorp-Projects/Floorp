@@ -22,7 +22,6 @@
 #include "nsThreadUtils.h"
 class nsBaseWidget;
 
-
 namespace mozilla {
 class MemoryReportingProcess;
 namespace layers {
@@ -36,18 +35,18 @@ class PImageBridgeChild;
 class RemoteCompositorSession;
 class InProcessCompositorSession;
 class UiCompositorControllerChild;
-} // namespace layers
+}  // namespace layers
 namespace widget {
 class CompositorWidget;
-} // namespace widget
+}  // namespace widget
 namespace dom {
 class ContentParent;
 class TabParent;
 class PVideoDecoderManagerChild;
-} // namespace dom
+}  // namespace dom
 namespace ipc {
 class GeckoChildProcessHost;
-} // namespace ipc
+}  // namespace ipc
 namespace gfx {
 
 class GPUChild;
@@ -59,8 +58,7 @@ class VsyncIOThreadHolder;
 // The GPUProcessManager is a singleton responsible for creating GPU-bound
 // objects that may live in another process. Currently, it provides access
 // to the compositor via CompositorBridgeParent.
-class GPUProcessManager final : public GPUProcessHost::Listener
-{
+class GPUProcessManager final : public GPUProcessHost::Listener {
   friend class layers::RemoteCompositorSession;
   friend class layers::InProcessCompositorSession;
 
@@ -77,7 +75,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener
   typedef layers::InProcessCompositorSession InProcessCompositorSession;
   typedef layers::UiCompositorControllerChild UiCompositorControllerChild;
 
-public:
+ public:
   static void Initialize();
   static void Shutdown();
   static GPUProcessManager* Get();
@@ -93,21 +91,18 @@ public:
   bool EnsureGPUReady();
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
-    nsBaseWidget* aWidget,
-    LayerManager* aLayerManager,
-    CSSToLayoutDeviceScale aScale,
-    const CompositorOptions& aOptions,
-    bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize,
-    bool* aRetry);
+      nsBaseWidget* aWidget, LayerManager* aLayerManager,
+      CSSToLayoutDeviceScale aScale, const CompositorOptions& aOptions,
+      bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
+      bool* aRetry);
 
   bool CreateContentBridges(
-    base::ProcessId aOtherProcess,
-    mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
-    mozilla::ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
-    mozilla::ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
-    mozilla::ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
-    nsTArray<uint32_t>* aNamespaces);
+      base::ProcessId aOtherProcess,
+      mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
+      mozilla::ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
+      mozilla::ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
+      mozilla::ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
+      nsTArray<uint32_t>* aNamespaces);
 
   // Maps the layer tree and process together so that aOwningPID is allowed
   // to access aLayersId across process.
@@ -118,7 +113,8 @@ public:
   // Must run on the content main thread.
   void UnmapLayerTreeId(LayersId aLayersId, base::ProcessId aOwningId);
 
-  // Checks to see if aLayersId and aRequestingPID have been mapped by MapLayerTreeId
+  // Checks to see if aLayersId and aRequestingPID have been mapped by
+  // MapLayerTreeId
   bool IsLayerTreeIdMapped(LayersId aLayersId, base::ProcessId aRequestingId);
 
   // Allocate an ID that can be used to refer to a layer tree and
@@ -131,16 +127,15 @@ public:
   // Must run on the browser main thread.
   uint32_t AllocateNamespace();
 
-  // Allocate a layers ID and connect it to a compositor. If the compositor is null,
-  // the connect operation will not be performed, but an ID will still be allocated.
-  // This must be called from the browser main thread.
+  // Allocate a layers ID and connect it to a compositor. If the compositor is
+  // null, the connect operation will not be performed, but an ID will still be
+  // allocated. This must be called from the browser main thread.
   //
   // Note that a layer tree id is always allocated, even if this returns false.
-  bool AllocateAndConnectLayerTreeId(
-    PCompositorBridgeChild* aCompositorBridge,
-    base::ProcessId aOtherPid,
-    LayersId* aOutLayersId,
-    CompositorOptions* aOutCompositorOptions);
+  bool AllocateAndConnectLayerTreeId(PCompositorBridgeChild* aCompositorBridge,
+                                     base::ProcessId aOtherPid,
+                                     LayersId* aOutLayersId,
+                                     CompositorOptions* aOutCompositorOptions);
 
   // Destroy and recreate all of the compositors
   void ResetCompositors();
@@ -176,35 +171,35 @@ public:
   RefPtr<MemoryReportingProcess> GetProcessMemoryReporter();
 
   // Returns access to the PGPU protocol if a GPU process is present.
-  GPUChild* GetGPUChild() {
-    return mGPUChild;
-  }
+  GPUChild* GetGPUChild() { return mGPUChild; }
 
   // Returns whether or not a GPU process was ever launched.
-  bool AttemptedGPUProcess() const {
-    return mNumProcessAttempts > 0;
-  }
+  bool AttemptedGPUProcess() const { return mNumProcessAttempts > 0; }
 
-private:
+ private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
 
-  bool CreateContentCompositorManager(base::ProcessId aOtherProcess,
-                                      mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint);
-  bool CreateContentImageBridge(base::ProcessId aOtherProcess,
-                                mozilla::ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
-  bool CreateContentVRManager(base::ProcessId aOtherProcess,
-                              mozilla::ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
-  void CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
-                                        mozilla::ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
+  bool CreateContentCompositorManager(
+      base::ProcessId aOtherProcess,
+      mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint);
+  bool CreateContentImageBridge(
+      base::ProcessId aOtherProcess,
+      mozilla::ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
+  bool CreateContentVRManager(
+      base::ProcessId aOtherProcess,
+      mozilla::ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+  void CreateContentVideoDecoderManager(
+      base::ProcessId aOtherProcess,
+      mozilla::ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
 
   // Called from RemoteCompositorSession. We track remote sessions so we can
   // notify their owning widgets that the session must be restarted.
   void RegisterRemoteProcessSession(RemoteCompositorSession* aSession);
   void UnregisterRemoteProcessSession(RemoteCompositorSession* aSession);
 
-  // Called from InProcessCompositorSession. We track in process sessino so we can
-  // notify their owning widgets that the session must be restarted
+  // Called from InProcessCompositorSession. We track in process sessino so we
+  // can notify their owning widgets that the session must be restarted
   void RegisterInProcessSession(InProcessCompositorSession* aSession);
   void UnregisterInProcessSession(InProcessCompositorSession* aSession);
 
@@ -213,7 +208,7 @@ private:
 
   void FallbackToSoftware(const char* aMessage);
 
-private:
+ private:
   GPUProcessManager();
 
   // Permanently disable the GPU process and record a message why.
@@ -234,34 +229,32 @@ private:
   void EnsureVRManager();
 
 #if defined(MOZ_WIDGET_ANDROID)
-  already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(nsBaseWidget* aWidget, const LayersId aId);
-#endif // defined(MOZ_WIDGET_ANDROID)
+  already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(
+      nsBaseWidget* aWidget, const LayersId aId);
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
   RefPtr<CompositorSession> CreateRemoteSession(
-    nsBaseWidget* aWidget,
-    LayerManager* aLayerManager,
-    const LayersId& aRootLayerTreeId,
-    CSSToLayoutDeviceScale aScale,
-    const CompositorOptions& aOptions,
-    bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize);
+      nsBaseWidget* aWidget, LayerManager* aLayerManager,
+      const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
+      const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
+      const gfx::IntSize& aSurfaceSize);
 
   DISALLOW_COPY_AND_ASSIGN(GPUProcessManager);
 
   class Observer final : public nsIObserver {
-  public:
+   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
     explicit Observer(GPUProcessManager* aManager);
 
-  protected:
+   protected:
     ~Observer() {}
 
     GPUProcessManager* mManager;
   };
   friend class Observer;
 
-private:
+ private:
   bool mDecodeVideoOnGpuProcess = true;
 
   RefPtr<Observer> mObserver;
@@ -286,7 +279,7 @@ private:
   RefPtr<VsyncBridgeChild> mVsyncBridge;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // _include_mozilla_gfx_ipc_GPUProcessManager_h_
+#endif  // _include_mozilla_gfx_ipc_GPUProcessManager_h_

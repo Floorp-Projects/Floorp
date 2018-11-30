@@ -17,7 +17,7 @@ namespace mozilla {
 /**
  *  Generate a cryptographically secure random 64-bit unsigned number using the
  *  best facilities available on the current OS.
- *  
+ *
  *  Useful whenever a secure random number is needed and NSS isn't available.
  *  (Perhaps because it hasn't been initialized yet)
  *
@@ -28,9 +28,8 @@ namespace mozilla {
  *    Other Unix: "/dev/urandom"
  *
  */
-MFBT_API Maybe<uint64_t>
-RandomUint64();
+MFBT_API Maybe<uint64_t> RandomUint64();
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_RandomNum_h_
+#endif  // mozilla_RandomNum_h_

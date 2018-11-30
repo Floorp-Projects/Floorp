@@ -23,54 +23,50 @@ union UnwindCode {
   struct {
     uint8_t offset_in_prolog;
     uint8_t unwind_operation_code : 4;
-    uint8_t operation_info        : 4;
+    uint8_t operation_info : 4;
   };
   USHORT frame_offset;
 };
 
 enum UnwindOperationCodes {
-  UWOP_PUSH_NONVOL = 0,     // info == register number
-  UWOP_ALLOC_LARGE = 1,     // no info, alloc size in next 2 slots
-  UWOP_ALLOC_SMALL = 2,     // info == size of allocation / 8 - 1
-  UWOP_SET_FPREG = 3,       // no info, FP = RSP + UNWIND_INFO.FPRegOffset*16
-  UWOP_SAVE_NONVOL = 4,     // info == register number, offset in next slot
-  UWOP_SAVE_NONVOL_FAR = 5, // info == register number, offset in next 2 slots
-  UWOP_SAVE_XMM = 6,        // Version 1; undocumented
-  UWOP_EPILOG = 6,          // Version 2; undocumented
-  UWOP_SAVE_XMM_FAR = 7,    // Version 1; undocumented
-  UWOP_SPARE = 7,           // Version 2; undocumented
-  UWOP_SAVE_XMM128 = 8,     // info == XMM reg number, offset in next slot
-  UWOP_SAVE_XMM128_FAR = 9, // info == XMM reg number, offset in next 2 slots
-  UWOP_PUSH_MACHFRAME = 10  // info == 0: no error-code, 1: error-code
+  UWOP_PUSH_NONVOL = 0,      // info == register number
+  UWOP_ALLOC_LARGE = 1,      // no info, alloc size in next 2 slots
+  UWOP_ALLOC_SMALL = 2,      // info == size of allocation / 8 - 1
+  UWOP_SET_FPREG = 3,        // no info, FP = RSP + UNWIND_INFO.FPRegOffset*16
+  UWOP_SAVE_NONVOL = 4,      // info == register number, offset in next slot
+  UWOP_SAVE_NONVOL_FAR = 5,  // info == register number, offset in next 2 slots
+  UWOP_SAVE_XMM = 6,         // Version 1; undocumented
+  UWOP_EPILOG = 6,           // Version 2; undocumented
+  UWOP_SAVE_XMM_FAR = 7,     // Version 1; undocumented
+  UWOP_SPARE = 7,            // Version 2; undocumented
+  UWOP_SAVE_XMM128 = 8,      // info == XMM reg number, offset in next slot
+  UWOP_SAVE_XMM128_FAR = 9,  // info == XMM reg number, offset in next 2 slots
+  UWOP_PUSH_MACHFRAME = 10   // info == 0: no error-code, 1: error-code
 };
 
 struct UnwindInfo {
-  uint8_t version       : 3;
-  uint8_t flags         : 5;
+  uint8_t version : 3;
+  uint8_t flags : 5;
   uint8_t size_of_prolog;
   uint8_t count_of_codes;
   uint8_t frame_register : 4;
-  uint8_t frame_offset   : 4;
+  uint8_t frame_offset : 4;
   UnwindCode unwind_code[1];
 };
 
-ModuleUnwindParser::~ModuleUnwindParser()
-{
+ModuleUnwindParser::~ModuleUnwindParser() {
   if (mImg) {
     ImageUnload(mImg);
   }
 }
 
-void*
-ModuleUnwindParser::RvaToVa(ULONG aRva)
-{
-  return ImageRvaToVa(
-    mImg->FileHeader, mImg->MappedAddress, aRva, &mImg->LastRvaSection);
+void* ModuleUnwindParser::RvaToVa(ULONG aRva) {
+  return ImageRvaToVa(mImg->FileHeader, mImg->MappedAddress, aRva,
+                      &mImg->LastRvaSection);
 }
 
 ModuleUnwindParser::ModuleUnwindParser(const std::string& aPath)
-  : mPath(aPath)
-{
+    : mPath(aPath) {
   // Convert wchar to native charset because ImageLoad only takes
   // a PSTR as input.
   std::string code_file = UTF8ToMBCS(aPath);
@@ -85,11 +81,12 @@ ModuleUnwindParser::ModuleUnwindParser(const std::string& aPath)
     return;
   }
 
-  DWORD exception_rva = optional_header->
-    DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION].VirtualAddress;
+  DWORD exception_rva =
+      optional_header->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION]
+          .VirtualAddress;
 
-  DWORD exception_size = optional_header->
-    DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION].Size;
+  DWORD exception_size =
+      optional_header->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION].Size;
 
   auto funcs = (PIMAGE_RUNTIME_FUNCTION_ENTRY)RvaToVa(exception_rva);
   if (!funcs) {
@@ -101,10 +98,8 @@ ModuleUnwindParser::ModuleUnwindParser(const std::string& aPath)
   }
 }
 
-bool
-ModuleUnwindParser::GenerateCFIForFunction(IMAGE_RUNTIME_FUNCTION_ENTRY& aFunc,
-                                           UnwindCFI& aRet)
-{
+bool ModuleUnwindParser::GenerateCFIForFunction(
+    IMAGE_RUNTIME_FUNCTION_ENTRY& aFunc, UnwindCFI& aRet) {
   DWORD unwind_rva = aFunc.UnwindInfoAddress;
   // Holds RVA to all visited IMAGE_RUNTIME_FUNCTION_ENTRY, to avoid
   // circular references.
@@ -133,7 +128,7 @@ ModuleUnwindParser::GenerateCFIForFunction(IMAGE_RUNTIME_FUNCTION_ENTRY& aFunc,
     return false;
   }
 
-  DWORD stack_size = 8; // minimal stack size is 8 for RIP
+  DWORD stack_size = 8;  // minimal stack size is 8 for RIP
   DWORD rip_offset = 8;
   do {
     for (uint8_t c = 0; c < unwind_info->count_of_codes; c++) {
@@ -169,15 +164,15 @@ ModuleUnwindParser::GenerateCFIForFunction(IMAGE_RUNTIME_FUNCTION_ENTRY& aFunc,
           // we know it will be incorrect after this point.
           return false;
         case UWOP_SAVE_NONVOL:
-        case UWOP_SAVE_XMM: // also v2 UWOP_EPILOG
+        case UWOP_SAVE_XMM:  // also v2 UWOP_EPILOG
         case UWOP_SAVE_XMM128: {
-          c++; // skip slot with offset
+          c++;  // skip slot with offset
           break;
         }
         case UWOP_SAVE_NONVOL_FAR:
-        case UWOP_SAVE_XMM_FAR: // also v2 UWOP_SPARE
+        case UWOP_SAVE_XMM_FAR:  // also v2 UWOP_SPARE
         case UWOP_SAVE_XMM128_FAR: {
-          c += 2; // skip 2 slots with offset
+          c += 2;  // skip 2 slots with offset
           break;
         }
         case UWOP_PUSH_MACHFRAME: {
@@ -189,19 +184,16 @@ ModuleUnwindParser::GenerateCFIForFunction(IMAGE_RUNTIME_FUNCTION_ENTRY& aFunc,
           rip_offset += 80;
           break;
         }
-        default: {
-          return false;
-        }
+        default: { return false; }
       }
     }
 
     if (unwind_info->flags & UNW_FLAG_CHAININFO) {
-      auto chained_func = (PIMAGE_RUNTIME_FUNCTION_ENTRY)(
-            (unwind_info->unwind_code +
-            ((unwind_info->count_of_codes + 1) & ~1)));
+      auto chained_func = (PIMAGE_RUNTIME_FUNCTION_ENTRY)((
+          unwind_info->unwind_code + ((unwind_info->count_of_codes + 1) & ~1)));
 
       if (visited.end() != visited.find(chained_func->UnwindInfoAddress)) {
-        return false; // Circular reference
+        return false;  // Circular reference
       }
 
       visited.insert(chained_func->UnwindInfoAddress);
@@ -229,13 +221,11 @@ ModuleUnwindParser::GetAnyOffsetAddr() const {
   return mUnwindMap.begin()->first;
 }
 
-bool
-ModuleUnwindParser::GetCFI(DWORD aAddress, UnwindCFI& aRet)
-{
+bool ModuleUnwindParser::GetCFI(DWORD aAddress, UnwindCFI& aRet) {
   // Figure out the begin address of the requested address.
   auto itUW = mUnwindMap.lower_bound(aAddress + 1);
   if (itUW == mUnwindMap.begin()) {
-   return false; // address before this module.
+    return false;  // address before this module.
   }
   --itUW;
 
@@ -261,6 +251,6 @@ ModuleUnwindParser::GetCFI(DWORD aAddress, UnwindCFI& aRet)
   return true;
 }
 
-} // namespace
+}  // namespace CrashReporter
 
-#endif // XP_WIN && HAVE_64BIT_BUILD
+#endif  // XP_WIN && HAVE_64BIT_BUILD

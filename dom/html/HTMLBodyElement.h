@@ -17,15 +17,12 @@ namespace dom {
 
 class OnBeforeUnloadEventHandlerNonNull;
 
-class HTMLBodyElement final : public nsGenericHTMLElement
-{
-public:
+class HTMLBodyElement final : public nsGenericHTMLElement {
+ public:
   using Element::GetText;
 
   explicit HTMLBodyElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-  {
-  }
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLBodyElement, nsGenericHTMLElement)
@@ -35,104 +32,73 @@ public:
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLBodyElement.
 #define EVENT(name_, id_, type_, struct_) /* nothing; handled by the shim */
-#define WINDOW_EVENT_HELPER(name_, type_)                               \
-  type_* GetOn##name_();                                                \
+#define WINDOW_EVENT_HELPER(name_, type_) \
+  type_* GetOn##name_();                  \
   void SetOn##name_(type_* handler);
-#define WINDOW_EVENT(name_, id_, type_, struct_)                        \
+#define WINDOW_EVENT(name_, id_, type_, struct_) \
   WINDOW_EVENT_HELPER(name_, EventHandlerNonNull)
-#define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                  \
+#define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_) \
   WINDOW_EVENT_HELPER(name_, OnBeforeUnloadEventHandlerNonNull)
-#include "mozilla/EventNameList.h" // IWYU pragma: keep
+#include "mozilla/EventNameList.h"  // IWYU pragma: keep
 #undef BEFOREUNLOAD_EVENT
 #undef WINDOW_EVENT
 #undef WINDOW_EVENT_HELPER
 #undef EVENT
 
-  void GetText(nsAString& aText)
-  {
-    GetHTMLAttr(nsGkAtoms::text, aText);
-  }
-  void SetText(const nsAString& aText)
-  {
-    SetHTMLAttr(nsGkAtoms::text, aText);
-  }
-  void SetText(const nsAString& aText, ErrorResult& aError)
-  {
+  void GetText(nsAString& aText) { GetHTMLAttr(nsGkAtoms::text, aText); }
+  void SetText(const nsAString& aText) { SetHTMLAttr(nsGkAtoms::text, aText); }
+  void SetText(const nsAString& aText, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::text, aText, aError);
   }
-  void GetLink(nsAString& aLink)
-  {
-    GetHTMLAttr(nsGkAtoms::link, aLink);
-  }
-  void SetLink(const nsAString& aLink)
-  {
-    SetHTMLAttr(nsGkAtoms::link, aLink);
-  }
-  void SetLink(const nsAString& aLink, ErrorResult& aError)
-  {
+  void GetLink(nsAString& aLink) { GetHTMLAttr(nsGkAtoms::link, aLink); }
+  void SetLink(const nsAString& aLink) { SetHTMLAttr(nsGkAtoms::link, aLink); }
+  void SetLink(const nsAString& aLink, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::link, aLink, aError);
   }
-  void GetVLink(nsAString& aVLink)
-  {
-    GetHTMLAttr(nsGkAtoms::vlink, aVLink);
-  }
-  void SetVLink(const nsAString& aVLink)
-  {
+  void GetVLink(nsAString& aVLink) { GetHTMLAttr(nsGkAtoms::vlink, aVLink); }
+  void SetVLink(const nsAString& aVLink) {
     SetHTMLAttr(nsGkAtoms::vlink, aVLink);
   }
-  void SetVLink(const nsAString& aVLink, ErrorResult& aError)
-  {
+  void SetVLink(const nsAString& aVLink, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::vlink, aVLink, aError);
   }
-  void GetALink(nsAString& aALink)
-  {
-    GetHTMLAttr(nsGkAtoms::alink, aALink);
-  }
-  void SetALink(const nsAString& aALink)
-  {
+  void GetALink(nsAString& aALink) { GetHTMLAttr(nsGkAtoms::alink, aALink); }
+  void SetALink(const nsAString& aALink) {
     SetHTMLAttr(nsGkAtoms::alink, aALink);
   }
-  void SetALink(const nsAString& aALink, ErrorResult& aError)
-  {
+  void SetALink(const nsAString& aALink, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::alink, aALink, aError);
   }
-  void GetBgColor(nsAString& aBgColor)
-  {
+  void GetBgColor(nsAString& aBgColor) {
     GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
   }
-  void SetBgColor(const nsAString& aBgColor)
-  {
+  void SetBgColor(const nsAString& aBgColor) {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
   }
-  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError)
-  {
+  void SetBgColor(const nsAString& aBgColor, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
-  void GetBackground(DOMString& aBackground)
-  {
+  void GetBackground(DOMString& aBackground) {
     GetHTMLAttr(nsGkAtoms::background, aBackground);
   }
-  void GetBackground(nsAString& aBackground)
-  {
+  void GetBackground(nsAString& aBackground) {
     GetHTMLAttr(nsGkAtoms::background, aBackground);
   }
-  void SetBackground(const nsAString& aBackground, ErrorResult& aError)
-  {
+  void SetBackground(const nsAString& aBackground, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::background, aBackground, aError);
   }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                              nsAtom* aAttribute,
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   virtual already_AddRefed<TextEditor> GetAssociatedEditor() override;
-  virtual nsresult Clone(dom::NodeInfo*, nsINode **aResult) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
-
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
@@ -145,17 +111,18 @@ public:
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
 
-protected:
+ protected:
   virtual ~HTMLBodyElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* HTMLBodyElement_h___ */

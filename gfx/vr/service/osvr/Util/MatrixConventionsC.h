@@ -58,10 +58,10 @@ typedef uint16_t OSVR_MatrixConventions;
     @ingroup MatrixConvention
 */
 typedef enum OSVR_MatrixMasks {
-    OSVR_MATRIX_MASK_ROWMAJOR = 0x1,
-    OSVR_MATRIX_MASK_ROWVECTORS = 0x2,
-    OSVR_MATRIX_MASK_LHINPUT = 0x4,
-    OSVR_MATRIX_MASK_UNSIGNEDZ = 0x8
+  OSVR_MATRIX_MASK_ROWMAJOR = 0x1,
+  OSVR_MATRIX_MASK_ROWVECTORS = 0x2,
+  OSVR_MATRIX_MASK_LHINPUT = 0x4,
+  OSVR_MATRIX_MASK_UNSIGNEDZ = 0x8
 } OSVR_MatrixMasks;
 #endif
 
@@ -79,10 +79,10 @@ typedef enum OSVR_MatrixMasks {
 */
 /** @brief Flag bit controlling output memory order */
 typedef enum OSVR_MatrixOrderingFlags {
-    /** @brief Column-major memory order (default) */
-    OSVR_MATRIX_COLMAJOR = 0x0,
-    /** @brief Row-major memory order */
-    OSVR_MATRIX_ROWMAJOR = OSVR_MATRIX_MASK_ROWMAJOR
+  /** @brief Column-major memory order (default) */
+  OSVR_MATRIX_COLMAJOR = 0x0,
+  /** @brief Row-major memory order */
+  OSVR_MATRIX_ROWMAJOR = OSVR_MATRIX_MASK_ROWMAJOR
 } OSVR_MatrixOrderingFlags;
 
 /** @brief Flag bit controlling expected input to matrices.
@@ -92,39 +92,39 @@ typedef enum OSVR_MatrixOrderingFlags {
     carry on.)
 */
 typedef enum OSVR_MatrixVectorFlags {
-    /** @brief Matrix transforms column vectors (default) */
-    OSVR_MATRIX_COLVECTORS = 0x0,
-    /** @brief Matrix transforms row vectors */
-    OSVR_MATRIX_ROWVECTORS = OSVR_MATRIX_MASK_ROWVECTORS
+  /** @brief Matrix transforms column vectors (default) */
+  OSVR_MATRIX_COLVECTORS = 0x0,
+  /** @brief Matrix transforms row vectors */
+  OSVR_MATRIX_ROWVECTORS = OSVR_MATRIX_MASK_ROWVECTORS
 } OSVR_MatrixVectorFlags;
 
 /** @brief Flag bit to indicate coordinate system input to projection matrix */
 typedef enum OSVR_ProjectionMatrixInputFlags {
-    /** @brief Matrix takes vectors from a right-handed coordinate system
-       (default) */
-    OSVR_MATRIX_RHINPUT = 0x0,
-    /** @brief Matrix takes vectors from a left-handed coordinate system */
-    OSVR_MATRIX_LHINPUT = OSVR_MATRIX_MASK_LHINPUT
+  /** @brief Matrix takes vectors from a right-handed coordinate system
+     (default) */
+  OSVR_MATRIX_RHINPUT = 0x0,
+  /** @brief Matrix takes vectors from a left-handed coordinate system */
+  OSVR_MATRIX_LHINPUT = OSVR_MATRIX_MASK_LHINPUT
 
 } OSVR_ProjectionMatrixInputFlags;
 
 /** @brief Flag bit to indicate the desired post-projection Z value convention
  */
 typedef enum OSVR_ProjectionMatrixZFlags {
-    /** @brief Matrix maps the near and far planes to signed Z values (in the
-        range [-1, 1])  (default)*/
-    OSVR_MATRIX_SIGNEDZ = 0x0,
-    /** @brief Matrix maps the near and far planes to unsigned Z values (in the
-        range [0, 1]) */
-    OSVR_MATRIX_UNSIGNEDZ = OSVR_MATRIX_MASK_UNSIGNEDZ
+  /** @brief Matrix maps the near and far planes to signed Z values (in the
+      range [-1, 1])  (default)*/
+  OSVR_MATRIX_SIGNEDZ = 0x0,
+  /** @brief Matrix maps the near and far planes to unsigned Z values (in the
+      range [0, 1]) */
+  OSVR_MATRIX_UNSIGNEDZ = OSVR_MATRIX_MASK_UNSIGNEDZ
 } OSVR_ProjectionMatrixZFlags;
 /** @} */ /* end of matrix flags group */
 
 enum {
-    /** @brief Constant for the number of elements in the matrices we use - 4x4.
-        @ingroup MatrixConvention
-    */
-    OSVR_MATRIX_SIZE = 16
+  /** @brief Constant for the number of elements in the matrices we use - 4x4.
+      @ingroup MatrixConvention
+  */
+  OSVR_MATRIX_SIZE = 16
 };
 
 /** @addtogroup UtilMath
@@ -155,7 +155,7 @@ OSVR_EXTERN_C_END
 inline OSVR_ReturnCode osvrPose3ToMatrix(OSVR_Pose3 const *pose,
                                          OSVR_MatrixConventions flags,
                                          double *mat) {
-    return osvrPose3ToMatrixd(pose, flags, mat);
+  return osvrPose3ToMatrixd(pose, flags, mat);
 }
 
 /** @brief Set a matrix based on a Pose3. (C++-only overload - detecting scalar
@@ -163,7 +163,7 @@ inline OSVR_ReturnCode osvrPose3ToMatrix(OSVR_Pose3 const *pose,
 inline OSVR_ReturnCode osvrPose3ToMatrix(OSVR_Pose3 const *pose,
                                          OSVR_MatrixConventions flags,
                                          float *mat) {
-    return osvrPose3ToMatrixf(pose, flags, mat);
+  return osvrPose3ToMatrixf(pose, flags, mat);
 }
 
 /** @brief Set a matrix based on a Pose3. (C++-only overload - detects scalar
@@ -172,7 +172,7 @@ template <typename Scalar>
 inline OSVR_ReturnCode osvrPose3ToMatrix(OSVR_Pose3 const *pose,
                                          OSVR_MatrixConventions flags,
                                          Scalar mat[OSVR_MATRIX_SIZE]) {
-    return osvrPose3ToMatrix(pose, flags, &(mat[0]));
+  return osvrPose3ToMatrix(pose, flags, &(mat[0]));
 }
 /** @brief Set a matrix based on a Pose3. (C++-only overload - detects scalar,
  * takes array, takes pose by reference) */
@@ -180,7 +180,7 @@ template <typename Scalar>
 inline OSVR_ReturnCode osvrPose3ToMatrix(OSVR_Pose3 const &pose,
                                          OSVR_MatrixConventions flags,
                                          Scalar mat[OSVR_MATRIX_SIZE]) {
-    return osvrPose3ToMatrix(&pose, flags, &(mat[0]));
+  return osvrPose3ToMatrix(&pose, flags, &(mat[0]));
 }
 
 #endif

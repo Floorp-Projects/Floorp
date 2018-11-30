@@ -13,88 +13,65 @@ class nsPresContext;
 namespace mozilla {
 namespace dom {
 
-MutationEvent::MutationEvent(EventTarget* aOwner,
-                             nsPresContext* aPresContext,
+MutationEvent::MutationEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                              InternalMutationEvent* aEvent)
-  : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalMutationEvent(false, eVoidEvent))
-{
+    : Event(aOwner, aPresContext,
+            aEvent ? aEvent : new InternalMutationEvent(false, eVoidEvent)) {
   mEventIsInternal = (aEvent == nullptr);
 }
 
-nsINode*
-MutationEvent::GetRelatedNode()
-{
+nsINode* MutationEvent::GetRelatedNode() {
   return mEvent->AsMutationEvent()->mRelatedNode;
 }
 
-void
-MutationEvent::GetPrevValue(nsAString& aPrevValue) const
-{
+void MutationEvent::GetPrevValue(nsAString& aPrevValue) const {
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
-  if (mutation->mPrevAttrValue)
-    mutation->mPrevAttrValue->ToString(aPrevValue);
+  if (mutation->mPrevAttrValue) mutation->mPrevAttrValue->ToString(aPrevValue);
 }
 
-void
-MutationEvent::GetNewValue(nsAString& aNewValue) const
-{
+void MutationEvent::GetNewValue(nsAString& aNewValue) const {
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
-  if (mutation->mNewAttrValue)
-      mutation->mNewAttrValue->ToString(aNewValue);
+  if (mutation->mNewAttrValue) mutation->mNewAttrValue->ToString(aNewValue);
 }
 
-void
-MutationEvent::GetAttrName(nsAString& aAttrName) const
-{
+void MutationEvent::GetAttrName(nsAString& aAttrName) const {
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
-  if (mutation->mAttrName)
-      mutation->mAttrName->ToString(aAttrName);
+  if (mutation->mAttrName) mutation->mAttrName->ToString(aAttrName);
 }
 
-uint16_t
-MutationEvent::AttrChange()
-{
+uint16_t MutationEvent::AttrChange() {
   return mEvent->AsMutationEvent()->mAttrChange;
 }
 
-void
-MutationEvent::InitMutationEvent(const nsAString& aType,
-                                 bool aCanBubble, bool aCancelable,
-                                 nsINode* aRelatedNode,
-                                 const nsAString& aPrevValue,
-                                 const nsAString& aNewValue,
-                                 const nsAString& aAttrName,
-                                 uint16_t& aAttrChange,
-                                 ErrorResult& aRv)
-{
+void MutationEvent::InitMutationEvent(const nsAString& aType, bool aCanBubble,
+                                      bool aCancelable, nsINode* aRelatedNode,
+                                      const nsAString& aPrevValue,
+                                      const nsAString& aNewValue,
+                                      const nsAString& aAttrName,
+                                      uint16_t& aAttrChange, ErrorResult& aRv) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   Event::InitEvent(aType, aCanBubble, aCancelable);
 
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
   mutation->mRelatedNode = aRelatedNode;
-  if (!aPrevValue.IsEmpty())
-    mutation->mPrevAttrValue = NS_Atomize(aPrevValue);
-  if (!aNewValue.IsEmpty())
-    mutation->mNewAttrValue = NS_Atomize(aNewValue);
+  if (!aPrevValue.IsEmpty()) mutation->mPrevAttrValue = NS_Atomize(aPrevValue);
+  if (!aNewValue.IsEmpty()) mutation->mNewAttrValue = NS_Atomize(aNewValue);
   if (!aAttrName.IsEmpty()) {
     mutation->mAttrName = NS_Atomize(aAttrName);
   }
   mutation->mAttrChange = aAttrChange;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<MutationEvent>
-NS_NewDOMMutationEvent(EventTarget* aOwner,
-                       nsPresContext* aPresContext,
-                       InternalMutationEvent* aEvent)
-{
+already_AddRefed<MutationEvent> NS_NewDOMMutationEvent(
+    EventTarget* aOwner, nsPresContext* aPresContext,
+    InternalMutationEvent* aEvent) {
   RefPtr<MutationEvent> it = new MutationEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

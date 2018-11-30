@@ -6,20 +6,20 @@
 
 #include "CanvasLayerMLGPU.h"
 #include "composite/CompositableHost.h"  // for CompositableHost
-#include "gfx2DGlue.h"                  // for ToFilter
-#include "gfxEnv.h"                     // for gfxEnv, etc
-#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
-#include "mozilla/gfx/Point.h"          // for Point
-#include "mozilla/gfx/Rect.h"           // for Rect
-#include "mozilla/layers/Compositor.h"  // for Compositor
-#include "mozilla/layers/Effects.h"     // for EffectChain
+#include "gfx2DGlue.h"                   // for ToFilter
+#include "gfxEnv.h"                      // for gfxEnv, etc
+#include "mozilla/gfx/Matrix.h"          // for Matrix4x4
+#include "mozilla/gfx/Point.h"           // for Point
+#include "mozilla/gfx/Rect.h"            // for Rect
+#include "mozilla/layers/Compositor.h"   // for Compositor
+#include "mozilla/layers/Effects.h"      // for EffectChain
 #include "mozilla/layers/ImageHost.h"
-#include "mozilla/mozalloc.h"           // for operator delete
+#include "mozilla/mozalloc.h"  // for operator delete
 #include "nsAString.h"
-#include "mozilla/RefPtr.h"                   // for nsRefPtr
+#include "mozilla/RefPtr.h"  // for nsRefPtr
 #include "MaskOperation.h"
-#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
-#include "nsString.h"                   // for nsAutoCString
+#include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
+#include "nsString.h"         // for nsAutoCString
 
 namespace mozilla {
 namespace layers {
@@ -27,25 +27,13 @@ namespace layers {
 using namespace mozilla::gfx;
 
 CanvasLayerMLGPU::CanvasLayerMLGPU(LayerManagerMLGPU* aManager)
-  : CanvasLayer(aManager, nullptr)
-  , TexturedLayerMLGPU(aManager)
-{
-}
+    : CanvasLayer(aManager, nullptr), TexturedLayerMLGPU(aManager) {}
 
-CanvasLayerMLGPU::~CanvasLayerMLGPU()
-{
-  CleanupResources();
-}
+CanvasLayerMLGPU::~CanvasLayerMLGPU() { CleanupResources(); }
 
-Layer*
-CanvasLayerMLGPU::GetLayer()
-{
-  return this;
-}
+Layer* CanvasLayerMLGPU::GetLayer() { return this; }
 
-gfx::SamplingFilter
-CanvasLayerMLGPU::GetSamplingFilter()
-{
+gfx::SamplingFilter CanvasLayerMLGPU::GetSamplingFilter() {
   gfx::SamplingFilter filter = mSamplingFilter;
 #ifdef ANDROID
   // Bug 691354
@@ -60,9 +48,8 @@ CanvasLayerMLGPU::GetSamplingFilter()
   return filter;
 }
 
-void
-CanvasLayerMLGPU::PrintInfo(std::stringstream& aStream, const char* aPrefix)
-{
+void CanvasLayerMLGPU::PrintInfo(std::stringstream& aStream,
+                                 const char* aPrefix) {
   CanvasLayer::PrintInfo(aStream, aPrefix);
   aStream << "\n";
   if (mHost && mHost->IsAttached()) {
@@ -72,9 +59,7 @@ CanvasLayerMLGPU::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
 }
 
-void
-CanvasLayerMLGPU::CleanupResources()
-{
+void CanvasLayerMLGPU::CleanupResources() {
   if (mHost) {
     mHost->Detach(this);
   }
@@ -83,24 +68,14 @@ CanvasLayerMLGPU::CleanupResources()
   mHost = nullptr;
 }
 
-void
-CanvasLayerMLGPU::Disconnect()
-{
-  CleanupResources();
-}
+void CanvasLayerMLGPU::Disconnect() { CleanupResources(); }
 
-void
-CanvasLayerMLGPU::ClearCachedResources()
-{
-  CleanupResources();
-}
+void CanvasLayerMLGPU::ClearCachedResources() { CleanupResources(); }
 
-void
-CanvasLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
-{
+void CanvasLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion) {
   aRegion.AndWith(LayerIntRect::FromUnknownRect(mPictureRect));
   LayerMLGPU::SetRenderRegion(std::move(aRegion));
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

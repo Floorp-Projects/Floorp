@@ -19,25 +19,20 @@ namespace net {
 class WebrtcProxyChannel;
 
 class WebrtcProxyChannelParent : public PWebrtcProxyChannelParent,
-                                 public WebrtcProxyChannelCallback
-{
-public:
+                                 public WebrtcProxyChannelCallback {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelParent, override)
 
-  mozilla::ipc::IPCResult
-  RecvAsyncOpen(const nsCString& aHost,
-                const int& aPort,
-                const OptionalLoadInfoArgs& aLoadInfoArgs,
-                const nsCString& aAlpn) override;
+  mozilla::ipc::IPCResult RecvAsyncOpen(
+      const nsCString& aHost, const int& aPort,
+      const OptionalLoadInfoArgs& aLoadInfoArgs,
+      const nsCString& aAlpn) override;
 
-  mozilla::ipc::IPCResult
-  RecvWrite(nsTArray<uint8_t>&& aWriteData) override;
+  mozilla::ipc::IPCResult RecvWrite(nsTArray<uint8_t>&& aWriteData) override;
 
-  mozilla::ipc::IPCResult
-  RecvClose() override;
+  mozilla::ipc::IPCResult RecvClose() override;
 
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   explicit WebrtcProxyChannelParent(nsIAuthPromptProvider* aAuthProvider);
 
@@ -49,17 +44,17 @@ public:
   void AddIPDLReference() { AddRef(); }
   void ReleaseIPDLReference() { Release(); }
 
-protected:
+ protected:
   virtual ~WebrtcProxyChannelParent();
 
-private:
+ private:
   void CleanupChannel();
 
   // Indicates that IPC is open.
   RefPtr<WebrtcProxyChannel> mChannel;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_WebrtcProxyChannelParent_h
+#endif  // mozilla_net_WebrtcProxyChannelParent_h

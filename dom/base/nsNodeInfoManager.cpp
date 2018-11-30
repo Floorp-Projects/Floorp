@@ -41,26 +41,23 @@ static LazyLogModule gNodeInfoManagerLeakPRLog("NodeInfoManagerLeak");
 static const uint32_t kInitialNodeInfoHashSize = 32;
 
 nsNodeInfoManager::nsNodeInfoManager()
-  : mNodeInfoHash(kInitialNodeInfoHashSize),
-    mDocument(nullptr),
-    mNonDocumentNodeInfos(0),
-    mTextNodeInfo(nullptr),
-    mCommentNodeInfo(nullptr),
-    mDocumentNodeInfo(nullptr),
-    mRecentlyUsedNodeInfos(),
-    mSVGEnabled(eTriUnset),
-    mMathMLEnabled(eTriUnset)
-{
+    : mNodeInfoHash(kInitialNodeInfoHashSize),
+      mDocument(nullptr),
+      mNonDocumentNodeInfos(0),
+      mTextNodeInfo(nullptr),
+      mCommentNodeInfo(nullptr),
+      mDocumentNodeInfo(nullptr),
+      mRecentlyUsedNodeInfos(),
+      mSVGEnabled(eTriUnset),
+      mMathMLEnabled(eTriUnset) {
   nsLayoutStatics::AddRef();
 
   if (gNodeInfoManagerLeakPRLog)
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
-           ("NODEINFOMANAGER %p created", this));
+            ("NODEINFOMANAGER %p created", this));
 }
 
-
-nsNodeInfoManager::~nsNodeInfoManager()
-{
+nsNodeInfoManager::~nsNodeInfoManager() {
   // Note: mPrincipal may be null here if we never got inited correctly
   mPrincipal = nullptr;
 
@@ -68,7 +65,7 @@ nsNodeInfoManager::~nsNodeInfoManager()
 
   if (gNodeInfoManagerLeakPRLog)
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
-           ("NODEINFOMANAGER %p destroyed", this));
+            ("NODEINFOMANAGER %p destroyed", this));
 
   nsLayoutStatics::Release();
 }
@@ -88,27 +85,27 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)->CanSkip(tmp->mDocument, aRemovingAllowed);
+    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)
+        ->CanSkip(tmp->mDocument, aRemovingAllowed);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)->CanSkipInCC(tmp->mDocument);
+    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)
+        ->CanSkipInCC(tmp->mDocument);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsNodeInfoManager)
   if (tmp->mDocument) {
-    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)->CanSkipThis(tmp->mDocument);
+    return NS_CYCLE_COLLECTION_PARTICIPANT(nsDocument)
+        ->CanSkipThis(tmp->mDocument);
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-nsresult
-nsNodeInfoManager::Init(nsIDocument *aDocument)
-{
-  MOZ_ASSERT(!mPrincipal,
-                  "Being inited when we already have a principal?");
+nsresult nsNodeInfoManager::Init(nsIDocument* aDocument) {
+  MOZ_ASSERT(!mPrincipal, "Being inited when we already have a principal?");
 
   mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
 
@@ -122,14 +119,12 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 
   if (gNodeInfoManagerLeakPRLog)
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
-           ("NODEINFOMANAGER %p Init document=%p", this, aDocument));
+            ("NODEINFOMANAGER %p Init document=%p", this, aDocument));
 
   return NS_OK;
 }
 
-void
-nsNodeInfoManager::DropDocumentReference()
-{
+void nsNodeInfoManager::DropDocumentReference() {
   if (mBindingManager) {
     mBindingManager->DropDocumentReference();
   }
@@ -139,16 +134,14 @@ nsNodeInfoManager::DropDocumentReference()
     iter.Data()->mDocument = nullptr;
   }
 
-  NS_ASSERTION(!mNonDocumentNodeInfos, "Shouldn't have non-document nodeinfos!");
+  NS_ASSERTION(!mNonDocumentNodeInfos,
+               "Shouldn't have non-document nodeinfos!");
   mDocument = nullptr;
 }
 
-
-already_AddRefed<mozilla::dom::NodeInfo>
-nsNodeInfoManager::GetNodeInfo(nsAtom *aName, nsAtom *aPrefix,
-                               int32_t aNamespaceID, uint16_t aNodeType,
-                               nsAtom* aExtraName /* = nullptr */)
-{
+already_AddRefed<mozilla::dom::NodeInfo> nsNodeInfoManager::GetNodeInfo(
+    nsAtom* aName, nsAtom* aPrefix, int32_t aNamespaceID, uint16_t aNodeType,
+    nsAtom* aExtraName /* = nullptr */) {
   CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
 
   NodeInfo::NodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType,
@@ -169,7 +162,8 @@ nsNodeInfoManager::GetNodeInfo(nsAtom *aName, nsAtom *aPrefix,
       NS_IF_ADDREF(mDocument);
     }
 
-    nodeInfo = new NodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName, this);
+    nodeInfo =
+        new NodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName, this);
     mNodeInfoHash.Put(&nodeInfo->mInner, nodeInfo);
   }
 
@@ -179,12 +173,10 @@ nsNodeInfoManager::GetNodeInfo(nsAtom *aName, nsAtom *aPrefix,
   return nodeInfo.forget();
 }
 
-
-nsresult
-nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
-                               int32_t aNamespaceID, uint16_t aNodeType,
-                               NodeInfo** aNodeInfo)
-{
+nsresult nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom* aPrefix,
+                                        int32_t aNamespaceID,
+                                        uint16_t aNodeType,
+                                        NodeInfo** aNodeInfo) {
   // TODO(erahm): Combine this with the atom version.
 #ifdef DEBUG
   {
@@ -210,7 +202,8 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
     }
 
     RefPtr<nsAtom> nameAtom = NS_Atomize(aName);
-    nodeInfo = new NodeInfo(nameAtom, aPrefix, aNamespaceID, aNodeType, nullptr, this);
+    nodeInfo =
+        new NodeInfo(nameAtom, aPrefix, aNamespaceID, aNodeType, nullptr, this);
     mNodeInfoHash.Put(&nodeInfo->mInner, nodeInfo);
   }
 
@@ -220,27 +213,22 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
   return NS_OK;
 }
 
-
-nsresult
-nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
-                               const nsAString& aNamespaceURI,
-                               uint16_t aNodeType,
-                               NodeInfo** aNodeInfo)
-{
+nsresult nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom* aPrefix,
+                                        const nsAString& aNamespaceURI,
+                                        uint16_t aNodeType,
+                                        NodeInfo** aNodeInfo) {
   int32_t nsid = kNameSpaceID_None;
 
   if (!aNamespaceURI.IsEmpty()) {
-    nsresult rv = nsContentUtils::NameSpaceManager()->
-      RegisterNameSpace(aNamespaceURI, nsid);
+    nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
+        aNamespaceURI, nsid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return GetNodeInfo(aName, aPrefix, nsid, aNodeType, aNodeInfo);
 }
 
-already_AddRefed<NodeInfo>
-nsNodeInfoManager::GetTextNodeInfo()
-{
+already_AddRefed<NodeInfo> nsNodeInfoManager::GetTextNodeInfo() {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
 
   if (!mTextNodeInfo) {
@@ -255,53 +243,43 @@ nsNodeInfoManager::GetTextNodeInfo()
   return nodeInfo.forget();
 }
 
-already_AddRefed<NodeInfo>
-nsNodeInfoManager::GetCommentNodeInfo()
-{
+already_AddRefed<NodeInfo> nsNodeInfoManager::GetCommentNodeInfo() {
   RefPtr<NodeInfo> nodeInfo;
 
   if (!mCommentNodeInfo) {
     nodeInfo = GetNodeInfo(nsGkAtoms::commentTagName, nullptr,
-                           kNameSpaceID_None, nsINode::COMMENT_NODE,
-                           nullptr);
+                           kNameSpaceID_None, nsINode::COMMENT_NODE, nullptr);
     // Hold a weak ref; the nodeinfo will let us know when it goes away
     mCommentNodeInfo = nodeInfo;
-  }
-  else {
+  } else {
     nodeInfo = mCommentNodeInfo;
   }
 
   return nodeInfo.forget();
 }
 
-already_AddRefed<NodeInfo>
-nsNodeInfoManager::GetDocumentNodeInfo()
-{
+already_AddRefed<NodeInfo> nsNodeInfoManager::GetDocumentNodeInfo() {
   RefPtr<NodeInfo> nodeInfo;
 
   if (!mDocumentNodeInfo) {
     NS_ASSERTION(mDocument, "Should have mDocument!");
     nodeInfo = GetNodeInfo(nsGkAtoms::documentNodeName, nullptr,
-                           kNameSpaceID_None, nsINode::DOCUMENT_NODE,
-                           nullptr);
+                           kNameSpaceID_None, nsINode::DOCUMENT_NODE, nullptr);
     // Hold a weak ref; the nodeinfo will let us know when it goes away
     mDocumentNodeInfo = nodeInfo;
 
     --mNonDocumentNodeInfos;
     if (!mNonDocumentNodeInfos) {
-      mDocument->Release(); // Don't set mDocument to null!
+      mDocument->Release();  // Don't set mDocument to null!
     }
-  }
-  else {
+  } else {
     nodeInfo = mDocumentNodeInfo;
   }
 
   return nodeInfo.forget();
 }
 
-void
-nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
-{
+void nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal* aPrincipal) {
   mPrincipal = nullptr;
   if (!aPrincipal) {
     aPrincipal = mDefaultPrincipal;
@@ -314,9 +292,7 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
   mPrincipal = aPrincipal;
 }
 
-void
-nsNodeInfoManager::RemoveNodeInfo(NodeInfo *aNodeInfo)
-{
+void nsNodeInfoManager::RemoveNodeInfo(NodeInfo* aNodeInfo) {
   MOZ_ASSERT(aNodeInfo, "Trying to remove null nodeinfo from manager!");
 
   if (aNodeInfo == mDocumentNodeInfo) {
@@ -333,8 +309,7 @@ nsNodeInfoManager::RemoveNodeInfo(NodeInfo *aNodeInfo)
     // Drop weak reference if needed
     if (aNodeInfo == mTextNodeInfo) {
       mTextNodeInfo = nullptr;
-    }
-    else if (aNodeInfo == mCommentNodeInfo) {
+    } else if (aNodeInfo == mCommentNodeInfo) {
       mCommentNodeInfo = nullptr;
     }
   }
@@ -344,9 +319,7 @@ nsNodeInfoManager::RemoveNodeInfo(NodeInfo *aNodeInfo)
   MOZ_ASSERT(ret, "Can't find mozilla::dom::NodeInfo to remove!!!");
 }
 
-bool
-nsNodeInfoManager::InternalSVGEnabled()
-{
+bool nsNodeInfoManager::InternalSVGEnabled() {
   // If the svg.disabled pref. is true, convert all SVG nodes into
   // disabled SVG nodes by swapping the namespace.
   nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
@@ -363,21 +336,19 @@ nsNodeInfoManager::InternalSVGEnabled()
     }
   }
   bool conclusion =
-    (SVGEnabled || nsContentUtils::IsSystemPrincipal(mPrincipal) ||
-     (loadInfo &&
-      (loadInfo->GetExternalContentPolicyType() ==
-         nsIContentPolicy::TYPE_IMAGE ||
-       loadInfo->GetExternalContentPolicyType() ==
-         nsIContentPolicy::TYPE_OTHER) &&
-      (nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal()) ||
-       nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()))));
+      (SVGEnabled || nsContentUtils::IsSystemPrincipal(mPrincipal) ||
+       (loadInfo &&
+        (loadInfo->GetExternalContentPolicyType() ==
+             nsIContentPolicy::TYPE_IMAGE ||
+         loadInfo->GetExternalContentPolicyType() ==
+             nsIContentPolicy::TYPE_OTHER) &&
+        (nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal()) ||
+         nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()))));
   mSVGEnabled = conclusion ? eTriTrue : eTriFalse;
   return conclusion;
 }
 
-bool
-nsNodeInfoManager::InternalMathMLEnabled()
-{
+bool nsNodeInfoManager::InternalMathMLEnabled() {
   // If the mathml.disabled pref. is true, convert all MathML nodes into
   // disabled MathML nodes by swapping the namespace.
   nsNameSpaceManager* nsmgr = nsNameSpaceManager::GetInstance();
@@ -387,14 +358,12 @@ nsNodeInfoManager::InternalMathMLEnabled()
   return conclusion;
 }
 
-void
-nsNodeInfoManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
-{
+void nsNodeInfoManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   aSizes.mDOMOtherSize += aSizes.mState.mMallocSizeOf(this);
 
   if (mBindingManager) {
     aSizes.mBindingsSize +=
-      mBindingManager->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+        mBindingManager->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 
   // Measurement of the following members may be added later if DMD finds it

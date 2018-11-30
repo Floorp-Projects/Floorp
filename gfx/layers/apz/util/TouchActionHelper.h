@@ -7,7 +7,7 @@
 #ifndef __mozilla_layers_TouchActionHelper_h__
 #define __mozilla_layers_TouchActionHelper_h__
 
-#include "mozilla/layers/LayersTypes.h" // for TouchBehaviorFlags
+#include "mozilla/layers/LayersTypes.h"  // for TouchBehaviorFlags
 
 class nsIFrame;
 class nsIWidget;
@@ -19,25 +19,25 @@ namespace layers {
  * Helper class to figure out the allowed touch behavior for frames, as per
  * the touch-action spec.
  */
-class TouchActionHelper
-{
-private:
+class TouchActionHelper {
+ private:
   static void UpdateAllowedBehavior(uint32_t aTouchActionValue,
                                     bool aConsiderPanning,
                                     TouchBehaviorFlags& aOutBehavior);
 
-public:
+ public:
   /*
-   * Performs hit testing on content, finds frame that corresponds to the aPoint and retrieves
-   * touch-action css property value from it according the rules specified in the spec:
+   * Performs hit testing on content, finds frame that corresponds to the aPoint
+   * and retrieves touch-action css property value from it according the rules
+   * specified in the spec:
    * http://www.w3.org/TR/pointerevents/#the-touch-action-css-property.
    */
-  static TouchBehaviorFlags GetAllowedTouchBehavior(nsIWidget* aWidget,
-                                                    nsIFrame* aRootFrame,
-                                                    const LayoutDeviceIntPoint& aPoint);
+  static TouchBehaviorFlags GetAllowedTouchBehavior(
+      nsIWidget* aWidget, nsIFrame* aRootFrame,
+      const LayoutDeviceIntPoint& aPoint);
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /*__mozilla_layers_TouchActionHelper_h__ */

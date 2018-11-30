@@ -15,34 +15,27 @@ StaticMutex CrashReporterClient::sLock;
 StaticRefPtr<CrashReporterClient> CrashReporterClient::sClientSingleton;
 
 CrashReporterClient::CrashReporterClient(const Shmem& aShmem)
- : mMetadata(new CrashReporterMetadataShmem(aShmem))
-{
+    : mMetadata(new CrashReporterMetadataShmem(aShmem)) {
   MOZ_COUNT_CTOR(CrashReporterClient);
 }
 
-CrashReporterClient::~CrashReporterClient()
-{
+CrashReporterClient::~CrashReporterClient() {
   MOZ_COUNT_DTOR(CrashReporterClient);
 }
 
-void
-CrashReporterClient::AnnotateCrashReport(CrashReporter::Annotation aKey,
-                                         const nsCString& aData)
-{
+void CrashReporterClient::AnnotateCrashReport(CrashReporter::Annotation aKey,
+                                              const nsCString& aData) {
   StaticMutexAutoLock lock(sLock);
   mMetadata->AnnotateCrashReport(aKey, aData);
 }
 
-void
-CrashReporterClient::AppendAppNotes(const nsCString& aData)
-{
+void CrashReporterClient::AppendAppNotes(const nsCString& aData) {
   StaticMutexAutoLock lock(sLock);
   mMetadata->AppendAppNotes(aData);
 }
 
-/* static */ void
-CrashReporterClient::InitSingletonWithShmem(const Shmem& aShmem)
-{
+/* static */ void CrashReporterClient::InitSingletonWithShmem(
+    const Shmem& aShmem) {
   {
     StaticMutexAutoLock lock(sLock);
 
@@ -53,19 +46,15 @@ CrashReporterClient::InitSingletonWithShmem(const Shmem& aShmem)
   CrashReporter::NotifyCrashReporterClientCreated();
 }
 
-/* static */ void
-CrashReporterClient::DestroySingleton()
-{
+/* static */ void CrashReporterClient::DestroySingleton() {
   StaticMutexAutoLock lock(sLock);
   sClientSingleton = nullptr;
 }
 
-/* static */ RefPtr<CrashReporterClient>
-CrashReporterClient::GetSingleton()
-{
+/* static */ RefPtr<CrashReporterClient> CrashReporterClient::GetSingleton() {
   StaticMutexAutoLock lock(sLock);
   return sClientSingleton;
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

@@ -18,19 +18,14 @@ NS_DEFINE_NAMED_CID(NS_PARSER_CID);
 NS_DEFINE_NAMED_CID(NS_SAXXMLREADER_CID);
 
 static const mozilla::Module::CIDEntry kParserCIDs[] = {
-  { &kNS_PARSER_CID, false, nullptr, nsParserConstructor },
-  { &kNS_SAXXMLREADER_CID, false, nullptr, nsSAXXMLReaderConstructor },
-  { nullptr }
-};
+    {&kNS_PARSER_CID, false, nullptr, nsParserConstructor},
+    {&kNS_SAXXMLREADER_CID, false, nullptr, nsSAXXMLReaderConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kParserContracts[] = {
-  { NS_SAXXMLREADER_CONTRACTID, &kNS_SAXXMLREADER_CID },
-  { nullptr }
-};
+    {NS_SAXXMLREADER_CONTRACTID, &kNS_SAXXMLREADER_CID}, {nullptr}};
 
-static nsresult
-Initialize()
-{
+static nsresult Initialize() {
   nsresult rv = nsHTMLTags::AddRefTable();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -42,20 +37,14 @@ Initialize()
   return rv;
 }
 
-static void
-Shutdown()
-{
-  nsHTMLTags::ReleaseTable();
-}
+static void Shutdown() { nsHTMLTags::ReleaseTable(); }
 
-static mozilla::Module kParserModule = {
-  mozilla::Module::kVersion,
-  kParserCIDs,
-  kParserContracts,
-  nullptr,
-  nullptr,
-  Initialize,
-  Shutdown
-};
+static mozilla::Module kParserModule = {mozilla::Module::kVersion,
+                                        kParserCIDs,
+                                        kParserContracts,
+                                        nullptr,
+                                        nullptr,
+                                        Initialize,
+                                        Shutdown};
 
 NSMODULE_DEFN(nsParserModule) = &kParserModule;

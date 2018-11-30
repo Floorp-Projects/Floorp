@@ -11,11 +11,10 @@
 #include "nsIFileChannel.h"
 #include "nsIUploadChannel.h"
 
-class nsFileChannel : public nsBaseChannel
-                    , public nsIFileChannel
-                    , public nsIUploadChannel
-{
-public:
+class nsFileChannel : public nsBaseChannel,
+                      public nsIFileChannel,
+                      public nsIUploadChannel {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIFILECHANNEL
   NS_DECL_NSIUPLOADCHANNEL
@@ -24,7 +23,7 @@ public:
 
   nsresult Init();
 
-protected:
+ protected:
   ~nsFileChannel() = default;
 
   // Called to construct a blocking file input stream for the given file.  This
@@ -35,14 +34,13 @@ protected:
                                             nsCOMPtr<nsIInputStream> &stream,
                                             nsCString &contentType, bool async);
 
-  virtual MOZ_MUST_USE nsresult OpenContentStream(bool async,
-                                                  nsIInputStream **result,
-                                                  nsIChannel** channel) override;
+  virtual MOZ_MUST_USE nsresult OpenContentStream(
+      bool async, nsIInputStream **result, nsIChannel **channel) override;
 
-private:
+ private:
   nsCOMPtr<nsIInputStream> mUploadStream;
   int64_t mUploadLength;
   nsCOMPtr<nsIURI> mFileURI;
 };
 
-#endif // !nsFileChannel_h__
+#endif  // !nsFileChannel_h__

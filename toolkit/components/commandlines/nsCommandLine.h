@@ -15,36 +15,36 @@ class nsICommandLineValidator;
 class nsIDOMWindow;
 class nsIFile;
 
-class nsCommandLine final : public nsICommandLineRunner
-{
-public:
+class nsCommandLine final : public nsICommandLineRunner {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOMMANDLINE
   NS_DECL_NSICOMMANDLINERUNNER
 
   nsCommandLine();
 
-protected:
+ protected:
   ~nsCommandLine() = default;
 
   typedef nsresult (*EnumerateHandlersCallback)(nsICommandLineHandler* aHandler,
-					nsICommandLine* aThis,
-					void *aClosure);
-  typedef nsresult (*EnumerateValidatorsCallback)(nsICommandLineValidator* aValidator,
-					nsICommandLine* aThis,
-					void *aClosure);
+                                                nsICommandLine* aThis,
+                                                void* aClosure);
+  typedef nsresult (*EnumerateValidatorsCallback)(
+      nsICommandLineValidator* aValidator, nsICommandLine* aThis,
+      void* aClosure);
 
   void appendArg(const char* arg);
   MOZ_MUST_USE nsresult resolveShortcutURL(nsIFile* aFile, nsACString& outURL);
-  nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure);
-  nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure);
+  nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback,
+                             void* aClosure);
+  nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback,
+                               void* aClosure);
 
-  nsTArray<nsString>      mArgs;
-  uint32_t                mState;
-  nsCOMPtr<nsIFile>       mWorkingDir;
-  nsCOMPtr<nsIDOMWindow>  mWindowContext;
-  bool                    mPreventDefault;
+  nsTArray<nsString> mArgs;
+  uint32_t mState;
+  nsCOMPtr<nsIFile> mWorkingDir;
+  nsCOMPtr<nsIDOMWindow> mWindowContext;
+  bool mPreventDefault;
 };
 
 #endif
-

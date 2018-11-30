@@ -5,11 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 template <typename T>
-int NS_FASTCALL
-Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
-        const mozilla::detail::nsTStringRepr<T>& aRhs,
-        const nsTStringComparator<T>& comp)
-{
+int NS_FASTCALL Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
+                        const mozilla::detail::nsTStringRepr<T>& aRhs,
+                        const nsTStringComparator<T>& comp) {
   typedef typename nsTSubstring<T>::size_type size_type;
   typedef typename nsTSubstring<T>::const_iterator const_iterator;
 
@@ -26,8 +24,8 @@ Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
   size_type lengthToCompare = XPCOM_MIN(lLength, rLength);
 
   int result;
-  if ((result = comp(leftIter.get(), rightIter.get(),
-                     lengthToCompare, lengthToCompare)) == 0) {
+  if ((result = comp(leftIter.get(), rightIter.get(), lengthToCompare,
+                     lengthToCompare)) == 0) {
     if (lLength < rLength) {
       result = -1;
     } else if (rLength < lLength) {
@@ -41,13 +39,10 @@ Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
 }
 
 template <typename T>
-int
-nsTDefaultStringComparator<T>::operator()(const char_type* aLhs,
-                                          const char_type* aRhs,
-                                          uint32_t aLLength,
-                                          uint32_t aRLength) const
-{
-  return
-    aLLength == aRLength ? nsCharTraits<T>::compare(aLhs, aRhs, aLLength) :
-                            (aLLength > aRLength) ? 1 : -1;
+int nsTDefaultStringComparator<T>::operator()(const char_type* aLhs,
+                                              const char_type* aRhs,
+                                              uint32_t aLLength,
+                                              uint32_t aRLength) const {
+  return aLLength == aRLength ? nsCharTraits<T>::compare(aLhs, aRhs, aLLength)
+                              : (aLLength > aRLength) ? 1 : -1;
 }

@@ -5,7 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #if defined(XP_UNIX)
 
 #include <dirent.h>
@@ -41,262 +40,269 @@ extern void enterJsDirectory();
 extern void exitJsDirectory();
 extern void readFull(const char* path, js::Vector<uint8_t>& buf);
 
-void
-readFull(JSContext* cx, const char* path, js::Vector<char16_t>& buf)
-{
-    buf.shrinkTo(0);
+void readFull(JSContext* cx, const char* path, js::Vector<char16_t>& buf) {
+  buf.shrinkTo(0);
 
-    js::Vector<uint8_t> intermediate(cx);
-    readFull(path, intermediate);
+  js::Vector<uint8_t> intermediate(cx);
+  readFull(path, intermediate);
 
-    if (!buf.appendAll(intermediate)) {
-        MOZ_CRASH("Couldn't read data");
-    }
+  if (!buf.appendAll(intermediate)) {
+    MOZ_CRASH("Couldn't read data");
+  }
 }
 
 // Invariant: `path` must end with directory separator.
-template<typename Tok> void
-runTestFromPath(JSContext* cx, const char* path)
-{
-    const char BIN_SUFFIX[] = ".binjs";
-    const char TXT_SUFFIX[] = ".js";
-    fprintf(stderr, "runTestFromPath: entering directory '%s'\n", path);
-    const size_t pathlen = strlen(path);
+template <typename Tok>
+void runTestFromPath(JSContext* cx, const char* path) {
+  const char BIN_SUFFIX[] = ".binjs";
+  const char TXT_SUFFIX[] = ".js";
+  fprintf(stderr, "runTestFromPath: entering directory '%s'\n", path);
+  const size_t pathlen = strlen(path);
 
 #if defined(XP_UNIX)
-    MOZ_ASSERT(path[pathlen - 1] == '/');
+  MOZ_ASSERT(path[pathlen - 1] == '/');
 
-    // Read the list of files in the directory.
-    enterJsDirectory();
-    DIR* dir = opendir(path);
-    exitJsDirectory();
-    if (!dir) {
-        MOZ_CRASH("Couldn't open directory");
-    }
+  // Read the list of files in the directory.
+  enterJsDirectory();
+  DIR* dir = opendir(path);
+  exitJsDirectory();
+  if (!dir) {
+    MOZ_CRASH("Couldn't open directory");
+  }
 
-
-    while (auto entry = readdir(dir)) {
-        const char* d_name = entry->d_name;
-        const bool isDirectory = entry->d_type == DT_DIR;
-
+  while (auto entry = readdir(dir)) {
+    const char* d_name = entry->d_name;
+    const bool isDirectory = entry->d_type == DT_DIR;
 
 #elif defined(XP_WIN)
-    MOZ_ASSERT(path[pathlen - 1] == '\\');
+  MOZ_ASSERT(path[pathlen - 1] == '\\');
 
-    Vector<char> pattern(cx);
-    if (!pattern.append(path, pathlen)) {
+  Vector<char> pattern(cx);
+  if (!pattern.append(path, pathlen)) {
+    MOZ_CRASH();
+  }
+  if (!pattern.append('*')) {
+    MOZ_CRASH();
+  }
+  if (!pattern.append('\0')) {
+    MOZ_CRASH();
+  }
+
+  WIN32_FIND_DATA FindFileData;
+  enterJsDirectory();
+  HANDLE hFind = FindFirstFile(pattern.begin(), &FindFileData);
+  exitJsDirectory();
+  for (bool found = (hFind != INVALID_HANDLE_VALUE); found;
+       found = FindNextFile(hFind, &FindFileData)) {
+    const char* d_name = FindFileData.cFileName;
+    const bool isDirectory =
+        FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+
+#endif  // defined(XP_UNIX) || defined(XP_WIN)
+
+    const size_t namlen = strlen(d_name);
+
+    // Recurse through subdirectories.
+    if (isDirectory) {
+      if (strcmp(d_name, ".") == 0) {
+        continue;
+      }
+      if (strcmp(d_name, "..") == 0) {
+        continue;
+      }
+
+      Vector<char> subPath(cx);
+      // Start with `path` (including directory separator).
+      if (!subPath.append(path, pathlen)) {
         MOZ_CRASH();
-    }
-    if (!pattern.append('*')) {
+      }
+      if (!subPath.append(d_name, namlen)) {
         MOZ_CRASH();
-    }
-    if (!pattern.append('\0')) {
+      }
+      // Append same directory separator.
+      if (!subPath.append(path[pathlen - 1])) {
         MOZ_CRASH();
+      }
+      if (!subPath.append(0)) {
+        MOZ_CRASH();
+      }
+      runTestFromPath<Tok>(cx, subPath.begin());
+      continue;
     }
 
-    WIN32_FIND_DATA FindFileData;
-    enterJsDirectory();
-    HANDLE hFind = FindFirstFile(pattern.begin(), &FindFileData);
-    exitJsDirectory();
-    for (bool found = (hFind != INVALID_HANDLE_VALUE);
-            found;
-            found = FindNextFile(hFind, &FindFileData))
     {
-        const char* d_name = FindFileData.cFileName;
-        const bool isDirectory = FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+      // Make sure that we run GC between two tests. Otherwise, since we're
+      // running everything from the same cx and without returning to JS, there
+      // is nothing to deallocate the ASTs.
+      JS::PrepareForFullGC(cx);
+      cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::NO_REASON);
+    }
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
-#endif // defined(XP_UNIX) || defined(XP_WIN)
+    // Find files whose name ends with ".binjs".
+    fprintf(stderr, "Considering %s\n", d_name);
+    if (namlen < sizeof(BIN_SUFFIX)) {
+      continue;
+    }
+    if (strncmp(d_name + namlen - (sizeof(BIN_SUFFIX) - 1), BIN_SUFFIX,
+                sizeof(BIN_SUFFIX)) != 0)
+      continue;
 
-        const size_t namlen = strlen(d_name);
+    // Find text file.
+    Vector<char> txtPath(cx);
+    if (!txtPath.append(path, pathlen)) {
+      MOZ_CRASH();
+    }
+    if (!txtPath.append(d_name, namlen)) {
+      MOZ_CRASH();
+    }
+    txtPath.shrinkBy(sizeof(BIN_SUFFIX) - 1);
+    if (!txtPath.append(TXT_SUFFIX, sizeof(TXT_SUFFIX))) {
+      MOZ_CRASH();
+    }
+    fprintf(stderr, "Testing %s\n", txtPath.begin());
 
-        // Recurse through subdirectories.
-        if (isDirectory) {
-            if (strcmp(d_name, ".") == 0) {
-                continue;
-            }
-            if (strcmp(d_name, "..") == 0) {
-                continue;
-            }
+    // Read text file.
+    js::Vector<char16_t> txtSource(cx);
+    readFull(cx, txtPath.begin(), txtSource);
 
-            Vector<char> subPath(cx);
-            // Start with `path` (including directory separator).
-            if (!subPath.append(path, pathlen)) {
-                MOZ_CRASH();
-            }
-            if (!subPath.append(d_name, namlen)) {
-                MOZ_CRASH();
-            }
-            // Append same directory separator.
-            if (!subPath.append(path[pathlen - 1])) {
-                MOZ_CRASH();
-            }
-            if (!subPath.append(0)) {
-                MOZ_CRASH();
-            }
-            runTestFromPath<Tok>(cx, subPath.begin());
-            continue;
-        }
+    // Parse text file.
+    CompileOptions txtOptions(cx);
+    txtOptions.setFileAndLine(txtPath.begin(), 0);
 
-        {
-            // Make sure that we run GC between two tests. Otherwise, since we're running
-            // everything from the same cx and without returning to JS, there is nothing
-            // to deallocate the ASTs.
-            JS::PrepareForFullGC(cx);
-            cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::NO_REASON);
-        }
-        LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    UsedNameTracker txtUsedNames(cx);
 
-        // Find files whose name ends with ".binjs".
-        fprintf(stderr, "Considering %s\n", d_name);
-        if (namlen < sizeof(BIN_SUFFIX)) {
-            continue;
-        }
-        if (strncmp(d_name + namlen - (sizeof(BIN_SUFFIX) - 1),
-                    BIN_SUFFIX,
-                    sizeof(BIN_SUFFIX)
-            ) != 0)
-            continue;
+    RootedScriptSourceObject sourceObject(
+        cx,
+        frontend::CreateScriptSourceObject(cx, txtOptions, mozilla::Nothing()));
+    if (!sourceObject) {
+      MOZ_CRASH("Couldn't initialize ScriptSourceObject");
+    }
 
-        // Find text file.
-        Vector<char> txtPath(cx);
-        if (!txtPath.append(path, pathlen)) {
-            MOZ_CRASH();
-        }
-        if (!txtPath.append(d_name, namlen)) {
-            MOZ_CRASH();
-        }
-        txtPath.shrinkBy(sizeof(BIN_SUFFIX) - 1);
-        if (!txtPath.append(TXT_SUFFIX, sizeof(TXT_SUFFIX))) {
-            MOZ_CRASH();
-        }
-        fprintf(stderr, "Testing %s\n", txtPath.begin());
+    js::frontend::Parser<js::frontend::FullParseHandler, char16_t> txtParser(
+        cx, allocScope.alloc(), txtOptions, txtSource.begin(),
+        txtSource.length(),
+        /* foldConstants = */ false, txtUsedNames, nullptr, nullptr,
+        sourceObject, frontend::ParseGoal::Script);
+    if (!txtParser.checkOptions()) {
+      MOZ_CRASH("Bad options");
+    }
 
-        // Read text file.
-        js::Vector<char16_t> txtSource(cx);
-        readFull(cx, txtPath.begin(), txtSource);
+    auto txtParsed =
+        txtParser
+            .parse();  // Will be deallocated once `parser` goes out of scope.
+    RootedValue txtExn(cx);
+    if (!txtParsed) {
+      // Save exception for more detailed error message, if necessary.
+      if (!js::GetAndClearException(cx, &txtExn)) {
+        MOZ_CRASH("Couldn't clear exception");
+      }
+    }
 
-        // Parse text file.
-        CompileOptions txtOptions(cx);
-        txtOptions.setFileAndLine(txtPath.begin(), 0);
+    // Read binary file.
+    Vector<char> binPath(cx);
+    if (!binPath.append(path, pathlen)) {
+      MOZ_CRASH();
+    }
+    if (!binPath.append(d_name, namlen)) {
+      MOZ_CRASH();
+    }
+    if (!binPath.append(0)) {
+      MOZ_CRASH();
+    }
 
-        UsedNameTracker txtUsedNames(cx);
+    js::Vector<uint8_t> binSource(cx);
+    readFull(binPath.begin(), binSource);
 
-        RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(
-                                                  cx, txtOptions, mozilla::Nothing()));
-        if (!sourceObject) {
-            MOZ_CRASH("Couldn't initialize ScriptSourceObject");
-        }
+    // Parse binary file.
+    CompileOptions binOptions(cx);
+    binOptions.setFileAndLine(binPath.begin(), 0);
 
-        js::frontend::Parser<js::frontend::FullParseHandler, char16_t> txtParser(
-            cx, allocScope.alloc(), txtOptions, txtSource.begin(), txtSource.length(),
-            /* foldConstants = */ false, txtUsedNames, nullptr,
-            nullptr, sourceObject, frontend::ParseGoal::Script);
-        if (!txtParser.checkOptions()) {
-            MOZ_CRASH("Bad options");
-        }
+    frontend::UsedNameTracker binUsedNames(cx);
 
-        auto txtParsed = txtParser.parse(); // Will be deallocated once `parser` goes out of scope.
-        RootedValue txtExn(cx);
-        if (!txtParsed) {
-            // Save exception for more detailed error message, if necessary.
-            if (!js::GetAndClearException(cx, &txtExn)) {
-                MOZ_CRASH("Couldn't clear exception");
-            }
-        }
+    frontend::Directives directives(false);
+    frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
+                                           false);
 
-        // Read binary file.
-        Vector<char> binPath(cx);
-        if (!binPath.append(path, pathlen)) {
-            MOZ_CRASH();
-        }
-        if (!binPath.append(d_name, namlen)) {
-            MOZ_CRASH();
-        }
-        if (!binPath.append(0)) {
-            MOZ_CRASH();
-        }
+    RootedScriptSourceObject sourceObj(
+        cx,
+        frontend::CreateScriptSourceObject(cx, binOptions, mozilla::Nothing()));
+    if (!sourceObj) {
+      MOZ_CRASH();
+    }
 
-        js::Vector<uint8_t> binSource(cx);
-        readFull(binPath.begin(), binSource);
+    frontend::BinASTParser<Tok> binParser(cx, allocScope.alloc(), binUsedNames,
+                                          binOptions, sourceObj);
 
-        // Parse binary file.
-        CompileOptions binOptions(cx);
-        binOptions.setFileAndLine(binPath.begin(), 0);
+    auto binParsed = binParser.parse(
+        &globalsc,
+        binSource);  // Will be deallocated once `reader` goes out of scope.
+    RootedValue binExn(cx);
+    if (binParsed.isErr()) {
+      // Save exception for more detailed error message, if necessary.
+      if (!js::GetAndClearException(cx, &binExn)) {
+        MOZ_CRASH("Couldn't clear binExn");
+      }
+    }
 
-        frontend::UsedNameTracker binUsedNames(cx);
+    // The binary parser should accept the file iff the text parser has.
+    if (binParsed.isOk() && !txtParsed) {
+      fprintf(stderr, "Text file parsing failed: ");
 
-        frontend::Directives directives(false);
-        frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
+      js::ErrorReport report(cx);
+      if (!report.init(cx, txtExn, js::ErrorReport::WithSideEffects)) {
+        MOZ_CRASH("Couldn't report txtExn");
+      }
 
-        RootedScriptSourceObject sourceObj(cx, frontend::CreateScriptSourceObject(cx, binOptions,
-                                                   mozilla::Nothing()));
-        if (!sourceObj) {
-            MOZ_CRASH();
-        }
+      PrintError(cx, stderr, report.toStringResult(), report.report(),
+                 /* reportWarnings */ true);
+      MOZ_CRASH("Binary parser accepted a file that text parser rejected");
+    }
 
-        frontend::BinASTParser<Tok> binParser(cx, allocScope.alloc(), binUsedNames, binOptions, sourceObj);
+    if (binParsed.isErr() && txtParsed) {
+      fprintf(stderr, "Binary file parsing failed: ");
 
-        auto binParsed = binParser.parse(&globalsc, binSource); // Will be deallocated once `reader` goes out of scope.
-        RootedValue binExn(cx);
-        if (binParsed.isErr()) {
-            // Save exception for more detailed error message, if necessary.
-            if (!js::GetAndClearException(cx, &binExn)) {
-                MOZ_CRASH("Couldn't clear binExn");
-            }
-        }
+      js::ErrorReport report(cx);
+      if (!report.init(cx, binExn, js::ErrorReport::WithSideEffects)) {
+        MOZ_CRASH("Couldn't report binExn");
+      }
 
-        // The binary parser should accept the file iff the text parser has.
-        if (binParsed.isOk() && !txtParsed) {
-            fprintf(stderr, "Text file parsing failed: ");
+      PrintError(cx, stderr, report.toStringResult(), report.report(),
+                 /* reportWarnings */ true);
+      MOZ_CRASH("Binary parser rejected a file that text parser accepted");
+    }
 
-            js::ErrorReport report(cx);
-            if (!report.init(cx, txtExn, js::ErrorReport::WithSideEffects)) {
-                MOZ_CRASH("Couldn't report txtExn");
-            }
+    if (binParsed.isErr()) {
+      fprintf(stderr,
+              "Binary parser and text parser agree that %s is invalid\n",
+              txtPath.begin());
+      continue;
+    }
 
-            PrintError(cx, stderr, report.toStringResult(), report.report(), /* reportWarnings */ true);
-            MOZ_CRASH("Binary parser accepted a file that text parser rejected");
-        }
+#if defined(DEBUG)  // Dumping an AST is only defined in DEBUG builds
+    // Compare ASTs.
+    Sprinter binPrinter(cx);
+    if (!binPrinter.init()) {
+      MOZ_CRASH("Couldn't display binParsed");
+    }
+    DumpParseTree(binParsed.unwrap(), binPrinter);
 
-        if (binParsed.isErr() && txtParsed) {
-            fprintf(stderr, "Binary file parsing failed: ");
+    Sprinter txtPrinter(cx);
+    if (!txtPrinter.init()) {
+      MOZ_CRASH("Couldn't display txtParsed");
+    }
+    DumpParseTree(txtParsed, txtPrinter);
 
-            js::ErrorReport report(cx);
-            if (!report.init(cx, binExn, js::ErrorReport::WithSideEffects)) {
-                MOZ_CRASH("Couldn't report binExn");
-            }
-
-            PrintError(cx, stderr, report.toStringResult(), report.report(), /* reportWarnings */ true);
-            MOZ_CRASH("Binary parser rejected a file that text parser accepted");
-        }
-
-        if (binParsed.isErr()) {
-            fprintf(stderr, "Binary parser and text parser agree that %s is invalid\n", txtPath.begin());
-            continue;
-        }
-
-#if defined(DEBUG) // Dumping an AST is only defined in DEBUG builds
-        // Compare ASTs.
-        Sprinter binPrinter(cx);
-        if (!binPrinter.init()) {
-            MOZ_CRASH("Couldn't display binParsed");
-        }
-        DumpParseTree(binParsed.unwrap(), binPrinter);
-
-        Sprinter txtPrinter(cx);
-        if (!txtPrinter.init()) {
-            MOZ_CRASH("Couldn't display txtParsed");
-        }
-        DumpParseTree(txtParsed, txtPrinter);
-
-        if (strcmp(binPrinter.string(), txtPrinter.string()) != 0) {
-            fprintf(stderr, "Got distinct ASTs when parsing %s (%p/%p):\n\tBINARY\n%s\n\n\tTEXT\n%s\n",
-                txtPath.begin(),
-                (void*)binPrinter.getOffset(), (void*)txtPrinter.getOffset(),
-                binPrinter.string(), txtPrinter.string());
-#if 0 // Not for release, but useful for debugging.
-      // In case of error, this dumps files to /tmp, so they may
-      // easily be diffed.
+    if (strcmp(binPrinter.string(), txtPrinter.string()) != 0) {
+      fprintf(stderr,
+              "Got distinct ASTs when parsing %s "
+              "(%p/%p):\n\tBINARY\n%s\n\n\tTEXT\n%s\n",
+              txtPath.begin(), (void*)binPrinter.getOffset(),
+              (void*)txtPrinter.getOffset(), binPrinter.string(),
+              txtPrinter.string());
+#if 0   // Not for release, but useful for debugging.
+        // In case of error, this dumps files to /tmp, so they may
+        // easily be diffed.
             auto fd = open("/tmp/bin.ast", O_CREAT | O_TRUNC | O_WRONLY, 0666);
             if (!fd) {
                 MOZ_CRASH("Could not open bin.ast");
@@ -322,44 +328,45 @@ runTestFromPath(JSContext* cx, const char* path)
             if (result != 0) {
                 MOZ_CRASH("Could not close txt.ast");
             }
-#endif // 0
-            MOZ_CRASH("Got distinct ASTs");
-        }
-
-        fprintf(stderr, "Got the same AST when parsing %s\n", txtPath.begin());
-#endif // defined(DEBUG)
+#endif  // 0
+      MOZ_CRASH("Got distinct ASTs");
     }
+
+    fprintf(stderr, "Got the same AST when parsing %s\n", txtPath.begin());
+#endif  // defined(DEBUG)
+  }
 
 #if defined(XP_WIN)
-    if (!FindClose(hFind)) {
-        MOZ_CRASH("Could not close Find");
-    }
+  if (!FindClose(hFind)) {
+    MOZ_CRASH("Could not close Find");
+  }
 #elif defined(XP_UNIX)
-    if (closedir(dir) != 0) {
-        MOZ_CRASH("Could not close dir");
-    }
-#endif // defined(XP_WIN)
+  if (closedir(dir) != 0) {
+    MOZ_CRASH("Could not close dir");
+  }
+#endif  // defined(XP_WIN)
 }
 
-BEGIN_TEST(testBinASTReaderSimpleECMAScript2)
-{
+BEGIN_TEST(testBinASTReaderSimpleECMAScript2) {
 #if defined(XP_WIN)
-    runTestFromPath<js::frontend::BinTokenReaderTester>(cx, "jsapi-tests\\binast\\parser\\tester\\");
+  runTestFromPath<js::frontend::BinTokenReaderTester>(
+      cx, "jsapi-tests\\binast\\parser\\tester\\");
 #else
-    runTestFromPath<js::frontend::BinTokenReaderTester>(cx, "jsapi-tests/binast/parser/tester/");
-#endif // defined(XP_XIN)
-    return true;
+  runTestFromPath<js::frontend::BinTokenReaderTester>(
+      cx, "jsapi-tests/binast/parser/tester/");
+#endif  // defined(XP_XIN)
+  return true;
 }
 END_TEST(testBinASTReaderSimpleECMAScript2)
 
-BEGIN_TEST(testBinASTReaderMultipartECMAScript2)
-{
+BEGIN_TEST(testBinASTReaderMultipartECMAScript2) {
 #if defined(XP_WIN)
-    runTestFromPath<js::frontend::BinTokenReaderMultipart>(cx, "jsapi-tests\\binast\\parser\\multipart\\");
+  runTestFromPath<js::frontend::BinTokenReaderMultipart>(
+      cx, "jsapi-tests\\binast\\parser\\multipart\\");
 #else
-    runTestFromPath<js::frontend::BinTokenReaderMultipart>(cx, "jsapi-tests/binast/parser/multipart/");
-#endif // defined(XP_XIN)
-    return true;
+  runTestFromPath<js::frontend::BinTokenReaderMultipart>(
+      cx, "jsapi-tests/binast/parser/multipart/");
+#endif  // defined(XP_XIN)
+  return true;
 }
 END_TEST(testBinASTReaderMultipartECMAScript2)
-

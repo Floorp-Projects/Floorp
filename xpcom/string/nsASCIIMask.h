@@ -24,9 +24,8 @@ namespace mozilla {
 // on a course of action, chances are building up one of these arrays
 // and using it is going to be faster, especially if the set of
 // characters is more than one long, and known at compile time.
-class ASCIIMask
-{
-public:
+class ASCIIMask {
+ public:
   // Preset masks for some common character groups
   // When testing, you must check if the index is < 128 or use IsMasked()
   //
@@ -37,8 +36,8 @@ public:
   static const ASCIIMaskArray& MaskCRLFTab();
   static const ASCIIMaskArray& MaskWhitespace();
 
-  static MOZ_ALWAYS_INLINE bool IsMasked(const ASCIIMaskArray& aMask, uint32_t aChar)
-  {
+  static MOZ_ALWAYS_INLINE bool IsMasked(const ASCIIMaskArray& aMask,
+                                         uint32_t aChar) {
     return aChar < 128 && aMask[aChar];
   }
 };
@@ -52,22 +51,19 @@ public:
 // ...
 // if (someChar < 128 && sABCMask[someChar]) this is A or B or C
 
-
-namespace details
-{
-template<typename F, size_t... Indices>
-constexpr std::array<bool, 128> CreateASCIIMask(F fun, std::index_sequence<Indices...>)
-{
-  return {{ fun(Indices)... }};
+namespace details {
+template <typename F, size_t... Indices>
+constexpr std::array<bool, 128> CreateASCIIMask(
+    F fun, std::index_sequence<Indices...>) {
+  return {{fun(Indices)...}};
 }
-} // namespace details
+}  // namespace details
 
-template<typename F>
-constexpr std::array<bool, 128> CreateASCIIMask(F fun)
-{
+template <typename F>
+constexpr std::array<bool, 128> CreateASCIIMask(F fun) {
   return details::CreateASCIIMask(fun, std::make_index_sequence<128>{});
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // nsASCIIMask_h_
+#endif  // nsASCIIMask_h_

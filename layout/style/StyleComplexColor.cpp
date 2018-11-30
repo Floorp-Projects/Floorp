@@ -15,9 +15,8 @@ using namespace mozilla;
 
 // Blend one RGBA color with another based on a given ratios.
 // It is a linear combination of each channel with alpha premultipled.
-static nscolor
-LinearBlendColors(nscolor aBg, float aBgRatio, nscolor aFg, float aFgRatio)
-{
+static nscolor LinearBlendColors(nscolor aBg, float aBgRatio, nscolor aFg,
+                                 float aFgRatio) {
   constexpr float kFactor = 1.0f / 255.0f;
 
   float p1 = aBgRatio;
@@ -47,8 +46,7 @@ LinearBlendColors(nscolor aBg, float aBgRatio, nscolor aFg, float aFgRatio)
   return NS_RGBA(r, g, b, NSToIntRound(a * 255));
 }
 
-bool
-StyleComplexColor::MaybeTransparent() const {
+bool StyleComplexColor::MaybeTransparent() const {
   // We know that the color is opaque when it's a numeric color with
   // alpha == 255.
   // TODO(djg): Should we extend this to check Complex with bgRatio =
@@ -56,24 +54,22 @@ StyleComplexColor::MaybeTransparent() const {
   return mTag != eNumeric || NS_GET_A(mColor) != 255;
 }
 
-nscolor
-StyleComplexColor::CalcColor(nscolor aForegroundColor) const {
+nscolor StyleComplexColor::CalcColor(nscolor aForegroundColor) const {
   switch (mTag) {
-  case eNumeric:
-    return mColor;
-  case eForeground:
-  case eAuto:
-    return aForegroundColor;
-  case eComplex:
-    return LinearBlendColors(mColor, mBgRatio, aForegroundColor, mFgRatio);
-  default:
-    MOZ_ASSERT_UNREACHABLE("StyleComplexColor has invalid mTag");
-    return mColor;
+    case eNumeric:
+      return mColor;
+    case eForeground:
+    case eAuto:
+      return aForegroundColor;
+    case eComplex:
+      return LinearBlendColors(mColor, mBgRatio, aForegroundColor, mFgRatio);
+    default:
+      MOZ_ASSERT_UNREACHABLE("StyleComplexColor has invalid mTag");
+      return mColor;
   }
 }
 
-nscolor
-StyleComplexColor::CalcColor(mozilla::ComputedStyle* aStyle) const {
+nscolor StyleComplexColor::CalcColor(mozilla::ComputedStyle* aStyle) const {
   // Common case that is numeric color, which is pure background, we
   // can skip resolving StyleColor().
   // TODO(djg): Is this optimization worth it?
@@ -86,7 +82,6 @@ StyleComplexColor::CalcColor(mozilla::ComputedStyle* aStyle) const {
   return CalcColor(fgColor);
 }
 
-nscolor
-StyleComplexColor::CalcColor(const nsIFrame* aFrame) const {
+nscolor StyleComplexColor::CalcColor(const nsIFrame* aFrame) const {
   return CalcColor(aFrame->Style());
 }

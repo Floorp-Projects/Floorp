@@ -13,31 +13,28 @@
 namespace mozilla {
 namespace widget {
 
-class ScreenHelperAndroid final : public ScreenManager::Helper
-{
-public:
-    class ScreenHelperSupport;
+class ScreenHelperAndroid final : public ScreenManager::Helper {
+ public:
+  class ScreenHelperSupport;
 
-    ScreenHelperAndroid();
-    ~ScreenHelperAndroid();
+  ScreenHelperAndroid();
+  ~ScreenHelperAndroid();
 
-    static ScreenHelperAndroid* GetSingleton();
+  static ScreenHelperAndroid* GetSingleton();
 
-    void Refresh();
+  void Refresh();
 
-    void AddScreen(uint32_t aScreenId,
-                   DisplayType aDisplayType,
-                   LayoutDeviceIntRect aRect = LayoutDeviceIntRect(),
-                   float aDensity = 1.0f);
-    void RemoveScreen(uint32_t aId);
-    already_AddRefed<Screen> ScreenForId(uint32_t aScreenId);
+  void AddScreen(uint32_t aScreenId, DisplayType aDisplayType,
+                 LayoutDeviceIntRect aRect = LayoutDeviceIntRect(),
+                 float aDensity = 1.0f);
+  void RemoveScreen(uint32_t aId);
+  already_AddRefed<Screen> ScreenForId(uint32_t aScreenId);
 
-private:
-    nsDataHashtable<nsUint32HashKey, RefPtr<Screen>> mScreens;
+ private:
+  nsDataHashtable<nsUint32HashKey, RefPtr<Screen>> mScreens;
 };
 
-} // widget
-} // mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif /* ScreenHelperAndroid_h___ */
-

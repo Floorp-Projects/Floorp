@@ -11,25 +11,17 @@
 namespace mozilla {
 namespace dom {
 
-CDATASection::~CDATASection()
-{
-}
+CDATASection::~CDATASection() {}
 
-JSObject*
-CDATASection::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* CDATASection::WrapNode(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return CDATASection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool
-CDATASection::IsNodeOfType(uint32_t aFlags) const
-{
-  return false;
-}
+bool CDATASection::IsNodeOfType(uint32_t aFlags) const { return false; }
 
-already_AddRefed<CharacterData>
-CDATASection::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
-{
+already_AddRefed<CharacterData> CDATASection::CloneDataNode(
+    mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   RefPtr<CDATASection> it = new CDATASection(ni.forget());
   if (aCloneText) {
@@ -40,11 +32,9 @@ CDATASection::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) 
 }
 
 #ifdef DEBUG
-void
-CDATASection::List(FILE* out, int32_t aIndent) const
-{
+void CDATASection::List(FILE* out, int32_t aIndent) const {
   int32_t index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (index = aIndent; --index >= 0;) fputs("  ", out);
 
   fprintf(out, "CDATASection refcount=%" PRIuPTR "<", mRefCnt.get());
 
@@ -55,11 +45,9 @@ CDATASection::List(FILE* out, int32_t aIndent) const
   fputs(">\n", out);
 }
 
-void
-CDATASection::DumpContent(FILE* out, int32_t aIndent,
-                               bool aDumpAll) const {
-}
+void CDATASection::DumpContent(FILE* out, int32_t aIndent,
+                               bool aDumpAll) const {}
 #endif
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

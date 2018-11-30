@@ -10,24 +10,20 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<ChromeNodeList>
-ChromeNodeList::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
-{
+already_AddRefed<ChromeNodeList> ChromeNodeList::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   nsIDocument* root = win ? win->GetExtantDoc() : nullptr;
   RefPtr<ChromeNodeList> list = new ChromeNodeList(root);
   return list.forget();
 }
 
-JSObject*
-ChromeNodeList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ChromeNodeList::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return ChromeNodeList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-ChromeNodeList::Append(nsINode& aNode, ErrorResult& aError)
-{
+void ChromeNodeList::Append(nsINode& aNode, ErrorResult& aError) {
   if (!aNode.IsContent()) {
     // nsINodeList deals with nsIContent objects only, so need to
     // filter out other nodes for now.
@@ -38,9 +34,7 @@ ChromeNodeList::Append(nsINode& aNode, ErrorResult& aError)
   AppendElement(aNode.AsContent());
 }
 
-void
-ChromeNodeList::Remove(nsINode& aNode, ErrorResult& aError)
-{
+void ChromeNodeList::Remove(nsINode& aNode, ErrorResult& aError) {
   if (!aNode.IsContent()) {
     aError.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;

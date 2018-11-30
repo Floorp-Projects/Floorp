@@ -28,9 +28,8 @@
 namespace mozilla {
 namespace a11y {
 
-class AccessibleWrap : public Accessible
-{
-public: // construction, destruction
+class AccessibleWrap : public Accessible {
+ public:  // construction, destruction
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~AccessibleWrap();
 
@@ -44,17 +43,16 @@ public: // construction, destruction
    * should be instantied with.   used on runtime to determine the
    * right type for this accessible's associated native object.
    */
-  virtual Class GetNativeType ();
+  virtual Class GetNativeType();
 
-  virtual void Shutdown () override;
+  virtual void Shutdown() override;
 
   virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) override;
   virtual bool RemoveChild(Accessible* aAccessible) override;
 
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
 
-protected:
-
+ protected:
   /**
    * Return true if the parent doesn't have children to expose to AT.
    */
@@ -69,8 +67,7 @@ protected:
   id GetNativeObject();
 #endif
 
-private:
-
+ private:
   /**
    * Our native object. Private because its creation is done lazily.
    * Don't access it directly. Ever. Unless you are GetNativeObject() or
@@ -92,14 +89,14 @@ private:
 };
 
 #if defined(__OBJC__)
-  void FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType);
+void FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType);
 #else
-  void FireNativeEvent(id aNativeAcc, uint32_t aEventType);
+void FireNativeEvent(id aNativeAcc, uint32_t aEventType);
 #endif
 
 Class GetTypeFromRole(roles::Role aRole);
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

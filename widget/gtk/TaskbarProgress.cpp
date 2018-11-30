@@ -20,24 +20,19 @@ static mozilla::LazyLogModule gGtkTaskbarProgressLog("nsIGtkTaskbarProgress");
 
 NS_IMPL_ISUPPORTS(TaskbarProgress, nsIGtkTaskbarProgress, nsITaskbarProgress)
 
-TaskbarProgress::TaskbarProgress()
-    : mPrimaryWindow(nullptr)
-{
+TaskbarProgress::TaskbarProgress() : mPrimaryWindow(nullptr) {
   MOZ_LOG(gGtkTaskbarProgressLog, LogLevel::Info,
           ("%p TaskbarProgress()", this));
 }
 
-TaskbarProgress::~TaskbarProgress()
-{
+TaskbarProgress::~TaskbarProgress() {
   MOZ_LOG(gGtkTaskbarProgressLog, LogLevel::Info,
           ("%p ~TaskbarProgress()", this));
 }
 
 NS_IMETHODIMP
 TaskbarProgress::SetProgressState(nsTaskbarProgressState aState,
-                                  uint64_t               aCurrentValue,
-                                  uint64_t               aMaxValue)
-{
+                                  uint64_t aCurrentValue, uint64_t aMaxValue) {
 #ifdef MOZ_X11
   NS_ENSURE_ARG_RANGE(aState, 0, STATE_PAUSED);
 
@@ -61,7 +56,7 @@ TaskbarProgress::SetProgressState(nsTaskbarProgressState aState,
   } else {
     // Rounding down to ensure we don't set to 'full' until the operation
     // is completely finished.
-    progress = (gulong) (((double)aCurrentValue / aMaxValue) * 100.0);
+    progress = (gulong)(((double)aCurrentValue / aMaxValue) * 100.0);
   }
 
   // Check if the resultant value is the same as the previous call, and
@@ -83,29 +78,31 @@ TaskbarProgress::SetProgressState(nsTaskbarProgressState aState,
 }
 
 NS_IMETHODIMP
-TaskbarProgress::SetPrimaryWindow(mozIDOMWindowProxy* aWindow)
-{
+TaskbarProgress::SetPrimaryWindow(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_TRUE(aWindow != nullptr, NS_ERROR_ILLEGAL_VALUE);
 
   auto* parent = nsPIDOMWindowOuter::From(aWindow);
-  RefPtr<nsIWidget> widget = mozilla::widget::WidgetUtils::DOMWindowToWidget(parent);
+  RefPtr<nsIWidget> widget =
+      mozilla::widget::WidgetUtils::DOMWindowToWidget(parent);
 
-  // Only nsWindows have a native window, HeadlessWidgets do not.  Stop here if the
-  // window does not have one.
+  // Only nsWindows have a native window, HeadlessWidgets do not.  Stop here if
+  // the window does not have one.
   if (!widget->GetNativeData(NS_NATIVE_WINDOW)) {
     return NS_OK;
   }
 
   mPrimaryWindow = static_cast<nsWindow*>(widget.get());
 
-  // Clear our current progress.  We get a forced update from the DownloadsTaskbar
-  // after returning from this function - zeroing out our progress will make sure the
-  // new window gets the property set on it immediately, rather than waiting for the
-  // progress value to change (which could be a while depending on size.)
+  // Clear our current progress.  We get a forced update from the
+  // DownloadsTaskbar after returning from this function - zeroing out our
+  // progress will make sure the new window gets the property set on it
+  // immediately, rather than waiting for the progress value to change (which
+  // could be a while depending on size.)
   mCurrentProgress = 0;
 
   MOZ_LOG(gGtkTaskbarProgressLog, LogLevel::Debug,
-          ("GtkTaskbarProgress::SetPrimaryWindow window: %p", mPrimaryWindow.get()));
+          ("GtkTaskbarProgress::SetPrimaryWindow window: %p",
+           mPrimaryWindow.get()));
 
   return NS_OK;
 }

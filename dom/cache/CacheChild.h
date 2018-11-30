@@ -23,26 +23,18 @@ namespace cache {
 class Cache;
 class CacheOpArgs;
 
-class CacheChild final : public PCacheChild
-                       , public ActorChild
-{
-public:
-  class MOZ_RAII AutoLock final
-  {
+class CacheChild final : public PCacheChild, public ActorChild {
+ public:
+  class MOZ_RAII AutoLock final {
     CacheChild* mActor;
 
-  public:
-    explicit AutoLock(CacheChild* aActor)
-      : mActor(aActor)
-    {
+   public:
+    explicit AutoLock(CacheChild* aActor) : mActor(aActor) {
       MOZ_DIAGNOSTIC_ASSERT(mActor);
       mActor->Lock();
     }
 
-    ~AutoLock()
-    {
-      mActor->Unlock();
-    }
+    ~AutoLock() { mActor->Unlock(); }
   };
 
   CacheChild();
@@ -55,43 +47,36 @@ public:
   // its destructor to trigger ActorDestroy() if it has not been called yet.
   void ClearListener();
 
-  void
-  ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-            nsISupports* aParent, const CacheOpArgs& aArgs);
+  void ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
+                 nsISupports* aParent, const CacheOpArgs& aArgs);
 
   // Our parent Listener object has gone out of scope and is being destroyed.
   void StartDestroyFromListener();
 
-private:
+ private:
   // ActorChild methods
 
   // WorkerHolder is trying to destroy due to worker shutdown.
   virtual void StartDestroy() override;
 
   // PCacheChild methods
-  virtual void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  virtual PCacheOpChild*
-  AllocPCacheOpChild(const CacheOpArgs& aOpArgs) override;
+  virtual PCacheOpChild* AllocPCacheOpChild(
+      const CacheOpArgs& aOpArgs) override;
 
-  virtual bool
-  DeallocPCacheOpChild(PCacheOpChild* aActor) override;
+  virtual bool DeallocPCacheOpChild(PCacheOpChild* aActor) override;
 
   // utility methods
-  void
-  NoteDeletedActor();
+  void NoteDeletedActor();
 
-  void
-  MaybeFlushDelayedDestroy();
+  void MaybeFlushDelayedDestroy();
 
   // Methods used to temporarily force the actor alive.  Only called from
   // AutoLock.
-  void
-  Lock();
+  void Lock();
 
-  void
-  Unlock();
+  void Unlock();
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The Cache object must call ClearListener() to null this before its
@@ -104,8 +89,8 @@ private:
   NS_DECL_OWNINGTHREAD
 };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_CacheChild_h
+#endif  // mozilla_dom_cache_CacheChild_h

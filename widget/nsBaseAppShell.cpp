@@ -21,52 +21,41 @@
 NS_IMPL_ISUPPORTS(nsBaseAppShell, nsIAppShell, nsIThreadObserver, nsIObserver)
 
 nsBaseAppShell::nsBaseAppShell()
-  : mSuspendNativeCount(0)
-  , mEventloopNestingLevel(0)
-  , mBlockedWait(nullptr)
-  , mFavorPerf(0)
-  , mNativeEventPending(false)
-  , mStarvationDelay(0)
-  , mSwitchTime(0)
-  , mLastNativeEventTime(0)
-  , mEventloopNestingState(eEventloopNone)
-  , mRunning(false)
-  , mExiting(false)
-  , mBlockNativeEvent(false)
-  , mProcessedGeckoEvents(false)
-{
-}
+    : mSuspendNativeCount(0),
+      mEventloopNestingLevel(0),
+      mBlockedWait(nullptr),
+      mFavorPerf(0),
+      mNativeEventPending(false),
+      mStarvationDelay(0),
+      mSwitchTime(0),
+      mLastNativeEventTime(0),
+      mEventloopNestingState(eEventloopNone),
+      mRunning(false),
+      mExiting(false),
+      mBlockNativeEvent(false),
+      mProcessedGeckoEvents(false) {}
 
-nsBaseAppShell::~nsBaseAppShell()
-{
-}
+nsBaseAppShell::~nsBaseAppShell() {}
 
-nsresult
-nsBaseAppShell::Init()
-{
+nsresult nsBaseAppShell::Init() {
   // Configure ourselves as an observer for the current thread:
 
   if (XRE_UseNativeEventProcessing()) {
     nsCOMPtr<nsIThreadInternal> threadInt =
-      do_QueryInterface(NS_GetCurrentThread());
+        do_QueryInterface(NS_GetCurrentThread());
     NS_ENSURE_STATE(threadInt);
 
     threadInt->SetObserver(this);
   }
 
-  nsCOMPtr<nsIObserverService> obsSvc =
-    mozilla::services::GetObserverService();
-  if (obsSvc)
-    obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  if (obsSvc) obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   return NS_OK;
 }
 
 // Called by nsAppShell's native event callback
-void
-nsBaseAppShell::NativeEventCallback()
-{
-  if (!mNativeEventPending.exchange(false))
-    return;
+void nsBaseAppShell::NativeEventCallback() {
+  if (!mNativeEventPending.exchange(false)) return;
 
   // If DoProcessNextNativeEvent is on the stack, then we assume that we can
   // just unwind and let nsThread::ProcessNextEvent process the next event.
@@ -85,8 +74,7 @@ nsBaseAppShell::NativeEventCallback()
   nsIThread *thread = NS_GetCurrentThread();
   bool prevBlockNativeEvent = mBlockNativeEvent;
   if (mEventloopNestingState == eEventloopOther) {
-    if (!NS_HasPendingEvents(thread))
-      return;
+    if (!NS_HasPendingEvents(thread)) return;
     // We're in a nested native event loop and have some gecko events to
     // process.  While doing that we block processing native events from the
     // appshell - instead, we want to get back to the nested native event
@@ -103,25 +91,17 @@ nsBaseAppShell::NativeEventCallback()
 
   // Continue processing pending events later (we don't want to starve the
   // embedders event loop).
-  if (NS_HasPendingEvents(thread))
-    DoProcessMoreGeckoEvents();
+  if (NS_HasPendingEvents(thread)) DoProcessMoreGeckoEvents();
 
   DecrementEventloopNestingLevel();
 }
 
 // Note, this is currently overidden on windows, see comments in nsAppShell for
 // details.
-void
-nsBaseAppShell::DoProcessMoreGeckoEvents()
-{
-  OnDispatchedEvent();
-}
-
+void nsBaseAppShell::DoProcessMoreGeckoEvents() { OnDispatchedEvent(); }
 
 // Main thread via OnProcessNextEvent below
-bool
-nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait)
-{
+bool nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait) {
   // The next native event to be processed may trigger our NativeEventCallback,
   // in which case we do not want it to process any thread events since we'll
   // do that when this function returns.
@@ -148,8 +128,7 @@ nsBaseAppShell::DoProcessNextNativeEvent(bool mayWait)
 // nsIAppShell methods:
 
 NS_IMETHODIMP
-nsBaseAppShell::Run(void)
-{
+nsBaseAppShell::Run(void) {
   NS_ENSURE_STATE(!mRunning);  // should not call Run twice
   mRunning = true;
 
@@ -164,8 +143,7 @@ nsBaseAppShell::Run(void)
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::Exit(void)
-{
+nsBaseAppShell::Exit(void) {
   if (mRunning && !mExiting) {
     MessageLoop::current()->Quit();
   }
@@ -175,8 +153,7 @@ nsBaseAppShell::Exit(void)
 
 NS_IMETHODIMP
 nsBaseAppShell::FavorPerformanceHint(bool favorPerfOverStarvation,
-                                     uint32_t starvationDelay)
-{
+                                     uint32_t starvationDelay) {
   mStarvationDelay = PR_MillisecondsToInterval(starvationDelay);
   if (favorPerfOverStarvation) {
     ++mFavorPerf;
@@ -188,23 +165,21 @@ nsBaseAppShell::FavorPerformanceHint(bool favorPerfOverStarvation,
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::SuspendNative()
-{
+nsBaseAppShell::SuspendNative() {
   ++mSuspendNativeCount;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::ResumeNative()
-{
+nsBaseAppShell::ResumeNative() {
   --mSuspendNativeCount;
-  NS_ASSERTION(mSuspendNativeCount >= 0, "Unbalanced call to nsBaseAppShell::ResumeNative!");
+  NS_ASSERTION(mSuspendNativeCount >= 0,
+               "Unbalanced call to nsBaseAppShell::ResumeNative!");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::GetEventloopNestingLevel(uint32_t* aNestingLevelResult)
-{
+nsBaseAppShell::GetEventloopNestingLevel(uint32_t *aNestingLevelResult) {
   NS_ENSURE_ARG_POINTER(aNestingLevelResult);
 
   *aNestingLevelResult = mEventloopNestingLevel;
@@ -217,13 +192,10 @@ nsBaseAppShell::GetEventloopNestingLevel(uint32_t* aNestingLevelResult)
 
 // Called from any thread
 NS_IMETHODIMP
-nsBaseAppShell::OnDispatchedEvent()
-{
-  if (mBlockNativeEvent)
-    return NS_OK;
+nsBaseAppShell::OnDispatchedEvent() {
+  if (mBlockNativeEvent) return NS_OK;
 
-  if (mNativeEventPending.exchange(true))
-    return NS_OK;
+  if (mNativeEventPending.exchange(true)) return NS_OK;
 
   // Returns on the main thread in NativeEventCallback above
   ScheduleNativeEventCallback();
@@ -232,26 +204,23 @@ nsBaseAppShell::OnDispatchedEvent()
 
 // Called from the main thread
 NS_IMETHODIMP
-nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait)
-{
+nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait) {
   if (mBlockNativeEvent) {
-    if (!mayWait)
-      return NS_OK;
+    if (!mayWait) return NS_OK;
     // Hmm, we're in a nested native event loop and would like to get
     // back to it ASAP, but it seems a gecko event has caused us to
     // spin up a nested XPCOM event loop (eg. modal window), so we
     // really must start processing native events here again.
     mBlockNativeEvent = false;
     if (NS_HasPendingEvents(thr))
-      OnDispatchedEvent(); // in case we blocked it earlier
+      OnDispatchedEvent();  // in case we blocked it earlier
   }
 
   PRIntervalTime start = PR_IntervalNow();
   PRIntervalTime limit = THREAD_EVENT_STARVATION_LIMIT;
 
   // Unblock outer nested wait loop (below).
-  if (mBlockedWait)
-    *mBlockedWait = false;
+  if (mBlockedWait) *mBlockedWait = false;
 
   bool *oldBlockedWait = mBlockedWait;
   mBlockedWait = &mayWait;
@@ -284,12 +253,10 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait)
     // If we have been asked to exit from Run, then we should not wait for
     // events to process.  Note that an inner nested event loop causes
     // 'mayWait' to become false too, through 'mBlockedWait'.
-    if (mExiting)
-      mayWait = false;
+    if (mExiting) mayWait = false;
 
     mLastNativeEventTime = PR_IntervalNow();
-    if (!DoProcessNextNativeEvent(mayWait) || !mayWait)
-      break;
+    if (!DoProcessNextNativeEvent(mayWait) || !mayWait) break;
   }
 
   mBlockedWait = oldBlockedWait;
@@ -304,27 +271,20 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait)
   return NS_OK;
 }
 
-bool
-nsBaseAppShell::DispatchDummyEvent(nsIThread* aTarget)
-{
+bool nsBaseAppShell::DispatchDummyEvent(nsIThread *aTarget) {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mDummyEvent)
-    mDummyEvent = new mozilla::Runnable("DummyEvent");
+  if (!mDummyEvent) mDummyEvent = new mozilla::Runnable("DummyEvent");
 
   return NS_SUCCEEDED(aTarget->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL));
 }
 
-void
-nsBaseAppShell::IncrementEventloopNestingLevel()
-{
+void nsBaseAppShell::IncrementEventloopNestingLevel() {
   ++mEventloopNestingLevel;
   CrashReporter::SetEventloopNestingLevel(mEventloopNestingLevel);
 }
 
-void
-nsBaseAppShell::DecrementEventloopNestingLevel()
-{
+void nsBaseAppShell::DecrementEventloopNestingLevel() {
   --mEventloopNestingLevel;
   CrashReporter::SetEventloopNestingLevel(mEventloopNestingLevel);
 }
@@ -332,15 +292,13 @@ nsBaseAppShell::DecrementEventloopNestingLevel()
 // Called from the main thread
 NS_IMETHODIMP
 nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
-                                      bool eventWasProcessed)
-{
+                                      bool eventWasProcessed) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
-                        const char16_t *data)
-{
+                        const char16_t *data) {
   NS_ASSERTION(!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID), "oops");
   Exit();
   return NS_OK;

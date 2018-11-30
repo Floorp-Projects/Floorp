@@ -16,33 +16,26 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAngle, mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAngle, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAngle, Release)
 
-JSObject*
-SVGAngle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAngle::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return SVGAngle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-uint16_t
-SVGAngle::UnitType() const
-{
+uint16_t SVGAngle::UnitType() const {
   if (mType == AnimValue) {
     return mVal->mAnimValUnit;
   }
   return mVal->mBaseValUnit;
 }
 
-float
-SVGAngle::Value() const
-{
+float SVGAngle::Value() const {
   if (mType == AnimValue) {
     return mVal->GetAnimValue();
   }
   return mVal->GetBaseValue();
 }
 
-void
-SVGAngle::SetValue(float aValue, ErrorResult& rv)
-{
+void SVGAngle::SetValue(float aValue, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -52,18 +45,14 @@ SVGAngle::SetValue(float aValue, ErrorResult& rv)
                      isBaseVal ? mSVGElement.get() : nullptr, isBaseVal);
 }
 
-float
-SVGAngle::ValueInSpecifiedUnits() const
-{
+float SVGAngle::ValueInSpecifiedUnits() const {
   if (mType == AnimValue) {
     return mVal->mAnimVal;
   }
   return mVal->mBaseVal;
 }
 
-void
-SVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv)
-{
+void SVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -74,34 +63,28 @@ SVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv)
   }
 }
 
-void
-SVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
-                                 float valueInSpecifiedUnits,
-                                 ErrorResult& rv)
-{
+void SVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
+                                      float valueInSpecifiedUnits,
+                                      ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
-  rv = mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
-                                    mType == BaseValue ? mSVGElement.get()
-                                                       : nullptr);
+  rv = mVal->NewValueSpecifiedUnits(
+      unitType, valueInSpecifiedUnits,
+      mType == BaseValue ? mSVGElement.get() : nullptr);
 }
 
-void
-SVGAngle::ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv)
-{
+void SVGAngle::ConvertToSpecifiedUnits(uint16_t unitType, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
-  rv = mVal->ConvertToSpecifiedUnits(unitType, mType == BaseValue ?
-                                     mSVGElement.get() : nullptr);
+  rv = mVal->ConvertToSpecifiedUnits(
+      unitType, mType == BaseValue ? mSVGElement.get() : nullptr);
 }
 
-void
-SVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv)
-{
+void SVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -111,13 +94,10 @@ SVGAngle::SetValueAsString(const nsAString& aValue, ErrorResult& rv)
                                 isBaseVal);
 }
 
-void
-SVGAngle::GetValueAsString(nsAString& aValue)
-{
+void SVGAngle::GetValueAsString(nsAString& aValue) {
   if (mType == AnimValue) {
     mVal->GetAnimValueString(aValue);
   } else {
     mVal->GetBaseValueString(aValue);
   }
 }
-

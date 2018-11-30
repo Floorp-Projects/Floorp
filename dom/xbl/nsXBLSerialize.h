@@ -27,7 +27,8 @@ typedef uint8_t XBLBindingSerializeDetails;
 // Set to indicate that nsXBLPrototypeBinding::mChromeOnlyContent should be true
 #define XBLBinding_Serialize_ChromeOnlyContent (1 << 2)
 
-// Set to indicate that nsXBLPrototypeBinding::mBindToUntrustedContent should be true
+// Set to indicate that nsXBLPrototypeBinding::mBindToUntrustedContent should be
+// true
 #define XBLBinding_Serialize_BindToUntrustedContent (1 << 3)
 
 // Set to indicate that nsXBLPrototypeBinding::mSimpleScopeChain should be true
@@ -37,11 +38,12 @@ typedef uint8_t XBLBindingSerializeDetails;
 // are present for this document.
 #define XBLBinding_Serialize_NoMoreBindings 0x80
 
-// Implementation member types. The serialized value for each member contains one
-// of these values, combined with the read-only flag XBLBinding_Serialize_ReadOnly.
-// Use XBLBinding_Serialize_Mask to filter out the read-only flag and check for
-// just the member type.
-#define XBLBinding_Serialize_NoMoreItems 0 // appears at the end of the members list
+// Implementation member types. The serialized value for each member contains
+// one of these values, combined with the read-only flag
+// XBLBinding_Serialize_ReadOnly. Use XBLBinding_Serialize_Mask to filter out
+// the read-only flag and check for just the member type.
+#define XBLBinding_Serialize_NoMoreItems \
+  0  // appears at the end of the members list
 #define XBLBinding_Serialize_Field 1
 #define XBLBinding_Serialize_GetterProperty 2
 #define XBLBinding_Serialize_SetterProperty 3
@@ -83,12 +85,10 @@ typedef uint8_t XBLBindingSerializeDetails;
 static_assert(XBLBinding_Serialize_CustomNamespace >= kNameSpaceID_LastBuiltin,
               "The custom namespace should not be in use as a real namespace");
 
-nsresult
-XBL_SerializeFunction(nsIObjectOutputStream* aStream,
-                      JS::Handle<JSObject*> aFunctionObject);
+nsresult XBL_SerializeFunction(nsIObjectOutputStream* aStream,
+                               JS::Handle<JSObject*> aFunctionObject);
 
-nsresult
-XBL_DeserializeFunction(nsIObjectInputStream* aStream,
-                        JS::MutableHandle<JSObject*> aFunctionObject);
+nsresult XBL_DeserializeFunction(nsIObjectInputStream* aStream,
+                                 JS::MutableHandle<JSObject*> aFunctionObject);
 
-#endif // nsXBLSerialize_h__
+#endif  // nsXBLSerialize_h__

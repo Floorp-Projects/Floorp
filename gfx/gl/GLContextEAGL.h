@@ -15,65 +15,63 @@
 namespace mozilla {
 namespace gl {
 
-class GLContextEAGL : public GLContext
-{
-    friend class GLContextProviderEAGL;
+class GLContextEAGL : public GLContext {
+  friend class GLContextProviderEAGL;
 
-    EAGLContext* const mContext;
+  EAGLContext* const mContext;
 
-public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEAGL, override)
-    GLContextEAGL(CreateContextFlags flags, const SurfaceCaps& caps, EAGLContext* context,
-                  GLContext* sharedContext, bool isOffscreen, ContextProfile profile);
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEAGL, override)
+  GLContextEAGL(CreateContextFlags flags, const SurfaceCaps& caps,
+                EAGLContext* context, GLContext* sharedContext,
+                bool isOffscreen, ContextProfile profile);
 
-    ~GLContextEAGL();
+  ~GLContextEAGL();
 
-    virtual GLContextType GetContextType() const override {
-        return GLContextType::EAGL;
-    }
+  virtual GLContextType GetContextType() const override {
+    return GLContextType::EAGL;
+  }
 
-    static GLContextEAGL* Cast(GLContext* gl) {
-        MOZ_ASSERT(gl->GetContextType() == GLContextType::EAGL);
-        return static_cast<GLContextEAGL*>(gl);
-    }
+  static GLContextEAGL* Cast(GLContext* gl) {
+    MOZ_ASSERT(gl->GetContextType() == GLContextType::EAGL);
+    return static_cast<GLContextEAGL*>(gl);
+  }
 
-    bool Init() override;
+  bool Init() override;
 
-    bool AttachToWindow(nsIWidget* aWidget);
+  bool AttachToWindow(nsIWidget* aWidget);
 
-    EAGLContext* GetEAGLContext() const { return mContext; }
+  EAGLContext* GetEAGLContext() const { return mContext; }
 
-    virtual bool MakeCurrentImpl() const override;
+  virtual bool MakeCurrentImpl() const override;
 
-    virtual bool IsCurrentImpl() const override;
+  virtual bool IsCurrentImpl() const override;
 
-    virtual bool SetupLookupFunction() override;
+  virtual bool SetupLookupFunction() override;
 
-    virtual bool IsDoubleBuffered() const override;
+  virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SwapBuffers() override;
+  virtual bool SwapBuffers() override;
 
-    virtual void GetWSIInfo(nsCString* const out) const override;
+  virtual void GetWSIInfo(nsCString* const out) const override;
 
-    virtual GLuint GetDefaultFramebuffer() override {
-        return mBackbufferFB;
-    }
+  virtual GLuint GetDefaultFramebuffer() override { return mBackbufferFB; }
 
-    virtual bool RenewSurface(nsIWidget* aWidget) override {
-        // FIXME: should use the passed widget instead of the existing one.
-        return RecreateRB();
-    }
+  virtual bool RenewSurface(nsIWidget* aWidget) override {
+    // FIXME: should use the passed widget instead of the existing one.
+    return RecreateRB();
+  }
 
-private:
-    GLuint mBackbufferRB = 0;
-    GLuint mBackbufferFB = 0;
+ private:
+  GLuint mBackbufferRB = 0;
+  GLuint mBackbufferFB = 0;
 
-    void* mLayer = nullptr;
+  void* mLayer = nullptr;
 
-    bool RecreateRB();
+  bool RecreateRB();
 };
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // GLCONTEXTEAGL_H_
+#endif  // GLCONTEXTEAGL_H_

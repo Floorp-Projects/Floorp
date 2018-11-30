@@ -18,31 +18,22 @@ namespace dom {
 // classes inheriting from it are leaking. If the native for that class has
 // MOZ_COUNT_CTOR/DTOR in its constructor/destructor then it should show up in
 // the leak log too.
-class NonRefcountedDOMObject
-{
-protected:
-  NonRefcountedDOMObject()
-  {
-    MOZ_COUNT_CTOR(NonRefcountedDOMObject);
-  }
+class NonRefcountedDOMObject {
+ protected:
+  NonRefcountedDOMObject() { MOZ_COUNT_CTOR(NonRefcountedDOMObject); }
 
-  ~NonRefcountedDOMObject()
-  {
-    MOZ_COUNT_DTOR(NonRefcountedDOMObject);
-  }
+  ~NonRefcountedDOMObject() { MOZ_COUNT_DTOR(NonRefcountedDOMObject); }
 
   NonRefcountedDOMObject(const NonRefcountedDOMObject& aOther)
-    : NonRefcountedDOMObject()
-  {}
+      : NonRefcountedDOMObject() {}
 
-  NonRefcountedDOMObject& operator=(const NonRefcountedDOMObject& aOther)
-  {
+  NonRefcountedDOMObject& operator=(const NonRefcountedDOMObject& aOther) {
     NonRefcountedDOMObject();
     return *this;
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_NonRefcountedDOMObject_h__ */

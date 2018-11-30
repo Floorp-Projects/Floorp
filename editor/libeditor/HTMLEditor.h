@@ -47,16 +47,17 @@ class EmptyEditableFunctor;
 class ResizerSelectionListener;
 enum class EditSubAction : int32_t;
 struct PropItem;
-template<class T> class OwningNonNull;
+template <class T>
+class OwningNonNull;
 namespace dom {
 class Blob;
 class DocumentFragment;
 class Event;
 class MouseEvent;
-} // namespace dom
+}  // namespace dom
 namespace widget {
 struct IMEState;
-} // namespace widget
+}  // namespace widget
 
 enum class ParagraphSeparator { div, p, br };
 
@@ -64,17 +65,16 @@ enum class ParagraphSeparator { div, p, br };
  * The HTML editor implementation.<br>
  * Use to edit HTML document represented as a DOM tree.
  */
-class HTMLEditor final : public TextEditor
-                       , public nsIHTMLEditor
-                       , public nsIHTMLObjectResizer
-                       , public nsIHTMLAbsPosEditor
-                       , public nsITableEditor
-                       , public nsIHTMLInlineTableEditor
-                       , public nsIEditorStyleSheets
-                       , public nsStubMutationObserver
-                       , public nsIEditorMailSupport
-{
-public:
+class HTMLEditor final : public TextEditor,
+                         public nsIHTMLEditor,
+                         public nsIHTMLObjectResizer,
+                         public nsIHTMLAbsPosEditor,
+                         public nsITableEditor,
+                         public nsIHTMLInlineTableEditor,
+                         public nsIEditorStyleSheets,
+                         public nsStubMutationObserver,
+                         public nsIEditorMailSupport {
+ public:
   /****************************************************************************
    * NOTE: DO NOT MAKE YOUR NEW METHODS PUBLIC IF they are called by other
    *       classes under libeditor except EditorEventListener and
@@ -141,12 +141,12 @@ public:
   NS_IMETHOD InsertLineBreak() override;
 
   virtual nsresult HandleKeyPressEvent(
-                     WidgetKeyboardEvent* aKeyboardEvent) override;
+      WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual nsIContent* GetFocusedContent() override;
   virtual already_AddRefed<nsIContent> GetFocusedContentForIME() override;
   virtual bool IsActiveInDOMWindow() override;
   virtual dom::EventTarget* GetDOMEventTarget() override;
-  virtual Element* FindSelectionRoot(nsINode *aNode) const override;
+  virtual Element* FindSelectionRoot(nsINode* aNode) const override;
   virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
 
@@ -235,25 +235,22 @@ public:
    * with "font style elements" like <b>, <i>, etc, and <blockquote> to indent,
    * align attribute to align contents, returns false.
    */
-  bool IsCSSEnabled() const
-  {
+  bool IsCSSEnabled() const {
     // TODO: removal of mCSSAware and use only the presence of mCSSEditUtils
     return mCSSAware && mCSSEditUtils && mCSSEditUtils->IsCSSPrefChecked();
   }
-
 
   /**
    * Enable/disable object resizers for <img> elements, <table> elements,
    * absolute positioned elements (required absolute position editor enabled).
    */
-  void EnableObjectResizer(bool aEnable)
-  {
+  void EnableObjectResizer(bool aEnable) {
     if (mIsObjectResizingEnabled == aEnable) {
       return;
     }
 
     AutoEditActionDataSetter editActionData(
-      *this, EditAction::eEnableOrDisableResizer);
+        *this, EditAction::eEnableOrDisableResizer);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return;
     }
@@ -261,23 +258,19 @@ public:
     mIsObjectResizingEnabled = aEnable;
     RefereshEditingUI();
   }
-  bool IsObjectResizerEnabled() const
-  {
-    return mIsObjectResizingEnabled;
-  }
+  bool IsObjectResizerEnabled() const { return mIsObjectResizingEnabled; }
 
   /**
    * Enable/disable inline table editor, e.g., adding new row or column,
    * removing existing row or column.
    */
-  void EnableInlineTableEditor(bool aEnable)
-  {
+  void EnableInlineTableEditor(bool aEnable) {
     if (mIsInlineTableEditingEnabled == aEnable) {
       return;
     }
 
     AutoEditActionDataSetter editActionData(
-      *this, EditAction::eEnableOrDisableInlineTableEditingUI);
+        *this, EditAction::eEnableOrDisableInlineTableEditingUI);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return;
     }
@@ -285,8 +278,7 @@ public:
     mIsInlineTableEditingEnabled = aEnable;
     RefereshEditingUI();
   }
-  bool IsInlineTableEditorEnabled() const
-  {
+  bool IsInlineTableEditorEnabled() const {
     return mIsInlineTableEditingEnabled;
   }
 
@@ -295,14 +287,13 @@ public:
    * elements (required object resizers enabled) or positioning them with
    * dragging grabber.
    */
-  void EnableAbsolutePositionEditor(bool aEnable)
-  {
+  void EnableAbsolutePositionEditor(bool aEnable) {
     if (mIsAbsolutelyPositioningEnabled == aEnable) {
       return;
     }
 
     AutoEditActionDataSetter editActionData(
-      *this, EditAction::eEnableOrDisableAbsolutePositionEditor);
+        *this, EditAction::eEnableOrDisableAbsolutePositionEditor);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return;
     }
@@ -310,8 +301,7 @@ public:
     mIsAbsolutelyPositioningEnabled = aEnable;
     RefereshEditingUI();
   }
-  bool IsAbsolutePositionEditorEnabled() const
-  {
+  bool IsAbsolutePositionEditorEnabled() const {
     return mIsAbsolutelyPositioningEnabled;
   }
 
@@ -323,10 +313,7 @@ public:
    */
   already_AddRefed<Element> GetAbsolutelyPositionedSelectionContainer();
 
-  Element* GetPositionedElement() const
-  {
-    return mAbsolutelyPositionedObject;
-  }
+  Element* GetPositionedElement() const { return mAbsolutelyPositionedObject; }
 
   /**
    * extracts the selection from the normal flow of the document and
@@ -355,22 +342,15 @@ public:
    * This automatically removes exclusive style, however, treats all changes
    * as a transaction.
    */
-  nsresult SetInlinePropertyAsAction(nsAtom& aProperty,
-                                     nsAtom* aAttribute,
+  nsresult SetInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute,
                                      const nsAString& aValue);
 
-  nsresult GetInlineProperty(nsAtom* aProperty,
-                             nsAtom* aAttribute,
-                             const nsAString& aValue,
-                             bool* aFirst,
-                             bool* aAny,
+  nsresult GetInlineProperty(nsAtom* aProperty, nsAtom* aAttribute,
+                             const nsAString& aValue, bool* aFirst, bool* aAny,
                              bool* aAll);
-  nsresult GetInlinePropertyWithAttrValue(nsAtom* aProperty,
-                                          nsAtom* aAttr,
-                                          const nsAString& aValue,
-                                          bool* aFirst,
-                                          bool* aAny,
-                                          bool* aAll,
+  nsresult GetInlinePropertyWithAttrValue(nsAtom* aProperty, nsAtom* aAttr,
+                                          const nsAString& aValue, bool* aFirst,
+                                          bool* aAny, bool* aAll,
                                           nsAString& outValue);
 
   /**
@@ -388,8 +368,7 @@ public:
    *                    nsGkAtoms::bgcolor.  Otherwise, set nullptr.
    *                    Must not use nsGkAtoms::_empty here.
    */
-  nsresult RemoveInlinePropertyAsAction(nsAtom& aProperty,
-                                        nsAtom* aAttribute);
+  nsresult RemoveInlinePropertyAsAction(nsAtom& aProperty, nsAtom* aAttribute);
 
   /**
    * GetFontColorState() returns foreground color information in first
@@ -424,19 +403,16 @@ public:
    * but called with another instance.
    */
   void SetComposerCommandsUpdater(
-         ComposerCommandsUpdater* aComposerCommandsUpdater)
-  {
+      ComposerCommandsUpdater* aComposerCommandsUpdater) {
     MOZ_ASSERT(!aComposerCommandsUpdater || !mComposerCommandsUpdater ||
                aComposerCommandsUpdater == mComposerCommandsUpdater);
     mComposerCommandsUpdater = aComposerCommandsUpdater;
   }
 
-  ParagraphSeparator GetDefaultParagraphSeparator() const
-  {
+  ParagraphSeparator GetDefaultParagraphSeparator() const {
     return mDefaultParagraphSeparator;
   }
-  void SetDefaultParagraphSeparator(ParagraphSeparator aSep)
-  {
+  void SetDefaultParagraphSeparator(ParagraphSeparator aSep) {
     mDefaultParagraphSeparator = aSep;
   }
 
@@ -466,22 +442,22 @@ public:
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element*
-  GetElementOrParentByTagName(const nsAtom& aTagName, nsINode* aNode) const;
+  Element* GetElementOrParentByTagName(const nsAtom& aTagName,
+                                       nsINode* aNode) const;
 
   /**
-    * Get an active editor's editing host in DOM window.  If this editor isn't
-    * active in the DOM window, this returns NULL.
-    */
+   * Get an active editor's editing host in DOM window.  If this editor isn't
+   * active in the DOM window, this returns NULL.
+   */
   Element* GetActiveEditingHost() const;
 
   /** Insert a string as quoted text
-    * (whose representation is dependant on the editor type),
-    * replacing the selected text (if any).
-    *
-    * @param aQuotedText    The actual text to be quoted
-    * @parem aNodeInserted  Return the node which was inserted.
-    */
+   * (whose representation is dependant on the editor type),
+   * replacing the selected text (if any).
+   *
+   * @param aQuotedText    The actual text to be quoted
+   * @parem aNodeInserted  Return the node which was inserted.
+   */
   nsresult InsertAsQuotation(const nsAString& aQuotedText,
                              nsINode** aNodeInserted);
 
@@ -495,9 +471,9 @@ public:
    *
    * @param aString   the string to be inserted
    */
-   nsresult InsertTextWithQuotations(const nsAString& aStringToInsert);
+  nsresult InsertTextWithQuotations(const nsAString& aStringToInsert);
 
-protected: // May be called by friends.
+ protected:  // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
    * part of handling edit actions are allowed to call the following protected
@@ -515,9 +491,8 @@ protected: // May be called by friends.
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
-  virtual nsresult
-  DeleteSelectionWithTransaction(EDirection aAction,
-                                 EStripWrappers aStripWrappers) override;
+  virtual nsresult DeleteSelectionWithTransaction(
+      EDirection aAction, EStripWrappers aStripWrappers) override;
 
   /**
    * DeleteNodeWithTransaction() removes aNode from the DOM tree if it's
@@ -543,12 +518,10 @@ protected: // May be called by friends.
   /**
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
    */
-  virtual nsresult
-  InsertTextWithTransaction(nsIDocument& aDocument,
-                            const nsAString& aStringToInsert,
-                            const EditorRawDOMPoint& aPointToInsert,
-                            EditorRawDOMPoint* aPointAfterInsertedString =
-                              nullptr) override;
+  virtual nsresult InsertTextWithTransaction(
+      nsIDocument& aDocument, const nsAString& aStringToInsert,
+      const EditorRawDOMPoint& aPointToInsert,
+      EditorRawDOMPoint* aPointAfterInsertedString = nullptr) override;
 
   /**
    * CopyLastEditableChildStyles() clones inline container elements into
@@ -562,10 +535,9 @@ protected: // May be called by friends.
    *                            placeholder, this is set to the new <br>
    *                            element.
    */
-  nsresult
-  CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
-                                             Element& aNewBlock,
-                                             RefPtr<Element>* aNewBrElement);
+  nsresult CopyLastEditableChildStylesWithTransaction(
+      Element& aPreviousBlock, Element& aNewBlock,
+      RefPtr<Element>* aNewBrElement);
 
   /**
    * RemoveBlockContainerWithTransaction() removes aElement from the DOM tree
@@ -580,9 +552,8 @@ protected: // May be called by friends.
   virtual Element* GetEditorRoot() const override;
   using EditorBase::IsEditable;
   virtual nsresult RemoveAttributeOrEquivalent(
-                     Element* aElement,
-                     nsAtom* aAttribute,
-                     bool aSuppressTransaction) override;
+      Element* aElement, nsAtom* aAttribute,
+      bool aSuppressTransaction) override;
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
                                             nsAtom* aAttribute,
                                             const nsAString& aValue,
@@ -603,8 +574,7 @@ protected: // May be called by friends.
    * if there is a block parent.  If aAncestorLimiter is not nullptr,
    * this stops looking for the result.
    */
-  static Element* GetBlock(nsINode& aNode,
-                           nsINode* aAncestorLimiter = nullptr);
+  static Element* GetBlock(nsINode& aNode, nsINode* aAncestorLimiter = nullptr);
 
   /**
    * Returns container element of ranges in Selection.  If Selection is
@@ -635,8 +605,8 @@ protected: // May be called by friends.
    *                            be: startContaienr and endContainer are same
    *                            <tr> element, startOffset + 1 equals endOffset.
    */
-  already_AddRefed<Element>
-  GetFirstSelectedTableCellElement(ErrorResult& aRv) const;
+  already_AddRefed<Element> GetFirstSelectedTableCellElement(
+      ErrorResult& aRv) const;
 
   /**
    * GetNextSelectedTableCellElement() is a stateful method to retrieve
@@ -659,8 +629,8 @@ protected: // May be called by friends.
    *                            ranges selects a <td> or <th> element unless
    *                            this does not meet a range in a text node.
    */
-  already_AddRefed<Element>
-  GetNextSelectedTableCellElement(ErrorResult& aRv) const;
+  already_AddRefed<Element> GetNextSelectedTableCellElement(
+      ErrorResult& aRv) const;
 
   /**
    * DeleteTableCellContentsWithTransaction() removes any contents in cell
@@ -671,16 +641,12 @@ protected: // May be called by friends.
    */
   nsresult DeleteTableCellContentsWithTransaction();
 
-  void IsNextCharInNodeWhitespace(nsIContent* aContent,
-                                  int32_t aOffset,
-                                  bool* outIsSpace,
-                                  bool* outIsNBSP,
+  void IsNextCharInNodeWhitespace(nsIContent* aContent, int32_t aOffset,
+                                  bool* outIsSpace, bool* outIsNBSP,
                                   nsIContent** outNode = nullptr,
                                   int32_t* outOffset = 0);
-  void IsPrevCharInNodeWhitespace(nsIContent* aContent,
-                                  int32_t aOffset,
-                                  bool* outIsSpace,
-                                  bool* outIsNBSP,
+  void IsPrevCharInNodeWhitespace(nsIContent* aContent, int32_t aOffset,
+                                  bool* outIsSpace, bool* outIsNBSP,
                                   nsIContent** outNode = nullptr,
                                   int32_t* outOffset = 0);
 
@@ -696,8 +662,7 @@ protected: // May be called by friends.
    * @param aEnabled [IN] true to absolutely position the element,
    *                      false to put it back in the normal flow
    */
-  nsresult SetPositionToAbsoluteOrStatic(Element& aElement,
-                                         bool aEnabled);
+  nsresult SetPositionToAbsoluteOrStatic(Element& aElement, bool aEnabled);
 
   /**
    * adds aChange to the z-index of an arbitrary element.
@@ -709,7 +674,7 @@ protected: // May be called by friends.
   nsresult RelativeChangeElementZIndex(Element& aElement, int32_t aChange,
                                        int32_t* aReturn);
 
-  virtual bool IsBlockNode(nsINode *aNode) override;
+  virtual bool IsBlockNode(nsINode* aNode) override;
   using EditorBase::IsBlockNode;
 
   /**
@@ -748,15 +713,11 @@ protected: // May be called by friends.
                        bool aMozBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
                        bool aSafeToAskFrames = false);
-  nsresult IsEmptyNodeImpl(nsINode* aNode,
-                           bool* outIsEmptyBlock,
-                           bool aMozBRDoesntCount,
-                           bool aListOrCellNotEmpty,
-                           bool aSafeToAskFrames,
-                           bool* aSeenBR);
+  nsresult IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyBlock,
+                           bool aMozBRDoesntCount, bool aListOrCellNotEmpty,
+                           bool aSafeToAskFrames, bool* aSeenBR);
 
-  static bool HasAttributes(Element* aElement)
-  {
+  static bool HasAttributes(Element* aElement) {
     MOZ_ASSERT(aElement);
     uint32_t attrCount = aElement->GetAttrCount();
     return attrCount > 1 ||
@@ -783,10 +744,8 @@ protected: // May be called by friends.
    *
    * The nsIContent variant returns aIsSet instead of using an out parameter.
    */
-  bool IsTextPropertySetByContent(nsINode* aNode,
-                                  nsAtom* aProperty,
-                                  nsAtom* aAttribute,
-                                  const nsAString* aValue,
+  bool IsTextPropertySetByContent(nsINode* aNode, nsAtom* aProperty,
+                                  nsAtom* aAttribute, const nsAString* aValue,
                                   nsAString* outValue = nullptr);
 
   static dom::Element* GetLinkElement(nsINode* aNode);
@@ -800,19 +759,15 @@ protected: // May be called by friends.
    * Helper routines for font size changing.
    */
   enum class FontSize { incr, decr };
-  nsresult RelativeFontChangeOnTextNode(FontSize aDir,
-                                        Text& aTextNode,
+  nsresult RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
                                         int32_t aStartOffset,
                                         int32_t aEndOffset);
 
-  nsresult SetInlinePropertyOnNode(nsIContent& aNode,
-                                   nsAtom& aProperty,
-                                   nsAtom* aAttribute,
-                                   const nsAString& aValue);
+  nsresult SetInlinePropertyOnNode(nsIContent& aNode, nsAtom& aProperty,
+                                   nsAtom* aAttribute, const nsAString& aValue);
 
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                                nsAtom* aProperty,
-                                nsAtom* aAttribute,
+                                nsAtom* aProperty, nsAtom* aAttribute,
                                 nsIContent** aOutLeftNode = nullptr,
                                 nsIContent** aOutRightNode = nullptr);
 
@@ -825,24 +780,20 @@ protected: // May be called by friends.
    * EditorBase::GetPreviousElementOrText*() but this won't return nodes
    * outside active editing host.
    */
-  nsIContent* GetPreviousHTMLElementOrText(nsINode& aNode)
-  {
+  nsIContent* GetPreviousHTMLElementOrText(nsINode& aNode) {
     return GetPreviousHTMLElementOrTextInternal(aNode, false);
   }
-  nsIContent* GetPreviousHTMLElementOrTextInBlock(nsINode& aNode)
-  {
+  nsIContent* GetPreviousHTMLElementOrTextInBlock(nsINode& aNode) {
     return GetPreviousHTMLElementOrTextInternal(aNode, true);
   }
-  template<typename PT, typename CT>
-  nsIContent*
-  GetPreviousHTMLElementOrText(const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+  template <typename PT, typename CT>
+  nsIContent* GetPreviousHTMLElementOrText(
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetPreviousHTMLElementOrTextInternal(aPoint, false);
   }
-  template<typename PT, typename CT>
-  nsIContent*
-  GetPreviousHTMLElementOrTextInBlock(const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+  template <typename PT, typename CT>
+  nsIContent* GetPreviousHTMLElementOrTextInBlock(
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetPreviousHTMLElementOrTextInternal(aPoint, true);
   }
 
@@ -852,34 +803,29 @@ protected: // May be called by friends.
    */
   nsIContent* GetPreviousHTMLElementOrTextInternal(nsINode& aNode,
                                                    bool aNoBlockCrossing);
-  template<typename PT, typename CT>
-  nsIContent*
-  GetPreviousHTMLElementOrTextInternal(const EditorDOMPointBase<PT, CT>& aPoint,
-                                       bool aNoBlockCrossing);
+  template <typename PT, typename CT>
+  nsIContent* GetPreviousHTMLElementOrTextInternal(
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing);
 
   /**
    * GetPreviousEditableHTMLNode*() methods are similar to
    * EditorBase::GetPreviousEditableNode() but this won't return nodes outside
    * active editing host.
    */
-  nsIContent* GetPreviousEditableHTMLNode(nsINode& aNode)
-  {
+  nsIContent* GetPreviousEditableHTMLNode(nsINode& aNode) {
     return GetPreviousEditableHTMLNodeInternal(aNode, false);
   }
-  nsIContent* GetPreviousEditableHTMLNodeInBlock(nsINode& aNode)
-  {
+  nsIContent* GetPreviousEditableHTMLNodeInBlock(nsINode& aNode) {
     return GetPreviousEditableHTMLNodeInternal(aNode, true);
   }
-  template<typename PT, typename CT>
-  nsIContent*
-  GetPreviousEditableHTMLNode(const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+  template <typename PT, typename CT>
+  nsIContent* GetPreviousEditableHTMLNode(
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetPreviousEditableHTMLNodeInternal(aPoint, false);
   }
-  template<typename PT, typename CT>
+  template <typename PT, typename CT>
   nsIContent* GetPreviousEditableHTMLNodeInBlock(
-                const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetPreviousEditableHTMLNodeInternal(aPoint, true);
   }
 
@@ -889,10 +835,9 @@ protected: // May be called by friends.
    */
   nsIContent* GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
                                                   bool aNoBlockCrossing);
-  template<typename PT, typename CT>
+  template <typename PT, typename CT>
   nsIContent* GetPreviousEditableHTMLNodeInternal(
-                const EditorDOMPointBase<PT, CT>& aPoint,
-                bool aNoBlockCrossing);
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing);
 
   /**
    * GetNextHTMLElementOrText*() methods are similar to
@@ -904,24 +849,20 @@ protected: // May be called by friends.
    * On the other hand, methods which take |nsINode&| start to search from
    * next node of aNode.
    */
-  nsIContent* GetNextHTMLElementOrText(nsINode& aNode)
-  {
+  nsIContent* GetNextHTMLElementOrText(nsINode& aNode) {
     return GetNextHTMLElementOrTextInternal(aNode, false);
   }
-  nsIContent* GetNextHTMLElementOrTextInBlock(nsINode& aNode)
-  {
+  nsIContent* GetNextHTMLElementOrTextInBlock(nsINode& aNode) {
     return GetNextHTMLElementOrTextInternal(aNode, true);
   }
-  template<typename PT, typename CT>
-  nsIContent*
-  GetNextHTMLElementOrText(const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+  template <typename PT, typename CT>
+  nsIContent* GetNextHTMLElementOrText(
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetNextHTMLElementOrTextInternal(aPoint, false);
   }
-  template<typename PT, typename CT>
-  nsIContent*
-  GetNextHTMLElementOrTextInBlock(const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+  template <typename PT, typename CT>
+  nsIContent* GetNextHTMLElementOrTextInBlock(
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetNextHTMLElementOrTextInternal(aPoint, true);
   }
 
@@ -931,10 +872,9 @@ protected: // May be called by friends.
    */
   nsIContent* GetNextHTMLElementOrTextInternal(nsINode& aNode,
                                                bool aNoBlockCrossing);
-  template<typename PT, typename CT>
-  nsIContent*
-  GetNextHTMLElementOrTextInternal(const EditorDOMPointBase<PT, CT>& aPoint,
-                                   bool aNoBlockCrossing);
+  template <typename PT, typename CT>
+  nsIContent* GetNextHTMLElementOrTextInternal(
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing);
 
   /**
    * GetNextEditableHTMLNode*() methods are similar to
@@ -946,23 +886,20 @@ protected: // May be called by friends.
    * On the other hand, methods which take |nsINode&| start to search from
    * next node of aNode.
    */
-  nsIContent* GetNextEditableHTMLNode(nsINode& aNode)
-  {
+  nsIContent* GetNextEditableHTMLNode(nsINode& aNode) {
     return GetNextEditableHTMLNodeInternal(aNode, false);
   }
-  nsIContent* GetNextEditableHTMLNodeInBlock(nsINode& aNode)
-  {
+  nsIContent* GetNextEditableHTMLNodeInBlock(nsINode& aNode) {
     return GetNextEditableHTMLNodeInternal(aNode, true);
   }
-  template<typename PT, typename CT>
-  nsIContent* GetNextEditableHTMLNode(const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+  template <typename PT, typename CT>
+  nsIContent* GetNextEditableHTMLNode(
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetNextEditableHTMLNodeInternal(aPoint, false);
   }
-  template<typename PT, typename CT>
+  template <typename PT, typename CT>
   nsIContent* GetNextEditableHTMLNodeInBlock(
-                const EditorDOMPointBase<PT, CT>& aPoint)
-  {
+      const EditorDOMPointBase<PT, CT>& aPoint) {
     return GetNextEditableHTMLNodeInternal(aPoint, true);
   }
 
@@ -972,10 +909,9 @@ protected: // May be called by friends.
    */
   nsIContent* GetNextEditableHTMLNodeInternal(nsINode& aNode,
                                               bool aNoBlockCrossing);
-  template<typename PT, typename CT>
+  template <typename PT, typename CT>
   nsIContent* GetNextEditableHTMLNodeInternal(
-                const EditorDOMPointBase<PT, CT>& aPoint,
-                bool aNoBlockCrossing);
+      const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing);
 
   bool IsFirstEditableChild(nsINode* aNode);
   bool IsLastEditableChild(nsINode* aNode);
@@ -985,13 +921,9 @@ protected: // May be called by friends.
   nsIContent* GetFirstEditableLeaf(nsINode& aNode);
   nsIContent* GetLastEditableLeaf(nsINode& aNode);
 
-  nsresult GetInlinePropertyBase(nsAtom& aProperty,
-                                 nsAtom* aAttribute,
-                                 const nsAString* aValue,
-                                 bool* aFirst,
-                                 bool* aAny,
-                                 bool* aAll,
-                                 nsAString* outValue);
+  nsresult GetInlinePropertyBase(nsAtom& aProperty, nsAtom* aAttribute,
+                                 const nsAString* aValue, bool* aFirst,
+                                 bool* aAny, bool* aAll, nsAString* outValue);
 
   nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                       nsAtom* aProperty, nsAtom* aAttribute);
@@ -1007,13 +939,12 @@ protected: // May be called by friends.
    */
   MOZ_CAN_RUN_SCRIPT void OnModifyDocument();
 
-protected: // Called by helper classes.
-  virtual void
-  OnStartToHandleTopLevelEditSubAction(
-    EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
+ protected:  // Called by helper classes.
+  virtual void OnStartToHandleTopLevelEditSubAction(
+      EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
   virtual void OnEndHandlingTopLevelEditSubAction() override;
 
-protected: // Shouldn't be used by friend classes
+ protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
 
   /**
@@ -1054,8 +985,7 @@ protected: // Shouldn't be used by friend classes
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element*
-  GetElementOrParentByTagNameAtSelection(const nsAtom& aTagName) const;
+  Element* GetElementOrParentByTagNameAtSelection(const nsAtom& aTagName) const;
 
   /**
    * GetElementOrParentByTagNameInternal() looks for an element node whose
@@ -1074,9 +1004,8 @@ protected: // Shouldn't be used by friend classes
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element*
-  GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
-                                      nsINode& aNode) const;
+  Element* GetElementOrParentByTagNameInternal(const nsAtom& aTagName,
+                                               nsINode& aNode) const;
 
   /**
    * GetSelectedElement() returns a "selected" element node.  "selected" means:
@@ -1106,9 +1035,8 @@ protected: // Shouldn't be used by friend classes
    * @param aRv         Returns error code.
    * @return            A "selected" element.
    */
-  already_AddRefed<Element>
-  GetSelectedElement(const nsAtom* aTagName,
-                     ErrorResult& aRv);
+  already_AddRefed<Element> GetSelectedElement(const nsAtom* aTagName,
+                                               ErrorResult& aRv);
 
   /**
    * GetFirstTableRowElement() returns the first <tr> element in the most
@@ -1126,9 +1054,8 @@ protected: // Shouldn't be used by friend classes
    *                                    However, if <table> does not have
    *                                    <tr> element, returns NS_OK.
    */
-  Element*
-  GetFirstTableRowElement(Element& aTableOrElementInTable,
-                          ErrorResult& aRv) const;
+  Element* GetFirstTableRowElement(Element& aTableOrElementInTable,
+                                   ErrorResult& aRv) const;
 
   /**
    * GetNextTableRowElement() returns next <tr> element of aTableRowElement.
@@ -1140,9 +1067,8 @@ protected: // Shouldn't be used by friend classes
    *                            there is no next <tr> element, this returns
    *                            nullptr but does not return error.
    */
-  Element*
-  GetNextTableRowElement(Element& aTableRowElement,
-                         ErrorResult& aRv) const;
+  Element* GetNextTableRowElement(Element& aTableRowElement,
+                                  ErrorResult& aRv) const;
 
   struct CellAndIndexes;
   struct CellData;
@@ -1150,8 +1076,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * CellIndexes store both row index and column index of a table cell.
    */
-  struct MOZ_STACK_CLASS CellIndexes final
-  {
+  struct MOZ_STACK_CLASS CellIndexes final {
     int32_t mRow;
     int32_t mColumn;
 
@@ -1164,9 +1089,7 @@ protected: // Shouldn't be used by friend classes
      *                          available or given element is not a table cell.
      */
     CellIndexes(Element& aCellElement, ErrorResult& aRv)
-      : mRow(-1)
-      , mColumn(-1)
-    {
+        : mRow(-1), mColumn(-1) {
       MOZ_ASSERT(!aRv.Failed());
       Update(aCellElement, aRv);
     }
@@ -1190,9 +1113,7 @@ protected: // Shouldn't be used by friend classes
      */
     CellIndexes(HTMLEditor& aHTMLEditor, Selection& aSelection,
                 ErrorResult& aRv)
-      : mRow(-1)
-      , mColumn(-1)
-    {
+        : mRow(-1), mColumn(-1) {
       Update(aHTMLEditor, aSelection, aRv);
     }
 
@@ -1205,28 +1126,21 @@ protected: // Shouldn't be used by friend classes
     void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
                 ErrorResult& aRv);
 
-    bool operator==(const CellIndexes& aOther) const
-    {
+    bool operator==(const CellIndexes& aOther) const {
       return mRow == aOther.mRow && mColumn == aOther.mColumn;
     }
-    bool operator!=(const CellIndexes& aOther) const
-    {
+    bool operator!=(const CellIndexes& aOther) const {
       return mRow != aOther.mRow || mColumn != aOther.mColumn;
     }
 
-  private:
-    CellIndexes()
-      : mRow(-1)
-      , mColumn(-1)
-    {
-    }
+   private:
+    CellIndexes() : mRow(-1), mColumn(-1) {}
 
     friend struct CellAndIndexes;
     friend struct CellData;
   };
 
-  struct MOZ_STACK_CLASS CellAndIndexes final
-  {
+  struct MOZ_STACK_CLASS CellAndIndexes final {
     RefPtr<Element> mElement;
     CellIndexes mIndexes;
 
@@ -1237,8 +1151,7 @@ protected: // Shouldn't be used by friend classes
      * cell element is selected.
      */
     CellAndIndexes(HTMLEditor& aHTMLEditor, Selection& aSelection,
-                   ErrorResult& aRv)
-    {
+                   ErrorResult& aRv) {
       Update(aHTMLEditor, aSelection, aRv);
     }
 
@@ -1252,8 +1165,7 @@ protected: // Shouldn't be used by friend classes
                 ErrorResult& aRv);
   };
 
-  struct MOZ_STACK_CLASS CellData final
-  {
+  struct MOZ_STACK_CLASS CellData final {
     RefPtr<Element> mElement;
     // Current indexes which this is initialized with.
     CellIndexes mCurrent;
@@ -1277,32 +1189,23 @@ protected: // Shouldn't be used by friend classes
     bool mIsSelected;
 
     CellData()
-      : mRowSpan(-1)
-      , mColSpan(-1)
-      , mEffectiveRowSpan(-1)
-      , mEffectiveColSpan(-1)
-      , mIsSelected(false)
-    {
-    }
+        : mRowSpan(-1),
+          mColSpan(-1),
+          mEffectiveRowSpan(-1),
+          mEffectiveColSpan(-1),
+          mIsSelected(false) {}
 
     /**
      * Those constructors initializes the members with a <table> element and
      * both row and column index to specify a cell element.
      */
-    CellData(HTMLEditor& aHTMLEditor,
-             Element& aTableElement,
-             int32_t aRowIndex,
-             int32_t aColumnIndex,
-             ErrorResult& aRv)
-    {
+    CellData(HTMLEditor& aHTMLEditor, Element& aTableElement, int32_t aRowIndex,
+             int32_t aColumnIndex, ErrorResult& aRv) {
       Update(aHTMLEditor, aTableElement, aRowIndex, aColumnIndex, aRv);
     }
 
-    CellData(HTMLEditor& aHTMLEditor,
-             Element& aTableElement,
-             const CellIndexes& aIndexes,
-             ErrorResult& aRv)
-    {
+    CellData(HTMLEditor& aHTMLEditor, Element& aTableElement,
+             const CellIndexes& aIndexes, ErrorResult& aRv) {
       Update(aHTMLEditor, aTableElement, aIndexes, aRv);
     }
 
@@ -1310,28 +1213,20 @@ protected: // Shouldn't be used by friend classes
      * Those Update() methods updates the members with a <table> element and
      * both row and column index to specify a cell element.
      */
-    void Update(HTMLEditor& aHTMLEditor,
-                Element& aTableElement,
-                int32_t aRowIndex,
-                int32_t aColumnIndex,
-                ErrorResult& aRv)
-    {
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
+                int32_t aRowIndex, int32_t aColumnIndex, ErrorResult& aRv) {
       mCurrent.mRow = aRowIndex;
       mCurrent.mColumn = aColumnIndex;
       Update(aHTMLEditor, aTableElement, aRv);
     }
 
-    void Update(HTMLEditor& aHTMLEditor,
-                Element& aTableElement,
-                const CellIndexes& aIndexes,
-                ErrorResult& aRv)
-    {
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
+                const CellIndexes& aIndexes, ErrorResult& aRv) {
       mCurrent = aIndexes;
       Update(aHTMLEditor, aTableElement, aRv);
     }
 
-    void Update(HTMLEditor& aHTMLEditor,
-                Element& aTableElement,
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
                 ErrorResult& aRv);
 
     /**
@@ -1345,16 +1240,13 @@ protected: // Shouldn't be used by friend classes
      * IsSpannedFromOtherRow() return true if there is no cell element
      * at the index because of spanning from other row and/or column.
      */
-    bool IsSpannedFromOtherRowOrColumn() const
-    {
+    bool IsSpannedFromOtherRowOrColumn() const {
       return mElement && mCurrent != mFirst;
     }
-    bool IsSpannedFromOtherColumn() const
-    {
+    bool IsSpannedFromOtherColumn() const {
       return mElement && mCurrent.mColumn != mFirst.mColumn;
     }
-    bool IsSpannedFromOtherRow() const
-    {
+    bool IsSpannedFromOtherRow() const {
       return mElement && mCurrent.mRow != mFirst.mRow;
     }
 
@@ -1363,15 +1255,13 @@ protected: // Shouldn't be used by friend classes
      * next cell.  Note that this does not check whether there is next
      * cell or not actually.
      */
-    int32_t NextColumnIndex() const
-    {
+    int32_t NextColumnIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mCurrent.mColumn + mEffectiveColSpan;
     }
-    int32_t NextRowIndex() const
-    {
+    int32_t NextRowIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -1382,15 +1272,13 @@ protected: // Shouldn't be used by friend classes
      * LastColumnIndex() and LastRowIndex() return column/row index of
      * column/row which is spanned by the cell.
      */
-    int32_t LastColumnIndex() const
-    {
+    int32_t LastColumnIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return NextColumnIndex() - 1;
     }
-    int32_t LastRowIndex() const
-    {
+    int32_t LastRowIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -1403,15 +1291,13 @@ protected: // Shouldn't be used by friend classes
      * Otherwise, i.e., current point is not spanned form other column/row,
      * returns 0.
      */
-    int32_t NumberOfPrecedingColmuns() const
-    {
+    int32_t NumberOfPrecedingColmuns() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mCurrent.mColumn - mFirst.mColumn;
     }
-    int32_t NumberOfPrecedingRows() const
-    {
+    int32_t NumberOfPrecedingRows() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -1423,15 +1309,13 @@ protected: // Shouldn't be used by friend classes
      * number of remaining columns/rows if the cell spans to other
      * column/row.
      */
-    int32_t NumberOfFollowingColumns() const
-    {
+    int32_t NumberOfFollowingColumns() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mEffectiveColSpan - 1;
     }
-    int32_t NumberOfFollowingRows() const
-    {
+    int32_t NumberOfFollowingRows() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -1443,8 +1327,7 @@ protected: // Shouldn't be used by friend classes
    * TableSize stores and computes number of rows and columns of a <table>
    * element.
    */
-  struct MOZ_STACK_CLASS TableSize final
-  {
+  struct MOZ_STACK_CLASS TableSize final {
     int32_t mRowCount;
     int32_t mColumnCount;
 
@@ -1463,9 +1346,7 @@ protected: // Shouldn't be used by friend classes
      */
     TableSize(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
               ErrorResult& aRv)
-      : mRowCount(-1)
-      , mColumnCount(-1)
-    {
+        : mRowCount(-1), mColumnCount(-1) {
       MOZ_ASSERT(!aRv.Failed());
       Update(aHTMLEditor, aTableOrElementInTable, aRv);
     }
@@ -1477,10 +1358,7 @@ protected: // Shouldn't be used by friend classes
     void Update(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
                 ErrorResult& aRv);
 
-    bool IsEmpty() const
-    {
-      return !mRowCount || !mColumnCount;
-    }
+    bool IsEmpty() const { return !mRowCount || !mColumnCount; }
   };
 
   /**
@@ -1497,13 +1375,11 @@ protected: // Shouldn't be used by friend classes
    *                            are out of bounds.
    */
   Element* GetTableCellElementAt(Element& aTableElement,
-                                 const CellIndexes& aCellIndexes) const
-  {
+                                 const CellIndexes& aCellIndexes) const {
     return GetTableCellElementAt(aTableElement, aCellIndexes.mRow,
                                  aCellIndexes.mColumn);
   }
-  Element* GetTableCellElementAt(Element& aTableElement,
-                                 int32_t aRowIndex,
+  Element* GetTableCellElementAt(Element& aTableElement, int32_t aRowIndex,
                                  int32_t aColumnIndex) const;
 
   /**
@@ -1521,9 +1397,8 @@ protected: // Shouldn't be used by friend classes
    * In #1 and #4, *aIsCellSelected will be set to true (i.e,, when
    * a selection range selects a cell element).
    */
-  already_AddRefed<Element>
-  GetSelectedOrParentTableElement(ErrorResult& aRv,
-                                  bool* aIsCellSelected = nullptr) const;
+  already_AddRefed<Element> GetSelectedOrParentTableElement(
+      ErrorResult& aRv, bool* aIsCellSelected = nullptr) const;
 
   /**
    * PasteInternal() pasts text with replacing selected content.
@@ -1535,8 +1410,7 @@ protected: // Shouldn't be used by friend classes
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
    */
-  nsresult PasteInternal(int32_t aClipboardType,
-                         bool aDispatchPasteEvent);
+  nsresult PasteInternal(int32_t aClipboardType, bool aDispatchPasteEvent);
 
   /**
    * InsertAsCitedQuotationInternal() inserts a <blockquote> element whose
@@ -1575,12 +1449,10 @@ protected: // Shouldn't be used by friend classes
    * @return                  Returns inserted point if succeeded.
    *                          Otherwise, the result is not set.
    */
-  template<typename PT, typename CT>
-  EditorDOMPoint
-  InsertNodeIntoProperAncestorWithTransaction(
-    nsIContent& aNode,
-    const EditorDOMPointBase<PT, CT>& aPointToInsert,
-    SplitAtEdges aSplitAtEdges);
+  template <typename PT, typename CT>
+  EditorDOMPoint InsertNodeIntoProperAncestorWithTransaction(
+      nsIContent& aNode, const EditorDOMPointBase<PT, CT>& aPointToInsert,
+      SplitAtEdges aSplitAtEdges);
 
   /**
    * InsertBrElementAtSelectionWithTransaction() inserts a new <br> element at
@@ -1611,11 +1483,9 @@ protected: // Shouldn't be used by friend classes
 
   nsresult LoadHTML(const nsAString& aInputString);
 
-  nsresult SetInlinePropertyInternal(nsAtom& aProperty,
-                                     nsAtom* aAttribute,
+  nsresult SetInlinePropertyInternal(nsAtom& aProperty, nsAtom* aAttribute,
                                      const nsAString& aValue);
-  nsresult RemoveInlinePropertyInternal(nsAtom* aProperty,
-                                        nsAtom* aAttribute);
+  nsresult RemoveInlinePropertyInternal(nsAtom* aProperty, nsAtom* aAttribute);
 
   /**
    * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
@@ -1624,16 +1494,14 @@ protected: // Shouldn't be used by friend classes
    * @param aSourceToInsert     HTML source fragment to replace the children
    *                            of <head> element.
    */
-  nsresult
-  ReplaceHeadContentsWithSourceWithTransaction(
-    const nsAString& aSourceToInsert);
+  nsresult ReplaceHeadContentsWithSourceWithTransaction(
+      const nsAString& aSourceToInsert);
 
   nsresult GetCSSBackgroundColorState(bool* aMixed, nsAString& aOutColor,
                                       bool aBlockLevel);
   nsresult GetHTMLBackgroundColorState(bool* aMixed, nsAString& outColor);
 
-  nsresult GetLastCellInRow(nsINode* aRowNode,
-                            nsINode** aCellNode);
+  nsresult GetLastCellInRow(nsINode* aRowNode, nsINode** aCellNode);
 
   static nsresult GetCellFromRange(nsRange* aRange, Element** aCell);
 
@@ -1644,8 +1512,8 @@ protected: // Shouldn't be used by friend classes
   nsresult SetCSSBackgroundColorWithTransaction(const nsAString& aColor);
   nsresult SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
 
-  virtual void
-  InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit) override;
+  virtual void InitializeSelectionAncestorLimit(
+      nsIContent& aAncestorLimit) override;
 
   /**
    * Make the given selection span the entire document.
@@ -1677,7 +1545,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Add a url + known style sheet to the internal lists.
    */
-  nsresult AddNewStyleSheetToList(const nsAString &aURL,
+  nsresult AddNewStyleSheetToList(const nsAString& aURL,
                                   StyleSheet* aStyleSheet);
 
   /**
@@ -1739,17 +1607,15 @@ protected: // Shouldn't be used by friend classes
    *                        keep selection ranges if user has already been
    *                        changed.
    */
-  nsresult
-  MaybeCollapseSelectionAtFirstEditableNode(
-    bool aIgnoreIfSelectionInEditingHost);
+  nsresult MaybeCollapseSelectionAtFirstEditableNode(
+      bool aIgnoreIfSelectionInEditingHost);
 
-  class BlobReader final
-  {
-  typedef EditorBase::AutoEditActionDataSetter AutoEditActionDataSetter;
-  public:
-    BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
-               bool aIsSafe, nsIDocument* aSourceDoc,
-               const EditorDOMPoint& aPointToInsert,
+  class BlobReader final {
+    typedef EditorBase::AutoEditActionDataSetter AutoEditActionDataSetter;
+
+   public:
+    BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor, bool aIsSafe,
+               nsIDocument* aSourceDoc, const EditorDOMPoint& aPointToInsert,
                bool aDoDeleteSelection);
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
@@ -1758,10 +1624,8 @@ protected: // Shouldn't be used by friend classes
     nsresult OnResult(const nsACString& aResult);
     nsresult OnError(const nsAString& aErrorName);
 
-  private:
-    ~BlobReader()
-    {
-    }
+   private:
+    ~BlobReader() {}
 
     RefPtr<dom::BlobImpl> mBlob;
     RefPtr<HTMLEditor> mHTMLEditor;
@@ -1801,8 +1665,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * InsertPosition is an enum to indicate where the method should insert to.
    */
-  enum class InsertPosition
-  {
+  enum class InsertPosition {
     // Before selected cell or a cell containing first selection range.
     eBeforeSelectedCell,
     // After selected cell or a cell containing first selection range.
@@ -1867,9 +1730,8 @@ protected: // Shouldn't be used by friend classes
    * of course)
    * This doesn't change or use the current selection.
    */
-  nsresult InsertCell(Element* aCell, int32_t aRowSpan,
-                      int32_t aColSpan, bool aAfter, bool aIsHeader,
-                      Element** aNewCell);
+  nsresult InsertCell(Element* aCell, int32_t aRowSpan, int32_t aColSpan,
+                      bool aAfter, bool aIsHeader, Element** aNewCell);
 
   /**
    * DeleteSelectedTableColumnsWithTransaction() removes cell elements which
@@ -1888,8 +1750,8 @@ protected: // Shouldn't be used by friend classes
    *                                    ignored if 2 ore more cells are
    *                                    selected.
    */
-  nsresult
-  DeleteSelectedTableColumnsWithTransaction(int32_t aNumberOfColumnsToDelete);
+  nsresult DeleteSelectedTableColumnsWithTransaction(
+      int32_t aNumberOfColumnsToDelete);
 
   /**
    * DeleteTableColumnWithTransaction() removes cell elements which belong
@@ -1903,9 +1765,8 @@ protected: // Shouldn't be used by friend classes
    * @param aRowIndex           Index of the column which you want to remove.
    *                            0 is the first column.
    */
-  nsresult
-  DeleteTableColumnWithTransaction(Element& aTableElement,
-                                   int32_t aColumnIndex);
+  nsresult DeleteTableColumnWithTransaction(Element& aTableElement,
+                                            int32_t aColumnIndex);
 
   /**
    * DeleteSelectedTableRowsWithTransaction() removes <tr> elements.
@@ -1922,8 +1783,8 @@ protected: // Shouldn't be used by friend classes
    * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
    *                                if 2 or more cells are selected.
    */
-  nsresult
-  DeleteSelectedTableRowsWithTransaction(int32_t aNumberOfRowsToDelete);
+  nsresult DeleteSelectedTableRowsWithTransaction(
+      int32_t aNumberOfRowsToDelete);
 
   /**
    * DeleteTableRowWithTransaction() removes a <tr> element whose index in
@@ -1936,8 +1797,8 @@ protected: // Shouldn't be used by friend classes
    * @param aRowIndex           Index of the <tr> element which you want to
    *                            remove.  0 is the first row.
    */
-  nsresult
-  DeleteTableRowWithTransaction(Element& aTableElement, int32_t aRowIndex);
+  nsresult DeleteTableRowWithTransaction(Element& aTableElement,
+                                         int32_t aRowIndex);
 
   /**
    * DeleteTableCellWithTransaction() removes table cell elements.  If two or
@@ -1966,8 +1827,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Move all contents from aCellToMerge into aTargetCell (append at end).
    */
-  nsresult MergeCells(RefPtr<Element> aTargetCell,
-                      RefPtr<Element> aCellToMerge,
+  nsresult MergeCells(RefPtr<Element> aTargetCell, RefPtr<Element> aCellToMerge,
                       bool aDeleteCellToMerge);
 
   /**
@@ -1976,8 +1836,7 @@ protected: // Shouldn't be used by friend classes
    *
    * @param aTableElement   The <table> element which you want to remove.
    */
-  nsresult
-  DeleteTableElementAndChildrenWithTransaction(Element& aTableElement);
+  nsresult DeleteTableElementAndChildrenWithTransaction(Element& aTableElement);
 
   nsresult SetColSpan(Element* aCell, int32_t aColSpan);
   nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
@@ -2018,26 +1877,22 @@ protected: // Shouldn't be used by friend classes
    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if cell is not found even if aCell is
    * null.
    */
-  nsresult GetCellContext(Element** aTable,
-                          Element** aCell, nsINode** aCellParent,
-                          int32_t* aCellOffset, int32_t* aRowIndex,
-                          int32_t* aColIndex);
+  nsresult GetCellContext(Element** aTable, Element** aCell,
+                          nsINode** aCellParent, int32_t* aCellOffset,
+                          int32_t* aRowIndex, int32_t* aColIndex);
 
-  nsresult GetCellSpansAt(Element* aTable, int32_t aRowIndex,
-                          int32_t aColIndex, int32_t& aActualRowSpan,
-                          int32_t& aActualColSpan);
+  nsresult GetCellSpansAt(Element* aTable, int32_t aRowIndex, int32_t aColIndex,
+                          int32_t& aActualRowSpan, int32_t& aActualColSpan);
 
   nsresult SplitCellIntoColumns(Element* aTable, int32_t aRowIndex,
                                 int32_t aColIndex, int32_t aColSpanLeft,
-                                int32_t aColSpanRight,
-                                Element** aNewCell);
+                                int32_t aColSpanRight, Element** aNewCell);
 
   nsresult SplitCellIntoRows(Element* aTable, int32_t aRowIndex,
                              int32_t aColIndex, int32_t aRowSpanAbove,
                              int32_t aRowSpanBelow, Element** aNewCell);
 
-  nsresult CopyCellBackgroundColor(Element* aDestCell,
-                                   Element* aSourceCell);
+  nsresult CopyCellBackgroundColor(Element* aDestCell, Element* aSourceCell);
 
   /**
    * Reduce rowspan/colspan when cells span into nonexistent rows/columns.
@@ -2080,16 +1935,14 @@ protected: // Shouldn't be used by friend classes
    *                        If aAddCites is false, this will be null.
    */
   nsresult InsertAsPlaintextQuotation(const nsAString& aQuotedText,
-                                      bool aAddCites,
-                                      nsINode** aNodeInserted);
+                                      bool aAddCites, nsINode** aNodeInserted);
 
   /**
    * InsertObject() inserts given object at aPointToInsert.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult InsertObject(const nsACString& aType, nsISupports* aObject,
-                        bool aIsSafe,
-                        nsIDocument* aSourceDoc,
+                        bool aIsSafe, nsIDocument* aSourceDoc,
                         const EditorDOMPoint& aPointToInsert,
                         bool aDoDeleteSelection);
 
@@ -2099,11 +1952,11 @@ protected: // Shouldn't be used by friend classes
   nsresult PrepareHTMLTransferable(nsITransferable** transferable);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult InsertFromTransferable(nsITransferable* transferable,
-                                    nsIDocument* aSourceDoc,
-                                    const nsAString& aContextStr,
-                                    const nsAString& aInfoStr,
-                                    bool havePrivateHTMLFlavor,
-                                    bool aDoDeleteSelection);
+                                  nsIDocument* aSourceDoc,
+                                  const nsAString& aContextStr,
+                                  const nsAString& aInfoStr,
+                                  bool havePrivateHTMLFlavor,
+                                  bool aDoDeleteSelection);
 
   /**
    * InsertFromDataTransfer() is called only when user drops data into
@@ -2116,45 +1969,37 @@ protected: // Shouldn't be used by friend classes
                                           const EditorDOMPoint& aDroppedAt,
                                           bool aDoDeleteSelection) override;
 
-  bool HavePrivateHTMLFlavor(nsIClipboard* clipboard );
+  bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
                        char16_t** aCfcontext);
 
   nsresult StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
-  nsresult CreateDOMFragmentFromPaste(const nsAString& aInputString,
-                                      const nsAString& aContextStr,
-                                      const nsAString& aInfoStr,
-                                      nsCOMPtr<nsINode>* outFragNode,
-                                      nsCOMPtr<nsINode>* outStartNode,
-                                      nsCOMPtr<nsINode>* outEndNode,
-                                      int32_t* outStartOffset,
-                                      int32_t* outEndOffset,
-                                      bool aTrustedInput);
+  nsresult CreateDOMFragmentFromPaste(
+      const nsAString& aInputString, const nsAString& aContextStr,
+      const nsAString& aInfoStr, nsCOMPtr<nsINode>* outFragNode,
+      nsCOMPtr<nsINode>* outStartNode, nsCOMPtr<nsINode>* outEndNode,
+      int32_t* outStartOffset, int32_t* outEndOffset, bool aTrustedInput);
   nsresult ParseFragment(const nsAString& aStr, nsAtom* aContextLocalName,
                          nsIDocument* aTargetDoc,
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
   void CreateListOfNodesToPaste(dom::DocumentFragment& aFragment,
                                 nsTArray<OwningNonNull<nsINode>>& outNodeList,
-                                nsINode* aStartContainer,
-                                int32_t aStartOffset,
-                                nsINode* aEndContainer,
-                                int32_t aEndOffset);
+                                nsINode* aStartContainer, int32_t aStartOffset,
+                                nsINode* aEndContainer, int32_t aEndOffset);
   enum class StartOrEnd { start, end };
   void GetListAndTableParents(StartOrEnd aStartOrEnd,
                               nsTArray<OwningNonNull<nsINode>>& aNodeList,
                               nsTArray<OwningNonNull<Element>>& outArray);
   int32_t DiscoverPartialListsAndTables(
-            nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
-            nsTArray<OwningNonNull<Element>>& aListsAndTables);
+      nsTArray<OwningNonNull<nsINode>>& aPasteNodes,
+      nsTArray<OwningNonNull<Element>>& aListsAndTables);
   nsINode* ScanForListAndTableStructure(
-             StartOrEnd aStartOrEnd,
-             nsTArray<OwningNonNull<nsINode>>& aNodes,
-             Element& aListOrTable);
+      StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodes,
+      Element& aListOrTable);
   void ReplaceOrphanedStructure(
-         StartOrEnd aStartOrEnd,
-         nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-         nsTArray<OwningNonNull<Element>>& aListAndTableArray,
-         int32_t aHighWaterMark);
+      StartOrEnd aStartOrEnd, nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+      nsTArray<OwningNonNull<Element>>& aListAndTableArray,
+      int32_t aHighWaterMark);
 
   /**
    * GetBetterInsertionPointFor() returns better insertion point to insert
@@ -2167,9 +2012,8 @@ protected: // Shouldn't be used by friend classes
    *                            is neither none, another <br> element nor
    *                            different block level element.
    */
-  EditorRawDOMPoint
-  GetBetterInsertionPointFor(nsINode& aNodeToInsert,
-                             const EditorRawDOMPoint& aPointToInsert);
+  EditorRawDOMPoint GetBetterInsertionPointFor(
+      nsINode& aNodeToInsert, const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * MakeDefinitionListItemWithTransaction() replaces parent list of current
@@ -2200,20 +2044,16 @@ protected: // Shouldn't be used by friend classes
   /**
    * Helper routines for inline style.
    */
-  nsresult SetInlinePropertyOnTextNode(Text& aData,
-                                       int32_t aStartOffset,
-                                       int32_t aEndOffset,
-                                       nsAtom& aProperty,
+  nsresult SetInlinePropertyOnTextNode(Text& aData, int32_t aStartOffset,
+                                       int32_t aEndOffset, nsAtom& aProperty,
                                        nsAtom* aAttribute,
                                        const nsAString& aValue);
 
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
-  nsresult SplitStyleAboveRange(nsRange* aRange,
-                                nsAtom* aProperty,
+  nsresult SplitStyleAboveRange(nsRange* aRange, nsAtom* aProperty,
                                 nsAtom* aAttribute);
-  nsresult RemoveStyleInside(nsIContent& aNode,
-                             nsAtom* aProperty,
+  nsresult RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
                              nsAtom* aAttribute,
                              const bool aChildrenOnly = false);
 
@@ -2243,15 +2083,11 @@ protected: // Shouldn't be used by friend classes
    * local style (e.g., for the insertHTML command).
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult DoInsertHTMLWithContext(const nsAString& aInputString,
-                                   const nsAString& aContextStr,
-                                   const nsAString& aInfoStr,
-                                   const nsAString& aFlavor,
-                                   nsIDocument* aSourceDoc,
-                                   const EditorDOMPoint& aPointToInsert,
-                                   bool aDeleteSelection,
-                                   bool aTrustedInput,
-                                   bool aClearStyle = true);
+  nsresult DoInsertHTMLWithContext(
+      const nsAString& aInputString, const nsAString& aContextStr,
+      const nsAString& aInfoStr, const nsAString& aFlavor,
+      nsIDocument* aSourceDoc, const EditorDOMPoint& aPointToInsert,
+      bool aDeleteSelection, bool aTrustedInput, bool aClearStyle = true);
 
   /**
    * sets the position of an element; warning it does NOT check if the
@@ -2282,17 +2118,14 @@ protected: // Shouldn't be used by friend classes
    *                    AutoSelectionSetterAfterTableEdit stack-based object to
    *                    insure we reset the caret in a table-editing method.
    */
-  void SetSelectionAfterTableEdit(Element* aTable,
-                                  int32_t aRow, int32_t aCol,
+  void SetSelectionAfterTableEdit(Element* aTable, int32_t aRow, int32_t aCol,
                                   int32_t aDirection, bool aSelected);
 
   void RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                   nsIDOMEventListener* aListener,
-                                  bool aUseCapture,
-                                  ManualNACPtr aElement,
+                                  bool aUseCapture, ManualNACPtr aElement,
                                   nsIPresShell* aShell);
-  void DeleteRefToAnonymousNode(ManualNACPtr aContent,
-                                nsIPresShell* aShell);
+  void DeleteRefToAnonymousNode(ManualNACPtr aContent, nsIPresShell* aShell);
 
   /**
    * RefereshEditingUI() may refresh editing UIs for current Selection, focus,
@@ -2304,15 +2137,11 @@ protected: // Shouldn't be used by friend classes
   /**
    * Returns the offset of an element's frame to its absolute containing block.
    */
-  nsresult GetElementOrigin(Element& aElement,
-                            int32_t& aX, int32_t& aY);
-  nsresult GetPositionAndDimensions(Element& aElement,
-                                    int32_t& aX, int32_t& aY,
+  nsresult GetElementOrigin(Element& aElement, int32_t& aX, int32_t& aY);
+  nsresult GetPositionAndDimensions(Element& aElement, int32_t& aX, int32_t& aY,
                                     int32_t& aW, int32_t& aH,
-                                    int32_t& aBorderLeft,
-                                    int32_t& aBorderTop,
-                                    int32_t& aMarginLeft,
-                                    int32_t& aMarginTop);
+                                    int32_t& aBorderLeft, int32_t& aBorderTop,
+                                    int32_t& aMarginLeft, int32_t& aMarginTop);
 
   bool IsInObservedSubtree(nsIContent* aChild);
 
@@ -2345,8 +2174,7 @@ protected: // Shouldn't be used by friend classes
   nsresult RefreshResizersInternal();
 
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
-  void SetAnonymousElementPosition(int32_t aX, int32_t aY,
-                                   Element* aResizer);
+  void SetAnonymousElementPosition(int32_t aX, int32_t aY, Element* aResizer);
 
   ManualNACPtr CreateShadow(nsIContent& aParentContent,
                             Element& aOriginalObject);
@@ -2359,24 +2187,20 @@ protected: // Shouldn't be used by friend classes
    * @param aElementX           Left of aElement.
    * @param aElementY           Top of aElement.
    */
-  nsresult SetShadowPosition(Element& aShadowElement,
-                             Element& aElement,
-                             int32_t aElementLeft,
-                             int32_t aElementTop);
+  nsresult SetShadowPosition(Element& aShadowElement, Element& aElement,
+                             int32_t aElementLeft, int32_t aElementTop);
 
   ManualNACPtr CreateResizingInfo(nsIContent& aParentContent);
-  nsresult SetResizingInfoPosition(int32_t aX, int32_t aY,
-                                   int32_t aW, int32_t aH);
+  nsresult SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW,
+                                   int32_t aH);
 
-  enum class ResizeAt
-  {
+  enum class ResizeAt {
     eX,
     eY,
     eWidth,
     eHeight,
   };
-  int32_t GetNewResizingIncrement(int32_t aX, int32_t aY,
-                                  ResizeAt aResizeAt);
+  int32_t GetNewResizingIncrement(int32_t aX, int32_t aY, ResizeAt aResizeAt);
 
   nsresult StartResizing(Element* aHandle);
   int32_t GetNewResizingX(int32_t aX, int32_t aY);
@@ -2474,12 +2298,9 @@ protected: // Shouldn't be used by friend classes
    */
   bool IsEmptyTextNode(nsINode& aNode);
 
-  bool IsSimpleModifiableNode(nsIContent* aContent,
-                              nsAtom* aProperty,
-                              nsAtom* aAttribute,
-                              const nsAString* aValue);
-  nsresult SetInlinePropertyOnNodeImpl(nsIContent& aNode,
-                                       nsAtom& aProperty,
+  bool IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
+                              nsAtom* aAttribute, const nsAString* aValue);
+  nsresult SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
                                        nsAtom* aAttribute,
                                        const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
@@ -2499,8 +2320,7 @@ protected: // Shouldn't be used by friend classes
    *                              is to be added to the created anonymous
    *                              element
    */
-  ManualNACPtr CreateAnonymousElement(nsAtom* aTag,
-                                      nsIContent& aParentContent,
+  ManualNACPtr CreateAnonymousElement(nsAtom* aTag, nsIContent& aParentContent,
                                       const nsAString& aAnonClass,
                                       bool aIsCreatedHidden);
 
@@ -2512,10 +2332,10 @@ protected: // Shouldn't be used by friend classes
    * @param aWindow     The global object under which the read should happen.
    * @param aBlobReader The blob reader object to be notified when finished.
    */
-  static nsresult SlurpBlob(dom::Blob* aBlob,
-                            nsPIDOMWindowOuter* aWindow,
+  static nsresult SlurpBlob(dom::Blob* aBlob, nsPIDOMWindowOuter* aWindow,
                             BlobReader* aBlobReader);
-protected:
+
+ protected:
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
 
@@ -2603,8 +2423,8 @@ protected:
   uint32_t mGrabberUsedCount;
   uint32_t mInlineTableEditorUsedCount;
 
-  int8_t  mInfoXIncrement;
-  int8_t  mInfoYIncrement;
+  int8_t mInfoXIncrement;
+  int8_t mInfoYIncrement;
 
   // absolute positioning
   int32_t mPositionedObjectX;
@@ -2652,20 +2472,18 @@ protected:
   friend class WSRunObject;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-mozilla::HTMLEditor*
-nsIEditor::AsHTMLEditor()
-{
-  return static_cast<mozilla::EditorBase*>(this)->mIsHTMLEditorClass ?
-           static_cast<mozilla::HTMLEditor*>(this) : nullptr;
+mozilla::HTMLEditor* nsIEditor::AsHTMLEditor() {
+  return static_cast<mozilla::EditorBase*>(this)->mIsHTMLEditorClass
+             ? static_cast<mozilla::HTMLEditor*>(this)
+             : nullptr;
 }
 
-const mozilla::HTMLEditor*
-nsIEditor::AsHTMLEditor() const
-{
-  return static_cast<const mozilla::EditorBase*>(this)->mIsHTMLEditorClass ?
-           static_cast<const mozilla::HTMLEditor*>(this) : nullptr;
+const mozilla::HTMLEditor* nsIEditor::AsHTMLEditor() const {
+  return static_cast<const mozilla::EditorBase*>(this)->mIsHTMLEditorClass
+             ? static_cast<const mozilla::HTMLEditor*>(this)
+             : nullptr;
 }
 
-#endif // #ifndef mozilla_HTMLEditor_h
+#endif  // #ifndef mozilla_HTMLEditor_h

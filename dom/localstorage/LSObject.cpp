@@ -57,12 +57,8 @@ RequestHelper* gRequestHelper = nullptr;
  * See LocalStorageCommon.h for high-level context and method comments for
  * low-level details.
  */
-class RequestHelper final
-  : public Runnable
-  , public LSRequestChildCallback
-{
-  enum class State
-  {
+class RequestHelper final : public Runnable, public LSRequestChildCallback {
+  enum class State {
     /**
      * The RequestHelper has been created and dispatched to the DOM File Thread.
      */
@@ -109,35 +105,29 @@ class RequestHelper final
   // Control flag for the nested event loop; once set to false, the loop ends.
   bool mWaiting;
 
-public:
-  RequestHelper(LSObject* aObject,
-                const LSRequestParams& aParams)
-    : Runnable("dom::RequestHelper")
-    , mObject(aObject)
-    , mOwningEventTarget(GetCurrentThreadEventTarget())
-    , mActor(nullptr)
-    , mParams(aParams)
-    , mResultCode(NS_OK)
-    , mState(State::Initial)
-    , mWaiting(true)
-  {
+ public:
+  RequestHelper(LSObject* aObject, const LSRequestParams& aParams)
+      : Runnable("dom::RequestHelper"),
+        mObject(aObject),
+        mOwningEventTarget(GetCurrentThreadEventTarget()),
+        mActor(nullptr),
+        mParams(aParams),
+        mResultCode(NS_OK),
+        mState(State::Initial),
+        mWaiting(true) {
     StaticMutexAutoLock lock(gRequestHelperMutex);
     gRequestHelper = this;
   }
 
-  bool
-  IsOnOwningThread() const
-  {
+  bool IsOnOwningThread() const {
     MOZ_ASSERT(mOwningEventTarget);
 
     bool current;
-    return
-      NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) && current;
+    return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) &&
+           current;
   }
 
-  void
-  AssertIsOnOwningThread() const
-  {
+  void AssertIsOnOwningThread() const {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsOnOwningThread());
   }
@@ -145,72 +135,59 @@ public:
   // Used for requests from the parent process to the parent process; in that
   // case we want ActorsParent to know our event-target and this is better than
   // trying to tunnel the pointer through IPC.
-  const nsCOMPtr<nsIEventTarget>&
-  GetSyncLoopEventTarget() const
-  {
+  const nsCOMPtr<nsIEventTarget>& GetSyncLoopEventTarget() const {
     MOZ_ASSERT(XRE_IsParentProcess());
 
     return mNestedEventTarget;
   }
 
-  nsresult
-  StartAndReturnResponse(LSRequestResponse& aResponse);
+  nsresult StartAndReturnResponse(LSRequestResponse& aResponse);
 
-  nsresult
-  CancelOnAnyThread();
+  nsresult CancelOnAnyThread();
 
-private:
-  ~RequestHelper()
-  {
+ private:
+  ~RequestHelper() {
     StaticMutexAutoLock lock(gRequestHelperMutex);
     gRequestHelper = nullptr;
   }
 
-  nsresult
-  Start();
+  nsresult Start();
 
-  void
-  Finish();
+  void Finish();
 
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIRUNNABLE
 
   // LSRequestChildCallback
-  void
-  OnResponse(const LSRequestResponse& aResponse) override;
+  void OnResponse(const LSRequestResponse& aResponse) override;
 };
 
-} // namespace
+}  // namespace
 
-LSObject::LSObject(nsPIDOMWindowInner* aWindow,
-                   nsIPrincipal* aPrincipal)
-  : Storage(aWindow, aPrincipal)
-  , mPrivateBrowsingId(0)
-  , mInExplicitSnapshot(false)
-{
+LSObject::LSObject(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
+    : Storage(aWindow, aPrincipal),
+      mPrivateBrowsingId(0),
+      mInExplicitSnapshot(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NextGenLocalStorageEnabled());
 }
 
-LSObject::~LSObject()
-{
+LSObject::~LSObject() {
   AssertIsOnOwningThread();
 
   DropObserver();
 }
 
 // static
-nsresult
-LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
-                          Storage** aStorage)
-{
+nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
+                                   Storage** aStorage) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aStorage);
   MOZ_ASSERT(NextGenLocalStorageEnabled());
   MOZ_ASSERT(nsContentUtils::StorageAllowedForWindow(aWindow) >
-               nsContentUtils::StorageAccess::eDeny);
+             nsContentUtils::StorageAccess::eDeny);
 
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
   MOZ_ASSERT(sop);
@@ -229,9 +206,8 @@ LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   // for the check.
   nsCString dummyOriginAttrSuffix;
   nsCString dummyOriginKey;
-  nsresult rv = GenerateOriginKey(principal,
-                                  dummyOriginAttrSuffix,
-                                  dummyOriginKey);
+  nsresult rv =
+      GenerateOriginKey(principal, dummyOriginAttrSuffix, dummyOriginKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -275,22 +251,18 @@ LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 }
 
 // static
-nsresult
-LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
-                             nsIPrincipal* aPrincipal,
-                             const nsAString& aDocumentURI,
-                             bool aPrivate,
-                             LSObject** aObject)
-{
+nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
+                                      nsIPrincipal* aPrincipal,
+                                      const nsAString& aDocumentURI,
+                                      bool aPrivate, LSObject** aObject) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aObject);
 
   nsCString dummyOriginAttrSuffix;
   nsCString dummyOriginKey;
-  nsresult rv = GenerateOriginKey(aPrincipal,
-                                  dummyOriginAttrSuffix,
-                                  dummyOriginKey);
+  nsresult rv =
+      GenerateOriginKey(aPrincipal, dummyOriginAttrSuffix, dummyOriginKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -309,9 +281,7 @@ LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   if (principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(nullptr, nullptr, &origin);
   } else {
-    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal,
-                                            nullptr,
-                                            nullptr,
+    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, nullptr, nullptr,
                                             &origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -329,9 +299,7 @@ LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
 }
 
 // static
-already_AddRefed<nsIEventTarget>
-LSObject::GetSyncLoopEventTarget()
-{
+already_AddRefed<nsIEventTarget> LSObject::GetSyncLoopEventTarget() {
   RefPtr<RequestHelper> helper;
 
   {
@@ -348,9 +316,7 @@ LSObject::GetSyncLoopEventTarget()
 }
 
 // static
-void
-LSObject::CancelSyncLoop()
-{
+void LSObject::CancelSyncLoop() {
   RefPtr<RequestHelper> helper;
 
   {
@@ -363,15 +329,13 @@ LSObject::CancelSyncLoop()
   }
 }
 
-LSRequestChild*
-LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
-                       const LSRequestParams& aParams,
-                       LSRequestChildCallback* aCallback)
-{
+LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
+                                       const LSRequestParams& aParams,
+                                       LSRequestChildCallback* aCallback) {
   AssertIsOnDOMFileThread();
 
   PBackgroundChild* backgroundActor =
-    BackgroundChild::GetOrCreateForCurrentThread(aMainEventTarget);
+      BackgroundChild::GetOrCreateForCurrentThread(aMainEventTarget);
   if (NS_WARN_IF(!backgroundActor)) {
     return nullptr;
   }
@@ -383,17 +347,13 @@ LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
   return actor;
 }
 
-Storage::StorageType
-LSObject::Type() const
-{
+Storage::StorageType LSObject::Type() const {
   AssertIsOnOwningThread();
 
   return eLocalStorage;
 }
 
-bool
-LSObject::IsForkOf(const Storage* aStorage) const
-{
+bool LSObject::IsForkOf(const Storage* aStorage) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aStorage);
 
@@ -404,9 +364,7 @@ LSObject::IsForkOf(const Storage* aStorage) const
   return static_cast<const LSObject*>(aStorage)->mOrigin == mOrigin;
 }
 
-int64_t
-LSObject::GetOriginQuotaUsage() const
-{
+int64_t LSObject::GetOriginQuotaUsage() const {
   AssertIsOnOwningThread();
 
   // It's not necessary to return an actual value here.  This method is
@@ -420,10 +378,8 @@ LSObject::GetOriginQuotaUsage() const
   return 0;
 }
 
-uint32_t
-LSObject::GetLength(nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aError)
-{
+uint32_t LSObject::GetLength(nsIPrincipal& aSubjectPrincipal,
+                             ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -447,12 +403,8 @@ LSObject::GetLength(nsIPrincipal& aSubjectPrincipal,
   return result;
 }
 
-void
-LSObject::Key(uint32_t aIndex,
-              nsAString& aResult,
-              nsIPrincipal& aSubjectPrincipal,
-              ErrorResult& aError)
-{
+void LSObject::Key(uint32_t aIndex, nsAString& aResult,
+                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -476,12 +428,8 @@ LSObject::Key(uint32_t aIndex,
   aResult = result;
 }
 
-void
-LSObject::GetItem(const nsAString& aKey,
-                  nsAString& aResult,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aError)
-{
+void LSObject::GetItem(const nsAString& aKey, nsAString& aResult,
+                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -505,9 +453,7 @@ LSObject::GetItem(const nsAString& aKey,
   aResult = result;
 }
 
-void
-LSObject::GetSupportedNames(nsTArray<nsString>& aNames)
-{
+void LSObject::GetSupportedNames(nsTArray<nsString>& aNames) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(*nsContentUtils::SubjectPrincipal())) {
@@ -527,12 +473,8 @@ LSObject::GetSupportedNames(nsTArray<nsString>& aNames)
   }
 }
 
-void
-LSObject::SetItem(const nsAString& aKey,
-                  const nsAString& aValue,
-                  nsIPrincipal& aSubjectPrincipal,
-                  ErrorResult& aError)
-{
+void LSObject::SetItem(const nsAString& aKey, const nsAString& aValue,
+                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -561,11 +503,9 @@ LSObject::SetItem(const nsAString& aKey,
   }
 }
 
-void
-LSObject::RemoveItem(const nsAString& aKey,
-                     nsIPrincipal& aSubjectPrincipal,
-                     ErrorResult& aError)
-{
+void LSObject::RemoveItem(const nsAString& aKey,
+                          nsIPrincipal& aSubjectPrincipal,
+                          ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -591,10 +531,7 @@ LSObject::RemoveItem(const nsAString& aKey,
   }
 }
 
-void
-LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
-                ErrorResult& aError)
-{
+void LSObject::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -620,10 +557,7 @@ LSObject::Clear(nsIPrincipal& aSubjectPrincipal,
   }
 }
 
-void
-LSObject::Open(nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aError)
-{
+void LSObject::Open(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -638,10 +572,7 @@ LSObject::Open(nsIPrincipal& aSubjectPrincipal,
   }
 }
 
-void
-LSObject::Close(nsIPrincipal& aSubjectPrincipal,
-                ErrorResult& aError)
-{
+void LSObject::Close(nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -652,10 +583,8 @@ LSObject::Close(nsIPrincipal& aSubjectPrincipal,
   DropDatabase();
 }
 
-void
-LSObject::BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
-                                ErrorResult& aError)
-{
+void LSObject::BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                     ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -683,10 +612,8 @@ LSObject::BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
   mInExplicitSnapshot = true;
 }
 
-void
-LSObject::EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
-                              ErrorResult& aError)
-{
+void LSObject::EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                   ErrorResult& aError) {
   AssertIsOnOwningThread();
 
   if (!CanUseStorage(aSubjectPrincipal)) {
@@ -723,16 +650,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(LSObject, Storage)
   tmp->DropDatabase();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-nsresult
-LSObject::DoRequestSynchronously(const LSRequestParams& aParams,
-                                 LSRequestResponse& aResponse)
-{
+nsresult LSObject::DoRequestSynchronously(const LSRequestParams& aParams,
+                                          LSRequestResponse& aResponse) {
   // We don't need this yet, but once the request successfully finishes, it's
   // too late to initialize PBackground child on the owning thread, because
   // it can fail and parent would keep an extra strong ref to the datastore or
   // observer.
   PBackgroundChild* backgroundActor =
-    BackgroundChild::GetOrCreateForCurrentThread();
+      BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return NS_ERROR_FAILURE;
   }
@@ -760,9 +685,7 @@ LSObject::DoRequestSynchronously(const LSRequestParams& aParams,
   return NS_OK;
 }
 
-nsresult
-LSObject::EnsureDatabase()
-{
+nsresult LSObject::EnsureDatabase() {
   AssertIsOnOwningThread();
 
   if (mDatabase && !mDatabase->IsAllowedToClose()) {
@@ -780,7 +703,7 @@ LSObject::EnsureDatabase()
   // too late to initialize PBackground child on the owning thread, because
   // it can fail and parent would keep an extra strong ref to the datastore.
   PBackgroundChild* backgroundActor =
-    BackgroundChild::GetOrCreateForCurrentThread();
+      BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return NS_ERROR_FAILURE;
   }
@@ -797,12 +720,13 @@ LSObject::EnsureDatabase()
   }
 
   MOZ_ASSERT(response.type() ==
-               LSRequestResponse::TLSRequestPrepareDatastoreResponse);
+             LSRequestResponse::TLSRequestPrepareDatastoreResponse);
 
   const LSRequestPrepareDatastoreResponse& prepareDatastoreResponse =
-    response.get_LSRequestPrepareDatastoreResponse();
+      response.get_LSRequestPrepareDatastoreResponse();
 
-  const NullableDatastoreId& datastoreId = prepareDatastoreResponse.datastoreId();
+  const NullableDatastoreId& datastoreId =
+      prepareDatastoreResponse.datastoreId();
 
   MOZ_ASSERT(datastoreId.type() == NullableDatastoreId::Tuint64_t);
 
@@ -817,11 +741,8 @@ LSObject::EnsureDatabase()
 
   LSDatabaseChild* actor = new LSDatabaseChild(database);
 
-  MOZ_ALWAYS_TRUE(
-    backgroundActor->SendPBackgroundLSDatabaseConstructor(actor,
-                                                          *mPrincipalInfo,
-                                                          mPrivateBrowsingId,
-                                                          datastoreId));
+  MOZ_ALWAYS_TRUE(backgroundActor->SendPBackgroundLSDatabaseConstructor(
+      actor, *mPrincipalInfo, mPrivateBrowsingId, datastoreId));
 
   database->SetActor(actor);
 
@@ -830,9 +751,7 @@ LSObject::EnsureDatabase()
   return NS_OK;
 }
 
-void
-LSObject::DropDatabase()
-{
+void LSObject::DropDatabase() {
   AssertIsOnOwningThread();
 
   if (mInExplicitSnapshot) {
@@ -843,9 +762,7 @@ LSObject::DropDatabase()
   mDatabase = nullptr;
 }
 
-nsresult
-LSObject::EnsureObserver()
-{
+nsresult LSObject::EnsureObserver() {
   AssertIsOnOwningThread();
 
   if (mObserver) {
@@ -869,10 +786,10 @@ LSObject::EnsureObserver()
   }
 
   MOZ_ASSERT(response.type() ==
-               LSRequestResponse::TLSRequestPrepareObserverResponse);
+             LSRequestResponse::TLSRequestPrepareObserverResponse);
 
   const LSRequestPrepareObserverResponse& prepareObserverResponse =
-    response.get_LSRequestPrepareObserverResponse();
+      response.get_LSRequestPrepareObserverResponse();
 
   uint64_t observerId = prepareObserverResponse.observerId();
 
@@ -891,7 +808,7 @@ LSObject::EnsureObserver()
   LSObserverChild* actor = new LSObserverChild(observer);
 
   MOZ_ALWAYS_TRUE(
-    backgroundActor->SendPBackgroundLSObserverConstructor(actor, observerId));
+      backgroundActor->SendPBackgroundLSObserverConstructor(actor, observerId));
 
   observer->SetActor(actor);
 
@@ -900,9 +817,7 @@ LSObject::EnsureObserver()
   return NS_OK;
 }
 
-void
-LSObject::DropObserver()
-{
+void LSObject::DropObserver() {
   AssertIsOnOwningThread();
 
   if (mObserver) {
@@ -910,27 +825,17 @@ LSObject::DropObserver()
   }
 }
 
-void
-LSObject::OnChange(const nsAString& aKey,
-                   const nsAString& aOldValue,
-                   const nsAString& aNewValue)
-{
+void LSObject::OnChange(const nsAString& aKey, const nsAString& aOldValue,
+                        const nsAString& aNewValue) {
   AssertIsOnOwningThread();
 
-  NotifyChange(/* aStorage */ this,
-               Principal(),
-               aKey,
-               aOldValue,
-               aNewValue,
-               /* aStorageType */ kLocalStorageType,
-               mDocumentURI,
+  NotifyChange(/* aStorage */ this, Principal(), aKey, aOldValue, aNewValue,
+               /* aStorageType */ kLocalStorageType, mDocumentURI,
                /* aIsPrivate */ !!mPrivateBrowsingId,
                /* aImmediateDispatch */ false);
 }
 
-nsresult
-LSObject::EndExplicitSnapshotInternal()
-{
+nsresult LSObject::EndExplicitSnapshotInternal() {
   AssertIsOnOwningThread();
 
   // Can be only called if the mInExplicitSnapshot flag is true.
@@ -960,17 +865,13 @@ LSObject::EndExplicitSnapshotInternal()
   return NS_OK;
 }
 
-void
-LSObject::LastRelease()
-{
+void LSObject::LastRelease() {
   AssertIsOnOwningThread();
 
   DropDatabase();
 }
 
-nsresult
-RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse)
-{
+nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   // Normally, we would use the standard way of blocking the thread using
@@ -991,17 +892,16 @@ RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse)
     auto thread = static_cast<nsThread*>(NS_GetCurrentThread());
 
     auto queue =
-      static_cast<ThreadEventQueue<EventQueue>*>(thread->EventQueue());
+        static_cast<ThreadEventQueue<EventQueue>*>(thread->EventQueue());
 
     mNestedEventTarget = queue->PushEventQueue();
     MOZ_ASSERT(mNestedEventTarget);
 
-    auto autoPopEventQueue = mozilla::MakeScopeExit([&] {
-      queue->PopEventQueue(mNestedEventTarget);
-    });
+    auto autoPopEventQueue = mozilla::MakeScopeExit(
+        [&] { queue->PopEventQueue(mNestedEventTarget); });
 
     nsCOMPtr<nsIEventTarget> domFileThread =
-      IPCBlobInputStreamThread::GetOrCreate();
+        IPCBlobInputStreamThread::GetOrCreate();
     if (NS_WARN_IF(!domFileThread)) {
       return NS_ERROR_FAILURE;
     }
@@ -1011,9 +911,7 @@ RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse)
       return rv;
     }
 
-    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-      return !mWaiting;
-    }));
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return !mWaiting; }));
   }
 
   if (NS_WARN_IF(NS_FAILED(mResultCode))) {
@@ -1024,22 +922,19 @@ RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse)
   return NS_OK;
 }
 
-nsresult
-RequestHelper::CancelOnAnyThread()
-{
+nsresult RequestHelper::CancelOnAnyThread() {
   RefPtr<RequestHelper> self = this;
 
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-    "RequestHelper::CancelOnAnyThread",
-    [self] () {
-      LSRequestChild* actor = self->mActor;
-      if (actor && !actor->Finishing()) {
-        actor->SendCancel();
-      }
-    });
+  RefPtr<Runnable> runnable =
+      NS_NewRunnableFunction("RequestHelper::CancelOnAnyThread", [self]() {
+        LSRequestChild* actor = self->mActor;
+        if (actor && !actor->Finishing()) {
+          actor->SendCancel();
+        }
+      });
 
   nsCOMPtr<nsIEventTarget> domFileThread =
-    IPCBlobInputStreamThread::GetOrCreate();
+      IPCBlobInputStreamThread::GetOrCreate();
   if (NS_WARN_IF(!domFileThread)) {
     return NS_ERROR_FAILURE;
   }
@@ -1052,16 +947,14 @@ RequestHelper::CancelOnAnyThread()
   return NS_OK;
 }
 
-nsresult
-RequestHelper::Start()
-{
+nsresult RequestHelper::Start() {
   AssertIsOnDOMFileThread();
   MOZ_ASSERT(mState == State::Initial);
 
   mState = State::ResponsePending;
 
   LSRequestChild* actor =
-    mObject->StartRequest(mNestedEventTarget, mParams, this);
+      mObject->StartRequest(mNestedEventTarget, mParams, this);
   if (NS_WARN_IF(!actor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1071,9 +964,7 @@ RequestHelper::Start()
   return NS_OK;
 }
 
-void
-RequestHelper::Finish()
-{
+void RequestHelper::Finish() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Finishing);
 
@@ -1087,8 +978,7 @@ RequestHelper::Finish()
 NS_IMPL_ISUPPORTS_INHERITED0(RequestHelper, Runnable)
 
 NS_IMETHODIMP
-RequestHelper::Run()
-{
+RequestHelper::Run() {
   nsresult rv;
 
   switch (mState) {
@@ -1114,17 +1004,15 @@ RequestHelper::Run()
     if (IsOnOwningThread()) {
       Finish();
     } else {
-      MOZ_ALWAYS_SUCCEEDS(mNestedEventTarget->Dispatch(this,
-                                                       NS_DISPATCH_NORMAL));
+      MOZ_ALWAYS_SUCCEEDS(
+          mNestedEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
     }
   }
 
   return NS_OK;
 }
 
-void
-RequestHelper::OnResponse(const LSRequestResponse& aResponse)
-{
+void RequestHelper::OnResponse(const LSRequestResponse& aResponse) {
   AssertIsOnDOMFileThread();
   MOZ_ASSERT(mState == State::ResponsePending);
 
@@ -1136,5 +1024,5 @@ RequestHelper::OnResponse(const LSRequestResponse& aResponse)
   MOZ_ALWAYS_SUCCEEDS(mNestedEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

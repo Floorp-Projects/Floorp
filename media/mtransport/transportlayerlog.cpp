@@ -16,16 +16,15 @@ MOZ_MTLOG_MODULE("mtransport")
 
 void TransportLayerLogging::WasInserted() {
   if (downward_) {
-    downward_->SignalStateChange.connect(
-        this, &TransportLayerLogging::StateChange);
+    downward_->SignalStateChange.connect(this,
+                                         &TransportLayerLogging::StateChange);
     downward_->SignalPacketReceived.connect(
         this, &TransportLayerLogging::PacketReceived);
     TL_SET_STATE(downward_->state());
   }
 }
 
-TransportResult
-TransportLayerLogging::SendPacket(MediaPacket& packet) {
+TransportResult TransportLayerLogging::SendPacket(MediaPacket& packet) {
   MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "SendPacket(" << packet.len() << ")");
 
   if (downward_) {
@@ -34,7 +33,7 @@ TransportLayerLogging::SendPacket(MediaPacket& packet) {
   return static_cast<TransportResult>(packet.len());
 }
 
-void TransportLayerLogging::StateChange(TransportLayer *layer, State state) {
+void TransportLayerLogging::StateChange(TransportLayer* layer, State state) {
   MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Received StateChange to " << state);
 
   TL_SET_STATE(state);
@@ -47,4 +46,4 @@ void TransportLayerLogging::PacketReceived(TransportLayer* layer,
   SignalPacketReceived(this, packet);
 }
 
-}  // close namespace
+}  // namespace mozilla

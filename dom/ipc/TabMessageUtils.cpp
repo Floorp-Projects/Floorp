@@ -12,19 +12,17 @@
 namespace mozilla {
 namespace dom {
 
-bool
-ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
-                RemoteDOMEvent* aResult)
-{
+bool ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
+                     RemoteDOMEvent* aResult) {
   aResult->mEvent = nullptr;
   nsString type;
   NS_ENSURE_TRUE(ReadParam(aMsg, aIter, &type), false);
 
-  aResult->mEvent = EventDispatcher::CreateEvent(nullptr, nullptr, nullptr,
-                                                 type);
+  aResult->mEvent =
+      EventDispatcher::CreateEvent(nullptr, nullptr, nullptr, type);
 
   return aResult->mEvent->Deserialize(aMsg, aIter);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -15,19 +15,17 @@ class nsIRunnable;
 
 namespace mozilla {
 
-class EventQueue final : public AbstractEventQueue
-{
-public:
+class EventQueue final : public AbstractEventQueue {
+ public:
   static const bool SupportsPrioritization = false;
 
   EventQueue() {}
   explicit EventQueue(EventPriority aPriority);
 
-  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                EventPriority aPriority,
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent, EventPriority aPriority,
                 const MutexAutoLock& aProofOfLock) final;
-  already_AddRefed<nsIRunnable> GetEvent(EventPriority* aPriority,
-                                         const MutexAutoLock& aProofOfLock) final;
+  already_AddRefed<nsIRunnable> GetEvent(
+      EventPriority* aPriority, const MutexAutoLock& aProofOfLock) final;
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
   bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final;
@@ -35,20 +33,23 @@ public:
   size_t Count(const MutexAutoLock& aProofOfLock) const final;
   already_AddRefed<nsIRunnable> PeekEvent(const MutexAutoLock& aProofOfLock);
 
-  void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
+  void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {
+  }
   void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
-  void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
-  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
+  void SuspendInputEventPrioritization(
+      const MutexAutoLock& aProofOfLock) final {}
+  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {
+  }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override {
     return mQueue.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
-private:
+ private:
   mozilla::Queue<nsCOMPtr<nsIRunnable>> mQueue;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_EventQueue_h
+#endif  // mozilla_EventQueue_h

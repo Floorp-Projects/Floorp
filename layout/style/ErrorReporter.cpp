@@ -32,10 +32,9 @@ using namespace mozilla::css;
 
 namespace {
 class ShortTermURISpecCache : public Runnable {
-public:
+ public:
   ShortTermURISpecCache()
-   : Runnable("ShortTermURISpecCache")
-   , mPending(false) {}
+      : Runnable("ShortTermURISpecCache"), mPending(false) {}
 
   nsString const& GetSpec(nsIURI* aURI) {
     if (mURI != aURI) {
@@ -60,24 +59,22 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   nsCOMPtr<nsIURI> mURI;
   nsString mSpec;
   bool mPending;
 };
 
-} // namespace
+}  // namespace
 
 bool ErrorReporter::sInitialized = false;
 
-static nsIConsoleService *sConsoleService;
-static nsIFactory *sScriptErrorFactory;
-static nsIStringBundle *sStringBundle;
-static ShortTermURISpecCache *sSpecCache;
+static nsIConsoleService* sConsoleService;
+static nsIFactory* sScriptErrorFactory;
+static nsIStringBundle* sStringBundle;
+static ShortTermURISpecCache* sSpecCache;
 
-void
-ErrorReporter::InitGlobals()
-{
+void ErrorReporter::InitGlobals() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sInitialized, "should not have been called");
 
@@ -113,18 +110,15 @@ ErrorReporter::InitGlobals()
 namespace mozilla {
 namespace css {
 
-/* static */ void
-ErrorReporter::ReleaseGlobals()
-{
+/* static */ void ErrorReporter::ReleaseGlobals() {
   NS_IF_RELEASE(sConsoleService);
   NS_IF_RELEASE(sScriptErrorFactory);
   NS_IF_RELEASE(sStringBundle);
   NS_IF_RELEASE(sSpecCache);
 }
 
-static uint64_t
-FindInnerWindowID(const StyleSheet* aSheet, const Loader* aLoader)
-{
+static uint64_t FindInnerWindowID(const StyleSheet* aSheet,
+                                  const Loader* aLoader) {
   uint64_t innerWindowID = 0;
   if (aSheet) {
     innerWindowID = aSheet->FindOwningWindowInnerID();
@@ -137,30 +131,26 @@ FindInnerWindowID(const StyleSheet* aSheet, const Loader* aLoader)
   return innerWindowID;
 }
 
-ErrorReporter::ErrorReporter(const StyleSheet* aSheet,
-                             const Loader* aLoader,
+ErrorReporter::ErrorReporter(const StyleSheet* aSheet, const Loader* aLoader,
                              nsIURI* aURI)
-  : mSheet(aSheet)
-  , mLoader(aLoader)
-  , mURI(aURI)
-  , mErrorLineNumber(0)
-  , mPrevErrorLineNumber(0)
-  , mErrorColNumber(0)
-{
+    : mSheet(aSheet),
+      mLoader(aLoader),
+      mURI(aURI),
+      mErrorLineNumber(0),
+      mPrevErrorLineNumber(0),
+      mErrorColNumber(0) {
   MOZ_ASSERT(ShouldReportErrors(mSheet, mLoader));
   EnsureGlobalsInitialized();
 }
 
-ErrorReporter::~ErrorReporter()
-{
+ErrorReporter::~ErrorReporter() {
   MOZ_ASSERT(NS_IsMainThread());
   // Schedule deferred cleanup for cached data. We want to strike a
   // balance between performance and memory usage, so we only allow
   // short-term caching.
   if (sSpecCache && sSpecCache->IsInUse() && !sSpecCache->IsPending()) {
     nsCOMPtr<nsIRunnable> runnable(sSpecCache);
-    nsresult rv =
-      SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
     if (NS_FAILED(rv)) {
       // Peform the "deferred" cleanup immediately if the dispatch fails.
       sSpecCache->Run();
@@ -170,9 +160,7 @@ ErrorReporter::~ErrorReporter()
   }
 }
 
-bool
-ErrorReporter::ShouldReportErrors(const nsIDocument& aDoc)
-{
+bool ErrorReporter::ShouldReportErrors(const nsIDocument& aDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   nsIDocShell* shell = aDoc.GetDocShell();
   if (!shell) {
@@ -184,9 +172,7 @@ ErrorReporter::ShouldReportErrors(const nsIDocument& aDoc)
   return report;
 }
 
-static nsINode*
-SheetOwner(const StyleSheet& aSheet)
-{
+static nsINode* SheetOwner(const StyleSheet& aSheet) {
   if (nsINode* owner = aSheet.GetOwnerNode()) {
     return owner;
   }
@@ -195,10 +181,8 @@ SheetOwner(const StyleSheet& aSheet)
   return associated ? &associated->AsNode() : nullptr;
 }
 
-bool
-ErrorReporter::ShouldReportErrors(const StyleSheet* aSheet,
-                                  const Loader* aLoader)
-{
+bool ErrorReporter::ShouldReportErrors(const StyleSheet* aSheet,
+                                       const Loader* aLoader) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!StaticPrefs::layout_css_report_errors()) {
@@ -220,9 +204,7 @@ ErrorReporter::ShouldReportErrors(const StyleSheet* aSheet,
   return false;
 }
 
-void
-ErrorReporter::OutputError()
-{
+void ErrorReporter::OutputError() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(ShouldReportErrors(mSheet, mLoader));
 
@@ -245,19 +227,15 @@ ErrorReporter::OutputError()
 
   nsresult rv;
   nsCOMPtr<nsIScriptError> errorObject =
-    do_CreateInstance(sScriptErrorFactory, &rv);
+      do_CreateInstance(sScriptErrorFactory, &rv);
 
   if (NS_SUCCEEDED(rv)) {
     // It is safe to used InitWithSanitizedSource because mFileName is
     // an already anonymized uri spec.
-    rv = errorObject->InitWithSanitizedSource(mError,
-                                              mFileName,
-                                              mErrorLine,
-                                              mErrorLineNumber,
-                                              mErrorColNumber,
-                                              nsIScriptError::warningFlag,
-                                              "CSS Parser",
-                                              FindInnerWindowID(mSheet, mLoader));
+    rv = errorObject->InitWithSanitizedSource(
+        mError, mFileName, mErrorLine, mErrorLineNumber, mErrorColNumber,
+        nsIScriptError::warningFlag, "CSS Parser",
+        FindInnerWindowID(mSheet, mLoader));
     if (NS_SUCCEEDED(rv)) {
       sConsoleService->LogMessage(errorObject);
     }
@@ -266,17 +244,14 @@ ErrorReporter::OutputError()
   ClearError();
 }
 
-// When Stylo's CSS parser is in use, this reporter does not have access to the CSS parser's
-// state. The users of ErrorReporter need to provide:
+// When Stylo's CSS parser is in use, this reporter does not have access to the
+// CSS parser's state. The users of ErrorReporter need to provide:
 // - the line number of the error
 // - the column number of the error
 // - the complete source line containing the invalid CSS
 
-void
-ErrorReporter::OutputError(uint32_t aLineNumber,
-                           uint32_t aColNumber,
-                           const nsACString& aSourceLine)
-{
+void ErrorReporter::OutputError(uint32_t aLineNumber, uint32_t aColNumber,
+                                const nsACString& aSourceLine) {
   mErrorLineNumber = aLineNumber;
   mErrorColNumber = aColNumber;
 
@@ -285,7 +260,8 @@ ErrorReporter::OutputError(uint32_t aLineNumber,
   // be shared among all the nsIScriptError objects.
   if (mErrorLine.IsEmpty() || mErrorLineNumber != mPrevErrorLineNumber) {
     mErrorLine.Truncate();
-    // This could be a really long string for minified CSS; just leave it empty if we OOM.
+    // This could be a really long string for minified CSS; just leave it empty
+    // if we OOM.
     if (!AppendUTF8toUTF16(aSourceLine, mErrorLine, fallible)) {
       mErrorLine.Truncate();
     }
@@ -296,15 +272,9 @@ ErrorReporter::OutputError(uint32_t aLineNumber,
   OutputError();
 }
 
-void
-ErrorReporter::ClearError()
-{
-  mError.Truncate();
-}
+void ErrorReporter::ClearError() { mError.Truncate(); }
 
-void
-ErrorReporter::AddToError(const nsString &aErrorText)
-{
+void ErrorReporter::AddToError(const nsString& aErrorText) {
   MOZ_ASSERT(ShouldReportErrors(mSheet, mLoader));
 
   if (mError.IsEmpty()) {
@@ -315,9 +285,7 @@ ErrorReporter::AddToError(const nsString &aErrorText)
   }
 }
 
-void
-ErrorReporter::ReportUnexpected(const char *aMessage)
-{
+void ErrorReporter::ReportUnexpected(const char* aMessage) {
   MOZ_ASSERT(ShouldReportErrors(mSheet, mLoader));
 
   nsAutoString str;
@@ -325,13 +293,11 @@ ErrorReporter::ReportUnexpected(const char *aMessage)
   AddToError(str);
 }
 
-void
-ErrorReporter::ReportUnexpectedUnescaped(const char *aMessage,
-                                         const nsAutoString& aParam)
-{
+void ErrorReporter::ReportUnexpectedUnescaped(const char* aMessage,
+                                              const nsAutoString& aParam) {
   MOZ_ASSERT(ShouldReportErrors(mSheet, mLoader));
 
-  const char16_t *params[1] = { aParam.get() };
+  const char16_t* params[1] = {aParam.get()};
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(aMessage, params, ArrayLength(params),
@@ -339,5 +305,5 @@ ErrorReporter::ReportUnexpectedUnescaped(const char *aMessage,
   AddToError(str);
 }
 
-} // namespace css
-} // namespace mozilla
+}  // namespace css
+}  // namespace mozilla

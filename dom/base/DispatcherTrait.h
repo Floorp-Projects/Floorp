@@ -23,15 +23,15 @@ class TabGroup;
 // delegate to the DocGroup or TabGroup. We can't use the Dispatcher class
 // directly because it inherits from nsISupports.
 class DispatcherTrait {
-public:
+ public:
   // This method may or may not be safe off of the main thread. For nsIDocument
   // it is safe. For nsIGlobalWindow it is not safe.
   virtual nsresult Dispatch(TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable);
 
   // This method may or may not be safe off of the main thread. For nsIDocument
-  // it is safe. For nsIGlobalWindow it is not safe. The nsISerialEventTarget can
-  // always be used off the main thread.
+  // it is safe. For nsIGlobalWindow it is not safe. The nsISerialEventTarget
+  // can always be used off the main thread.
   virtual nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;
 
   // Must be called on the main thread. The AbstractThread can always be used
@@ -39,7 +39,7 @@ public:
   virtual AbstractThread* AbstractMainThreadFor(TaskCategory aCategory);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_DispatcherTrait_h
+#endif  // mozilla_dom_DispatcherTrait_h

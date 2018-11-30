@@ -14,26 +14,21 @@
 
 namespace mozilla {
 
-nsresult
-SVGNumberList::CopyFrom(const SVGNumberList& rhs)
-{
+nsresult SVGNumberList::CopyFrom(const SVGNumberList& rhs) {
   if (!mNumbers.Assign(rhs.mNumbers, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-void
-SVGNumberList::GetValueAsString(nsAString& aValue) const
-{
+void SVGNumberList::GetValueAsString(nsAString& aValue) const {
   aValue.Truncate();
   char16_t buf[24];
   uint32_t last = mNumbers.Length() - 1;
   for (uint32_t i = 0; i < mNumbers.Length(); ++i) {
     // Would like to use aValue.AppendPrintf("%f", mNumbers[i]), but it's not
     // possible to always avoid trailing zeros.
-    nsTextFormatter::snprintf(buf, ArrayLength(buf),
-                              u"%g",
+    nsTextFormatter::snprintf(buf, ArrayLength(buf), u"%g",
                               double(mNumbers[i]));
     // We ignore OOM, since it's not useful for us to return an error.
     aValue.Append(buf);
@@ -43,13 +38,11 @@ SVGNumberList::GetValueAsString(nsAString& aValue) const
   }
 }
 
-nsresult
-SVGNumberList::SetValueFromString(const nsAString& aValue)
-{
+nsresult SVGNumberList::SetValueFromString(const nsAString& aValue) {
   SVGNumberList temp;
 
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-    tokenizer(aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tokenizer(
+      aValue, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
   while (tokenizer.hasMoreTokens()) {
     float num;
@@ -61,9 +54,9 @@ SVGNumberList::SetValueFromString(const nsAString& aValue)
     }
   }
   if (tokenizer.separatorAfterCurrentToken()) {
-    return NS_ERROR_DOM_SYNTAX_ERR; // trailing comma
+    return NS_ERROR_DOM_SYNTAX_ERR;  // trailing comma
   }
   return CopyFrom(temp);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

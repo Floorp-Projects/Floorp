@@ -24,23 +24,26 @@ namespace gfx {
 
 class PathRecording;
 
-class DrawEventRecorderPrivate : public DrawEventRecorder
-{
-public:
+class DrawEventRecorderPrivate : public DrawEventRecorder {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPrivate, override)
 
   DrawEventRecorderPrivate();
-  virtual ~DrawEventRecorderPrivate() { }
-  virtual bool Finish() override { ClearResources(); return true; }
-  virtual void FlushItem(IntRect) { }
+  virtual ~DrawEventRecorderPrivate() {}
+  virtual bool Finish() override {
+    ClearResources();
+    return true;
+  }
+  virtual void FlushItem(IntRect) {}
   void DetachResources() {
     // The iteration is a bit awkward here because our iterator will
     // be invalidated by the removal
-    for (auto font = mStoredFonts.begin(); font != mStoredFonts.end(); ) {
+    for (auto font = mStoredFonts.begin(); font != mStoredFonts.end();) {
       auto oldFont = font++;
       (*oldFont)->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
     }
-    for (auto surface = mStoredSurfaces.begin(); surface != mStoredSurfaces.end(); ) {
+    for (auto surface = mStoredSurfaces.begin();
+         surface != mStoredSurfaces.end();) {
       auto oldSurface = surface++;
       (*oldSurface)->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
     }
@@ -54,15 +57,15 @@ public:
     mScaledFonts.clear();
   }
 
-  template<class S>
+  template <class S>
   void WriteHeader(S& aStream) {
     WriteElement(aStream, kMagicInt);
     WriteElement(aStream, kMajorRevision);
     WriteElement(aStream, kMinorRevision);
   }
 
-  virtual void RecordEvent(const RecordedEvent &aEvent) = 0;
-  void WritePath(const PathRecording *aPath);
+  virtual void RecordEvent(const RecordedEvent& aEvent) = 0;
+  void WritePath(const PathRecording* aPath);
 
   void AddStoredObject(const ReferencePtr aObject) {
     mStoredObjects.insert(aObject);
@@ -73,15 +76,12 @@ public:
   }
 
   void AddScaledFont(ScaledFont* aFont) {
-    if (mStoredFonts.insert(aFont).second &&
-        WantsExternalFonts()) {
+    if (mStoredFonts.insert(aFont).second && WantsExternalFonts()) {
       mScaledFonts.push_back(aFont);
     }
   }
 
-  void RemoveScaledFont(ScaledFont* aFont) {
-    mStoredFonts.erase(aFont);
-  }
+  void RemoveScaledFont(ScaledFont* aFont) { mStoredFonts.erase(aFont); }
 
   void AddSourceSurface(SourceSurface* aSurface) {
     mStoredSurfaces.insert(aSurface);
@@ -105,22 +105,19 @@ public:
 
   bool WantsExternalFonts() const { return mExternalFonts; }
 
-  void TakeExternalSurfaces(std::vector<RefPtr<SourceSurface>>& aSurfaces)
-  {
+  void TakeExternalSurfaces(std::vector<RefPtr<SourceSurface>>& aSurfaces) {
     aSurfaces = std::move(mExternalSurfaces);
   }
 
-  virtual void StoreSourceSurfaceRecording(SourceSurface *aSurface,
-                                           const char *aReason);
+  virtual void StoreSourceSurfaceRecording(SourceSurface* aSurface,
+                                           const char* aReason);
 
-  virtual void AddDependentSurface(uint64_t aDependencyId)
-  {
+  virtual void AddDependentSurface(uint64_t aDependencyId) {
     MOZ_CRASH("GFX: AddDependentSurface");
   }
 
-protected:
-  void StoreExternalSurfaceRecording(SourceSurface* aSurface,
-                                     uint64_t aKey);
+ protected:
+  void StoreExternalSurfaceRecording(SourceSurface* aSurface, uint64_t aKey);
 
   virtual void Flush() = 0;
 
@@ -133,15 +130,15 @@ protected:
   bool mExternalFonts;
 };
 
-class DrawEventRecorderFile : public DrawEventRecorderPrivate
-{
+class DrawEventRecorderFile : public DrawEventRecorderPrivate {
   using char_type = filesystem::Path::value_type;
-public:
+
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderFile, override)
   explicit DrawEventRecorderFile(const char_type* aFilename);
   ~DrawEventRecorderFile();
 
-  void RecordEvent(const RecordedEvent &aEvent) override;
+  void RecordEvent(const RecordedEvent& aEvent) override;
 
   /**
    * Returns whether a recording file is currently open.
@@ -162,28 +159,29 @@ public:
    */
   void Close();
 
-private:
+ private:
   void Flush() override;
 
   mozilla::OFStream mOutputStream;
 };
 
-typedef std::function<void(MemStream &aStream, std::vector<RefPtr<ScaledFont>> &aScaledFonts)> SerializeResourcesFn;
+typedef std::function<void(MemStream& aStream,
+                           std::vector<RefPtr<ScaledFont>>& aScaledFonts)>
+    SerializeResourcesFn;
 
 // WARNING: This should not be used in its existing state because
 // it is likely to OOM because of large continguous allocations.
-class DrawEventRecorderMemory : public DrawEventRecorderPrivate
-{
-public:
+class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderMemory, override)
 
   /**
    * Constructs a DrawEventRecorder that stores the recording in memory.
    */
   DrawEventRecorderMemory();
-  explicit DrawEventRecorderMemory(const SerializeResourcesFn &aSerialize);
+  explicit DrawEventRecorderMemory(const SerializeResourcesFn& aSerialize);
 
-  void RecordEvent(const RecordedEvent &aEvent) override;
+  void RecordEvent(const RecordedEvent& aEvent) override;
 
   void AddDependentSurface(uint64_t aDependencyId) override;
 
@@ -212,17 +210,17 @@ public:
    */
   MemStream mIndex;
 
-protected:
-  ~DrawEventRecorderMemory() {};
+ protected:
+  ~DrawEventRecorderMemory(){};
 
-private:
+ private:
   SerializeResourcesFn mSerializeCallback;
   nsTHashtable<nsUint64HashKey> mDependentSurfaces;
 
   void Flush() override;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_DRAWEVENTRECORDER_H_ */

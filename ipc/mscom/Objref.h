@@ -27,10 +27,8 @@ namespace mscom {
  * @param aEnd    Absolute position of the end of the OBJREF.
  * @return true if the handler was successfully stripped, otherwise false.
  */
-bool
-StripHandlerFromOBJREF(NotNull<IStream*> aStream,
-                       const uint64_t aStart,
-                       const uint64_t aEnd);
+bool StripHandlerFromOBJREF(NotNull<IStream*> aStream, const uint64_t aStart,
+                            const uint64_t aEnd);
 
 /**
  * Given a buffer containing a serialized proxy to an interface, this function
@@ -39,8 +37,7 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream,
  *                must be positioned at the beginning of the OBJREF.
  * @return The size of the serialized proxy, or 0 on error.
  */
-uint32_t
-GetOBJREFSize(NotNull<IStream*> aStream);
+uint32_t GetOBJREFSize(NotNull<IStream*> aStream);
 
 /**
  * Overrides the IID in a serialized proxy with the specified IID.
@@ -48,11 +45,9 @@ GetOBJREFSize(NotNull<IStream*> aStream);
  * @param aStart Offset to the beginning of the serialized proxy within aStream.
  * @param aNewIid The replacement IID to apply to the serialized proxy.
  */
-bool
-SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid);
+bool SetIID(NotNull<IStream*> aStream, const uint64_t aStart, REFIID aNewIid);
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_Objref_h
-
+#endif  // mozilla_mscom_Objref_h

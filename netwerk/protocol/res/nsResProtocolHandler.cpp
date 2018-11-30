@@ -17,38 +17,37 @@
 
 #include "mozilla/Omnijar.h"
 
-using mozilla::dom::ContentParent;
 using mozilla::LogLevel;
 using mozilla::Unused;
+using mozilla::dom::ContentParent;
 
-#define kAPP           "app"
-#define kGRE           "gre"
+#define kAPP "app"
+#define kGRE "gre"
 
-nsresult
-nsResProtocolHandler::Init()
-{
-    nsresult rv;
-    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, mAppURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, mGREURI);
-    NS_ENSURE_SUCCESS(rv, rv);
+nsresult nsResProtocolHandler::Init() {
+  nsresult rv;
+  rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, mAppURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, mGREURI);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // mozilla::Omnijar::GetURIString always returns a string ending with /,
-    // and we want to remove it.
-    mGREURI.Truncate(mGREURI.Length() - 1);
-    if (mAppURI.Length()) {
-      mAppURI.Truncate(mAppURI.Length() - 1);
-    } else {
-      mAppURI = mGREURI;
-    }
+  // mozilla::Omnijar::GetURIString always returns a string ending with /,
+  // and we want to remove it.
+  mGREURI.Truncate(mGREURI.Length() - 1);
+  if (mAppURI.Length()) {
+    mAppURI.Truncate(mAppURI.Length() - 1);
+  } else {
+    mAppURI = mGREURI;
+  }
 
-    //XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
-    // but once I finish multiple chrome registration I'm not sure that it is needed
+  // XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
+  // but once I finish multiple chrome registration I'm not sure that it is
+  // needed
 
-    // XXX dveditz: resource://pchrome/ defeats profile directory salting
-    // if web content can load it. Tread carefully.
+  // XXX dveditz: resource://pchrome/ defeats profile directory salting
+  // if web content can load it. Tread carefully.
 
-    return rv;
+  return rv;
 }
 
 //----------------------------------------------------------------------------
@@ -62,70 +61,64 @@ NS_IMPL_ADDREF_INHERITED(nsResProtocolHandler, SubstitutingProtocolHandler)
 NS_IMPL_RELEASE_INHERITED(nsResProtocolHandler, SubstitutingProtocolHandler)
 
 NS_IMETHODIMP
-nsResProtocolHandler::AllowContentToAccess(nsIURI *aURI, bool *aResult)
-{
-    *aResult = false;
+nsResProtocolHandler::AllowContentToAccess(nsIURI* aURI, bool* aResult) {
+  *aResult = false;
 
-    nsAutoCString host;
-    nsresult rv = aURI->GetAsciiHost(host);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString host;
+  nsresult rv = aURI->GetAsciiHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    uint32_t flags;
-    rv = GetSubstitutionFlags(host, &flags);
-    NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t flags;
+  rv = GetSubstitutionFlags(host, &flags);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    *aResult = flags & nsISubstitutingProtocolHandler::ALLOW_CONTENT_ACCESS;
-    return NS_OK;
+  *aResult = flags & nsISubstitutingProtocolHandler::ALLOW_CONTENT_ACCESS;
+  return NS_OK;
 }
 
-nsresult
-nsResProtocolHandler::GetSubstitutionInternal(const nsACString& aRoot,
-                                              nsIURI** aResult,
-                                              uint32_t* aFlags)
-{
-    nsAutoCString uri;
+nsresult nsResProtocolHandler::GetSubstitutionInternal(const nsACString& aRoot,
+                                                       nsIURI** aResult,
+                                                       uint32_t* aFlags) {
+  nsAutoCString uri;
 
-    if (!ResolveSpecialCases(aRoot, NS_LITERAL_CSTRING("/"), NS_LITERAL_CSTRING("/"), uri)) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
+  if (!ResolveSpecialCases(aRoot, NS_LITERAL_CSTRING("/"),
+                           NS_LITERAL_CSTRING("/"), uri)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-    *aFlags = 0; // No content access.
-    return NS_NewURI(aResult, uri);
+  *aFlags = 0;  // No content access.
+  return NS_NewURI(aResult, uri);
 }
 
-bool
-nsResProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
-                                          const nsACString& aPath,
-                                          const nsACString& aPathname,
-                                          nsACString& aResult)
-{
-    if (aHost.EqualsLiteral("") || aHost.EqualsLiteral(kAPP)) {
-        aResult.Assign(mAppURI);
-    } else if (aHost.Equals(kGRE)) {
-        aResult.Assign(mGREURI);
-    } else {
-        return false;
-    }
-    aResult.Append(aPath);
-    return true;
+bool nsResProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
+                                               const nsACString& aPath,
+                                               const nsACString& aPathname,
+                                               nsACString& aResult) {
+  if (aHost.EqualsLiteral("") || aHost.EqualsLiteral(kAPP)) {
+    aResult.Assign(mAppURI);
+  } else if (aHost.Equals(kGRE)) {
+    aResult.Assign(mGREURI);
+  } else {
+    return false;
+  }
+  aResult.Append(aPath);
+  return true;
 }
 
-nsresult
-nsResProtocolHandler::SetSubstitution(const nsACString& aRoot, nsIURI* aBaseURI)
-{
-    MOZ_ASSERT(!aRoot.EqualsLiteral(""));
-    MOZ_ASSERT(!aRoot.EqualsLiteral(kAPP));
-    MOZ_ASSERT(!aRoot.EqualsLiteral(kGRE));
-    return SubstitutingProtocolHandler::SetSubstitution(aRoot, aBaseURI);
+nsresult nsResProtocolHandler::SetSubstitution(const nsACString& aRoot,
+                                               nsIURI* aBaseURI) {
+  MOZ_ASSERT(!aRoot.EqualsLiteral(""));
+  MOZ_ASSERT(!aRoot.EqualsLiteral(kAPP));
+  MOZ_ASSERT(!aRoot.EqualsLiteral(kGRE));
+  return SubstitutingProtocolHandler::SetSubstitution(aRoot, aBaseURI);
 }
 
-nsresult
-nsResProtocolHandler::SetSubstitutionWithFlags(const nsACString& aRoot,
-                                               nsIURI* aBaseURI,
-                                               uint32_t aFlags)
-{
-    MOZ_ASSERT(!aRoot.EqualsLiteral(""));
-    MOZ_ASSERT(!aRoot.EqualsLiteral(kAPP));
-    MOZ_ASSERT(!aRoot.EqualsLiteral(kGRE));
-    return SubstitutingProtocolHandler::SetSubstitutionWithFlags(aRoot, aBaseURI, aFlags);
+nsresult nsResProtocolHandler::SetSubstitutionWithFlags(const nsACString& aRoot,
+                                                        nsIURI* aBaseURI,
+                                                        uint32_t aFlags) {
+  MOZ_ASSERT(!aRoot.EqualsLiteral(""));
+  MOZ_ASSERT(!aRoot.EqualsLiteral(kAPP));
+  MOZ_ASSERT(!aRoot.EqualsLiteral(kGRE));
+  return SubstitutingProtocolHandler::SetSubstitutionWithFlags(aRoot, aBaseURI,
+                                                               aFlags);
 }

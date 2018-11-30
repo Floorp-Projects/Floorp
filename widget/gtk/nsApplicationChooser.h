@@ -13,20 +13,20 @@
 
 class nsIWidget;
 
-class nsApplicationChooser final : public nsIApplicationChooser
-{
-public:
+class nsApplicationChooser final : public nsIApplicationChooser {
+ public:
   nsApplicationChooser();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPLICATIONCHOOSER
   void Done(GtkWidget* chooser, gint response);
 
-private:
+ private:
   ~nsApplicationChooser();
   nsCOMPtr<nsIWidget> mParentWidget;
   nsCString mWindowTitle;
   nsCOMPtr<nsIApplicationChooserFinishedCallback> mCallback;
-  static void OnResponse(GtkWidget* chooser, gint response_id, gpointer user_data);
+  static void OnResponse(GtkWidget* chooser, gint response_id,
+                         gpointer user_data);
   static void OnDestroy(GtkWidget* chooser, gpointer user_data);
 };
 #endif

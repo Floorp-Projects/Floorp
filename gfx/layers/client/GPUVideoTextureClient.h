@@ -18,9 +18,8 @@ class VideoDecoderManagerChild;
 }
 namespace layers {
 
-class GPUVideoTextureData : public TextureData
-{
-public:
+class GPUVideoTextureData : public TextureData {
+ public:
   GPUVideoTextureData(dom::VideoDecoderManagerChild* aManager,
                       const SurfaceDescriptorGPUVideo& aSD,
                       const gfx::IntSize& aSize);
@@ -30,7 +29,7 @@ public:
 
   virtual bool Lock(OpenMode) override { return true; };
 
-  virtual void Unlock() override {};
+  virtual void Unlock() override{};
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
@@ -40,21 +39,18 @@ public:
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface();
 
-  virtual GPUVideoTextureData* AsGPUVideoTextureData() override
-  {
-    return this;
-  }
+  virtual GPUVideoTextureData* AsGPUVideoTextureData() override { return this; }
 
-protected:
+ protected:
   RefPtr<dom::VideoDecoderManagerChild> mManager;
   SurfaceDescriptorGPUVideo mSD;
   gfx::IntSize mSize;
 
-public:
+ public:
   const decltype(mSD)& SD() const { return mSD; }
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_GPUVIDEOTEXTURECLIENT_H
+#endif  // MOZILLA_GFX_GPUVIDEOTEXTURECLIENT_H

@@ -33,9 +33,8 @@ class KeyboardBlockState;
  * been completely processed, along with the input block that the input event
  * is associated with.
  */
-class QueuedInput
-{
-public:
+class QueuedInput {
+ public:
   QueuedInput(const MultiTouchInput& aInput, TouchBlockState& aBlock);
   QueuedInput(const ScrollWheelInput& aInput, WheelBlockState& aBlock);
   QueuedInput(const MouseInput& aInput, DragBlockState& aBlock);
@@ -45,7 +44,7 @@ public:
   InputData* Input();
   InputBlockState* Block();
 
-private:
+ private:
   // A copy of the input event that is provided to the constructor. This must
   // be non-null, and is owned by this QueuedInput instance (hence the
   // UniquePtr).
@@ -55,7 +54,7 @@ private:
   RefPtr<InputBlockState> mBlock;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_QueuedInput_h
+#endif  // mozilla_layers_QueuedInput_h

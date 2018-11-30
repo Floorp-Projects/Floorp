@@ -19,9 +19,8 @@ static HPOWERNOTIFY sPowerHandle = nullptr;
 static HPOWERNOTIFY sCapacityHandle = nullptr;
 static HWND sHWnd = nullptr;
 
-static
-LRESULT CALLBACK
-BatteryWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK BatteryWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
+                                          LPARAM lParam) {
   if (msg != WM_POWERBROADCAST || wParam != PBT_POWERSETTINGCHANGE) {
     return DefWindowProc(hwnd, msg, wParam, lParam);
   }
@@ -35,9 +34,7 @@ BatteryWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   return TRUE;
 }
 
-void
-EnableBatteryNotifications()
-{
+void EnableBatteryNotifications() {
   // Create custom window to watch battery event
   // If we can get Gecko's window handle, this is unnecessary.
 
@@ -53,28 +50,21 @@ EnableBatteryNotifications()
       RegisterClassW(&wc);
     }
 
-    sHWnd = CreateWindowW(L"MozillaBatteryClass", L"Battery Watcher",
-                          0, 0, 0, 0, 0,
-                          nullptr, nullptr, hSelf, nullptr);
+    sHWnd = CreateWindowW(L"MozillaBatteryClass", L"Battery Watcher", 0, 0, 0,
+                          0, 0, nullptr, nullptr, hSelf, nullptr);
   }
 
   if (sHWnd == nullptr) {
     return;
   }
 
-  sPowerHandle =
-    RegisterPowerSettingNotification(sHWnd,
-                                     &GUID_ACDC_POWER_SOURCE,
-                                     DEVICE_NOTIFY_WINDOW_HANDLE);
-  sCapacityHandle =
-    RegisterPowerSettingNotification(sHWnd,
-                                     &GUID_BATTERY_PERCENTAGE_REMAINING,
-                                     DEVICE_NOTIFY_WINDOW_HANDLE);
+  sPowerHandle = RegisterPowerSettingNotification(
+      sHWnd, &GUID_ACDC_POWER_SOURCE, DEVICE_NOTIFY_WINDOW_HANDLE);
+  sCapacityHandle = RegisterPowerSettingNotification(
+      sHWnd, &GUID_BATTERY_PERCENTAGE_REMAINING, DEVICE_NOTIFY_WINDOW_HANDLE);
 }
 
-void
-DisableBatteryNotifications()
-{
+void DisableBatteryNotifications() {
   if (sPowerHandle) {
     UnregisterPowerSettingNotification(sPowerHandle);
     sPowerHandle = nullptr;
@@ -91,9 +81,7 @@ DisableBatteryNotifications()
   }
 }
 
-void
-GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
-{
+void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo) {
   SYSTEM_POWER_STATUS status;
   if (!GetSystemPowerStatus(&status)) {
     aBatteryInfo->level() = kDefaultLevel;
@@ -102,9 +90,9 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
     return;
   }
 
-  aBatteryInfo->level() =
-    status.BatteryLifePercent == 255 ? kDefaultLevel
-                                     : ((double)status.BatteryLifePercent) / 100.0;
+  aBatteryInfo->level() = status.BatteryLifePercent == 255
+                              ? kDefaultLevel
+                              : ((double)status.BatteryLifePercent) / 100.0;
   aBatteryInfo->charging() = (status.ACLineStatus != 0);
   if (status.ACLineStatus != 0) {
     if (aBatteryInfo->level() == 1.0) {
@@ -112,16 +100,16 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
       // So, if battery is 100%, set kDefaultRemainingTime at force.
       aBatteryInfo->remainingTime() = kDefaultRemainingTime;
     } else {
-      aBatteryInfo->remainingTime() =
-        status.BatteryFullLifeTime == (DWORD)-1 ? kUnknownRemainingTime
-                                                : status.BatteryFullLifeTime;
+      aBatteryInfo->remainingTime() = status.BatteryFullLifeTime == (DWORD)-1
+                                          ? kUnknownRemainingTime
+                                          : status.BatteryFullLifeTime;
     }
   } else {
-    aBatteryInfo->remainingTime() =
-      status.BatteryLifeTime == (DWORD)-1 ? kUnknownRemainingTime
-                                          : status.BatteryLifeTime;
+    aBatteryInfo->remainingTime() = status.BatteryLifeTime == (DWORD)-1
+                                        ? kUnknownRemainingTime
+                                        : status.BatteryLifeTime;
   }
 }
 
-} // hal_impl
-} // mozilla
+}  // namespace hal_impl
+}  // namespace mozilla

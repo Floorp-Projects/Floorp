@@ -10,33 +10,30 @@
 
 #include "gtest/gtest.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 using namespace pkix;
 
-class CTLogVerifierTest : public ::testing::Test
-{
-public:
-  void SetUp() override
-  {
+class CTLogVerifierTest : public ::testing::Test {
+ public:
+  void SetUp() override {
     // Does nothing if NSS is already initialized.
     if (NSS_NoDB_Init(nullptr) != SECSuccess) {
       abort();
     }
 
-    ASSERT_EQ(Success, mLog.Init(InputForBuffer(GetTestPublicKey()),
-                                 -1 /*operator id*/,
-                                 CTLogStatus::Included,
-                                 0 /*disqualification time*/));
+    ASSERT_EQ(Success,
+              mLog.Init(InputForBuffer(GetTestPublicKey()), -1 /*operator id*/,
+                        CTLogStatus::Included, 0 /*disqualification time*/));
     ASSERT_EQ(GetTestPublicKeyId(), mLog.keyId());
   }
 
-protected:
+ protected:
   CTLogVerifier mLog;
 };
 
-TEST_F(CTLogVerifierTest, VerifiesCertSCT)
-{
+TEST_F(CTLogVerifierTest, VerifiesCertSCT) {
   LogEntry certEntry;
   GetX509CertLogEntry(certEntry);
 
@@ -46,8 +43,7 @@ TEST_F(CTLogVerifierTest, VerifiesCertSCT)
   EXPECT_EQ(Success, mLog.Verify(certEntry, certSct));
 }
 
-TEST_F(CTLogVerifierTest, VerifiesPrecertSCT)
-{
+TEST_F(CTLogVerifierTest, VerifiesPrecertSCT) {
   LogEntry precertEntry;
   GetPrecertLogEntry(precertEntry);
 
@@ -57,8 +53,7 @@ TEST_F(CTLogVerifierTest, VerifiesPrecertSCT)
   EXPECT_EQ(Success, mLog.Verify(precertEntry, precertSct));
 }
 
-TEST_F(CTLogVerifierTest, FailsInvalidTimestamp)
-{
+TEST_F(CTLogVerifierTest, FailsInvalidTimestamp) {
   LogEntry certEntry;
   GetX509CertLogEntry(certEntry);
 
@@ -71,8 +66,7 @@ TEST_F(CTLogVerifierTest, FailsInvalidTimestamp)
   EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry, certSct));
 }
 
-TEST_F(CTLogVerifierTest, FailsInvalidSignature)
-{
+TEST_F(CTLogVerifierTest, FailsInvalidSignature) {
   LogEntry certEntry;
   GetX509CertLogEntry(certEntry);
 
@@ -89,12 +83,11 @@ TEST_F(CTLogVerifierTest, FailsInvalidSignature)
   SignedCertificateTimestamp certSct2;
   GetX509CertSCT(certSct2);
   certSct2.signature.signatureData[0] ^= '\xFF';
-  EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry,
-                                                           certSct2));
+  EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE,
+            mLog.Verify(certEntry, certSct2));
 }
 
-TEST_F(CTLogVerifierTest, FailsInvalidLogID)
-{
+TEST_F(CTLogVerifierTest, FailsInvalidLogID) {
   LogEntry certEntry;
   GetX509CertLogEntry(certEntry);
 
@@ -105,22 +98,21 @@ TEST_F(CTLogVerifierTest, FailsInvalidLogID)
   // attempting signature validation.
   certSct.logId.push_back('\x0');
 
-  EXPECT_EQ(pkix::Result::FATAL_ERROR_INVALID_ARGS, mLog.Verify(certEntry,
-                                                                certSct));
+  EXPECT_EQ(pkix::Result::FATAL_ERROR_INVALID_ARGS,
+            mLog.Verify(certEntry, certSct));
 }
 
 // Test that excess data after the public key is rejected.
-TEST_F(CTLogVerifierTest, ExcessDataInPublicKey)
-{
+TEST_F(CTLogVerifierTest, ExcessDataInPublicKey) {
   Buffer key = GetTestPublicKey();
   std::string extra = "extra";
   key.insert(key.end(), extra.begin(), extra.end());
 
   CTLogVerifier log;
-  EXPECT_NE(Success, log.Init(InputForBuffer(key),
-                              -1 /*operator id*/,
-                              CTLogStatus::Included,
-                              0 /*disqualification time*/));
+  EXPECT_NE(Success,
+            log.Init(InputForBuffer(key), -1 /*operator id*/,
+                     CTLogStatus::Included, 0 /*disqualification time*/));
 }
 
-} }  // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

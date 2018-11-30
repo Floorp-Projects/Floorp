@@ -19,11 +19,8 @@ namespace dom {
  * Actor representing the parent (PBackground thread) side of a MIDIPort object.
  *
  */
-class MIDIPortParent final :
-    public PMIDIPortParent,
-    public MIDIPortInterface
-{
-public:
+class MIDIPortParent final : public PMIDIPortParent, public MIDIPortInterface {
+ public:
   NS_INLINE_DECL_REFCOUNTING(MIDIPortParent);
   void ActorDestroy(ActorDestroyReason) override;
   mozilla::ipc::IPCResult RecvSend(nsTArray<MIDIMessage>&& aMsg) override;
@@ -31,7 +28,8 @@ public:
   mozilla::ipc::IPCResult RecvClose() override;
   mozilla::ipc::IPCResult RecvClear() override;
   mozilla::ipc::IPCResult RecvShutdown() override;
-  MOZ_IMPLICIT MIDIPortParent(const MIDIPortInfo& aPortInfo, const bool aSysexEnabled);
+  MOZ_IMPLICIT MIDIPortParent(const MIDIPortInfo& aPortInfo,
+                              const bool aSysexEnabled);
   // Sends the current port status to the child actor. May also send message
   // buffer if required.
   bool SendUpdateStatus(const MIDIPortDeviceState& aState,
@@ -39,7 +37,7 @@ public:
   uint32_t GetInternalId() const { return mInternalId; }
   void Teardown();
 
-protected:
+ protected:
   ~MIDIPortParent() = default;
   // Queue of messages that needs to be sent. Since sending a message on a
   // closed port opens it, we sometimes have to buffer messages from the time
@@ -47,7 +45,7 @@ protected:
   nsTArray<MIDIMessage> mMessageQueue;
   const uint32_t mInternalId;
 };
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

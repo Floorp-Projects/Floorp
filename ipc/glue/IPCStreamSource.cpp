@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCStreamSource.h"
-#include "BackgroundParent.h" // for AssertIsOnBackgroundThread
+#include "BackgroundParent.h"  // for AssertIsOnBackgroundThread
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICancelableRunnable.h"
@@ -19,21 +19,18 @@ using mozilla::wr::ByteBuffer;
 namespace mozilla {
 namespace ipc {
 
-class IPCStreamSource::Callback final : public nsIInputStreamCallback
-                                      , public nsIRunnable
-                                      , public nsICancelableRunnable
-{
-public:
+class IPCStreamSource::Callback final : public nsIInputStreamCallback,
+                                        public nsIRunnable,
+                                        public nsICancelableRunnable {
+ public:
   explicit Callback(IPCStreamSource* aSource)
-    : mSource(aSource)
-    , mOwningEventTarget(GetCurrentThreadSerialEventTarget())
-  {
+      : mSource(aSource),
+        mOwningEventTarget(GetCurrentThreadSerialEventTarget()) {
     MOZ_ASSERT(mSource);
   }
 
   NS_IMETHOD
-  OnInputStreamReady(nsIAsyncInputStream* aStream) override
-  {
+  OnInputStreamReady(nsIAsyncInputStream* aStream) override {
     // any thread
     if (mOwningEventTarget->IsOnCurrentThread()) {
       return Run();
@@ -42,7 +39,8 @@ public:
     // If this fails, then it means the owning thread is a Worker that has
     // been shutdown.  Its ok to lose the event in this case because the
     // IPCStreamChild listens for this event through the WorkerRef.
-    nsresult rv = mOwningEventTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL);
+    nsresult rv =
+        mOwningEventTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch stream readable event to owning thread");
     }
@@ -51,8 +49,7 @@ public:
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
     if (mSource) {
       mSource->OnStreamReady(this);
@@ -60,26 +57,21 @@ public:
     return NS_OK;
   }
 
-  nsresult
-  Cancel() override
-  {
+  nsresult Cancel() override {
     // Cancel() gets called when the Worker thread is being shutdown.  We have
     // nothing to do here because IPCStreamChild handles this case via
     // the WorkerRef.
     return NS_OK;
   }
 
-  void
-  ClearSource()
-  {
+  void ClearSource() {
     MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
     MOZ_ASSERT(mSource);
     mSource = nullptr;
   }
 
-private:
-  ~Callback()
-  {
+ private:
+  ~Callback() {
     // called on any thread
 
     // ClearSource() should be called before the Callback is destroyed
@@ -97,27 +89,21 @@ private:
 };
 
 NS_IMPL_ISUPPORTS(IPCStreamSource::Callback, nsIInputStreamCallback,
-                                             nsIRunnable,
-                                             nsICancelableRunnable);
+                  nsIRunnable, nsICancelableRunnable);
 
 IPCStreamSource::IPCStreamSource(nsIAsyncInputStream* aInputStream)
-  : mStream(aInputStream)
-  , mState(ePending)
-{
+    : mStream(aInputStream), mState(ePending) {
   MOZ_ASSERT(aInputStream);
 }
 
-IPCStreamSource::~IPCStreamSource()
-{
+IPCStreamSource::~IPCStreamSource() {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   MOZ_ASSERT(mState == eClosed);
   MOZ_ASSERT(!mCallback);
   MOZ_ASSERT(!mWorkerRef);
 }
 
-bool
-IPCStreamSource::Initialize()
-{
+bool IPCStreamSource::Initialize() {
   bool nonBlocking = false;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mStream->IsNonBlocking(&nonBlocking)));
   // IPCStreamChild reads in the current thread, so it is only supported on
@@ -134,10 +120,11 @@ IPCStreamSource::Initialize()
   // do not need anything special in order to be kept alive.
   if (!NS_IsMainThread()) {
     mozilla::dom::WorkerPrivate* workerPrivate =
-      mozilla::dom::GetCurrentThreadWorkerPrivate();
+        mozilla::dom::GetCurrentThreadWorkerPrivate();
     if (workerPrivate) {
       RefPtr<mozilla::dom::StrongWorkerRef> workerRef =
-        mozilla::dom::StrongWorkerRef::Create(workerPrivate, "IPCStreamSource");
+          mozilla::dom::StrongWorkerRef::Create(workerPrivate,
+                                                "IPCStreamSource");
       if (NS_WARN_IF(!workerRef)) {
         return false;
       }
@@ -151,16 +138,12 @@ IPCStreamSource::Initialize()
   return true;
 }
 
-void
-IPCStreamSource::ActorConstructed()
-{
+void IPCStreamSource::ActorConstructed() {
   MOZ_ASSERT(mState == ePending);
   mState = eActorConstructed;
 }
 
-void
-IPCStreamSource::ActorDestroyed()
-{
+void IPCStreamSource::ActorDestroyed() {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
 
   mState = eClosed;
@@ -173,23 +156,17 @@ IPCStreamSource::ActorDestroyed()
   mWorkerRef = nullptr;
 }
 
-void
-IPCStreamSource::Start()
-{
+void IPCStreamSource::Start() {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   DoRead();
 }
 
-void
-IPCStreamSource::StartDestroy()
-{
+void IPCStreamSource::StartDestroy() {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   OnEnd(NS_ERROR_ABORT);
 }
 
-void
-IPCStreamSource::DoRead()
-{
+void IPCStreamSource::DoRead() {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   MOZ_ASSERT(mState == eActorConstructed);
   MOZ_ASSERT(!mCallback);
@@ -243,9 +220,7 @@ IPCStreamSource::DoRead()
   }
 }
 
-void
-IPCStreamSource::Wait()
-{
+void IPCStreamSource::Wait() {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   MOZ_ASSERT(mState == eActorConstructed);
   MOZ_ASSERT(!mCallback);
@@ -260,9 +235,7 @@ IPCStreamSource::Wait()
   }
 }
 
-void
-IPCStreamSource::OnStreamReady(Callback* aCallback)
-{
+void IPCStreamSource::OnStreamReady(Callback* aCallback) {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   MOZ_ASSERT(mCallback);
   MOZ_ASSERT(aCallback == mCallback);
@@ -271,9 +244,7 @@ IPCStreamSource::OnStreamReady(Callback* aCallback)
   DoRead();
 }
 
-void
-IPCStreamSource::OnEnd(nsresult aRv)
-{
+void IPCStreamSource::OnEnd(nsresult aRv) {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
   MOZ_ASSERT(aRv != NS_BASE_STREAM_WOULD_BLOCK);
 
@@ -293,5 +264,5 @@ IPCStreamSource::OnEnd(nsresult aRv)
   Close(aRv);
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

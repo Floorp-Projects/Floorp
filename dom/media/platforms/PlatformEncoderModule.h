@@ -44,7 +44,7 @@ class PlatformEncoderModule {
 
  protected:
   PlatformEncoderModule() = default;
-  virtual ~PlatformEncoderModule() {};
+  virtual ~PlatformEncoderModule(){};
 };
 
 class MediaDataEncoder {

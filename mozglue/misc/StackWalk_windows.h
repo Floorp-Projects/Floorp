@@ -10,17 +10,14 @@
  *
  * See comment in StackWalk.cpp
  */
-struct MOZ_RAII AutoSuppressStackWalking
-{
+struct MOZ_RAII AutoSuppressStackWalking {
   MFBT_API AutoSuppressStackWalking();
   MFBT_API ~AutoSuppressStackWalking();
 };
 
-MFBT_API void
-RegisterJitCodeRegion(uint8_t* aStart, size_t size);
+MFBT_API void RegisterJitCodeRegion(uint8_t* aStart, size_t size);
 
-MFBT_API void
-UnregisterJitCodeRegion(uint8_t* aStart, size_t size);
-#endif // _M_AMD64
+MFBT_API void UnregisterJitCodeRegion(uint8_t* aStart, size_t size);
+#endif  // _M_AMD64
 
-#endif // mozilla_StackWalk_windows_h
+#endif  // mozilla_StackWalk_windows_h

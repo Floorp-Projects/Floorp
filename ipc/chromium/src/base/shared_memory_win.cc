@@ -26,18 +26,16 @@ typedef struct _SECTION_BASIC_INFORMATION {
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
 typedef ULONG(__stdcall* NtQuerySectionType)(
-    HANDLE SectionHandle,
-    SECTION_INFORMATION_CLASS SectionInformationClass,
-    PVOID SectionInformation,
-    ULONG SectionInformationLength,
+    HANDLE SectionHandle, SECTION_INFORMATION_CLASS SectionInformationClass,
+    PVOID SectionInformation, ULONG SectionInformationLength,
     PULONG ResultLength);
 
 // Checks if the section object is safe to map. At the moment this just means
 // it's not an image section.
 bool IsSectionSafeToMap(HANDLE handle) {
   static NtQuerySectionType nt_query_section_func =
-    reinterpret_cast<NtQuerySectionType>(
-      ::GetProcAddress(::GetModuleHandle(L"ntdll.dll"), "NtQuerySection"));
+      reinterpret_cast<NtQuerySectionType>(
+          ::GetProcAddress(::GetModuleHandle(L"ntdll.dll"), "NtQuerySection"));
   DCHECK(nt_query_section_func);
 
   // The handle must have SECTION_QUERY access for this to succeed.
@@ -52,7 +50,7 @@ bool IsSectionSafeToMap(HANDLE handle) {
   return (basic_information.Attributes & SEC_IMAGE) != SEC_IMAGE;
 }
 
-} // namespace (unnamed)
+}  // namespace
 
 namespace base {
 
@@ -61,8 +59,7 @@ SharedMemory::SharedMemory()
       mapped_file_(NULL),
       memory_(NULL),
       read_only_(false),
-      max_size_(0) {
-}
+      max_size_(0) {}
 
 SharedMemory::SharedMemory(SharedMemory&& other) {
   if (this == &other) {
@@ -99,32 +96,29 @@ bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
 }
 
 // static
-SharedMemoryHandle SharedMemory::NULLHandle() {
-  return NULL;
-}
+SharedMemoryHandle SharedMemory::NULLHandle() { return NULL; }
 
 bool SharedMemory::Create(size_t size) {
   DCHECK(mapped_file_ == NULL);
   read_only_ = false;
-  mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
-      PAGE_READWRITE, 0, static_cast<DWORD>(size), NULL);
-  if (!mapped_file_)
-    return false;
+  mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                   0, static_cast<DWORD>(size), NULL);
+  if (!mapped_file_) return false;
 
   max_size_ = size;
   return true;
 }
 
 bool SharedMemory::Map(size_t bytes) {
-  if (mapped_file_ == NULL)
-    return false;
+  if (mapped_file_ == NULL) return false;
 
   if (external_section_ && !IsSectionSafeToMap(mapped_file_)) {
     return false;
   }
 
-  memory_ = MapViewOfFile(mapped_file_,
-      read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, bytes);
+  memory_ = MapViewOfFile(
+      mapped_file_, read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE,
+      0, 0, bytes);
   if (memory_ != NULL) {
     return true;
   }
@@ -132,8 +126,7 @@ bool SharedMemory::Map(size_t bytes) {
 }
 
 bool SharedMemory::Unmap() {
-  if (memory_ == NULL)
-    return false;
+  if (memory_ == NULL) return false;
 
   UnmapViewOfFile(memory_);
   memory_ = NULL;
@@ -141,15 +134,14 @@ bool SharedMemory::Unmap() {
 }
 
 bool SharedMemory::ShareToProcessCommon(ProcessId processId,
-                                        SharedMemoryHandle *new_handle,
+                                        SharedMemoryHandle* new_handle,
                                         bool close_self) {
   *new_handle = 0;
   DWORD access = FILE_MAP_READ | SECTION_QUERY;
   DWORD options = 0;
   HANDLE mapped_file = mapped_file_;
   HANDLE result;
-  if (!read_only_)
-    access |= FILE_MAP_WRITE;
+  if (!read_only_) access |= FILE_MAP_WRITE;
   if (close_self) {
     // DUPLICATE_CLOSE_SOURCE causes DuplicateHandle to close mapped_file.
     options = DUPLICATE_CLOSE_SOURCE;
@@ -171,7 +163,6 @@ bool SharedMemory::ShareToProcessCommon(ProcessId processId,
   return true;
 }
 
-
 void SharedMemory::Close(bool unmap_view) {
   if (unmap_view) {
     Unmap();
@@ -183,8 +174,6 @@ void SharedMemory::Close(bool unmap_view) {
   }
 }
 
-SharedMemoryHandle SharedMemory::handle() const {
-  return mapped_file_;
-}
+SharedMemoryHandle SharedMemory::handle() const { return mapped_file_; }
 
 }  // namespace base

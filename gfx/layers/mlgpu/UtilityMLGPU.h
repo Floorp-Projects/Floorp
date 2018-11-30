@@ -13,30 +13,33 @@
 namespace mozilla {
 namespace layers {
 
-template <size_t T> struct AlignUp
-{
+template <size_t T>
+struct AlignUp {
   static inline size_t calc(size_t aAmount) {
     MOZ_ASSERT(IsPowerOfTwo(T), "alignment must be a power of two");
     return aAmount + ((T - (aAmount % T)) % T);
   }
 };
 
-template <> struct AlignUp<0>
-{
-  static inline size_t calc(size_t aAmount) {
-    return aAmount;
-  }
+template <>
+struct AlignUp<0> {
+  static inline size_t calc(size_t aAmount) { return aAmount; }
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #ifdef ENABLE_AL_LOGGING
-#  define AL_LOG(...) printf_stderr("AL: " __VA_ARGS__)
-#  define AL_LOG_IF(cond, ...) do { if (cond) { printf_stderr("AL: " __VA_ARGS__); } } while(0)
+#define AL_LOG(...) printf_stderr("AL: " __VA_ARGS__)
+#define AL_LOG_IF(cond, ...)             \
+  do {                                   \
+    if (cond) {                          \
+      printf_stderr("AL: " __VA_ARGS__); \
+    }                                    \
+  } while (0)
 #else
-#  define AL_LOG(...)
-#  define AL_LOG_IF(...)
+#define AL_LOG(...)
+#define AL_LOG_IF(...)
 #endif
 
-#endif // mozilla_gfx_layers_mlgpu_UtilityMLGPU_h
+#endif  // mozilla_gfx_layers_mlgpu_UtilityMLGPU_h

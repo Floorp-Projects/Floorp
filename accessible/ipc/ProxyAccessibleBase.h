@@ -25,8 +25,7 @@ class DocAccessibleParent;
 class ProxyAccessible;
 enum class RelationType;
 
-enum Interfaces
-{
+enum Interfaces {
   HYPERTEXT = 1,
   HYPERLINK = 1 << 1,
   IMAGE = 1 << 2,
@@ -39,38 +38,36 @@ enum Interfaces
 };
 
 template <class Derived>
-class ProxyAccessibleBase
-{
-public:
-  ~ProxyAccessibleBase()
-  {
-    MOZ_ASSERT(!mWrapper);
-  }
+class ProxyAccessibleBase {
+ public:
+  ~ProxyAccessibleBase() { MOZ_ASSERT(!mWrapper); }
 
-  void AddChildAt(uint32_t aIdx, Derived* aChild)
-  { mChildren.InsertElementAt(aIdx, aChild); }
+  void AddChildAt(uint32_t aIdx, Derived* aChild) {
+    mChildren.InsertElementAt(aIdx, aChild);
+  }
 
   uint32_t ChildrenCount() const { return mChildren.Length(); }
   Derived* ChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
-  Derived* FirstChild() const
-    { return mChildren.Length() ? mChildren[0] : nullptr; }
-  Derived* LastChild() const
-    { return mChildren.Length() ? mChildren[mChildren.Length() - 1] : nullptr; }
-  Derived* PrevSibling() const
-  {
+  Derived* FirstChild() const {
+    return mChildren.Length() ? mChildren[0] : nullptr;
+  }
+  Derived* LastChild() const {
+    return mChildren.Length() ? mChildren[mChildren.Length() - 1] : nullptr;
+  }
+  Derived* PrevSibling() const {
     size_t idx = IndexInParent();
     return idx > 0 ? Parent()->mChildren[idx - 1] : nullptr;
   }
-  Derived* NextSibling() const
-  {
+  Derived* NextSibling() const {
     size_t idx = IndexInParent();
     return idx + 1 < Parent()->mChildren.Length() ? Parent()->mChildren[idx + 1]
-    : nullptr;
+                                                  : nullptr;
   }
 
   // XXX evaluate if this is fast enough.
-  size_t IndexInParent() const { return
-    Parent()->mChildren.IndexOf(static_cast<const Derived*>(this)); }
+  size_t IndexInParent() const {
+    return Parent()->mChildren.IndexOf(static_cast<const Derived*>(this));
+  }
   uint32_t EmbeddedChildCount() const;
   int32_t IndexOfEmbeddedChild(const Derived* aChild);
   Derived* EmbeddedChildAt(size_t aChildIdx);
@@ -84,8 +81,7 @@ public:
   /**
    * Remove The given child.
    */
-  void RemoveChild(Derived* aChild)
-    { mChildren.RemoveElement(aChild); }
+  void RemoveChild(Derived* aChild) { mChildren.RemoveElement(aChild); }
 
   /**
    * Return the proxy for the parent of the wrapped accessible.
@@ -102,11 +98,9 @@ public:
   /**
    * Return true if this is an embedded object.
    */
-  bool IsEmbeddedObject() const
-  {
+  bool IsEmbeddedObject() const {
     role role = Role();
-    return role != roles::TEXT_LEAF &&
-           role != roles::WHITESPACE &&
+    return role != roles::TEXT_LEAF && role != roles::WHITESPACE &&
            role != roles::STATICTEXT;
   }
 
@@ -135,53 +129,51 @@ public:
 
   // XXX checking mRole alone may not result in same behavior as Accessibles
   // due to ARIA roles. See bug 1210477.
-  inline bool IsTable() const
-  {
+  inline bool IsTable() const {
     return mRole == roles::TABLE || mRole == roles::MATHML_TABLE;
   }
-  inline bool IsTableRow() const
-  {
-    return (mRole == roles::ROW ||
-        mRole == roles::MATHML_TABLE_ROW ||
-        mRole == roles::MATHML_LABELED_ROW);
+  inline bool IsTableRow() const {
+    return (mRole == roles::ROW || mRole == roles::MATHML_TABLE_ROW ||
+            mRole == roles::MATHML_LABELED_ROW);
   }
-  inline bool IsTableCell() const
-  {
-    return (mRole == roles::CELL ||
-        mRole == roles::COLUMNHEADER ||
-        mRole == roles::ROWHEADER ||
-        mRole == roles::GRID_CELL ||
-        mRole == roles::MATHML_CELL);
+  inline bool IsTableCell() const {
+    return (mRole == roles::CELL || mRole == roles::COLUMNHEADER ||
+            mRole == roles::ROWHEADER || mRole == roles::GRID_CELL ||
+            mRole == roles::MATHML_CELL);
   }
 
-protected:
-  ProxyAccessibleBase(uint64_t aID, Derived* aParent,
-                      DocAccessibleParent* aDoc, role aRole,
-                      uint32_t aInterfaces)
-    : mParent(aParent->ID())
-    , mDoc(aDoc)
-    , mWrapper(0)
-    , mID(aID)
-    , mRole(aRole)
-    , mOuterDoc(false)
-    , mIsDoc(false)
-    , mHasValue(aInterfaces & Interfaces::VALUE)
-    , mIsHyperLink(aInterfaces & Interfaces::HYPERLINK)
-    , mIsHyperText(aInterfaces & Interfaces::HYPERTEXT)
-    , mIsSelection(aInterfaces & Interfaces::SELECTION)
-  {
-  }
+ protected:
+  ProxyAccessibleBase(uint64_t aID, Derived* aParent, DocAccessibleParent* aDoc,
+                      role aRole, uint32_t aInterfaces)
+      : mParent(aParent->ID()),
+        mDoc(aDoc),
+        mWrapper(0),
+        mID(aID),
+        mRole(aRole),
+        mOuterDoc(false),
+        mIsDoc(false),
+        mHasValue(aInterfaces & Interfaces::VALUE),
+        mIsHyperLink(aInterfaces & Interfaces::HYPERLINK),
+        mIsHyperText(aInterfaces & Interfaces::HYPERTEXT),
+        mIsSelection(aInterfaces & Interfaces::SELECTION) {}
 
-  explicit ProxyAccessibleBase(DocAccessibleParent* aThisAsDoc) :
-    mParent(kNoParent), mDoc(aThisAsDoc), mWrapper(0), mID(0),
-    mRole(roles::DOCUMENT), mOuterDoc(false), mIsDoc(true), mHasValue(false),
-    mIsHyperLink(false), mIsHyperText(false), mIsSelection(false)
-  {}
+  explicit ProxyAccessibleBase(DocAccessibleParent* aThisAsDoc)
+      : mParent(kNoParent),
+        mDoc(aThisAsDoc),
+        mWrapper(0),
+        mID(0),
+        mRole(roles::DOCUMENT),
+        mOuterDoc(false),
+        mIsDoc(true),
+        mHasValue(false),
+        mIsHyperLink(false),
+        mIsHyperText(false),
+        mIsSelection(false) {}
 
-protected:
+ protected:
   void SetParent(Derived* aParent);
 
-private:
+ private:
   uintptr_t mParent;
   static const uintptr_t kNoParent = UINTPTR_MAX;
 
@@ -192,25 +184,25 @@ private:
   uintptr_t mWrapper;
   uint64_t mID;
 
-protected:
+ protected:
   // XXX DocAccessibleParent gets to change this to change the role of
   // documents.
   role mRole : 27;
 
-private:
+ private:
   bool mOuterDoc : 1;
 
-public:
-  const bool mIsDoc: 1;
-  const bool mHasValue: 1;
-  const bool mIsHyperLink: 1;
-  const bool mIsHyperText: 1;
-  const bool mIsSelection: 1;
+ public:
+  const bool mIsDoc : 1;
+  const bool mHasValue : 1;
+  const bool mIsHyperLink : 1;
+  const bool mIsHyperText : 1;
+  const bool mIsSelection : 1;
 };
 
 extern template class ProxyAccessibleBase<ProxyAccessible>;
 
-}
-}
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

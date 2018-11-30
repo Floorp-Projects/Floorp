@@ -19,29 +19,26 @@ namespace dom {
 
 namespace {
 
-class PromiseHandler final : public PromiseNativeHandler
-{
-public:
+class PromiseHandler final : public PromiseNativeHandler {
+ public:
   NS_DECL_ISUPPORTS
 
   PromiseHandler(FileSystemDirectoryEntry* aParentEntry,
                  FileSystem* aFileSystem,
                  FileSystemEntriesCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback)
-    : mParentEntry(aParentEntry)
-    , mFileSystem(aFileSystem)
-    , mSuccessCallback(aSuccessCallback)
-    , mErrorCallback(aErrorCallback)
-  {
+      : mParentEntry(aParentEntry),
+        mFileSystem(aFileSystem),
+        mSuccessCallback(aSuccessCallback),
+        mErrorCallback(aErrorCallback) {
     MOZ_ASSERT(aParentEntry);
     MOZ_ASSERT(aFileSystem);
     MOZ_ASSERT(aSuccessCallback);
   }
 
-  virtual void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    if(NS_WARN_IF(!aValue.isObject())) {
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    if (NS_WARN_IF(!aValue.isObject())) {
       return;
     }
 
@@ -63,7 +60,7 @@ public:
         return;
       }
 
-      if(NS_WARN_IF(!value.isObject())) {
+      if (NS_WARN_IF(!value.isObject())) {
         return;
       }
 
@@ -71,43 +68,40 @@ public:
 
       RefPtr<File> file;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(File, valueObj, file))) {
-        RefPtr<FileSystemFileEntry> entry =
-          new FileSystemFileEntry(mParentEntry->GetParentObject(), file,
-                                  mParentEntry, mFileSystem);
+        RefPtr<FileSystemFileEntry> entry = new FileSystemFileEntry(
+            mParentEntry->GetParentObject(), file, mParentEntry, mFileSystem);
         sequence[i] = entry;
         continue;
       }
 
       RefPtr<Directory> directory;
-      if (NS_WARN_IF(NS_FAILED(UNWRAP_OBJECT(Directory, valueObj,
-                                             directory)))) {
+      if (NS_WARN_IF(
+              NS_FAILED(UNWRAP_OBJECT(Directory, valueObj, directory)))) {
         return;
       }
 
       RefPtr<FileSystemDirectoryEntry> entry =
-        new FileSystemDirectoryEntry(mParentEntry->GetParentObject(), directory,
-                                     mParentEntry, mFileSystem);
+          new FileSystemDirectoryEntry(mParentEntry->GetParentObject(),
+                                       directory, mParentEntry, mFileSystem);
       sequence[i] = entry;
     }
 
     mSuccessCallback->HandleEvent(sequence);
   }
 
-  virtual void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
     if (mErrorCallback) {
-      RefPtr<ErrorCallbackRunnable> runnable =
-        new ErrorCallbackRunnable(mParentEntry->GetParentObject(),
-                                  mErrorCallback,
-                                  NS_ERROR_DOM_INVALID_STATE_ERR);
+      RefPtr<ErrorCallbackRunnable> runnable = new ErrorCallbackRunnable(
+          mParentEntry->GetParentObject(), mErrorCallback,
+          NS_ERROR_DOM_INVALID_STATE_ERR);
 
       FileSystemUtils::DispatchRunnable(mParentEntry->GetParentObject(),
                                         runnable.forget());
     }
   }
 
-private:
+ private:
   ~PromiseHandler() {}
 
   RefPtr<FileSystemDirectoryEntry> mParentEntry;
@@ -118,7 +112,7 @@ private:
 
 NS_IMPL_ISUPPORTS0(PromiseHandler);
 
-} // anonymous namespace
+}  // anonymous namespace
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemDirectoryReader, mParentEntry,
                                       mDirectory, mFileSystem)
@@ -131,38 +125,33 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemDirectoryReader)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-FileSystemDirectoryReader::FileSystemDirectoryReader(FileSystemDirectoryEntry* aParentEntry,
-                                                     FileSystem* aFileSystem,
-                                                     Directory* aDirectory)
-  : mParentEntry(aParentEntry)
-  , mFileSystem(aFileSystem)
-  , mDirectory(aDirectory)
-  , mAlreadyRead(false)
-{
+FileSystemDirectoryReader::FileSystemDirectoryReader(
+    FileSystemDirectoryEntry* aParentEntry, FileSystem* aFileSystem,
+    Directory* aDirectory)
+    : mParentEntry(aParentEntry),
+      mFileSystem(aFileSystem),
+      mDirectory(aDirectory),
+      mAlreadyRead(false) {
   MOZ_ASSERT(aParentEntry);
   MOZ_ASSERT(aFileSystem);
 }
 
-FileSystemDirectoryReader::~FileSystemDirectoryReader()
-{}
+FileSystemDirectoryReader::~FileSystemDirectoryReader() {}
 
-JSObject*
-FileSystemDirectoryReader::WrapObject(JSContext* aCx,
-                                      JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* FileSystemDirectoryReader::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return FileSystemDirectoryReader_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-FileSystemDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCallback,
-                                       const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                                       ErrorResult& aRv)
-{
+void FileSystemDirectoryReader::ReadEntries(
+    FileSystemEntriesCallback& aSuccessCallback,
+    const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+    ErrorResult& aRv) {
   MOZ_ASSERT(mDirectory);
 
   if (mAlreadyRead) {
     RefPtr<EmptyEntriesCallbackRunnable> runnable =
-      new EmptyEntriesCallbackRunnable(&aSuccessCallback);
+        new EmptyEntriesCallbackRunnable(&aSuccessCallback);
 
     FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
     return;
@@ -179,12 +168,11 @@ FileSystemDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCallba
     return;
   }
 
-  RefPtr<PromiseHandler> handler =
-    new PromiseHandler(mParentEntry, mFileSystem, &aSuccessCallback,
-                       aErrorCallback.WasPassed()
-                         ? &aErrorCallback.Value() : nullptr);
+  RefPtr<PromiseHandler> handler = new PromiseHandler(
+      mParentEntry, mFileSystem, &aSuccessCallback,
+      aErrorCallback.WasPassed() ? &aErrorCallback.Value() : nullptr);
   promise->AppendNativeHandler(handler);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

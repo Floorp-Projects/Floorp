@@ -25,51 +25,43 @@ bool nsUXThemeData::sCommandButtonMetricsInitialized = false;
 SIZE nsUXThemeData::sCommandButtonBoxMetrics;
 bool nsUXThemeData::sCommandButtonBoxMetricsInitialized = false;
 
-bool
-nsUXThemeData::sFlatMenus = false;
+bool nsUXThemeData::sFlatMenus = false;
 
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
 
-void
-nsUXThemeData::Teardown() {
-  Invalidate();
-}
+void nsUXThemeData::Teardown() { Invalidate(); }
 
-void
-nsUXThemeData::Initialize()
-{
+void nsUXThemeData::Initialize() {
   ::ZeroMemory(sThemes, sizeof(sThemes));
 
   CheckForCompositor(true);
   Invalidate();
 }
 
-void
-nsUXThemeData::Invalidate() {
-  for(int i = 0; i < eUXNumClasses; i++) {
-    if(sThemes[i]) {
+void nsUXThemeData::Invalidate() {
+  for (int i = 0; i < eUXNumClasses; i++) {
+    if (sThemes[i]) {
       CloseThemeData(sThemes[i]);
       sThemes[i] = nullptr;
     }
   }
   BOOL useFlat = FALSE;
-  sFlatMenus = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ?
-                   useFlat : false;
+  sFlatMenus =
+      ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ? useFlat : false;
 }
 
 HANDLE
 nsUXThemeData::GetTheme(nsUXThemeClass cls) {
   NS_ASSERTION(cls < eUXNumClasses, "Invalid theme class!");
-  if(!sThemes[cls])
-  {
+  if (!sThemes[cls]) {
     sThemes[cls] = OpenThemeData(nullptr, GetClassName(cls));
   }
   return sThemes[cls];
 }
 
 const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
-  switch(cls) {
+  switch (cls) {
     case eUXButton:
       return L"Button";
     case eUXEdit:
@@ -119,9 +111,7 @@ const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
 }
 
 // static
-void
-nsUXThemeData::EnsureCommandButtonMetrics()
-{
+void nsUXThemeData::EnsureCommandButtonMetrics() {
   if (sCommandButtonMetricsInitialized) {
     return;
   }
@@ -141,17 +131,17 @@ nsUXThemeData::EnsureCommandButtonMetrics()
 
   sCommandButtonMetrics[0].cx = GetSystemMetrics(SM_CXSIZE);
   sCommandButtonMetrics[0].cy = GetSystemMetrics(SM_CYSIZE);
-  sCommandButtonMetrics[1].cx = sCommandButtonMetrics[2].cx = sCommandButtonMetrics[0].cx;
-  sCommandButtonMetrics[1].cy = sCommandButtonMetrics[2].cy = sCommandButtonMetrics[0].cy;
+  sCommandButtonMetrics[1].cx = sCommandButtonMetrics[2].cx =
+      sCommandButtonMetrics[0].cx;
+  sCommandButtonMetrics[1].cy = sCommandButtonMetrics[2].cy =
+      sCommandButtonMetrics[0].cy;
 
   // Trigger a refresh on the next layout.
   sTitlebarInfoPopulatedAero = sTitlebarInfoPopulatedThemed = false;
 }
 
 // static
-void
-nsUXThemeData::EnsureCommandButtonBoxMetrics()
-{
+void nsUXThemeData::EnsureCommandButtonBoxMetrics() {
   if (sCommandButtonBoxMetricsInitialized) {
     return;
   }
@@ -159,56 +149,53 @@ nsUXThemeData::EnsureCommandButtonBoxMetrics()
 
   EnsureCommandButtonMetrics();
 
-  sCommandButtonBoxMetrics.cx = sCommandButtonMetrics[0].cx
-                                + sCommandButtonMetrics[1].cx
-                                + sCommandButtonMetrics[2].cx;
-  sCommandButtonBoxMetrics.cy = sCommandButtonMetrics[0].cy
-                                + sCommandButtonMetrics[1].cy
-                                + sCommandButtonMetrics[2].cy;
+  sCommandButtonBoxMetrics.cx = sCommandButtonMetrics[0].cx +
+                                sCommandButtonMetrics[1].cx +
+                                sCommandButtonMetrics[2].cx;
+  sCommandButtonBoxMetrics.cy = sCommandButtonMetrics[0].cy +
+                                sCommandButtonMetrics[1].cy +
+                                sCommandButtonMetrics[2].cy;
 
   // Trigger a refresh on the next layout.
   sTitlebarInfoPopulatedAero = sTitlebarInfoPopulatedThemed = false;
 }
 
 // static
-void
-nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
-{
-  if (!aWnd)
-    return;
+void nsUXThemeData::UpdateTitlebarInfo(HWND aWnd) {
+  if (!aWnd) return;
 
   if (!sTitlebarInfoPopulatedAero && nsUXThemeData::CheckForCompositor()) {
     RECT captionButtons;
-    if (SUCCEEDED(DwmGetWindowAttribute(aWnd,
-                                        DWMWA_CAPTION_BUTTON_BOUNDS,
+    if (SUCCEEDED(DwmGetWindowAttribute(aWnd, DWMWA_CAPTION_BUTTON_BOUNDS,
                                         &captionButtons,
                                         sizeof(captionButtons)))) {
-      sCommandButtonBoxMetrics.cx = captionButtons.right - captionButtons.left - 3;
-      sCommandButtonBoxMetrics.cy = (captionButtons.bottom - captionButtons.top) - 1;
+      sCommandButtonBoxMetrics.cx =
+          captionButtons.right - captionButtons.left - 3;
+      sCommandButtonBoxMetrics.cy =
+          (captionButtons.bottom - captionButtons.top) - 1;
       sCommandButtonBoxMetricsInitialized = true;
-      MOZ_ASSERT(sCommandButtonBoxMetrics.cx > 0 &&
-                 sCommandButtonBoxMetrics.cy > 0,
-                 "We must not cache bad command button box dimensions");
+      MOZ_ASSERT(
+          sCommandButtonBoxMetrics.cx > 0 && sCommandButtonBoxMetrics.cy > 0,
+          "We must not cache bad command button box dimensions");
       sTitlebarInfoPopulatedAero = true;
     }
   }
 
   // NB: sTitlebarInfoPopulatedThemed is always true pre-vista.
-  if (sTitlebarInfoPopulatedThemed || IsWin8OrLater())
-    return;
+  if (sTitlebarInfoPopulatedThemed || IsWin8OrLater()) return;
 
   // Query a temporary, visible window with command buttons to get
-  // the right metrics. 
+  // the right metrics.
   WNDCLASSW wc;
-  wc.style         = 0;
-  wc.lpfnWndProc   = ::DefWindowProcW;
-  wc.cbClsExtra    = 0;
-  wc.cbWndExtra    = 0;
-  wc.hInstance     = nsToolkit::mDllInstance;
-  wc.hIcon         = nullptr;
-  wc.hCursor       = nullptr;
+  wc.style = 0;
+  wc.lpfnWndProc = ::DefWindowProcW;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  wc.hInstance = nsToolkit::mDllInstance;
+  wc.hIcon = nullptr;
+  wc.hCursor = nullptr;
   wc.hbrBackground = nullptr;
-  wc.lpszMenuName  = nullptr;
+  wc.lpszMenuName = nullptr;
   wc.lpszClassName = kClassNameTemp;
   ::RegisterClassW(&wc);
 
@@ -216,10 +203,8 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   // keeps the window from showing up on the desktop or the taskbar.
   // Note the parent (browser) window is usually still hidden, we
   // don't want to display it, so we can't query it directly.
-  HWND hWnd = CreateWindowExW(WS_EX_LAYERED,
-                              kClassNameTemp, L"",
-                              WS_OVERLAPPEDWINDOW,
-                              0, 0, 0, 0, aWnd, nullptr,
+  HWND hWnd = CreateWindowExW(WS_EX_LAYERED, kClassNameTemp, L"",
+                              WS_OVERLAPPEDWINDOW, 0, 0, 0, 0, aWnd, nullptr,
                               nsToolkit::mDllInstance, nullptr);
   NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
 
@@ -228,13 +213,14 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   // compositor) and aero lite (special theme for win server 2012/2013) we may
   // get the wrong information if the window isn't activated, so we have to:
   if (sThemeId == LookAndFeel::eWindowsTheme_AeroLite ||
-      (sThemeId == LookAndFeel::eWindowsTheme_Aero && !nsUXThemeData::CheckForCompositor())) {
+      (sThemeId == LookAndFeel::eWindowsTheme_Aero &&
+       !nsUXThemeData::CheckForCompositor())) {
     showType = SW_SHOW;
   }
   ShowWindow(hWnd, showType);
   TITLEBARINFOEX info = {0};
   info.cbSize = sizeof(TITLEBARINFOEX);
-  SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 
+  SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info);
   DestroyWindow(hWnd);
 
   // Only set if we have valid data for all three buttons we use.
@@ -277,49 +263,32 @@ struct THEMELIST {
   int type;
 };
 
-const THEMELIST knownThemes[] = {
-  { L"aero.msstyles", WINTHEME_AERO },
-  { L"aerolite.msstyles", WINTHEME_AERO_LITE },
-  { L"luna.msstyles", WINTHEME_LUNA },
-  { L"zune.msstyles", WINTHEME_ZUNE },
-  { L"royale.msstyles", WINTHEME_ROYALE }
-};
+const THEMELIST knownThemes[] = {{L"aero.msstyles", WINTHEME_AERO},
+                                 {L"aerolite.msstyles", WINTHEME_AERO_LITE},
+                                 {L"luna.msstyles", WINTHEME_LUNA},
+                                 {L"zune.msstyles", WINTHEME_ZUNE},
+                                 {L"royale.msstyles", WINTHEME_ROYALE}};
 
-const THEMELIST knownColors[] = {
-  { L"normalcolor", WINTHEMECOLOR_NORMAL },
-  { L"homestead",   WINTHEMECOLOR_HOMESTEAD },
-  { L"metallic",    WINTHEMECOLOR_METALLIC }
-};
+const THEMELIST knownColors[] = {{L"normalcolor", WINTHEMECOLOR_NORMAL},
+                                 {L"homestead", WINTHEMECOLOR_HOMESTEAD},
+                                 {L"metallic", WINTHEMECOLOR_METALLIC}};
 
-LookAndFeel::WindowsTheme
-nsUXThemeData::sThemeId = LookAndFeel::eWindowsTheme_Generic;
+LookAndFeel::WindowsTheme nsUXThemeData::sThemeId =
+    LookAndFeel::eWindowsTheme_Generic;
 
-bool
-nsUXThemeData::sIsDefaultWindowsTheme = false;
-bool
-nsUXThemeData::sIsHighContrastOn = false;
+bool nsUXThemeData::sIsDefaultWindowsTheme = false;
+bool nsUXThemeData::sIsHighContrastOn = false;
 
 // static
-LookAndFeel::WindowsTheme
-nsUXThemeData::GetNativeThemeId()
-{
-  return sThemeId;
-}
+LookAndFeel::WindowsTheme nsUXThemeData::GetNativeThemeId() { return sThemeId; }
 
 // static
-bool nsUXThemeData::IsDefaultWindowTheme()
-{
-  return sIsDefaultWindowsTheme;
-}
+bool nsUXThemeData::IsDefaultWindowTheme() { return sIsDefaultWindowsTheme; }
 
-bool nsUXThemeData::IsHighContrastOn()
-{
-  return sIsHighContrastOn;
-}
+bool nsUXThemeData::IsHighContrastOn() { return sIsHighContrastOn; }
 
 // static
-bool nsUXThemeData::CheckForCompositor(bool aUpdateCache)
-{
+bool nsUXThemeData::CheckForCompositor(bool aUpdateCache) {
   static BOOL sCachedValue = FALSE;
   if (aUpdateCache) {
     DwmIsCompositionEnabled(&sCachedValue);
@@ -328,9 +297,7 @@ bool nsUXThemeData::CheckForCompositor(bool aUpdateCache)
 }
 
 // static
-void
-nsUXThemeData::UpdateNativeThemeInfo()
-{
+void nsUXThemeData::UpdateNativeThemeInfo() {
   // Trigger a refresh of themed button metrics if needed
   sTitlebarInfoPopulatedThemed = false;
 
@@ -352,10 +319,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
 
   WCHAR themeFileName[MAX_PATH + 1];
   WCHAR themeColor[MAX_PATH + 1];
-  if (FAILED(GetCurrentThemeName(themeFileName,
-                                 MAX_PATH,
-                                 themeColor,
-                                 MAX_PATH,
+  if (FAILED(GetCurrentThemeName(themeFileName, MAX_PATH, themeColor, MAX_PATH,
                                  nullptr, 0))) {
     sThemeId = LookAndFeel::eWindowsTheme_Classic;
     return;
@@ -372,8 +336,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
     }
   }
 
-  if (theme == WINTHEME_UNRECOGNIZED)
-    return;
+  if (theme == WINTHEME_UNRECOGNIZED) return;
 
   // We're using the default theme if we're using any of Aero, Aero Lite, or
   // luna. However, on Win8, GetCurrentThemeName (see above) returns
@@ -381,12 +344,13 @@ nsUXThemeData::UpdateNativeThemeInfo()
   // themes "don't count" as default themes, so we specifically check for high
   // contrast mode in that situation.
   if (!(IsWin8OrLater() && sIsHighContrastOn) &&
-      (theme == WINTHEME_AERO || theme == WINTHEME_AERO_LITE || theme == WINTHEME_LUNA)) {
+      (theme == WINTHEME_AERO || theme == WINTHEME_AERO_LITE ||
+       theme == WINTHEME_LUNA)) {
     sIsDefaultWindowsTheme = true;
   }
 
   if (theme != WINTHEME_LUNA) {
-    switch(theme) {
+    switch (theme) {
       case WINTHEME_AERO:
         sThemeId = LookAndFeel::eWindowsTheme_Aero;
         return;
@@ -414,7 +378,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
     }
   }
 
-  switch(color) {
+  switch (color) {
     case WINTHEMECOLOR_NORMAL:
       sThemeId = LookAndFeel::eWindowsTheme_LunaBlue;
       return;

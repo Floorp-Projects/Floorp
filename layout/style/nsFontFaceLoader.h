@@ -22,10 +22,9 @@
 
 class nsIPrincipal;
 
-class nsFontFaceLoader final : public nsIStreamLoaderObserver
-                             , public nsIRequestObserver
-{
-public:
+class nsFontFaceLoader final : public nsIStreamLoaderObserver,
+                               public nsIRequestObserver {
+ public:
   nsFontFaceLoader(gfxUserFontEntry* aFontToLoad, nsIURI* aFontURI,
                    mozilla::dom::FontFaceSet* aFontFaceSet,
                    nsIChannel* aChannel);
@@ -47,20 +46,20 @@ public:
 
   gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
 
-protected:
+ protected:
   virtual ~nsFontFaceLoader();
 
   // helper method for determining the font-display value
   mozilla::StyleFontDisplay GetFontDisplay();
 
-private:
-  RefPtr<gfxUserFontEntry>  mUserFontEntry;
-  nsCOMPtr<nsIURI>        mFontURI;
+ private:
+  RefPtr<gfxUserFontEntry> mUserFontEntry;
+  nsCOMPtr<nsIURI> mFontURI;
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
-  nsCOMPtr<nsIChannel>    mChannel;
-  nsCOMPtr<nsITimer>      mLoadTimer;
-  mozilla::TimeStamp      mStartTime;
-  nsIStreamLoader*        mStreamLoader;
+  nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsITimer> mLoadTimer;
+  mozilla::TimeStamp mStartTime;
+  nsIStreamLoader* mStreamLoader;
 };
 
 #endif /* !defined(nsFontFaceLoader_h_) */

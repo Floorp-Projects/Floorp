@@ -31,7 +31,7 @@
 #if defined(OS_MACOSX)
 namespace base {
 void InitThreading();
-}  // namespace
+}  // namespace base
 #endif
 
 static void* ThreadFunc(void* closure) {
@@ -52,7 +52,7 @@ PlatformThreadId PlatformThread::CurrentId() {
 #elif defined(OS_LINUX)
   return syscall(__NR_gettid);
 #elif defined(OS_OPENBSD) || defined(OS_SOLARIS) || defined(__GLIBC__)
-  return (intptr_t) (pthread_self());
+  return (intptr_t)(pthread_self());
 #elif defined(OS_NETBSD)
   return _lwp_self();
 #elif defined(OS_DRAGONFLY)
@@ -63,9 +63,7 @@ PlatformThreadId PlatformThread::CurrentId() {
 }
 
 // static
-void PlatformThread::YieldCurrentThread() {
-  sched_yield();
-}
+void PlatformThread::YieldCurrentThread() { sched_yield(); }
 
 // static
 void PlatformThread::Sleep(int duration_ms) {
@@ -91,15 +89,14 @@ void PlatformThread::SetName(const char* name) {
   // the process name for the LWP.  We don't want to do this for the main
   // thread because that would rename the process, causing tools like killall
   // to stop working.
-  if (PlatformThread::CurrentId() == getpid())
-    return;
+  if (PlatformThread::CurrentId() == getpid()) return;
 
   // Using NS_SetCurrentThreadName, as opposed to using platform APIs directly,
   // also sets the thread name on the PRThread wrapper, and allows us to
   // retrieve it using PR_GetThreadName.
   NS_SetCurrentThreadName(name);
 }
-#endif // !OS_MACOSX
+#endif  // !OS_MACOSX
 
 namespace {
 
@@ -120,8 +117,7 @@ bool CreateThread(size_t stack_size, bool joinable,
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
   }
 
-  if (stack_size == 0)
-    stack_size = nsIThreadManager::DEFAULT_STACK_SIZE;
+  if (stack_size == 0) stack_size = nsIThreadManager::DEFAULT_STACK_SIZE;
   pthread_attr_setstacksize(&attributes, stack_size);
 
   success = !pthread_create(thread_handle, &attributes, ThreadFunc, delegate);
@@ -135,8 +131,8 @@ bool CreateThread(size_t stack_size, bool joinable,
 // static
 bool PlatformThread::Create(size_t stack_size, Delegate* delegate,
                             PlatformThreadHandle* thread_handle) {
-  return CreateThread(stack_size, true /* joinable thread */,
-                      delegate, thread_handle);
+  return CreateThread(stack_size, true /* joinable thread */, delegate,
+                      thread_handle);
 }
 
 // static

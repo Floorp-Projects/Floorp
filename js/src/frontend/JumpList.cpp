@@ -11,23 +11,19 @@
 using namespace js;
 using namespace js::frontend;
 
-void
-JumpList::push(jsbytecode* code, ptrdiff_t jumpOffset)
-{
-    SET_JUMP_OFFSET(&code[jumpOffset], offset - jumpOffset);
-    offset = jumpOffset;
+void JumpList::push(jsbytecode* code, ptrdiff_t jumpOffset) {
+  SET_JUMP_OFFSET(&code[jumpOffset], offset - jumpOffset);
+  offset = jumpOffset;
 }
 
-void
-JumpList::patchAll(jsbytecode* code, JumpTarget target)
-{
-    ptrdiff_t delta;
-    for (ptrdiff_t jumpOffset = offset; jumpOffset != -1; jumpOffset += delta) {
-        jsbytecode* pc = &code[jumpOffset];
-        MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)) || JSOp(*pc) == JSOP_LABEL);
-        delta = GET_JUMP_OFFSET(pc);
-        MOZ_ASSERT(delta < 0);
-        ptrdiff_t span = target.offset - jumpOffset;
-        SET_JUMP_OFFSET(pc, span);
-    }
+void JumpList::patchAll(jsbytecode* code, JumpTarget target) {
+  ptrdiff_t delta;
+  for (ptrdiff_t jumpOffset = offset; jumpOffset != -1; jumpOffset += delta) {
+    jsbytecode* pc = &code[jumpOffset];
+    MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)) || JSOp(*pc) == JSOP_LABEL);
+    delta = GET_JUMP_OFFSET(pc);
+    MOZ_ASSERT(delta < 0);
+    ptrdiff_t span = target.offset - jumpOffset;
+    SET_JUMP_OFFSET(pc, span);
+  }
 }

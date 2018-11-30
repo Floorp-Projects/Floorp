@@ -7,16 +7,16 @@
 #ifndef nsParserConstants_h_
 #define nsParserConstants_h_
 
-const char16_t kSpace       = ' ';
-const char16_t kQuote       = '"';
-const char16_t kApostrophe  = '\'';
-const char16_t kLessThan    = '<';
+const char16_t kSpace = ' ';
+const char16_t kQuote = '"';
+const char16_t kApostrophe = '\'';
+const char16_t kLessThan = '<';
 const char16_t kGreaterThan = '>';
-const char16_t kAmpersand   = '&';
-const char16_t kBackSlash   = '\\';
-const char16_t kEqual       = '=';
-const char16_t kSemicolon   = ';';
-const char16_t kComma       = ',';
-const char16_t kNullCh      = '\0';
+const char16_t kAmpersand = '&';
+const char16_t kBackSlash = '\\';
+const char16_t kEqual = '=';
+const char16_t kSemicolon = ';';
+const char16_t kComma = ',';
+const char16_t kNullCh = '\0';
 
-#endif // nsParserConstants_h_
+#endif  // nsParserConstants_h_

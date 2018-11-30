@@ -13,24 +13,19 @@ namespace mozilla {
 
 class EditorBase;
 
-class HTMLEditorEventListener final : public EditorEventListener
-{
-public:
+class HTMLEditorEventListener final : public EditorEventListener {
+ public:
   HTMLEditorEventListener()
-    : EditorEventListener()
-    , mListeningToMouseMoveEventForResizers(false)
-    , mListeningToMouseMoveEventForGrabber(false)
-    , mListeningToResizeEvent(false)
-  {
-  }
+      : EditorEventListener(),
+        mListeningToMouseMoveEventForResizers(false),
+        mListeningToMouseMoveEventForGrabber(false),
+        mListeningToResizeEvent(false) {}
 
-  virtual ~HTMLEditorEventListener()
-  {
-  }
+  virtual ~HTMLEditorEventListener() {}
 
   // nsIDOMEventListener
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD HandleEvent(dom::Event *aEvent) override;
+  NS_IMETHOD HandleEvent(dom::Event* aEvent) override;
 
   /**
    * Connect() fails if aEditorBase isn't an HTMLEditor instance.
@@ -43,13 +38,11 @@ public:
    * ListenToMouseMoveEventForResizers() starts to listen to or stop
    * listening to "mousemove" events for resizers.
    */
-  nsresult ListenToMouseMoveEventForResizers(bool aListen)
-  {
+  nsresult ListenToMouseMoveEventForResizers(bool aListen) {
     if (aListen == mListeningToMouseMoveEventForResizers) {
       return NS_OK;
     }
-    nsresult rv =
-      ListenToMouseMoveEventForResizersOrGrabber(aListen, false);
+    nsresult rv = ListenToMouseMoveEventForResizersOrGrabber(aListen, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -61,13 +54,11 @@ public:
    * listening to "mousemove" events for grabber to move absolutely
    * positioned element.
    */
-  nsresult ListenToMouseMoveEventForGrabber(bool aListen)
-  {
+  nsresult ListenToMouseMoveEventForGrabber(bool aListen) {
     if (aListen == mListeningToMouseMoveEventForGrabber) {
       return NS_OK;
     }
-    nsresult rv =
-      ListenToMouseMoveEventForResizersOrGrabber(aListen, true);
+    nsresult rv = ListenToMouseMoveEventForResizersOrGrabber(aListen, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -80,21 +71,21 @@ public:
    */
   nsresult ListenToWindowResizeEvent(bool aListen);
 
-protected:
+ protected:
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent) override;
   virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) override;
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseClick(WidgetMouseEvent* aMouseClickEvent) override;
 
-  nsresult
-  ListenToMouseMoveEventForResizersOrGrabber(bool aListen, bool aForGrabber);
+  nsresult ListenToMouseMoveEventForResizersOrGrabber(bool aListen,
+                                                      bool aForGrabber);
 
   bool mListeningToMouseMoveEventForResizers;
   bool mListeningToMouseMoveEventForGrabber;
   bool mListeningToResizeEvent;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef HTMLEditorEventListener_h
+#endif  // #ifndef HTMLEditorEventListener_h

@@ -16,44 +16,33 @@ class nsIPrincipal;
 namespace mozilla {
 namespace dom {
 
-class Feature final
-{
-public:
+class Feature final {
+ public:
   explicit Feature(const nsAString& aFeatureName);
 
   ~Feature();
 
-  const nsAString&
-  Name() const;
+  const nsAString& Name() const;
 
-  void
-  SetAllowsNone();
+  void SetAllowsNone();
 
-  bool
-  AllowsNone() const;
+  bool AllowsNone() const;
 
-  void
-  SetAllowsAll();
+  void SetAllowsAll();
 
-  bool
-  AllowsAll() const;
+  bool AllowsAll() const;
 
-  void
-  AppendToAllowList(nsIPrincipal* aPrincipal);
+  void AppendToAllowList(nsIPrincipal* aPrincipal);
 
-  void
-  GetAllowList(nsTArray<nsCOMPtr<nsIPrincipal>>& aList) const;
+  void GetAllowList(nsTArray<nsCOMPtr<nsIPrincipal>>& aList) const;
 
-  bool
-  AllowListContains(nsIPrincipal* aPrincipal) const;
+  bool AllowListContains(nsIPrincipal* aPrincipal) const;
 
-  bool
-  HasAllowList() const;
+  bool HasAllowList() const;
 
-  bool
-  Allows(nsIPrincipal* aPrincipal) const;
+  bool Allows(nsIPrincipal* aPrincipal) const;
 
-private:
+ private:
   nsString mFeatureName;
 
   enum Policy {
@@ -72,7 +61,7 @@ private:
   nsTArray<nsCOMPtr<nsIPrincipal>> mAllowList;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Feature_h
+#endif  // mozilla_dom_Feature_h

@@ -20,14 +20,13 @@ using namespace mozilla::a11y;
 extern "C" {
 const gchar* getDescriptionCB(AtkObject* aAtkObj);
 
-static void
-getImagePositionCB(AtkImage* aImage, gint* aAccX, gint* aAccY,
-                   AtkCoordType aCoordType)
-{
+static void getImagePositionCB(AtkImage* aImage, gint* aAccX, gint* aAccY,
+                               AtkCoordType aCoordType) {
   nsIntPoint pos;
-  uint32_t geckoCoordType = (aCoordType == ATK_XY_WINDOW) ?
-    nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE :
-    nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
+  uint32_t geckoCoordType =
+      (aCoordType == ATK_XY_WINDOW)
+          ? nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE
+          : nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
 
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
   if (accWrap && accWrap->IsImage()) {
@@ -41,15 +40,12 @@ getImagePositionCB(AtkImage* aImage, gint* aAccX, gint* aAccY,
   *aAccY = pos.y;
 }
 
-static const gchar*
-getImageDescriptionCB(AtkImage* aImage)
-{
+static const gchar* getImageDescriptionCB(AtkImage* aImage) {
   return getDescriptionCB(ATK_OBJECT(aImage));
 }
 
-static void
-getImageSizeCB(AtkImage* aImage, gint* aAccWidth, gint* aAccHeight)
-{
+static void getImageSizeCB(AtkImage* aImage, gint* aAccWidth,
+                           gint* aAccHeight) {
   nsIntSize size;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
   if (accWrap && accWrap->IsImage()) {
@@ -62,14 +58,11 @@ getImageSizeCB(AtkImage* aImage, gint* aAccWidth, gint* aAccHeight)
   *aAccHeight = size.height;
 }
 
-} // extern "C"
+}  // extern "C"
 
-void
-imageInterfaceInitCB(AtkImageIface* aIface)
-{
+void imageInterfaceInitCB(AtkImageIface* aIface) {
   NS_ASSERTION(aIface, "no interface!");
-  if (MOZ_UNLIKELY(!aIface))
-    return;
+  if (MOZ_UNLIKELY(!aIface)) return;
 
   aIface->get_image_position = getImagePositionCB;
   aIface->get_image_description = getImageDescriptionCB;

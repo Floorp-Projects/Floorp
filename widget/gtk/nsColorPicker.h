@@ -19,16 +19,15 @@
 
 class nsIWidget;
 
-class nsColorPicker final : public nsIColorPicker
-{
-public:
+class nsColorPicker final : public nsIColorPicker {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOLORPICKER
 
-  nsColorPicker() {};
+  nsColorPicker(){};
 
-private:
-  ~nsColorPicker() {};
+ private:
+  ~nsColorPicker(){};
 
   static nsString ToHexString(int n);
 
@@ -36,7 +35,7 @@ private:
                          gpointer user_data);
   static void OnDestroy(GtkWidget* dialog, gpointer user_data);
 
-#if defined(ACTIVATE_GTK3_COLOR_PICKER) && GTK_CHECK_VERSION(3,4,0)
+#if defined(ACTIVATE_GTK3_COLOR_PICKER) && GTK_CHECK_VERSION(3, 4, 0)
   static void OnColorChanged(GtkColorChooser* color_chooser, GdkRGBA* color,
                              gpointer user_data);
 
@@ -70,4 +69,4 @@ private:
   nsString mInitialColor;
 };
 
-#endif // nsColorPicker_h__
+#endif  // nsColorPicker_h__

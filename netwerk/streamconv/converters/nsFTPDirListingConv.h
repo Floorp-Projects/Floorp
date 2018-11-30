@@ -10,43 +10,43 @@
 
 class nsIURI;
 
-#define NS_FTPDIRLISTINGCONVERTER_CID                         \
-{ /* 14C0E880-623E-11d3-A178-0050041CAF44 */         \
-    0x14c0e880,                                      \
-    0x623e,                                          \
-    0x11d3,                                          \
-    {0xa1, 0x78, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44}       \
-}
+#define NS_FTPDIRLISTINGCONVERTER_CID                \
+  { /* 14C0E880-623E-11d3-A178-0050041CAF44 */       \
+    0x14c0e880, 0x623e, 0x11d3, {                    \
+      0xa1, 0x78, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44 \
+    }                                                \
+  }
 
 class nsFTPDirListingConv : public nsIStreamConverter {
-public:
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
+ public:
+  // nsISupports methods
+  NS_DECL_ISUPPORTS
 
-    // nsIStreamConverter methods
-    NS_DECL_NSISTREAMCONVERTER
+  // nsIStreamConverter methods
+  NS_DECL_NSISTREAMCONVERTER
 
-    // nsIStreamListener methods
-    NS_DECL_NSISTREAMLISTENER
+  // nsIStreamListener methods
+  NS_DECL_NSISTREAMLISTENER
 
-    // nsIRequestObserver methods
-    NS_DECL_NSIREQUESTOBSERVER
+  // nsIRequestObserver methods
+  NS_DECL_NSIREQUESTOBSERVER
 
-    // nsFTPDirListingConv methods
-    nsFTPDirListingConv();
+  // nsFTPDirListingConv methods
+  nsFTPDirListingConv();
 
-private:
-    virtual ~nsFTPDirListingConv();
+ private:
+  virtual ~nsFTPDirListingConv();
 
-    // Get the application/http-index-format headers
-    nsresult GetHeaders(nsACString& str, nsIURI* uri);
-    char*    DigestBufferLines(char *aBuffer, nsCString &aString);
+  // Get the application/http-index-format headers
+  nsresult GetHeaders(nsACString& str, nsIURI* uri);
+  char* DigestBufferLines(char* aBuffer, nsCString& aString);
 
-    // member data
-    nsCString           mBuffer;            // buffered data.
-    bool                mSentHeading;       // have we sent 100, 101, 200, and 300 lines yet?
+  // member data
+  nsCString mBuffer;  // buffered data.
+  bool mSentHeading;  // have we sent 100, 101, 200, and 300 lines yet?
 
-    nsIStreamListener   *mFinalListener; // this guy gets the converted data via his OnDataAvailable()
+  nsIStreamListener* mFinalListener;  // this guy gets the converted data via
+                                      // his OnDataAvailable()
 };
 
 #endif /* __nsftpdirlistingdconv__h__ */

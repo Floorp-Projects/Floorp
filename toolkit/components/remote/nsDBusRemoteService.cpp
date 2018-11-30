@@ -28,48 +28,43 @@
 
 #include <dlfcn.h>
 
-NS_IMPL_ISUPPORTS(nsDBusRemoteService,
-                  nsIRemoteService)
+NS_IMPL_ISUPPORTS(nsDBusRemoteService, nsIRemoteService)
 
 NS_IMETHODIMP
-nsDBusRemoteService::RegisterWindow(mozIDOMWindow* aWindow)
-{
+nsDBusRemoteService::RegisterWindow(mozIDOMWindow *aWindow) {
   // We don't listen for property change events on DBus remote
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-const char* introspect_template =
-"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n"
-"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\";>\n"
-"<node>\n"
-" <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
-"   <method name=\"Introspect\">\n"
-"     <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
-"   </method>\n"
-" </interface>\n"
-" <interface name=\"org.mozilla.%s\">\n"
-"   <method name=\"OpenURL\">\n"
-"     <arg name=\"url\" direction=\"in\" type=\"s\"/>\n"
-"   </method>\n"
-" </interface>\n"
-"</node>\n";
+const char *introspect_template =
+    "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
+    "1.0//EN\"\n"
+    "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\";>\n"
+    "<node>\n"
+    " <interface name=\"org.freedesktop.DBus.Introspectable\">\n"
+    "   <method name=\"Introspect\">\n"
+    "     <arg name=\"data\" direction=\"out\" type=\"s\"/>\n"
+    "   </method>\n"
+    " </interface>\n"
+    " <interface name=\"org.mozilla.%s\">\n"
+    "   <method name=\"OpenURL\">\n"
+    "     <arg name=\"url\" direction=\"in\" type=\"s\"/>\n"
+    "   </method>\n"
+    " </interface>\n"
+    "</node>\n";
 
-DBusHandlerResult
-nsDBusRemoteService::Introspect(DBusMessage *msg)
-{
+DBusHandlerResult nsDBusRemoteService::Introspect(DBusMessage *msg) {
   DBusMessage *reply;
 
   reply = dbus_message_new_method_return(msg);
-  if (!reply)
-   return DBUS_HANDLER_RESULT_NEED_MEMORY;
+  if (!reply) return DBUS_HANDLER_RESULT_NEED_MEMORY;
 
   nsAutoCString introspect_xml;
   introspect_xml = nsPrintfCString(introspect_template, mAppName.get());
 
   const char *message = introspect_xml.get();
-  dbus_message_append_args(reply,
-     DBUS_TYPE_STRING, &message,
-     DBUS_TYPE_INVALID);
+  dbus_message_append_args(reply, DBUS_TYPE_STRING, &message,
+                           DBUS_TYPE_INVALID);
 
   dbus_connection_send(mConnection, reply, nullptr);
   dbus_message_unref(reply);
@@ -77,22 +72,21 @@ nsDBusRemoteService::Introspect(DBusMessage *msg)
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-DBusHandlerResult
-nsDBusRemoteService::OpenURL(DBusMessage *msg)
-{
+DBusHandlerResult nsDBusRemoteService::OpenURL(DBusMessage *msg) {
   DBusMessage *reply = nullptr;
-  const char  *commandLine;
-  int          length;
+  const char *commandLine;
+  int length;
 
   if (!dbus_message_get_args(msg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE,
-      &commandLine, &length, DBUS_TYPE_INVALID) || length == 0) {
+                             &commandLine, &length, DBUS_TYPE_INVALID) ||
+      length == 0) {
     nsAutoCString errorMsg;
     errorMsg = nsPrintfCString("org.mozilla.%s.Error", mAppName.get());
     reply = dbus_message_new_error(msg, errorMsg.get(), "Wrong argument");
   } else {
     guint32 timestamp = gtk_get_current_event_time();
     if (timestamp == GDK_CURRENT_TIME) {
-        timestamp = guint32(g_get_monotonic_time() / 1000);
+      timestamp = guint32(g_get_monotonic_time() / 1000);
     }
     nsRemoteService::HandleCommandLine(commandLine, nullptr, timestamp);
     reply = dbus_message_new_method_return(msg);
@@ -104,16 +98,15 @@ nsDBusRemoteService::OpenURL(DBusMessage *msg)
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-DBusHandlerResult
-nsDBusRemoteService::HandleDBusMessage(DBusConnection *aConnection, DBusMessage *msg)
-{
+DBusHandlerResult nsDBusRemoteService::HandleDBusMessage(
+    DBusConnection *aConnection, DBusMessage *msg) {
   NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
 
   const char *method = dbus_message_get_member(msg);
   const char *iface = dbus_message_get_interface(msg);
 
   if ((strcmp("Introspect", method) == 0) &&
-    (strcmp("org.freedesktop.DBus.Introspectable", iface) == 0)) {
+      (strcmp("org.freedesktop.DBus.Introspectable", iface) == 0)) {
     return Introspect(msg);
   }
 
@@ -121,54 +114,48 @@ nsDBusRemoteService::HandleDBusMessage(DBusConnection *aConnection, DBusMessage 
   ourInterfaceName = nsPrintfCString("org.mozilla.%s", mAppName.get());
 
   if ((strcmp("OpenURL", method) == 0) &&
-     (strcmp(ourInterfaceName.get(), iface) == 0)) {
+      (strcmp(ourInterfaceName.get(), iface) == 0)) {
     return OpenURL(msg);
   }
 
   return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-void
-nsDBusRemoteService::UnregisterDBusInterface(DBusConnection *aConnection)
-{
+void nsDBusRemoteService::UnregisterDBusInterface(DBusConnection *aConnection) {
   NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
   // Not implemented
 }
 
-static DBusHandlerResult
-message_handler(DBusConnection *conn, DBusMessage *msg, void *user_data)
-{
-  auto interface = static_cast<nsDBusRemoteService*>(user_data);
+static DBusHandlerResult message_handler(DBusConnection *conn, DBusMessage *msg,
+                                         void *user_data) {
+  auto interface = static_cast<nsDBusRemoteService *>(user_data);
   return interface->HandleDBusMessage(conn, msg);
 }
 
-static void
-unregister(DBusConnection *conn, void *user_data)
-{
-  auto interface = static_cast<nsDBusRemoteService*>(user_data);
+static void unregister(DBusConnection *conn, void *user_data) {
+  auto interface = static_cast<nsDBusRemoteService *>(user_data);
   interface->UnregisterDBusInterface(conn);
 }
 
 static DBusObjectPathVTable remoteHandlersTable = {
-  .unregister_function  = unregister,
-  .message_function = message_handler,
+    .unregister_function = unregister,
+    .message_function = message_handler,
 };
 
 NS_IMETHODIMP
-nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
-{
+nsDBusRemoteService::Startup(const char *aAppName, const char *aProfileName) {
   if (mConnection && dbus_connection_get_is_connected(mConnection)) {
     // We're already connected so we don't need to reconnect
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
   // Don't even try to start without any application/profile name
-  if (!aAppName || aAppName[0] == '\0' ||
-      !aProfileName || aProfileName[0] == '\0')
+  if (!aAppName || aAppName[0] == '\0' || !aProfileName ||
+      aProfileName[0] == '\0')
     return NS_ERROR_INVALID_ARG;
 
-  mConnection = already_AddRefed<DBusConnection>(
-    dbus_bus_get(DBUS_BUS_SESSION, nullptr));
+  mConnection =
+      already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SESSION, nullptr));
   if (!mConnection) {
     return NS_ERROR_FAILURE;
   }
@@ -186,14 +173,13 @@ nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
   profileName.ReplaceChar("+/=", '_');
 
   nsAutoCString busName;
-  busName = nsPrintfCString("org.mozilla.%s.%s", mAppName.get(),
-                                                 profileName.get());
+  busName =
+      nsPrintfCString("org.mozilla.%s.%s", mAppName.get(), profileName.get());
   if (busName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
     busName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
 
-  static auto sDBusValidateBusName =
-    (bool (*)(const char *, DBusError *))
-    dlsym(RTLD_DEFAULT, "dbus_validate_bus_name");
+  static auto sDBusValidateBusName = (bool (*)(const char *, DBusError *))dlsym(
+      RTLD_DEFAULT, "dbus_validate_bus_name");
   if (!sDBusValidateBusName) {
     return NS_ERROR_FAILURE;
   }
@@ -210,8 +196,8 @@ nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
 
   DBusError err;
   dbus_error_init(&err);
-  dbus_bus_request_name(mConnection, busName.get(),
-                       DBUS_NAME_FLAG_DO_NOT_QUEUE, &err);
+  dbus_bus_request_name(mConnection, busName.get(), DBUS_NAME_FLAG_DO_NOT_QUEUE,
+                        &err);
   // The interface is already owned - there is another application/profile
   // instance already running.
   if (dbus_error_is_set(&err)) {
@@ -231,8 +217,7 @@ nsDBusRemoteService::Startup(const char* aAppName, const char* aProfileName)
 }
 
 NS_IMETHODIMP
-nsDBusRemoteService::Shutdown()
-{
+nsDBusRemoteService::Shutdown() {
   dbus_connection_unregister_object_path(mConnection, mPathName.get());
 
   // dbus_connection_unref() will be called by RefPtr here.

@@ -14,21 +14,20 @@
 #include "nsContainerFrame.h"
 #include "nsColor.h"
 
-class  nsIContent;
-class  nsPresContext;
+class nsIContent;
+class nsPresContext;
 struct nsRect;
 struct nsSize;
-class  nsAtom;
-class  nsHTMLFramesetBorderFrame;
-class  nsHTMLFramesetFrame;
+class nsAtom;
+class nsHTMLFramesetBorderFrame;
+class nsHTMLFramesetFrame;
 
 #define NO_COLOR 0xFFFFFFFA
 
 // defined at HTMLFrameSetElement.h
 struct nsFramesetSpec;
 
-struct nsBorderColor
-{
+struct nsBorderColor {
   nscolor mLeft;
   nscolor mRight;
   nscolor mTop;
@@ -46,15 +45,14 @@ enum nsFrameborder {
 };
 
 struct nsFramesetDrag {
-  nsHTMLFramesetFrame* mSource;    // frameset whose border was dragged to cause the resize
-  int32_t              mIndex;     // index of left col or top row of effected area
-  int32_t              mChange;    // pos for left to right or top to bottom, neg otherwise
-  bool                 mVertical;  // vertical if true, otherwise horizontal
+  nsHTMLFramesetFrame*
+      mSource;      // frameset whose border was dragged to cause the resize
+  int32_t mIndex;   // index of left col or top row of effected area
+  int32_t mChange;  // pos for left to right or top to bottom, neg otherwise
+  bool mVertical;   // vertical if true, otherwise horizontal
 
   nsFramesetDrag();
-  void Reset(bool                 aVertical,
-             int32_t              aIndex,
-             int32_t              aChange,
+  void Reset(bool aVertical, int32_t aIndex, int32_t aChange,
              nsHTMLFramesetFrame* aSource);
   void UnSet();
 };
@@ -62,9 +60,8 @@ struct nsFramesetDrag {
 /*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-class nsHTMLFramesetFrame final : public nsContainerFrame
-{
-public:
+class nsHTMLFramesetFrame final : public nsContainerFrame {
+ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
 
@@ -72,37 +69,33 @@ public:
 
   virtual ~nsHTMLFramesetFrame();
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 
-  virtual void SetInitialChildList(ChildListID  aListID,
+  virtual void SetInitialChildList(ChildListID aListID,
                                    nsFrameList& aChildList) override;
 
-  static bool    gDragInProgress;
+  static bool gDragInProgress;
 
   void GetSizeOfChild(nsIFrame* aChild, mozilla::WritingMode aWM,
                       mozilla::LogicalSize& aSize);
 
-  void GetSizeOfChildAt(int32_t  aIndexInParent,
-                        mozilla::WritingMode aWM,
-                        mozilla::LogicalSize&  aSize,
-                        nsIntPoint& aCellIndex);
+  void GetSizeOfChildAt(int32_t aIndexInParent, mozilla::WritingMode aWM,
+                        mozilla::LogicalSize& aSize, nsIntPoint& aCellIndex);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  virtual nsresult GetCursor(const nsPoint&    aPoint,
+  virtual nsresult GetCursor(const nsPoint& aPoint,
                              nsIFrame::Cursor& aCursor) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+                      nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -112,42 +105,35 @@ public:
                       nsHTMLFramesetBorderFrame* aBorder,
                       mozilla::WidgetGUIEvent* aEvent);
 
-  void MouseDrag(nsPresContext* aPresContext,
-                 mozilla::WidgetGUIEvent* aEvent);
+  void MouseDrag(nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent);
 
   void EndMouseDrag(nsPresContext* aPresContext);
 
   nsFrameborder GetParentFrameborder() { return mParentFrameborder; }
 
-  void SetParentFrameborder(nsFrameborder aValue) { mParentFrameborder = aValue; }
+  void SetParentFrameborder(nsFrameborder aValue) {
+    mParentFrameborder = aValue;
+  }
 
   nsFramesetDrag& GetDrag() { return mDrag; }
 
   void RecalculateBorderResize();
 
-protected:
-  void Scale(nscoord  aDesired,
-             int32_t  aNumIndicies,
-             int32_t* aIndicies,
-             int32_t  aNumItems,
-             int32_t* aItems);
+ protected:
+  void Scale(nscoord aDesired, int32_t aNumIndicies, int32_t* aIndicies,
+             int32_t aNumItems, int32_t* aItems);
 
-  void CalculateRowCol(nsPresContext*       aPresContext,
-                       nscoord               aSize,
-                       int32_t               aNumSpecs,
-                       const nsFramesetSpec* aSpecs,
-                       nscoord*              aValues);
+  void CalculateRowCol(nsPresContext* aPresContext, nscoord aSize,
+                       int32_t aNumSpecs, const nsFramesetSpec* aSpecs,
+                       nscoord* aValues);
 
-  void GenerateRowCol(nsPresContext*       aPresContext,
-                      nscoord               aSize,
-                      int32_t               aNumSpecs,
-                      const nsFramesetSpec* aSpecs,
-                      nscoord*              aValues,
-                      nsString&             aNewAttr);
+  void GenerateRowCol(nsPresContext* aPresContext, nscoord aSize,
+                      int32_t aNumSpecs, const nsFramesetSpec* aSpecs,
+                      nscoord* aValues, nsString& aNewAttr);
 
-  virtual void GetDesiredSize(nsPresContext*          aPresContext,
+  virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const ReflowInput& aReflowInput,
-                              ReflowOutput&     aDesiredSize);
+                              ReflowOutput& aDesiredSize);
 
   int32_t GetBorderWidth(nsPresContext* aPresContext,
                          bool aTakeForcingIntoAccount);
@@ -170,12 +156,9 @@ protected:
 
   bool GetNoResize(nsIFrame* aChildFrame);
 
-  void ReflowPlaceChild(nsIFrame*                aChild,
-                        nsPresContext*          aPresContext,
-                        const ReflowInput& aReflowInput,
-                        nsPoint&                 aOffset,
-                        nsSize&                  aSize,
-                        nsIntPoint*              aCellIndex = 0);
+  void ReflowPlaceChild(nsIFrame* aChild, nsPresContext* aPresContext,
+                        const ReflowInput& aReflowInput, nsPoint& aOffset,
+                        nsSize& aSize, nsIntPoint* aCellIndex = 0);
 
   bool CanResize(bool aVertical, bool aLeft);
 
@@ -183,32 +166,33 @@ protected:
 
   void SetBorderResize(nsHTMLFramesetBorderFrame* aBorderFrame);
 
-  template<typename T, class D = mozilla::DefaultDelete<T>>
+  template <typename T, class D = mozilla::DefaultDelete<T>>
   using UniquePtr = mozilla::UniquePtr<T, D>;
 
-  nsFramesetDrag   mDrag;
-  nsBorderColor    mEdgeColors;
+  nsFramesetDrag mDrag;
+  nsBorderColor mEdgeColors;
   nsHTMLFramesetBorderFrame* mDragger;
   nsHTMLFramesetFrame* mTopLevelFrameset;
   UniquePtr<nsHTMLFramesetBorderFrame*[]> mVerBorders;  // vertical borders
   UniquePtr<nsHTMLFramesetBorderFrame*[]> mHorBorders;  // horizontal borders
-  UniquePtr<nsFrameborder[]> mChildFrameborder; // the frameborder attr of children
+  UniquePtr<nsFrameborder[]>
+      mChildFrameborder;  // the frameborder attr of children
   UniquePtr<nsBorderColor[]> mChildBorderColors;
   UniquePtr<nscoord[]> mRowSizes;  // currently computed row sizes
   UniquePtr<nscoord[]> mColSizes;  // currently computed col sizes
   mozilla::LayoutDeviceIntPoint mFirstDragPoint;
-  int32_t          mNumRows;
-  int32_t          mNumCols;
-  int32_t          mNonBorderChildCount;
-  int32_t          mNonBlankChildCount;
-  int32_t          mEdgeVisibility;
-  nsFrameborder    mParentFrameborder;
-  nscolor          mParentBorderColor;
-  int32_t          mParentBorderWidth;
-  int32_t          mPrevNeighborOrigSize; // used during resize
-  int32_t          mNextNeighborOrigSize;
-  int32_t          mMinDrag;
-  int32_t          mChildCount;
+  int32_t mNumRows;
+  int32_t mNumCols;
+  int32_t mNonBorderChildCount;
+  int32_t mNonBlankChildCount;
+  int32_t mEdgeVisibility;
+  nsFrameborder mParentFrameborder;
+  nscolor mParentBorderColor;
+  int32_t mParentBorderWidth;
+  int32_t mPrevNeighborOrigSize;  // used during resize
+  int32_t mNextNeighborOrigSize;
+  int32_t mMinDrag;
+  int32_t mChildCount;
 };
 
 #endif

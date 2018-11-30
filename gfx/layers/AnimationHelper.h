@@ -8,9 +8,9 @@
 #define mozilla_layers_AnimationHelper_h
 
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/ComputedTimingFunction.h" // for ComputedTimingFunction
-#include "mozilla/layers/LayersMessages.h" // for TransformData, etc
-#include "mozilla/TimeStamp.h"          // for TimeStamp
+#include "mozilla/ComputedTimingFunction.h"  // for ComputedTimingFunction
+#include "mozilla/layers/LayersMessages.h"   // for TransformData, etc
+#include "mozilla/TimeStamp.h"               // for TimeStamp
 #include "mozilla/TimingParams.h"
 #include "X11UndefineNone.h"
 
@@ -52,12 +52,7 @@ struct AnimationTransform {
 };
 
 struct AnimatedValue {
-  enum {
-    TRANSFORM,
-    OPACITY,
-    COLOR,
-    NONE
-  } mType {NONE};
+  enum { TRANSFORM, OPACITY, COLOR, NONE } mType{NONE};
 
   union {
     AnimationTransform mTransform;
@@ -66,31 +61,22 @@ struct AnimatedValue {
   };
 
   AnimatedValue(gfx::Matrix4x4&& aTransformInDevSpace,
-                gfx::Matrix4x4&& aFrameTransform,
-                const TransformData& aData)
-    : mType(AnimatedValue::TRANSFORM)
-    , mOpacity(0.0)
-  {
+                gfx::Matrix4x4&& aFrameTransform, const TransformData& aData)
+      : mType(AnimatedValue::TRANSFORM), mOpacity(0.0) {
     mTransform.mTransformInDevSpace = std::move(aTransformInDevSpace);
     mTransform.mFrameTransform = std::move(aFrameTransform);
     mTransform.mData = aData;
   }
 
   explicit AnimatedValue(const float& aValue)
-    : mType(AnimatedValue::OPACITY)
-    , mOpacity(aValue)
-  {
-  }
+      : mType(AnimatedValue::OPACITY), mOpacity(aValue) {}
 
   explicit AnimatedValue(nscolor aValue)
-    : mType(AnimatedValue::COLOR)
-    , mColor(aValue)
-  {
-  }
+      : mType(AnimatedValue::COLOR), mColor(aValue) {}
 
   ~AnimatedValue() {}
 
-private:
+ private:
   AnimatedValue() = delete;
 };
 
@@ -108,28 +94,24 @@ private:
 // item that is animated (e.g. nsDisplayTransform) gets a CompositorAnimationsId
 // key and reuses that key (it persists the key via the frame user-data
 // mechanism).
-class CompositorAnimationStorage final
-{
+class CompositorAnimationStorage final {
   typedef nsClassHashtable<nsUint64HashKey, AnimatedValue> AnimatedValueTable;
   typedef nsClassHashtable<nsUint64HashKey, AnimationArray> AnimationsTable;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorAnimationStorage)
-public:
-
+ public:
   /**
    * Set the animation transform based on the unique id and also
    * set up |aFrameTransform| and |aData| for OMTA testing
    */
-  void SetAnimatedValue(uint64_t aId,
-                        gfx::Matrix4x4&& aTransformInDevSpace,
+  void SetAnimatedValue(uint64_t aId, gfx::Matrix4x4&& aTransformInDevSpace,
                         gfx::Matrix4x4&& aFrameTransform,
                         const TransformData& aData);
 
   /**
    * Set the animation transform in device pixel based on the unique id
    */
-  void SetAnimatedValue(uint64_t aId,
-                        gfx::Matrix4x4&& aTransformInDevSpace);
+  void SetAnimatedValue(uint64_t aId, gfx::Matrix4x4&& aTransformInDevSpace);
 
   /**
    * Set the animation opacity based on the unique id
@@ -151,15 +133,11 @@ public:
   /**
    * Return the iterator of animated value table
    */
-  AnimatedValueTable::Iterator ConstAnimatedValueTableIter() const
-  {
+  AnimatedValueTable::Iterator ConstAnimatedValueTableIter() const {
     return mAnimatedValues.ConstIter();
   }
 
-  uint32_t AnimatedValueCount() const
-  {
-    return mAnimatedValues.Count();
-  }
+  uint32_t AnimatedValueCount() const { return mAnimatedValues.Count(); }
 
   /**
    * Set the animations based on the unique id
@@ -174,15 +152,11 @@ public:
   /**
    * Return the iterator of animations table
    */
-  AnimationsTable::Iterator ConstAnimationsTableIter() const
-  {
+  AnimationsTable::Iterator ConstAnimationsTableIter() const {
     return mAnimations.ConstIter();
   }
 
-  uint32_t AnimationsCount() const
-  {
-    return mAnimations.Count();
-  }
+  uint32_t AnimationsCount() const { return mAnimations.Count(); }
 
   /**
    * Clear AnimatedValues and Animations data
@@ -190,10 +164,10 @@ public:
   void Clear();
   void ClearById(const uint64_t& aId);
 
-private:
-  ~CompositorAnimationStorage() { };
+ private:
+  ~CompositorAnimationStorage(){};
 
-private:
+ private:
   AnimatedValueTable mAnimatedValues;
   AnimationsTable mAnimations;
 };
@@ -203,15 +177,9 @@ private:
  * non-webrender compositor-side implementations. It provides
  * utility functions for sampling animations at particular timestamps.
  */
-class AnimationHelper
-{
-public:
-
-  enum class SampleResult {
-    None,
-    Skipped,
-    Sampled
-  };
+class AnimationHelper {
+ public:
+  enum class SampleResult { None, Skipped, Sampled };
 
   /**
    * Sample animations based on a given time stamp for a element(layer) with
@@ -228,21 +196,18 @@ public:
    * call of this function,
    * SampleResult::Sampled if the animation output was updated.
    */
-  static SampleResult
-  SampleAnimationForEachNode(TimeStamp aPreviousFrameTime,
-                             TimeStamp aCurrentFrameTime,
-                             AnimationArray& aAnimations,
-                             InfallibleTArray<AnimData>& aAnimationData,
-                             RefPtr<RawServoAnimationValue>& aAnimationValue,
-                             const AnimatedValue* aPreviousValue);
+  static SampleResult SampleAnimationForEachNode(
+      TimeStamp aPreviousFrameTime, TimeStamp aCurrentFrameTime,
+      AnimationArray& aAnimations, InfallibleTArray<AnimData>& aAnimationData,
+      RefPtr<RawServoAnimationValue>& aAnimationValue,
+      const AnimatedValue* aPreviousValue);
   /**
    * Populates AnimData stuctures into |aAnimData| and |aBaseAnimationStyle|
    * based on |aAnimations|.
    */
-  static void
-  SetAnimations(AnimationArray& aAnimations,
-                InfallibleTArray<AnimData>& aAnimData,
-                RefPtr<RawServoAnimationValue>& aBaseAnimationStyle);
+  static void SetAnimations(
+      AnimationArray& aAnimations, InfallibleTArray<AnimData>& aAnimData,
+      RefPtr<RawServoAnimationValue>& aBaseAnimationStyle);
 
   /**
    * Get a unique id to represent the compositor animation between child
@@ -263,13 +228,12 @@ public:
    * visually effective), this function returns true to ensure we composite
    * again on the next tick.
    */
-  static bool
-  SampleAnimations(CompositorAnimationStorage* aStorage,
-                   TimeStamp aPreviousFrameTime,
-                   TimeStamp aCurrentFrameTime);
+  static bool SampleAnimations(CompositorAnimationStorage* aStorage,
+                               TimeStamp aPreviousFrameTime,
+                               TimeStamp aCurrentFrameTime);
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_AnimationHelper_h
+#endif  // mozilla_layers_AnimationHelper_h

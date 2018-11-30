@@ -22,42 +22,37 @@ namespace extensions {
 
 class MatchPattern;
 
-class MatchGlob final : public nsISupports
-                      , public nsWrapperCache
-{
-public:
+class MatchGlob final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MatchGlob)
 
-  static already_AddRefed<MatchGlob>
-  Constructor(dom::GlobalObject& aGlobal, const nsAString& aGlob, bool aAllowQuestion,
-              ErrorResult& aRv);
+  static already_AddRefed<MatchGlob> Constructor(dom::GlobalObject& aGlobal,
+                                                 const nsAString& aGlob,
+                                                 bool aAllowQuestion,
+                                                 ErrorResult& aRv);
 
   bool Matches(const nsAString& aString) const;
 
-  bool IsWildcard() const
-  {
-    return mIsPrefix && mPathLiteral.IsEmpty();
-  }
+  bool IsWildcard() const { return mIsPrefix && mPathLiteral.IsEmpty(); }
 
-  void GetGlob(nsAString& aGlob) const
-  {
-    aGlob = mGlob;
-  }
+  void GetGlob(nsAString& aGlob) const { aGlob = mGlob; }
 
   nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::HandleObject aGivenProto) override;
 
-protected:
+ protected:
   virtual ~MatchGlob();
 
-private:
+ private:
   friend class MatchPattern;
 
   explicit MatchGlob(nsISupports* aParent) : mParent(aParent) {}
 
-  void Init(JSContext* aCx, const nsAString& aGlob, bool aAllowQuestion, ErrorResult& aRv);
+  void Init(JSContext* aCx, const nsAString& aGlob, bool aAllowQuestion,
+            ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
 
@@ -77,22 +72,21 @@ private:
   JS::Heap<JSObject*> mRegExp;
 };
 
-class MatchGlobSet final : public nsTArray<RefPtr<MatchGlob>>
-{
-public:
+class MatchGlobSet final : public nsTArray<RefPtr<MatchGlob>> {
+ public:
   // Note: We can't use the nsTArray constructors directly, since the static
   // analyzer doesn't handle their MOZ_IMPLICIT annotations correctly.
   MatchGlobSet() {}
   explicit MatchGlobSet(size_type aCapacity) : nsTArray(aCapacity) {}
   explicit MatchGlobSet(const nsTArray& aOther) : nsTArray(aOther) {}
   MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther) : nsTArray(std::move(aOther)) {}
-  MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlob>> aIL) : nsTArray(aIL) {}
+  MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlob>> aIL)
+      : nsTArray(aIL) {}
 
   bool Matches(const nsAString& aValue) const;
 };
 
-} // namespace extensions
-} // namespace mozilla
+}  // namespace extensions
+}  // namespace mozilla
 
-#endif // mozilla_extensions_MatchGlob_h
-
+#endif  // mozilla_extensions_MatchGlob_h

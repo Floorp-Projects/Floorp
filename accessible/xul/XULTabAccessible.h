@@ -17,9 +17,8 @@ namespace a11y {
 /**
  * An individual tab, xul:tab element.
  */
-class XULTabAccessible : public HyperTextAccessibleWrap
-{
-public:
+class XULTabAccessible : public HyperTextAccessibleWrap {
+ public:
   enum { eAction_Switch = 0 };
 
   XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -37,13 +36,11 @@ public:
   virtual bool DoAction(uint8_t aIndex) const override;
 };
 
-
 /**
  * A container of tab objects, xul:tabs element.
  */
-class XULTabsAccessible : public XULSelectControlAccessible
-{
-public:
+class XULTabsAccessible : public XULSelectControlAccessible {
+ public:
   XULTabsAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
@@ -60,26 +57,24 @@ public:
   virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
   virtual bool IsItemSelected(uint32_t aIndex) override;
 
-protected:
+ protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
-
 /**
  * A container of tab panels, xul:tabpanels element.
  */
-class XULTabpanelsAccessible : public AccessibleWrap
-{
-public:
-  XULTabpanelsAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    AccessibleWrap(aContent, aDoc)
-    { mType = eXULTabpanelsType; }
+class XULTabpanelsAccessible : public AccessibleWrap {
+ public:
+  XULTabpanelsAccessible(nsIContent* aContent, DocAccessible* aDoc)
+      : AccessibleWrap(aContent, aDoc) {
+    mType = eXULTabpanelsType;
+  }
 
   // Accessible
   virtual a11y::role NativeRole() const override;
 };
-
 
 /**
  * A tabpanel object, child elements of xul:tabpanels element.
@@ -88,9 +83,8 @@ public:
  * for example we do not create instance of this class for XUL textbox used as
  * a tabpanel.
  */
-class XULTabpanelAccessible : public AccessibleWrap
-{
-public:
+class XULTabpanelAccessible : public AccessibleWrap {
+ public:
   XULTabpanelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
@@ -98,8 +92,7 @@ public:
   virtual Relation RelationByType(RelationType aType) const override;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

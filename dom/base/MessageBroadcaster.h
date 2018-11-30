@@ -14,14 +14,12 @@ namespace mozilla {
 namespace dom {
 
 /**
- * Implementation for the WebIDL MessageBroadcaster interface. Base class for window and
- * process broadcaster message managers.
+ * Implementation for the WebIDL MessageBroadcaster interface. Base class for
+ * window and process broadcaster message managers.
  */
-class MessageBroadcaster : public MessageListenerManager
-{
-public:
-  static MessageBroadcaster* From(MessageListenerManager* aManager)
-  {
+class MessageBroadcaster : public MessageListenerManager {
+ public:
+  static MessageBroadcaster* From(MessageListenerManager* aManager) {
     if (aManager->IsBroadcaster()) {
       return static_cast<MessageBroadcaster*>(aManager);
     }
@@ -31,17 +29,12 @@ public:
   void BroadcastAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                              JS::Handle<JS::Value> aObj,
                              JS::Handle<JSObject*> aObjects,
-                             mozilla::ErrorResult& aError)
-  {
+                             mozilla::ErrorResult& aError) {
     DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, nullptr,
                          JS::UndefinedHandleValue, aError);
   }
-  uint32_t ChildCount()
-  {
-    return mChildManagers.Length();
-  }
-  MessageListenerManager* GetChildAt(uint32_t aIndex)
-  {
+  uint32_t ChildCount() { return mChildManagers.Length(); }
+  MessageListenerManager* GetChildAt(uint32_t aIndex) {
     return mChildManagers.SafeElementAt(aIndex);
   }
   void ReleaseCachedProcesses();
@@ -49,11 +42,12 @@ public:
   void AddChildManager(MessageListenerManager* aManager);
   void RemoveChildManager(MessageListenerManager* aManager);
 
-protected:
-  MessageBroadcaster(MessageBroadcaster* aParentManager, MessageManagerFlags aFlags);
+ protected:
+  MessageBroadcaster(MessageBroadcaster* aParentManager,
+                     MessageManagerFlags aFlags);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MessageBroadcaster_h
+#endif  // mozilla_dom_MessageBroadcaster_h

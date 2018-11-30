@@ -7,21 +7,19 @@
 
 #include "jsapi-tests/tests.h"
 
-BEGIN_TEST(testSameValue)
-{
-
-    /*
-     * NB: passing a double that fits in an integer jsval is API misuse.  As a
-     * matter of defense in depth, however, JS_SameValue should return the
-     * correct result comparing a positive-zero double to a negative-zero
-     * double, and this is believed to be the only way to make such a
-     * comparison possible.
-     */
-    JS::RootedValue v1(cx, JS::DoubleValue(0.0));
-    JS::RootedValue v2(cx, JS::DoubleValue(-0.0));
-    bool same;
-    CHECK(JS_SameValue(cx, v1, v2, &same));
-    CHECK(!same);
-    return true;
+BEGIN_TEST(testSameValue) {
+  /*
+   * NB: passing a double that fits in an integer jsval is API misuse.  As a
+   * matter of defense in depth, however, JS_SameValue should return the
+   * correct result comparing a positive-zero double to a negative-zero
+   * double, and this is believed to be the only way to make such a
+   * comparison possible.
+   */
+  JS::RootedValue v1(cx, JS::DoubleValue(0.0));
+  JS::RootedValue v2(cx, JS::DoubleValue(-0.0));
+  bool same;
+  CHECK(JS_SameValue(cx, v1, v2, &same));
+  CHECK(!same);
+  return true;
 }
 END_TEST(testSameValue)

@@ -23,39 +23,32 @@ namespace dom {
 
 class GlobalObject;
 
-class StructuredCloneTester final : public nsISupports
-                                  , public nsWrapperCache
-{
-public:
+class StructuredCloneTester final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StructuredCloneTester)
 
-  static already_AddRefed<StructuredCloneTester>
-  Constructor(const GlobalObject& aGlobal, const bool aSerializable,
-              const bool aDeserializable, ErrorResult& aRv);
+  static already_AddRefed<StructuredCloneTester> Constructor(
+      const GlobalObject& aGlobal, const bool aSerializable,
+      const bool aDeserializable, ErrorResult& aRv);
 
-  bool
-  Serializable() const;
+  bool Serializable() const;
 
-  bool
-  Deserializable() const;
+  bool Deserializable() const;
 
-  static JSObject*
-  ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader);
+  static JSObject* ReadStructuredClone(JSContext* aCx,
+                                       JSStructuredCloneReader* aReader);
 
-  bool
-  WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+  bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
 
-  nsISupports*
-  GetParentObject() const;
+  nsISupports* GetParentObject() const;
 
   // nsWrapperCache interface
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-private:
-  StructuredCloneTester(nsISupports* aParent,
-                        const bool aSerializable,
+ private:
+  StructuredCloneTester(nsISupports* aParent, const bool aSerializable,
                         const bool aDeserializable);
   ~StructuredCloneTester() = default;
 
@@ -64,7 +57,7 @@ private:
   bool mDeserializable;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_StructuredCloneTester_h
+#endif  // mozilla_dom_StructuredCloneTester_h

@@ -13,50 +13,40 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
-class UsageResult
-  : public nsIQuotaUsageResult
-{
+class UsageResult : public nsIQuotaUsageResult {
   nsCString mOrigin;
   uint64_t mUsage;
   bool mPersisted;
   uint64_t mLastAccessed;
 
-public:
-  UsageResult(const nsACString& aOrigin,
-              bool aPersisted,
-              uint64_t aUsage,
+ public:
+  UsageResult(const nsACString& aOrigin, bool aPersisted, uint64_t aUsage,
               uint64_t aLastAccessed);
 
-private:
-  virtual ~UsageResult()
-  { }
+ private:
+  virtual ~UsageResult() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUOTAUSAGERESULT
 };
 
-class OriginUsageResult
-  : public nsIQuotaOriginUsageResult
-{
+class OriginUsageResult : public nsIQuotaOriginUsageResult {
   uint64_t mUsage;
   uint64_t mFileUsage;
   uint64_t mLimit;
 
-public:
-  OriginUsageResult(uint64_t aUsage,
-                    uint64_t aFileUsage,
-                    uint64_t aLimit);
+ public:
+  OriginUsageResult(uint64_t aUsage, uint64_t aFileUsage, uint64_t aLimit);
 
-private:
-  virtual ~OriginUsageResult()
-  { }
+ private:
+  virtual ~OriginUsageResult() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUOTAORIGINUSAGERESULT
 };
 
-} // namespace quota
-} // namespace dom
-} // namespace mozilla
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_quota_QuotaResults_h
+#endif  // mozilla_dom_quota_QuotaResults_h

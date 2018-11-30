@@ -21,17 +21,14 @@ namespace mozilla {
  * @param  aResult      [out] Receives the string value, if successful.
  * @return true if successful. aResult is unchanged upon failure.
  */
-static bool
-QueryStringValue(const void* aBlock, DWORD aTranslation,
-                 const wchar_t* aFieldName, nsAString& aResult)
-{
+static bool QueryStringValue(const void* aBlock, DWORD aTranslation,
+                             const wchar_t* aFieldName, nsAString& aResult) {
   nsAutoString path;
   path.AppendPrintf("\\StringFileInfo\\%02X%02X%02X%02X\\%S",
                     (aTranslation & 0x0000ff00) >> 8,
                     (aTranslation & 0x000000ff),
                     (aTranslation & 0xff000000) >> 24,
-                    (aTranslation & 0x00ff0000) >> 16,
-                    aFieldName);
+                    (aTranslation & 0x00ff0000) >> 16, aFieldName);
 
   wchar_t* lpBuffer = nullptr;
   UINT len = 0;
@@ -54,12 +51,11 @@ QueryStringValue(const void* aBlock, DWORD aTranslation,
  * @param  aResult       [in] Receives the string value, if successful.
  * @return true if successful. aResult is unchanged upon failure.
  */
-static bool
-QueryStringValue(const void* aBlock, const DWORD* aTranslations,
-                 size_t aNumTrans, const wchar_t* aFieldName,
-                 nsAString& aResult)
-{
-  static const DWORD kPreferredTranslation = 0x04b00409; // English (US), Unicode
+static bool QueryStringValue(const void* aBlock, const DWORD* aTranslations,
+                             size_t aNumTrans, const wchar_t* aFieldName,
+                             nsAString& aResult) {
+  static const DWORD kPreferredTranslation =
+      0x04b00409;  // English (US), Unicode
   if (QueryStringValue(aBlock, kPreferredTranslation, aFieldName, aResult)) {
     return true;
   }
@@ -71,9 +67,7 @@ QueryStringValue(const void* aBlock, const DWORD* aTranslations,
   return false;
 }
 
-bool
-ModuleVersionInfo::GetFromImage(const nsAString& aPath)
-{
+bool ModuleVersionInfo::GetFromImage(const nsAString& aPath) {
   nsString path(aPath);
   DWORD infoSize = GetFileVersionInfoSizeW(path.get(), nullptr);
   if (!infoSize) {
@@ -88,15 +82,15 @@ ModuleVersionInfo::GetFromImage(const nsAString& aPath)
   VS_FIXEDFILEINFO* vInfo = nullptr;
   UINT vInfoLen = 0;
   if (::VerQueryValueW(verInfo.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
-    mFileVersion = VersionNumber(vInfo->dwFileVersionMS,
-                                 vInfo->dwFileVersionLS);
-    mProductVersion = VersionNumber(vInfo->dwProductVersionMS,
-                                    vInfo->dwProductVersionLS);
+    mFileVersion =
+        VersionNumber(vInfo->dwFileVersionMS, vInfo->dwFileVersionLS);
+    mProductVersion =
+        VersionNumber(vInfo->dwProductVersionMS, vInfo->dwProductVersionLS);
   }
 
   // Note that regardless the character set indicated, strings are always
   // returned as Unicode by the Windows APIs.
-  DWORD *pTrans = nullptr;
+  DWORD* pTrans = nullptr;
   UINT cbTrans = 0;
   if (::VerQueryValueW(verInfo.get(), L"\\VarFileInfo\\Translation",
                        (PVOID*)&pTrans, &cbTrans)) {
@@ -114,4 +108,4 @@ ModuleVersionInfo::GetFromImage(const nsAString& aPath)
   return true;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

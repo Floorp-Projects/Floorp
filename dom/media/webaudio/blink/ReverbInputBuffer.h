@@ -34,38 +34,39 @@
 
 namespace WebCore {
 
-// ReverbInputBuffer is used to buffer input samples for deferred processing by the background threads.
+// ReverbInputBuffer is used to buffer input samples for deferred processing by
+// the background threads.
 class ReverbInputBuffer {
-public:
-    explicit ReverbInputBuffer(size_t length);
+ public:
+  explicit ReverbInputBuffer(size_t length);
 
-    // The realtime audio thread keeps writing samples here.
-    // The assumption is that the buffer's length is evenly divisible by numberOfFrames (for nearly all cases this will be fine).
-    // FIXME: remove numberOfFrames restriction...
-    void write(const float* sourceP, size_t numberOfFrames);
+  // The realtime audio thread keeps writing samples here.
+  // The assumption is that the buffer's length is evenly divisible by
+  // numberOfFrames (for nearly all cases this will be fine).
+  // FIXME: remove numberOfFrames restriction...
+  void write(const float* sourceP, size_t numberOfFrames);
 
-    // Background threads can call this to check if there's anything to read...
-    size_t writeIndex() const { return m_writeIndex; }
+  // Background threads can call this to check if there's anything to read...
+  size_t writeIndex() const { return m_writeIndex; }
 
-    // The individual background threads read here (and hope that they can keep up with the buffer writing).
-    // readIndex is updated with the next readIndex to read from...
-    // The assumption is that the buffer's length is evenly divisible by numberOfFrames.
-    // FIXME: remove numberOfFrames restriction...
-    float* directReadFrom(int* readIndex, size_t numberOfFrames);
+  // The individual background threads read here (and hope that they can keep up
+  // with the buffer writing). readIndex is updated with the next readIndex to
+  // read from... The assumption is that the buffer's length is evenly divisible
+  // by numberOfFrames.
+  // FIXME: remove numberOfFrames restriction...
+  float* directReadFrom(int* readIndex, size_t numberOfFrames);
 
-    void reset();
+  void reset();
 
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-    {
-        return m_buffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    }
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return m_buffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
 
-
-private:
-    nsTArray<float> m_buffer;
-    size_t m_writeIndex;
+ private:
+  nsTArray<float> m_buffer;
+  size_t m_writeIndex;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // ReverbInputBuffer_h
+#endif  // ReverbInputBuffer_h

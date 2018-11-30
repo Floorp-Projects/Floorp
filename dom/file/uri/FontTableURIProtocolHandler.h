@@ -16,30 +16,29 @@
 namespace mozilla {
 namespace dom {
 
-class FontTableURIProtocolHandler final : public nsIProtocolHandler
-                                        , public nsIProtocolHandlerWithDynamicFlags
-                                        , public nsSupportsWeakReference
-{
-public:
+class FontTableURIProtocolHandler final
+    : public nsIProtocolHandler,
+      public nsIProtocolHandlerWithDynamicFlags,
+      public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROTOCOLHANDLER
   NS_DECL_NSIPROTOCOLHANDLERWITHDYNAMICFLAGS
 
   FontTableURIProtocolHandler();
 
-  static nsresult GenerateURIString(nsACString &aUri);
+  static nsresult GenerateURIString(nsACString& aUri);
 
-protected:
+ protected:
   virtual ~FontTableURIProtocolHandler();
 };
 
-inline bool IsFontTableURI(nsIURI* aUri)
-{
+inline bool IsFontTableURI(nsIURI* aUri) {
   bool isFont;
   return NS_SUCCEEDED(aUri->SchemeIs(FONTTABLEURI_SCHEME, &isFont)) && isFont;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* FontTableURIProtocolHandler_h */

@@ -14,11 +14,11 @@
 #include "nsITimer.h"
 
 #ifdef MOZILLA_INTERNAL_API
-# include "nsThreadManager.h"
+#include "nsThreadManager.h"
 #else
-# include "nsXPCOMCIDInternal.h"
-# include "nsIThreadManager.h"
-# include "nsServiceManagerUtils.h"
+#include "nsXPCOMCIDInternal.h"
+#include "nsIThreadManager.h"
+#include "nsServiceManagerUtils.h"
 #endif
 
 #ifdef XP_WIN
@@ -34,8 +34,7 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS(IdlePeriod, nsIIdlePeriod)
 
 NS_IMETHODIMP
-IdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
-{
+IdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline) {
   *aIdleDeadline = TimeStamp();
   return NS_OK;
 }
@@ -52,16 +51,14 @@ NS_IMPL_QUERY_INTERFACE(Runnable, nsIRunnable, nsINamed)
 #endif
 
 NS_IMETHODIMP
-Runnable::Run()
-{
+Runnable::Run() {
   // Do nothing
   return NS_OK;
 }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMETHODIMP
-Runnable::GetName(nsACString& aName)
-{
+Runnable::GetName(nsACString& aName) {
   if (mName) {
     aName.AssignASCII(mName);
   } else {
@@ -71,29 +68,24 @@ Runnable::GetName(nsACString& aName)
 }
 #endif
 
-NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, Runnable,
-                            nsICancelableRunnable)
+NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, Runnable, nsICancelableRunnable)
 
-nsresult
-CancelableRunnable::Cancel()
-{
+nsresult CancelableRunnable::Cancel() {
   // Do nothing
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(IdleRunnable, CancelableRunnable,
-                            nsIIdleRunnable)
+NS_IMPL_ISUPPORTS_INHERITED(IdleRunnable, CancelableRunnable, nsIIdleRunnable)
 
 NS_IMPL_ISUPPORTS_INHERITED(PrioritizableRunnable, Runnable,
                             nsIRunnablePriority)
 
-PrioritizableRunnable::PrioritizableRunnable(already_AddRefed<nsIRunnable>&& aRunnable,
-                                             uint32_t aPriority)
- // Real runnable name is managed by overridding the GetName function.
- : Runnable("PrioritizableRunnable")
- , mRunnable(std::move(aRunnable))
- , mPriority(aPriority)
-{
+PrioritizableRunnable::PrioritizableRunnable(
+    already_AddRefed<nsIRunnable>&& aRunnable, uint32_t aPriority)
+    // Real runnable name is managed by overridding the GetName function.
+    : Runnable("PrioritizableRunnable"),
+      mRunnable(std::move(aRunnable)),
+      mPriority(aPriority) {
 #if DEBUG
   nsCOMPtr<nsIRunnablePriority> runnablePrio = do_QueryInterface(mRunnable);
   MOZ_ASSERT(!runnablePrio);
@@ -102,8 +94,7 @@ PrioritizableRunnable::PrioritizableRunnable(already_AddRefed<nsIRunnable>&& aRu
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMETHODIMP
-PrioritizableRunnable::GetName(nsACString& aName)
-{
+PrioritizableRunnable::GetName(nsACString& aName) {
   // Try to get a name from the underlying runnable.
   nsCOMPtr<nsINamed> named = do_QueryInterface(mRunnable);
   if (named) {
@@ -114,15 +105,13 @@ PrioritizableRunnable::GetName(nsACString& aName)
 #endif
 
 NS_IMETHODIMP
-PrioritizableRunnable::Run()
-{
+PrioritizableRunnable::Run() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   return mRunnable->Run();
 }
 
 NS_IMETHODIMP
-PrioritizableRunnable::GetPriority(uint32_t* aPriority)
-{
+PrioritizableRunnable::GetPriority(uint32_t* aPriority) {
   *aPriority = mPriority;
   return NS_OK;
 }
@@ -131,21 +120,16 @@ PrioritizableRunnable::GetPriority(uint32_t* aPriority)
 
 //-----------------------------------------------------------------------------
 
-nsresult
-NS_NewNamedThread(const nsACString& aName,
-                  nsIThread** aResult,
-                  nsIRunnable* aEvent,
-                  uint32_t aStackSize)
-{
+nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
+                           nsIRunnable* aEvent, uint32_t aStackSize) {
   nsCOMPtr<nsIThread> thread;
 #ifdef MOZILLA_INTERNAL_API
-  nsresult rv =
-    nsThreadManager::get().nsThreadManager::NewNamedThread(aName, aStackSize,
-                                                           getter_AddRefs(thread));
+  nsresult rv = nsThreadManager::get().nsThreadManager::NewNamedThread(
+      aName, aStackSize, getter_AddRefs(thread));
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
-    do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
+      do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -168,21 +152,18 @@ NS_NewNamedThread(const nsACString& aName,
   return NS_OK;
 }
 
-nsresult
-NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
-{
+nsresult NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent,
+                      uint32_t aStackSize) {
   return NS_NewNamedThread(NS_LITERAL_CSTRING(""), aResult, aEvent, aStackSize);
 }
 
-nsresult
-NS_GetCurrentThread(nsIThread** aResult)
-{
+nsresult NS_GetCurrentThread(nsIThread** aResult) {
 #ifdef MOZILLA_INTERNAL_API
   return nsThreadManager::get().nsThreadManager::GetCurrentThread(aResult);
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
-    do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
+      do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -190,15 +171,13 @@ NS_GetCurrentThread(nsIThread** aResult)
 #endif
 }
 
-nsresult
-NS_GetMainThread(nsIThread** aResult)
-{
+nsresult NS_GetMainThread(nsIThread** aResult) {
 #ifdef MOZILLA_INTERNAL_API
   return nsThreadManager::get().nsThreadManager::GetMainThread(aResult);
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
-    do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
+      do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -206,9 +185,7 @@ NS_GetMainThread(nsIThread** aResult)
 #endif
 }
 
-nsresult
-NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
-{
+nsresult NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent) {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
@@ -239,21 +216,19 @@ NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 // It is common to call NS_DispatchToCurrentThread with a newly
 // allocated runnable with a refcount of zero. To keep us from leaking
 // the runnable if the dispatch method fails, we take a death grip.
-nsresult
-NS_DispatchToCurrentThread(nsIRunnable* aEvent)
-{
+nsresult NS_DispatchToCurrentThread(nsIRunnable* aEvent) {
   nsCOMPtr<nsIRunnable> event(aEvent);
   return NS_DispatchToCurrentThread(event.forget());
 }
 
-nsresult
-NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispatchFlags)
-{
+nsresult NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent,
+                                 uint32_t aDispatchFlags) {
   LeakRefPtr<nsIRunnable> event(std::move(aEvent));
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    NS_ASSERTION(false, "Failed NS_DispatchToMainThread() in shutdown; leaking");
+    NS_ASSERTION(false,
+                 "Failed NS_DispatchToMainThread() in shutdown; leaking");
     // NOTE: if you stop leaking here, adjust Promise::MaybeReportRejected(),
     // which assumes a leak here, or split into leaks and no-leaks versions
     return rv;
@@ -266,16 +241,13 @@ NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispat
 // likely that the runnable is being dispatched to the main thread
 // because it owns main thread only objects, so it is not safe to
 // release them here.
-nsresult
-NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
-{
+nsresult NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags) {
   nsCOMPtr<nsIRunnable> event(aEvent);
   return NS_DispatchToMainThread(event.forget(), aDispatchFlags);
 }
 
-nsresult
-NS_DelayedDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs)
-{
+nsresult NS_DelayedDispatchToCurrentThread(
+    already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs) {
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
   nsIEventTarget* thread = GetCurrentThreadEventTarget();
@@ -294,10 +266,8 @@ NS_DelayedDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent, uint32
   return thread->DelayedDispatch(event.forget(), aDelayMs);
 }
 
-nsresult
-NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                        nsIThread* aThread)
-{
+nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
+                                 nsIThread* aThread) {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
@@ -318,16 +288,13 @@ NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
   return rv;
 }
 
-nsresult
-NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
-{
-  return NS_IdleDispatchToThread(std::move(aEvent),
-                                 NS_GetCurrentThread());
+nsresult NS_IdleDispatchToCurrentThread(
+    already_AddRefed<nsIRunnable>&& aEvent) {
+  return NS_IdleDispatchToThread(std::move(aEvent), NS_GetCurrentThread());
 }
 
-extern nsresult
-NS_IdleDispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
-{
+extern nsresult NS_IdleDispatchToMainThread(
+    already_AddRefed<nsIRunnable>&& aEvent) {
   nsCOMPtr<nsIThread> mainThread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
   if (NS_SUCCEEDED(rv)) {
@@ -336,16 +303,12 @@ NS_IdleDispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
   return rv;
 }
 
-class IdleRunnableWrapper final : public IdleRunnable
-{
-public:
+class IdleRunnableWrapper final : public IdleRunnable {
+ public:
   explicit IdleRunnableWrapper(already_AddRefed<nsIRunnable>&& aEvent)
-    : mRunnable(std::move(aEvent))
-  {
-  }
+      : mRunnable(std::move(aEvent)) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     if (!mRunnable) {
       return NS_OK;
     }
@@ -354,30 +317,22 @@ public:
     return runnable->Run();
   }
 
-  static void
-  TimedOut(nsITimer* aTimer, void* aClosure)
-  {
+  static void TimedOut(nsITimer* aTimer, void* aClosure) {
     RefPtr<IdleRunnableWrapper> runnable =
-      static_cast<IdleRunnableWrapper*>(aClosure);
+        static_cast<IdleRunnableWrapper*>(aClosure);
     runnable->Run();
   }
 
-  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override
-  {
+  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override {
     MOZ_ASSERT(aTarget);
     MOZ_ASSERT(!mTimer);
-    NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer),
-                                TimedOut,
-                                this,
-                                aDelay,
+    NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer), TimedOut, this, aDelay,
                                 nsITimer::TYPE_ONE_SHOT,
-                                "IdleRunnableWrapper::SetTimer",
-                                aTarget);
+                                "IdleRunnableWrapper::SetTimer", aTarget);
   }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-  NS_IMETHOD GetName(nsACString& aName) override
-  {
+  NS_IMETHOD GetName(nsACString& aName) override {
     aName.AssignLiteral("IdleRunnableWrapper");
     if (nsCOMPtr<nsINamed> named = do_QueryInterface(mRunnable)) {
       nsAutoCString name;
@@ -391,14 +346,10 @@ public:
   }
 #endif
 
-private:
-  ~IdleRunnableWrapper()
-  {
-    CancelTimer();
-  }
+ private:
+  ~IdleRunnableWrapper() { CancelTimer(); }
 
-  void CancelTimer()
-  {
+  void CancelTimer() {
     if (mTimer) {
       mTimer->Cancel();
     }
@@ -408,15 +359,12 @@ private:
   nsCOMPtr<nsIRunnable> mRunnable;
 };
 
-extern nsresult
-NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
-                        uint32_t aTimeout,
-                        nsIThread* aThread)
-{
+extern nsresult NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
+                                        uint32_t aTimeout, nsIThread* aThread) {
   nsCOMPtr<nsIRunnable> event(std::move(aEvent));
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
 
-  //XXX Using current thread for now as the nsIEventTarget.
+  // XXX Using current thread for now as the nsIEventTarget.
   nsIEventTarget* target = mozilla::GetCurrentThreadEventTarget();
   if (!target) {
     return NS_ERROR_UNEXPECTED;
@@ -434,18 +382,14 @@ NS_IdleDispatchToThread(already_AddRefed<nsIRunnable>&& aEvent,
   return NS_IdleDispatchToThread(event.forget(), aThread);
 }
 
-extern nsresult
-NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent,
-                               uint32_t aTimeout)
-{
+extern nsresult NS_IdleDispatchToCurrentThread(
+    already_AddRefed<nsIRunnable>&& aEvent, uint32_t aTimeout) {
   return NS_IdleDispatchToThread(std::move(aEvent), aTimeout,
                                  NS_GetCurrentThread());
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
-nsresult
-NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout)
-{
+nsresult NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout) {
   nsresult rv = NS_OK;
 
 #ifdef MOZILLA_INTERNAL_API
@@ -479,18 +423,14 @@ NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout)
   }
   return rv;
 }
-#endif // XPCOM_GLUE_AVOID_NSPR
+#endif  // XPCOM_GLUE_AVOID_NSPR
 
-inline bool
-hasPendingEvents(nsIThread* aThread)
-{
+inline bool hasPendingEvents(nsIThread* aThread) {
   bool val;
   return NS_SUCCEEDED(aThread->HasPendingEvents(&val)) && val;
 }
 
-bool
-NS_HasPendingEvents(nsIThread* aThread)
-{
+bool NS_HasPendingEvents(nsIThread* aThread) {
   if (!aThread) {
 #ifndef MOZILLA_INTERNAL_API
     nsCOMPtr<nsIThread> current;
@@ -506,9 +446,7 @@ NS_HasPendingEvents(nsIThread* aThread)
   return hasPendingEvents(aThread);
 }
 
-bool
-NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait)
-{
+bool NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait) {
 #ifdef MOZILLA_INTERNAL_API
   if (!aThread) {
     aThread = NS_GetCurrentThread();
@@ -530,24 +468,17 @@ NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait)
   return NS_SUCCEEDED(aThread->ProcessNextEvent(aMayWait, &val)) && val;
 }
 
-void
-NS_SetCurrentThreadName(const char* aName)
-{
+void NS_SetCurrentThreadName(const char* aName) {
   PR_SetCurrentThreadName(aName);
   CrashReporter::SetCurrentThreadName(aName);
 }
 
 #ifdef MOZILLA_INTERNAL_API
-nsIThread*
-NS_GetCurrentThread()
-{
+nsIThread* NS_GetCurrentThread() {
   return nsThreadManager::get().GetCurrentThread();
 }
 
-
-nsIThread*
-NS_GetCurrentThreadNoCreate()
-{
+nsIThread* NS_GetCurrentThreadNoCreate() {
   if (nsThreadManager::get().IsNSThread()) {
     return NS_GetCurrentThread();
   }
@@ -556,34 +487,29 @@ NS_GetCurrentThreadNoCreate()
 #endif
 
 // nsThreadPoolNaming
-nsCString
-nsThreadPoolNaming::GetNextThreadName(const nsACString& aPoolName)
-{
+nsCString nsThreadPoolNaming::GetNextThreadName(const nsACString& aPoolName) {
   nsCString name(aPoolName);
   name.AppendLiteral(" #");
-  name.AppendInt(++mCounter, 10); // The counter is declared as atomic
+  name.AppendInt(++mCounter, 10);  // The counter is declared as atomic
   return name;
 }
 
 // nsAutoLowPriorityIO
-nsAutoLowPriorityIO::nsAutoLowPriorityIO()
-{
+nsAutoLowPriorityIO::nsAutoLowPriorityIO() {
 #if defined(XP_WIN)
-  lowIOPrioritySet = SetThreadPriority(GetCurrentThread(),
-                                       THREAD_MODE_BACKGROUND_BEGIN);
+  lowIOPrioritySet =
+      SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN);
 #elif defined(XP_MACOSX)
   oldPriority = getiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD);
-  lowIOPrioritySet = oldPriority != -1 &&
-                     setiopolicy_np(IOPOL_TYPE_DISK,
-                                    IOPOL_SCOPE_THREAD,
-                                    IOPOL_THROTTLE) != -1;
+  lowIOPrioritySet =
+      oldPriority != -1 &&
+      setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD, IOPOL_THROTTLE) != -1;
 #else
   lowIOPrioritySet = false;
 #endif
 }
 
-nsAutoLowPriorityIO::~nsAutoLowPriorityIO()
-{
+nsAutoLowPriorityIO::~nsAutoLowPriorityIO() {
 #if defined(XP_WIN)
   if (MOZ_LIKELY(lowIOPrioritySet)) {
     // On Windows the old thread priority is automatically restored
@@ -598,9 +524,7 @@ nsAutoLowPriorityIO::~nsAutoLowPriorityIO()
 
 namespace mozilla {
 
-nsIEventTarget*
-GetCurrentThreadEventTarget()
-{
+nsIEventTarget* GetCurrentThreadEventTarget() {
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
@@ -610,9 +534,7 @@ GetCurrentThreadEventTarget()
   return thread->EventTarget();
 }
 
-nsIEventTarget*
-GetMainThreadEventTarget()
-{
+nsIEventTarget* GetMainThreadEventTarget() {
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
@@ -622,9 +544,7 @@ GetMainThreadEventTarget()
   return thread->EventTarget();
 }
 
-nsISerialEventTarget*
-GetCurrentThreadSerialEventTarget()
-{
+nsISerialEventTarget* GetCurrentThreadSerialEventTarget() {
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
@@ -634,9 +554,7 @@ GetCurrentThreadSerialEventTarget()
   return thread->SerialEventTarget();
 }
 
-nsISerialEventTarget*
-GetMainThreadSerialEventTarget()
-{
+nsISerialEventTarget* GetMainThreadSerialEventTarget() {
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
@@ -646,11 +564,9 @@ GetMainThreadSerialEventTarget()
   return thread->SerialEventTarget();
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-bool
-nsIEventTarget::IsOnCurrentThread()
-{
+bool nsIEventTarget::IsOnCurrentThread() {
   if (mVirtualThread) {
     return mVirtualThread == GetCurrentVirtualThread();
   }

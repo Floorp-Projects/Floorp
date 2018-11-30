@@ -18,19 +18,14 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gfx {
 
-InlineTranslator::InlineTranslator(DrawTarget* aDT, void* aFontContext)
-  : mBaseDT(aDT)
-  , mFontContext(aFontContext)
-{
-}
+InlineTranslator::InlineTranslator(DrawTarget *aDT, void *aFontContext)
+    : mBaseDT(aDT), mFontContext(aFontContext) {}
 
-bool
-InlineTranslator::TranslateRecording(char *aData, size_t aLen)
-{
+bool InlineTranslator::TranslateRecording(char *aData, size_t aLen) {
   // an istream like class for reading from memory
   struct MemReader {
     MemReader(char *aData, size_t aLen) : mData(aData), mEnd(aData + aLen) {}
-    void read(char* s, std::streamsize n) {
+    void read(char *s, std::streamsize n) {
       if (n <= (mEnd - mData)) {
         memcpy(s, mData, n);
         mData += n;
@@ -40,18 +35,13 @@ InlineTranslator::TranslateRecording(char *aData, size_t aLen)
         mData = mEnd + 1;
       }
     }
-    bool eof() {
-      return mData > mEnd;
-    }
-    bool good() {
-      return !eof();
-    }
+    bool eof() { return mData > mEnd; }
+    bool good() { return !eof(); }
 
     char *mData;
     char *mEnd;
   };
   MemReader reader(aData, aLen);
-
 
   uint32_t magicInt;
   ReadElement(reader, magicInt);
@@ -77,23 +67,27 @@ InlineTranslator::TranslateRecording(char *aData, size_t aLen)
   int32_t eventType;
   ReadElement(reader, eventType);
   while (reader.good()) {
-    bool success = RecordedEvent::DoWithEvent(reader, static_cast<RecordedEvent::EventType>(eventType),
-                               [&] (RecordedEvent *recordedEvent) {
-                                 // Make sure that the whole event was read from the stream successfully.
-                                 if (!reader.good()) {
-                                     mError = " READ";
-                                     return false;
-                                 }
+    bool success = RecordedEvent::DoWithEvent(
+        reader, static_cast<RecordedEvent::EventType>(eventType),
+        [&](RecordedEvent *recordedEvent) {
+          // Make sure that the whole event was read from the stream
+          // successfully.
+          if (!reader.good()) {
+            mError = " READ";
+            return false;
+          }
 
-                                 if (!recordedEvent->PlayEvent(this)) {
-                                     mError = " PLAY";
-                                     return false;
-                                 }
+          if (!recordedEvent->PlayEvent(this)) {
+            mError = " PLAY";
+            return false;
+          }
 
-                                 return true;
-                              });
+          return true;
+        });
     if (!success) {
-      mError = RecordedEvent::GetEventName(static_cast<RecordedEvent::EventType>(eventType)) + mError;
+      mError = RecordedEvent::GetEventName(
+                   static_cast<RecordedEvent::EventType>(eventType)) +
+               mError;
       return false;
     }
 
@@ -103,15 +97,13 @@ InlineTranslator::TranslateRecording(char *aData, size_t aLen)
   return true;
 }
 
-already_AddRefed<DrawTarget>
-InlineTranslator::CreateDrawTarget(ReferencePtr aRefPtr,
-                                  const gfx::IntSize &aSize,
-                                  gfx::SurfaceFormat aFormat)
-{
+already_AddRefed<DrawTarget> InlineTranslator::CreateDrawTarget(
+    ReferencePtr aRefPtr, const gfx::IntSize &aSize,
+    gfx::SurfaceFormat aFormat) {
   RefPtr<DrawTarget> drawTarget = mBaseDT;
   AddDrawTarget(aRefPtr, drawTarget);
   return drawTarget.forget();
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

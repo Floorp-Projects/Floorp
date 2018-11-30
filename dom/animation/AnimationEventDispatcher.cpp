@@ -17,19 +17,19 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEventDispatcher)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEventDispatcher)
   for (auto& info : tmp->mPendingEvents) {
-    ImplCycleCollectionTraverse(cb, info.mTarget,
-      "mozilla::AnimationEventDispatcher.mPendingEvents.mTarget");
-    ImplCycleCollectionTraverse(cb, info.mAnimation,
-      "mozilla::AnimationEventDispatcher.mPendingEvents.mAnimation");
+    ImplCycleCollectionTraverse(
+        cb, info.mTarget,
+        "mozilla::AnimationEventDispatcher.mPendingEvents.mTarget");
+    ImplCycleCollectionTraverse(
+        cb, info.mAnimation,
+        "mozilla::AnimationEventDispatcher.mPendingEvents.mAnimation");
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnimationEventDispatcher, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnimationEventDispatcher, Release)
 
-void
-AnimationEventDispatcher::Disconnect()
-{
+void AnimationEventDispatcher::Disconnect() {
   if (mIsObserving) {
     MOZ_ASSERT(mPresContext && mPresContext->RefreshDriver(),
                "The pres context and the refresh driver should be still "
@@ -40,25 +40,20 @@ AnimationEventDispatcher::Disconnect()
   mPresContext = nullptr;
 }
 
-void
-AnimationEventDispatcher::QueueEvent(AnimationEventInfo&& aEvent)
-{
+void AnimationEventDispatcher::QueueEvent(AnimationEventInfo&& aEvent) {
   mPendingEvents.AppendElement(std::move(aEvent));
   mIsSorted = false;
   ScheduleDispatch();
 }
 
-void
-AnimationEventDispatcher::QueueEvents(nsTArray<AnimationEventInfo>&& aEvents)
-{
+void AnimationEventDispatcher::QueueEvents(
+    nsTArray<AnimationEventInfo>&& aEvents) {
   mPendingEvents.AppendElements(std::move(aEvents));
   mIsSorted = false;
   ScheduleDispatch();
 }
 
-void
-AnimationEventDispatcher::ScheduleDispatch()
-{
+void AnimationEventDispatcher::ScheduleDispatch() {
   MOZ_ASSERT(mPresContext, "The pres context should be valid");
   if (!mIsObserving) {
     mPresContext->RefreshDriver()->ScheduleAnimationEventDispatch(this);
@@ -66,5 +61,4 @@ AnimationEventDispatcher::ScheduleDispatch()
   }
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

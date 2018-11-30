@@ -19,7 +19,7 @@ namespace AvailableMemoryTracker {
 
 void Init();
 
-} // namespace AvailableMemoryTracker
-} // namespace mozilla
+}  // namespace AvailableMemoryTracker
+}  // namespace mozilla
 
-#endif // ifndef mozilla_AvailableMemoryTracker_h
+#endif  // ifndef mozilla_AvailableMemoryTracker_h

@@ -650,7 +650,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   bool mCanPlayThrough = false;
 };
 
-typedef MozPromise<mozilla::dom::MediaMemoryInfo, nsresult, true> MediaMemoryPromise;
+typedef MozPromise<mozilla::dom::MediaMemoryInfo, nsresult, true>
+    MediaMemoryPromise;
 
 RefPtr<MediaMemoryPromise> GetMediaMemorySizes();
 

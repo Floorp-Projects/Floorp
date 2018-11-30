@@ -32,82 +32,81 @@ class nsInputStreamPump;
 
 //-----------------------------------------------------------------------------
 
-class nsJARChannel final : public nsIJARChannel
-                         , public nsIStreamListener
-                         , public nsIThreadRetargetableRequest
-                         , public nsIThreadRetargetableStreamListener
-                         , public nsHashPropertyBag
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSICHANNEL
-    NS_DECL_NSIJARCHANNEL
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSITHREADRETARGETABLEREQUEST
-    NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+class nsJARChannel final : public nsIJARChannel,
+                           public nsIStreamListener,
+                           public nsIThreadRetargetableRequest,
+                           public nsIThreadRetargetableStreamListener,
+                           public nsHashPropertyBag {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIREQUEST
+  NS_DECL_NSICHANNEL
+  NS_DECL_NSIJARCHANNEL
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLEREQUEST
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-    nsJARChannel();
+  nsJARChannel();
 
-    nsresult Init(nsIURI *uri);
+  nsresult Init(nsIURI *uri);
 
-    void SetFile(nsIFile *file);
+  void SetFile(nsIFile *file);
 
-private:
-    virtual ~nsJARChannel();
+ private:
+  virtual ~nsJARChannel();
 
-    nsresult CreateJarInput(nsIZipReaderCache *, nsJARInputThunk **);
-    nsresult LookupFile();
-    nsresult OpenLocalFile();
-    nsresult ContinueOpenLocalFile(nsJARInputThunk* aInput, bool aIsSyncCall);
-    nsresult OnOpenLocalFileComplete(nsresult aResult, bool aIsSyncCall);
-    nsresult CheckPendingEvents();
-    void NotifyError(nsresult aError);
-    void FireOnProgress(uint64_t aProgress);
+  nsresult CreateJarInput(nsIZipReaderCache *, nsJARInputThunk **);
+  nsresult LookupFile();
+  nsresult OpenLocalFile();
+  nsresult ContinueOpenLocalFile(nsJARInputThunk *aInput, bool aIsSyncCall);
+  nsresult OnOpenLocalFileComplete(nsresult aResult, bool aIsSyncCall);
+  nsresult CheckPendingEvents();
+  void NotifyError(nsresult aError);
+  void FireOnProgress(uint64_t aProgress);
 
-    nsCString                       mSpec;
+  nsCString mSpec;
 
-    bool                            mOpened;
+  bool mOpened;
 
-    RefPtr<nsJARProtocolHandler>    mJarHandler;
-    nsCOMPtr<nsIJARURI>             mJarURI;
-    nsCOMPtr<nsIURI>                mOriginalURI;
-    nsCOMPtr<nsISupports>           mOwner;
-    nsCOMPtr<nsILoadInfo>           mLoadInfo;
-    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    nsCOMPtr<nsISupports>           mSecurityInfo;
-    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
-    nsCOMPtr<nsILoadGroup>          mLoadGroup;
-    nsCOMPtr<nsIStreamListener>     mListener;
-    nsCOMPtr<nsISupports>           mListenerContext;
-    nsCString                       mContentType;
-    nsCString                       mContentCharset;
-    int64_t                         mContentLength;
-    uint32_t                        mLoadFlags;
-    nsresult                        mStatus;
-    bool                            mIsPending; // the AsyncOpen is in progress.
+  RefPtr<nsJARProtocolHandler> mJarHandler;
+  nsCOMPtr<nsIJARURI> mJarURI;
+  nsCOMPtr<nsIURI> mOriginalURI;
+  nsCOMPtr<nsISupports> mOwner;
+  nsCOMPtr<nsILoadInfo> mLoadInfo;
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+  nsCOMPtr<nsISupports> mSecurityInfo;
+  nsCOMPtr<nsIProgressEventSink> mProgressSink;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
+  nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsISupports> mListenerContext;
+  nsCString mContentType;
+  nsCString mContentCharset;
+  int64_t mContentLength;
+  uint32_t mLoadFlags;
+  nsresult mStatus;
+  bool mIsPending;  // the AsyncOpen is in progress.
 
-    bool                            mEnableOMT;
-    // |Cancel()|, |Suspend()|, and |Resume()| might be called during AsyncOpen.
-    struct {
-        bool isCanceled;
-        uint32_t suspendCount;
-    }                               mPendingEvent;
+  bool mEnableOMT;
+  // |Cancel()|, |Suspend()|, and |Resume()| might be called during AsyncOpen.
+  struct {
+    bool isCanceled;
+    uint32_t suspendCount;
+  } mPendingEvent;
 
-    nsCOMPtr<nsIInputStreamPump>    mPump;
-    // mRequest is only non-null during OnStartRequest, so we'll have a pointer
-    // to the request if we get called back via RetargetDeliveryTo.
-    nsCOMPtr<nsIRequest>            mRequest;
-    nsCOMPtr<nsIFile>               mJarFile;
-    nsCOMPtr<nsIFile>               mJarFileOverride;
-    nsCOMPtr<nsIZipReader>          mPreCachedJarReader;
-    nsCOMPtr<nsIURI>                mJarBaseURI;
-    nsCString                       mJarEntry;
-    nsCString                       mInnerJarEntry;
+  nsCOMPtr<nsIInputStreamPump> mPump;
+  // mRequest is only non-null during OnStartRequest, so we'll have a pointer
+  // to the request if we get called back via RetargetDeliveryTo.
+  nsCOMPtr<nsIRequest> mRequest;
+  nsCOMPtr<nsIFile> mJarFile;
+  nsCOMPtr<nsIFile> mJarFileOverride;
+  nsCOMPtr<nsIZipReader> mPreCachedJarReader;
+  nsCOMPtr<nsIURI> mJarBaseURI;
+  nsCString mJarEntry;
+  nsCString mInnerJarEntry;
 
-    // use StreamTransportService as background thread
-    nsCOMPtr<nsIEventTarget>        mWorker;
+  // use StreamTransportService as background thread
+  nsCOMPtr<nsIEventTarget> mWorker;
 };
 
-#endif // nsJARChannel_h__
+#endif  // nsJARChannel_h__

@@ -47,17 +47,11 @@
 #if defined(__GLIBC__)
 #include <unistd.h>
 #include <sys/syscall.h>
-static inline pid_t gettid()
-{
-  return (pid_t) syscall(SYS_gettid);
-}
+static inline pid_t gettid() { return (pid_t)syscall(SYS_gettid); }
 #elif defined(GP_OS_darwin)
 #include <unistd.h>
 #include <sys/syscall.h>
-static inline pid_t gettid()
-{
-  return (pid_t) syscall(SYS_thread_selfid);
-}
+static inline pid_t gettid() { return (pid_t)syscall(SYS_thread_selfid); }
 #elif defined(GP_OS_android)
 #include <unistd.h>
 #elif defined(GP_OS_windows)
@@ -72,17 +66,15 @@ extern mozilla::LazyLogModule gProfilerLog;
 
 // These are for MOZ_LOG="prof:3" or higher. It's the default logging level for
 // the profiler, and should be used sparingly.
-#define LOG_TEST \
-  MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Info)
-#define LOG(arg, ...) \
+#define LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Info)
+#define LOG(arg, ...)                            \
   MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info, \
           ("[%d] " arg, getpid(), ##__VA_ARGS__))
 
 // These are for MOZ_LOG="prof:4" or higher. It should be used for logging that
 // is somewhat more verbose than LOG.
-#define DEBUG_LOG_TEST \
-  MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Debug)
-#define DEBUG_LOG(arg, ...) \
+#define DEBUG_LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Debug)
+#define DEBUG_LOG(arg, ...)                       \
   MOZ_LOG(gProfilerLog, mozilla::LogLevel::Debug, \
           ("[%d] " arg, getpid(), ##__VA_ARGS__))
 
@@ -96,7 +88,7 @@ typedef uint8_t* Address;
 // supported platforms.
 
 class Thread {
-public:
+ public:
   static int GetCurrentId();
 };
 
@@ -112,7 +104,7 @@ struct PlatformDataDestructor {
 };
 
 typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
-  UniquePlatformData;
+    UniquePlatformData;
 UniquePlatformData AllocPlatformData(int aThreadId);
 
 namespace mozilla {

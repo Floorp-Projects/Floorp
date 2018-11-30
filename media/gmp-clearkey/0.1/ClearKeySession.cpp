@@ -30,22 +30,16 @@ using namespace std;
 
 ClearKeySession::ClearKeySession(const std::string& aSessionId,
                                  SessionType aSessionType)
-  : mSessionId(aSessionId)
-  , mSessionType(aSessionType)
-{
+    : mSessionId(aSessionId), mSessionType(aSessionType) {
   CK_LOGD("ClearKeySession ctor %p", this);
 }
 
-ClearKeySession::~ClearKeySession()
-{
+ClearKeySession::~ClearKeySession() {
   CK_LOGD("ClearKeySession dtor %p", this);
 }
 
-bool
-ClearKeySession::Init(InitDataType aInitDataType,
-                      const uint8_t* aInitData,
-                      uint32_t aInitDataSize)
-{
+bool ClearKeySession::Init(InitDataType aInitDataType, const uint8_t* aInitData,
+                           uint32_t aInitDataSize) {
   CK_LOGD("ClearKeySession::Init");
 
   if (aInitDataType == InitDataType::kCenc) {
@@ -56,7 +50,7 @@ ClearKeySession::Init(InitDataType aInitDataType,
              aInitDataSize <= kMaxWebmInitDataSize) {
     // "webm" initData format is simply the raw bytes of the keyId.
     vector<uint8_t> keyId;
-    keyId.assign(aInitData, aInitData+aInitDataSize);
+    keyId.assign(aInitData, aInitData + aInitDataSize);
     mKeyIds.push_back(keyId);
   }
 
@@ -67,14 +61,8 @@ ClearKeySession::Init(InitDataType aInitDataType,
   return true;
 }
 
-SessionType
-ClearKeySession::Type() const
-{
-  return mSessionType;
-}
+SessionType ClearKeySession::Type() const { return mSessionType; }
 
-void
-ClearKeySession::AddKeyId(const KeyId& aKeyId)
-{
+void ClearKeySession::AddKeyId(const KeyId& aKeyId) {
   mKeyIds.push_back(aKeyId);
 }

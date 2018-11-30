@@ -18,9 +18,8 @@ namespace dom {
 
 class Visitor;
 
-class HTMLMenuItemElement final : public nsGenericHTMLElement
-{
-public:
+class HTMLMenuItemElement final : public nsGenericHTMLElement {
+ public:
   using mozilla::dom::Element::GetText;
 
   HTMLMenuItemElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -33,18 +32,15 @@ public:
                                        nsGenericHTMLElement)
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
-  virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) override;
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  virtual nsresult BindToTree(nsIDocument* aDocument,
-                              nsIContent* aParent,
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
 
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                nsAttrValue& aResult) override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
 
   virtual void DoneCreatingElement() override;
 
@@ -63,73 +59,55 @@ public:
   // WebIDL
 
   void GetType(DOMString& aValue);
-  void SetType(const nsAString& aType, ErrorResult& aError)
-  {
+  void SetType(const nsAString& aType, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::type, aType, aError);
   }
 
   // nsAString needed for HTMLMenuElement
-  void GetLabel(nsAString& aValue)
-  {
+  void GetLabel(nsAString& aValue) {
     if (!GetAttr(kNameSpaceID_None, nsGkAtoms::label, aValue)) {
       GetText(aValue);
     }
   }
-  void SetLabel(const nsAString& aLabel, ErrorResult& aError)
-  {
+  void SetLabel(const nsAString& aLabel, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::label, aLabel, aError);
   }
 
   // nsAString needed for HTMLMenuElement
-  void GetIcon(nsAString& aValue)
-  {
+  void GetIcon(nsAString& aValue) {
     GetURIAttr(nsGkAtoms::icon, nullptr, aValue);
   }
-  void SetIcon(const nsAString& aIcon, ErrorResult& aError)
-  {
+  void SetIcon(const nsAString& aIcon, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::icon, aIcon, aError);
   }
 
-  bool Disabled() const
-  {
-    return GetBoolAttr(nsGkAtoms::disabled);
-  }
-  void SetDisabled(bool aDisabled, ErrorResult& aError)
-  {
+  bool Disabled() const { return GetBoolAttr(nsGkAtoms::disabled); }
+  void SetDisabled(bool aDisabled, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aError);
   }
 
-  bool Checked() const
-  {
-    return mChecked;
-  }
+  bool Checked() const { return mChecked; }
   void SetChecked(bool aChecked);
 
-  void GetRadiogroup(DOMString& aValue)
-  {
+  void GetRadiogroup(DOMString& aValue) {
     GetHTMLAttr(nsGkAtoms::radiogroup, aValue);
   }
-  void SetRadiogroup(const nsAString& aRadiogroup, ErrorResult& aError)
-  {
+  void SetRadiogroup(const nsAString& aRadiogroup, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::radiogroup, aRadiogroup, aError);
   }
 
-  bool DefaultChecked() const
-  {
-    return GetBoolAttr(nsGkAtoms::checked);
-  }
-  void SetDefaultChecked(bool aDefault, ErrorResult& aError)
-  {
+  bool DefaultChecked() const { return GetBoolAttr(nsGkAtoms::checked); }
+  void SetDefaultChecked(bool aDefault, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::checked, aDefault, aError);
   }
 
-protected:
+ protected:
   virtual ~HTMLMenuItemElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-
-protected:
+ protected:
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
@@ -150,7 +128,7 @@ protected:
   void ClearChecked() { mChecked = false; }
   void SetCheckedDirty() { mCheckedDirty = true; }
 
-private:
+ private:
   uint8_t mType : 2;
   bool mParserCreating : 1;
   bool mShouldInitChecked : 1;
@@ -158,7 +136,7 @@ private:
   bool mChecked : 1;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLMenuItemElement_h
+#endif  // mozilla_dom_HTMLMenuItemElement_h

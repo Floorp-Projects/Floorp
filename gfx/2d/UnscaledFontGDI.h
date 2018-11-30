@@ -13,13 +13,10 @@
 namespace mozilla {
 namespace gfx {
 
-class UnscaledFontGDI final : public UnscaledFont
-{
-public:
+class UnscaledFontGDI final : public UnscaledFont {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFontGDI, override)
-  explicit UnscaledFontGDI(const LOGFONT& aLogFont)
-    : mLogFont(aLogFont)
-  {}
+  explicit UnscaledFontGDI(const LOGFONT& aLogFont) : mLogFont(aLogFont) {}
 
   FontType GetType() const override { return FontType::GDI; }
 
@@ -31,22 +28,19 @@ public:
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
-  static already_AddRefed<UnscaledFont>
-    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
+  static already_AddRefed<UnscaledFont> CreateFromFontDescriptor(
+      const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
-  already_AddRefed<ScaledFont>
-    CreateScaledFont(Float aGlyphSize,
-                     const uint8_t* aInstanceData,
-                     uint32_t aInstanceDataLength,
-                     const FontVariation* aVariations,
-                     uint32_t aNumVariations) override;
+  already_AddRefed<ScaledFont> CreateScaledFont(
+      Float aGlyphSize, const uint8_t* aInstanceData,
+      uint32_t aInstanceDataLength, const FontVariation* aVariations,
+      uint32_t aNumVariations) override;
 
-private:
+ private:
   LOGFONT mLogFont;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_UNSCALEDFONTGDI_H_ */
-

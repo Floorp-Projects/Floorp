@@ -10,23 +10,22 @@
 #include "nsCodingStateMachine.h"
 #include "nsAutoPtr.h"
 
-class nsEscCharSetProber: public nsCharSetProber {
-public:
+class nsEscCharSetProber : public nsCharSetProber {
+ public:
   nsEscCharSetProber();
   virtual ~nsEscCharSetProber(void);
   nsProbingState HandleData(const char* aBuf, uint32_t aLen) override;
-  const char* GetCharSetName() override {return mDetectedCharset;}
-  nsProbingState GetState(void) override {return mState;}
-  void      Reset(void) override;
-  float     GetConfidence(void) override {return (float)0.99;}
+  const char* GetCharSetName() override { return mDetectedCharset; }
+  nsProbingState GetState(void) override { return mState; }
+  void Reset(void) override;
+  float GetConfidence(void) override { return (float)0.99; }
 
-protected:
-  void      GetDistribution(uint32_t aCharLen, const char* aStr);
+ protected:
+  void GetDistribution(uint32_t aCharLen, const char* aStr);
 
   nsAutoPtr<nsCodingStateMachine> mCodingSM;
   nsProbingState mState;
-  const char *  mDetectedCharset;
+  const char* mDetectedCharset;
 };
 
 #endif /* nsEscCharSetProber_h__ */
-

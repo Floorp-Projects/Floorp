@@ -17,13 +17,10 @@ struct MIDIOptions;
 /**
  * Handles permission dialog management when requesting MIDI permissions.
  */
-class MIDIPermissionRequest final
-  : public ContentPermissionRequestBase,
-    public nsIRunnable
-{
-public:
-  MIDIPermissionRequest(nsPIDOMWindowInner* aWindow,
-                        Promise* aPromise,
+class MIDIPermissionRequest final : public ContentPermissionRequestBase,
+                                    public nsIRunnable {
+ public:
+  MIDIPermissionRequest(nsPIDOMWindowInner* aWindow, Promise* aPromise,
                         const MIDIOptions& aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -35,7 +32,7 @@ public:
   NS_IMETHOD Allow(JS::HandleValue choices) override;
   NS_IMETHOD GetTypes(nsIArray** aTypes) override;
 
-private:
+ private:
   ~MIDIPermissionRequest() = default;
 
   // Promise for returning MIDIAccess on request success
@@ -44,7 +41,7 @@ private:
   bool mNeedsSysex;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif //mozilla_dom_MIDIPermissionRequest_h
+#endif  // mozilla_dom_MIDIPermissionRequest_h

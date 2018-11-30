@@ -12,30 +12,27 @@
 
 #include "nsMediaFragmentURIParser.h"
 
-using std::pair;
 using std::make_pair;
+using std::pair;
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 nsMediaFragmentURIParser::nsMediaFragmentURIParser(nsIURI* aURI)
-  : mClipUnit(eClipUnit_Pixel)
-{
+    : mClipUnit(eClipUnit_Pixel) {
   nsAutoCString ref;
   aURI->GetRef(ref);
   Parse(ref);
 }
 
 nsMediaFragmentURIParser::nsMediaFragmentURIParser(nsCString& aRef)
-  : mClipUnit(eClipUnit_Pixel)
-{
+    : mClipUnit(eClipUnit_Pixel) {
   Parse(aRef);
 }
 
-bool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring aString)
-{
+bool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring aString) {
   nsDependentSubstring original(aString);
-  if (aString.Length() > 4 &&
-      aString[0] == 'n' && aString[1] == 'p' &&
+  if (aString.Length() > 4 && aString[0] == 'n' && aString[1] == 'p' &&
       aString[2] == 't' && aString[3] == ':') {
     aString.Rebind(aString, 4);
   }
@@ -78,36 +75,32 @@ bool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring aString)
   return true;
 }
 
-bool nsMediaFragmentURIParser::ParseNPTTime(nsDependentSubstring& aString, double& aTime)
-{
+bool nsMediaFragmentURIParser::ParseNPTTime(nsDependentSubstring& aString,
+                                            double& aTime) {
   if (aString.Length() == 0) {
     return false;
   }
 
-  return
-    ParseNPTHHMMSS(aString, aTime) ||
-    ParseNPTMMSS(aString, aTime) ||
-    ParseNPTSec(aString, aTime);
+  return ParseNPTHHMMSS(aString, aTime) || ParseNPTMMSS(aString, aTime) ||
+         ParseNPTSec(aString, aTime);
 }
 
 // Return true if the given character is a numeric character
-static bool IsDigit(nsDependentSubstring::char_type aChar)
-{
+static bool IsDigit(nsDependentSubstring::char_type aChar) {
   return (aChar >= '0' && aChar <= '9');
 }
 
 // Return the index of the first character in the string that is not
 // a numerical digit, starting from 'aStart'.
-static uint32_t FirstNonDigit(nsDependentSubstring& aString, uint32_t aStart)
-{
-   while (aStart < aString.Length() && IsDigit(aString[aStart])) {
+static uint32_t FirstNonDigit(nsDependentSubstring& aString, uint32_t aStart) {
+  while (aStart < aString.Length() && IsDigit(aString[aStart])) {
     ++aStart;
   }
   return aStart;
 }
 
-bool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString, double& aSec)
-{
+bool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString,
+                                           double& aSec) {
   nsDependentSubstring original(aString);
   if (aString.Length() == 0) {
     return false;
@@ -136,8 +129,8 @@ bool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString, double
   return true;
 }
 
-bool nsMediaFragmentURIParser::ParseNPTMMSS(nsDependentSubstring& aString, double& aTime)
-{
+bool nsMediaFragmentURIParser::ParseNPTMMSS(nsDependentSubstring& aString,
+                                            double& aTime) {
   nsDependentSubstring original(aString);
   uint32_t mm = 0;
   uint32_t ss = 0;
@@ -166,8 +159,8 @@ bool nsMediaFragmentURIParser::ParseNPTMMSS(nsDependentSubstring& aString, doubl
   return true;
 }
 
-bool nsMediaFragmentURIParser::ParseNPTFraction(nsDependentSubstring& aString, double& aFraction)
-{
+bool nsMediaFragmentURIParser::ParseNPTFraction(nsDependentSubstring& aString,
+                                                double& aFraction) {
   double fraction = 0.0;
 
   if (aString.Length() > 0 && aString[0] == '.') {
@@ -188,8 +181,8 @@ bool nsMediaFragmentURIParser::ParseNPTFraction(nsDependentSubstring& aString, d
   return true;
 }
 
-bool nsMediaFragmentURIParser::ParseNPTHHMMSS(nsDependentSubstring& aString, double& aTime)
-{
+bool nsMediaFragmentURIParser::ParseNPTHHMMSS(nsDependentSubstring& aString,
+                                              double& aTime) {
   nsDependentSubstring original(aString);
   uint32_t hh = 0;
   double seconds = 0.0;
@@ -212,8 +205,8 @@ bool nsMediaFragmentURIParser::ParseNPTHHMMSS(nsDependentSubstring& aString, dou
   return true;
 }
 
-bool nsMediaFragmentURIParser::ParseNPTHH(nsDependentSubstring& aString, uint32_t& aHour)
-{
+bool nsMediaFragmentURIParser::ParseNPTHH(nsDependentSubstring& aString,
+                                          uint32_t& aHour) {
   if (aString.Length() == 0) {
     return false;
   }
@@ -235,13 +228,13 @@ bool nsMediaFragmentURIParser::ParseNPTHH(nsDependentSubstring& aString, uint32_
   return true;
 }
 
-bool nsMediaFragmentURIParser::ParseNPTMM(nsDependentSubstring& aString, uint32_t& aMinute)
-{
+bool nsMediaFragmentURIParser::ParseNPTMM(nsDependentSubstring& aString,
+                                          uint32_t& aMinute) {
   return ParseNPTSS(aString, aMinute);
 }
 
-bool nsMediaFragmentURIParser::ParseNPTSS(nsDependentSubstring& aString, uint32_t& aSecond)
-{
+bool nsMediaFragmentURIParser::ParseNPTSS(nsDependentSubstring& aString,
+                                          uint32_t& aSecond) {
   if (aString.Length() < 2) {
     return false;
   }
@@ -255,8 +248,7 @@ bool nsMediaFragmentURIParser::ParseNPTSS(nsDependentSubstring& aString, uint32_
     }
 
     aString.Rebind(aString, 2);
-    if (u >= 60)
-      return false;
+    if (u >= 60) return false;
 
     aSecond = u;
     return true;
@@ -265,9 +257,7 @@ bool nsMediaFragmentURIParser::ParseNPTSS(nsDependentSubstring& aString, uint32_
   return false;
 }
 
-static bool ParseInteger(nsDependentSubstring& aString,
-                         int32_t& aResult)
-{
+static bool ParseInteger(nsDependentSubstring& aString, int32_t& aResult) {
   uint32_t index = FirstNonDigit(aString, 0);
   if (index == 0) {
     return false;
@@ -285,8 +275,7 @@ static bool ParseInteger(nsDependentSubstring& aString,
   return true;
 }
 
-static bool ParseCommaSeparator(nsDependentSubstring& aString)
-{
+static bool ParseCommaSeparator(nsDependentSubstring& aString) {
   if (aString.Length() > 1 && aString[0] == ',') {
     aString.Rebind(aString, 1);
     return true;
@@ -295,8 +284,7 @@ static bool ParseCommaSeparator(nsDependentSubstring& aString)
   return false;
 }
 
-bool nsMediaFragmentURIParser::ParseXYWH(nsDependentSubstring aString)
-{
+bool nsMediaFragmentURIParser::ParseXYWH(nsDependentSubstring aString) {
   int32_t x, y, w, h;
   ClipUnit clipUnit;
 
@@ -312,18 +300,12 @@ bool nsMediaFragmentURIParser::ParseXYWH(nsDependentSubstring aString)
   }
 
   // Read and validate coordinates.
-  if (ParseInteger(aString, x) && x >= 0 &&
-      ParseCommaSeparator(aString)       &&
-      ParseInteger(aString, y) && y >= 0 &&
-      ParseCommaSeparator(aString)       &&
-      ParseInteger(aString, w) && w > 0  &&
-      ParseCommaSeparator(aString)       &&
-      ParseInteger(aString, h) && h > 0  &&
-      aString.Length() == 0) {
-
+  if (ParseInteger(aString, x) && x >= 0 && ParseCommaSeparator(aString) &&
+      ParseInteger(aString, y) && y >= 0 && ParseCommaSeparator(aString) &&
+      ParseInteger(aString, w) && w > 0 && ParseCommaSeparator(aString) &&
+      ParseInteger(aString, h) && h > 0 && aString.Length() == 0) {
     // Reject invalid percentage coordinates.
-    if (clipUnit == eClipUnit_Percent &&
-        (x + w > 100 || y + h > 100)) {
+    if (clipUnit == eClipUnit_Percent && (x + w > 100 || y + h > 100)) {
       return false;
     }
 
@@ -335,10 +317,9 @@ bool nsMediaFragmentURIParser::ParseXYWH(nsDependentSubstring aString)
   return false;
 }
 
-void nsMediaFragmentURIParser::Parse(nsACString& aRef)
-{
+void nsMediaFragmentURIParser::Parse(nsACString& aRef) {
   // Create an array of possibly-invalid media fragments.
-  nsTArray< std::pair<nsCString, nsCString> > fragments;
+  nsTArray<std::pair<nsCString, nsCString> > fragments;
   nsCCharSeparatedTokenizer tokenizer(aRef, '&');
 
   while (tokenizer.hasMoreTokens()) {
@@ -356,7 +337,7 @@ void nsMediaFragmentURIParser::Parse(nsACString& aRef)
 
   // Parse the media fragment values.
   bool gotTemporal = false, gotSpatial = false;
-  for (int i = fragments.Length() - 1 ; i >= 0 ; --i) {
+  for (int i = fragments.Length() - 1; i >= 0; --i) {
     if (gotTemporal && gotSpatial) {
       // We've got one of each possible type. No need to look at the rest.
       break;
@@ -370,5 +351,5 @@ void nsMediaFragmentURIParser::Parse(nsACString& aRef)
   }
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

@@ -18,53 +18,46 @@
 namespace mozilla {
 namespace image {
 
-struct SVGDrawingParameters
-{
+struct SVGDrawingParameters {
   typedef mozilla::gfx::IntSize IntSize;
   typedef mozilla::gfx::SamplingFilter SamplingFilter;
 
-  SVGDrawingParameters(gfxContext* aContext,
-                       const nsIntSize& aRasterSize,
-                       const nsIntSize& aDrawSize,
-                       const ImageRegion& aRegion,
+  SVGDrawingParameters(gfxContext* aContext, const nsIntSize& aRasterSize,
+                       const nsIntSize& aDrawSize, const ImageRegion& aRegion,
                        SamplingFilter aSamplingFilter,
                        const Maybe<SVGImageContext>& aSVGContext,
-                       float aAnimationTime,
-                       uint32_t aFlags,
-                       float aOpacity)
-    : context(aContext)
-    , size(aRasterSize)
-    , drawSize(aDrawSize)
-    , region(aRegion)
-    , samplingFilter(aSamplingFilter)
-    , svgContext(aSVGContext)
-    , viewportSize(aRasterSize)
-    , animationTime(aAnimationTime)
-    , flags(aFlags)
-    , opacity(aOpacity)
-  {
+                       float aAnimationTime, uint32_t aFlags, float aOpacity)
+      : context(aContext),
+        size(aRasterSize),
+        drawSize(aDrawSize),
+        region(aRegion),
+        samplingFilter(aSamplingFilter),
+        svgContext(aSVGContext),
+        viewportSize(aRasterSize),
+        animationTime(aAnimationTime),
+        flags(aFlags),
+        opacity(aOpacity) {
     if (aSVGContext) {
       auto sz = aSVGContext->GetViewportSize();
       if (sz) {
-        viewportSize = nsIntSize(sz->width, sz->height); // XXX losing unit
+        viewportSize = nsIntSize(sz->width, sz->height);  // XXX losing unit
       }
     }
   }
 
-  gfxContext*                   context;
-  IntSize                       size; // Size to rasterize a surface at.
-  IntSize                       drawSize; // Size to draw the given surface at.
-  ImageRegion                   region;
-  SamplingFilter                samplingFilter;
+  gfxContext* context;
+  IntSize size;      // Size to rasterize a surface at.
+  IntSize drawSize;  // Size to draw the given surface at.
+  ImageRegion region;
+  SamplingFilter samplingFilter;
   const Maybe<SVGImageContext>& svgContext;
-  nsIntSize                     viewportSize;
-  float                         animationTime;
-  uint32_t                      flags;
-  gfxFloat                      opacity;
+  nsIntSize viewportSize;
+  float animationTime;
+  uint32_t flags;
+  gfxFloat opacity;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_SVGDrawingParameters_h
-
+#endif  // mozilla_image_SVGDrawingParameters_h

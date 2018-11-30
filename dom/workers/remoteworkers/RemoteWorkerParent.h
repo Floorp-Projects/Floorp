@@ -14,38 +14,31 @@ namespace dom {
 
 class RemoteWorkerController;
 
-class RemoteWorkerParent final : public PRemoteWorkerParent
-{
-public:
+class RemoteWorkerParent final : public PRemoteWorkerParent {
+ public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerParent)
 
   RemoteWorkerParent();
 
-  void
-  Initialize();
+  void Initialize();
 
-  void
-  SetController(RemoteWorkerController* aController);
+  void SetController(RemoteWorkerController* aController);
 
-private:
+ private:
   ~RemoteWorkerParent();
 
-  void
-  ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
+  void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
-  mozilla::ipc::IPCResult
-  RecvError(const ErrorValue& aValue) override;
+  mozilla::ipc::IPCResult RecvError(const ErrorValue& aValue) override;
 
-  mozilla::ipc::IPCResult
-  RecvClose() override;
+  mozilla::ipc::IPCResult RecvClose() override;
 
-  mozilla::ipc::IPCResult
-  RecvCreated(const bool& aStatus) override;
+  mozilla::ipc::IPCResult RecvCreated(const bool& aStatus) override;
 
   RefPtr<RemoteWorkerController> mController;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RemoteWorkerParent_h
+#endif  // mozilla_dom_RemoteWorkerParent_h

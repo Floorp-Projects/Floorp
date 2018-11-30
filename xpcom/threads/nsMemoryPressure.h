@@ -9,8 +9,7 @@
 
 #include "nscore.h"
 
-enum MemoryPressureState
-{
+enum MemoryPressureState {
   /*
    * No memory pressure.
    */
@@ -58,8 +57,7 @@ enum MemoryPressureState
  * Return and erase the latest state of the memory pressure event set by any of
  * the corresponding dispatch function.
  */
-MemoryPressureState
-NS_GetPendingMemoryPressure();
+MemoryPressureState NS_GetPendingMemoryPressure();
 
 /**
  * This function causes the main thread to fire a memory pressure event
@@ -70,8 +68,7 @@ NS_GetPendingMemoryPressure();
  *
  * You may call this function from any thread.
  */
-void
-NS_DispatchEventualMemoryPressure(MemoryPressureState aState);
+void NS_DispatchEventualMemoryPressure(MemoryPressureState aState);
 
 /**
  * This function causes the main thread to fire a memory pressure event
@@ -82,7 +79,6 @@ NS_DispatchEventualMemoryPressure(MemoryPressureState aState);
  *
  * You may call this function from any thread.
  */
-nsresult
-NS_DispatchMemoryPressure(MemoryPressureState aState);
+nsresult NS_DispatchMemoryPressure(MemoryPressureState aState);
 
-#endif // nsMemoryPressure_h__
+#endif  // nsMemoryPressure_h__

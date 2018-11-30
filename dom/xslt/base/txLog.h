@@ -8,16 +8,15 @@
 
 #include "mozilla/Logging.h"
 
-class txLog
-{
-public:
-    static mozilla::LazyLogModule xpath;
-    static mozilla::LazyLogModule xslt;
+class txLog {
+ public:
+  static mozilla::LazyLogModule xpath;
+  static mozilla::LazyLogModule xslt;
 };
 
-#define TX_LG_IMPL \
-    mozilla::LazyLogModule txLog::xpath("xpath"); \
-    mozilla::LazyLogModule txLog::xslt("xslt");
+#define TX_LG_IMPL                              \
+  mozilla::LazyLogModule txLog::xpath("xpath"); \
+  mozilla::LazyLogModule txLog::xslt("xslt");
 
 #define TX_LG_CREATE
 

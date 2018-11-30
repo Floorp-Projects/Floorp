@@ -10,67 +10,49 @@
 namespace mozilla {
 namespace dom {
 
-DeprecationReportBody::DeprecationReportBody(nsPIDOMWindowInner* aWindow,
-                                             const nsAString& aId,
-                                             const Nullable<Date>& aDate,
-                                             const nsAString& aMessage,
-                                             const nsAString& aSourceFile,
-                                             const Nullable<uint32_t>& aLineNumber,
-                                             const Nullable<uint32_t>& aColumnNumber)
-  : ReportBody(aWindow)
-  , mId(aId)
-  , mDate(aDate)
-  , mMessage(aMessage)
-  , mSourceFile(aSourceFile)
-  , mLineNumber(aLineNumber)
-  , mColumnNumber(aColumnNumber)
-{
+DeprecationReportBody::DeprecationReportBody(
+    nsPIDOMWindowInner* aWindow, const nsAString& aId,
+    const Nullable<Date>& aDate, const nsAString& aMessage,
+    const nsAString& aSourceFile, const Nullable<uint32_t>& aLineNumber,
+    const Nullable<uint32_t>& aColumnNumber)
+    : ReportBody(aWindow),
+      mId(aId),
+      mDate(aDate),
+      mMessage(aMessage),
+      mSourceFile(aSourceFile),
+      mLineNumber(aLineNumber),
+      mColumnNumber(aColumnNumber) {
   MOZ_ASSERT(aWindow);
 }
 
 DeprecationReportBody::~DeprecationReportBody() = default;
 
-JSObject*
-DeprecationReportBody::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DeprecationReportBody::WrapObject(JSContext* aCx,
+                                            JS::Handle<JSObject*> aGivenProto) {
   return DeprecationReportBody_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-DeprecationReportBody::GetId(nsAString& aId) const
-{
-  aId = mId;
-}
+void DeprecationReportBody::GetId(nsAString& aId) const { aId = mId; }
 
-Nullable<Date>
-DeprecationReportBody::GetAnticipatedRemoval() const
-{
+Nullable<Date> DeprecationReportBody::GetAnticipatedRemoval() const {
   return mDate;
 }
 
-void
-DeprecationReportBody::GetMessage(nsAString& aMessage) const
-{
+void DeprecationReportBody::GetMessage(nsAString& aMessage) const {
   aMessage = mMessage;
 }
 
-void
-DeprecationReportBody::GetSourceFile(nsAString& aSourceFile) const
-{
+void DeprecationReportBody::GetSourceFile(nsAString& aSourceFile) const {
   aSourceFile = mSourceFile;
 }
 
-Nullable<uint32_t>
-DeprecationReportBody::GetLineNumber() const
-{
+Nullable<uint32_t> DeprecationReportBody::GetLineNumber() const {
   return mLineNumber;
 }
 
-Nullable<uint32_t>
-DeprecationReportBody::GetColumnNumber() const
-{
+Nullable<uint32_t> DeprecationReportBody::GetColumnNumber() const {
   return mColumnNumber;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

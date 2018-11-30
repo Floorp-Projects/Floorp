@@ -20,21 +20,15 @@
 namespace mozilla {
 namespace dom {
 
-DocumentOrShadowRoot::DocumentOrShadowRoot(mozilla::dom::ShadowRoot& aShadowRoot)
-  : mAsNode(aShadowRoot)
-  , mKind(Kind::ShadowRoot)
-{}
+DocumentOrShadowRoot::DocumentOrShadowRoot(
+    mozilla::dom::ShadowRoot& aShadowRoot)
+    : mAsNode(aShadowRoot), mKind(Kind::ShadowRoot) {}
 
 DocumentOrShadowRoot::DocumentOrShadowRoot(nsIDocument& aDoc)
-  : mAsNode(aDoc)
-  , mKind(Kind::Document)
-{}
+    : mAsNode(aDoc), mKind(Kind::Document) {}
 
-void
-DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
-  nsWindowSizes& aSizes,
-  const nsTArray<RefPtr<StyleSheet>>& aSheets) const
-{
+void DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
+    nsWindowSizes& aSizes, const nsTArray<RefPtr<StyleSheet>>& aSheets) const {
   size_t n = 0;
   n += aSheets.ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
   for (StyleSheet* sheet : aSheets) {
@@ -52,41 +46,33 @@ DocumentOrShadowRoot::AddSizeOfOwnedSheetArrayExcludingThis(
   }
 }
 
-void
-DocumentOrShadowRoot::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
-{
+void DocumentOrShadowRoot::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
   AddSizeOfOwnedSheetArrayExcludingThis(aSizes, mStyleSheets);
   aSizes.mDOMOtherSize +=
-    mIdentifierMap.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+      mIdentifierMap.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 }
 
-DocumentOrShadowRoot::~DocumentOrShadowRoot()
-{
+DocumentOrShadowRoot::~DocumentOrShadowRoot() {
   for (StyleSheet* sheet : mStyleSheets) {
     sheet->ClearAssociatedDocumentOrShadowRoot();
   }
 }
 
-StyleSheetList&
-DocumentOrShadowRoot::EnsureDOMStyleSheets()
-{
+StyleSheetList& DocumentOrShadowRoot::EnsureDOMStyleSheets() {
   if (!mDOMStyleSheets) {
     mDOMStyleSheets = new StyleSheetList(*this);
   }
   return *mDOMStyleSheets;
 }
 
-void
-DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet)
-{
+void DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
   aSheet.SetAssociatedDocumentOrShadowRoot(
-    this, StyleSheet::OwnedByDocumentOrShadowRoot);
+      this, StyleSheet::OwnedByDocumentOrShadowRoot);
   mStyleSheets.InsertElementAt(aIndex, &aSheet);
 }
 
-already_AddRefed<StyleSheet>
-DocumentOrShadowRoot::RemoveSheet(StyleSheet& aSheet)
-{
+already_AddRefed<StyleSheet> DocumentOrShadowRoot::RemoveSheet(
+    StyleSheet& aSheet) {
   auto index = mStyleSheets.IndexOf(&aSheet);
   if (index == mStyleSheets.NoIndex) {
     return nullptr;
@@ -97,9 +83,7 @@ DocumentOrShadowRoot::RemoveSheet(StyleSheet& aSheet)
   return sheet.forget();
 }
 
-Element*
-DocumentOrShadowRoot::GetElementById(const nsAString& aElementId)
-{
+Element* DocumentOrShadowRoot::GetElementById(const nsAString& aElementId) {
   if (MOZ_UNLIKELY(aElementId.IsEmpty())) {
     nsContentUtils::ReportEmptyGetElementByIdArg(AsNode().OwnerDoc());
     return nullptr;
@@ -114,30 +98,25 @@ DocumentOrShadowRoot::GetElementById(const nsAString& aElementId)
   return nullptr;
 }
 
-already_AddRefed<nsContentList>
-DocumentOrShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName)
-{
+already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
+    const nsAString& aNamespaceURI, const nsAString& aLocalName) {
   ErrorResult rv;
   RefPtr<nsContentList> list =
-    GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
+      GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
   if (rv.Failed()) {
     return nullptr;
   }
   return list.forget();
 }
 
-already_AddRefed<nsContentList>
-DocumentOrShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName,
-                                   mozilla::ErrorResult& aResult)
-{
+already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByTagNameNS(
+    const nsAString& aNamespaceURI, const nsAString& aLocalName,
+    mozilla::ErrorResult& aResult) {
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    aResult =
-      nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
-                                                            nameSpaceId);
+    aResult = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
+        aNamespaceURI, nameSpaceId);
     if (aResult.Failed()) {
       return nullptr;
     }
@@ -147,18 +126,13 @@ DocumentOrShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   return NS_GetContentList(&AsNode(), nameSpaceId, aLocalName);
 }
 
-already_AddRefed<nsContentList>
-DocumentOrShadowRoot::GetElementsByClassName(const nsAString& aClasses)
-{
+already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByClassName(
+    const nsAString& aClasses) {
   return nsContentUtils::GetElementsByClassName(&AsNode(), aClasses);
 }
 
-nsIContent*
-DocumentOrShadowRoot::Retarget(nsIContent* aContent) const
-{
-  for (nsIContent* cur = aContent;
-       cur;
-       cur = cur->GetContainingShadowHost()) {
+nsIContent* DocumentOrShadowRoot::Retarget(nsIContent* aContent) const {
+  for (nsIContent* cur = aContent; cur; cur = cur->GetContainingShadowHost()) {
     if (cur->SubtreeRoot() == &AsNode()) {
       return cur;
     }
@@ -166,15 +140,12 @@ DocumentOrShadowRoot::Retarget(nsIContent* aContent) const
   return nullptr;
 }
 
-Element*
-DocumentOrShadowRoot::GetRetargetedFocusedElement()
-{
+Element* DocumentOrShadowRoot::GetRetargetedFocusedElement() {
   if (nsCOMPtr<nsPIDOMWindowOuter> window = AsNode().OwnerDoc()->GetWindow()) {
     nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-    nsIContent* focusedContent =
-      nsFocusManager::GetFocusedDescendant(window,
-                                           nsFocusManager::eOnlyCurrentWindow,
-                                           getter_AddRefs(focusedWindow));
+    nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
+        window, nsFocusManager::eOnlyCurrentWindow,
+        getter_AddRefs(focusedWindow));
     // be safe and make sure the element is from this document
     if (focusedContent && focusedContent->OwnerDoc() == AsNode().OwnerDoc()) {
       if (focusedContent->ChromeOnlyAccess()) {
@@ -192,32 +163,28 @@ DocumentOrShadowRoot::GetRetargetedFocusedElement()
   return nullptr;
 }
 
-Element*
-DocumentOrShadowRoot::GetPointerLockElement()
-{
+Element* DocumentOrShadowRoot::GetPointerLockElement() {
   nsCOMPtr<Element> pointerLockedElement =
-    do_QueryReferent(EventStateManager::sPointerLockedElement);
+      do_QueryReferent(EventStateManager::sPointerLockedElement);
   if (!pointerLockedElement) {
     return nullptr;
   }
 
   nsIContent* retargetedPointerLockedElement = Retarget(pointerLockedElement);
-  return
-    retargetedPointerLockedElement && retargetedPointerLockedElement->IsElement() ?
-      retargetedPointerLockedElement->AsElement() : nullptr;
+  return retargetedPointerLockedElement &&
+                 retargetedPointerLockedElement->IsElement()
+             ? retargetedPointerLockedElement->AsElement()
+             : nullptr;
 }
 
-Element*
-DocumentOrShadowRoot::GetFullscreenElement()
-{
+Element* DocumentOrShadowRoot::GetFullscreenElement() {
   if (!AsNode().IsInComposedDoc()) {
     return nullptr;
   }
 
   Element* element = AsNode().OwnerDoc()->FullscreenStackTop();
-  NS_ASSERTION(!element ||
-               element->State().HasState(NS_EVENT_STATE_FULLSCREEN),
-    "Fullscreen element should have fullscreen styles applied");
+  NS_ASSERTION(!element || element->State().HasState(NS_EVENT_STATE_FULLSCREEN),
+               "Fullscreen element should have fullscreen styles applied");
 
   nsIContent* retargeted = Retarget(element);
   if (retargeted && retargeted->IsElement()) {
@@ -227,41 +194,33 @@ DocumentOrShadowRoot::GetFullscreenElement()
   return nullptr;
 }
 
-Element*
-DocumentOrShadowRoot::ElementFromPoint(float aX, float aY)
-{
+Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
   return ElementFromPointHelper(aX, aY, false, true);
 }
 
-void
-DocumentOrShadowRoot::ElementsFromPoint(float aX, float aY,
-                                        nsTArray<RefPtr<Element>>& aElements)
-{
+void DocumentOrShadowRoot::ElementsFromPoint(
+    float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
   ElementsFromPointHelper(aX, aY, nsIDocument::FLUSH_LAYOUT, aElements);
 }
 
-Element*
-DocumentOrShadowRoot::ElementFromPointHelper(float aX, float aY,
-                                             bool aIgnoreRootScrollFrame,
-                                             bool aFlushLayout)
-{
+Element* DocumentOrShadowRoot::ElementFromPointHelper(
+    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
   AutoTArray<RefPtr<Element>, 1> elementArray;
-  ElementsFromPointHelper(aX, aY,
-                          ((aIgnoreRootScrollFrame ? nsIDocument::IGNORE_ROOT_SCROLL_FRAME : 0) |
-                           (aFlushLayout ? nsIDocument::FLUSH_LAYOUT : 0) |
-                           nsIDocument::IS_ELEMENT_FROM_POINT),
-                          elementArray);
+  ElementsFromPointHelper(
+      aX, aY,
+      ((aIgnoreRootScrollFrame ? nsIDocument::IGNORE_ROOT_SCROLL_FRAME : 0) |
+       (aFlushLayout ? nsIDocument::FLUSH_LAYOUT : 0) |
+       nsIDocument::IS_ELEMENT_FROM_POINT),
+      elementArray);
   if (elementArray.IsEmpty()) {
     return nullptr;
   }
   return elementArray[0];
 }
 
-void
-DocumentOrShadowRoot::ElementsFromPointHelper(float aX, float aY,
-                                              uint32_t aFlags,
-                                              nsTArray<RefPtr<mozilla::dom::Element>>& aElements)
-{
+void DocumentOrShadowRoot::ElementsFromPointHelper(
+    float aX, float aY, uint32_t aFlags,
+    nsTArray<RefPtr<mozilla::dom::Element>>& aElements) {
   // As per the the spec, we return null if either coord is negative
   if (!(aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) && (aX < 0 || aY < 0)) {
     return;
@@ -287,17 +246,22 @@ DocumentOrShadowRoot::ElementsFromPointHelper(float aX, float aY,
 
   // XUL docs, unlike HTML, have no frame tree until everything's done loading
   if (!rootFrame) {
-    return; // return null to premature XUL callers as a reminder to wait
+    return;  // return null to premature XUL callers as a reminder to wait
   }
 
   nsTArray<nsIFrame*> outFrames;
   // Emulate what GetFrameAtPoint does, since we want all the frames under our
   // point.
-  nsLayoutUtils::GetFramesForArea(rootFrame, nsRect(pt, nsSize(1, 1)), outFrames,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
-    ((aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
+  nsLayoutUtils::GetFramesForArea(
+      rootFrame, nsRect(pt, nsSize(1, 1)), outFrames,
+      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
+          nsLayoutUtils::IGNORE_CROSS_DOC |
+          ((aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME)
+               ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME
+               : 0));
 
-  // Dunno when this would ever happen, as we should at least have a root frame under us?
+  // Dunno when this would ever happen, as we should at least have a root frame
+  // under us?
   if (outFrames.IsEmpty()) {
     return;
   }
@@ -325,7 +289,7 @@ DocumentOrShadowRoot::ElementsFromPointHelper(float aX, float aY,
       }
     }
 
-    //XXXsmaug There is plenty of unspec'ed behavior here
+    // XXXsmaug There is plenty of unspec'ed behavior here
     //         https://github.com/w3c/webcomponents/issues/735
     //         https://github.com/w3c/webcomponents/issues/736
     node = Retarget(node);
@@ -342,11 +306,10 @@ DocumentOrShadowRoot::ElementsFromPointHelper(float aX, float aY,
   }
 }
 
-Element*
-DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,
-                                          IDTargetObserver aObserver,
-                                          void* aData, bool aForImage)
-{
+Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,
+                                                   IDTargetObserver aObserver,
+                                                   void* aData,
+                                                   bool aForImage) {
   nsDependentAtomString id(aID);
 
   if (!CheckGetElementByIdArg(id)) {
@@ -360,11 +323,9 @@ DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,
   return aForImage ? entry->GetImageIdElement() : entry->GetIdElement();
 }
 
-void
-DocumentOrShadowRoot::RemoveIDTargetObserver(nsAtom* aID,
-                                             IDTargetObserver aObserver,
-                                             void* aData, bool aForImage)
-{
+void DocumentOrShadowRoot::RemoveIDTargetObserver(nsAtom* aID,
+                                                  IDTargetObserver aObserver,
+                                                  void* aData, bool aForImage) {
   nsDependentAtomString id(aID);
 
   if (!CheckGetElementByIdArg(id)) {
@@ -379,10 +340,7 @@ DocumentOrShadowRoot::RemoveIDTargetObserver(nsAtom* aID,
   entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
 }
 
-
-Element*
-DocumentOrShadowRoot::LookupImageElement(const nsAString& aId)
-{
+Element* DocumentOrShadowRoot::LookupImageElement(const nsAString& aId) {
   if (aId.IsEmpty()) {
     return nullptr;
   }
@@ -391,21 +349,16 @@ DocumentOrShadowRoot::LookupImageElement(const nsAString& aId)
   return entry ? entry->GetImageIdElement() : nullptr;
 }
 
-void
-DocumentOrShadowRoot::ReportEmptyGetElementByIdArg()
-{
+void DocumentOrShadowRoot::ReportEmptyGetElementByIdArg() {
   nsContentUtils::ReportEmptyGetElementByIdArg(AsNode().OwnerDoc());
 }
 
 /**
  * A struct that holds all the information about a radio group.
  */
-struct nsRadioGroupStruct
-{
+struct nsRadioGroupStruct {
   nsRadioGroupStruct()
-    : mRequiredRadioCount(0)
-    , mGroupSuffersFromValueMissing(false)
-  {}
+      : mRequiredRadioCount(0), mGroupSuffersFromValueMissing(false) {}
 
   /**
    * A strong pointer to the currently selected radio button.
@@ -416,11 +369,9 @@ struct nsRadioGroupStruct
   bool mGroupSuffersFromValueMissing;
 };
 
-nsresult
-DocumentOrShadowRoot::WalkRadioGroup(const nsAString& aName,
-                                     nsIRadioVisitor* aVisitor,
-                                     bool aFlushContent)
-{
+nsresult DocumentOrShadowRoot::WalkRadioGroup(const nsAString& aName,
+                                              nsIRadioVisitor* aVisitor,
+                                              bool aFlushContent) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
 
   for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
@@ -432,26 +383,20 @@ DocumentOrShadowRoot::WalkRadioGroup(const nsAString& aName,
   return NS_OK;
 }
 
-void
-DocumentOrShadowRoot::SetCurrentRadioButton(const nsAString& aName,
-                                            HTMLInputElement* aRadio)
-{
+void DocumentOrShadowRoot::SetCurrentRadioButton(const nsAString& aName,
+                                                 HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
   radioGroup->mSelectedRadioButton = aRadio;
 }
 
-HTMLInputElement*
-DocumentOrShadowRoot::GetCurrentRadioButton(const nsAString& aName)
-{
+HTMLInputElement* DocumentOrShadowRoot::GetCurrentRadioButton(
+    const nsAString& aName) {
   return GetOrCreateRadioGroup(aName)->mSelectedRadioButton;
 }
 
-nsresult
-DocumentOrShadowRoot::GetNextRadioButton(const nsAString& aName,
-                                         const bool aPrevious,
-                                         HTMLInputElement* aFocusedRadio,
-                                         HTMLInputElement** aRadioOut)
-{
+nsresult DocumentOrShadowRoot::GetNextRadioButton(
+    const nsAString& aName, const bool aPrevious,
+    HTMLInputElement* aFocusedRadio, HTMLInputElement** aRadioOut) {
   // XXX Can we combine the HTML radio button method impls of
   //     nsDocument and nsHTMLFormControl?
   // XXX Why is HTML radio button stuff in nsDocument, as
@@ -481,13 +426,15 @@ DocumentOrShadowRoot::GetNextRadioButton(const nsAString& aName,
   do {
     if (aPrevious) {
       if (--index < 0) {
-        index = numRadios -1;
+        index = numRadios - 1;
       }
     } else if (++index >= numRadios) {
       index = 0;
     }
-    NS_ASSERTION(static_cast<nsGenericHTMLFormElement*>(radioGroup->mRadioButtons[index])->IsHTMLElement(nsGkAtoms::input),
-                 "mRadioButtons holding a non-radio button");
+    NS_ASSERTION(
+        static_cast<nsGenericHTMLFormElement*>(radioGroup->mRadioButtons[index])
+            ->IsHTMLElement(nsGkAtoms::input),
+        "mRadioButtons holding a non-radio button");
     radio = static_cast<HTMLInputElement*>(radioGroup->mRadioButtons[index]);
   } while (radio->Disabled() && radio != currentRadio);
 
@@ -495,10 +442,8 @@ DocumentOrShadowRoot::GetNextRadioButton(const nsAString& aName,
   return NS_OK;
 }
 
-void
-DocumentOrShadowRoot::AddToRadioGroup(const nsAString& aName,
-                                      HTMLInputElement* aRadio)
-{
+void DocumentOrShadowRoot::AddToRadioGroup(const nsAString& aName,
+                                           HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
   radioGroup->mRadioButtons.AppendObject(aRadio);
 
@@ -507,10 +452,8 @@ DocumentOrShadowRoot::AddToRadioGroup(const nsAString& aName,
   }
 }
 
-void
-DocumentOrShadowRoot::RemoveFromRadioGroup(const nsAString& aName,
-                                           HTMLInputElement* aRadio)
-{
+void DocumentOrShadowRoot::RemoveFromRadioGroup(const nsAString& aName,
+                                                HTMLInputElement* aRadio) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
   radioGroup->mRadioButtons.RemoveObject(aRadio);
 
@@ -521,17 +464,14 @@ DocumentOrShadowRoot::RemoveFromRadioGroup(const nsAString& aName,
   }
 }
 
-uint32_t
-DocumentOrShadowRoot::GetRequiredRadioCount(const nsAString& aName) const
-{
+uint32_t DocumentOrShadowRoot::GetRequiredRadioCount(
+    const nsAString& aName) const {
   nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
   return radioGroup ? radioGroup->mRequiredRadioCount : 0;
 }
 
-void
-DocumentOrShadowRoot::RadioRequiredWillChange(const nsAString& aName,
-                                              bool aRequiredAdded)
-{
+void DocumentOrShadowRoot::RadioRequiredWillChange(const nsAString& aName,
+                                                   bool aRequiredAdded) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
 
   if (aRequiredAdded) {
@@ -543,59 +483,50 @@ DocumentOrShadowRoot::RadioRequiredWillChange(const nsAString& aName,
   }
 }
 
-bool
-DocumentOrShadowRoot::GetValueMissingState(const nsAString& aName) const
-{
+bool DocumentOrShadowRoot::GetValueMissingState(const nsAString& aName) const {
   nsRadioGroupStruct* radioGroup = GetRadioGroup(aName);
   return radioGroup && radioGroup->mGroupSuffersFromValueMissing;
 }
 
-void
-DocumentOrShadowRoot::SetValueMissingState(const nsAString& aName, bool aValue)
-{
+void DocumentOrShadowRoot::SetValueMissingState(const nsAString& aName,
+                                                bool aValue) {
   nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
   radioGroup->mGroupSuffersFromValueMissing = aValue;
 }
 
-nsRadioGroupStruct*
-DocumentOrShadowRoot::GetRadioGroup(const nsAString& aName) const
-{
+nsRadioGroupStruct* DocumentOrShadowRoot::GetRadioGroup(
+    const nsAString& aName) const {
   nsRadioGroupStruct* radioGroup = nullptr;
   mRadioGroups.Get(aName, &radioGroup);
   return radioGroup;
 }
 
-nsRadioGroupStruct*
-DocumentOrShadowRoot::GetOrCreateRadioGroup(const nsAString& aName)
-{
+nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
+    const nsAString& aName) {
   return mRadioGroups.LookupForAdd(aName).OrInsert(
-    [] () { return new nsRadioGroupStruct(); });
+      []() { return new nsRadioGroupStruct(); });
 }
 
-void
-DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
-                               nsCycleCollectionTraversalCallback &cb)
-{
+void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
+                                    nsCycleCollectionTraversalCallback& cb) {
   for (auto iter = tmp->mRadioGroups.Iter(); !iter.Done(); iter.Next()) {
     nsRadioGroupStruct* radioGroup = iter.UserData();
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-      cb, "mRadioGroups entry->mSelectedRadioButton");
+        cb, "mRadioGroups entry->mSelectedRadioButton");
     cb.NoteXPCOMChild(ToSupports(radioGroup->mSelectedRadioButton));
 
     uint32_t i, count = radioGroup->mRadioButtons.Count();
     for (i = 0; i < count; ++i) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-        cb, "mRadioGroups entry->mRadioButtons[i]");
+          cb, "mRadioGroups entry->mRadioButtons[i]");
       cb.NoteXPCOMChild(radioGroup->mRadioButtons[i]);
     }
   }
 }
 
-void
-DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp)
-{
+void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   tmp->mRadioGroups.Clear();
 }
 
-}
-}
+}  // namespace dom
+}  // namespace mozilla

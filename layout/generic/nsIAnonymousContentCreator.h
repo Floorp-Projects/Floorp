@@ -26,15 +26,12 @@ class nsIFrame;
  *
  * @see nsCSSFrameConstructor
  */
-class nsIAnonymousContentCreator
-{
-public:
+class nsIAnonymousContentCreator {
+ public:
   NS_DECL_QUERYFRAME_TARGET(nsIAnonymousContentCreator)
 
   struct ContentInfo {
-    explicit ContentInfo(nsIContent* aContent)
-      : mContent(aContent)
-    {}
+    explicit ContentInfo(nsIContent* aContent) : mContent(aContent) {}
 
     nsIContent* mContent;
   };
@@ -67,4 +64,3 @@ public:
 };
 
 #endif
-

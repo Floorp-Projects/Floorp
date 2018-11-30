@@ -19,8 +19,7 @@
  * Macro for adding a reference to an interface.
  * @param _ptr The interface pointer.
  */
-#define NS_ADDREF(_ptr) \
-  (_ptr)->AddRef()
+#define NS_ADDREF(_ptr) (_ptr)->AddRef()
 
 /**
  * Macro for adding a reference to this. This macro should be used
@@ -28,16 +27,12 @@
  * from the pointers primary type to nsISupports. This macro sidesteps
  * that entire problem.
  */
-#define NS_ADDREF_THIS() \
-  AddRef()
-
+#define NS_ADDREF_THIS() AddRef()
 
 // Making this a |inline| |template| allows |aExpr| to be evaluated only once,
 // yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
-template<class T>
-inline void
-ns_if_addref(T aExpr)
-{
+template <class T>
+inline void ns_if_addref(T aExpr) {
   if (aExpr) {
     aExpr->AddRef();
   }
@@ -50,29 +45,29 @@ ns_if_addref(T aExpr)
 #define NS_IF_ADDREF(_expr) ns_if_addref(_expr)
 
 /*
- * Given these declarations, it explicitly OK and efficient to end a `getter' with:
+ * Given these declarations, it explicitly OK and efficient to end a `getter'
+ * with:
  *
  *    NS_IF_ADDREF(*result = mThing);
  *
- * even if |mThing| is an |nsCOMPtr|.  If |mThing| is an |nsCOMPtr|, however, it is still
- * _illegal_ to say |NS_IF_ADDREF(mThing)|.
+ * even if |mThing| is an |nsCOMPtr|.  If |mThing| is an |nsCOMPtr|, however, it
+ * is still _illegal_ to say |NS_IF_ADDREF(mThing)|.
  */
 
 /**
  * Macro for releasing a reference to an interface.
  * @param _ptr The interface pointer.
  */
-#define NS_RELEASE(_ptr)                                                      \
-  do {                                                                        \
-    (_ptr)->Release();                                                        \
-    (_ptr) = 0;                                                               \
+#define NS_RELEASE(_ptr) \
+  do {                   \
+    (_ptr)->Release();   \
+    (_ptr) = 0;          \
   } while (0)
 
 /**
  * Macro for releasing a reference to this interface.
  */
-#define NS_RELEASE_THIS() \
-    Release()
+#define NS_RELEASE_THIS() Release()
 
 /**
  * Macro for releasing a reference to an interface, except that this
@@ -83,22 +78,22 @@ ns_if_addref(T aExpr)
  * @param _ptr The interface pointer.
  * @param _rc  The reference count.
  */
-#define NS_RELEASE2(_ptr, _rc)                                                \
-  do {                                                                        \
-    _rc = (_ptr)->Release();                                                  \
-    if (0 == (_rc)) (_ptr) = 0;                                               \
+#define NS_RELEASE2(_ptr, _rc)  \
+  do {                          \
+    _rc = (_ptr)->Release();    \
+    if (0 == (_rc)) (_ptr) = 0; \
   } while (0)
 
 /**
  * Macro for releasing a reference to an interface that checks for nullptr;
  * @param _ptr The interface pointer.
  */
-#define NS_IF_RELEASE(_ptr)                                                   \
-  do {                                                                        \
-    if (_ptr) {                                                               \
-      (_ptr)->Release();                                                      \
-      (_ptr) = 0;                                                             \
-    }                                                                         \
+#define NS_IF_RELEASE(_ptr) \
+  do {                      \
+    if (_ptr) {             \
+      (_ptr)->Release();    \
+      (_ptr) = 0;           \
+    }                       \
   } while (0)
 
 /*
@@ -108,7 +103,8 @@ ns_if_addref(T aExpr)
  * |static_cast<nsIBase*>(this)|; but that disguises the fact that what
  * you are really doing is disambiguating the |nsISupports|.  You could make
  * that more obvious with a double cast, e.g., |static_cast<nsISupports*>
-                                                           (* static_cast<nsIBase*>(this))|, but that is bulky and harder to read...
+                                                           (*
+ static_cast<nsIBase*>(this))|, but that is bulky and harder to read...
  *
  * The following macro is clean, short, and obvious.  In the example above,
  * you would use it like this: |NS_ISUPPORTS_CAST(nsIBase*, this)|.
@@ -118,16 +114,15 @@ ns_if_addref(T aExpr)
   static_cast<nsISupports*>(static_cast<__unambiguousBase>(__expr))
 
 // a type-safe shortcut for calling the |QueryInterface()| member function
-template<class T, class DestinationType>
-inline nsresult
-CallQueryInterface(T* aSource, DestinationType** aDestination)
-{
+template <class T, class DestinationType>
+inline nsresult CallQueryInterface(T* aSource, DestinationType** aDestination) {
   // We permit nsISupports-to-nsISupports here so that one can still obtain
   // the canonical nsISupports pointer with CallQueryInterface.
-  static_assert(!(mozilla::IsSame<DestinationType, T>::value ||
-                  mozilla::IsBaseOf<DestinationType, T>::value) ||
-                mozilla::IsSame<DestinationType, nsISupports>::value,
-                "don't use CallQueryInterface for compile-time-determinable casts");
+  static_assert(
+      !(mozilla::IsSame<DestinationType, T>::value ||
+        mozilla::IsBaseOf<DestinationType, T>::value) ||
+          mozilla::IsSame<DestinationType, nsISupports>::value,
+      "don't use CallQueryInterface for compile-time-determinable casts");
 
   MOZ_ASSERT(aSource, "null parameter");
   MOZ_ASSERT(aDestination, "null parameter");
@@ -137,9 +132,8 @@ CallQueryInterface(T* aSource, DestinationType** aDestination)
 }
 
 template <class SourceType, class DestinationType>
-inline nsresult
-CallQueryInterface(RefPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr)
-{
+inline nsresult CallQueryInterface(RefPtr<SourceType>& aSourcePtr,
+                                   DestinationType** aDestPtr) {
   return CallQueryInterface(aSourcePtr.get(), aDestPtr);
 }
 

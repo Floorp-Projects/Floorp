@@ -15,8 +15,7 @@ namespace dom {
 class ServiceWorkerInfo;
 class ServiceWorkerRegistrationInfo;
 
-class ServiceWorkerImpl final : public ServiceWorker::Inner
-{
+class ServiceWorkerImpl final : public ServiceWorker::Inner {
   RefPtr<ServiceWorkerInfo> mInfo;
   RefPtr<ServiceWorkerRegistrationInfo> mReg;
   ServiceWorker* mOuter;
@@ -24,29 +23,25 @@ class ServiceWorkerImpl final : public ServiceWorker::Inner
   ~ServiceWorkerImpl();
 
   // ServiceWorker::Inner interface
-  void
-  AddServiceWorker(ServiceWorker* aWorker) override;
+  void AddServiceWorker(ServiceWorker* aWorker) override;
 
-  void
-  RemoveServiceWorker(ServiceWorker* aWorker) override;
+  void RemoveServiceWorker(ServiceWorker* aWorker) override;
 
-  void
-  GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
-                  ServiceWorkerFailureCallback&& aFailureCB) override;
+  void GetRegistration(ServiceWorkerRegistrationCallback&& aSuccessCB,
+                       ServiceWorkerFailureCallback&& aFailureCB) override;
 
-  void
-  PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
-              const ClientInfo& aClientInfo,
-              const ClientState& aClientState) override;
+  void PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
+                   const ClientInfo& aClientInfo,
+                   const ClientState& aClientState) override;
 
-public:
+ public:
   ServiceWorkerImpl(ServiceWorkerInfo* aInfo,
                     ServiceWorkerRegistrationInfo* aReg);
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerImpl, override);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ServiceWorkerImpl_h
+#endif  // mozilla_dom_ServiceWorkerImpl_h

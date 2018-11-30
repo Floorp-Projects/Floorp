@@ -25,21 +25,17 @@ class StyleSheet;
 
 namespace dom {
 
-class MediaList final : public nsISupports
-                      , public nsWrapperCache
-{
-public:
+class MediaList final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaList)
 
   // Needed for CSSOM, but please don't use it outside of that :)
   explicit MediaList(already_AddRefed<RawServoMediaList> aRawList)
-    : mRawList(aRawList)
-  { }
+      : mRawList(aRawList) {}
 
-  static already_AddRefed<MediaList> Create(const nsAString& aMedia,
-                                            CallerType aCallerType =
-                                              CallerType::NonSystem);
+  static already_AddRefed<MediaList> Create(
+      const nsAString& aMedia, CallerType aCallerType = CallerType::NonSystem);
 
   already_AddRefed<MediaList> Clone();
 
@@ -53,10 +49,7 @@ public:
   void SetStyleSheet(StyleSheet* aSheet);
 
   // WebIDL
-  void Stringify(nsAString& aString)
-  {
-    GetMediaText(aString);
-  }
+  void Stringify(nsAString& aString) { GetMediaText(aString); }
   void GetMediaText(nsAString& aMediaText);
   void SetMediaText(const nsAString& aMediaText);
   uint32_t Length();
@@ -67,12 +60,11 @@ public:
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-protected:
+ protected:
   MediaList(const nsAString& aMedia, CallerType);
   MediaList();
 
@@ -81,8 +73,7 @@ protected:
   nsresult Delete(const nsAString& aOldMedium);
   nsresult Append(const nsAString& aNewMedium);
 
-  ~MediaList()
-  {
+  ~MediaList() {
     MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
   }
 
@@ -91,13 +82,13 @@ protected:
   // medialist changes
   StyleSheet* mStyleSheet = nullptr;
 
-private:
-  template<typename Func>
+ private:
+  template <typename Func>
   inline nsresult DoMediaChange(Func aCallback);
   RefPtr<RawServoMediaList> mRawList;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MediaList_h
+#endif  // mozilla_dom_MediaList_h

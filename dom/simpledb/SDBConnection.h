@@ -11,8 +11,7 @@
 #include "nsISDBConnection.h"
 #include "nsTArray.h"
 
-#define NS_SDBCONNECTION_CONTRACTID \
-  "@mozilla.org/dom/sdb-connection;1"
+#define NS_SDBCONNECTION_CONTRACTID "@mozilla.org/dom/sdb-connection;1"
 
 class nsISDBCloseCallback;
 
@@ -23,7 +22,7 @@ namespace ipc {
 class PBackgroundChild;
 class PrincipalInfo;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -31,9 +30,7 @@ class SDBConnectionChild;
 class SDBRequest;
 class SDBRequestParams;
 
-class SDBConnection final
-  : public nsISDBConnection
-{
+class SDBConnection final : public nsISDBConnection {
   typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
@@ -47,54 +44,40 @@ class SDBConnection final
   bool mOpen;
   bool mAllowedToClose;
 
-public:
-  static nsresult
-  Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+ public:
+  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-  void
-  AssertIsOnOwningThread() const
-  {
-    NS_ASSERT_OWNINGTHREAD(SDBConnection);
-  }
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(SDBConnection); }
 
-  void
-  ClearBackgroundActor();
+  void ClearBackgroundActor();
 
-  void
-  OnNewRequest();
+  void OnNewRequest();
 
-  void
-  OnRequestFinished();
+  void OnRequestFinished();
 
-  void
-  OnOpen();
+  void OnOpen();
 
-  void
-  OnClose(bool aAbnormal);
+  void OnClose(bool aAbnormal);
 
-  void
-  AllowToClose();
+  void AllowToClose();
 
-private:
+ private:
   SDBConnection();
 
   ~SDBConnection();
 
-  nsresult
-  CheckState();
+  nsresult CheckState();
 
-  nsresult
-  EnsureBackgroundActor();
+  nsresult EnsureBackgroundActor();
 
-  nsresult
-  InitiateRequest(SDBRequest* aRequest,
-                  const SDBRequestParams& aParams);
+  nsresult InitiateRequest(SDBRequest* aRequest,
+                           const SDBRequestParams& aParams);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISDBCONNECTION
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_simpledb_SDBConnection_h */

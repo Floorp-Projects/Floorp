@@ -12,14 +12,13 @@
 #include "nsTArray.h"
 
 template <class T>
-inline nsresult
-nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
-                  JS::MutableHandle<JSObject*> aResultArray)
-{
+inline nsresult nsTArrayToJSArray(JSContext* aCx,
+                                  const nsTArray<T>& aSourceArray,
+                                  JS::MutableHandle<JSObject*> aResultArray) {
   MOZ_ASSERT(aCx);
 
   JS::Rooted<JSObject*> arrayObj(aCx,
-    JS_NewArrayObject(aCx, aSourceArray.Length()));
+                                 JS_NewArrayObject(aCx, aSourceArray.Length()));
   if (!arrayObj) {
     NS_WARNING("JS_NewArrayObject failed!");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -27,7 +26,8 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
 
   for (uint32_t index = 0; index < aSourceArray.Length(); index++) {
     nsCOMPtr<nsISupports> obj;
-    nsresult rv = aSourceArray[index]->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(obj));
+    nsresult rv = aSourceArray[index]->QueryInterface(NS_GET_IID(nsISupports),
+                                                      getter_AddRefs(obj));
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::RootedValue wrappedVal(aCx);
@@ -50,15 +50,13 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
 }
 
 template <>
-inline nsresult
-nsTArrayToJSArray<nsString>(JSContext* aCx,
-                            const nsTArray<nsString>& aSourceArray,
-                            JS::MutableHandle<JSObject*> aResultArray)
-{
+inline nsresult nsTArrayToJSArray<nsString>(
+    JSContext* aCx, const nsTArray<nsString>& aSourceArray,
+    JS::MutableHandle<JSObject*> aResultArray) {
   MOZ_ASSERT(aCx);
 
   JS::Rooted<JSObject*> arrayObj(aCx,
-    JS_NewArrayObject(aCx, aSourceArray.Length()));
+                                 JS_NewArrayObject(aCx, aSourceArray.Length()));
   if (!arrayObj) {
     NS_WARNING("JS_NewArrayObject failed!");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -69,7 +67,7 @@ nsTArrayToJSArray<nsString>(JSContext* aCx,
     s = JS_NewUCStringCopyN(aCx, aSourceArray[index].BeginReading(),
                             aSourceArray[index].Length());
 
-    if(!s) {
+    if (!s) {
       NS_WARNING("Memory allocation error!");
       return NS_ERROR_OUT_OF_MEMORY;
     }

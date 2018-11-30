@@ -22,11 +22,10 @@ class MLGRenderTarget;
 class MLGTexture;
 class TextureSource;
 
-class MaskOperation
-{
+class MaskOperation {
   NS_INLINE_DECL_REFCOUNTING(MaskOperation)
 
-public:
+ public:
   // For when the exact texture is known ahead of time.
   MaskOperation(FrameBuilder* aBuilder, MLGTexture* aSource);
 
@@ -36,30 +35,23 @@ public:
   // ignore the layer parameter).
   virtual gfx::Rect ComputeMaskRect(Layer* aLayer) const;
 
-  MLGTexture* GetTexture() const {
-    return mTexture;
-  }
-  bool IsEmpty() const {
-    return !mTexture;
-  }
+  MLGTexture* GetTexture() const { return mTexture; }
+  bool IsEmpty() const { return !mTexture; }
 
-protected:
+ protected:
   explicit MaskOperation(FrameBuilder* aBuilder);
   virtual ~MaskOperation();
 
-protected:
+ protected:
   RefPtr<MLGTexture> mTexture;
 };
 
-struct MaskTexture
-{
-  MaskTexture() : mSource(nullptr)
-  {}
+struct MaskTexture {
+  MaskTexture() : mSource(nullptr) {}
   MaskTexture(const gfx::Rect& aRect, TextureSource* aSource)
-   : mRect(aRect), mSource(aSource)
-  {}
+      : mRect(aRect), mSource(aSource) {}
 
-  bool operator <(const MaskTexture& aOther) const;
+  bool operator<(const MaskTexture& aOther) const;
 
   gfx::Rect mRect;
   RefPtr<TextureSource> mSource;
@@ -67,9 +59,8 @@ struct MaskTexture
 
 typedef std::vector<MaskTexture> MaskTextureList;
 
-class MaskCombineOperation final : public MaskOperation
-{
-public:
+class MaskCombineOperation final : public MaskOperation {
+ public:
   explicit MaskCombineOperation(FrameBuilder* aBuilder);
   ~MaskCombineOperation() override;
 
@@ -78,11 +69,9 @@ public:
   void PrepareForRendering();
   void Render();
 
-  gfx::Rect ComputeMaskRect(Layer* aLayer) const override {
-    return mArea;
-  }
+  gfx::Rect ComputeMaskRect(Layer* aLayer) const override { return mArea; }
 
-private:
+ private:
   FrameBuilder* mBuilder;
   gfx::Rect mArea;
   MaskTextureList mTextures;
@@ -94,7 +83,7 @@ private:
 RefPtr<TextureSource> GetMaskLayerTexture(Layer* aLayer);
 void AppendToMaskTextureList(MaskTextureList& aList, Layer* aLayer);
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_MaskOperation_h
+#endif  // mozilla_gfx_layers_mlgpu_MaskOperation_h

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 // Original author: ekr@rtfm.com
 
 // Some of this code is cut-and-pasted from nICEr. Copyright is:
@@ -62,7 +61,7 @@ class NrIceResolverFake {
   NrIceResolverFake();
   ~NrIceResolverFake();
 
-  void SetAddr(const std::string& hostname, const PRNetAddr& addr) {
+  void SetAddr(const std::string &hostname, const PRNetAddr &addr) {
     switch (addr.raw.family) {
       case AF_INET:
         addrs_[hostname] = addr;
@@ -79,29 +78,24 @@ class NrIceResolverFake {
 
   void DestroyResolver();
 
-private:
+ private:
   // Implementations of vtbl functions
   static int destroy(void **objp);
-  static int resolve(void *obj,
-                     nr_resolver_resource *resource,
-                     int (*cb)(void *cb_arg,
-                               nr_transport_addr *addr),
-                     void *cb_arg,
-                     void **handle);
+  static int resolve(void *obj, nr_resolver_resource *resource,
+                     int (*cb)(void *cb_arg, nr_transport_addr *addr),
+                     void *cb_arg, void **handle);
   static void resolve_cb(NR_SOCKET s, int how, void *cb_arg);
   static int cancel(void *obj, void *handle);
 
   // Get an address.
-  const PRNetAddr *Resolve(const std::string& hostname, int address_family) {
+  const PRNetAddr *Resolve(const std::string &hostname, int address_family) {
     switch (address_family) {
       case AF_INET:
-        if (!addrs_.count(hostname))
-          return nullptr;
+        if (!addrs_.count(hostname)) return nullptr;
 
         return &addrs_[hostname];
       case AF_INET6:
-        if (!addrs6_.count(hostname))
-          return nullptr;
+        if (!addrs6_.count(hostname)) return nullptr;
 
         return &addrs6_[hostname];
       default:
@@ -109,21 +103,18 @@ private:
     }
   }
 
-
   struct PendingResolution {
-    PendingResolution(NrIceResolverFake *resolver,
-                      const std::string& hostname,
-                      uint16_t port,
-                      int transport,
-                      int address_family,
+    PendingResolution(NrIceResolverFake *resolver, const std::string &hostname,
+                      uint16_t port, int transport, int address_family,
                       int (*cb)(void *cb_arg, nr_transport_addr *addr),
-                      void *cb_arg) :
-        resolver_(resolver),
-        hostname_(hostname),
-        port_(port),
-        transport_(transport),
-        address_family_(address_family),
-        cb_(cb), cb_arg_(cb_arg) {}
+                      void *cb_arg)
+        : resolver_(resolver),
+          hostname_(hostname),
+          port_(port),
+          transport_(transport),
+          address_family_(address_family),
+          cb_(cb),
+          cb_arg_(cb_arg) {}
 
     NrIceResolverFake *resolver_;
     std::string hostname_;
@@ -135,7 +126,7 @@ private:
     void *timer_handle_;
   };
 
-  nr_resolver_vtbl* vtbl_;
+  nr_resolver_vtbl *vtbl_;
   std::map<std::string, PRNetAddr> addrs_;
   std::map<std::string, PRNetAddr> addrs6_;
   uint32_t delay_ms_;

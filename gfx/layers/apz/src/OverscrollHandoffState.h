@@ -11,8 +11,8 @@
 #include "mozilla/RefPtr.h"   // for RefPtr
 #include "nsISupportsImpl.h"  // for NS_INLINE_DECL_THREADSAFE_REFCOUNTING
 #include "APZUtils.h"         // for CancelAnimationFlags
-#include "mozilla/layers/LayersTypes.h" // for Layer::ScrollDirection
-#include "Units.h"            // for ScreenPoint
+#include "mozilla/layers/LayersTypes.h"  // for Layer::ScrollDirection
+#include "Units.h"                       // for ScreenPoint
 
 namespace mozilla {
 
@@ -23,18 +23,18 @@ namespace layers {
 class AsyncPanZoomController;
 
 /**
- * This class represents the chain of APZCs along which overscroll is handed off.
- * It is created by APZCTreeManager by starting from an initial APZC which is
- * the target for input events, and following the scroll parent ID links (often
- * but not always corresponding to parent pointers in the APZC tree), then
- * adjusting for scrollgrab.
+ * This class represents the chain of APZCs along which overscroll is handed
+ * off. It is created by APZCTreeManager by starting from an initial APZC which
+ * is the target for input events, and following the scroll parent ID links
+ * (often but not always corresponding to parent pointers in the APZC tree),
+ * then adjusting for scrollgrab.
  */
-class OverscrollHandoffChain
-{
-protected:
+class OverscrollHandoffChain {
+ protected:
   // Reference-counted classes cannot have public destructors.
   ~OverscrollHandoffChain();
-public:
+
+ public:
   // Threadsafe so that the controller and sampler threads can both maintain
   // nsRefPtrs to the same handoff chain.
   // Mutable so that we can pass around the class by
@@ -44,7 +44,8 @@ public:
 
   /*
    * Methods for building the handoff chain.
-   * These should be used only by AsyncPanZoomController::BuildOverscrollHandoffChain().
+   * These should be used only by
+   * AsyncPanZoomController::BuildOverscrollHandoffChain().
    */
   void Add(AsyncPanZoomController* aApzc);
   void SortByScrollPriority();
@@ -97,7 +98,7 @@ public:
       const InputData& aInput,
       ScrollDirections* aOutAllowedScrollDirections) const;
 
-private:
+ private:
   std::vector<RefPtr<AsyncPanZoomController>> mChain;
 
   typedef void (AsyncPanZoomController::*APZCMethod)();
@@ -113,11 +114,10 @@ struct OverscrollHandoffState {
   OverscrollHandoffState(const OverscrollHandoffChain& aChain,
                          const ScreenPoint& aPanDistance,
                          ScrollSource aScrollSource)
-    : mChain(aChain),
-      mChainIndex(0),
-      mPanDistance(aPanDistance),
-      mScrollSource(aScrollSource)
-  {}
+      : mChain(aChain),
+        mChainIndex(0),
+        mPanDistance(aPanDistance),
+        mScrollSource(aScrollSource) {}
 
   // The chain of APZCs along which we hand off scroll.
   // This is const to indicate that the chain does not change over the
@@ -159,7 +159,7 @@ struct FlingHandoffState {
   RefPtr<const AsyncPanZoomController> mScrolledApzc;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* mozilla_layers_OverscrollHandoffChain_h */

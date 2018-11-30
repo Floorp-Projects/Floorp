@@ -35,29 +35,25 @@ using mozilla::ipc::PBackgroundChild;
 using mozilla::ipc::PBackgroundParent;
 
 StructuredCloneData::StructuredCloneData()
-  : StructuredCloneData(StructuredCloneHolder::TransferringSupported)
-{}
+    : StructuredCloneData(StructuredCloneHolder::TransferringSupported) {}
 
 StructuredCloneData::StructuredCloneData(StructuredCloneData&& aOther)
-  : StructuredCloneData(StructuredCloneHolder::TransferringSupported)
-{
+    : StructuredCloneData(StructuredCloneHolder::TransferringSupported) {
   *this = std::move(aOther);
 }
 
-StructuredCloneData::StructuredCloneData(TransferringSupport aSupportsTransferring)
-  : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
-                          aSupportsTransferring,
-                          StructuredCloneHolder::StructuredCloneScope::DifferentProcess)
-  , mExternalData(JS::StructuredCloneScope::DifferentProcess)
-  , mInitialized(false)
-{}
+StructuredCloneData::StructuredCloneData(
+    TransferringSupport aSupportsTransferring)
+    : StructuredCloneHolder(
+          StructuredCloneHolder::CloningSupported, aSupportsTransferring,
+          StructuredCloneHolder::StructuredCloneScope::DifferentProcess),
+      mExternalData(JS::StructuredCloneScope::DifferentProcess),
+      mInitialized(false) {}
 
-StructuredCloneData::~StructuredCloneData()
-{}
+StructuredCloneData::~StructuredCloneData() {}
 
-StructuredCloneData&
-StructuredCloneData::operator=(StructuredCloneData&& aOther)
-{
+StructuredCloneData& StructuredCloneData::operator=(
+    StructuredCloneData&& aOther) {
   mBlobImplArray = std::move(aOther.mBlobImplArray);
   mExternalData = std::move(aOther.mExternalData);
   mSharedData = std::move(aOther.mSharedData);
@@ -67,9 +63,7 @@ StructuredCloneData::operator=(StructuredCloneData&& aOther)
   return *this;
 }
 
-bool
-StructuredCloneData::Copy(const StructuredCloneData& aData)
-{
+bool StructuredCloneData::Copy(const StructuredCloneData& aData) {
   if (!aData.mInitialized) {
     return true;
   }
@@ -77,8 +71,7 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
   if (aData.SharedData()) {
     mSharedData = aData.SharedData();
   } else {
-    mSharedData =
-      SharedJSAllocatedData::CreateFromExternalData(aData.Data());
+    mSharedData = SharedJSAllocatedData::CreateFromExternalData(aData.Data());
     NS_ENSURE_TRUE(mSharedData, false);
   }
 
@@ -100,11 +93,9 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
   return true;
 }
 
-void
-StructuredCloneData::Read(JSContext* aCx,
-                          JS::MutableHandle<JS::Value> aValue,
-                          ErrorResult &aRv)
-{
+void StructuredCloneData::Read(JSContext* aCx,
+                               JS::MutableHandle<JS::Value> aValue,
+                               ErrorResult& aRv) {
   MOZ_ASSERT(mInitialized);
 
   nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
@@ -113,24 +104,19 @@ StructuredCloneData::Read(JSContext* aCx,
   ReadFromBuffer(global, aCx, Data(), aValue, aRv);
 }
 
-void
-StructuredCloneData::Write(JSContext* aCx,
-                           JS::Handle<JS::Value> aValue,
-                           ErrorResult &aRv)
-{
+void StructuredCloneData::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) {
   Write(aCx, aValue, JS::UndefinedHandleValue, aRv);
 }
 
-void
-StructuredCloneData::Write(JSContext* aCx,
-                           JS::Handle<JS::Value> aValue,
-                           JS::Handle<JS::Value> aTransfer,
-                           ErrorResult &aRv)
-{
+void StructuredCloneData::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                JS::Handle<JS::Value> aTransfer,
+                                ErrorResult& aRv) {
   MOZ_ASSERT(!mInitialized);
 
   StructuredCloneHolder::Write(aCx, aValue, aTransfer,
-                               JS::CloneDataPolicy().denySharedArrayBuffer(), aRv);
+                               JS::CloneDataPolicy().denySharedArrayBuffer(),
+                               aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -148,16 +134,11 @@ enum ActorFlavorEnum {
   Child,
 };
 
-enum ManagerFlavorEnum {
-  ContentProtocol = 0,
-  BackgroundProtocol
-};
+enum ManagerFlavorEnum { ContentProtocol = 0, BackgroundProtocol };
 
-template<typename M>
-bool
-BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
-                       ClonedMessageData& aClonedData)
-{
+template <typename M>
+bool BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
+                            ClonedMessageData& aClonedData) {
   SerializedStructuredCloneBuffer& buffer = aClonedData.data();
   auto iter = aData.Data().Start();
   size_t size = aData.Data().Size();
@@ -173,7 +154,8 @@ BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
   const nsTArray<RefPtr<BlobImpl>>& blobImpls = aData.BlobImpls();
 
   if (!blobImpls.IsEmpty()) {
-    if (NS_WARN_IF(!aClonedData.blobs().SetLength(blobImpls.Length(), fallible))) {
+    if (NS_WARN_IF(
+            !aClonedData.blobs().SetLength(blobImpls.Length(), fallible))) {
       return false;
     }
 
@@ -188,8 +170,8 @@ BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
 
   const nsTArray<nsCOMPtr<nsIInputStream>>& inputStreams = aData.InputStreams();
   if (!inputStreams.IsEmpty()) {
-    if (NS_WARN_IF(!aData.IPCStreams().SetCapacity(inputStreams.Length(),
-                                                   fallible))) {
+    if (NS_WARN_IF(
+            !aData.IPCStreams().SetCapacity(inputStreams.Length(), fallible))) {
       return false;
     }
 
@@ -212,84 +194,61 @@ BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
   return true;
 }
 
-bool
-StructuredCloneData::BuildClonedMessageDataForParent(
-  nsIContentParent* aParent,
-  ClonedMessageData& aClonedData)
-{
+bool StructuredCloneData::BuildClonedMessageDataForParent(
+    nsIContentParent* aParent, ClonedMessageData& aClonedData) {
   return BuildClonedMessageData(aParent, *this, aClonedData);
 }
 
-bool
-StructuredCloneData::BuildClonedMessageDataForChild(
-  nsIContentChild* aChild,
-  ClonedMessageData& aClonedData)
-{
+bool StructuredCloneData::BuildClonedMessageDataForChild(
+    nsIContentChild* aChild, ClonedMessageData& aClonedData) {
   return BuildClonedMessageData(aChild, *this, aClonedData);
 }
 
-bool
-StructuredCloneData::BuildClonedMessageDataForBackgroundParent(
-  PBackgroundParent* aParent,
-  ClonedMessageData& aClonedData)
-{
+bool StructuredCloneData::BuildClonedMessageDataForBackgroundParent(
+    PBackgroundParent* aParent, ClonedMessageData& aClonedData) {
   return BuildClonedMessageData(aParent, *this, aClonedData);
 }
 
-bool
-StructuredCloneData::BuildClonedMessageDataForBackgroundChild(
-  PBackgroundChild* aChild,
-  ClonedMessageData& aClonedData)
-{
+bool StructuredCloneData::BuildClonedMessageDataForBackgroundChild(
+    PBackgroundChild* aChild, ClonedMessageData& aClonedData) {
   return BuildClonedMessageData(aChild, *this, aClonedData);
 }
 
 // See the StructuredCloneData class block comment for the meanings of each val.
-enum MemoryFlavorEnum {
-  BorrowMemory = 0,
-  CopyMemory,
-  StealMemory
-};
+enum MemoryFlavorEnum { BorrowMemory = 0, CopyMemory, StealMemory };
 
-template<MemoryFlavorEnum>
-struct MemoryTraits
-{ };
+template <MemoryFlavorEnum>
+struct MemoryTraits {};
 
-template<>
-struct MemoryTraits<BorrowMemory>
-{
+template <>
+struct MemoryTraits<BorrowMemory> {
   typedef const mozilla::dom::ClonedMessageData ClonedMessageType;
 
   static void ProvideBuffer(const ClonedMessageData& aClonedData,
-                            StructuredCloneData& aData)
-  {
+                            StructuredCloneData& aData) {
     const SerializedStructuredCloneBuffer& buffer = aClonedData.data();
     aData.UseExternalData(buffer.data);
   }
 };
 
-template<>
-struct MemoryTraits<CopyMemory>
-{
+template <>
+struct MemoryTraits<CopyMemory> {
   typedef const mozilla::dom::ClonedMessageData ClonedMessageType;
 
   static void ProvideBuffer(const ClonedMessageData& aClonedData,
-                            StructuredCloneData& aData)
-  {
+                            StructuredCloneData& aData) {
     const SerializedStructuredCloneBuffer& buffer = aClonedData.data();
     aData.CopyExternalData(buffer.data);
   }
 };
 
-template<>
-struct MemoryTraits<StealMemory>
-{
+template <>
+struct MemoryTraits<StealMemory> {
   // note: not const!
   typedef mozilla::dom::ClonedMessageData ClonedMessageType;
 
   static void ProvideBuffer(ClonedMessageData& aClonedData,
-                            StructuredCloneData& aData)
-  {
+                            StructuredCloneData& aData) {
     SerializedStructuredCloneBuffer& buffer = aClonedData.data();
     aData.StealExternalData(buffer.data);
   }
@@ -299,12 +258,12 @@ struct MemoryTraits<StealMemory>
 // and Child/BackgroundChild in this implementation.  The calling methods,
 // however, do maintain the distinction for code-reading purposes and are backed
 // by assertions to enforce there is no misuse.
-template<MemoryFlavorEnum MemoryFlavor, ActorFlavorEnum Flavor>
-static void
-UnpackClonedMessageData(typename MemoryTraits<MemoryFlavor>::ClonedMessageType& aClonedData,
-                        StructuredCloneData& aData)
-{
-  const InfallibleTArray<MessagePortIdentifier>& identifiers = aClonedData.identfiers();
+template <MemoryFlavorEnum MemoryFlavor, ActorFlavorEnum Flavor>
+static void UnpackClonedMessageData(
+    typename MemoryTraits<MemoryFlavor>::ClonedMessageType& aClonedData,
+    StructuredCloneData& aData) {
+  const InfallibleTArray<MessagePortIdentifier>& identifiers =
+      aClonedData.identfiers();
 
   MemoryTraits<MemoryFlavor>::ProvideBuffer(aClonedData, aData);
 
@@ -335,103 +294,86 @@ UnpackClonedMessageData(typename MemoryTraits<MemoryFlavor>::ClonedMessageType& 
   }
 }
 
-void
-StructuredCloneData::BorrowFromClonedMessageDataForParent(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::BorrowFromClonedMessageDataForParent(
+    const ClonedMessageData& aClonedData) {
   // PContent parent is always main thread and actor constraints demand we're
   // likewise on that thread.
   MOZ_ASSERT(NS_IsMainThread());
   UnpackClonedMessageData<BorrowMemory, Parent>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::BorrowFromClonedMessageDataForChild(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::BorrowFromClonedMessageDataForChild(
+    const ClonedMessageData& aClonedData) {
   // PContent child is always main thread and actor constraints demand we're
   // likewise on that thread.
   MOZ_ASSERT(NS_IsMainThread());
   UnpackClonedMessageData<BorrowMemory, Child>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::BorrowFromClonedMessageDataForBackgroundParent(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::BorrowFromClonedMessageDataForBackgroundParent(
+    const ClonedMessageData& aClonedData) {
   MOZ_ASSERT(IsOnBackgroundThread());
   UnpackClonedMessageData<BorrowMemory, Parent>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::BorrowFromClonedMessageDataForBackgroundChild(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::BorrowFromClonedMessageDataForBackgroundChild(
+    const ClonedMessageData& aClonedData) {
   // No thread assertion; BackgroundChild can happen on any thread.
   UnpackClonedMessageData<BorrowMemory, Child>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::CopyFromClonedMessageDataForParent(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::CopyFromClonedMessageDataForParent(
+    const ClonedMessageData& aClonedData) {
   MOZ_ASSERT(NS_IsMainThread());
   UnpackClonedMessageData<CopyMemory, Parent>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::CopyFromClonedMessageDataForChild(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::CopyFromClonedMessageDataForChild(
+    const ClonedMessageData& aClonedData) {
   MOZ_ASSERT(NS_IsMainThread());
   UnpackClonedMessageData<CopyMemory, Child>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::CopyFromClonedMessageDataForBackgroundParent(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::CopyFromClonedMessageDataForBackgroundParent(
+    const ClonedMessageData& aClonedData) {
   MOZ_ASSERT(IsOnBackgroundThread());
   UnpackClonedMessageData<CopyMemory, Parent>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::CopyFromClonedMessageDataForBackgroundChild(const ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::CopyFromClonedMessageDataForBackgroundChild(
+    const ClonedMessageData& aClonedData) {
   UnpackClonedMessageData<CopyMemory, Child>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::StealFromClonedMessageDataForParent(ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::StealFromClonedMessageDataForParent(
+    ClonedMessageData& aClonedData) {
   MOZ_ASSERT(NS_IsMainThread());
   UnpackClonedMessageData<StealMemory, Parent>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::StealFromClonedMessageDataForChild(ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::StealFromClonedMessageDataForChild(
+    ClonedMessageData& aClonedData) {
   MOZ_ASSERT(NS_IsMainThread());
   UnpackClonedMessageData<StealMemory, Child>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::StealFromClonedMessageDataForBackgroundParent(ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::StealFromClonedMessageDataForBackgroundParent(
+    ClonedMessageData& aClonedData) {
   MOZ_ASSERT(IsOnBackgroundThread());
   UnpackClonedMessageData<StealMemory, Parent>(aClonedData, *this);
 }
 
-void
-StructuredCloneData::StealFromClonedMessageDataForBackgroundChild(ClonedMessageData& aClonedData)
-{
+void StructuredCloneData::StealFromClonedMessageDataForBackgroundChild(
+    ClonedMessageData& aClonedData) {
   UnpackClonedMessageData<StealMemory, Child>(aClonedData, *this);
 }
 
-
-void
-StructuredCloneData::WriteIPCParams(IPC::Message* aMsg) const
-{
+void StructuredCloneData::WriteIPCParams(IPC::Message* aMsg) const {
   WriteParam(aMsg, Data());
 }
 
-bool
-StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
-                                   PickleIterator* aIter)
-{
+bool StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
+                                        PickleIterator* aIter) {
   MOZ_ASSERT(!mInitialized);
   JSStructuredCloneData data(JS::StructuredCloneScope::DifferentProcess);
   if (!ReadParam(aMsg, aIter, &data)) {
@@ -442,21 +384,17 @@ StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
   return true;
 }
 
-bool
-StructuredCloneData::CopyExternalData(const char* aData,
-                                      size_t aDataLength)
-{
+bool StructuredCloneData::CopyExternalData(const char* aData,
+                                           size_t aDataLength) {
   MOZ_ASSERT(!mInitialized);
-  mSharedData = SharedJSAllocatedData::CreateFromExternalData(aData,
-                                                              aDataLength);
+  mSharedData =
+      SharedJSAllocatedData::CreateFromExternalData(aData, aDataLength);
   NS_ENSURE_TRUE(mSharedData, false);
   mInitialized = true;
   return true;
 }
 
-bool
-StructuredCloneData::CopyExternalData(const JSStructuredCloneData& aData)
-{
+bool StructuredCloneData::CopyExternalData(const JSStructuredCloneData& aData) {
   MOZ_ASSERT(!mInitialized);
   mSharedData = SharedJSAllocatedData::CreateFromExternalData(aData);
   NS_ENSURE_TRUE(mSharedData, false);
@@ -464,21 +402,17 @@ StructuredCloneData::CopyExternalData(const JSStructuredCloneData& aData)
   return true;
 }
 
-bool
-StructuredCloneData::StealExternalData(JSStructuredCloneData& aData)
-{
+bool StructuredCloneData::StealExternalData(JSStructuredCloneData& aData) {
   MOZ_ASSERT(!mInitialized);
   mSharedData = new SharedJSAllocatedData(std::move(aData));
   mInitialized = true;
   return true;
 }
 
-already_AddRefed<SharedJSAllocatedData>
-StructuredCloneData::TakeSharedData()
-{
+already_AddRefed<SharedJSAllocatedData> StructuredCloneData::TakeSharedData() {
   return mSharedData.forget();
 }
 
-} // namespace ipc
-} // namespace dom
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace dom
+}  // namespace mozilla

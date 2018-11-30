@@ -36,40 +36,33 @@ namespace {
 ClientManagerService* sClientManagerServiceInstance = nullptr;
 bool sClientManagerServiceShutdownRegistered = false;
 
-class ClientShutdownBlocker final : public nsIAsyncShutdownBlocker
-{
+class ClientShutdownBlocker final : public nsIAsyncShutdownBlocker {
   RefPtr<GenericPromise::Private> mPromise;
 
   ~ClientShutdownBlocker() = default;
 
-public:
+ public:
   explicit ClientShutdownBlocker(GenericPromise::Private* aPromise)
-    : mPromise(aPromise)
-  {
+      : mPromise(aPromise) {
     MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
 
   NS_IMETHOD
-  GetName(nsAString& aNameOut) override
-  {
-    aNameOut =
-      NS_LITERAL_STRING("ClientManagerService: start destroying IPC actors early");
+  GetName(nsAString& aNameOut) override {
+    aNameOut = NS_LITERAL_STRING(
+        "ClientManagerService: start destroying IPC actors early");
     return NS_OK;
   }
 
   NS_IMETHOD
-  BlockShutdown(nsIAsyncShutdownClient* aClient) override
-  {
+  BlockShutdown(nsIAsyncShutdownClient* aClient) override {
     mPromise->Resolve(true, __func__);
     aClient->RemoveBlocker(this);
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetState(nsIPropertyBag**) override
-  {
-    return NS_OK;
-  }
+  GetState(nsIPropertyBag**) override { return NS_OK; }
 
   NS_DECL_ISUPPORTS
 };
@@ -78,48 +71,44 @@ NS_IMPL_ISUPPORTS(ClientShutdownBlocker, nsIAsyncShutdownBlocker)
 
 // Helper function the resolves a MozPromise when we detect that the browser
 // has begun to shutdown.
-RefPtr<GenericPromise>
-OnShutdown()
-{
+RefPtr<GenericPromise> OnShutdown() {
   RefPtr<GenericPromise::Private> ref = new GenericPromise::Private(__func__);
 
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("ClientManagerServer::OnShutdown",
-  [ref] () {
-    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
-    if (!svc) {
-      ref->Resolve(true, __func__);
-      return;
-    }
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction("ClientManagerServer::OnShutdown", [ref]() {
+        nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+        if (!svc) {
+          ref->Resolve(true, __func__);
+          return;
+        }
 
-    nsCOMPtr<nsIAsyncShutdownClient> phase;
-    MOZ_ALWAYS_SUCCEEDS(svc->GetXpcomWillShutdown(getter_AddRefs(phase)));
-    if (!phase) {
-      ref->Resolve(true, __func__);
-      return;
-    }
+        nsCOMPtr<nsIAsyncShutdownClient> phase;
+        MOZ_ALWAYS_SUCCEEDS(svc->GetXpcomWillShutdown(getter_AddRefs(phase)));
+        if (!phase) {
+          ref->Resolve(true, __func__);
+          return;
+        }
 
-    nsCOMPtr<nsIAsyncShutdownBlocker> blocker = new ClientShutdownBlocker(ref);
-    nsresult rv =
-      phase->AddBlocker(blocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-                        NS_LITERAL_STRING("ClientManagerService shutdown"));
+        nsCOMPtr<nsIAsyncShutdownBlocker> blocker =
+            new ClientShutdownBlocker(ref);
+        nsresult rv = phase->AddBlocker(
+            blocker, NS_LITERAL_STRING(__FILE__), __LINE__,
+            NS_LITERAL_STRING("ClientManagerService shutdown"));
 
-    if (NS_FAILED(rv)) {
-      ref->Resolve(true, __func__);
-      return;
-    }
-  });
+        if (NS_FAILED(rv)) {
+          ref->Resolve(true, __func__);
+          return;
+        }
+      });
 
-  MOZ_ALWAYS_SUCCEEDS(
-    SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   return ref.forget();
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
-ClientManagerService::ClientManagerService()
-  : mShutdown(false)
-{
+ClientManagerService::ClientManagerService() : mShutdown(false) {
   AssertIsOnBackgroundThread();
 
   // Only register one shutdown handler at a time.  If a previous service
@@ -134,21 +123,19 @@ ClientManagerService::ClientManagerService()
     // shutdown at the first sign it has begun.  Since we handle normal shutdown
     // gracefully we don't really need to block anything here.  We just begin
     // destroying our IPC actors immediately.
-    OnShutdown()->Then(GetCurrentThreadSerialEventTarget(), __func__,
-      [] () {
-        // Look up the latest service instance, if it exists.  This may
-        // be different from the instance that registered the shutdown
-        // handler.
-        RefPtr<ClientManagerService> svc = ClientManagerService::GetInstance();
-        if (svc) {
-          svc->Shutdown();
-        }
-      });
+    OnShutdown()->Then(GetCurrentThreadSerialEventTarget(), __func__, []() {
+      // Look up the latest service instance, if it exists.  This may
+      // be different from the instance that registered the shutdown
+      // handler.
+      RefPtr<ClientManagerService> svc = ClientManagerService::GetInstance();
+      if (svc) {
+        svc->Shutdown();
+      }
+    });
   }
 }
 
-ClientManagerService::~ClientManagerService()
-{
+ClientManagerService::~ClientManagerService() {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(mSourceTable.Count() == 0);
   MOZ_DIAGNOSTIC_ASSERT(mManagerList.IsEmpty());
@@ -157,9 +144,7 @@ ClientManagerService::~ClientManagerService()
   sClientManagerServiceInstance = nullptr;
 }
 
-void
-ClientManagerService::Shutdown()
-{
+void ClientManagerService::Shutdown() {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(sClientManagerServiceShutdownRegistered);
 
@@ -180,8 +165,7 @@ ClientManagerService::Shutdown()
 
 // static
 already_AddRefed<ClientManagerService>
-ClientManagerService::GetOrCreateInstance()
-{
+ClientManagerService::GetOrCreateInstance() {
   AssertIsOnBackgroundThread();
 
   if (!sClientManagerServiceInstance) {
@@ -193,9 +177,7 @@ ClientManagerService::GetOrCreateInstance()
 }
 
 // static
-already_AddRefed<ClientManagerService>
-ClientManagerService::GetInstance()
-{
+already_AddRefed<ClientManagerService> ClientManagerService::GetInstance() {
   AssertIsOnBackgroundThread();
 
   if (!sClientManagerServiceInstance) {
@@ -206,9 +188,7 @@ ClientManagerService::GetInstance()
   return ref.forget();
 }
 
-bool
-ClientManagerService::AddSource(ClientSourceParent* aSource)
-{
+bool ClientManagerService::AddSource(ClientSourceParent* aSource) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aSource);
   auto entry = mSourceTable.LookupForAdd(aSource->Info().Id());
@@ -222,9 +202,7 @@ ClientManagerService::AddSource(ClientSourceParent* aSource)
   return true;
 }
 
-bool
-ClientManagerService::RemoveSource(ClientSourceParent* aSource)
-{
+bool ClientManagerService::RemoveSource(ClientSourceParent* aSource) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aSource);
   auto entry = mSourceTable.Lookup(aSource->Info().Id());
@@ -235,9 +213,8 @@ ClientManagerService::RemoveSource(ClientSourceParent* aSource)
   return true;
 }
 
-ClientSourceParent*
-ClientManagerService::FindSource(const nsID& aID, const PrincipalInfo& aPrincipalInfo)
-{
+ClientSourceParent* ClientManagerService::FindSource(
+    const nsID& aID, const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
 
   auto entry = mSourceTable.Lookup(aID);
@@ -247,16 +224,15 @@ ClientManagerService::FindSource(const nsID& aID, const PrincipalInfo& aPrincipa
 
   ClientSourceParent* source = entry.Data();
   if (source->IsFrozen() ||
-      !ClientMatchPrincipalInfo(source->Info().PrincipalInfo(), aPrincipalInfo)) {
+      !ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
+                                aPrincipalInfo)) {
     return nullptr;
   }
 
   return source;
 }
 
-void
-ClientManagerService::AddManager(ClientManagerParent* aManager)
-{
+void ClientManagerService::AddManager(ClientManagerParent* aManager) {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(aManager);
   MOZ_ASSERT(!mManagerList.Contains(aManager));
@@ -268,22 +244,19 @@ ClientManagerService::AddManager(ClientManagerParent* aManager)
   }
 }
 
-void
-ClientManagerService::RemoveManager(ClientManagerParent* aManager)
-{
+void ClientManagerService::RemoveManager(ClientManagerParent* aManager) {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(aManager);
   DebugOnly<bool> removed = mManagerList.RemoveElement(aManager);
   MOZ_ASSERT(removed);
 }
 
-RefPtr<ClientOpPromise>
-ClientManagerService::Navigate(const ClientNavigateArgs& aArgs)
-{
+RefPtr<ClientOpPromise> ClientManagerService::Navigate(
+    const ClientNavigateArgs& aArgs) {
   RefPtr<ClientOpPromise> ref;
 
-  ClientSourceParent* source = FindSource(aArgs.target().id(),
-                                          aArgs.target().principalInfo());
+  ClientSourceParent* source =
+      FindSource(aArgs.target().id(), aArgs.target().principalInfo());
   if (!source) {
     ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
     return ref.forget();
@@ -303,11 +276,11 @@ ClientManagerService::Navigate(const ClientNavigateArgs& aArgs)
   args.targetParent() = source;
 
   RefPtr<ClientOpPromise::Private> promise =
-    new ClientOpPromise::Private(__func__);
+      new ClientOpPromise::Private(__func__);
 
   ClientNavigateOpParent* op = new ClientNavigateOpParent(args, promise);
   PClientNavigateOpParent* result =
-    manager->SendPClientNavigateOpConstructor(op, args);
+      manager->SendPClientNavigateOpConstructor(op, args);
   if (!result) {
     promise->Reject(NS_ERROR_FAILURE, __func__);
     ref = promise;
@@ -318,79 +291,64 @@ ClientManagerService::Navigate(const ClientNavigateArgs& aArgs)
   return ref.forget();
 }
 
-namespace
-{
+namespace {
 
-class PromiseListHolder final
-{
+class PromiseListHolder final {
   RefPtr<ClientOpPromise::Private> mResultPromise;
   nsTArray<RefPtr<ClientOpPromise>> mPromiseList;
   nsTArray<ClientInfoAndState> mResultList;
   uint32_t mOutstandingPromiseCount;
 
-  void
-  ProcessSuccess(const ClientInfoAndState& aResult)
-  {
+  void ProcessSuccess(const ClientInfoAndState& aResult) {
     mResultList.AppendElement(aResult);
     ProcessCompletion();
   }
 
-  void
-  ProcessCompletion()
-  {
+  void ProcessCompletion() {
     MOZ_DIAGNOSTIC_ASSERT(mOutstandingPromiseCount > 0);
     mOutstandingPromiseCount -= 1;
     MaybeFinish();
   }
 
   ~PromiseListHolder() = default;
-public:
-  PromiseListHolder()
-    : mResultPromise(new ClientOpPromise::Private(__func__))
-    , mOutstandingPromiseCount(0)
-  {
-  }
 
-  already_AddRefed<ClientOpPromise>
-  GetResultPromise()
-  {
+ public:
+  PromiseListHolder()
+      : mResultPromise(new ClientOpPromise::Private(__func__)),
+        mOutstandingPromiseCount(0) {}
+
+  already_AddRefed<ClientOpPromise> GetResultPromise() {
     RefPtr<PromiseListHolder> kungFuDeathGrip = this;
-    mResultPromise->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
-      [kungFuDeathGrip] (const ClientOpResult& aResult) { },
-      [kungFuDeathGrip] (nsresult aResult) { });
+    mResultPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                         [kungFuDeathGrip](const ClientOpResult& aResult) {},
+                         [kungFuDeathGrip](nsresult aResult) {});
 
     RefPtr<ClientOpPromise> ref = mResultPromise;
     return ref.forget();
   }
 
-  void
-  AddPromise(RefPtr<ClientOpPromise>&& aPromise)
-  {
+  void AddPromise(RefPtr<ClientOpPromise>&& aPromise) {
     mPromiseList.AppendElement(std::move(aPromise));
     MOZ_DIAGNOSTIC_ASSERT(mPromiseList.LastElement());
     mOutstandingPromiseCount += 1;
 
     RefPtr<PromiseListHolder> self(this);
     mPromiseList.LastElement()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
-      [self] (const ClientOpResult& aResult) {
-        // TODO: This is pretty clunky.  Try to figure out a better
-        //       wait for MatchAll() and Claim() to share this code
-        //       even though they expect different return values.
-        if (aResult.type() == ClientOpResult::TClientInfoAndState) {
-          self->ProcessSuccess(aResult.get_ClientInfoAndState());
-        } else {
-          self->ProcessCompletion();
-        }
-      }, [self] (nsresult aResult) {
-        self->ProcessCompletion();
-      });
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [self](const ClientOpResult& aResult) {
+          // TODO: This is pretty clunky.  Try to figure out a better
+          //       wait for MatchAll() and Claim() to share this code
+          //       even though they expect different return values.
+          if (aResult.type() == ClientOpResult::TClientInfoAndState) {
+            self->ProcessSuccess(aResult.get_ClientInfoAndState());
+          } else {
+            self->ProcessCompletion();
+          }
+        },
+        [self](nsresult aResult) { self->ProcessCompletion(); });
   }
 
-  void
-  MaybeFinish()
-  {
+  void MaybeFinish() {
     if (!mOutstandingPromiseCount) {
       mResultPromise->Resolve(mResultList, __func__);
     }
@@ -399,11 +357,10 @@ public:
   NS_INLINE_DECL_REFCOUNTING(PromiseListHolder)
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-RefPtr<ClientOpPromise>
-ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
-{
+RefPtr<ClientOpPromise> ClientManagerService::MatchAll(
+    const ClientMatchAllArgs& aArgs) {
   AssertIsOnBackgroundThread();
 
   ServiceWorkerDescriptor swd(aArgs.serviceWorker());
@@ -424,26 +381,26 @@ ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
       continue;
     }
 
-    if (!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
+    if (!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
+                                  principalInfo)) {
       continue;
     }
 
     if (!aArgs.includeUncontrolled()) {
       const Maybe<ServiceWorkerDescriptor>& controller =
-        source->GetController();
+          source->GetController();
       if (controller.isNothing()) {
         continue;
       }
 
-      if(controller.ref().Id() != swd.Id() ||
-         controller.ref().Scope() != swd.Scope()) {
+      if (controller.ref().Id() != swd.Id() ||
+          controller.ref().Scope() != swd.Scope()) {
         continue;
       }
     }
 
-    promiseList->AddPromise(
-      source->StartOp(ClientGetInfoAndStateArgs(source->Info().Id(),
-                                                source->Info().PrincipalInfo())));
+    promiseList->AddPromise(source->StartOp(ClientGetInfoAndStateArgs(
+        source->Info().Id(), source->Info().PrincipalInfo())));
   }
 
   // Maybe finish the promise now in case we didn't find any matching clients.
@@ -454,43 +411,38 @@ ClientManagerService::MatchAll(const ClientMatchAllArgs& aArgs)
 
 namespace {
 
-RefPtr<ClientOpPromise>
-ClaimOnMainThread(const ClientInfo& aClientInfo,
-                  const ServiceWorkerDescriptor& aDescriptor)
-{
+RefPtr<ClientOpPromise> ClaimOnMainThread(
+    const ClientInfo& aClientInfo, const ServiceWorkerDescriptor& aDescriptor) {
   RefPtr<ClientOpPromise::Private> promise =
-    new ClientOpPromise::Private(__func__);
+      new ClientOpPromise::Private(__func__);
 
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__,
-    [promise, clientInfo = std::move(aClientInfo), desc = std::move(aDescriptor)] () {
-      auto scopeExit = MakeScopeExit([&] {
-        promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      __func__, [promise, clientInfo = std::move(aClientInfo),
+                 desc = std::move(aDescriptor)]() {
+        auto scopeExit = MakeScopeExit(
+            [&] { promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__); });
+
+        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        NS_ENSURE_TRUE_VOID(swm);
+
+        RefPtr<GenericPromise> inner = swm->MaybeClaimClient(clientInfo, desc);
+        inner->Then(
+            SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+            [promise](bool aResult) { promise->Resolve(NS_OK, __func__); },
+            [promise](nsresult aRv) { promise->Reject(aRv, __func__); });
+
+        scopeExit.release();
       });
-
-      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      NS_ENSURE_TRUE_VOID(swm);
-
-      RefPtr<GenericPromise> inner = swm->MaybeClaimClient(clientInfo, desc);
-      inner->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-        [promise] (bool aResult) {
-          promise->Resolve(NS_OK, __func__);
-        }, [promise] (nsresult aRv) {
-          promise->Reject(aRv, __func__);
-        });
-
-      scopeExit.release();
-    });
 
   MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   return promise.forget();
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
-RefPtr<ClientOpPromise>
-ClientManagerService::Claim(const ClientClaimArgs& aArgs)
-{
+RefPtr<ClientOpPromise> ClientManagerService::Claim(
+    const ClientClaimArgs& aArgs) {
   AssertIsOnBackgroundThread();
 
   const IPCServiceWorkerDescriptor& serviceWorker = aArgs.serviceWorker();
@@ -506,7 +458,8 @@ ClientManagerService::Claim(const ClientClaimArgs& aArgs)
       continue;
     }
 
-    if (!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(), principalInfo)) {
+    if (!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
+                                  principalInfo)) {
       continue;
     }
 
@@ -528,9 +481,8 @@ ClientManagerService::Claim(const ClientClaimArgs& aArgs)
     }
 
     if (ServiceWorkerParentInterceptEnabled()) {
-      promiseList->AddPromise(
-        ClaimOnMainThread(source->Info(),
-                          ServiceWorkerDescriptor(serviceWorker)));
+      promiseList->AddPromise(ClaimOnMainThread(
+          source->Info(), ServiceWorkerDescriptor(serviceWorker)));
     } else {
       promiseList->AddPromise(source->StartOp(aArgs));
     }
@@ -542,14 +494,13 @@ ClientManagerService::Claim(const ClientClaimArgs& aArgs)
   return promiseList->GetResultPromise();
 }
 
-RefPtr<ClientOpPromise>
-ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
-{
+RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
+    const ClientGetInfoAndStateArgs& aArgs) {
   ClientSourceParent* source = FindSource(aArgs.id(), aArgs.principalInfo());
 
   if (!source) {
     RefPtr<ClientOpPromise> ref =
-      ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+        ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
     return ref.forget();
   }
 
@@ -557,21 +508,20 @@ ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
     RefPtr<ClientManagerService> self = this;
 
     // rejection ultimately converted to `undefined` in Clients::Get
-    RefPtr<ClientOpPromise> ref =
-      source->ExecutionReadyPromise()
-            ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                   [self, aArgs] () -> RefPtr<ClientOpPromise> {
-                      ClientSourceParent* source = self->FindSource(aArgs.id(),
-                                                                    aArgs.principalInfo());
+    RefPtr<ClientOpPromise> ref = source->ExecutionReadyPromise()->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [self, aArgs]() -> RefPtr<ClientOpPromise> {
+          ClientSourceParent* source =
+              self->FindSource(aArgs.id(), aArgs.principalInfo());
 
-                      if (!source) {
-                        RefPtr<ClientOpPromise> ref =
-                          ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-                        return ref.forget();
-                      }
+          if (!source) {
+            RefPtr<ClientOpPromise> ref =
+                ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+            return ref.forget();
+          }
 
-                      return source->StartOp(aArgs);
-                   });
+          return source->StartOp(aArgs);
+        });
 
     return ref.forget();
   }
@@ -581,32 +531,28 @@ ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
 
 namespace {
 
-class OpenWindowRunnable final : public Runnable
-{
+class OpenWindowRunnable final : public Runnable {
   RefPtr<ClientOpPromise::Private> mPromise;
   const ClientOpenWindowArgs mArgs;
   RefPtr<ContentParent> mSourceProcess;
 
-  ~OpenWindowRunnable()
-  {
+  ~OpenWindowRunnable() {
     NS_ReleaseOnMainThreadSystemGroup(mSourceProcess.forget());
   }
 
-public:
+ public:
   OpenWindowRunnable(ClientOpPromise::Private* aPromise,
                      const ClientOpenWindowArgs& aArgs,
                      already_AddRefed<ContentParent> aSourceProcess)
-    : Runnable("ClientManagerService::OpenWindowRunnable")
-    , mPromise(aPromise)
-    , mArgs(aArgs)
-    , mSourceProcess(aSourceProcess)
-  {
+      : Runnable("ClientManagerService::OpenWindowRunnable"),
+        mPromise(aPromise),
+        mArgs(aArgs),
+        mSourceProcess(aSourceProcess) {
     MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!BrowserTabsRemoteAutostart()) {
@@ -629,11 +575,9 @@ public:
     // opening the window.  This will start a process if one is not
     // present.
     if (!targetProcess) {
-      targetProcess =
-        ContentParent::GetNewOrUsedBrowserProcess(nullptr,
-                                                  NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
-                                                  ContentParent::GetInitialProcessPriority(nullptr),
-                                                  nullptr);
+      targetProcess = ContentParent::GetNewOrUsedBrowserProcess(
+          nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
+          ContentParent::GetInitialProcessPriority(nullptr), nullptr);
     }
 
     // But starting a process can failure for any number of reasons. Reject the
@@ -645,7 +589,7 @@ public:
     }
 
     ClientOpenWindowOpParent* actor =
-      new ClientOpenWindowOpParent(mArgs, mPromise);
+        new ClientOpenWindowOpParent(mArgs, mPromise);
 
     // If this fails the actor will be automatically destroyed which will
     // reject the promise.
@@ -655,23 +599,21 @@ public:
   }
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-RefPtr<ClientOpPromise>
-ClientManagerService::OpenWindow(const ClientOpenWindowArgs& aArgs,
-                                 already_AddRefed<ContentParent> aSourceProcess)
-{
+RefPtr<ClientOpPromise> ClientManagerService::OpenWindow(
+    const ClientOpenWindowArgs& aArgs,
+    already_AddRefed<ContentParent> aSourceProcess) {
   RefPtr<ClientOpPromise::Private> promise =
-    new ClientOpPromise::Private(__func__);
+      new ClientOpPromise::Private(__func__);
 
-  nsCOMPtr<nsIRunnable> r = new OpenWindowRunnable(promise, aArgs,
-                                                   std::move(aSourceProcess));
-  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other,
-                                            r.forget()));
+  nsCOMPtr<nsIRunnable> r =
+      new OpenWindowRunnable(promise, aArgs, std::move(aSourceProcess));
+  MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   RefPtr<ClientOpPromise> ref = promise;
   return ref.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

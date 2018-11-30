@@ -14,25 +14,22 @@ namespace gfx {
 
 PrintTargetRecording::PrintTargetRecording(cairo_surface_t* aCairoSurface,
                                            const IntSize& aSize)
-  : PrintTarget(aCairoSurface, aSize)
-{
-}
+    : PrintTarget(aCairoSurface, aSize) {}
 
 /* static */ already_AddRefed<PrintTargetRecording>
-PrintTargetRecording::CreateOrNull(const IntSize& aSize)
-{
+PrintTargetRecording::CreateOrNull(const IntSize& aSize) {
   if (!Factory::CheckSurfaceSize(aSize)) {
     return nullptr;
   }
 
   // Perhaps surprisingly, this surface is never actually drawn to.  This class
-  // creates a DrawTargetWrapAndRecord using CreateWrapAndRecordDrawTarget, and that
-  // needs another DrawTarget to be passed to it.  You might expect the type of
-  // the DrawTarget that is passed to matter because it would seem logical to
-  // encoded its type in the recording, and on replaying the recording a
-  // DrawTarget of the same type would be created.  However, the passed
-  // DrawTarget's type doesn't seem to be encoded any more accurately than just
-  // "BackendType::CAIRO".  Even if it were, the code that replays the
+  // creates a DrawTargetWrapAndRecord using CreateWrapAndRecordDrawTarget, and
+  // that needs another DrawTarget to be passed to it.  You might expect the
+  // type of the DrawTarget that is passed to matter because it would seem
+  // logical to encoded its type in the recording, and on replaying the
+  // recording a DrawTarget of the same type would be created.  However, the
+  // passed DrawTarget's type doesn't seem to be encoded any more accurately
+  // than just "BackendType::CAIRO".  Even if it were, the code that replays the
   // recording is PrintTranslator::TranslateRecording which (indirectly) calls
   // MakePrintTarget on the type of nsIDeviceContextSpecProxy that is created
   // for the platform that we're running on, and the type of DrawTarget that
@@ -55,7 +52,7 @@ PrintTargetRecording::CreateOrNull(const IntSize& aSize)
   // work.
   //
   cairo_surface_t* surface =
-    cairo_recording_surface_create(CAIRO_CONTENT_COLOR_ALPHA, nullptr);
+      cairo_recording_surface_create(CAIRO_CONTENT_COLOR_ALPHA, nullptr);
 
   if (cairo_surface_status(surface)) {
     return nullptr;
@@ -63,15 +60,13 @@ PrintTargetRecording::CreateOrNull(const IntSize& aSize)
 
   // The new object takes ownership of our surface reference.
   RefPtr<PrintTargetRecording> target =
-    new PrintTargetRecording(surface, aSize);
+      new PrintTargetRecording(surface, aSize);
 
   return target.forget();
 }
 
-already_AddRefed<DrawTarget>
-PrintTargetRecording::MakeDrawTarget(const IntSize& aSize,
-                                     DrawEventRecorder* aRecorder)
-{
+already_AddRefed<DrawTarget> PrintTargetRecording::MakeDrawTarget(
+    const IntSize& aSize, DrawEventRecorder* aRecorder) {
   MOZ_ASSERT(aRecorder, "A DrawEventRecorder is required");
 
   if (!aRecorder) {
@@ -90,9 +85,8 @@ PrintTargetRecording::MakeDrawTarget(const IntSize& aSize,
 }
 
 already_AddRefed<DrawTarget>
-PrintTargetRecording::CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
-                                                    DrawTarget* aDrawTarget)
-{
+PrintTargetRecording::CreateWrapAndRecordDrawTarget(
+    DrawEventRecorder* aRecorder, DrawTarget* aDrawTarget) {
   MOZ_ASSERT(aRecorder);
   MOZ_ASSERT(aDrawTarget);
 
@@ -105,12 +99,12 @@ PrintTargetRecording::CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder
 
   if (!dt || !dt->IsValid()) {
     gfxCriticalNote
-      << "Failed to create a recording DrawTarget for PrintTarget";
+        << "Failed to create a recording DrawTarget for PrintTarget";
     return nullptr;
   }
 
   return dt.forget();
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

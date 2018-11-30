@@ -21,17 +21,11 @@ WaitableEvent::WaitableEvent(bool manual_reset, bool signaled)
   CHECK(handle_);
 }
 
-WaitableEvent::~WaitableEvent() {
-  CloseHandle(handle_);
-}
+WaitableEvent::~WaitableEvent() { CloseHandle(handle_); }
 
-void WaitableEvent::Reset() {
-  ResetEvent(handle_);
-}
+void WaitableEvent::Reset() { ResetEvent(handle_); }
 
-void WaitableEvent::Signal() {
-  SetEvent(handle_);
-}
+void WaitableEvent::Signal() { SetEvent(handle_); }
 
 bool WaitableEvent::IsSignaled() {
   return TimedWait(TimeDelta::FromMilliseconds(0));
@@ -70,8 +64,7 @@ size_t WaitableEvent::WaitMany(WaitableEvent** events, size_t count) {
   CHECK(count <= MAXIMUM_WAIT_OBJECTS)
       << "Can only wait on " << MAXIMUM_WAIT_OBJECTS << " with WaitMany";
 
-  for (size_t i = 0; i < count; ++i)
-    handles[i] = events[i]->handle();
+  for (size_t i = 0; i < count; ++i) handles[i] = events[i]->handle();
 
   DWORD result =
       WaitForMultipleObjects(count, handles,

@@ -17,7 +17,6 @@
 #include "nsPrintingProxy.h"
 #endif
 
-
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
@@ -49,44 +48,41 @@ NS_DEFINE_NAMED_CID(NS_XREDIRPROVIDER_CID);
 
 static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
 #ifdef MOZ_XUL
-    { &kNS_DIALOGPARAMBLOCK_CID, false, nullptr, nsDialogParamBlockConstructor },
+    {&kNS_DIALOGPARAMBLOCK_CID, false, nullptr, nsDialogParamBlockConstructor},
 #ifdef NS_PRINTING
 
 #ifdef PROXY_PRINTING
-    { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingPromptServiceConstructor,
-      mozilla::Module::MAIN_PROCESS_ONLY },
-    { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingProxyConstructor,
-      mozilla::Module::CONTENT_PROCESS_ONLY },
+    {&kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr,
+     nsPrintingPromptServiceConstructor, mozilla::Module::MAIN_PROCESS_ONLY},
+    {&kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingProxyConstructor,
+     mozilla::Module::CONTENT_PROCESS_ONLY},
 #else
-    { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingPromptServiceConstructor },
+    {&kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr,
+     nsPrintingPromptServiceConstructor},
 #endif
 #endif
 #endif
-    { &kNS_WINDOWWATCHER_CID, false, nullptr, nsWindowWatcherConstructor },
-    { &kNS_FIND_CID, false, nullptr, nsFindConstructor },
-    { &kNS_WEBBROWSERPERSIST_CID, false, nullptr, nsWebBrowserPersistConstructor },
-    { &kNS_XREDIRPROVIDER_CID, false, nullptr, nsXREDirProviderConstructor },
-    { nullptr }
-};
+    {&kNS_WINDOWWATCHER_CID, false, nullptr, nsWindowWatcherConstructor},
+    {&kNS_FIND_CID, false, nullptr, nsFindConstructor},
+    {&kNS_WEBBROWSERPERSIST_CID, false, nullptr,
+     nsWebBrowserPersistConstructor},
+    {&kNS_XREDIRPROVIDER_CID, false, nullptr, nsXREDirProviderConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
 #ifdef MOZ_XUL
-    { NS_DIALOGPARAMBLOCK_CONTRACTID, &kNS_DIALOGPARAMBLOCK_CID },
+    {NS_DIALOGPARAMBLOCK_CONTRACTID, &kNS_DIALOGPARAMBLOCK_CID},
 #ifdef NS_PRINTING
-    { NS_PRINTINGPROMPTSERVICE_CONTRACTID, &kNS_PRINTINGPROMPTSERVICE_CID },
+    {NS_PRINTINGPROMPTSERVICE_CONTRACTID, &kNS_PRINTINGPROMPTSERVICE_CID},
 #endif
 #endif
-    { NS_WINDOWWATCHER_CONTRACTID, &kNS_WINDOWWATCHER_CID },
-    { NS_FIND_CONTRACTID, &kNS_FIND_CID },
-    { NS_WEBBROWSERPERSIST_CONTRACTID, &kNS_WEBBROWSERPERSIST_CID },
-    { NS_XREDIRPROVIDER_CONTRACTID, &kNS_XREDIRPROVIDER_CID },
-    { nullptr }
-};
+    {NS_WINDOWWATCHER_CONTRACTID, &kNS_WINDOWWATCHER_CID},
+    {NS_FIND_CONTRACTID, &kNS_FIND_CID},
+    {NS_WEBBROWSERPERSIST_CONTRACTID, &kNS_WEBBROWSERPERSIST_CID},
+    {NS_XREDIRPROVIDER_CONTRACTID, &kNS_XREDIRPROVIDER_CID},
+    {nullptr}};
 
 static const mozilla::Module kEmbeddingModule = {
-    mozilla::Module::kVersion,
-    kEmbeddingCIDs,
-    kEmbeddingContracts
-};
+    mozilla::Module::kVersion, kEmbeddingCIDs, kEmbeddingContracts};
 
 NSMODULE_DEFN(embedcomponents) = &kEmbeddingModule;

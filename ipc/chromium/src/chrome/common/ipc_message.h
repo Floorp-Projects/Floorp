@@ -91,46 +91,38 @@ class Message : public Pickle {
     friend class Message;
 
     enum {
-      NESTED_MASK     = 0x0003,
-      PRIO_MASK       = 0x000C,
-      SYNC_BIT        = 0x0010,
-      REPLY_BIT       = 0x0020,
+      NESTED_MASK = 0x0003,
+      PRIO_MASK = 0x000C,
+      SYNC_BIT = 0x0010,
+      REPLY_BIT = 0x0020,
       REPLY_ERROR_BIT = 0x0040,
-      INTERRUPT_BIT   = 0x0080,
-      COMPRESS_BIT    = 0x0100,
+      INTERRUPT_BIT = 0x0080,
+      COMPRESS_BIT = 0x0100,
       COMPRESSALL_BIT = 0x0200,
-      COMPRESS_MASK   = 0x0300,
+      COMPRESS_MASK = 0x0300,
       CONSTRUCTOR_BIT = 0x0400,
 #ifdef MOZ_TASK_TRACER
-      TASKTRACER_BIT  = 0x0800,
+      TASKTRACER_BIT = 0x0800,
 #endif
     };
 
-  public:
-    constexpr HeaderFlags()
-      : mFlags(NOT_NESTED)
-    {
-    }
+   public:
+    constexpr HeaderFlags() : mFlags(NOT_NESTED) {}
 
-    explicit constexpr HeaderFlags(NestedLevel level)
-      : mFlags(level)
-    {
-    }
+    explicit constexpr HeaderFlags(NestedLevel level) : mFlags(level) {}
 
     constexpr HeaderFlags(NestedLevel level, PriorityValue priority,
                           MessageCompression compression,
-                          Constructor constructor,
-                          Sync sync, Interrupt interrupt, Reply reply)
-      : mFlags(level |
-               (priority << 2) |
-               (compression == COMPRESSION_ENABLED ? COMPRESS_BIT :
-                compression == COMPRESSION_ALL ? COMPRESSALL_BIT : 0) |
-               (constructor == CONSTRUCTOR ? CONSTRUCTOR_BIT : 0) |
-               (sync == SYNC ? SYNC_BIT : 0) |
-               (interrupt == INTERRUPT ? INTERRUPT_BIT : 0) |
-               (reply == REPLY ? REPLY_BIT : 0))
-    {
-    }
+                          Constructor constructor, Sync sync,
+                          Interrupt interrupt, Reply reply)
+        : mFlags(level | (priority << 2) |
+                 (compression == COMPRESSION_ENABLED
+                      ? COMPRESS_BIT
+                      : compression == COMPRESSION_ALL ? COMPRESSALL_BIT : 0) |
+                 (constructor == CONSTRUCTOR ? CONSTRUCTOR_BIT : 0) |
+                 (sync == SYNC ? SYNC_BIT : 0) |
+                 (interrupt == INTERRUPT ? INTERRUPT_BIT : 0) |
+                 (reply == REPLY ? REPLY_BIT : 0)) {}
 
     NestedLevel Level() const {
       return static_cast<NestedLevel>(mFlags & NESTED_MASK);
@@ -141,51 +133,31 @@ class Message : public Pickle {
     }
 
     MessageCompression Compression() const {
-      return ((mFlags & COMPRESS_BIT) ? COMPRESSION_ENABLED :
-              (mFlags & COMPRESSALL_BIT) ? COMPRESSION_ALL : COMPRESSION_NONE);
+      return ((mFlags & COMPRESS_BIT)
+                  ? COMPRESSION_ENABLED
+                  : (mFlags & COMPRESSALL_BIT) ? COMPRESSION_ALL
+                                               : COMPRESSION_NONE);
     }
 
-    bool IsConstructor() const {
-      return (mFlags & CONSTRUCTOR_BIT) != 0;
-    }
-    bool IsSync() const {
-      return (mFlags & SYNC_BIT) != 0;
-    }
-    bool IsInterrupt() const {
-      return (mFlags & INTERRUPT_BIT) != 0;
-    }
-    bool IsReply() const {
-      return (mFlags & REPLY_BIT) != 0;
-    }
+    bool IsConstructor() const { return (mFlags & CONSTRUCTOR_BIT) != 0; }
+    bool IsSync() const { return (mFlags & SYNC_BIT) != 0; }
+    bool IsInterrupt() const { return (mFlags & INTERRUPT_BIT) != 0; }
+    bool IsReply() const { return (mFlags & REPLY_BIT) != 0; }
 
-    bool IsReplyError() const {
-      return (mFlags & REPLY_ERROR_BIT) != 0;
-    }
+    bool IsReplyError() const { return (mFlags & REPLY_ERROR_BIT) != 0; }
 
 #ifdef MOZ_TASK_TRACER
-    bool IsTaskTracer() const {
-      return (mFlags & TASKTRACER_BIT) != 0;
-    }
+    bool IsTaskTracer() const { return (mFlags & TASKTRACER_BIT) != 0; }
 #endif
 
-  private:
-    void SetSync() {
-      mFlags |= SYNC_BIT;
-    }
-    void SetInterrupt() {
-      mFlags |= INTERRUPT_BIT;
-    }
-    void SetReply() {
-      mFlags |= REPLY_BIT;
-    }
-    void SetReplyError() {
-      mFlags |= REPLY_ERROR_BIT;
-    }
+   private:
+    void SetSync() { mFlags |= SYNC_BIT; }
+    void SetInterrupt() { mFlags |= INTERRUPT_BIT; }
+    void SetReply() { mFlags |= REPLY_BIT; }
+    void SetReplyError() { mFlags |= REPLY_ERROR_BIT; }
 
 #ifdef MOZ_TASK_TRACER
-    void SetTaskTracer() {
-      mFlags |= TASKTRACER_BIT;
-    }
+    void SetTaskTracer() { mFlags |= TASKTRACER_BIT; }
 #endif
 
     uint32_t mFlags;
@@ -200,11 +172,9 @@ class Message : public Pickle {
   //
   // NOTE: `recordWriteLatency` is only passed by IPDL generated message code,
   // and is used to trigger the IPC_WRITE_LATENCY_MS telemetry.
-  Message(int32_t routing_id,
-          msgid_t type,
-          uint32_t segmentCapacity = 0, // 0 for the default capacity.
-          HeaderFlags flags = HeaderFlags(),
-          bool recordWriteLatency=false);
+  Message(int32_t routing_id, msgid_t type,
+          uint32_t segmentCapacity = 0,  // 0 for the default capacity.
+          HeaderFlags flags = HeaderFlags(), bool recordWriteLatency = false);
 
   Message(const char* data, int data_len);
 
@@ -219,67 +189,42 @@ class Message : public Pickle {
   // the write latency of messages) of IPDL message creation.  This helps
   // move the malloc and some of the parameter setting out of autogenerated
   // code.
-  static Message* IPDLMessage(int32_t routing_id,
-                              msgid_t type,
+  static Message* IPDLMessage(int32_t routing_id, msgid_t type,
                               HeaderFlags flags);
 
   // One-off constructors for special error-handling messages.
   static Message* ForSyncDispatchError(NestedLevel level);
   static Message* ForInterruptDispatchError();
 
-  NestedLevel nested_level() const {
-    return header()->flags.Level();
-  }
+  NestedLevel nested_level() const { return header()->flags.Level(); }
 
-  PriorityValue priority() const {
-    return header()->flags.Priority();
-  }
+  PriorityValue priority() const { return header()->flags.Priority(); }
 
-  bool is_constructor() const {
-    return header()->flags.IsConstructor();
-  }
+  bool is_constructor() const { return header()->flags.IsConstructor(); }
 
   // True if this is a synchronous message.
-  bool is_sync() const {
-    return header()->flags.IsSync();
-  }
+  bool is_sync() const { return header()->flags.IsSync(); }
 
   // True if this is a synchronous message.
-  bool is_interrupt() const {
-    return header()->flags.IsInterrupt();
-  }
+  bool is_interrupt() const { return header()->flags.IsInterrupt(); }
 
   MessageCompression compress_type() const {
     return header()->flags.Compression();
   }
 
-  bool is_reply() const {
-    return header()->flags.IsReply();
-  }
+  bool is_reply() const { return header()->flags.IsReply(); }
 
-  bool is_reply_error() const {
-    return header()->flags.IsReplyError();
-  }
+  bool is_reply_error() const { return header()->flags.IsReplyError(); }
 
-  msgid_t type() const {
-    return header()->type;
-  }
+  msgid_t type() const { return header()->type; }
 
-  int32_t routing_id() const {
-    return header()->routing;
-  }
+  int32_t routing_id() const { return header()->routing; }
 
-  void set_routing_id(int32_t new_id) {
-    header()->routing = new_id;
-  }
+  void set_routing_id(int32_t new_id) { header()->routing = new_id; }
 
-  int32_t transaction_id() const {
-    return header()->txid;
-  }
+  int32_t transaction_id() const { return header()->txid; }
 
-  void set_transaction_id(int32_t txid) {
-    header()->txid = txid;
-  }
+  void set_transaction_id(int32_t txid) { header()->txid = txid; }
 
   uint32_t interrupt_remote_stack_depth_guess() const {
     return header()->interrupt_remote_stack_depth_guess;
@@ -299,46 +244,38 @@ class Message : public Pickle {
     header()->interrupt_local_stack_depth = depth;
   }
 
-  int32_t seqno() const {
-    return header()->seqno;
-  }
+  int32_t seqno() const { return header()->seqno; }
 
-  void set_seqno(int32_t aSeqno) {
-    header()->seqno = aSeqno;
-  }
+  void set_seqno(int32_t aSeqno) { header()->seqno = aSeqno; }
 
-  const char* name() const {
-    return StringFromIPCMessageType(type());
-  }
+  const char* name() const { return StringFromIPCMessageType(type()); }
 
-  const mozilla::TimeStamp& create_time() const {
-    return create_time_;
-  }
+  const mozilla::TimeStamp& create_time() const { return create_time_; }
 
 #if defined(OS_POSIX)
   uint32_t num_fds() const;
 #endif
 
-  template<class T>
+  template <class T>
   static bool Dispatch(const Message* msg, T* obj, void (T::*func)()) {
     (obj->*func)();
     return true;
   }
 
-  template<class T>
+  template <class T>
   static bool Dispatch(const Message* msg, T* obj, void (T::*func)() const) {
     (obj->*func)();
     return true;
   }
 
-  template<class T>
+  template <class T>
   static bool Dispatch(const Message* msg, T* obj,
                        void (T::*func)(const Message&)) {
     (obj->*func)(*msg);
     return true;
   }
 
-  template<class T>
+  template <class T>
   static bool Dispatch(const Message* msg, T* obj,
                        void (T::*func)(const Message&) const) {
     (obj->*func)(*msg);
@@ -346,15 +283,17 @@ class Message : public Pickle {
   }
 
   // Used for async messages with no parameters.
-  static void Log(const Message* msg, std::wstring* l) {
-  }
+  static void Log(const Message* msg, std::wstring* l) {}
 
   static int HeaderSizeFromData(const char* range_start,
                                 const char* range_end) {
 #ifdef MOZ_TASK_TRACER
-    return ((static_cast<unsigned int>(range_end - range_start) >= sizeof(Header)) &&
-            (reinterpret_cast<const Header*>(range_start)->flags.IsTaskTracer())) ?
-      sizeof(HeaderTaskTracer) : sizeof(Header);
+    return ((static_cast<unsigned int>(range_end - range_start) >=
+             sizeof(Header)) &&
+            (reinterpret_cast<const Header*>(range_start)
+                 ->flags.IsTaskTracer()))
+               ? sizeof(HeaderTaskTracer)
+               : sizeof(Header);
 #else
     return sizeof(Header);
 #endif
@@ -376,18 +315,14 @@ class Message : public Pickle {
   bool WriteFileDescriptor(const base::FileDescriptor& descriptor);
   // Get a file descriptor from the message. Returns false on error.
   //   iter: a Pickle iterator to the current location in the message.
-  bool ReadFileDescriptor(PickleIterator* iter, base::FileDescriptor* descriptor) const;
+  bool ReadFileDescriptor(PickleIterator* iter,
+                          base::FileDescriptor* descriptor) const;
 
 #if defined(OS_MACOSX)
-  void set_fd_cookie(uint32_t cookie) {
-    header()->cookie = cookie;
-  }
-  uint32_t fd_cookie() const {
-    return header()->cookie;
-  }
+  void set_fd_cookie(uint32_t cookie) { header()->cookie = cookie; }
+  uint32_t fd_cookie() const { return header()->cookie; }
 #endif
 #endif
-
 
   friend class Channel;
   friend class MessageReplyDeserializer;
@@ -398,12 +333,12 @@ class Message : public Pickle {
 
 #ifdef MOZ_TASK_TRACER
   void TaskTracerDispatch();
-  class AutoTaskTracerRun
-    : public mozilla::tasktracer::AutoSaveCurTraceInfo {
+  class AutoTaskTracerRun : public mozilla::tasktracer::AutoSaveCurTraceInfo {
     Message& mMsg;
     uint64_t mTaskId;
     uint64_t mSourceEventId;
-  public:
+
+   public:
     explicit AutoTaskTracerRun(Message& aMsg);
     ~AutoTaskTracerRun();
   };
@@ -414,17 +349,18 @@ class Message : public Pickle {
 #endif
 
   struct Header : Pickle::Header {
-    int32_t routing;  // ID of the view that this message is destined for
-    msgid_t type;   // specifies the user-defined message type
-    HeaderFlags flags;   // specifies control flags for the message
+    int32_t routing;    // ID of the view that this message is destined for
+    msgid_t type;       // specifies the user-defined message type
+    HeaderFlags flags;  // specifies control flags for the message
 #if defined(OS_POSIX)
-    uint32_t num_fds; // the number of descriptors included with this message
-# if defined(OS_MACOSX)
+    uint32_t num_fds;  // the number of descriptors included with this message
+#if defined(OS_MACOSX)
     uint32_t cookie;  // cookie to ACK that the descriptors have been read.
-# endif
+#endif
 #endif
     union {
-      // For Interrupt messages, a guess at what the *other* side's stack depth is.
+      // For Interrupt messages, a guess at what the *other* side's stack depth
+      // is.
       uint32_t interrupt_remote_stack_depth_guess;
 
       // For RPC and Urgent messages, a transaction ID for message ordering.
@@ -455,20 +391,16 @@ class Message : public Pickle {
   }
 
   Header* header() {
-    return UseTaskTracerHeader() ?
-      headerT<HeaderTaskTracer>() : headerT<Header>();
+    return UseTaskTracerHeader() ? headerT<HeaderTaskTracer>()
+                                 : headerT<Header>();
   }
   const Header* header() const {
-    return UseTaskTracerHeader() ?
-      headerT<HeaderTaskTracer>() : headerT<Header>();
+    return UseTaskTracerHeader() ? headerT<HeaderTaskTracer>()
+                                 : headerT<Header>();
   }
 #else
-  Header* header() {
-    return headerT<Header>();
-  }
-  const Header* header() const {
-    return headerT<Header>();
-  }
+  Header* header() { return headerT<Header>(); }
+  const Header* header() const { return headerT<Header>(); }
 #endif
 
 #if defined(OS_POSIX)
@@ -488,22 +420,21 @@ class Message : public Pickle {
 #endif
 
   mozilla::TimeStamp create_time_;
-
 };
 
 class MessageInfo {
-public:
-    typedef uint32_t msgid_t;
+ public:
+  typedef uint32_t msgid_t;
 
-    explicit MessageInfo(const Message& aMsg)
-        : mSeqno(aMsg.seqno()), mType(aMsg.type()) {}
+  explicit MessageInfo(const Message& aMsg)
+      : mSeqno(aMsg.seqno()), mType(aMsg.type()) {}
 
-    int32_t seqno() const { return mSeqno; }
-    msgid_t type() const { return mType; }
+  int32_t seqno() const { return mSeqno; }
+  msgid_t type() const { return mType; }
 
-private:
-    int32_t mSeqno;
-    msgid_t mType;
+ private:
+  int32_t mSeqno;
+  msgid_t mType;
 };
 
 //------------------------------------------------------------------------------
@@ -518,7 +449,7 @@ enum SpecialRoutingIDs {
   MSG_ROUTING_CONTROL = kint32max
 };
 
-#define IPC_REPLY_ID 0xFFF0  // Special message id for replies
+#define IPC_REPLY_ID 0xFFF0    // Special message id for replies
 #define IPC_LOGGING_ID 0xFFF1  // Special message id for logging
 
 #endif  // CHROME_COMMON_IPC_MESSAGE_H__

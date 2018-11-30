@@ -19,99 +19,93 @@
 class nsNativeThemeGTK final : private nsNativeTheme,
                                public nsITheme,
                                public nsIObserver {
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIOBSERVER
 
   // The nsITheme interface.
-  NS_IMETHOD DrawWidgetBackground(gfxContext* aContext,
-                                  nsIFrame* aFrame,
+  NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
-  bool CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
-                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                        const mozilla::layers::StackingContextHelper& aSc,
-                                        mozilla::layers::WebRenderLayerManager* aManager,
-                                        nsIFrame* aFrame,
-                                        StyleAppearance aAppearance,
-                                        const nsRect& aRect) override;
+  bool CreateWebRenderCommandsForWidget(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const mozilla::layers::StackingContextHelper& aSc,
+      mozilla::layers::WebRenderLayerManager* aManager, nsIFrame* aFrame,
+      StyleAppearance aAppearance, const nsRect& aRect) override;
 
-  MOZ_MUST_USE LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
-                                                     nsIFrame* aFrame,
-                                                     StyleAppearance aAppearance) override;
+  MOZ_MUST_USE LayoutDeviceIntMargin
+  GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
+                  StyleAppearance aAppearance) override;
 
-  bool GetWidgetPadding(nsDeviceContext* aContext,
-                        nsIFrame* aFrame,
+  bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
                         LayoutDeviceIntMargin* aResult) override;
 
-  virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
-                                 nsIFrame* aFrame,
+  virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                  StyleAppearance aAppearance,
                                  nsRect* aOverflowRect) override;
 
-  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                  nsIFrame* aFrame,
+  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
                                   mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame,
-                                StyleAppearance aAppearance,
-                                nsAtom* aAttribute,
-                                bool* aShouldRepaint,
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppearance,
+                                nsAtom* aAttribute, bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue) override;
 
   NS_IMETHOD ThemeChanged() override;
 
-  NS_IMETHOD_(bool) ThemeSupportsWidget(nsPresContext* aPresContext,
-                                        nsIFrame* aFrame,
-                                        StyleAppearance aAppearance) override;
+  NS_IMETHOD_(bool)
+  ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
+                      StyleAppearance aAppearance) override;
 
   NS_IMETHOD_(bool) WidgetIsContainer(StyleAppearance aAppearance) override;
 
-  NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
+  NS_IMETHOD_(bool)
+  ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
 
   virtual bool ThemeNeedsComboboxDropmarker() override;
 
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
-                                             StyleAppearance aAppearance) override;
+  virtual Transparency GetWidgetTransparency(
+      nsIFrame* aFrame, StyleAppearance aAppearance) override;
 
-  virtual bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance) override;
+  virtual bool WidgetAppearanceDependsOnWindowFocus(
+      StyleAppearance aAppearance) override;
 
   nsNativeThemeGTK();
 
-protected:
+ protected:
   virtual ~nsNativeThemeGTK();
 
-private:
+ private:
   GtkTextDirection GetTextDirection(nsIFrame* aFrame);
   gint GetTabMarginPixels(nsIFrame* aFrame);
-  bool GetGtkWidgetAndState(StyleAppearance aAppearance,
-                            nsIFrame* aFrame,
+  bool GetGtkWidgetAndState(StyleAppearance aAppearance, nsIFrame* aFrame,
                             WidgetNodeType& aGtkWidgetType,
-                            GtkWidgetState* aState,
-                            gint* aWidgetFlags);
-  bool GetExtraSizeForWidget(nsIFrame* aFrame,
-                             StyleAppearance aAppearance,
+                            GtkWidgetState* aState, gint* aWidgetFlags);
+  bool GetExtraSizeForWidget(nsIFrame* aFrame, StyleAppearance aAppearance,
                              nsIntMargin* aExtra);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
   WidgetNodeType NativeThemeToGtkTheme(StyleAppearance aAppearance,
                                        nsIFrame* aFrame);
 
-  uint8_t mDisabledWidgetTypes[(static_cast<size_t>(mozilla::StyleAppearance::Count) + 7) / 8];
-  uint8_t mSafeWidgetStates[static_cast<size_t>(mozilla::StyleAppearance::Count) * 4]; // 32 bits per widget
+  uint8_t mDisabledWidgetTypes
+      [(static_cast<size_t>(mozilla::StyleAppearance::Count) + 7) / 8];
+  uint8_t
+      mSafeWidgetStates[static_cast<size_t>(mozilla::StyleAppearance::Count) *
+                        4];  // 32 bits per widget
   static const char* sDisabledEngines[];
 
   // Because moz_gtk_get_widget_border can be slow, we cache its results
   // by widget type.  Each bit in mBorderCacheValid says whether the
   // corresponding entry in mBorderCache is valid.
-  void GetCachedWidgetBorder(nsIFrame* aFrame,
-                             StyleAppearance aAppearance,
+  void GetCachedWidgetBorder(nsIFrame* aFrame, StyleAppearance aAppearance,
                              GtkTextDirection aDirection,
                              LayoutDeviceIntMargin* aResult);
   uint8_t mBorderCacheValid[(MOZ_GTK_WIDGET_NODE_COUNT + 7) / 8];

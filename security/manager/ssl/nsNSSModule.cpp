@@ -37,7 +37,8 @@
 #include "nsCertTree.h"
 #endif
 
-namespace mozilla { namespace psm {
+namespace mozilla {
+namespace psm {
 
 // Many of the implementations in this module call NSS functions and as a result
 // require that PSM has successfully initialized NSS before being used.
@@ -47,10 +48,8 @@ namespace mozilla { namespace psm {
 // The following initialization framework allows these requirements to be
 // succinctly expressed and implemented.
 
-template<class InstanceClass, nsresult (InstanceClass::*InitMethod)()>
-MOZ_ALWAYS_INLINE static nsresult
-Instantiate(REFNSIID aIID, void** aResult)
-{
+template <class InstanceClass, nsresult (InstanceClass::*InitMethod)()>
+MOZ_ALWAYS_INLINE static nsresult Instantiate(REFNSIID aIID, void** aResult) {
   InstanceClass* inst = new InstanceClass();
   NS_ADDREF(inst);
   nsresult rv = InitMethod != nullptr ? (inst->*InitMethod)() : NS_OK;
@@ -73,12 +72,13 @@ enum class ProcessRestriction {
   AnyProcess,
 };
 
-template<class InstanceClass, nsresult (InstanceClass::*InitMethod)() = nullptr,
-         ProcessRestriction processRestriction = ProcessRestriction::ParentProcessOnly,
-         ThreadRestriction threadRestriction = ThreadRestriction::AnyThread>
-static nsresult
-Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
+template <class InstanceClass,
+          nsresult (InstanceClass::*InitMethod)() = nullptr,
+          ProcessRestriction processRestriction =
+              ProcessRestriction::ParentProcessOnly,
+          ThreadRestriction threadRestriction = ThreadRestriction::AnyThread>
+static nsresult Constructor(nsISupports* aOuter, REFNSIID aIID,
+                            void** aResult) {
   *aResult = nullptr;
   if (aOuter != nullptr) {
     return NS_ERROR_NO_AGGREGATION;
@@ -95,7 +95,6 @@ Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
   if (threadRestriction == ThreadRestriction::MainThreadOnly &&
       !NS_IsMainThread()) {
-
     nsCOMPtr<nsIThread> mainThread;
     nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
     if (NS_FAILED(rv)) {
@@ -104,10 +103,10 @@ Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
     // Forward to the main thread synchronously.
     mozilla::SyncRunnable::DispatchToThread(
-      mainThread,
-      new SyncRunnable(NS_NewRunnableFunction("psm::Constructor", [&]() {
-        rv = Instantiate<InstanceClass, InitMethod>(aIID, aResult);
-      })));
+        mainThread,
+        new SyncRunnable(NS_NewRunnableFunction("psm::Constructor", [&]() {
+          rv = Instantiate<InstanceClass, InitMethod>(aIID, aResult);
+        })));
 
     return rv;
   }
@@ -115,7 +114,8 @@ Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return Instantiate<InstanceClass, InitMethod>(aIID, aResult);
 }
 
-} } // namespace mozilla::psm
+}  // namespace psm
+}  // namespace mozilla
 
 using namespace mozilla::psm;
 
@@ -162,107 +162,106 @@ NS_DEFINE_NAMED_CID(NS_OSREAUTHENTICATOR_CID);
 // on main thread in advance in net_EnsurePSMInit(). Update that function when
 // new component with ThreadRestriction::MainThreadOnly is added.
 static const mozilla::Module::CIDEntry kNSSCIDs[] = {
-  { &kNS_NSSCOMPONENT_CID, false, nullptr, nsNSSComponentConstructor },
-  { &kNS_SECRETDECODERRING_CID, false, nullptr,
-    Constructor<SecretDecoderRing> },
-  { &kNS_PK11TOKENDB_CID, false, nullptr, Constructor<nsPK11TokenDB> },
-  { &kNS_PKCS11MODULEDB_CID, false, nullptr, Constructor<PKCS11ModuleDB> },
-  { &kNS_PSMCONTENTLISTEN_CID, false, nullptr, PSMContentListenerConstructor },
-  { &kNS_X509CERT_CID, false, nullptr,
-    Constructor<nsNSSCertificate, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_X509CERTDB_CID, false, nullptr, Constructor<nsNSSCertificateDB> },
-  { &kNS_X509CERTLIST_CID, false, nullptr,
-    Constructor<nsNSSCertList, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_FORMPROCESSOR_CID, false, nullptr, nsKeygenFormProcessor::Create },
+    {&kNS_NSSCOMPONENT_CID, false, nullptr, nsNSSComponentConstructor},
+    {&kNS_SECRETDECODERRING_CID, false, nullptr,
+     Constructor<SecretDecoderRing>},
+    {&kNS_PK11TOKENDB_CID, false, nullptr, Constructor<nsPK11TokenDB>},
+    {&kNS_PKCS11MODULEDB_CID, false, nullptr, Constructor<PKCS11ModuleDB>},
+    {&kNS_PSMCONTENTLISTEN_CID, false, nullptr, PSMContentListenerConstructor},
+    {&kNS_X509CERT_CID, false, nullptr,
+     Constructor<nsNSSCertificate, nullptr, ProcessRestriction::AnyProcess>},
+    {&kNS_X509CERTDB_CID, false, nullptr, Constructor<nsNSSCertificateDB>},
+    {&kNS_X509CERTLIST_CID, false, nullptr,
+     Constructor<nsNSSCertList, nullptr, ProcessRestriction::AnyProcess>},
+    {&kNS_FORMPROCESSOR_CID, false, nullptr, nsKeygenFormProcessor::Create},
 #ifdef MOZ_XUL
-  { &kNS_CERTTREE_CID, false, nullptr, Constructor<nsCertTree> },
+    {&kNS_CERTTREE_CID, false, nullptr, Constructor<nsCertTree>},
 #endif
-  { &kNS_CRYPTO_HASH_CID, false, nullptr,
-    Constructor<nsCryptoHash, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_CRYPTO_HMAC_CID, false, nullptr,
-    Constructor<nsCryptoHMAC, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_KEYMODULEOBJECT_CID, false, nullptr,
-    Constructor<nsKeyObject, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_KEYMODULEOBJECTFACTORY_CID, false, nullptr,
-    Constructor<nsKeyObjectFactory, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_CONTENTSIGNATUREVERIFIER_CID, false, nullptr,
-    Constructor<ContentSignatureVerifier> },
-  { &kNS_CERTOVERRIDE_CID, false, nullptr,
-    Constructor<nsCertOverrideService, &nsCertOverrideService::Init,
-                ProcessRestriction::ParentProcessOnly,
-                ThreadRestriction::MainThreadOnly> },
-  { &kNS_RANDOMGENERATOR_CID, false, nullptr,
-    Constructor<nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess> },
-  { &kTRANSPORTSECURITYINFO_CID, false, nullptr,
-    Constructor<TransportSecurityInfo, nullptr,
-                ProcessRestriction::AnyProcess> },
-  { &kNS_NSSERRORSSERVICE_CID, false, nullptr, NSSErrorsServiceConstructor },
-  { &kNS_NSSVERSION_CID, false, nullptr, nsNSSVersionConstructor },
-  { &kNS_SECURE_BROWSER_UI_CID, false, nullptr, nsSecureBrowserUIImplConstructor },
-  { &kNS_SITE_SECURITY_SERVICE_CID, false, nullptr,
-    Constructor<nsSiteSecurityService, &nsSiteSecurityService::Init,
-                ProcessRestriction::AnyProcess,
-                ThreadRestriction::MainThreadOnly> },
-  { &kNS_CERT_BLOCKLIST_CID, false, nullptr,
-    Constructor<CertBlocklist, &CertBlocklist::Init,
-                ProcessRestriction::ParentProcessOnly,
-                ThreadRestriction::MainThreadOnly> },
-  { &kNS_OSKEYSTORE_CID, false, nullptr, Constructor<OSKeyStore,
-                nullptr,
-                ProcessRestriction::ParentProcessOnly,
-                ThreadRestriction::MainThreadOnly> },
-  { &kNS_OSREAUTHENTICATOR_CID, false, nullptr, Constructor<OSReauthenticator,
-                nullptr,
-                ProcessRestriction::ParentProcessOnly,
-                ThreadRestriction::MainThreadOnly> },
-  { nullptr }
-};
+    {&kNS_CRYPTO_HASH_CID, false, nullptr,
+     Constructor<nsCryptoHash, nullptr, ProcessRestriction::AnyProcess>},
+    {&kNS_CRYPTO_HMAC_CID, false, nullptr,
+     Constructor<nsCryptoHMAC, nullptr, ProcessRestriction::AnyProcess>},
+    {&kNS_KEYMODULEOBJECT_CID, false, nullptr,
+     Constructor<nsKeyObject, nullptr, ProcessRestriction::AnyProcess>},
+    {&kNS_KEYMODULEOBJECTFACTORY_CID, false, nullptr,
+     Constructor<nsKeyObjectFactory, nullptr, ProcessRestriction::AnyProcess>},
+    {&kNS_CONTENTSIGNATUREVERIFIER_CID, false, nullptr,
+     Constructor<ContentSignatureVerifier>},
+    {&kNS_CERTOVERRIDE_CID, false, nullptr,
+     Constructor<nsCertOverrideService, &nsCertOverrideService::Init,
+                 ProcessRestriction::ParentProcessOnly,
+                 ThreadRestriction::MainThreadOnly>},
+    {&kNS_RANDOMGENERATOR_CID, false, nullptr,
+     Constructor<nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess>},
+    {&kTRANSPORTSECURITYINFO_CID, false, nullptr,
+     Constructor<TransportSecurityInfo, nullptr,
+                 ProcessRestriction::AnyProcess>},
+    {&kNS_NSSERRORSSERVICE_CID, false, nullptr, NSSErrorsServiceConstructor},
+    {&kNS_NSSVERSION_CID, false, nullptr, nsNSSVersionConstructor},
+    {&kNS_SECURE_BROWSER_UI_CID, false, nullptr,
+     nsSecureBrowserUIImplConstructor},
+    {&kNS_SITE_SECURITY_SERVICE_CID, false, nullptr,
+     Constructor<nsSiteSecurityService, &nsSiteSecurityService::Init,
+                 ProcessRestriction::AnyProcess,
+                 ThreadRestriction::MainThreadOnly>},
+    {&kNS_CERT_BLOCKLIST_CID, false, nullptr,
+     Constructor<CertBlocklist, &CertBlocklist::Init,
+                 ProcessRestriction::ParentProcessOnly,
+                 ThreadRestriction::MainThreadOnly>},
+    {&kNS_OSKEYSTORE_CID, false, nullptr,
+     Constructor<OSKeyStore, nullptr, ProcessRestriction::ParentProcessOnly,
+                 ThreadRestriction::MainThreadOnly>},
+    {&kNS_OSREAUTHENTICATOR_CID, false, nullptr,
+     Constructor<OSReauthenticator, nullptr,
+                 ProcessRestriction::ParentProcessOnly,
+                 ThreadRestriction::MainThreadOnly>},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
-  { PSM_COMPONENT_CONTRACTID, &kNS_NSSCOMPONENT_CID },
-  { NS_NSS_ERRORS_SERVICE_CONTRACTID, &kNS_NSSERRORSSERVICE_CID },
-  { NS_NSSVERSION_CONTRACTID, &kNS_NSSVERSION_CID },
-  { NS_SECRETDECODERRING_CONTRACTID, &kNS_SECRETDECODERRING_CID },
-  { NS_PK11TOKENDB_CONTRACTID, &kNS_PK11TOKENDB_CID },
-  { NS_PKCS11MODULEDB_CONTRACTID, &kNS_PKCS11MODULEDB_CID },
-  { NS_PSMCONTENTLISTEN_CONTRACTID, &kNS_PSMCONTENTLISTEN_CID },
-  { NS_X509CERTDB_CONTRACTID, &kNS_X509CERTDB_CID },
-  { NS_X509CERTLIST_CONTRACTID, &kNS_X509CERTLIST_CID },
-  { NS_FORMPROCESSOR_CONTRACTID, &kNS_FORMPROCESSOR_CID },
+    {PSM_COMPONENT_CONTRACTID, &kNS_NSSCOMPONENT_CID},
+    {NS_NSS_ERRORS_SERVICE_CONTRACTID, &kNS_NSSERRORSSERVICE_CID},
+    {NS_NSSVERSION_CONTRACTID, &kNS_NSSVERSION_CID},
+    {NS_SECRETDECODERRING_CONTRACTID, &kNS_SECRETDECODERRING_CID},
+    {NS_PK11TOKENDB_CONTRACTID, &kNS_PK11TOKENDB_CID},
+    {NS_PKCS11MODULEDB_CONTRACTID, &kNS_PKCS11MODULEDB_CID},
+    {NS_PSMCONTENTLISTEN_CONTRACTID, &kNS_PSMCONTENTLISTEN_CID},
+    {NS_X509CERTDB_CONTRACTID, &kNS_X509CERTDB_CID},
+    {NS_X509CERTLIST_CONTRACTID, &kNS_X509CERTLIST_CID},
+    {NS_FORMPROCESSOR_CONTRACTID, &kNS_FORMPROCESSOR_CID},
 #ifdef MOZ_XUL
-  { NS_CERTTREE_CONTRACTID, &kNS_CERTTREE_CID },
+    {NS_CERTTREE_CONTRACTID, &kNS_CERTTREE_CID},
 #endif
-  { NS_CRYPTO_HASH_CONTRACTID, &kNS_CRYPTO_HASH_CID },
-  { NS_CRYPTO_HMAC_CONTRACTID, &kNS_CRYPTO_HMAC_CID },
-  { "@mozilla.org/uriloader/psm-external-content-listener;1", &kNS_PSMCONTENTLISTEN_CID },
-  { NS_KEYMODULEOBJECT_CONTRACTID, &kNS_KEYMODULEOBJECT_CID },
-  { NS_KEYMODULEOBJECTFACTORY_CONTRACTID, &kNS_KEYMODULEOBJECTFACTORY_CID },
-  { NS_CONTENTSIGNATUREVERIFIER_CONTRACTID, &kNS_CONTENTSIGNATUREVERIFIER_CID },
-  { NS_CERTOVERRIDE_CONTRACTID, &kNS_CERTOVERRIDE_CID },
-  { NS_RANDOMGENERATOR_CONTRACTID, &kNS_RANDOMGENERATOR_CID },
-  { NS_SECURE_BROWSER_UI_CONTRACTID, &kNS_SECURE_BROWSER_UI_CID },
-  { NS_SSSERVICE_CONTRACTID, &kNS_SITE_SECURITY_SERVICE_CID },
-  { NS_CERTBLOCKLIST_CONTRACTID, &kNS_CERT_BLOCKLIST_CID },
-  { NS_OSKEYSTORE_CONTRACTID, &kNS_OSKEYSTORE_CID},
-  { NS_OSREAUTHENTICATOR_CONTRACTID, &kNS_OSREAUTHENTICATOR_CID},
-  { nullptr }
-};
+    {NS_CRYPTO_HASH_CONTRACTID, &kNS_CRYPTO_HASH_CID},
+    {NS_CRYPTO_HMAC_CONTRACTID, &kNS_CRYPTO_HMAC_CID},
+    {"@mozilla.org/uriloader/psm-external-content-listener;1",
+     &kNS_PSMCONTENTLISTEN_CID},
+    {NS_KEYMODULEOBJECT_CONTRACTID, &kNS_KEYMODULEOBJECT_CID},
+    {NS_KEYMODULEOBJECTFACTORY_CONTRACTID, &kNS_KEYMODULEOBJECTFACTORY_CID},
+    {NS_CONTENTSIGNATUREVERIFIER_CONTRACTID, &kNS_CONTENTSIGNATUREVERIFIER_CID},
+    {NS_CERTOVERRIDE_CONTRACTID, &kNS_CERTOVERRIDE_CID},
+    {NS_RANDOMGENERATOR_CONTRACTID, &kNS_RANDOMGENERATOR_CID},
+    {NS_SECURE_BROWSER_UI_CONTRACTID, &kNS_SECURE_BROWSER_UI_CID},
+    {NS_SSSERVICE_CONTRACTID, &kNS_SITE_SECURITY_SERVICE_CID},
+    {NS_CERTBLOCKLIST_CONTRACTID, &kNS_CERT_BLOCKLIST_CID},
+    {NS_OSKEYSTORE_CONTRACTID, &kNS_OSKEYSTORE_CID},
+    {NS_OSREAUTHENTICATOR_CONTRACTID, &kNS_OSREAUTHENTICATOR_CID},
+    {nullptr}};
 
 static const mozilla::Module::CategoryEntry kNSSCategories[] = {
-  { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-ca-cert", "@mozilla.org/uriloader/psm-external-content-listener;1" },
-  { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-server-cert", "@mozilla.org/uriloader/psm-external-content-listener;1" },
-  { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-user-cert", "@mozilla.org/uriloader/psm-external-content-listener;1" },
-  { NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-email-cert", "@mozilla.org/uriloader/psm-external-content-listener;1" },
-  { nullptr }
-};
+    {NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-ca-cert",
+     "@mozilla.org/uriloader/psm-external-content-listener;1"},
+    {NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY,
+     "application/x-x509-server-cert",
+     "@mozilla.org/uriloader/psm-external-content-listener;1"},
+    {NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-user-cert",
+     "@mozilla.org/uriloader/psm-external-content-listener;1"},
+    {NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY, "application/x-x509-email-cert",
+     "@mozilla.org/uriloader/psm-external-content-listener;1"},
+    {nullptr}};
 
-static const mozilla::Module kNSSModule = {
-  mozilla::Module::kVersion,
-  kNSSCIDs,
-  kNSSContracts,
-  kNSSCategories
-};
+static const mozilla::Module kNSSModule = {mozilla::Module::kVersion, kNSSCIDs,
+                                           kNSSContracts, kNSSCategories};
 
-} // unnamed namespace
+}  // unnamed namespace
 
 NSMODULE_DEFN(NSS) = &kNSSModule;

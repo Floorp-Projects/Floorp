@@ -13,8 +13,7 @@
   The root accessible. There is one per window.
   Created by the RootAccessibleWrap.
 */
-@interface mozRootAccessible : mozAccessible
-{
+@interface mozRootAccessible : mozAccessible {
   // the mozView that we're representing.
   // all outside communication goes through the mozView.
   // in reality, it's just piping all calls to us, and we're
@@ -26,6 +25,6 @@
   // party tools that we do this!
   //
   // /hwaara
-  id <mozView, mozAccessible> mParallelView; // weak ref
+  id<mozView, mozAccessible> mParallelView;  // weak ref
 }
 @end

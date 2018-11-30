@@ -14,30 +14,27 @@
 #include "nsString.h"
 #endif
 
-struct VersionPart
-{
-  int32_t     numA;
+struct VersionPart {
+  int32_t numA;
 
-  const char* strB;    // NOT null-terminated, can be a null pointer
-  uint32_t    strBlen;
+  const char* strB;  // NOT null-terminated, can be a null pointer
+  uint32_t strBlen;
 
-  int32_t     numC;
+  int32_t numC;
 
-  char*       extraD;  // null-terminated
+  char* extraD;  // null-terminated
 };
 
 #ifdef XP_WIN
-struct VersionPartW
-{
-  int32_t     numA;
+struct VersionPartW {
+  int32_t numA;
 
-  wchar_t*    strB;    // NOT null-terminated, can be a null pointer
-  uint32_t    strBlen;
+  wchar_t* strB;  // NOT null-terminated, can be a null pointer
+  uint32_t strBlen;
 
-  int32_t     numC;
+  int32_t numC;
 
-  wchar_t*    extraD;  // null-terminated
-
+  wchar_t* extraD;  // null-terminated
 };
 #endif
 
@@ -46,9 +43,7 @@ struct VersionPartW
  *
  * @returns A pointer to the next versionpart, or null if none.
  */
-static char*
-ParseVP(char* aPart, VersionPart& aResult)
-{
+static char* ParseVP(char* aPart, VersionPart& aResult) {
   char* dot;
 
   aResult.numA = 0;
@@ -109,17 +104,13 @@ ParseVP(char* aPart, VersionPart& aResult)
   return dot;
 }
 
-
 /**
  * Parse a version part into a number and "extra text".
  *
  * @returns A pointer to the next versionpart, or null if none.
  */
 #ifdef XP_WIN
-static wchar_t*
-ParseVP(wchar_t* aPart, VersionPartW& aResult)
-{
-
+static wchar_t* ParseVP(wchar_t* aPart, VersionPartW& aResult) {
   wchar_t* dot;
 
   aResult.numA = 0;
@@ -184,9 +175,7 @@ ParseVP(wchar_t* aPart, VersionPartW& aResult)
 #endif
 
 // compare two null-terminated strings, which may be null pointers
-static int32_t
-ns_strcmp(const char* aStr1, const char* aStr2)
-{
+static int32_t ns_strcmp(const char* aStr1, const char* aStr2) {
   // any string is *before* no string
   if (!aStr1) {
     return aStr2 != 0;
@@ -200,10 +189,8 @@ ns_strcmp(const char* aStr1, const char* aStr2)
 }
 
 // compare two length-specified string, which may be null pointers
-static int32_t
-ns_strnncmp(const char* aStr1, uint32_t aLen1,
-            const char* aStr2, uint32_t aLen2)
-{
+static int32_t ns_strnncmp(const char* aStr1, uint32_t aLen1, const char* aStr2,
+                           uint32_t aLen2) {
   // any string is *before* no string
   if (!aStr1) {
     return aStr2 != 0;
@@ -231,9 +218,7 @@ ns_strnncmp(const char* aStr1, uint32_t aLen1,
 }
 
 // compare two int32_t
-static int32_t
-ns_cmp(int32_t aNum1, int32_t aNum2)
-{
+static int32_t ns_cmp(int32_t aNum1, int32_t aNum2) {
   if (aNum1 < aNum2) {
     return -1;
   }
@@ -244,9 +229,7 @@ ns_cmp(int32_t aNum1, int32_t aNum2)
 /**
  * Compares two VersionParts
  */
-static int32_t
-CompareVP(VersionPart& aVer1, VersionPart& aVer2)
-{
+static int32_t CompareVP(VersionPart& aVer1, VersionPart& aVer2) {
   int32_t r = ns_cmp(aVer1.numA, aVer2.numA);
   if (r) {
     return r;
@@ -269,9 +252,7 @@ CompareVP(VersionPart& aVer1, VersionPart& aVer2)
  * Compares two VersionParts
  */
 #ifdef XP_WIN
-static int32_t
-CompareVP(VersionPartW& aVer1, VersionPartW& aVer2)
-{
+static int32_t CompareVP(VersionPartW& aVer1, VersionPartW& aVer2) {
   int32_t r = ns_cmp(aVer1.numA, aVer2.numA);
   if (r) {
     return r;
@@ -302,9 +283,7 @@ CompareVP(VersionPartW& aVer1, VersionPartW& aVer2)
 namespace mozilla {
 
 #ifdef XP_WIN
-int32_t
-CompareVersions(const char16_t* aStrA, const char16_t* aStrB)
-{
+int32_t CompareVersions(const char16_t* aStrA, const char16_t* aStrB) {
   wchar_t* A2 = wcsdup(char16ptr_t(aStrA));
   if (!A2) {
     return 1;
@@ -340,9 +319,7 @@ CompareVersions(const char16_t* aStrA, const char16_t* aStrB)
 }
 #endif
 
-int32_t
-CompareVersions(const char* aStrA, const char* aStrB)
-{
+int32_t CompareVersions(const char* aStrA, const char* aStrB) {
   char* A2 = strdup(aStrA);
   if (!A2) {
     return 1;
@@ -377,5 +354,4 @@ CompareVersions(const char* aStrA, const char* aStrB)
   return result;
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

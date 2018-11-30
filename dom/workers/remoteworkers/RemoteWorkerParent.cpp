@@ -19,19 +19,15 @@ namespace dom {
 
 namespace {
 
-class UnregisterActorRunnable final : public Runnable
-{
-public:
+class UnregisterActorRunnable final : public Runnable {
+ public:
   explicit UnregisterActorRunnable(already_AddRefed<ContentParent> aParent)
-    : Runnable("UnregisterActorRunnable")
-    , mContentParent(aParent)
-  {
+      : Runnable("UnregisterActorRunnable"), mContentParent(aParent) {
     AssertIsOnBackgroundThread();
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
     mContentParent->UnregisterRemoveWorkerActor();
@@ -40,27 +36,23 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<ContentParent> mContentParent;
 };
 
-} // anonymous
+}  // namespace
 
-RemoteWorkerParent::RemoteWorkerParent()
-{
+RemoteWorkerParent::RemoteWorkerParent() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 }
 
-RemoteWorkerParent::~RemoteWorkerParent()
-{
+RemoteWorkerParent::~RemoteWorkerParent() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 }
 
-void
-RemoteWorkerParent::Initialize()
-{
+void RemoteWorkerParent::Initialize() {
   RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(Manager());
 
   // Parent is null if the child actor runs on the parent process.
@@ -68,16 +60,14 @@ RemoteWorkerParent::Initialize()
     parent->RegisterRemoteWorkerActor();
 
     nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
+        SystemGroup::EventTargetFor(TaskCategory::Other);
 
-    NS_ProxyRelease("RemoteWorkerParent::Initialize ContentParent",
-                    target, parent.forget());
+    NS_ProxyRelease("RemoteWorkerParent::Initialize ContentParent", target,
+                    parent.forget());
   }
 }
 
-void
-RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason)
-{
+void RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -86,19 +76,17 @@ RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason)
   // Parent is null if the child actor runs on the parent process.
   if (parent) {
     RefPtr<UnregisterActorRunnable> r =
-      new UnregisterActorRunnable(parent.forget());
+        new UnregisterActorRunnable(parent.forget());
 
     nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
+        SystemGroup::EventTargetFor(TaskCategory::Other);
     target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   }
 
   mController = nullptr;
 }
 
-IPCResult
-RemoteWorkerParent::RecvCreated(const bool& aStatus)
-{
+IPCResult RemoteWorkerParent::RecvCreated(const bool& aStatus) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -115,9 +103,7 @@ RemoteWorkerParent::RecvCreated(const bool& aStatus)
   return IPC_OK();
 }
 
-IPCResult
-RemoteWorkerParent::RecvError(const ErrorValue& aValue)
-{
+IPCResult RemoteWorkerParent::RecvError(const ErrorValue& aValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -128,9 +114,7 @@ RemoteWorkerParent::RecvError(const ErrorValue& aValue)
   return IPC_OK();
 }
 
-IPCResult
-RemoteWorkerParent::RecvClose()
-{
+IPCResult RemoteWorkerParent::RecvClose() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -142,14 +126,12 @@ RemoteWorkerParent::RecvClose()
   return IPC_OK();
 }
 
-void
-RemoteWorkerParent::SetController(RemoteWorkerController* aController)
-{
+void RemoteWorkerParent::SetController(RemoteWorkerController* aController) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
   mController = aController;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

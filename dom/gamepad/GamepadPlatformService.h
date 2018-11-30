@@ -29,11 +29,10 @@ class GamepadEventChannelParent;
 // 2. Monitor Thread:
 //    This thread is populated in platform-dependent backends, which
 //    is in charge of processing gamepad hardware events from OS
-class GamepadPlatformService final
-{
+class GamepadPlatformService final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadPlatformService)
  public:
-  //Get the singleton service
+  // Get the singleton service
   static already_AddRefed<GamepadPlatformService> GetParentService();
 
   // Add a gamepad to the list of known gamepads, and return its index.
@@ -68,10 +67,10 @@ class GamepadPlatformService final
   // indexes.
   void ResetGamepadIndexes();
 
-  //Add IPDL parent instance
+  // Add IPDL parent instance
   void AddChannelParent(GamepadEventChannelParent* aParent);
 
-  //Remove IPDL parent instance
+  // Remove IPDL parent instance
   void RemoveChannelParent(GamepadEventChannelParent* aParent);
 
   bool HasGamepadListeners();
@@ -81,7 +80,8 @@ class GamepadPlatformService final
  private:
   GamepadPlatformService();
   ~GamepadPlatformService();
-  template<class T> void NotifyGamepadChange(uint32_t aIndex, const T& aInfo);
+  template <class T>
+  void NotifyGamepadChange(uint32_t aIndex, const T& aInfo);
 
   // Flush all pending events buffered in mPendingEvents, must be called
   // with mMutex held
@@ -106,7 +106,7 @@ class GamepadPlatformService final
   nsTArray<GamepadChangeEvent> mPendingEvents;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

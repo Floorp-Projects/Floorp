@@ -11,9 +11,12 @@
 #include "nsIChannel.h"
 #include <functional>
 
-#define TRACKING_DUMMY_CHANNEL_IID \
-  { 0x70ceb97d, 0xbfa6, 0x4255, \
-    { 0xb7, 0x08, 0xe1, 0xb4, 0x4a, 0x1e, 0x0e, 0x9a } }
+#define TRACKING_DUMMY_CHANNEL_IID                   \
+  {                                                  \
+    0x70ceb97d, 0xbfa6, 0x4255, {                    \
+      0xb7, 0x08, 0xe1, 0xb4, 0x4a, 0x1e, 0x0e, 0x9a \
+    }                                                \
+  }
 
 class nsIChannel;
 
@@ -41,10 +44,9 @@ namespace net {
  * 1496997 we can remove this implementation.  Bug 1498259 covers removing this
  * hack in particular.
  */
-class TrackingDummyChannel final : public nsIChannel
-                                 , public nsIHttpChannelInternal
-{
-public:
+class TrackingDummyChannel final : public nsIChannel,
+                                   public nsIHttpChannelInternal {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(TRACKING_DUMMY_CHANNEL_IID)
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -52,29 +54,23 @@ public:
   NS_DECL_NSICHANNEL
   NS_DECL_NSIHTTPCHANNELINTERNAL
 
-  enum StorageAllowedState
-  {
+  enum StorageAllowedState {
     eStorageGranted,
     eStorageDenied,
     eAsyncNeeded,
   };
 
-  static StorageAllowedState
-  StorageAllowed(nsIChannel* aChannel,
-                 const std::function<void(bool)>& aCallback);
+  static StorageAllowedState StorageAllowed(
+      nsIChannel* aChannel, const std::function<void(bool)>& aCallback);
 
-  TrackingDummyChannel(nsIURI* aURI,
-                       nsIURI* aTopWindowURI,
-                       nsresult aTopWindowURIResult,
-                       nsILoadInfo* aLoadInfo);
+  TrackingDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
+                       nsresult aTopWindowURIResult, nsILoadInfo* aLoadInfo);
 
-  bool
-  IsTrackingResource() const;
+  bool IsTrackingResource() const;
 
-  void
-  SetIsTrackingResource();
+  void SetIsTrackingResource();
 
-private:
+ private:
   ~TrackingDummyChannel();
 
   nsCOMPtr<nsILoadInfo> mLoadInfo;
@@ -87,7 +83,7 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(TrackingDummyChannel, TRACKING_DUMMY_CHANNEL_IID)
 
-} // net namespace
-} // mozilla namespace
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_TrackingDummyChannel_h
+#endif  // mozilla_net_TrackingDummyChannel_h

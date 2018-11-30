@@ -11,9 +11,7 @@
  */
 
 template <typename T>
-typename nsTSubstringTuple<T>::size_type
-nsTSubstringTuple<T>::Length() const
-{
+typename nsTSubstringTuple<T>::size_type nsTSubstringTuple<T>::Length() const {
   mozilla::CheckedInt<size_type> len;
   if (mHead) {
     len = mHead->Length();
@@ -26,7 +24,6 @@ nsTSubstringTuple<T>::Length() const
   return len.value();
 }
 
-
 /**
  * writes the aggregate string to the given buffer. aBufLen is assumed
  * to be equal to or greater than the value returned by the Length()
@@ -34,9 +31,7 @@ nsTSubstringTuple<T>::Length() const
  */
 
 template <typename T>
-void
-nsTSubstringTuple<T>::WriteTo(char_type* aBuf, uint32_t aBufLen) const
-{
+void nsTSubstringTuple<T>::WriteTo(char_type* aBuf, uint32_t aBufLen) const {
   MOZ_RELEASE_ASSERT(aBufLen >= mFragB->Length(), "buffer too small");
   uint32_t headLen = aBufLen - mFragB->Length();
   if (mHead) {
@@ -49,17 +44,14 @@ nsTSubstringTuple<T>::WriteTo(char_type* aBuf, uint32_t aBufLen) const
   char_traits::copy(aBuf + headLen, mFragB->Data(), mFragB->Length());
 }
 
-
 /**
  * returns true if this tuple is dependent on (i.e., overlapping with)
  * the given char sequence.
  */
 
 template <typename T>
-bool
-nsTSubstringTuple<T>::IsDependentOn(const char_type* aStart,
-                                    const char_type* aEnd) const
-{
+bool nsTSubstringTuple<T>::IsDependentOn(const char_type* aStart,
+                                         const char_type* aEnd) const {
   // we aStart with the right-most fragment since it is faster to check.
 
   if (mFragB->IsDependentOn(aStart, aEnd)) {

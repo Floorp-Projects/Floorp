@@ -12,10 +12,8 @@
 
 using namespace mozilla::a11y;
 
-void
-TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
-                 const nsAString& aNewText)
-{
+void TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
+                      const nsAString& aNewText) {
   NS_ASSERTION(aTextLeaf, "No text leaf accessible?");
 
   const nsString& oldText = aTextLeaf->Text();
@@ -25,8 +23,7 @@ TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
   // Skip coinciding begin substrings.
   uint32_t skipStart = 0;
   for (; skipStart < minLen; skipStart++) {
-    if (aNewText[skipStart] != oldText[skipStart])
-      break;
+    if (aNewText[skipStart] != oldText[skipStart]) break;
   }
 
   // The text was changed. Do update.
@@ -36,13 +33,10 @@ TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
   }
 }
 
-void
-TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
-                      uint32_t aSkipStart)
-{
+void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
+                           uint32_t aSkipStart) {
   Accessible* parent = mTextLeaf->Parent();
-  if (!parent)
-    return;
+  if (!parent) return;
 
   mHyperText = parent->AsHyperText();
   if (!mHyperText) {
@@ -52,8 +46,7 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
 
   // Get the text leaf accessible offset and invalidate cached offsets after it.
   mTextOffset = mHyperText->GetChildOffset(mTextLeaf, true);
-  NS_ASSERTION(mTextOffset != -1,
-               "Text leaf hasn't offset within hyper text!");
+  NS_ASSERTION(mTextOffset != -1, "Text leaf hasn't offset within hyper text!");
 
   uint32_t oldLen = aOldText.Length(), newLen = aNewText.Length();
   uint32_t minLen = std::min(oldLen, newLen);
@@ -77,19 +70,19 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   // It could be single insertion or removal or the case of long strings. Do not
   // calculate the difference between long strings and prefer to fire pair of
   // insert/remove events as the old string was replaced on the new one.
-  if (strLen1 == 0 || strLen2 == 0 ||
-      strLen1 > kMaxStrLen || strLen2 > kMaxStrLen) {
+  if (strLen1 == 0 || strLen2 == 0 || strLen1 > kMaxStrLen ||
+      strLen2 > kMaxStrLen) {
     if (strLen1 > 0) {
       // Fire text change event for removal.
       RefPtr<AccEvent> textRemoveEvent =
-        new AccTextChangeEvent(mHyperText, mTextOffset, str1, false);
+          new AccTextChangeEvent(mHyperText, mTextOffset, str1, false);
       mDocument->FireDelayedEvent(textRemoveEvent);
     }
 
     if (strLen2 > 0) {
       // Fire text change event for insertion.
       RefPtr<AccEvent> textInsertEvent =
-        new AccTextChangeEvent(mHyperText, mTextOffset, str2, true);
+          new AccTextChangeEvent(mHyperText, mTextOffset, str2, true);
       mDocument->FireDelayedEvent(textInsertEvent);
     }
 
@@ -108,8 +101,7 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   uint32_t len1 = strLen1 + 1, len2 = strLen2 + 1;
   uint32_t* entries = new uint32_t[len1 * len2];
 
-  for (uint32_t colIdx = 0; colIdx < len1; colIdx++)
-    entries[colIdx] = colIdx;
+  for (uint32_t colIdx = 0; colIdx < len1; colIdx++) entries[colIdx] = colIdx;
 
   uint32_t* row = entries;
   for (uint32_t rowIdx = 1; rowIdx < len2; rowIdx++) {
@@ -132,7 +124,7 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   nsTArray<RefPtr<AccEvent> > events;
   ComputeTextChangeEvents(str1, str2, entries, events);
 
-  delete [] entries;
+  delete[] entries;
 
   // Fire events.
   for (int32_t idx = events.Length() - 1; idx >= 0; idx--)
@@ -144,12 +136,9 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   mTextLeaf->SetText(aNewText);
 }
 
-void
-TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
-                                     const nsAString& aStr2,
-                                     uint32_t* aEntries,
-                                     nsTArray<RefPtr<AccEvent> >& aEvents)
-{
+void TextUpdater::ComputeTextChangeEvents(
+    const nsAString& aStr1, const nsAString& aStr2, uint32_t* aEntries,
+    nsTArray<RefPtr<AccEvent> >& aEvents) {
   int32_t colIdx = aStr1.Length(), rowIdx = aStr2.Length();
 
   // Point at which strings last matched.
@@ -158,36 +147,36 @@ TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
 
   int32_t colLen = colEnd + 1;
   uint32_t* row = aEntries + rowIdx * colLen;
-  uint32_t dist = row[colIdx]; // current Levenshtein distance
-  while (rowIdx && colIdx) { // stop when we can't move diagonally
-    if (aStr1[colIdx - 1] == aStr2[rowIdx - 1]) { // match
-      if (rowIdx < rowEnd) { // deal with any pending insertion
-        FireInsertEvent(Substring(aStr2, rowIdx, rowEnd - rowIdx),
-                        rowIdx, aEvents);
+  uint32_t dist = row[colIdx];  // current Levenshtein distance
+  while (rowIdx && colIdx) {    // stop when we can't move diagonally
+    if (aStr1[colIdx - 1] == aStr2[rowIdx - 1]) {  // match
+      if (rowIdx < rowEnd) {  // deal with any pending insertion
+        FireInsertEvent(Substring(aStr2, rowIdx, rowEnd - rowIdx), rowIdx,
+                        aEvents);
       }
-      if (colIdx < colEnd) { // deal with any pending deletion
-        FireDeleteEvent(Substring(aStr1, colIdx, colEnd - colIdx),
-                        rowIdx, aEvents);
+      if (colIdx < colEnd) {  // deal with any pending deletion
+        FireDeleteEvent(Substring(aStr1, colIdx, colEnd - colIdx), rowIdx,
+                        aEvents);
       }
 
-      colEnd = --colIdx; // reset the match point
+      colEnd = --colIdx;  // reset the match point
       rowEnd = --rowIdx;
       row -= colLen;
       continue;
     }
     --dist;
-    if (dist == row[colIdx - 1 - colLen]) { // substitution
+    if (dist == row[colIdx - 1 - colLen]) {  // substitution
       --colIdx;
       --rowIdx;
       row -= colLen;
       continue;
     }
-    if (dist == row[colIdx - colLen]) { // insertion
+    if (dist == row[colIdx - colLen]) {  // insertion
       --rowIdx;
       row -= colLen;
       continue;
     }
-    if (dist == row[colIdx - 1]) { // deletion
+    if (dist == row[colIdx - 1]) {  // deletion
       --colIdx;
       continue;
     }
@@ -195,8 +184,6 @@ TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
     return;
   }
 
-  if (rowEnd)
-    FireInsertEvent(Substring(aStr2, 0, rowEnd), 0, aEvents);
-  if (colEnd)
-    FireDeleteEvent(Substring(aStr1, 0, colEnd), 0, aEvents);
+  if (rowEnd) FireInsertEvent(Substring(aStr2, 0, rowEnd), 0, aEvents);
+  if (colEnd) FireDeleteEvent(Substring(aStr1, 0, colEnd), 0, aEvents);
 }

@@ -7,35 +7,35 @@
 #ifndef MOZILLA_GFX_SHAREDSURFACESCHILD_H
 #define MOZILLA_GFX_SHAREDSURFACESCHILD_H
 
-#include <stdint.h>                     // for uint32_t, uint64_t
-#include "mozilla/Attributes.h"         // for override
-#include "mozilla/Maybe.h"              // for Maybe
-#include "mozilla/RefPtr.h"             // for already_AddRefed
-#include "mozilla/StaticPtr.h"          // for StaticRefPtr
-#include "mozilla/gfx/UserData.h"       // for UserDataKey
-#include "mozilla/webrender/WebRenderTypes.h" // for wr::ImageKey
-#include "nsTArray.h"                   // for AutoTArray
+#include <stdint.h>                            // for uint32_t, uint64_t
+#include "mozilla/Attributes.h"                // for override
+#include "mozilla/Maybe.h"                     // for Maybe
+#include "mozilla/RefPtr.h"                    // for already_AddRefed
+#include "mozilla/StaticPtr.h"                 // for StaticRefPtr
+#include "mozilla/gfx/UserData.h"              // for UserDataKey
+#include "mozilla/webrender/WebRenderTypes.h"  // for wr::ImageKey
+#include "nsTArray.h"                          // for AutoTArray
 
 namespace mozilla {
 namespace layers {
 class AnimationImageKeyData;
-} // namespace mozilla
-} // namespace layers
+}  // namespace layers
+}  // namespace mozilla
 
-template<>
-struct nsTArray_CopyChooser<mozilla::layers::AnimationImageKeyData>
-{
-  typedef nsTArray_CopyWithConstructors<mozilla::layers::AnimationImageKeyData> Type;
+template <>
+struct nsTArray_CopyChooser<mozilla::layers::AnimationImageKeyData> {
+  typedef nsTArray_CopyWithConstructors<mozilla::layers::AnimationImageKeyData>
+      Type;
 };
 
 namespace mozilla {
 namespace gfx {
 class SourceSurfaceSharedData;
-} // namespace gfx
+}  // namespace gfx
 
 namespace wr {
 class IpcResourceUpdateQueue;
-} // namespace wr
+}  // namespace wr
 
 namespace layers {
 
@@ -43,9 +43,8 @@ class CompositorManagerChild;
 class ImageContainer;
 class WebRenderLayerManager;
 
-class SharedSurfacesChild final
-{
-public:
+class SharedSurfacesChild final {
+ public:
   /**
    * Request that the surface be mapped into the compositor thread's memory
    * space. This is useful for when the caller itself has no present need for
@@ -60,8 +59,7 @@ public:
    * space, and a valid ExternalImageId be generated for it for use with
    * WebRender. This must be called from the main thread.
    */
-  static nsresult Share(gfx::SourceSurface* aSurface,
-                        wr::ExternalImageId& aId);
+  static nsresult Share(gfx::SourceSurface* aSurface, wr::ExternalImageId& aId);
 
   /**
    * Request that the surface be mapped into the compositor thread's memory
@@ -89,22 +87,22 @@ public:
    * Get the external ID, if any, bound to the shared surface. Used for memory
    * reporting purposes.
    */
-  static Maybe<wr::ExternalImageId>
-  GetExternalId(const gfx::SourceSurfaceSharedData* aSurface);
+  static Maybe<wr::ExternalImageId> GetExternalId(
+      const gfx::SourceSurfaceSharedData* aSurface);
 
   /**
    * Get the surface (or its underlying surface) as a SourceSurfaceSharedData
    * pointer, if valid.
    */
-  static gfx::SourceSurfaceSharedData*
-  AsSourceSurfaceSharedData(gfx::SourceSurface* aSurface);
+  static gfx::SourceSurfaceSharedData* AsSourceSurfaceSharedData(
+      gfx::SourceSurface* aSurface);
 
   static nsresult UpdateAnimation(ImageContainer* aContainer,
                                   gfx::SourceSurface* aSurface,
                                   const gfx::IntRect& aDirtyRect);
 
   class ImageKeyData {
-  public:
+   public:
     ImageKeyData(WebRenderLayerManager* aManager,
                  const wr::ImageKey& aImageKey);
     ~ImageKeyData();
@@ -116,32 +114,25 @@ public:
 
     void MergeDirtyRect(const Maybe<gfx::IntRect>& aDirtyRect);
 
-    Maybe<gfx::IntRect> TakeDirtyRect()
-    {
-      return std::move(mDirtyRect);
-    }
+    Maybe<gfx::IntRect> TakeDirtyRect() { return std::move(mDirtyRect); }
 
     RefPtr<WebRenderLayerManager> mManager;
     Maybe<gfx::IntRect> mDirtyRect;
     wr::ImageKey mImageKey;
   };
 
-private:
+ private:
   SharedSurfacesChild() = delete;
   ~SharedSurfacesChild() = delete;
 
   friend class SharedSurfacesAnimation;
 
   class SharedUserData final {
-  public:
-    SharedUserData()
-      : mShared(false)
-    { }
+   public:
+    SharedUserData() : mShared(false) {}
 
     explicit SharedUserData(const wr::ExternalImageId& aId)
-      : mId(aId)
-      , mShared(false)
-    { }
+        : mId(aId), mShared(false) {}
 
     ~SharedUserData();
 
@@ -151,25 +142,17 @@ private:
     SharedUserData(SharedUserData&& aOther) = delete;
     SharedUserData& operator=(SharedUserData&& aOther) = delete;
 
-    const wr::ExternalImageId& Id() const
-    {
-      return mId;
-    }
+    const wr::ExternalImageId& Id() const { return mId; }
 
-    void SetId(const wr::ExternalImageId& aId)
-    {
+    void SetId(const wr::ExternalImageId& aId) {
       mId = aId;
       mKeys.Clear();
       mShared = false;
     }
 
-    bool IsShared() const
-    {
-      return mShared;
-    }
+    bool IsShared() const { return mShared; }
 
-    void MarkShared()
-    {
+    void MarkShared() {
       MOZ_ASSERT(!mShared);
       mShared = true;
     }
@@ -178,7 +161,7 @@ private:
                            wr::IpcResourceUpdateQueue& aResources,
                            const Maybe<gfx::IntRect>& aDirtyRect);
 
-  protected:
+   protected:
     AutoTArray<ImageKeyData, 1> mKeys;
     wr::ExternalImageId mId;
     bool mShared : 1;
@@ -187,8 +170,7 @@ private:
   static nsresult ShareInternal(gfx::SourceSurfaceSharedData* aSurface,
                                 SharedUserData** aUserData);
 
-  static void Unshare(const wr::ExternalImageId& aId,
-                      bool aReleaseId,
+  static void Unshare(const wr::ExternalImageId& aId, bool aReleaseId,
                       nsTArray<ImageKeyData>& aKeys);
 
   static void DestroySharedUserData(void* aClosure);
@@ -196,11 +178,10 @@ private:
   static gfx::UserDataKey sSharedKey;
 };
 
-class AnimationImageKeyData final : public SharedSurfacesChild::ImageKeyData
-{
-public:
+class AnimationImageKeyData final : public SharedSurfacesChild::ImageKeyData {
+ public:
   AnimationImageKeyData(WebRenderLayerManager* aManager,
-               const wr::ImageKey& aImageKey);
+                        const wr::ImageKey& aImageKey);
 
   ~AnimationImageKeyData();
 
@@ -215,13 +196,11 @@ public:
  * This helper class owns a single ImageKey which will map to different external
  * image IDs representing different frames in an animation.
  */
-class SharedSurfacesAnimation final
-{
-public:
+class SharedSurfacesAnimation final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedSurfacesAnimation)
 
-  SharedSurfacesAnimation()
-  { }
+  SharedSurfacesAnimation() {}
 
   void Destroy();
 
@@ -267,7 +246,7 @@ public:
    */
   void Invalidate(WebRenderLayerManager* aManager);
 
-private:
+ private:
   ~SharedSurfacesAnimation();
 
   void HoldSurfaceForRecycling(AnimationImageKeyData& aEntry,
@@ -278,7 +257,7 @@ private:
   wr::ExternalImageId mId;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

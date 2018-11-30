@@ -20,24 +20,21 @@ namespace js {
 // UnboxedPlainObject
 /////////////////////////////////////////////////////////////////////
 
-inline const UnboxedLayout&
-UnboxedPlainObject::layout() const
-{
-    AutoSweepObjectGroup sweep(group());
-    return group()->unboxedLayout(sweep);
+inline const UnboxedLayout& UnboxedPlainObject::layout() const {
+  AutoSweepObjectGroup sweep(group());
+  return group()->unboxedLayout(sweep);
 }
 
 /////////////////////////////////////////////////////////////////////
 // UnboxedLayout
 /////////////////////////////////////////////////////////////////////
 
-gc::AllocKind
-js::UnboxedLayout::getAllocKind() const
-{
-    MOZ_ASSERT(size());
-    return gc::GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + size());
+gc::AllocKind js::UnboxedLayout::getAllocKind() const {
+  MOZ_ASSERT(size());
+  return gc::GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() +
+                                     size());
 }
 
-} // namespace js
+}  // namespace js
 
-#endif // vm_UnboxedObject_inl_h
+#endif  // vm_UnboxedObject_inl_h

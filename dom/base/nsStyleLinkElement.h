@@ -29,12 +29,11 @@ namespace mozilla {
 class CSSStyleSheet;
 namespace dom {
 class ShadowRoot;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsStyleLinkElement : public nsIStyleSheetLinkingElement
-{
-public:
+class nsStyleLinkElement : public nsIStyleSheetLinkingElement {
+ public:
   nsStyleLinkElement();
   virtual ~nsStyleLinkElement();
 
@@ -47,8 +46,8 @@ public:
   mozilla::StyleSheet* GetStyleSheet() override;
   void InitStyleLinkElement(bool aDontLoadStyle) override;
 
-  mozilla::Result<Update, nsresult>
-    UpdateStyleSheet(nsICSSLoaderObserver*) override;
+  mozilla::Result<Update, nsresult> UpdateStyleSheet(
+      nsICSSLoaderObserver*) override;
 
   void SetEnableUpdates(bool aEnableUpdates) override;
   void GetCharset(nsAString& aCharset) override;
@@ -60,24 +59,24 @@ public:
   uint32_t GetColumnNumber() override;
 
   enum RelValue {
-    ePREFETCH =     0x00000001,
+    ePREFETCH = 0x00000001,
     eDNS_PREFETCH = 0x00000002,
-    eSTYLESHEET =   0x00000004,
-    eNEXT =         0x00000008,
-    eALTERNATE =    0x00000010,
-    ePRECONNECT =   0x00000020,
+    eSTYLESHEET = 0x00000004,
+    eNEXT = 0x00000008,
+    eALTERNATE = 0x00000010,
+    ePRECONNECT = 0x00000020,
     // NOTE: 0x40 is unused
-    ePRELOAD =      0x00000080
+    ePRELOAD = 0x00000080
   };
 
   // The return value is a bitwise or of 0 or more RelValues.
   static uint32_t ParseLinkTypes(const nsAString& aTypes);
 
-  void UpdateStyleSheetInternal()
-  {
+  void UpdateStyleSheetInternal() {
     mozilla::Unused << UpdateStyleSheetInternal(nullptr, nullptr);
   }
-protected:
+
+ protected:
   /**
    * @param aOldDocument   should be non-null only if we're updating because we
    *                       removed the node from the document.
@@ -91,8 +90,7 @@ protected:
    * TODO(emilio): Should probably pass a single DocumentOrShadowRoot.
    */
   mozilla::Result<Update, nsresult> UpdateStyleSheetInternal(
-      nsIDocument* aOldDocument,
-      mozilla::dom::ShadowRoot* aOldShadowRoot,
+      nsIDocument* aOldDocument, mozilla::dom::ShadowRoot* aOldShadowRoot,
       ForceUpdate = ForceUpdate::No);
 
   // Gets a suitable title and media for SheetInfo out of an element, which
@@ -101,8 +99,7 @@ protected:
   // NOTE(emilio): Needs nsString instead of nsAString because of
   // CompressWhitespace.
   static void GetTitleAndMediaForElement(const mozilla::dom::Element&,
-                                         nsString& aTitle,
-                                         nsString& aMedia);
+                                         nsString& aTitle, nsString& aMedia);
 
   // Returns whether the type attribute specifies the text/css mime type.
   static bool IsCSSMimeTypeAttribute(const mozilla::dom::Element&);
@@ -111,9 +108,9 @@ protected:
 
   // CC methods
   void Unlink();
-  void Traverse(nsCycleCollectionTraversalCallback &cb);
+  void Traverse(nsCycleCollectionTraversalCallback& cb);
 
-private:
+ private:
   /**
    * @param aOldDocument should be non-null only if we're updating because we
    *                     removed the node from the document.
@@ -126,14 +123,13 @@ private:
    *                     about the content that affects the resulting sheet
    *                     changed but the URI may not have changed.
    */
-  mozilla::Result<Update, nsresult>
-    DoUpdateStyleSheet(nsIDocument* aOldDocument,
-                       mozilla::dom::ShadowRoot* aOldShadowRoot,
-                       nsICSSLoaderObserver* aObserver,
-                       ForceUpdate);
+  mozilla::Result<Update, nsresult> DoUpdateStyleSheet(
+      nsIDocument* aOldDocument, mozilla::dom::ShadowRoot* aOldShadowRoot,
+      nsICSSLoaderObserver* aObserver, ForceUpdate);
 
   RefPtr<mozilla::StyleSheet> mStyleSheet;
-protected:
+
+ protected:
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   bool mDontLoadStyle;
   bool mUpdatesEnabled;
@@ -142,4 +138,3 @@ protected:
 };
 
 #endif /* nsStyleLinkElement_h___ */
-

@@ -23,20 +23,16 @@ extern "C" int posix_memalign(void** memptr, size_t alignment, size_t size);
 namespace mozilla {
 
 VolatileBuffer::VolatileBuffer()
-  : mMutex("VolatileBuffer")
-  , mBuf(nullptr)
-  , mSize(0)
-  , mLockCount(0)
-  , mHeap(false)
-  , mFirstLock(true)
-{
-}
+    : mMutex("VolatileBuffer"),
+      mBuf(nullptr),
+      mSize(0),
+      mLockCount(0),
+      mHeap(false),
+      mFirstLock(true) {}
 
-bool
-VolatileBuffer::Init(size_t aSize, size_t aAlignment)
-{
+bool VolatileBuffer::Init(size_t aSize, size_t aAlignment) {
   MOZ_ASSERT(!mSize && !mBuf, "Init called twice");
-  MOZ_ASSERT(!(aAlignment % sizeof(void *)),
+  MOZ_ASSERT(!(aAlignment % sizeof(void*)),
              "Alignment must be multiple of pointer size");
 
   mSize = aSize;
@@ -49,11 +45,8 @@ VolatileBuffer::Init(size_t aSize, size_t aAlignment)
     goto heap_alloc;
   }
 
-  mBuf = VirtualAllocEx(GetCurrentProcess(),
-                        nullptr,
-                        mSize,
-                        MEM_COMMIT | MEM_RESERVE,
-                        PAGE_READWRITE);
+  mBuf = VirtualAllocEx(GetCurrentProcess(), nullptr, mSize,
+                        MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
   if (mBuf) {
     return true;
   }
@@ -68,8 +61,7 @@ heap_alloc:
   return !!mBuf;
 }
 
-VolatileBuffer::~VolatileBuffer()
-{
+VolatileBuffer::~VolatileBuffer() {
   MOZ_ASSERT(mLockCount == 0, "Being destroyed with non-zero lock count?");
 
   if (OnHeap()) {
@@ -83,9 +75,7 @@ VolatileBuffer::~VolatileBuffer()
   }
 }
 
-bool
-VolatileBuffer::Lock(void** aBuf)
-{
+bool VolatileBuffer::Lock(void** aBuf) {
   MutexAutoLock lock(mMutex);
 
   MOZ_ASSERT(mBuf, "Attempting to lock an uninitialized VolatileBuffer");
@@ -102,17 +92,12 @@ VolatileBuffer::Lock(void** aBuf)
     return true;
   }
 
-  void* addr = VirtualAllocEx(GetCurrentProcess(),
-                              mBuf,
-                              mSize,
-                              MEM_RESET_UNDO,
+  void* addr = VirtualAllocEx(GetCurrentProcess(), mBuf, mSize, MEM_RESET_UNDO,
                               PAGE_READWRITE);
   return !!addr;
 }
 
-void
-VolatileBuffer::Unlock()
-{
+void VolatileBuffer::Unlock() {
   MutexAutoLock lock(mMutex);
 
   MOZ_ASSERT(mLockCount > 0, "VolatileBuffer unlocked too many times!");
@@ -120,23 +105,15 @@ VolatileBuffer::Unlock()
     return;
   }
 
-  DebugOnly<void*> addr = VirtualAllocEx(GetCurrentProcess(),
-                                         mBuf,
-                                         mSize,
-                                         MEM_RESET,
-                                         PAGE_READWRITE);
+  DebugOnly<void*> addr = VirtualAllocEx(GetCurrentProcess(), mBuf, mSize,
+                                         MEM_RESET, PAGE_READWRITE);
   MOZ_ASSERT(addr, "Failed to MEM_RESET");
 }
 
-bool
-VolatileBuffer::OnHeap() const
-{
-  return mHeap;
-}
+bool VolatileBuffer::OnHeap() const { return mHeap; }
 
-size_t
-VolatileBuffer::HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t VolatileBuffer::HeapSizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   if (OnHeap()) {
 #ifdef MOZ_MEMORY
     return aMallocSizeOf(mBuf);
@@ -148,9 +125,7 @@ VolatileBuffer::HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return 0;
 }
 
-size_t
-VolatileBuffer::NonHeapSizeOfExcludingThis() const
-{
+size_t VolatileBuffer::NonHeapSizeOfExcludingThis() const {
   if (OnHeap()) {
     return 0;
   }
@@ -158,4 +133,4 @@ VolatileBuffer::NonHeapSizeOfExcludingThis() const
   return (mSize + 4095) & ~4095;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -10,23 +10,21 @@
 
 class txPattern;
 
-class txPatternOptimizer
-{
-public:
-    /**
-     * Optimize the given pattern.
-     * @param aInPattern    Pattern to optimize.
-     * @param aOutPattern   Resulting pattern, null if optimization didn't
-     *                      result in a new pattern.
-     */
-    nsresult optimize(txPattern* aInPattern, txPattern** aOutPattern);
+class txPatternOptimizer {
+ public:
+  /**
+   * Optimize the given pattern.
+   * @param aInPattern    Pattern to optimize.
+   * @param aOutPattern   Resulting pattern, null if optimization didn't
+   *                      result in a new pattern.
+   */
+  nsresult optimize(txPattern* aInPattern, txPattern** aOutPattern);
 
-private:
+ private:
+  // Helper methods for optimizing specific classes
+  nsresult optimizeStep(txPattern* aInPattern, txPattern** aOutPattern);
 
-    // Helper methods for optimizing specific classes
-    nsresult optimizeStep(txPattern* aInPattern, txPattern** aOutPattern);
-
-    txXPathOptimizer mXPathOptimizer;
+  txXPathOptimizer mXPathOptimizer;
 };
 
-#endif //txPatternOptimizer_h__
+#endif  // txPatternOptimizer_h__

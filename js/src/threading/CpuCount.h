@@ -13,4 +13,4 @@ namespace js {
  */
 uint32_t GetCPUCount();
 
-}
+}  // namespace js

@@ -39,58 +39,66 @@ namespace WebCore {
 class HRTFKernel;
 
 class HRTFDatabase {
-public:
-    static nsReturnRef<HRTFDatabase> create(float sampleRate);
+ public:
+  static nsReturnRef<HRTFDatabase> create(float sampleRate);
 
-    // clang-format off
+  // clang-format off
     // getKernelsFromAzimuthElevation() returns a left and right ear kernel, and an interpolated left and right frame delay for the given azimuth and elevation.
     // azimuthBlend must be in the range 0 -> 1.
     // Valid values for azimuthIndex are 0 -> HRTFElevation::NumberOfTotalAzimuths - 1 (corresponding to angles of 0 -> 360).
     // Valid values for elevationAngle are MinElevation -> MaxElevation.
-    // clang-format on
-    void getKernelsFromAzimuthElevation(double azimuthBlend, unsigned azimuthIndex, double elevationAngle, HRTFKernel* &kernelL, HRTFKernel* &kernelR, double& frameDelayL, double& frameDelayR);
+  // clang-format on
+  void getKernelsFromAzimuthElevation(double azimuthBlend,
+                                      unsigned azimuthIndex,
+                                      double elevationAngle,
+                                      HRTFKernel*& kernelL,
+                                      HRTFKernel*& kernelR, double& frameDelayL,
+                                      double& frameDelayR);
 
-    // Returns the number of different azimuth angles.
-    static unsigned numberOfAzimuths() { return HRTFElevation::NumberOfTotalAzimuths; }
+  // Returns the number of different azimuth angles.
+  static unsigned numberOfAzimuths() {
+    return HRTFElevation::NumberOfTotalAzimuths;
+  }
 
-    float sampleRate() const { return m_sampleRate; }
+  float sampleRate() const { return m_sampleRate; }
 
-    // Number of elevations loaded from resource.
-    static const unsigned NumberOfRawElevations;
+  // Number of elevations loaded from resource.
+  static const unsigned NumberOfRawElevations;
 
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
-    HRTFDatabase(const HRTFDatabase& other) = delete;
-    void operator=(const HRTFDatabase& other) = delete;
+ private:
+  HRTFDatabase(const HRTFDatabase& other) = delete;
+  void operator=(const HRTFDatabase& other) = delete;
 
-    explicit HRTFDatabase(float sampleRate);
+  explicit HRTFDatabase(float sampleRate);
 
-    // Minimum and maximum elevation angles (inclusive) for a HRTFDatabase.
-    static const int MinElevation;
-    static const int MaxElevation;
-    static const unsigned RawElevationAngleSpacing;
+  // Minimum and maximum elevation angles (inclusive) for a HRTFDatabase.
+  static const int MinElevation;
+  static const int MaxElevation;
+  static const unsigned RawElevationAngleSpacing;
 
-    // Interpolates by this factor to get the total number of elevations from every elevation loaded from resource.
-    static const unsigned InterpolationFactor;
+  // Interpolates by this factor to get the total number of elevations from
+  // every elevation loaded from resource.
+  static const unsigned InterpolationFactor;
 
-    // Total number of elevations after interpolation.
-    static const unsigned NumberOfTotalElevations;
+  // Total number of elevations after interpolation.
+  static const unsigned NumberOfTotalElevations;
 
-    // Returns the index for the correct HRTFElevation given the elevation angle.
-    static unsigned indexFromElevationAngle(double);
+  // Returns the index for the correct HRTFElevation given the elevation angle.
+  static unsigned indexFromElevationAngle(double);
 
-    nsTArray<nsAutoRef<HRTFElevation> > m_elevations;
-    float m_sampleRate;
+  nsTArray<nsAutoRef<HRTFElevation> > m_elevations;
+  float m_sampleRate;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
 template <>
-class nsAutoRefTraits<WebCore::HRTFDatabase> :
-    public nsPointerRefTraits<WebCore::HRTFDatabase> {
-public:
-    static void Release(WebCore::HRTFDatabase* ptr) { delete(ptr); }
+class nsAutoRefTraits<WebCore::HRTFDatabase>
+    : public nsPointerRefTraits<WebCore::HRTFDatabase> {
+ public:
+  static void Release(WebCore::HRTFDatabase* ptr) { delete (ptr); }
 };
 
-#endif // HRTFDatabase_h
+#endif  // HRTFDatabase_h

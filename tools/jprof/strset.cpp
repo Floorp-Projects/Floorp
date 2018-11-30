@@ -6,35 +6,32 @@
 #include <malloc.h>
 #include <string.h>
 
-StrSet::StrSet()
-{
-    strings = 0;
-    numstrings = 0;
+StrSet::StrSet() {
+  strings = 0;
+  numstrings = 0;
 }
 
-void StrSet::add(const char* s)
-{
-    if (strings) {
-	strings = (char**) realloc(strings, (numstrings + 1) * sizeof(char*));
-    } else {
-	strings = (char**) malloc(sizeof(char*));
-    }
-    strings[numstrings] = strdup(s);
-    numstrings++;
+void StrSet::add(const char* s) {
+  if (strings) {
+    strings = (char**)realloc(strings, (numstrings + 1) * sizeof(char*));
+  } else {
+    strings = (char**)malloc(sizeof(char*));
+  }
+  strings[numstrings] = strdup(s);
+  numstrings++;
 }
 
-int StrSet::contains(const char* s)
-{
-    char** sp = strings;
-    int i = numstrings;
+int StrSet::contains(const char* s) {
+  char** sp = strings;
+  int i = numstrings;
 
-    while (--i >= 0) {
-	char *ss = *sp++;
-	if (ss[0] == s[0]) {
-	    if (strcmp(ss, s) == 0) {
-		return 1;
-	    }
-	}
+  while (--i >= 0) {
+    char* ss = *sp++;
+    if (ss[0] == s[0]) {
+      if (strcmp(ss, s) == 0) {
+        return 1;
+      }
     }
-    return 0;
+  }
+  return 0;
 }

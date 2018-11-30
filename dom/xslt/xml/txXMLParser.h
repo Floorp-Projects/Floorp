@@ -19,8 +19,9 @@ class txXPathNode;
  * Parse a document from the aHref location, with referrer URI on behalf
  * of the document aLoader.
  */
-extern "C" nsresult
-txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
-                       nsAString& aErrMsg, txXPathNode** aResult);
+extern "C" nsresult txParseDocumentFromURI(const nsAString& aHref,
+                                           const txXPathNode& aLoader,
+                                           nsAString& aErrMsg,
+                                           txXPathNode** aResult);
 
 #endif

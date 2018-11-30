@@ -8,18 +8,16 @@
 
 namespace mozilla {
 
-class RelativeTimeline
-{
-public:
-  RelativeTimeline()
-    : mRandomTimelineSeed(0) { }
+class RelativeTimeline {
+ public:
+  RelativeTimeline() : mRandomTimelineSeed(0) {}
 
   int64_t GetRandomTimelineSeed();
-private:
-  uint64_t mRandomTimelineSeed;
 
+ private:
+  uint64_t mRandomTimelineSeed;
 };
 
-} // mozilla namespace
+}  // namespace mozilla
 
 #endif /* __RelativeTimeline_h__ */

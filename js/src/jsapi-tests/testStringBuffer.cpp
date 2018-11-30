@@ -9,20 +9,19 @@
 #include "util/StringBuffer.h"
 #include "vm/JSAtom.h"
 
-BEGIN_TEST(testStringBuffer_finishString)
-{
-    JSString* str = JS_NewStringCopyZ(cx, "foopy");
-    CHECK(str);
+BEGIN_TEST(testStringBuffer_finishString) {
+  JSString* str = JS_NewStringCopyZ(cx, "foopy");
+  CHECK(str);
 
-    JS::Rooted<JSAtom*> atom(cx, js::AtomizeString(cx, str));
-    CHECK(atom);
+  JS::Rooted<JSAtom*> atom(cx, js::AtomizeString(cx, str));
+  CHECK(atom);
 
-    js::StringBuffer buffer(cx);
-    CHECK(buffer.append("foopy"));
+  js::StringBuffer buffer(cx);
+  CHECK(buffer.append("foopy"));
 
-    JS::Rooted<JSAtom*> finishedAtom(cx, buffer.finishAtom());
-    CHECK(finishedAtom);
-    CHECK_EQUAL(atom, finishedAtom);
-    return true;
+  JS::Rooted<JSAtom*> finishedAtom(cx, buffer.finishAtom());
+  CHECK(finishedAtom);
+  CHECK_EQUAL(atom, finishedAtom);
+  return true;
 }
 END_TEST(testStringBuffer_finishString)

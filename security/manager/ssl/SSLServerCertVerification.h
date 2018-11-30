@@ -9,11 +9,13 @@
 #include "seccomon.h"
 #include "prio.h"
 
-namespace mozilla { namespace psm {
+namespace mozilla {
+namespace psm {
 
-SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd,
-                              PRBool checkSig, PRBool isServer);
+SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
+                              PRBool isServer);
 
-} } // namespace mozilla::psm
+}
+}  // namespace mozilla
 
 #endif

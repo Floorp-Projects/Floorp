@@ -8,9 +8,7 @@
 
 namespace mozilla {
 
-void
-HandleLauncherError(const LauncherError& aError)
-{
+void HandleLauncherError(const LauncherError& aError) {
   // This is a placeholder error handler. We'll add telemetry and a fallback
   // error log in future revisions.
   WindowsError::UniqueString msg = aError.mError.AsString();
@@ -21,4 +19,4 @@ HandleLauncherError(const LauncherError& aError)
   ::MessageBoxW(nullptr, msg.get(), L"Firefox", MB_OK | MB_ICONERROR);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

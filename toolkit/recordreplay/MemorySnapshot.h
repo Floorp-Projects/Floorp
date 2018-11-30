@@ -44,7 +44,8 @@ void* AllocateMemoryTryAddress(void* aAddress, size_t aSize, MemoryKind aKind);
 
 // Note a range of memory that was just allocated from the system, and the
 // kind of memory allocation that was performed.
-void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize, MemoryKind aKind);
+void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize,
+                             MemoryKind aKind);
 
 // Exclude a region of memory from snapshots, before the first checkpoint has
 // been reached.
@@ -82,8 +83,7 @@ void EraseLastSavedDiffMemorySnapshot();
 // changes occur when they are not allowed then the process will crash.
 void SetMemoryChangesAllowed(bool aAllowed);
 
-struct MOZ_RAII AutoDisallowMemoryChanges
-{
+struct MOZ_RAII AutoDisallowMemoryChanges {
   AutoDisallowMemoryChanges() { SetMemoryChangesAllowed(false); }
   ~AutoDisallowMemoryChanges() { SetMemoryChangesAllowed(true); }
 };
@@ -113,8 +113,7 @@ void SetAllowIntentionalCrashes(bool aAllowed);
 void StartCountdown(size_t aCount);
 
 // Per StartCountdown, set a countdown and remove it on destruction.
-struct MOZ_RAII AutoCountdown
-{
+struct MOZ_RAII AutoCountdown {
   explicit AutoCountdown(size_t aCount);
   ~AutoCountdown();
 };
@@ -131,7 +130,7 @@ void MemoryMove(void* aDst, const void* aSrc, size_t aSize);
 // dynamic code loading.
 void MemoryZero(void* aDst, size_t aSize);
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_MemorySnapshot_h
+#endif  // mozilla_recordreplay_MemorySnapshot_h

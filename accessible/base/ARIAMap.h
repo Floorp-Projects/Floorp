@@ -24,8 +24,7 @@ class nsINode;
 /**
  * Used to define if role requires to expose Value interface.
  */
-enum EValueRule
-{
+enum EValueRule {
   /**
    * Value interface isn't exposed.
    */
@@ -46,15 +45,13 @@ enum EValueRule
   eHasValueMinMaxIfFocusable
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Action constants
 
 /**
  * Used to define if the role requires to expose action.
  */
-enum EActionRule
-{
+enum EActionRule {
   eNoAction,
   eActivateAction,
   eClickAction,
@@ -68,20 +65,13 @@ enum EActionRule
   eSwitchAction
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Live region constants
 
 /**
  * Used to define if role exposes default value of aria-live attribute.
  */
-enum ELiveAttrRule
-{
-  eNoLiveAttr,
-  eOffLiveAttr,
-  ePoliteLiveAttr
-};
-
+enum ELiveAttrRule { eNoLiveAttr, eOffLiveAttr, ePoliteLiveAttr };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Role constants
@@ -96,7 +86,6 @@ const bool kUseMapRole = true;
  */
 const bool kUseNativeRole = false;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // ARIA attribute characteristic masks
 
@@ -110,8 +99,8 @@ const uint8_t ATTR_BYPASSOBJ = 0x1 << 0;
 const uint8_t ATTR_BYPASSOBJ_IF_FALSE = 0x1 << 1;
 
 /**
- * This mask indicates the attribute is expected to have an NMTOKEN or bool value.
- * (See for example usage in Accessible::Attributes())
+ * This mask indicates the attribute is expected to have an NMTOKEN or bool
+ * value. (See for example usage in Accessible::Attributes())
  */
 const uint8_t ATTR_VALTOKEN = 0x1 << 2;
 
@@ -136,25 +125,25 @@ const uint8_t ATTR_GLOBAL = 0x1 << 3;
 /**
  * For each ARIA role, this maps the nsIAccessible information.
  */
-struct nsRoleMapEntry
-{
+struct nsRoleMapEntry {
   /**
    * Return true if matches to the given ARIA role.
    */
-  bool Is(nsAtom* aARIARole) const
-    { return roleAtom == aARIARole; }
+  bool Is(nsAtom* aARIARole) const { return roleAtom == aARIARole; }
 
   /**
    * Return true if ARIA role has the given accessible type.
    */
-  bool IsOfType(mozilla::a11y::AccGenericType aType) const
-    { return accTypes & aType; }
+  bool IsOfType(mozilla::a11y::AccGenericType aType) const {
+    return accTypes & aType;
+  }
 
   /**
    * Return ARIA role.
    */
-  const nsDependentAtomString ARIARoleString() const
-    { return nsDependentAtomString(roleAtom); }
+  const nsDependentAtomString ARIARoleString() const {
+    return nsDependentAtomString(roleAtom);
+  }
 
   // ARIA role: string representation such as "button"
   nsStaticAtom* const roleAtom;
@@ -179,7 +168,7 @@ struct nsRoleMapEntry
   uint32_t accTypes;
 
   // Automatic state mapping rule: always include in states
-  uint64_t state; // or kNoReqStates if no default state for this role
+  uint64_t state;  // or kNoReqStates if no default state for this role
 
   // ARIA properties supported for this role (in other words, the aria-foo
   // attribute to accessible states mapping rules).
@@ -191,7 +180,6 @@ struct nsRoleMapEntry
   mozilla::a11y::aria::EStateRule attributeMap3;
   mozilla::a11y::aria::EStateRule attributeMap4;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // ARIA map
@@ -282,34 +270,31 @@ uint8_t AttrCharacteristicsFor(nsAtom* aAtom);
  */
 bool HasDefinedARIAHidden(nsIContent* aContent);
 
- /**
-  * Represents a simple enumerator for iterating through ARIA attributes
-  * exposed as object attributes on a given accessible.
-  */
-class AttrIterator
-{
-public:
+/**
+ * Represents a simple enumerator for iterating through ARIA attributes
+ * exposed as object attributes on a given accessible.
+ */
+class AttrIterator {
+ public:
   explicit AttrIterator(nsIContent* aContent)
-    : mElement(Element::FromNode(aContent))
-    , mAttrIdx(0)
-  {
+      : mElement(Element::FromNode(aContent)), mAttrIdx(0) {
     mAttrCount = mElement ? mElement->GetAttrCount() : 0;
   }
 
   bool Next(nsAString& aAttrName, nsAString& aAttrValue);
 
-private:
+ private:
   AttrIterator() = delete;
   AttrIterator(const AttrIterator&) = delete;
-  AttrIterator& operator= (const AttrIterator&) = delete;
+  AttrIterator& operator=(const AttrIterator&) = delete;
 
   dom::Element* mElement;
   uint32_t mAttrIdx;
   uint32_t mAttrCount;
 };
 
-} // namespace aria
-} // namespace a11y
-} // namespace mozilla
+}  // namespace aria
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

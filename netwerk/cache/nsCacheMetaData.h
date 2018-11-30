@@ -13,33 +13,33 @@
 class nsICacheMetaDataVisitor;
 
 class nsCacheMetaData {
-public:
-    nsCacheMetaData() : mBuffer(nullptr), mBufferSize(0), mMetaSize(0) { }
+ public:
+  nsCacheMetaData() : mBuffer(nullptr), mBufferSize(0), mMetaSize(0) {}
 
-    ~nsCacheMetaData() {
-        mBufferSize = mMetaSize = 0;
-        free(mBuffer);
-        mBuffer = nullptr;
-    }
+  ~nsCacheMetaData() {
+    mBufferSize = mMetaSize = 0;
+    free(mBuffer);
+    mBuffer = nullptr;
+  }
 
-    const char *  GetElement(const char * key);
+  const char* GetElement(const char* key);
 
-    nsresult      SetElement(const char * key, const char * value);
+  nsresult SetElement(const char* key, const char* value);
 
-    uint32_t      Size(void) { return mMetaSize; }
+  uint32_t Size(void) { return mMetaSize; }
 
-    nsresult      FlattenMetaData(char * buffer, uint32_t bufSize);
+  nsresult FlattenMetaData(char* buffer, uint32_t bufSize);
 
-    nsresult      UnflattenMetaData(const char * buffer, uint32_t bufSize);
+  nsresult UnflattenMetaData(const char* buffer, uint32_t bufSize);
 
-    nsresult      VisitElements(nsICacheMetaDataVisitor * visitor);
+  nsresult VisitElements(nsICacheMetaDataVisitor* visitor);
 
-private:
-    nsresult      EnsureBuffer(uint32_t size);
+ private:
+  nsresult EnsureBuffer(uint32_t size);
 
-    char *        mBuffer;
-    uint32_t      mBufferSize;
-    uint32_t      mMetaSize;
+  char* mBuffer;
+  uint32_t mBufferSize;
+  uint32_t mMetaSize;
 };
 
-#endif // _nsCacheMetaData_h
+#endif  // _nsCacheMetaData_h

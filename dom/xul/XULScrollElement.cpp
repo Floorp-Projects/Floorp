@@ -18,15 +18,12 @@
 namespace mozilla {
 namespace dom {
 
-JSObject*
-XULScrollElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* XULScrollElement::WrapNode(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return XULScrollElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
-{
+void XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv) {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -34,13 +31,13 @@ XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
   }
 
   nsIFrame* scrolledFrame = sf->GetScrolledFrame();
-  if (!scrolledFrame){
+  if (!scrolledFrame) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   nsIFrame* scrolledBox = nsBox::GetChildXULBox(scrolledFrame);
-  if (!scrolledBox){
+  if (!scrolledBox) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -65,12 +62,13 @@ XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
-    nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(GetPrimaryFrame(), shell->GetRootFrame());
+    nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(
+        GetPrimaryFrame(), shell->GetRootFrame());
     frameWidth = rcFrame.width;
   }
 
   // first find out what index we are currently at
-  while(child) {
+  while (child) {
     rect = child->GetRect();
     if (horiz) {
       // In the left-to-right case we break from the loop when the center of
@@ -79,13 +77,14 @@ XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
       // In the right-to-left case we break when the center of the current
       // child rect is less than the scrolled position of the right edge of
       // the scrollelement.
-      diff = rect.x + rect.width/2; // use the center, to avoid rounding errors
-      if ((isLTR && diff > cp.x) ||
-          (!isLTR && diff < cp.x + frameWidth)) {
+      diff =
+          rect.x + rect.width / 2;  // use the center, to avoid rounding errors
+      if ((isLTR && diff > cp.x) || (!isLTR && diff < cp.x + frameWidth)) {
         break;
       }
     } else {
-      diff = rect.y + rect.height/2;// use the center, to avoid rounding errors
+      diff =
+          rect.y + rect.height / 2;  // use the center, to avoid rounding errors
       if (diff > cp.y) {
         break;
       }
@@ -96,11 +95,10 @@ XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
 
   int32_t count = 0;
 
-  if (aIndex == 0)
-    return;
+  if (aIndex == 0) return;
 
   if (aIndex > 0) {
-    while(child) {
+    while (child) {
       child = nsBox::GetNextXULBox(child);
       if (child) {
         rect = child->GetRect();
@@ -113,14 +111,13 @@ XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
 
   } else if (aIndex < 0) {
     child = nsBox::GetChildXULBox(scrolledBox);
-    while(child) {
+    while (child) {
       rect = child->GetRect();
       if (count >= curIndex + aIndex) {
         break;
       }
       count++;
       child = nsBox::GetNextXULBox(child);
-
     }
   }
 
@@ -131,8 +128,7 @@ XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
     // In the right-to-left case we scroll so that the right edge of the
     // selected child is scrolled to the right edge of the scrollbox.
 
-    nsPoint pt(isLTR ? rect.x : rect.x + rect.width - frameWidth,
-               cp.y);
+    nsPoint pt(isLTR ? rect.x : rect.x + rect.width - frameWidth, cp.y);
 
     // Use a destination range that ensures the left edge (or right edge,
     // for RTL) will indeed be visible. Also ensure that the top edge
@@ -149,11 +145,9 @@ XULScrollElement::ScrollByIndex(int32_t aIndex, ErrorResult& aRv)
   }
 }
 
-void
-XULScrollElement::ScrollToElement(Element& child, ErrorResult& aRv)
-{
+void XULScrollElement::ScrollToElement(Element& child, ErrorResult& aRv) {
   nsCOMPtr<nsIDocument> doc = GetComposedDoc();
-  if (!doc){
+  if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -164,23 +158,20 @@ XULScrollElement::ScrollToElement(Element& child, ErrorResult& aRv)
     return;
   }
 
-  shell->ScrollContentIntoView(&child,
-                               nsIPresShell::ScrollAxis(
-                                 nsIPresShell::SCROLL_TOP,
-                                 nsIPresShell::SCROLL_ALWAYS),
-                               nsIPresShell::ScrollAxis(
-                                 nsIPresShell::SCROLL_LEFT,
-                                 nsIPresShell::SCROLL_ALWAYS),
-                               nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
-                               nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+  shell->ScrollContentIntoView(
+      &child,
+      nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_TOP,
+                               nsIPresShell::SCROLL_ALWAYS),
+      nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_LEFT,
+                               nsIPresShell::SCROLL_ALWAYS),
+      nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
+          nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
-
-void
-XULScrollElement::EnsureElementIsVisible(Element& aChild, ErrorResult& aRv)
-{
+void XULScrollElement::EnsureElementIsVisible(Element& aChild,
+                                              ErrorResult& aRv) {
   nsCOMPtr<nsIDocument> doc = GetComposedDoc();
-  if (!doc){
+  if (!doc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -191,12 +182,11 @@ XULScrollElement::EnsureElementIsVisible(Element& aChild, ErrorResult& aRv)
     return;
   }
 
-  shell->ScrollContentIntoView(&aChild,
-                               nsIPresShell::ScrollAxis(),
+  shell->ScrollContentIntoView(&aChild, nsIPresShell::ScrollAxis(),
                                nsIPresShell::ScrollAxis(),
                                nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
-                               nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+                                   nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

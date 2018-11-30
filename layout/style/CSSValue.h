@@ -15,7 +15,7 @@
 class nsROCSSPrimitiveValue;
 namespace mozilla {
 class ErrorResult;
-} // namespace mozilla
+}  // namespace mozilla
 
 namespace mozilla {
 namespace dom {
@@ -23,9 +23,8 @@ namespace dom {
 /**
  * CSSValue - a DOM object representing values in DOM computed style.
  */
-class CSSValue : public RefCounted<CSSValue>
-{
-public:
+class CSSValue : public RefCounted<CSSValue> {
+ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(CSSValue);
   enum : uint16_t {
     CSS_INHERIT,
@@ -38,7 +37,7 @@ public:
   virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) = 0;
   virtual uint16_t CssValueType() const = 0;
 
-  virtual ~CSSValue() { };
+  virtual ~CSSValue(){};
 
   // Downcasting
 
@@ -51,7 +50,7 @@ public:
   inline nsROCSSPrimitiveValue* AsPrimitiveValue();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

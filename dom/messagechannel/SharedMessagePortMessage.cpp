@@ -19,12 +19,10 @@ using namespace ipc;
 
 namespace dom {
 
-/* static */ void
-SharedMessagePortMessage::FromSharedToMessagesChild(
-                      MessagePortChild* aActor,
-                      const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-                      nsTArray<ClonedMessageData>& aArray)
-{
+/* static */ void SharedMessagePortMessage::FromSharedToMessagesChild(
+    MessagePortChild* aActor,
+    const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
+    nsTArray<ClonedMessageData>& aArray) {
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aArray.IsEmpty());
   aArray.SetCapacity(aData.Length());
@@ -38,11 +36,9 @@ SharedMessagePortMessage::FromSharedToMessagesChild(
   }
 }
 
-/* static */ bool
-SharedMessagePortMessage::FromMessagesToSharedChild(
-                      nsTArray<ClonedMessageData>& aArray,
-                      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData)
-{
+/* static */ bool SharedMessagePortMessage::FromMessagesToSharedChild(
+    nsTArray<ClonedMessageData>& aArray,
+    FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());
 
   if (NS_WARN_IF(!aData.SetCapacity(aArray.Length(), mozilla::fallible))) {
@@ -61,12 +57,10 @@ SharedMessagePortMessage::FromMessagesToSharedChild(
   return true;
 }
 
-/* static */ bool
-SharedMessagePortMessage::FromSharedToMessagesParent(
-                      MessagePortParent* aActor,
-                      const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-                      FallibleTArray<ClonedMessageData>& aArray)
-{
+/* static */ bool SharedMessagePortMessage::FromSharedToMessagesParent(
+    MessagePortParent* aActor,
+    const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
+    FallibleTArray<ClonedMessageData>& aArray) {
   MOZ_ASSERT(aArray.IsEmpty());
 
   if (NS_WARN_IF(!aArray.SetCapacity(aData.Length(), mozilla::fallible))) {
@@ -85,11 +79,9 @@ SharedMessagePortMessage::FromSharedToMessagesParent(
   return true;
 }
 
-/* static */ bool
-SharedMessagePortMessage::FromMessagesToSharedParent(
-                      nsTArray<ClonedMessageData>& aArray,
-                      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData)
-{
+/* static */ bool SharedMessagePortMessage::FromMessagesToSharedParent(
+    nsTArray<ClonedMessageData>& aArray,
+    FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData) {
   MOZ_ASSERT(aData.IsEmpty());
 
   if (NS_WARN_IF(!aData.SetCapacity(aArray.Length(), mozilla::fallible))) {
@@ -108,5 +100,5 @@ SharedMessagePortMessage::FromMessagesToSharedParent(
   return true;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

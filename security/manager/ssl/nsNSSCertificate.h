@@ -21,16 +21,19 @@
 #include "nsSimpleEnumerator.h"
 #include "nsStringFwd.h"
 
-namespace mozilla { namespace pkix { class DERArray; } }
+namespace mozilla {
+namespace pkix {
+class DERArray;
+}
+}  // namespace mozilla
 
 class nsINSSComponent;
 class nsIASN1Sequence;
 
-class nsNSSCertificate final : public nsIX509Cert
-                             , public nsISerializable
-                             , public nsIClassInfo
-{
-public:
+class nsNSSCertificate final : public nsIX509Cert,
+                               public nsISerializable,
+                               public nsIClassInfo {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERT
   NS_DECL_NSISERIALIZABLE
@@ -46,12 +49,12 @@ public:
   static nsresult GetDbKey(const mozilla::UniqueCERTCertificate& cert,
                            nsACString& aDbKey);
 
-private:
+ private:
   virtual ~nsNSSCertificate();
 
   mozilla::UniqueCERTCertificate mCert;
-  bool             mPermDelete;
-  uint32_t         mCertType;
+  bool mPermDelete;
+  uint32_t mCertType;
   std::vector<nsString> mSubjectAltNames;
   nsresult CreateASN1Struct(nsIASN1Object** aRetVal);
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence);
@@ -65,18 +68,17 @@ private:
 namespace mozilla {
 
 SECStatus ConstructCERTCertListFromReversedDERArray(
-            const mozilla::pkix::DERArray& certArray,
-            /*out*/ mozilla::UniqueCERTCertList& certList);
+    const mozilla::pkix::DERArray& certArray,
+    /*out*/ mozilla::UniqueCERTCertList& certList);
 
-} // namespace mozilla
+}  // namespace mozilla
 
 typedef const std::function<nsresult(nsCOMPtr<nsIX509Cert>& aCert,
-                bool aHasMore, /* out */ bool& aContinue)> ForEachCertOperation;
+                                     bool aHasMore, /* out */ bool& aContinue)>
+    ForEachCertOperation;
 
-class nsNSSCertList : public nsIX509CertList
-                    , public nsISerializable
-{
-public:
+class nsNSSCertList : public nsIX509CertList, public nsISerializable {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTLIST
   NS_DECL_NSISERIALIZABLE
@@ -92,7 +94,7 @@ public:
   nsNSSCertList();
 
   static mozilla::UniqueCERTCertList DupCertList(
-    const mozilla::UniqueCERTCertList& certList);
+      const mozilla::UniqueCERTCertList& certList);
 
   // For each certificate in this CertList, run the operation aOperation.
   // To end early with NS_OK, set the `aContinue` argument false before
@@ -110,29 +112,30 @@ public:
   // Will return error if used on self-signed or empty chains.
   // This method requires that all arguments be empty, notably the list
   // `aIntermediates` must be empty.
-  nsresult SegmentCertificateChain(/* out */ nsCOMPtr<nsIX509Cert>& aRoot,
-                           /* out */ nsCOMPtr<nsIX509CertList>& aIntermediates,
-                           /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity);
+  nsresult SegmentCertificateChain(
+      /* out */ nsCOMPtr<nsIX509Cert>& aRoot,
+      /* out */ nsCOMPtr<nsIX509CertList>& aIntermediates,
+      /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity);
 
   // Obtain the root certificate of a certificate chain. This method does so
   // blindly, as SegmentCertificateChain; the same restrictions apply. On an
   // empty list, leaves aRoot empty and returns OK.
   nsresult GetRootCertificate(/* out */ nsCOMPtr<nsIX509Cert>& aRoot);
 
-private:
-   virtual ~nsNSSCertList() {}
+ private:
+  virtual ~nsNSSCertList() {}
 
-   std::vector<mozilla::UniqueCERTCertificate> mCerts;
+  std::vector<mozilla::UniqueCERTCertificate> mCerts;
 
-   nsNSSCertList(const nsNSSCertList&) = delete;
-   void operator=(const nsNSSCertList&) = delete;
+  nsNSSCertList(const nsNSSCertList&) = delete;
+  void operator=(const nsNSSCertList&) = delete;
 };
 
-#define NS_X509CERT_CID { /* 660a3226-915c-4ffb-bb20-8985a632df05 */   \
-    0x660a3226,                                                        \
-    0x915c,                                                            \
-    0x4ffb,                                                            \
-    { 0xbb, 0x20, 0x89, 0x85, 0xa6, 0x32, 0xdf, 0x05 }                 \
+#define NS_X509CERT_CID                              \
+  { /* 660a3226-915c-4ffb-bb20-8985a632df05 */       \
+    0x660a3226, 0x915c, 0x4ffb, {                    \
+      0xbb, 0x20, 0x89, 0x85, 0xa6, 0x32, 0xdf, 0x05 \
+    }                                                \
   }
 
-#endif // nsNSSCertificate_h
+#endif  // nsNSSCertificate_h

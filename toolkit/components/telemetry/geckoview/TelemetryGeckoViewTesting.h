@@ -4,11 +4,11 @@
 
 #include "nsITelemetryGeckoViewTesting.h"
 
-class TelemetryGeckoViewTestingImpl final : public nsITelemetryGeckoViewTesting
-{
+class TelemetryGeckoViewTestingImpl final
+    : public nsITelemetryGeckoViewTesting {
   ~TelemetryGeckoViewTestingImpl() = default;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITELEMETRYGECKOVIEWTESTING
 };

@@ -32,13 +32,17 @@
  * canRunScript(MOZ_KnownLive(rawPointer));
  */
 template <typename T>
-static MOZ_ALWAYS_INLINE T* MOZ_KnownLive(T* ptr) { return ptr; }
+static MOZ_ALWAYS_INLINE T* MOZ_KnownLive(T* ptr) {
+  return ptr;
+}
 
 /**
  * Ditto, but for references.
  */
 template <typename T>
-static MOZ_ALWAYS_INLINE T& MOZ_KnownLive(T& ref) { return ref; }
+static MOZ_ALWAYS_INLINE T& MOZ_KnownLive(T& ref) {
+  return ref;
+}
 
 #endif
 
@@ -49,7 +53,8 @@ static MOZ_ALWAYS_INLINE T& MOZ_KnownLive(T& ref) { return ref; }
  * Example:
  * MOZ_ASSERT(retVal = true);
  */
-static MOZ_ALWAYS_INLINE MOZ_CONSTEXPR bool MOZ_AssertAssignmentTest(bool exprResult) {
+static MOZ_ALWAYS_INLINE MOZ_CONSTEXPR bool MOZ_AssertAssignmentTest(
+    bool exprResult) {
   return exprResult;
 }
 

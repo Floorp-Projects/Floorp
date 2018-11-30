@@ -38,13 +38,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReportingObserver)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<ReportingObserver>
-ReportingObserver::Constructor(const GlobalObject& aGlobal,
-                               ReportingObserverCallback& aCallback,
-                               const ReportingObserverOptions& aOptions,
-                               ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+/* static */ already_AddRefed<ReportingObserver> ReportingObserver::Constructor(
+    const GlobalObject& aGlobal, ReportingObserverCallback& aCallback,
+    const ReportingObserverOptions& aOptions, ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window);
 
   nsTArray<nsString> types;
@@ -53,7 +51,7 @@ ReportingObserver::Constructor(const GlobalObject& aGlobal,
   }
 
   RefPtr<ReportingObserver> ro =
-    new ReportingObserver(window, aCallback, types, aOptions.mBuffered);
+      new ReportingObserver(window, aCallback, types, aOptions.mBuffered);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (NS_WARN_IF(!obs)) {
@@ -73,22 +71,16 @@ ReportingObserver::ReportingObserver(nsPIDOMWindowInner* aWindow,
                                      ReportingObserverCallback& aCallback,
                                      const nsTArray<nsString>& aTypes,
                                      bool aBuffered)
-  : mWindow(aWindow)
-  , mCallback(&aCallback)
-  , mTypes(aTypes)
-  , mBuffered(aBuffered)
-{
+    : mWindow(aWindow),
+      mCallback(&aCallback),
+      mTypes(aTypes),
+      mBuffered(aBuffered) {
   MOZ_ASSERT(aWindow);
 }
 
-ReportingObserver::~ReportingObserver()
-{
-  Shutdown();
-}
+ReportingObserver::~ReportingObserver() { Shutdown(); }
 
-void
-ReportingObserver::Shutdown()
-{
+void ReportingObserver::Shutdown() {
   Disconnect();
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -97,35 +89,26 @@ ReportingObserver::Shutdown()
   }
 }
 
-JSObject*
-ReportingObserver::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ReportingObserver::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return ReportingObserver_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-ReportingObserver::Observe()
-{
+void ReportingObserver::Observe() {
   mWindow->RegisterReportingObserver(this, mBuffered);
 }
 
-void
-ReportingObserver::Disconnect()
-{
+void ReportingObserver::Disconnect() {
   if (mWindow) {
     mWindow->UnregisterReportingObserver(this);
   }
 }
 
-void
-ReportingObserver::TakeRecords(nsTArray<RefPtr<Report>>& aRecords)
-{
+void ReportingObserver::TakeRecords(nsTArray<RefPtr<Report>>& aRecords) {
   mReports.SwapElements(aRecords);
 }
 
-void
-ReportingObserver::MaybeReport(Report* aReport)
-{
+void ReportingObserver::MaybeReport(Report* aReport) {
   MOZ_ASSERT(aReport);
 
   if (!mTypes.IsEmpty()) {
@@ -152,19 +135,14 @@ ReportingObserver::MaybeReport(Report* aReport)
 
   nsCOMPtr<nsPIDOMWindowInner> window = mWindow;
 
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction(
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "ReportingObserver::MaybeReport",
-      [window]() {
-        window->NotifyReportingObservers();
-      });
+      [window]() { window->NotifyReportingObservers(); });
 
   NS_DispatchToCurrentThread(r);
 }
 
-void
-ReportingObserver::MaybeNotify()
-{
+void ReportingObserver::MaybeNotify() {
   if (mReports.IsEmpty()) {
     return;
   }
@@ -186,12 +164,11 @@ ReportingObserver::MaybeNotify()
 
 NS_IMETHODIMP
 ReportingObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                           const char16_t* aData)
-{
+                           const char16_t* aData) {
   MOZ_ASSERT(!strcmp(aTopic, "memory-pressure"));
   mReports.Clear();
   return NS_OK;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

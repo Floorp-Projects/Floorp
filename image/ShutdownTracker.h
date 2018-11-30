@@ -20,8 +20,7 @@ namespace image {
  * many 'xpcom-will-shutdown' notification observers on short-lived objects,
  * which would have an unnecessary performance cost.
  */
-struct ShutdownTracker
-{
+struct ShutdownTracker {
   /**
    * Initialize static data. Called during imagelib module initialization.
    */
@@ -36,11 +35,11 @@ struct ShutdownTracker
    */
   static bool ShutdownHasStarted();
 
-private:
+ private:
   virtual ~ShutdownTracker() = 0;  // Forbid instantiation.
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_ShutdownTracker_h
+#endif  // mozilla_image_ShutdownTracker_h

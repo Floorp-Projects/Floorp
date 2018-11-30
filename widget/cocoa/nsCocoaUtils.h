@@ -27,9 +27,7 @@
 @end
 
 #if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
-enum {
-  NSEventPhaseMayBegin    = 0x1 << 5
-};
+enum { NSEventPhaseMayBegin = 0x1 << 5 };
 #endif
 
 class nsIWidget;
@@ -38,43 +36,35 @@ namespace mozilla {
 class TimeStamp;
 namespace gfx {
 class SourceSurface;
-} // namespace gfx
+}  // namespace gfx
 namespace dom {
 class Promise;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 
 // Used to retain a Cocoa object for the remainder of a method's execution.
 class nsAutoRetainCocoaObject {
-public:
-explicit nsAutoRetainCocoaObject(id anObject)
-{
-  mObject = NS_OBJC_TRY_EXPR_ABORT([anObject retain]);
-}
-~nsAutoRetainCocoaObject()
-{
-  NS_OBJC_TRY_ABORT([mObject release]);
-}
-private:
+ public:
+  explicit nsAutoRetainCocoaObject(id anObject) {
+    mObject = NS_OBJC_TRY_EXPR_ABORT([anObject retain]);
+  }
+  ~nsAutoRetainCocoaObject() { NS_OBJC_TRY_ABORT([mObject release]); }
+
+ private:
   id mObject;  // [STRONG]
 };
 
 // Provide a local autorelease pool for the remainder of a method's execution.
 class nsAutoreleasePool {
-public:
-  nsAutoreleasePool()
-  {
-    mLocalPool = [[NSAutoreleasePool alloc] init];
-  }
-  ~nsAutoreleasePool()
-  {
-    [mLocalPool release];
-  }
-private:
-  NSAutoreleasePool *mLocalPool;
+ public:
+  nsAutoreleasePool() { mLocalPool = [[NSAutoreleasePool alloc] init]; }
+  ~nsAutoreleasePool() { [mLocalPool release]; }
+
+ private:
+  NSAutoreleasePool* mLocalPool;
 };
 
 @interface NSApplication (Undocumented)
@@ -85,19 +75,17 @@ private:
 
 // Send an event to the current Cocoa app-modal session.  Present in all
 // versions of OS X from (at least) 10.2.8 through 10.5.
-- (void)_modalSession:(NSModalSession)aSession sendEvent:(NSEvent *)theEvent;
+- (void)_modalSession:(NSModalSession)aSession sendEvent:(NSEvent*)theEvent;
 
 @end
 
-struct KeyBindingsCommand
-{
+struct KeyBindingsCommand {
   SEL selector;
   id data;
 };
 
-@interface NativeKeyBindingsRecorder : NSResponder
-{
-@private
+@interface NativeKeyBindingsRecorder : NSResponder {
+ @private
   nsTArray<KeyBindingsCommand>* mCommands;
 }
 
@@ -107,30 +95,24 @@ struct KeyBindingsCommand
 
 - (void)insertText:(id)aString;
 
-@end // NativeKeyBindingsRecorder
+@end  // NativeKeyBindingsRecorder
 
-#if !defined(MAC_OS_X_VERSION_10_14) || \
-  MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
 typedef NSString* AVMediaType;
 #endif
 
-class nsCocoaUtils
-{
+class nsCocoaUtils {
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
   typedef mozilla::dom::Promise Promise;
   typedef StaticAutoPtr<nsTArray<RefPtr<Promise>>> PromiseArray;
 
-public:
-
+ public:
   // Get the backing scale factor from an object that supports this selector
   // (NSView/Window/Screen, on 10.7 or later), returning 1.0 if not supported
-  static CGFloat
-  GetBackingScaleFactor(id aObject)
-  {
-    if (HiDPIEnabled() &&
-        [aObject respondsToSelector:@selector(backingScaleFactor)]) {
+  static CGFloat GetBackingScaleFactor(id aObject) {
+    if (HiDPIEnabled() && [aObject respondsToSelector:@selector(backingScaleFactor)]) {
       return [aObject backingScaleFactor];
     }
     return 1.0;
@@ -138,69 +120,49 @@ public:
 
   // Conversions between Cocoa points and device pixels, given the backing
   // scale factor from a view/window/screen.
-  static int32_t
-  CocoaPointsToDevPixels(CGFloat aPts, CGFloat aBackingScale)
-  {
+  static int32_t CocoaPointsToDevPixels(CGFloat aPts, CGFloat aBackingScale) {
     return NSToIntRound(aPts * aBackingScale);
   }
 
-  static LayoutDeviceIntPoint
-  CocoaPointsToDevPixels(const NSPoint& aPt, CGFloat aBackingScale)
-  {
+  static LayoutDeviceIntPoint CocoaPointsToDevPixels(const NSPoint& aPt, CGFloat aBackingScale) {
     return LayoutDeviceIntPoint(NSToIntRound(aPt.x * aBackingScale),
                                 NSToIntRound(aPt.y * aBackingScale));
   }
 
-  static LayoutDeviceIntPoint
-  CocoaPointsToDevPixelsRoundDown(const NSPoint& aPt, CGFloat aBackingScale)
-  {
+  static LayoutDeviceIntPoint CocoaPointsToDevPixelsRoundDown(const NSPoint& aPt,
+                                                              CGFloat aBackingScale) {
     return LayoutDeviceIntPoint(NSToIntFloor(aPt.x * aBackingScale),
                                 NSToIntFloor(aPt.y * aBackingScale));
   }
 
-  static LayoutDeviceIntRect
-  CocoaPointsToDevPixels(const NSRect& aRect, CGFloat aBackingScale)
-  {
+  static LayoutDeviceIntRect CocoaPointsToDevPixels(const NSRect& aRect, CGFloat aBackingScale) {
     return LayoutDeviceIntRect(NSToIntRound(aRect.origin.x * aBackingScale),
                                NSToIntRound(aRect.origin.y * aBackingScale),
                                NSToIntRound(aRect.size.width * aBackingScale),
                                NSToIntRound(aRect.size.height * aBackingScale));
   }
 
-  static CGFloat
-  DevPixelsToCocoaPoints(int32_t aPixels, CGFloat aBackingScale)
-  {
+  static CGFloat DevPixelsToCocoaPoints(int32_t aPixels, CGFloat aBackingScale) {
     return (CGFloat)aPixels / aBackingScale;
   }
 
-  static NSPoint
-  DevPixelsToCocoaPoints(const mozilla::LayoutDeviceIntPoint& aPt,
-                         CGFloat aBackingScale)
-  {
-    return NSMakePoint((CGFloat)aPt.x / aBackingScale,
-                       (CGFloat)aPt.y / aBackingScale);
+  static NSPoint DevPixelsToCocoaPoints(const mozilla::LayoutDeviceIntPoint& aPt,
+                                        CGFloat aBackingScale) {
+    return NSMakePoint((CGFloat)aPt.x / aBackingScale, (CGFloat)aPt.y / aBackingScale);
   }
 
   // Implements an NSPoint equivalent of -[NSWindow convertRectFromScreen:].
-  static NSPoint
-  ConvertPointFromScreen(NSWindow* aWindow, const NSPoint& aPt)
-  {
+  static NSPoint ConvertPointFromScreen(NSWindow* aWindow, const NSPoint& aPt) {
     return [aWindow convertRectFromScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
   }
 
   // Implements an NSPoint equivalent of -[NSWindow convertRectToScreen:].
-  static NSPoint
-  ConvertPointToScreen(NSWindow* aWindow, const NSPoint& aPt)
-  {
+  static NSPoint ConvertPointToScreen(NSWindow* aWindow, const NSPoint& aPt) {
     return [aWindow convertRectToScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
   }
 
-  static NSRect
-  DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect,
-                         CGFloat aBackingScale)
-  {
-    return NSMakeRect((CGFloat)aRect.X() / aBackingScale,
-                      (CGFloat)aRect.Y() / aBackingScale,
+  static NSRect DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect, CGFloat aBackingScale) {
+    return NSMakeRect((CGFloat)aRect.X() / aBackingScale, (CGFloat)aRect.Y() / aBackingScale,
                       (CGFloat)aRect.Width() / aBackingScale,
                       (CGFloat)aRect.Height() / aBackingScale);
   }
@@ -223,24 +185,23 @@ public:
   // This function does no scaling, so the Gecko coordinates are
   // expected to be desktop pixels, which are equal to Cocoa points
   // (by definition).
-  static NSRect GeckoRectToCocoaRect(const mozilla::DesktopIntRect &geckoRect);
+  static NSRect GeckoRectToCocoaRect(const mozilla::DesktopIntRect& geckoRect);
 
   // Converts aGeckoRect in dev pixels to points in Cocoa coordinates
-  static NSRect
-  GeckoRectToCocoaRectDevPix(const mozilla::LayoutDeviceIntRect &aGeckoRect,
-                             CGFloat aBackingScale);
+  static NSRect GeckoRectToCocoaRectDevPix(const mozilla::LayoutDeviceIntRect& aGeckoRect,
+                                           CGFloat aBackingScale);
 
   // See explanation for geckoRectToCocoaRect, guess what this does...
-  static mozilla::DesktopIntRect CocoaRectToGeckoRect(const NSRect &cocoaRect);
+  static mozilla::DesktopIntRect CocoaRectToGeckoRect(const NSRect& cocoaRect);
 
-  static mozilla::LayoutDeviceIntRect CocoaRectToGeckoRectDevPix(
-    const NSRect& aCocoaRect, CGFloat aBackingScale);
+  static mozilla::LayoutDeviceIntRect CocoaRectToGeckoRectDevPix(const NSRect& aCocoaRect,
+                                                                 CGFloat aBackingScale);
 
   // Gives the location for the event in screen coordinates. Do not call this
   // unless the window the event was originally targeted at is still alive!
   // anEvent may be nil -- in that case the current mouse location is returned.
   static NSPoint ScreenLocationForEvent(NSEvent* anEvent);
-  
+
   // Determines if an event happened over a window, whether or not the event
   // is for the window. Does not take window z-order into account.
   static BOOL IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow);
@@ -272,10 +233,10 @@ public:
 
   // 3 utility functions to go from a frame of imgIContainer to CGImage and then to NSImage
   // Convert imgIContainer -> CGImageRef, caller owns result
-  
+
   /** Creates a <code>CGImageRef</code> from a frame contained in an <code>imgIContainer</code>.
-      Copies the pixel data from the indicated frame of the <code>imgIContainer</code> into a new <code>CGImageRef</code>.
-      The caller owns the <code>CGImageRef</code>. 
+      Copies the pixel data from the indicated frame of the <code>imgIContainer</code> into a new
+     <code>CGImageRef</code>. The caller owns the <code>CGImageRef</code>.
       @param aFrame the frame to convert
       @param aResult the resulting CGImageRef
       @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
@@ -283,18 +244,17 @@ public:
                               pixels are zero
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
-  static nsresult CreateCGImageFromSurface(SourceSurface* aSurface,
-                                           CGImageRef* aResult,
+  static nsresult CreateCGImageFromSurface(SourceSurface* aSurface, CGImageRef* aResult,
                                            bool* aIsEntirelyBlack = nullptr);
-  
+
   /** Creates a Cocoa <code>NSImage</code> from a <code>CGImageRef</code>.
       Copies the pixel data from the <code>CGImageRef</code> into a new <code>NSImage</code>.
-      The caller owns the <code>NSImage</code>. 
+      The caller owns the <code>NSImage</code>.
       @param aInputImage the image to convert
       @param aResult the resulting NSImage
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
-  static nsresult CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage **aResult);
+  static nsresult CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage** aResult);
 
   /** Creates a Cocoa <code>NSImage</code> from a frame of an <code>imgIContainer</code>.
       Combines the two methods above. The caller owns the <code>NSImage</code>.
@@ -303,13 +263,14 @@ public:
       @param aResult the resulting NSImage
       @param scaleFactor the desired scale factor of the NSImage (2 for a retina display)
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
-   */  
-  static nsresult CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult, CGFloat scaleFactor);
+   */
+  static nsresult CreateNSImageFromImageContainer(imgIContainer* aImage, uint32_t aWhichFrame,
+                                                  NSImage** aResult, CGFloat scaleFactor);
 
   /**
    * Returns nsAString for aSrc.
    */
-  static void GetStringForNSString(const NSString *aSrc, nsAString& aDist);
+  static void GetStringForNSString(const NSString* aSrc, nsAString& aDist);
 
   /**
    * Makes NSString instance for aString.
@@ -321,30 +282,26 @@ public:
    * Just copies values between the two types; it does no coordinate-system
    * conversion, so both rects must have the same coordinate origin/direction.
    */
-  static void GeckoRectToNSRect(const nsIntRect& aGeckoRect,
-                                NSRect& aOutCocoaRect);
+  static void GeckoRectToNSRect(const nsIntRect& aGeckoRect, NSRect& aOutCocoaRect);
 
   /**
    * Returns Gecko rect for aCocoaRect.
    * Just copies values between the two types; it does no coordinate-system
    * conversion, so both rects must have the same coordinate origin/direction.
    */
-  static void NSRectToGeckoRect(const NSRect& aCocoaRect,
-                                nsIntRect& aOutGeckoRect);
+  static void NSRectToGeckoRect(const NSRect& aCocoaRect, nsIntRect& aOutGeckoRect);
 
   /**
    * Makes NSEvent instance for aEventTytpe and aEvent.
    */
-  static NSEvent* MakeNewCocoaEventWithType(NSEventType aEventType,
-                                            NSEvent *aEvent);
+  static NSEvent* MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent* aEvent);
 
   /**
    * Makes a cocoa event from a widget keyboard event.
    */
-  static NSEvent* MakeNewCococaEventFromWidgetEvent(
-                    const mozilla::WidgetKeyboardEvent& aKeyEvent,
-                    NSInteger aWindowNumber,
-                    NSGraphicsContext* aContext);
+  static NSEvent* MakeNewCococaEventFromWidgetEvent(const mozilla::WidgetKeyboardEvent& aKeyEvent,
+                                                    NSInteger aWindowNumber,
+                                                    NSGraphicsContext* aContext);
 
   /**
    * Initializes aNPCocoaEvent.
@@ -354,8 +311,7 @@ public:
   /**
    * Initializes WidgetInputEvent for aNativeEvent or aModifiers.
    */
-  static void InitInputEvent(mozilla::WidgetInputEvent &aInputEvent,
-                             NSEvent* aNativeEvent);
+  static void InitInputEvent(mozilla::WidgetInputEvent& aInputEvent, NSEvent* aNativeEvent);
 
   /**
    * Converts the native modifiers from aNativeEvent into WidgetMouseEvent
@@ -381,8 +337,7 @@ public:
    * commands based on selectors. This collects any such commands in the
    * provided array.
    */
-  static void GetCommandsFromKeyEvent(NSEvent* aEvent,
-                                      nsTArray<KeyBindingsCommand>& aCommands);
+  static void GetCommandsFromKeyEvent(NSEvent* aEvent, nsTArray<KeyBindingsCommand>& aCommands);
 
   /**
    * Converts the string name of a Gecko key (like "VK_HOME") to the
@@ -400,10 +355,8 @@ public:
    * Convert string with font attribute to NSMutableAttributedString
    */
   static NSMutableAttributedString* GetNSMutableAttributedString(
-           const nsAString& aText,
-           const nsTArray<mozilla::FontRange>& aFontRanges,
-           const bool aIsVertical,
-           const CGFloat aBackingScaleFactor);
+      const nsAString& aText, const nsTArray<mozilla::FontRange>& aFontRanges,
+      const bool aIsVertical, const CGFloat aBackingScaleFactor);
 
   /**
    * Compute TimeStamp from an event's timestamp.
@@ -437,7 +390,7 @@ public:
    */
   static nsresult RequestAudioCapturePermission(RefPtr<Promise>& aPromise);
 
-private:
+ private:
   /**
    * Completion handlers used as an argument to the macOS API to
    * request media capture permission. These are called asynchronously
@@ -463,16 +416,14 @@ private:
    *                 or ResolveVideoCapturePromises) to be used as
    *                 the requestAccessForMediaType callback.
    */
-  static nsresult RequestCapturePermission(NSString* aType,
-                                           RefPtr<Promise>& aPromise,
+  static nsresult RequestCapturePermission(NSString* aType, RefPtr<Promise>& aPromise,
                                            PromiseArray& aPromiseList,
                                            void (^aHandler)(BOOL granted));
   /**
    * Resolves the pending promises that are waiting for a response
    * to a request video or audio capture permission.
    */
-  static void ResolveMediaCapturePromises(bool aGranted,
-                                          PromiseArray& aPromiseList);
+  static void ResolveMediaCapturePromises(bool aGranted, PromiseArray& aPromiseList);
 
   /**
    * Array of promises waiting to be resolved due to a video capture request.
@@ -490,4 +441,4 @@ private:
   static StaticMutex sMediaCaptureMutex;
 };
 
-#endif // nsCocoaUtils_h_
+#endif  // nsCocoaUtils_h_

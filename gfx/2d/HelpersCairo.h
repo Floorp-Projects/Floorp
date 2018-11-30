@@ -14,11 +14,8 @@
 namespace mozilla {
 namespace gfx {
 
-static inline cairo_operator_t
-GfxOpToCairoOp(CompositionOp op)
-{
-  switch (op)
-  {
+static inline cairo_operator_t GfxOpToCairoOp(CompositionOp op) {
+  switch (op) {
     case CompositionOp::OP_OVER:
       return CAIRO_OPERATOR_OVER;
     case CompositionOp::OP_ADD:
@@ -78,11 +75,9 @@ GfxOpToCairoOp(CompositionOp op)
   return CAIRO_OPERATOR_OVER;
 }
 
-static inline cairo_antialias_t
-GfxAntialiasToCairoAntialias(AntialiasMode antialias)
-{
-  switch (antialias)
-  {
+static inline cairo_antialias_t GfxAntialiasToCairoAntialias(
+    AntialiasMode antialias) {
+  switch (antialias) {
     case AntialiasMode::NONE:
       return CAIRO_ANTIALIAS_NONE;
     case AntialiasMode::GRAY:
@@ -94,10 +89,9 @@ GfxAntialiasToCairoAntialias(AntialiasMode antialias)
   }
 }
 
-static inline AntialiasMode
-CairoAntialiasToGfxAntialias(cairo_antialias_t aAntialias)
-{
-  switch(aAntialias) {
+static inline AntialiasMode CairoAntialiasToGfxAntialias(
+    cairo_antialias_t aAntialias) {
+  switch (aAntialias) {
     case CAIRO_ANTIALIAS_NONE:
       return AntialiasMode::NONE;
     case CAIRO_ANTIALIAS_GRAY:
@@ -109,11 +103,9 @@ CairoAntialiasToGfxAntialias(cairo_antialias_t aAntialias)
   }
 }
 
-static inline cairo_filter_t
-GfxSamplingFilterToCairoFilter(SamplingFilter filter)
-{
-  switch (filter)
-  {
+static inline cairo_filter_t GfxSamplingFilterToCairoFilter(
+    SamplingFilter filter) {
+  switch (filter) {
     case SamplingFilter::GOOD:
       return CAIRO_FILTER_GOOD;
     case SamplingFilter::LINEAR:
@@ -127,11 +119,8 @@ GfxSamplingFilterToCairoFilter(SamplingFilter filter)
   return CAIRO_FILTER_BILINEAR;
 }
 
-static inline cairo_extend_t
-GfxExtendToCairoExtend(ExtendMode extend)
-{
-  switch (extend)
-  {
+static inline cairo_extend_t GfxExtendToCairoExtend(ExtendMode extend) {
+  switch (extend) {
     case ExtendMode::CLAMP:
       return CAIRO_EXTEND_PAD;
     // Cairo doesn't support tiling in only 1 direction,
@@ -147,11 +136,8 @@ GfxExtendToCairoExtend(ExtendMode extend)
   return CAIRO_EXTEND_PAD;
 }
 
-static inline cairo_format_t
-GfxFormatToCairoFormat(SurfaceFormat format)
-{
-  switch (format)
-  {
+static inline cairo_format_t GfxFormatToCairoFormat(SurfaceFormat format) {
+  switch (format) {
     case SurfaceFormat::A8R8G8B8_UINT32:
       return CAIRO_FORMAT_ARGB32;
     case SurfaceFormat::X8R8G8B8_UINT32:
@@ -166,11 +152,9 @@ GfxFormatToCairoFormat(SurfaceFormat format)
   }
 }
 
-static inline cairo_format_t
-CairoContentToCairoFormat(cairo_content_t content)
-{
-  switch (content)
-  {
+static inline cairo_format_t CairoContentToCairoFormat(
+    cairo_content_t content) {
+  switch (content) {
     case CAIRO_CONTENT_COLOR:
       return CAIRO_FORMAT_RGB24;
     case CAIRO_CONTENT_ALPHA:
@@ -179,19 +163,16 @@ CairoContentToCairoFormat(cairo_content_t content)
       return CAIRO_FORMAT_ARGB32;
     default:
       gfxCriticalError() << "Unknown cairo content type " << (int)content;
-      return CAIRO_FORMAT_A8; // least likely to cause OOB reads
+      return CAIRO_FORMAT_A8;  // least likely to cause OOB reads
   }
 }
 
-static inline cairo_content_t
-GfxFormatToCairoContent(SurfaceFormat format)
-{
-  switch (format)
-  {
+static inline cairo_content_t GfxFormatToCairoContent(SurfaceFormat format) {
+  switch (format) {
     case SurfaceFormat::A8R8G8B8_UINT32:
       return CAIRO_CONTENT_COLOR_ALPHA;
     case SurfaceFormat::X8R8G8B8_UINT32:
-    case SurfaceFormat::R5G6B5_UINT16:  //fall through
+    case SurfaceFormat::R5G6B5_UINT16:  // fall through
       return CAIRO_CONTENT_COLOR;
     case SurfaceFormat::A8:
       return CAIRO_CONTENT_ALPHA;
@@ -201,11 +182,8 @@ GfxFormatToCairoContent(SurfaceFormat format)
   }
 }
 
-static inline cairo_line_join_t
-GfxLineJoinToCairoLineJoin(JoinStyle style)
-{
-  switch (style)
-  {
+static inline cairo_line_join_t GfxLineJoinToCairoLineJoin(JoinStyle style) {
+  switch (style) {
     case JoinStyle::BEVEL:
       return CAIRO_LINE_JOIN_BEVEL;
     case JoinStyle::ROUND:
@@ -219,11 +197,8 @@ GfxLineJoinToCairoLineJoin(JoinStyle style)
   return CAIRO_LINE_JOIN_MITER;
 }
 
-static inline cairo_line_cap_t
-GfxLineCapToCairoLineCap(CapStyle style)
-{
-  switch (style)
-  {
+static inline cairo_line_cap_t GfxLineCapToCairoLineCap(CapStyle style) {
+  switch (style) {
     case CapStyle::BUTT:
       return CAIRO_LINE_CAP_BUTT;
     case CapStyle::ROUND:
@@ -235,11 +210,8 @@ GfxLineCapToCairoLineCap(CapStyle style)
   return CAIRO_LINE_CAP_BUTT;
 }
 
-static inline SurfaceFormat
-CairoContentToGfxFormat(cairo_content_t content)
-{
-  switch (content)
-  {
+static inline SurfaceFormat CairoContentToGfxFormat(cairo_content_t content) {
+  switch (content) {
     case CAIRO_CONTENT_COLOR_ALPHA:
       return SurfaceFormat::A8R8G8B8_UINT32;
     case CAIRO_CONTENT_COLOR:
@@ -252,9 +224,7 @@ CairoContentToGfxFormat(cairo_content_t content)
   return SurfaceFormat::B8G8R8A8;
 }
 
-static inline SurfaceFormat
-CairoFormatToGfxFormat(cairo_format_t format)
-{
+static inline SurfaceFormat CairoFormatToGfxFormat(cairo_format_t format) {
   switch (format) {
     case CAIRO_FORMAT_ARGB32:
       return SurfaceFormat::A8R8G8B8_UINT32;
@@ -270,9 +240,8 @@ CairoFormatToGfxFormat(cairo_format_t format)
   }
 }
 
-static inline FontHinting
-CairoHintingToGfxHinting(cairo_hint_style_t aHintStyle)
-{
+static inline FontHinting CairoHintingToGfxHinting(
+    cairo_hint_style_t aHintStyle) {
   switch (aHintStyle) {
     case CAIRO_HINT_STYLE_NONE:
       return FontHinting::NONE;
@@ -289,15 +258,14 @@ CairoHintingToGfxHinting(cairo_hint_style_t aHintStyle)
 
 SurfaceFormat GfxFormatForCairoSurface(cairo_surface_t* surface);
 
-static inline void
-GfxMatrixToCairoMatrix(const Matrix& mat, cairo_matrix_t& retval)
-{
-  cairo_matrix_init(&retval, mat._11, mat._12, mat._21, mat._22, mat._31, mat._32);
+static inline void GfxMatrixToCairoMatrix(const Matrix& mat,
+                                          cairo_matrix_t& retval) {
+  cairo_matrix_init(&retval, mat._11, mat._12, mat._21, mat._22, mat._31,
+                    mat._32);
 }
 
-static inline void
-SetCairoStrokeOptions(cairo_t* aCtx, const StrokeOptions& aStrokeOptions)
-{
+static inline void SetCairoStrokeOptions(cairo_t* aCtx,
+                                         const StrokeOptions& aStrokeOptions) {
   cairo_set_line_width(aCtx, aStrokeOptions.mLineWidth);
 
   cairo_set_miter_limit(aCtx, aStrokeOptions.mMiterLimit);
@@ -312,23 +280,22 @@ SetCairoStrokeOptions(cairo_t* aCtx, const StrokeOptions& aStrokeOptions)
       }
       dashes[i] = aStrokeOptions.mDashPattern[i];
     }
-    // Avoid all-zero patterns that would trigger the CAIRO_STATUS_INVALID_DASH context error state.
+    // Avoid all-zero patterns that would trigger the CAIRO_STATUS_INVALID_DASH
+    // context error state.
     if (nonZero) {
       cairo_set_dash(aCtx, &dashes[0], aStrokeOptions.mDashLength,
                      aStrokeOptions.mDashOffset);
     }
   }
 
-  cairo_set_line_join(aCtx, GfxLineJoinToCairoLineJoin(aStrokeOptions.mLineJoin));
+  cairo_set_line_join(aCtx,
+                      GfxLineJoinToCairoLineJoin(aStrokeOptions.mLineJoin));
 
   cairo_set_line_cap(aCtx, GfxLineCapToCairoLineCap(aStrokeOptions.mLineCap));
 }
 
-static inline cairo_fill_rule_t
-GfxFillRuleToCairoFillRule(FillRule rule)
-{
-  switch (rule)
-  {
+static inline cairo_fill_rule_t GfxFillRuleToCairoFillRule(FillRule rule) {
+  switch (rule) {
     case FillRule::FILL_WINDING:
       return CAIRO_FILL_RULE_WINDING;
     case FillRule::FILL_EVEN_ODD:
@@ -342,29 +309,23 @@ GfxFillRuleToCairoFillRule(FillRule rule)
 // the given matrix transform while it is in scope. When it goes out of scope
 // it will put the cairo context back the way it was.
 
-class CairoTempMatrix
-{
-public:
-  CairoTempMatrix(cairo_t* aCtx, const Matrix& aMatrix)
-    : mCtx(aCtx)
-  {
+class CairoTempMatrix {
+ public:
+  CairoTempMatrix(cairo_t* aCtx, const Matrix& aMatrix) : mCtx(aCtx) {
     cairo_get_matrix(aCtx, &mSaveMatrix);
     cairo_matrix_t matrix;
     GfxMatrixToCairoMatrix(aMatrix, matrix);
     cairo_set_matrix(aCtx, &matrix);
   }
 
-  ~CairoTempMatrix()
-  {
-    cairo_set_matrix(mCtx, &mSaveMatrix);
-  }
+  ~CairoTempMatrix() { cairo_set_matrix(mCtx, &mSaveMatrix); }
 
-private:
+ private:
   cairo_t* mCtx;
   cairo_matrix_t mSaveMatrix;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_HELPERSCAIRO_H_ */

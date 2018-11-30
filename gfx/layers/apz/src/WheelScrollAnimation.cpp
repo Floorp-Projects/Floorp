@@ -14,9 +14,8 @@
 namespace mozilla {
 namespace layers {
 
-static ScrollAnimationBezierPhysicsSettings
-SettingsForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
-{
+static ScrollAnimationBezierPhysicsSettings SettingsForDeltaType(
+    ScrollWheelInput::ScrollDeltaType aDeltaType) {
   int32_t minMS = 0;
   int32_t maxMS = 0;
 
@@ -36,19 +35,20 @@ SettingsForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
-  double intervalRatio = ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+  double intervalRatio =
+      ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
   intervalRatio = std::max(1.0, intervalRatio);
-  return ScrollAnimationBezierPhysicsSettings { minMS, maxMS, intervalRatio };
+  return ScrollAnimationBezierPhysicsSettings{minMS, maxMS, intervalRatio};
 }
 
-WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc,
-                                           const nsPoint& aInitialPosition,
-                                           ScrollWheelInput::ScrollDeltaType aDeltaType)
-  : GenericScrollAnimation(aApzc, aInitialPosition, SettingsForDeltaType(aDeltaType))
-{
+WheelScrollAnimation::WheelScrollAnimation(
+    AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
+    ScrollWheelInput::ScrollDeltaType aDeltaType)
+    : GenericScrollAnimation(aApzc, aInitialPosition,
+                             SettingsForDeltaType(aDeltaType)) {
   mDirectionForcedToOverscroll =
-    mApzc.mScrollMetadata.GetDisregardedDirection();
+      mApzc.mScrollMetadata.GetDisregardedDirection();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

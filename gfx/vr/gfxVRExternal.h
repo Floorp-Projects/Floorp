@@ -26,41 +26,38 @@ namespace mozilla {
 namespace gfx {
 namespace impl {
 
-class VRDisplayExternal : public VRDisplayHost
-{
-public:
+class VRDisplayExternal : public VRDisplayHost {
+ public:
   void ZeroSensor() override;
 
-protected:
+ protected:
   VRHMDSensorState GetSensorState() override;
   void StartPresentation() override;
   void StopPresentation() override;
   void StartVRNavigation() override;
   void StopVRNavigation(const TimeDuration& aTimeout) override;
 
-  bool SubmitFrame(const layers::SurfaceDescriptor& aTexture,
-                   uint64_t aFrameId,
+  bool SubmitFrame(const layers::SurfaceDescriptor& aTexture, uint64_t aFrameId,
                    const gfx::Rect& aLeftEyeRect,
                    const gfx::Rect& aRightEyeRect) override;
 
-public:
+ public:
   explicit VRDisplayExternal(const VRDisplayState& aDisplayState);
   void Refresh();
   const VRControllerState& GetLastControllerState(uint32_t aStateIndex) const;
-  void VibrateHaptic(uint32_t aControllerIdx,
-                     uint32_t aHapticIndex,
-                     double aIntensity,
-                     double aDuration,
+  void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                     double aIntensity, double aDuration,
                      const VRManagerPromise& aPromise);
   void StopVibrateHaptic(uint32_t aControllerIdx);
   void StopAllHaptics();
   void Run1msTasks(double aDeltaTime) override;
   void Run10msTasks() override;
-protected:
+
+ protected:
   virtual ~VRDisplayExternal();
   void Destroy();
 
-private:
+ private:
   bool PopulateLayerTexture(const layers::SurfaceDescriptor& aTexture,
                             VRLayerTextureType* aTextureType,
                             VRLayerTextureHandle* aTextureHandle);
@@ -82,12 +79,12 @@ private:
   VRHMDSensorState mLastSensorState;
 };
 
-} // namespace impl
+}  // namespace impl
 
-class VRSystemManagerExternal : public VRSystemManager
-{
-public:
-  static already_AddRefed<VRSystemManagerExternal> Create(VRExternalShmem* aAPIShmem = nullptr);
+class VRSystemManagerExternal : public VRSystemManager {
+ public:
+  static already_AddRefed<VRSystemManagerExternal> Create(
+      VRExternalShmem* aAPIShmem = nullptr);
 
   virtual void Destroy() override;
   virtual void Shutdown() override;
@@ -97,14 +94,12 @@ public:
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
-  virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
-                              aControllerResult) override;
+  virtual void GetControllers(
+      nsTArray<RefPtr<VRControllerHost>>& aControllerResult) override;
   virtual void ScanForControllers() override;
   virtual void RemoveControllers() override;
-  virtual void VibrateHaptic(uint32_t aControllerIdx,
-                             uint32_t aHapticIndex,
-                             double aIntensity,
-                             double aDuration,
+  virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                             double aIntensity, double aDuration,
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
 #if defined(MOZ_WIDGET_ANDROID)
@@ -119,11 +114,11 @@ public:
 #endif
   void PushState(VRBrowserState* aBrowserState, const bool aNotifyCond = false);
 
-protected:
+ protected:
   explicit VRSystemManagerExternal(VRExternalShmem* aAPIShmem = nullptr);
   virtual ~VRSystemManagerExternal();
 
-private:
+ private:
   // there can only be one
   RefPtr<impl::VRDisplayExternal> mDisplay;
 #if defined(XP_MACOSX)
@@ -131,7 +126,7 @@ private:
 #elif defined(XP_WIN)
   base::ProcessHandle mShmemFile;
 #elif defined(MOZ_WIDGET_ANDROID)
-  
+
   bool mExternalStructFailed;
   bool mEnumerationCompleted;
 #endif
@@ -148,8 +143,7 @@ private:
   void CheckForShutdown();
 };
 
-} // namespace gfx
-} // namespace mozilla
-
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* GFX_VR_EXTERNAL_H */

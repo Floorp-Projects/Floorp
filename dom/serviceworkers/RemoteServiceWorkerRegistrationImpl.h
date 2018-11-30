@@ -14,48 +14,41 @@ namespace dom {
 
 class ServiceWorkerRegistrationChild;
 
-class RemoteServiceWorkerRegistrationImpl final : public ServiceWorkerRegistration::Inner
-{
+class RemoteServiceWorkerRegistrationImpl final
+    : public ServiceWorkerRegistration::Inner {
   ServiceWorkerRegistrationChild* mActor;
   ServiceWorkerRegistration* mOuter;
   bool mShutdown;
 
   ~RemoteServiceWorkerRegistrationImpl();
 
-  void
-  Shutdown();
+  void Shutdown();
 
   // ServiceWorkerRegistration::Inner implementation
-  void
-  SetServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
+  void SetServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  void
-  ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
+  void ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  void
-  Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
-         ServiceWorkerFailureCallback&& aFailureCB) override;
+  void Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+              ServiceWorkerFailureCallback&& aFailureCB) override;
 
-  void
-  Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
-             ServiceWorkerFailureCallback&& aFailureCB) override;
+  void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
+                  ServiceWorkerFailureCallback&& aFailureCB) override;
 
-public:
-  explicit RemoteServiceWorkerRegistrationImpl(const ServiceWorkerRegistrationDescriptor& aDescriptor);
+ public:
+  explicit RemoteServiceWorkerRegistrationImpl(
+      const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
-  void
-  RevokeActor(ServiceWorkerRegistrationChild* aActor);
+  void RevokeActor(ServiceWorkerRegistrationChild* aActor);
 
-  void
-  UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor);
+  void UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
-  void
-  FireUpdateFound();
+  void FireUpdateFound();
 
   NS_INLINE_DECL_REFCOUNTING(RemoteServiceWorkerRegistrationImpl, override)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_remoteserviceworkerregistrationimpl_h__
+#endif  // mozilla_dom_remoteserviceworkerregistrationimpl_h__

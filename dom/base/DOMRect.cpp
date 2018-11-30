@@ -21,37 +21,34 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRectReadOnly)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-JSObject*
-DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DOMRectReadOnly::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(mParent);
   return DOMRectReadOnly_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMRectReadOnly>
-DOMRectReadOnly::Constructor(const GlobalObject& aGlobal, double aX, double aY,
-                             double aWidth, double aHeight, ErrorResult& aRv)
-{
+already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::Constructor(
+    const GlobalObject& aGlobal, double aX, double aY, double aWidth,
+    double aHeight, ErrorResult& aRv) {
   RefPtr<DOMRectReadOnly> obj =
-    new DOMRectReadOnly(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
+      new DOMRectReadOnly(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
   return obj.forget();
 }
 
 // -----------------------------------------------------------------------------
 
-JSObject*
-DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DOMRect::WrapObject(JSContext* aCx,
+                              JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(mParent);
   return DOMRect_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMRect>
-DOMRect::Constructor(const GlobalObject& aGlobal, double aX, double aY,
-                     double aWidth, double aHeight, ErrorResult& aRv)
-{
+already_AddRefed<DOMRect> DOMRect::Constructor(const GlobalObject& aGlobal,
+                                               double aX, double aY,
+                                               double aWidth, double aHeight,
+                                               ErrorResult& aRv) {
   RefPtr<DOMRect> obj =
-    new DOMRect(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
+      new DOMRect(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
   return obj.forget();
 }
 
@@ -68,28 +65,21 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMRectList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRectList)
 
-JSObject*
-DOMRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DOMRectList::WrapObject(JSContext* cx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::DOMRectList_Binding::Wrap(cx, this, aGivenProto);
 }
 
-static double
-RoundFloat(double aValue)
-{
-  return floor(aValue + 0.5);
-}
+static double RoundFloat(double aValue) { return floor(aValue + 0.5); }
 
-void
-DOMRect::SetLayoutRect(const nsRect& aLayoutRect)
-{
+void DOMRect::SetLayoutRect(const nsRect& aLayoutRect) {
   double scale = 65536.0;
-  // Round to the nearest 1/scale units. We choose scale so it can be represented
-  // exactly by machine floating point.
-  double scaleInv = 1/scale;
-  double t2pScaled = scale/AppUnitsPerCSSPixel();
-  double x = RoundFloat(aLayoutRect.x*t2pScaled)*scaleInv;
-  double y = RoundFloat(aLayoutRect.y*t2pScaled)*scaleInv;
-  SetRect(x, y, RoundFloat(aLayoutRect.XMost()*t2pScaled)*scaleInv - x,
-          RoundFloat(aLayoutRect.YMost()*t2pScaled)*scaleInv - y);
+  // Round to the nearest 1/scale units. We choose scale so it can be
+  // represented exactly by machine floating point.
+  double scaleInv = 1 / scale;
+  double t2pScaled = scale / AppUnitsPerCSSPixel();
+  double x = RoundFloat(aLayoutRect.x * t2pScaled) * scaleInv;
+  double y = RoundFloat(aLayoutRect.y * t2pScaled) * scaleInv;
+  SetRect(x, y, RoundFloat(aLayoutRect.XMost() * t2pScaled) * scaleInv - x,
+          RoundFloat(aLayoutRect.YMost() * t2pScaled) * scaleInv - y);
 }

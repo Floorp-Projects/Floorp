@@ -15,18 +15,17 @@
 namespace mozilla {
 
 class WebBrowserPersistResourcesChild final
-    : public PWebBrowserPersistResourcesChild
-    , public nsIWebBrowserPersistResourceVisitor
-{
-public:
-    WebBrowserPersistResourcesChild();
+    : public PWebBrowserPersistResourcesChild,
+      public nsIWebBrowserPersistResourceVisitor {
+ public:
+  WebBrowserPersistResourcesChild();
 
-    NS_DECL_NSIWEBBROWSERPERSISTRESOURCEVISITOR
-    NS_DECL_ISUPPORTS
-private:
-    virtual ~WebBrowserPersistResourcesChild();
+  NS_DECL_NSIWEBBROWSERPERSISTRESOURCEVISITOR
+  NS_DECL_ISUPPORTS
+ private:
+  virtual ~WebBrowserPersistResourcesChild();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WebBrowserPersistDocumentChild_h__
+#endif  // WebBrowserPersistDocumentChild_h__

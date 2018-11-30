@@ -8,21 +8,19 @@
 
 #include <stdint.h>
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 VerifiedSCT::VerifiedSCT()
-  : status(Status::None)
-  , origin(Origin::Unknown)
-  , logOperatorId(-1)
-  , logDisqualificationTime(UINT64_MAX)
-{
-}
+    : status(Status::None),
+      origin(Origin::Unknown),
+      logOperatorId(-1),
+      logDisqualificationTime(UINT64_MAX) {}
 
-void
-CTVerifyResult::Reset()
-{
+void CTVerifyResult::Reset() {
   verifiedScts.clear();
   decodingErrors = 0;
 }
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

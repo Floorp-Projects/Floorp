@@ -25,24 +25,23 @@
 
 namespace {
 
-struct FileMimeNameData
-{
+struct FileMimeNameData {
   const char* mMimeName;
   const char* mFileName;
 };
 
 FileMimeNameData kFileMimeNameMap[] = {
-  { kFileMime, "GenericFileName" },
-  { kPNGImageMime, "GenericImageNamePNG" },
+    {kFileMime, "GenericFileName"},
+    {kPNGImageMime, "GenericImageNamePNG"},
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DataTransferItem, mData,
-                                      mPrincipal, mDataTransfer, mCachedFile)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DataTransferItem, mData, mPrincipal,
+                                      mDataTransfer, mCachedFile)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DataTransferItem)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DataTransferItem)
 
@@ -51,15 +50,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DataTransferItem)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-JSObject*
-DataTransferItem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DataTransferItem::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return DataTransferItem_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DataTransferItem>
-DataTransferItem::Clone(DataTransfer* aDataTransfer) const
-{
+already_AddRefed<DataTransferItem> DataTransferItem::Clone(
+    DataTransfer* aDataTransfer) const {
   MOZ_ASSERT(aDataTransfer);
 
   RefPtr<DataTransferItem> it = new DataTransferItem(aDataTransfer, mType);
@@ -74,9 +71,7 @@ DataTransferItem::Clone(DataTransfer* aDataTransfer) const
   return it.forget();
 }
 
-void
-DataTransferItem::SetData(nsIVariant* aData)
-{
+void DataTransferItem::SetData(nsIVariant* aData) {
   // Invalidate our file cache, we will regenerate it with the new data
   mCachedFile = nullptr;
 
@@ -102,9 +97,8 @@ DataTransferItem::SetData(nsIVariant* aData)
   mKind = KindFromData(mData);
 }
 
-/* static */ DataTransferItem::eKind
-DataTransferItem::KindFromData(nsIVariant* aData)
-{
+/* static */ DataTransferItem::eKind DataTransferItem::KindFromData(
+    nsIVariant* aData) {
   nsCOMPtr<nsISupports> supports;
   nsresult rv = aData->GetAsISupports(getter_AddRefs(supports));
   if (NS_SUCCEEDED(rv) && supports) {
@@ -130,9 +124,7 @@ DataTransferItem::KindFromData(nsIVariant* aData)
   return KIND_OTHER;
 }
 
-void
-DataTransferItem::FillInExternalData()
-{
+void DataTransferItem::FillInExternalData() {
   if (mData) {
     return;
   }
@@ -146,7 +138,7 @@ DataTransferItem::FillInExternalData()
   }
 
   nsCOMPtr<nsITransferable> trans =
-    do_CreateInstance("@mozilla.org/widget/transferable;1");
+      do_CreateInstance("@mozilla.org/widget/transferable;1");
   if (NS_WARN_IF(!trans)) {
     return;
   }
@@ -158,7 +150,7 @@ DataTransferItem::FillInExternalData()
     MOZ_ASSERT(mIndex == 0, "index in clipboard must be 0");
 
     nsCOMPtr<nsIClipboard> clipboard =
-      do_GetService("@mozilla.org/widget/clipboard;1");
+        do_GetService("@mozilla.org/widget/clipboard;1");
     if (!clipboard || mDataTransfer->ClipboardType() < 0) {
       return;
     }
@@ -204,7 +196,8 @@ DataTransferItem::FillInExternalData()
 
     variant->SetAsISupports(data);
   } else {
-    // We have an external piece of string data. Extract it and store it in the variant
+    // We have an external piece of string data. Extract it and store it in the
+    // variant
     MOZ_ASSERT(oldKind == KIND_STRING);
 
     nsCOMPtr<nsISupportsString> supportsstr = do_QueryInterface(data);
@@ -225,14 +218,13 @@ DataTransferItem::FillInExternalData()
   SetData(variant);
 
   if (oldKind != Kind()) {
-    NS_WARNING("Clipboard data provided by the OS does not match predicted kind");
+    NS_WARNING(
+        "Clipboard data provided by the OS does not match predicted kind");
     mDataTransfer->TypesListMayHaveChanged();
   }
 }
 
-void
-DataTransferItem::GetType(nsAString& aType)
-{
+void DataTransferItem::GetType(nsAString& aType) {
   // If we don't have a File, we can just put whatever our recorded internal
   // type is.
   if (Kind() != KIND_FILE) {
@@ -261,10 +253,8 @@ DataTransferItem::GetType(nsAString& aType)
   file->GetType(aType);
 }
 
-already_AddRefed<File>
-DataTransferItem::GetAsFile(nsIPrincipal& aSubjectPrincipal,
-                            ErrorResult& aRv)
-{
+already_AddRefed<File> DataTransferItem::GetAsFile(
+    nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   // This is done even if we have an mCachedFile, as it performs the necessary
   // permissions checks to ensure that we are allowed to access this type.
   nsCOMPtr<nsIVariant> data = Data(&aSubjectPrincipal, aRv);
@@ -308,10 +298,8 @@ DataTransferItem::GetAsFile(nsIPrincipal& aSubjectPrincipal,
   return file.forget();
 }
 
-already_AddRefed<FileSystemEntry>
-DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
-                             ErrorResult& aRv)
-{
+already_AddRefed<FileSystemEntry> DataTransferItem::GetAsEntry(
+    nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   RefPtr<File> file = GetAsFile(aSubjectPrincipal, aRv);
   if (NS_WARN_IF(aRv.Failed()) || !file) {
     return nullptr;
@@ -320,7 +308,7 @@ DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
   nsCOMPtr<nsIGlobalObject> global;
   // This is annoying, but DataTransfer may have various things as parent.
   nsCOMPtr<EventTarget> target =
-    do_QueryInterface(mDataTransfer->GetParentObject());
+      do_QueryInterface(mDataTransfer->GetParentObject());
   if (target) {
     global = target->GetOwnerGlobal();
   } else {
@@ -350,8 +338,8 @@ DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
     nsCOMPtr<nsIFile> directoryFile;
     // fullPath is already in unicode, we don't have to use
     // NS_NewNativeLocalFile.
-    nsresult rv = NS_NewLocalFile(fullpath, true,
-                                  getter_AddRefs(directoryFile));
+    nsresult rv =
+        NS_NewLocalFile(fullpath, true, getter_AddRefs(directoryFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -371,9 +359,8 @@ DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
   return entry.forget();
 }
 
-already_AddRefed<File>
-DataTransferItem::CreateFileFromInputStream(nsIInputStream* aStream)
-{
+already_AddRefed<File> DataTransferItem::CreateFileFromInputStream(
+    nsIInputStream* aStream) {
   const char* key = nullptr;
   for (uint32_t i = 0; i < ArrayLength(kFileMimeNameMap); ++i) {
     if (mType.EqualsASCII(kFileMimeNameMap[i].mMimeName)) {
@@ -387,8 +374,8 @@ DataTransferItem::CreateFileFromInputStream(nsIInputStream* aStream)
   }
 
   nsAutoString fileName;
-  nsresult rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                   key, fileName);
+  nsresult rv = nsContentUtils::GetLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, key, fileName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -400,15 +387,13 @@ DataTransferItem::CreateFileFromInputStream(nsIInputStream* aStream)
     return nullptr;
   }
 
-  return File::CreateMemoryFile(mDataTransfer, data, available, fileName,
-                                mType, PR_Now());
+  return File::CreateMemoryFile(mDataTransfer, data, available, fileName, mType,
+                                PR_Now());
 }
 
-void
-DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
-                              nsIPrincipal& aSubjectPrincipal,
-                              ErrorResult& aRv)
-{
+void DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
+                                   nsIPrincipal& aSubjectPrincipal,
+                                   ErrorResult& aRv) {
   if (!aCallback) {
     return;
   }
@@ -436,23 +421,21 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
   }
 
   // Dispatch the callback to the main thread
-  class GASRunnable final : public Runnable
-  {
-  public:
+  class GASRunnable final : public Runnable {
+   public:
     GASRunnable(FunctionStringCallback* aCallback, const nsAString& aStringData)
-      : mozilla::Runnable("GASRunnable")
-      , mCallback(aCallback)
-      , mStringData(aStringData)
-    {}
+        : mozilla::Runnable("GASRunnable"),
+          mCallback(aCallback),
+          mStringData(aStringData) {}
 
-    NS_IMETHOD Run() override
-    {
+    NS_IMETHOD Run() override {
       ErrorResult rv;
       mCallback->Call(mStringData, rv);
       NS_WARNING_ASSERTION(!rv.Failed(), "callback failed");
       return rv.StealNSResult();
     }
-  private:
+
+   private:
     RefPtr<FunctionStringCallback> mCallback;
     nsString mStringData;
   };
@@ -476,14 +459,13 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
     rv = NS_DispatchToMainThread(runnable);
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("Dispatch to main thread Failed in "
-               "DataTransferItem::GetAsString!");
+    NS_WARNING(
+        "Dispatch to main thread Failed in "
+        "DataTransferItem::GetAsString!");
   }
 }
 
-already_AddRefed<nsIVariant>
-DataTransferItem::DataNoSecurityCheck()
-{
+already_AddRefed<nsIVariant> DataTransferItem::DataNoSecurityCheck() {
   if (!mData) {
     FillInExternalData();
   }
@@ -491,9 +473,8 @@ DataTransferItem::DataNoSecurityCheck()
   return data.forget();
 }
 
-already_AddRefed<nsIVariant>
-DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
-{
+already_AddRefed<nsIVariant> DataTransferItem::Data(nsIPrincipal* aPrincipal,
+                                                    ErrorResult& aRv) {
   MOZ_ASSERT(aPrincipal);
 
   // If the inbound principal is system, we can skip the below checks, as
@@ -510,15 +491,16 @@ DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
 
   nsCOMPtr<nsIVariant> variant = DataNoSecurityCheck();
 
-  MOZ_ASSERT(!ChromeOnly(), "Non-chrome code shouldn't see a ChromeOnly DataTransferItem");
+  MOZ_ASSERT(!ChromeOnly(),
+             "Non-chrome code shouldn't see a ChromeOnly DataTransferItem");
   if (ChromeOnly()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
   bool checkItemPrincipal = mDataTransfer->IsCrossDomainSubFrameDrop() ||
-    (mDataTransfer->GetEventMessage() != eDrop &&
-     mDataTransfer->GetEventMessage() != ePaste);
+                            (mDataTransfer->GetEventMessage() != eDrop &&
+                             mDataTransfer->GetEventMessage() != ePaste);
 
   // Check if the caller is allowed to access the drag data. Callers with
   // chrome privileges can always read the data. During the
@@ -531,8 +513,7 @@ DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
   // to just pretend as though the stored data is "nullptr". This is consistent
   // with Chrome's behavior and is less surprising for web applications which
   // don't expect execptions to be raised when performing certain operations.
-  if (Principal() && checkItemPrincipal &&
-      !aPrincipal->Subsumes(Principal())) {
+  if (Principal() && checkItemPrincipal && !aPrincipal->Subsumes(Principal())) {
     return nullptr;
   }
 
@@ -563,5 +544,5 @@ DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
   return variant.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

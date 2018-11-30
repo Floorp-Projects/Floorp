@@ -6,7 +6,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 // To generate this file, see the documentation in
 // js/src/frontend/binsource/README.md.
 
@@ -60,219 +59,232 @@ namespace frontend {
  *
  * (sorted by alphabetical order)
  */
-#define FOR_EACH_BIN_KIND(F) \
-    F(_Null, "") \
-    F(Arguments, "Arguments") \
-    F(ArrayAssignmentTarget, "ArrayAssignmentTarget") \
-    F(ArrayBinding, "ArrayBinding") \
-    F(ArrayExpression, "ArrayExpression") \
-    F(ArrowExpression, "ArrowExpression") \
-    F(ArrowExpressionContentsWithExpression, "ArrowExpressionContentsWithExpression") \
-    F(ArrowExpressionContentsWithFunctionBody, "ArrowExpressionContentsWithFunctionBody") \
-    F(AssertedBlockScope, "AssertedBlockScope") \
-    F(AssertedBoundName, "AssertedBoundName") \
-    F(AssertedBoundNamesScope, "AssertedBoundNamesScope") \
-    F(AssertedDeclaredKind, "AssertedDeclaredKind") \
-    F(AssertedDeclaredName, "AssertedDeclaredName") \
-    F(AssertedMaybePositionalParameterName, "AssertedMaybePositionalParameterName") \
-    F(AssertedParameterName, "AssertedParameterName") \
-    F(AssertedParameterScope, "AssertedParameterScope") \
-    F(AssertedPositionalParameterName, "AssertedPositionalParameterName") \
-    F(AssertedRestParameterName, "AssertedRestParameterName") \
-    F(AssertedScriptGlobalScope, "AssertedScriptGlobalScope") \
-    F(AssertedVarScope, "AssertedVarScope") \
-    F(AssignmentExpression, "AssignmentExpression") \
-    F(AssignmentTarget, "AssignmentTarget") \
-    F(AssignmentTargetIdentifier, "AssignmentTargetIdentifier") \
-    F(AssignmentTargetOrAssignmentTargetWithInitializer, "AssignmentTargetOrAssignmentTargetWithInitializer") \
-    F(AssignmentTargetPattern, "AssignmentTargetPattern") \
-    F(AssignmentTargetProperty, "AssignmentTargetProperty") \
-    F(AssignmentTargetPropertyIdentifier, "AssignmentTargetPropertyIdentifier") \
-    F(AssignmentTargetPropertyProperty, "AssignmentTargetPropertyProperty") \
-    F(AssignmentTargetWithInitializer, "AssignmentTargetWithInitializer") \
-    F(AwaitExpression, "AwaitExpression") \
-    F(BinaryExpression, "BinaryExpression") \
-    F(BinaryOperator, "BinaryOperator") \
-    F(Binding, "Binding") \
-    F(BindingIdentifier, "BindingIdentifier") \
-    F(BindingOrBindingWithInitializer, "BindingOrBindingWithInitializer") \
-    F(BindingPattern, "BindingPattern") \
-    F(BindingProperty, "BindingProperty") \
-    F(BindingPropertyIdentifier, "BindingPropertyIdentifier") \
-    F(BindingPropertyProperty, "BindingPropertyProperty") \
-    F(BindingWithInitializer, "BindingWithInitializer") \
-    F(Block, "Block") \
-    F(BreakStatement, "BreakStatement") \
-    F(CallExpression, "CallExpression") \
-    F(CatchClause, "CatchClause") \
-    F(ClassDeclaration, "ClassDeclaration") \
-    F(ClassElement, "ClassElement") \
-    F(ClassExpression, "ClassExpression") \
-    F(CompoundAssignmentExpression, "CompoundAssignmentExpression") \
-    F(CompoundAssignmentOperator, "CompoundAssignmentOperator") \
-    F(ComputedMemberAssignmentTarget, "ComputedMemberAssignmentTarget") \
-    F(ComputedMemberExpression, "ComputedMemberExpression") \
-    F(ComputedPropertyName, "ComputedPropertyName") \
-    F(ConditionalExpression, "ConditionalExpression") \
-    F(ContinueStatement, "ContinueStatement") \
-    F(DataProperty, "DataProperty") \
-    F(DebuggerStatement, "DebuggerStatement") \
-    F(Directive, "Directive") \
-    F(DoWhileStatement, "DoWhileStatement") \
-    F(EagerArrowExpressionWithExpression, "EagerArrowExpressionWithExpression") \
-    F(EagerArrowExpressionWithFunctionBody, "EagerArrowExpressionWithFunctionBody") \
-    F(EagerFunctionDeclaration, "EagerFunctionDeclaration") \
-    F(EagerFunctionExpression, "EagerFunctionExpression") \
-    F(EagerGetter, "EagerGetter") \
-    F(EagerMethod, "EagerMethod") \
-    F(EagerSetter, "EagerSetter") \
-    F(EmptyStatement, "EmptyStatement") \
-    F(Export, "Export") \
-    F(ExportAllFrom, "ExportAllFrom") \
-    F(ExportDeclaration, "ExportDeclaration") \
-    F(ExportDefault, "ExportDefault") \
-    F(ExportFrom, "ExportFrom") \
-    F(ExportFromSpecifier, "ExportFromSpecifier") \
-    F(ExportLocalSpecifier, "ExportLocalSpecifier") \
-    F(ExportLocals, "ExportLocals") \
-    F(Expression, "Expression") \
-    F(ExpressionOrSuper, "ExpressionOrSuper") \
-    F(ExpressionOrTemplateElement, "ExpressionOrTemplateElement") \
-    F(ExpressionStatement, "ExpressionStatement") \
-    F(ForInOfBinding, "ForInOfBinding") \
-    F(ForInOfBindingOrAssignmentTarget, "ForInOfBindingOrAssignmentTarget") \
-    F(ForInStatement, "ForInStatement") \
-    F(ForOfStatement, "ForOfStatement") \
-    F(ForStatement, "ForStatement") \
-    F(FormalParameters, "FormalParameters") \
-    F(FunctionBody, "FunctionBody") \
-    F(FunctionDeclaration, "FunctionDeclaration") \
-    F(FunctionDeclarationOrClassDeclarationOrExpression, "FunctionDeclarationOrClassDeclarationOrExpression") \
-    F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration, "FunctionDeclarationOrClassDeclarationOrVariableDeclaration") \
-    F(FunctionExpression, "FunctionExpression") \
-    F(FunctionExpressionContents, "FunctionExpressionContents") \
-    F(FunctionOrMethodContents, "FunctionOrMethodContents") \
-    F(Getter, "Getter") \
-    F(GetterContents, "GetterContents") \
-    F(Identifier, "Identifier") \
-    F(IdentifierExpression, "IdentifierExpression") \
-    F(IdentifierName, "IdentifierName") \
-    F(IfStatement, "IfStatement") \
-    F(Import, "Import") \
-    F(ImportDeclaration, "ImportDeclaration") \
-    F(ImportDeclarationOrExportDeclarationOrStatement, "ImportDeclarationOrExportDeclarationOrStatement") \
-    F(ImportNamespace, "ImportNamespace") \
-    F(ImportSpecifier, "ImportSpecifier") \
-    F(IterationStatement, "IterationStatement") \
-    F(Label, "Label") \
-    F(LabelledStatement, "LabelledStatement") \
-    F(LazyArrowExpressionWithExpression, "LazyArrowExpressionWithExpression") \
-    F(LazyArrowExpressionWithFunctionBody, "LazyArrowExpressionWithFunctionBody") \
-    F(LazyFunctionDeclaration, "LazyFunctionDeclaration") \
-    F(LazyFunctionExpression, "LazyFunctionExpression") \
-    F(LazyGetter, "LazyGetter") \
-    F(LazyMethod, "LazyMethod") \
-    F(LazySetter, "LazySetter") \
-    F(ListOfAssertedBoundName, "ListOfAssertedBoundName") \
-    F(ListOfAssertedDeclaredName, "ListOfAssertedDeclaredName") \
-    F(ListOfAssertedMaybePositionalParameterName, "ListOfAssertedMaybePositionalParameterName") \
-    F(ListOfAssignmentTargetOrAssignmentTargetWithInitializer, "ListOfAssignmentTargetOrAssignmentTargetWithInitializer") \
-    F(ListOfAssignmentTargetProperty, "ListOfAssignmentTargetProperty") \
-    F(ListOfBindingProperty, "ListOfBindingProperty") \
-    F(ListOfClassElement, "ListOfClassElement") \
-    F(ListOfDirective, "ListOfDirective") \
-    F(ListOfExportFromSpecifier, "ListOfExportFromSpecifier") \
-    F(ListOfExportLocalSpecifier, "ListOfExportLocalSpecifier") \
-    F(ListOfExpressionOrTemplateElement, "ListOfExpressionOrTemplateElement") \
-    F(ListOfImportDeclarationOrExportDeclarationOrStatement, "ListOfImportDeclarationOrExportDeclarationOrStatement") \
-    F(ListOfImportSpecifier, "ListOfImportSpecifier") \
-    F(ListOfObjectProperty, "ListOfObjectProperty") \
-    F(ListOfOptionalBindingOrBindingWithInitializer, "ListOfOptionalBindingOrBindingWithInitializer") \
-    F(ListOfOptionalSpreadElementOrExpression, "ListOfOptionalSpreadElementOrExpression") \
-    F(ListOfParameter, "ListOfParameter") \
-    F(ListOfStatement, "ListOfStatement") \
-    F(ListOfSwitchCase, "ListOfSwitchCase") \
-    F(ListOfVariableDeclarator, "ListOfVariableDeclarator") \
-    F(Literal, "Literal") \
-    F(LiteralBooleanExpression, "LiteralBooleanExpression") \
-    F(LiteralInfinityExpression, "LiteralInfinityExpression") \
-    F(LiteralNullExpression, "LiteralNullExpression") \
-    F(LiteralNumericExpression, "LiteralNumericExpression") \
-    F(LiteralPropertyName, "LiteralPropertyName") \
-    F(LiteralRegExpExpression, "LiteralRegExpExpression") \
-    F(LiteralStringExpression, "LiteralStringExpression") \
-    F(Method, "Method") \
-    F(MethodDefinition, "MethodDefinition") \
-    F(Module, "Module") \
-    F(NewExpression, "NewExpression") \
-    F(NewTargetExpression, "NewTargetExpression") \
-    F(ObjectAssignmentTarget, "ObjectAssignmentTarget") \
-    F(ObjectBinding, "ObjectBinding") \
-    F(ObjectExpression, "ObjectExpression") \
-    F(ObjectProperty, "ObjectProperty") \
-    F(OptionalAssignmentTarget, "OptionalAssignmentTarget") \
-    F(OptionalBinding, "OptionalBinding") \
-    F(OptionalBindingIdentifier, "OptionalBindingIdentifier") \
-    F(OptionalBindingOrBindingWithInitializer, "OptionalBindingOrBindingWithInitializer") \
-    F(OptionalCatchClause, "OptionalCatchClause") \
-    F(OptionalExpression, "OptionalExpression") \
-    F(OptionalIdentifierName, "OptionalIdentifierName") \
-    F(OptionalLabel, "OptionalLabel") \
-    F(OptionalPropertyKey, "OptionalPropertyKey") \
-    F(OptionalSpreadElementOrExpression, "OptionalSpreadElementOrExpression") \
-    F(OptionalStatement, "OptionalStatement") \
-    F(OptionalVariableDeclarationOrExpression, "OptionalVariableDeclarationOrExpression") \
-    F(Parameter, "Parameter") \
-    F(Program, "Program") \
-    F(PropertyKey, "PropertyKey") \
-    F(PropertyName, "PropertyName") \
-    F(ReturnStatement, "ReturnStatement") \
-    F(Script, "Script") \
-    F(Setter, "Setter") \
-    F(SetterContents, "SetterContents") \
-    F(ShorthandProperty, "ShorthandProperty") \
-    F(SimpleAssignmentTarget, "SimpleAssignmentTarget") \
-    F(SpreadElement, "SpreadElement") \
-    F(SpreadElementOrExpression, "SpreadElementOrExpression") \
-    F(Statement, "Statement") \
-    F(StaticMemberAssignmentTarget, "StaticMemberAssignmentTarget") \
-    F(StaticMemberExpression, "StaticMemberExpression") \
-    F(Super, "Super") \
-    F(SwitchCase, "SwitchCase") \
-    F(SwitchDefault, "SwitchDefault") \
-    F(SwitchStatement, "SwitchStatement") \
-    F(SwitchStatementWithDefault, "SwitchStatementWithDefault") \
-    F(TemplateElement, "TemplateElement") \
-    F(TemplateExpression, "TemplateExpression") \
-    F(ThisExpression, "ThisExpression") \
-    F(ThrowStatement, "ThrowStatement") \
-    F(TryCatchStatement, "TryCatchStatement") \
-    F(TryFinallyStatement, "TryFinallyStatement") \
-    F(UnaryExpression, "UnaryExpression") \
-    F(UnaryOperator, "UnaryOperator") \
-    F(UpdateExpression, "UpdateExpression") \
-    F(UpdateOperator, "UpdateOperator") \
-    F(VariableDeclaration, "VariableDeclaration") \
-    F(VariableDeclarationKind, "VariableDeclarationKind") \
-    F(VariableDeclarationOrExpression, "VariableDeclarationOrExpression") \
-    F(VariableDeclarator, "VariableDeclarator") \
-    F(WhileStatement, "WhileStatement") \
-    F(WithStatement, "WithStatement") \
-    F(YieldExpression, "YieldExpression") \
-    F(YieldStarExpression, "YieldStarExpression") \
-    F(String, "string")
+#define FOR_EACH_BIN_KIND(F)                                                  \
+  F(_Null, "")                                                                \
+  F(Arguments, "Arguments")                                                   \
+  F(ArrayAssignmentTarget, "ArrayAssignmentTarget")                           \
+  F(ArrayBinding, "ArrayBinding")                                             \
+  F(ArrayExpression, "ArrayExpression")                                       \
+  F(ArrowExpression, "ArrowExpression")                                       \
+  F(ArrowExpressionContentsWithExpression,                                    \
+    "ArrowExpressionContentsWithExpression")                                  \
+  F(ArrowExpressionContentsWithFunctionBody,                                  \
+    "ArrowExpressionContentsWithFunctionBody")                                \
+  F(AssertedBlockScope, "AssertedBlockScope")                                 \
+  F(AssertedBoundName, "AssertedBoundName")                                   \
+  F(AssertedBoundNamesScope, "AssertedBoundNamesScope")                       \
+  F(AssertedDeclaredKind, "AssertedDeclaredKind")                             \
+  F(AssertedDeclaredName, "AssertedDeclaredName")                             \
+  F(AssertedMaybePositionalParameterName,                                     \
+    "AssertedMaybePositionalParameterName")                                   \
+  F(AssertedParameterName, "AssertedParameterName")                           \
+  F(AssertedParameterScope, "AssertedParameterScope")                         \
+  F(AssertedPositionalParameterName, "AssertedPositionalParameterName")       \
+  F(AssertedRestParameterName, "AssertedRestParameterName")                   \
+  F(AssertedScriptGlobalScope, "AssertedScriptGlobalScope")                   \
+  F(AssertedVarScope, "AssertedVarScope")                                     \
+  F(AssignmentExpression, "AssignmentExpression")                             \
+  F(AssignmentTarget, "AssignmentTarget")                                     \
+  F(AssignmentTargetIdentifier, "AssignmentTargetIdentifier")                 \
+  F(AssignmentTargetOrAssignmentTargetWithInitializer,                        \
+    "AssignmentTargetOrAssignmentTargetWithInitializer")                      \
+  F(AssignmentTargetPattern, "AssignmentTargetPattern")                       \
+  F(AssignmentTargetProperty, "AssignmentTargetProperty")                     \
+  F(AssignmentTargetPropertyIdentifier, "AssignmentTargetPropertyIdentifier") \
+  F(AssignmentTargetPropertyProperty, "AssignmentTargetPropertyProperty")     \
+  F(AssignmentTargetWithInitializer, "AssignmentTargetWithInitializer")       \
+  F(AwaitExpression, "AwaitExpression")                                       \
+  F(BinaryExpression, "BinaryExpression")                                     \
+  F(BinaryOperator, "BinaryOperator")                                         \
+  F(Binding, "Binding")                                                       \
+  F(BindingIdentifier, "BindingIdentifier")                                   \
+  F(BindingOrBindingWithInitializer, "BindingOrBindingWithInitializer")       \
+  F(BindingPattern, "BindingPattern")                                         \
+  F(BindingProperty, "BindingProperty")                                       \
+  F(BindingPropertyIdentifier, "BindingPropertyIdentifier")                   \
+  F(BindingPropertyProperty, "BindingPropertyProperty")                       \
+  F(BindingWithInitializer, "BindingWithInitializer")                         \
+  F(Block, "Block")                                                           \
+  F(BreakStatement, "BreakStatement")                                         \
+  F(CallExpression, "CallExpression")                                         \
+  F(CatchClause, "CatchClause")                                               \
+  F(ClassDeclaration, "ClassDeclaration")                                     \
+  F(ClassElement, "ClassElement")                                             \
+  F(ClassExpression, "ClassExpression")                                       \
+  F(CompoundAssignmentExpression, "CompoundAssignmentExpression")             \
+  F(CompoundAssignmentOperator, "CompoundAssignmentOperator")                 \
+  F(ComputedMemberAssignmentTarget, "ComputedMemberAssignmentTarget")         \
+  F(ComputedMemberExpression, "ComputedMemberExpression")                     \
+  F(ComputedPropertyName, "ComputedPropertyName")                             \
+  F(ConditionalExpression, "ConditionalExpression")                           \
+  F(ContinueStatement, "ContinueStatement")                                   \
+  F(DataProperty, "DataProperty")                                             \
+  F(DebuggerStatement, "DebuggerStatement")                                   \
+  F(Directive, "Directive")                                                   \
+  F(DoWhileStatement, "DoWhileStatement")                                     \
+  F(EagerArrowExpressionWithExpression, "EagerArrowExpressionWithExpression") \
+  F(EagerArrowExpressionWithFunctionBody,                                     \
+    "EagerArrowExpressionWithFunctionBody")                                   \
+  F(EagerFunctionDeclaration, "EagerFunctionDeclaration")                     \
+  F(EagerFunctionExpression, "EagerFunctionExpression")                       \
+  F(EagerGetter, "EagerGetter")                                               \
+  F(EagerMethod, "EagerMethod")                                               \
+  F(EagerSetter, "EagerSetter")                                               \
+  F(EmptyStatement, "EmptyStatement")                                         \
+  F(Export, "Export")                                                         \
+  F(ExportAllFrom, "ExportAllFrom")                                           \
+  F(ExportDeclaration, "ExportDeclaration")                                   \
+  F(ExportDefault, "ExportDefault")                                           \
+  F(ExportFrom, "ExportFrom")                                                 \
+  F(ExportFromSpecifier, "ExportFromSpecifier")                               \
+  F(ExportLocalSpecifier, "ExportLocalSpecifier")                             \
+  F(ExportLocals, "ExportLocals")                                             \
+  F(Expression, "Expression")                                                 \
+  F(ExpressionOrSuper, "ExpressionOrSuper")                                   \
+  F(ExpressionOrTemplateElement, "ExpressionOrTemplateElement")               \
+  F(ExpressionStatement, "ExpressionStatement")                               \
+  F(ForInOfBinding, "ForInOfBinding")                                         \
+  F(ForInOfBindingOrAssignmentTarget, "ForInOfBindingOrAssignmentTarget")     \
+  F(ForInStatement, "ForInStatement")                                         \
+  F(ForOfStatement, "ForOfStatement")                                         \
+  F(ForStatement, "ForStatement")                                             \
+  F(FormalParameters, "FormalParameters")                                     \
+  F(FunctionBody, "FunctionBody")                                             \
+  F(FunctionDeclaration, "FunctionDeclaration")                               \
+  F(FunctionDeclarationOrClassDeclarationOrExpression,                        \
+    "FunctionDeclarationOrClassDeclarationOrExpression")                      \
+  F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration,               \
+    "FunctionDeclarationOrClassDeclarationOrVariableDeclaration")             \
+  F(FunctionExpression, "FunctionExpression")                                 \
+  F(FunctionExpressionContents, "FunctionExpressionContents")                 \
+  F(FunctionOrMethodContents, "FunctionOrMethodContents")                     \
+  F(Getter, "Getter")                                                         \
+  F(GetterContents, "GetterContents")                                         \
+  F(Identifier, "Identifier")                                                 \
+  F(IdentifierExpression, "IdentifierExpression")                             \
+  F(IdentifierName, "IdentifierName")                                         \
+  F(IfStatement, "IfStatement")                                               \
+  F(Import, "Import")                                                         \
+  F(ImportDeclaration, "ImportDeclaration")                                   \
+  F(ImportDeclarationOrExportDeclarationOrStatement,                          \
+    "ImportDeclarationOrExportDeclarationOrStatement")                        \
+  F(ImportNamespace, "ImportNamespace")                                       \
+  F(ImportSpecifier, "ImportSpecifier")                                       \
+  F(IterationStatement, "IterationStatement")                                 \
+  F(Label, "Label")                                                           \
+  F(LabelledStatement, "LabelledStatement")                                   \
+  F(LazyArrowExpressionWithExpression, "LazyArrowExpressionWithExpression")   \
+  F(LazyArrowExpressionWithFunctionBody,                                      \
+    "LazyArrowExpressionWithFunctionBody")                                    \
+  F(LazyFunctionDeclaration, "LazyFunctionDeclaration")                       \
+  F(LazyFunctionExpression, "LazyFunctionExpression")                         \
+  F(LazyGetter, "LazyGetter")                                                 \
+  F(LazyMethod, "LazyMethod")                                                 \
+  F(LazySetter, "LazySetter")                                                 \
+  F(ListOfAssertedBoundName, "ListOfAssertedBoundName")                       \
+  F(ListOfAssertedDeclaredName, "ListOfAssertedDeclaredName")                 \
+  F(ListOfAssertedMaybePositionalParameterName,                               \
+    "ListOfAssertedMaybePositionalParameterName")                             \
+  F(ListOfAssignmentTargetOrAssignmentTargetWithInitializer,                  \
+    "ListOfAssignmentTargetOrAssignmentTargetWithInitializer")                \
+  F(ListOfAssignmentTargetProperty, "ListOfAssignmentTargetProperty")         \
+  F(ListOfBindingProperty, "ListOfBindingProperty")                           \
+  F(ListOfClassElement, "ListOfClassElement")                                 \
+  F(ListOfDirective, "ListOfDirective")                                       \
+  F(ListOfExportFromSpecifier, "ListOfExportFromSpecifier")                   \
+  F(ListOfExportLocalSpecifier, "ListOfExportLocalSpecifier")                 \
+  F(ListOfExpressionOrTemplateElement, "ListOfExpressionOrTemplateElement")   \
+  F(ListOfImportDeclarationOrExportDeclarationOrStatement,                    \
+    "ListOfImportDeclarationOrExportDeclarationOrStatement")                  \
+  F(ListOfImportSpecifier, "ListOfImportSpecifier")                           \
+  F(ListOfObjectProperty, "ListOfObjectProperty")                             \
+  F(ListOfOptionalBindingOrBindingWithInitializer,                            \
+    "ListOfOptionalBindingOrBindingWithInitializer")                          \
+  F(ListOfOptionalSpreadElementOrExpression,                                  \
+    "ListOfOptionalSpreadElementOrExpression")                                \
+  F(ListOfParameter, "ListOfParameter")                                       \
+  F(ListOfStatement, "ListOfStatement")                                       \
+  F(ListOfSwitchCase, "ListOfSwitchCase")                                     \
+  F(ListOfVariableDeclarator, "ListOfVariableDeclarator")                     \
+  F(Literal, "Literal")                                                       \
+  F(LiteralBooleanExpression, "LiteralBooleanExpression")                     \
+  F(LiteralInfinityExpression, "LiteralInfinityExpression")                   \
+  F(LiteralNullExpression, "LiteralNullExpression")                           \
+  F(LiteralNumericExpression, "LiteralNumericExpression")                     \
+  F(LiteralPropertyName, "LiteralPropertyName")                               \
+  F(LiteralRegExpExpression, "LiteralRegExpExpression")                       \
+  F(LiteralStringExpression, "LiteralStringExpression")                       \
+  F(Method, "Method")                                                         \
+  F(MethodDefinition, "MethodDefinition")                                     \
+  F(Module, "Module")                                                         \
+  F(NewExpression, "NewExpression")                                           \
+  F(NewTargetExpression, "NewTargetExpression")                               \
+  F(ObjectAssignmentTarget, "ObjectAssignmentTarget")                         \
+  F(ObjectBinding, "ObjectBinding")                                           \
+  F(ObjectExpression, "ObjectExpression")                                     \
+  F(ObjectProperty, "ObjectProperty")                                         \
+  F(OptionalAssignmentTarget, "OptionalAssignmentTarget")                     \
+  F(OptionalBinding, "OptionalBinding")                                       \
+  F(OptionalBindingIdentifier, "OptionalBindingIdentifier")                   \
+  F(OptionalBindingOrBindingWithInitializer,                                  \
+    "OptionalBindingOrBindingWithInitializer")                                \
+  F(OptionalCatchClause, "OptionalCatchClause")                               \
+  F(OptionalExpression, "OptionalExpression")                                 \
+  F(OptionalIdentifierName, "OptionalIdentifierName")                         \
+  F(OptionalLabel, "OptionalLabel")                                           \
+  F(OptionalPropertyKey, "OptionalPropertyKey")                               \
+  F(OptionalSpreadElementOrExpression, "OptionalSpreadElementOrExpression")   \
+  F(OptionalStatement, "OptionalStatement")                                   \
+  F(OptionalVariableDeclarationOrExpression,                                  \
+    "OptionalVariableDeclarationOrExpression")                                \
+  F(Parameter, "Parameter")                                                   \
+  F(Program, "Program")                                                       \
+  F(PropertyKey, "PropertyKey")                                               \
+  F(PropertyName, "PropertyName")                                             \
+  F(ReturnStatement, "ReturnStatement")                                       \
+  F(Script, "Script")                                                         \
+  F(Setter, "Setter")                                                         \
+  F(SetterContents, "SetterContents")                                         \
+  F(ShorthandProperty, "ShorthandProperty")                                   \
+  F(SimpleAssignmentTarget, "SimpleAssignmentTarget")                         \
+  F(SpreadElement, "SpreadElement")                                           \
+  F(SpreadElementOrExpression, "SpreadElementOrExpression")                   \
+  F(Statement, "Statement")                                                   \
+  F(StaticMemberAssignmentTarget, "StaticMemberAssignmentTarget")             \
+  F(StaticMemberExpression, "StaticMemberExpression")                         \
+  F(Super, "Super")                                                           \
+  F(SwitchCase, "SwitchCase")                                                 \
+  F(SwitchDefault, "SwitchDefault")                                           \
+  F(SwitchStatement, "SwitchStatement")                                       \
+  F(SwitchStatementWithDefault, "SwitchStatementWithDefault")                 \
+  F(TemplateElement, "TemplateElement")                                       \
+  F(TemplateExpression, "TemplateExpression")                                 \
+  F(ThisExpression, "ThisExpression")                                         \
+  F(ThrowStatement, "ThrowStatement")                                         \
+  F(TryCatchStatement, "TryCatchStatement")                                   \
+  F(TryFinallyStatement, "TryFinallyStatement")                               \
+  F(UnaryExpression, "UnaryExpression")                                       \
+  F(UnaryOperator, "UnaryOperator")                                           \
+  F(UpdateExpression, "UpdateExpression")                                     \
+  F(UpdateOperator, "UpdateOperator")                                         \
+  F(VariableDeclaration, "VariableDeclaration")                               \
+  F(VariableDeclarationKind, "VariableDeclarationKind")                       \
+  F(VariableDeclarationOrExpression, "VariableDeclarationOrExpression")       \
+  F(VariableDeclarator, "VariableDeclarator")                                 \
+  F(WhileStatement, "WhileStatement")                                         \
+  F(WithStatement, "WithStatement")                                           \
+  F(YieldExpression, "YieldExpression")                                       \
+  F(YieldStarExpression, "YieldStarExpression")                               \
+  F(String, "string")
 
 enum class BinKind {
 #define EMIT_ENUM(name, _) name,
-    FOR_EACH_BIN_KIND(EMIT_ENUM)
+  FOR_EACH_BIN_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 
 // The number of distinct values of BinKind.
 const size_t BINKIND_LIMIT = 200;
-
-
-
 
 /**
  * The different fields of Binary AST nodes, as per the specifications of
@@ -287,86 +299,85 @@ const size_t BINKIND_LIMIT = 200;
  *
  * (sorted by alphabetical order)
  */
-#define FOR_EACH_BIN_FIELD(F) \
-    F(Alternate, "alternate") \
-    F(Arguments, "arguments") \
-    F(Binding, "binding") \
-    F(BindingScope, "bindingScope") \
-    F(Body, "body") \
-    F(BodyScope, "bodyScope") \
-    F(BoundNames, "boundNames") \
-    F(Callee, "callee") \
-    F(Cases, "cases") \
-    F(CatchClause, "catchClause") \
-    F(Consequent, "consequent") \
-    F(Contents, "contents") \
-    F(ContentsSkip, "contents_skip") \
-    F(Declaration, "declaration") \
-    F(Declarators, "declarators") \
-    F(DeclaredNames, "declaredNames") \
-    F(DefaultBinding, "defaultBinding") \
-    F(DefaultCase, "defaultCase") \
-    F(Directives, "directives") \
-    F(Discriminant, "discriminant") \
-    F(Elements, "elements") \
-    F(ExportedName, "exportedName") \
-    F(Expression, "expression") \
-    F(Finalizer, "finalizer") \
-    F(Flags, "flags") \
-    F(HasDirectEval, "hasDirectEval") \
-    F(Index, "index") \
-    F(Init, "init") \
-    F(IsAsync, "isAsync") \
-    F(IsCaptured, "isCaptured") \
-    F(IsFunctionNameCaptured, "isFunctionNameCaptured") \
-    F(IsGenerator, "isGenerator") \
-    F(IsPrefix, "isPrefix") \
-    F(IsSimpleParameterList, "isSimpleParameterList") \
-    F(IsStatic, "isStatic") \
-    F(IsThisCaptured, "isThisCaptured") \
-    F(Items, "items") \
-    F(Kind, "kind") \
-    F(Label, "label") \
-    F(Left, "left") \
-    F(Length, "length") \
-    F(Method, "method") \
-    F(ModuleSpecifier, "moduleSpecifier") \
-    F(Name, "name") \
-    F(NamedExports, "namedExports") \
-    F(NamedImports, "namedImports") \
-    F(NamespaceBinding, "namespaceBinding") \
-    F(Object, "object") \
-    F(Operand, "operand") \
-    F(Operator, "operator") \
-    F(Param, "param") \
-    F(ParamNames, "paramNames") \
-    F(ParameterScope, "parameterScope") \
-    F(Params, "params") \
-    F(Pattern, "pattern") \
-    F(PostDefaultCases, "postDefaultCases") \
-    F(PreDefaultCases, "preDefaultCases") \
-    F(Properties, "properties") \
-    F(Property, "property") \
-    F(RawValue, "rawValue") \
-    F(Rest, "rest") \
-    F(Right, "right") \
-    F(Scope, "scope") \
-    F(Statements, "statements") \
-    F(Super, "super") \
-    F(Tag, "tag") \
-    F(Test, "test") \
-    F(Update, "update") \
-    F(Value, "value")
+#define FOR_EACH_BIN_FIELD(F)                         \
+  F(Alternate, "alternate")                           \
+  F(Arguments, "arguments")                           \
+  F(Binding, "binding")                               \
+  F(BindingScope, "bindingScope")                     \
+  F(Body, "body")                                     \
+  F(BodyScope, "bodyScope")                           \
+  F(BoundNames, "boundNames")                         \
+  F(Callee, "callee")                                 \
+  F(Cases, "cases")                                   \
+  F(CatchClause, "catchClause")                       \
+  F(Consequent, "consequent")                         \
+  F(Contents, "contents")                             \
+  F(ContentsSkip, "contents_skip")                    \
+  F(Declaration, "declaration")                       \
+  F(Declarators, "declarators")                       \
+  F(DeclaredNames, "declaredNames")                   \
+  F(DefaultBinding, "defaultBinding")                 \
+  F(DefaultCase, "defaultCase")                       \
+  F(Directives, "directives")                         \
+  F(Discriminant, "discriminant")                     \
+  F(Elements, "elements")                             \
+  F(ExportedName, "exportedName")                     \
+  F(Expression, "expression")                         \
+  F(Finalizer, "finalizer")                           \
+  F(Flags, "flags")                                   \
+  F(HasDirectEval, "hasDirectEval")                   \
+  F(Index, "index")                                   \
+  F(Init, "init")                                     \
+  F(IsAsync, "isAsync")                               \
+  F(IsCaptured, "isCaptured")                         \
+  F(IsFunctionNameCaptured, "isFunctionNameCaptured") \
+  F(IsGenerator, "isGenerator")                       \
+  F(IsPrefix, "isPrefix")                             \
+  F(IsSimpleParameterList, "isSimpleParameterList")   \
+  F(IsStatic, "isStatic")                             \
+  F(IsThisCaptured, "isThisCaptured")                 \
+  F(Items, "items")                                   \
+  F(Kind, "kind")                                     \
+  F(Label, "label")                                   \
+  F(Left, "left")                                     \
+  F(Length, "length")                                 \
+  F(Method, "method")                                 \
+  F(ModuleSpecifier, "moduleSpecifier")               \
+  F(Name, "name")                                     \
+  F(NamedExports, "namedExports")                     \
+  F(NamedImports, "namedImports")                     \
+  F(NamespaceBinding, "namespaceBinding")             \
+  F(Object, "object")                                 \
+  F(Operand, "operand")                               \
+  F(Operator, "operator")                             \
+  F(Param, "param")                                   \
+  F(ParamNames, "paramNames")                         \
+  F(ParameterScope, "parameterScope")                 \
+  F(Params, "params")                                 \
+  F(Pattern, "pattern")                               \
+  F(PostDefaultCases, "postDefaultCases")             \
+  F(PreDefaultCases, "preDefaultCases")               \
+  F(Properties, "properties")                         \
+  F(Property, "property")                             \
+  F(RawValue, "rawValue")                             \
+  F(Rest, "rest")                                     \
+  F(Right, "right")                                   \
+  F(Scope, "scope")                                   \
+  F(Statements, "statements")                         \
+  F(Super, "super")                                   \
+  F(Tag, "tag")                                       \
+  F(Test, "test")                                     \
+  F(Update, "update")                                 \
+  F(Value, "value")
 
 enum class BinField {
 #define EMIT_ENUM(name, _) name,
-    FOR_EACH_BIN_FIELD(EMIT_ENUM)
+  FOR_EACH_BIN_FIELD(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 
 // The number of distinct values of BinField.
 const size_t BINFIELD_LIMIT = 69;
-
 
 /**
  * The different variants of Binary AST string enums, as per
@@ -384,67 +395,65 @@ const size_t BINFIELD_LIMIT = 69;
  *
  * (sorted by alphabetical order)
  */
-#define FOR_EACH_BIN_VARIANT(F) \
-    F(AssertedDeclaredKindConstLexical, "const lexical") \
-    F(AssertedDeclaredKindNonConstLexical, "non-const lexical") \
-    F(AssertedDeclaredKindOrVariableDeclarationKindVar, "var") \
-    F(BinaryOperatorBitAnd, "&") \
-    F(BinaryOperatorBitOr, "|") \
-    F(BinaryOperatorBitXor, "^") \
-    F(BinaryOperatorComma, ",") \
-    F(BinaryOperatorDiv, "/") \
-    F(BinaryOperatorEq, "==") \
-    F(BinaryOperatorGeqThan, ">=") \
-    F(BinaryOperatorGreaterThan, ">") \
-    F(BinaryOperatorIn, "in") \
-    F(BinaryOperatorInstanceof, "instanceof") \
-    F(BinaryOperatorLeqThan, "<=") \
-    F(BinaryOperatorLessThan, "<") \
-    F(BinaryOperatorLogicalAnd, "&&") \
-    F(BinaryOperatorLogicalOr, "||") \
-    F(BinaryOperatorLsh, "<<") \
-    F(BinaryOperatorMod, "%") \
-    F(BinaryOperatorMul, "*") \
-    F(BinaryOperatorNeq, "!=") \
-    F(BinaryOperatorOrUnaryOperatorMinus, "-") \
-    F(BinaryOperatorOrUnaryOperatorPlus, "+") \
-    F(BinaryOperatorPow, "**") \
-    F(BinaryOperatorRsh, ">>") \
-    F(BinaryOperatorStrictEq, "===") \
-    F(BinaryOperatorStrictNeq, "!==") \
-    F(BinaryOperatorUrsh, ">>>") \
-    F(CompoundAssignmentOperatorBitAndAssign, "&=") \
-    F(CompoundAssignmentOperatorBitOrAssign, "|=") \
-    F(CompoundAssignmentOperatorBitXorAssign, "^=") \
-    F(CompoundAssignmentOperatorDivAssign, "/=") \
-    F(CompoundAssignmentOperatorLshAssign, "<<=") \
-    F(CompoundAssignmentOperatorMinusAssign, "-=") \
-    F(CompoundAssignmentOperatorModAssign, "%=") \
-    F(CompoundAssignmentOperatorMulAssign, "*=") \
-    F(CompoundAssignmentOperatorPlusAssign, "+=") \
-    F(CompoundAssignmentOperatorPowAssign, "**=") \
-    F(CompoundAssignmentOperatorRshAssign, ">>=") \
-    F(CompoundAssignmentOperatorUrshAssign, ">>>=") \
-    F(UnaryOperatorBitNot, "~") \
-    F(UnaryOperatorDelete, "delete") \
-    F(UnaryOperatorNot, "!") \
-    F(UnaryOperatorTypeof, "typeof") \
-    F(UnaryOperatorVoid, "void") \
-    F(UpdateOperatorDecr, "--") \
-    F(UpdateOperatorIncr, "++") \
-    F(VariableDeclarationKindConst, "const") \
-    F(VariableDeclarationKindLet, "let")
+#define FOR_EACH_BIN_VARIANT(F)                               \
+  F(AssertedDeclaredKindConstLexical, "const lexical")        \
+  F(AssertedDeclaredKindNonConstLexical, "non-const lexical") \
+  F(AssertedDeclaredKindOrVariableDeclarationKindVar, "var")  \
+  F(BinaryOperatorBitAnd, "&")                                \
+  F(BinaryOperatorBitOr, "|")                                 \
+  F(BinaryOperatorBitXor, "^")                                \
+  F(BinaryOperatorComma, ",")                                 \
+  F(BinaryOperatorDiv, "/")                                   \
+  F(BinaryOperatorEq, "==")                                   \
+  F(BinaryOperatorGeqThan, ">=")                              \
+  F(BinaryOperatorGreaterThan, ">")                           \
+  F(BinaryOperatorIn, "in")                                   \
+  F(BinaryOperatorInstanceof, "instanceof")                   \
+  F(BinaryOperatorLeqThan, "<=")                              \
+  F(BinaryOperatorLessThan, "<")                              \
+  F(BinaryOperatorLogicalAnd, "&&")                           \
+  F(BinaryOperatorLogicalOr, "||")                            \
+  F(BinaryOperatorLsh, "<<")                                  \
+  F(BinaryOperatorMod, "%")                                   \
+  F(BinaryOperatorMul, "*")                                   \
+  F(BinaryOperatorNeq, "!=")                                  \
+  F(BinaryOperatorOrUnaryOperatorMinus, "-")                  \
+  F(BinaryOperatorOrUnaryOperatorPlus, "+")                   \
+  F(BinaryOperatorPow, "**")                                  \
+  F(BinaryOperatorRsh, ">>")                                  \
+  F(BinaryOperatorStrictEq, "===")                            \
+  F(BinaryOperatorStrictNeq, "!==")                           \
+  F(BinaryOperatorUrsh, ">>>")                                \
+  F(CompoundAssignmentOperatorBitAndAssign, "&=")             \
+  F(CompoundAssignmentOperatorBitOrAssign, "|=")              \
+  F(CompoundAssignmentOperatorBitXorAssign, "^=")             \
+  F(CompoundAssignmentOperatorDivAssign, "/=")                \
+  F(CompoundAssignmentOperatorLshAssign, "<<=")               \
+  F(CompoundAssignmentOperatorMinusAssign, "-=")              \
+  F(CompoundAssignmentOperatorModAssign, "%=")                \
+  F(CompoundAssignmentOperatorMulAssign, "*=")                \
+  F(CompoundAssignmentOperatorPlusAssign, "+=")               \
+  F(CompoundAssignmentOperatorPowAssign, "**=")               \
+  F(CompoundAssignmentOperatorRshAssign, ">>=")               \
+  F(CompoundAssignmentOperatorUrshAssign, ">>>=")             \
+  F(UnaryOperatorBitNot, "~")                                 \
+  F(UnaryOperatorDelete, "delete")                            \
+  F(UnaryOperatorNot, "!")                                    \
+  F(UnaryOperatorTypeof, "typeof")                            \
+  F(UnaryOperatorVoid, "void")                                \
+  F(UpdateOperatorDecr, "--")                                 \
+  F(UpdateOperatorIncr, "++")                                 \
+  F(VariableDeclarationKindConst, "const")                    \
+  F(VariableDeclarationKindLet, "let")
 
 enum class BinVariant {
 #define EMIT_ENUM(name, _) name,
-    FOR_EACH_BIN_VARIANT(EMIT_ENUM)
+  FOR_EACH_BIN_VARIANT(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 
 // The number of distinct values of BinVariant.
 const size_t BINVARIANT_LIMIT = 49;
-
-
 
 /**
  * Return a string describing a `BinKind`.
@@ -461,8 +470,7 @@ const char* describeBinField(const BinField& kind);
  */
 const char* describeBinVariant(const BinVariant& kind);
 
-} // namespace frontend
-} // namespace js
+}  // namespace frontend
+}  // namespace js
 
-#endif // frontend_BinToken_h
-
+#endif  // frontend_BinToken_h

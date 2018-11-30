@@ -14,27 +14,30 @@
  * Builds textruns that render their text with MathML specific renderings.
  */
 class MathMLTextRunFactory : public nsTransformingTextRunFactory {
-public:
-  MathMLTextRunFactory(mozilla::UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
+ public:
+  MathMLTextRunFactory(mozilla::UniquePtr<nsTransformingTextRunFactory>
+                           aInnerTransformingTextRunFactory,
                        uint32_t aFlags, uint8_t aSSTYScriptLevel,
                        float aFontInflation)
-    : mInnerTransformingTextRunFactory(std::move(aInnerTransformingTextRunFactory)),
-      mFlags(aFlags),
-      mFontInflation(aFontInflation),
-      mSSTYScriptLevel(aSSTYScriptLevel) {}
+      : mInnerTransformingTextRunFactory(
+            std::move(aInnerTransformingTextRunFactory)),
+        mFlags(aFlags),
+        mFontInflation(aFontInflation),
+        mSSTYScriptLevel(aSSTYScriptLevel) {}
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
                               mozilla::gfx::DrawTarget* aRefDrawTarget,
                               gfxMissingFontRecorder* aMFR) override;
   enum {
     // Style effects which may override single character <mi> behaviour
-    MATH_FONT_STYLING_NORMAL   = 0x1, // fontstyle="normal" has been set.
-    MATH_FONT_WEIGHT_BOLD      = 0x2, // fontweight="bold" has been set.
-    MATH_FONT_FEATURE_DTLS     = 0x4, // font feature dtls should be set
+    MATH_FONT_STYLING_NORMAL = 0x1,  // fontstyle="normal" has been set.
+    MATH_FONT_WEIGHT_BOLD = 0x2,     // fontweight="bold" has been set.
+    MATH_FONT_FEATURE_DTLS = 0x4,    // font feature dtls should be set
   };
 
-protected:
-  mozilla::UniquePtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
+ protected:
+  mozilla::UniquePtr<nsTransformingTextRunFactory>
+      mInnerTransformingTextRunFactory;
   uint32_t mFlags;
   float mFontInflation;
   uint8_t mSSTYScriptLevel;

@@ -15,9 +15,8 @@ namespace image {
 /**
  * Abstract superclass for Images that wrap other Images.
  */
-class ImageWrapper : public Image
-{
-public:
+class ImageWrapper : public Image {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGICONTAINER
 
@@ -26,8 +25,8 @@ public:
   size_t GetNativeSizesLength() const override;
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() override;
 
-  virtual size_t
-    SizeOfSourceWithComputedFallback(SizeOfState& aState) const override;
+  virtual size_t SizeOfSourceWithComputedFallback(
+      SizeOfState& aState) const override;
   virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
                                      MallocSizeOf aMallocSizeOf) const override;
 
@@ -43,8 +42,7 @@ public:
                                         uint64_t aSourceOffset,
                                         uint32_t aCount) override;
   virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
-                                       nsISupports* aContext,
-                                       nsresult aStatus,
+                                       nsISupports* aContext, nsresult aStatus,
                                        bool aLastPart) override;
 
   virtual void OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) override;
@@ -57,31 +55,28 @@ public:
 
   nsIURI* GetURI() const override;
 
-protected:
-  explicit ImageWrapper(Image* aInnerImage)
-    : mInnerImage(aInnerImage)
-  {
+ protected:
+  explicit ImageWrapper(Image* aInnerImage) : mInnerImage(aInnerImage) {
     MOZ_ASSERT(aInnerImage, "Need an image to wrap");
   }
 
-  virtual ~ImageWrapper() { }
+  virtual ~ImageWrapper() {}
 
   /**
    * Returns a weak reference to the inner image wrapped by this ImageWrapper.
    */
   Image* InnerImage() const { return mInnerImage.get(); }
 
-  void SetInnerImage(Image* aInnerImage)
-  {
+  void SetInnerImage(Image* aInnerImage) {
     MOZ_ASSERT(aInnerImage, "Need an image to wrap");
     mInnerImage = aInnerImage;
   }
 
-private:
+ private:
   RefPtr<Image> mInnerImage;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_ImageWrapper_h
+#endif  // mozilla_image_ImageWrapper_h

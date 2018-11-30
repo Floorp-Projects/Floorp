@@ -20,28 +20,27 @@ namespace JS {
 // If you want to use this class for a different key/value combination, add it
 // to the list and the compiler will generate the relevant machinery.
 template <typename K, typename V>
-class JS_PUBLIC_API WeakMapPtr
-{
-  public:
-    WeakMapPtr() : ptr(nullptr) {}
-    bool init(JSContext* cx);
-    bool initialized() { return ptr != nullptr; }
-    void destroy();
-    virtual ~WeakMapPtr() { MOZ_ASSERT(!initialized()); }
-    void trace(JSTracer* tracer);
+class JS_PUBLIC_API WeakMapPtr {
+ public:
+  WeakMapPtr() : ptr(nullptr) {}
+  bool init(JSContext* cx);
+  bool initialized() { return ptr != nullptr; }
+  void destroy();
+  virtual ~WeakMapPtr() { MOZ_ASSERT(!initialized()); }
+  void trace(JSTracer* tracer);
 
-    V lookup(const K& key);
-    bool put(JSContext* cx, const K& key, const V& value);
-    V removeValue(const K& key);
+  V lookup(const K& key);
+  bool put(JSContext* cx, const K& key, const V& value);
+  V removeValue(const K& key);
 
-  private:
-    void* ptr;
+ private:
+  void* ptr;
 
-    // WeakMapPtr is neither copyable nor assignable.
-    WeakMapPtr(const WeakMapPtr& wmp) = delete;
-    WeakMapPtr& operator=(const WeakMapPtr& wmp) = delete;
+  // WeakMapPtr is neither copyable nor assignable.
+  WeakMapPtr(const WeakMapPtr& wmp) = delete;
+  WeakMapPtr& operator=(const WeakMapPtr& wmp) = delete;
 };
 
 } /* namespace JS */
 
-#endif  /* js_WeakMapPtr_h */
+#endif /* js_WeakMapPtr_h */

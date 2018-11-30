@@ -15,9 +15,8 @@ namespace mozilla {
 namespace layers {
 
 // This is the base class for canvas and image layers.
-class TexturedLayerMLGPU : public LayerMLGPU
-{
-public:
+class TexturedLayerMLGPU : public LayerMLGPU {
+ public:
   TexturedLayerMLGPU* AsTexturedLayerMLGPU() override { return this; }
 
   virtual gfx::SamplingFilter GetSamplingFilter() = 0;
@@ -25,21 +24,14 @@ public:
   bool SetCompositableHost(CompositableHost* aHost) override;
   CompositableHost* GetCompositableHost() override;
 
-  void AssignToView(FrameBuilder* aBuilder,
-                    RenderViewMLGPU* aView,
+  void AssignToView(FrameBuilder* aBuilder, RenderViewMLGPU* aView,
                     Maybe<gfx::Polygon>&& aGeometry) override;
 
-  TextureSource* GetTexture() const {
-    return mTexture;
-  }
-  ImageHost* GetImageHost() const {
-    return mHost;
-  }
+  TextureSource* GetTexture() const { return mTexture; }
+  ImageHost* GetImageHost() const { return mHost; }
 
   // Return the scale factor from the texture source to the picture rect.
-  virtual Maybe<gfx::Size> GetPictureScale() const {
-    return Nothing();
-  }
+  virtual Maybe<gfx::Size> GetPictureScale() const { return Nothing(); }
 
   // Mask layers aren't prepared like normal layers. They are bound as
   // mask operations are built. Mask layers are never tiled (they are
@@ -47,18 +39,17 @@ public:
   // a TextureSource.
   RefPtr<TextureSource> BindAndGetTexture();
 
-protected:
+ protected:
   explicit TexturedLayerMLGPU(LayerManagerMLGPU* aManager);
   virtual ~TexturedLayerMLGPU() override;
 
-  void AssignBigImage(FrameBuilder* aBuilder,
-                      RenderViewMLGPU* aView,
+  void AssignBigImage(FrameBuilder* aBuilder, RenderViewMLGPU* aView,
                       BigImageIterator* aIter,
                       const Maybe<gfx::Polygon>& aGeometry);
 
   bool OnPrepareToRender(FrameBuilder* aBuilder) override;
 
-protected:
+ protected:
   RefPtr<ImageHost> mHost;
   RefPtr<TextureSource> mTexture;
   RefPtr<TextureSource> mBigImageTexture;
@@ -70,37 +61,30 @@ protected:
 // RenderPasses. In the future we could potentially consume the source
 // layer more intelligently instead (for example, having it compute
 // which textures are relevant for a given tile).
-class TempImageLayerMLGPU final : public ImageLayer,
-                                  public TexturedLayerMLGPU
-{
-public:
+class TempImageLayerMLGPU final : public ImageLayer, public TexturedLayerMLGPU {
+ public:
   explicit TempImageLayerMLGPU(LayerManagerMLGPU* aManager);
 
   // Layer
   HostLayer* AsHostLayer() override { return this; }
-  gfx::SamplingFilter GetSamplingFilter() override {
-    return mFilter;
-  }
-  bool IsContentOpaque() override {
-    return mIsOpaque;
-  }
+  gfx::SamplingFilter GetSamplingFilter() override { return mFilter; }
+  bool IsContentOpaque() override { return mIsOpaque; }
 
-  void Init(TexturedLayerMLGPU* aSource,
-            const RefPtr<TextureSource>& aTexture,
+  void Init(TexturedLayerMLGPU* aSource, const RefPtr<TextureSource>& aTexture,
             const gfx::IntRect& aPictureRect);
 
   // HostLayer
   Layer* GetLayer() override { return this; }
 
-protected:
+ protected:
   ~TempImageLayerMLGPU() override;
 
-private:
+ private:
   gfx::SamplingFilter mFilter;
   bool mIsOpaque;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_TexturedLayerMLGPU_h
+#endif  // mozilla_gfx_layers_mlgpu_TexturedLayerMLGPU_h

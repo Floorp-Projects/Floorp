@@ -14,61 +14,55 @@
 namespace js {
 namespace jit {
 
-// Basic information about bytecodes in the script.  Used to help baseline compilation.
-struct BytecodeInfo
-{
-    static const uint16_t MAX_STACK_DEPTH = 0xffffU;
-    uint16_t stackDepth;
-    bool initialized : 1;
-    bool jumpTarget : 1;
+// Basic information about bytecodes in the script.  Used to help baseline
+// compilation.
+struct BytecodeInfo {
+  static const uint16_t MAX_STACK_DEPTH = 0xffffU;
+  uint16_t stackDepth;
+  bool initialized : 1;
+  bool jumpTarget : 1;
 
-    // If true, this is a JSOP_LOOPENTRY op inside a catch or finally block.
-    bool loopEntryInCatchOrFinally : 1;
+  // If true, this is a JSOP_LOOPENTRY op inside a catch or finally block.
+  bool loopEntryInCatchOrFinally : 1;
 
-    void init(unsigned depth) {
-        MOZ_ASSERT(depth <= MAX_STACK_DEPTH);
-        MOZ_ASSERT_IF(initialized, stackDepth == depth);
-        initialized = true;
-        stackDepth = depth;
-    }
+  void init(unsigned depth) {
+    MOZ_ASSERT(depth <= MAX_STACK_DEPTH);
+    MOZ_ASSERT_IF(initialized, stackDepth == depth);
+    initialized = true;
+    stackDepth = depth;
+  }
 };
 
-class BytecodeAnalysis
-{
-    JSScript* script_;
-    Vector<BytecodeInfo, 0, JitAllocPolicy> infos_;
+class BytecodeAnalysis {
+  JSScript* script_;
+  Vector<BytecodeInfo, 0, JitAllocPolicy> infos_;
 
-    bool usesEnvironmentChain_;
-    bool hasTryFinally_;
+  bool usesEnvironmentChain_;
+  bool hasTryFinally_;
 
-  public:
-    explicit BytecodeAnalysis(TempAllocator& alloc, JSScript* script);
+ public:
+  explicit BytecodeAnalysis(TempAllocator& alloc, JSScript* script);
 
-    MOZ_MUST_USE bool init(TempAllocator& alloc, GSNCache& gsn);
+  MOZ_MUST_USE bool init(TempAllocator& alloc, GSNCache& gsn);
 
-    BytecodeInfo& info(jsbytecode* pc) {
-        MOZ_ASSERT(infos_[script_->pcToOffset(pc)].initialized);
-        return infos_[script_->pcToOffset(pc)];
+  BytecodeInfo& info(jsbytecode* pc) {
+    MOZ_ASSERT(infos_[script_->pcToOffset(pc)].initialized);
+    return infos_[script_->pcToOffset(pc)];
+  }
+
+  BytecodeInfo* maybeInfo(jsbytecode* pc) {
+    if (infos_[script_->pcToOffset(pc)].initialized) {
+      return &infos_[script_->pcToOffset(pc)];
     }
+    return nullptr;
+  }
 
-    BytecodeInfo* maybeInfo(jsbytecode* pc) {
-        if (infos_[script_->pcToOffset(pc)].initialized) {
-            return &infos_[script_->pcToOffset(pc)];
-        }
-        return nullptr;
-    }
+  bool usesEnvironmentChain() const { return usesEnvironmentChain_; }
 
-    bool usesEnvironmentChain() const {
-        return usesEnvironmentChain_;
-    }
-
-    bool hasTryFinally() const {
-        return hasTryFinally_;
-    }
+  bool hasTryFinally() const { return hasTryFinally_; }
 };
 
-
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_BytecodeAnalysis_h */

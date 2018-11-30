@@ -11,21 +11,15 @@
 namespace mozilla {
 namespace hal_impl {
 
-void
-EnableNetworkNotifications()
-{}
+void EnableNetworkNotifications() {}
 
-void
-DisableNetworkNotifications()
-{}
+void DisableNetworkNotifications() {}
 
-void
-GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
-{
+void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo) {
   aNetworkInfo->type() = dom::network::kDefaultType;
   aNetworkInfo->isWifi() = dom::network::kDefaultIsWifi;
   aNetworkInfo->dhcpGateway() = dom::network::kDefaultDHCPGateway;
 }
 
-} // namespace hal_impl
-} // namespace mozilla
+}  // namespace hal_impl
+}  // namespace mozilla

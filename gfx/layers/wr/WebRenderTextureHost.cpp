@@ -13,13 +13,10 @@
 namespace mozilla {
 namespace layers {
 
-WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
-                                           TextureFlags aFlags,
-                                           TextureHost* aTexture,
-                                           wr::ExternalImageId& aExternalImageId)
-  : TextureHost(aFlags)
-  , mExternalImageId(aExternalImageId)
-{
+WebRenderTextureHost::WebRenderTextureHost(
+    const SurfaceDescriptor& aDesc, TextureFlags aFlags, TextureHost* aTexture,
+    wr::ExternalImageId& aExternalImageId)
+    : TextureHost(aFlags), mExternalImageId(aExternalImageId) {
   // The wrapped textureHost will be used in WebRender, and the WebRender could
   // run at another thread. It's hard to control the life-time when gecko
   // receives PTextureParent destroy message. It's possible that textureHost is
@@ -35,94 +32,73 @@ WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
   CreateRenderTextureHost(aDesc, aTexture);
 }
 
-WebRenderTextureHost::~WebRenderTextureHost()
-{
+WebRenderTextureHost::~WebRenderTextureHost() {
   MOZ_COUNT_DTOR(WebRenderTextureHost);
-  wr::RenderThread::Get()->UnregisterExternalImage(wr::AsUint64(mExternalImageId));
+  wr::RenderThread::Get()->UnregisterExternalImage(
+      wr::AsUint64(mExternalImageId));
 }
 
-void
-WebRenderTextureHost::CreateRenderTextureHost(const layers::SurfaceDescriptor& aDesc,
-                                              TextureHost* aTexture)
-{
+void WebRenderTextureHost::CreateRenderTextureHost(
+    const layers::SurfaceDescriptor& aDesc, TextureHost* aTexture) {
   MOZ_ASSERT(aTexture);
 
   aTexture->CreateRenderTexture(mExternalImageId);
 }
 
-bool
-WebRenderTextureHost::Lock()
-{
+bool WebRenderTextureHost::Lock() {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
   return false;
 }
 
-void
-WebRenderTextureHost::Unlock()
-{
+void WebRenderTextureHost::Unlock() {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
 }
 
-bool
-WebRenderTextureHost::BindTextureSource(CompositableTextureSourceRef& aTexture)
-{
+bool WebRenderTextureHost::BindTextureSource(
+    CompositableTextureSourceRef& aTexture) {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
   return false;
 }
 
-already_AddRefed<gfx::DataSourceSurface>
-WebRenderTextureHost::GetAsSurface()
-{
+already_AddRefed<gfx::DataSourceSurface> WebRenderTextureHost::GetAsSurface() {
   if (!mWrappedTextureHost) {
     return nullptr;
   }
   return mWrappedTextureHost->GetAsSurface();
 }
 
-void
-WebRenderTextureHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
-{
-}
+void WebRenderTextureHost::SetTextureSourceProvider(
+    TextureSourceProvider* aProvider) {}
 
-YUVColorSpace
-WebRenderTextureHost::GetYUVColorSpace() const
-{
+YUVColorSpace WebRenderTextureHost::GetYUVColorSpace() const {
   if (mWrappedTextureHost) {
     return mWrappedTextureHost->GetYUVColorSpace();
   }
   return YUVColorSpace::UNKNOWN;
 }
 
-gfx::IntSize
-WebRenderTextureHost::GetSize() const
-{
+gfx::IntSize WebRenderTextureHost::GetSize() const {
   if (!mWrappedTextureHost) {
     return gfx::IntSize();
   }
   return mWrappedTextureHost->GetSize();
 }
 
-gfx::SurfaceFormat
-WebRenderTextureHost::GetFormat() const
-{
+gfx::SurfaceFormat WebRenderTextureHost::GetFormat() const {
   if (!mWrappedTextureHost) {
     return gfx::SurfaceFormat::UNKNOWN;
   }
   return mWrappedTextureHost->GetFormat();
 }
 
-gfx::SurfaceFormat
-WebRenderTextureHost::GetReadFormat() const
-{
+gfx::SurfaceFormat WebRenderTextureHost::GetReadFormat() const {
   if (!mWrappedTextureHost) {
     return gfx::SurfaceFormat::UNKNOWN;
   }
   return mWrappedTextureHost->GetReadFormat();
 }
 
-int32_t
-WebRenderTextureHost::GetRGBStride()
-{
+int32_t WebRenderTextureHost::GetRGBStride() {
   if (!mWrappedTextureHost) {
     return 0;
   }
@@ -130,59 +106,45 @@ WebRenderTextureHost::GetRGBStride()
   if (GetFormat() == gfx::SurfaceFormat::YUV) {
     // XXX this stride is used until yuv image rendering by webrender is used.
     // Software converted RGB buffers strides are aliened to 16
-    return gfx::GetAlignedStride<16>(GetSize().width, BytesPerPixel(gfx::SurfaceFormat::B8G8R8A8));
+    return gfx::GetAlignedStride<16>(
+        GetSize().width, BytesPerPixel(gfx::SurfaceFormat::B8G8R8A8));
   }
   return ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
 }
 
-bool
-WebRenderTextureHost::HasIntermediateBuffer() const
-{
+bool WebRenderTextureHost::HasIntermediateBuffer() const {
   MOZ_ASSERT(mWrappedTextureHost);
   return mWrappedTextureHost->HasIntermediateBuffer();
 }
 
-uint32_t
-WebRenderTextureHost::NumSubTextures() const
-{
+uint32_t WebRenderTextureHost::NumSubTextures() const {
   MOZ_ASSERT(mWrappedTextureHost);
   return mWrappedTextureHost->NumSubTextures();
 }
 
-void
-WebRenderTextureHost::PushResourceUpdates(wr::TransactionBuilder& aResources,
-                                          ResourceUpdateOp aOp,
-                                          const Range<wr::ImageKey>& aImageKeys,
-                                          const wr::ExternalImageId& aExtID)
-{
+void WebRenderTextureHost::PushResourceUpdates(
+    wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
+    const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(mExternalImageId == aExtID || SupportsWrNativeTexture());
 
   mWrappedTextureHost->PushResourceUpdates(aResources, aOp, aImageKeys, aExtID);
 }
 
-void
-WebRenderTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
-                                       const wr::LayoutRect& aBounds,
-                                       const wr::LayoutRect& aClip,
-                                       wr::ImageRendering aFilter,
-                                       const Range<wr::ImageKey>& aImageKeys)
-{
+void WebRenderTextureHost::PushDisplayItems(
+    wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
+    const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
+    const Range<wr::ImageKey>& aImageKeys) {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(aImageKeys.length() > 0);
 
-  mWrappedTextureHost->PushDisplayItems(aBuilder,
-                                         aBounds,
-                                         aClip,
-                                         aFilter,
-                                         aImageKeys);
+  mWrappedTextureHost->PushDisplayItems(aBuilder, aBounds, aClip, aFilter,
+                                        aImageKeys);
 }
 
-bool
-WebRenderTextureHost::SupportsWrNativeTexture()
-{
+bool WebRenderTextureHost::SupportsWrNativeTexture() {
   return mWrappedTextureHost->SupportsWrNativeTexture();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

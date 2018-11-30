@@ -24,17 +24,15 @@ class PresentationConnection;
 class PresentationRequest;
 class Promise;
 
-class PresentationRequesterCallback : public nsIPresentationServiceCallback
-{
-public:
+class PresentationRequesterCallback : public nsIPresentationServiceCallback {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSERVICECALLBACK
 
   PresentationRequesterCallback(PresentationRequest* aRequest,
-                                const nsAString& aSessionId,
-                                Promise* aPromise);
+                                const nsAString& aSessionId, Promise* aPromise);
 
-protected:
+ protected:
   virtual ~PresentationRequesterCallback();
 
   RefPtr<PresentationRequest> mRequest;
@@ -42,28 +40,27 @@ protected:
   RefPtr<Promise> mPromise;
 };
 
-class PresentationReconnectCallback final : public PresentationRequesterCallback
-{
-public:
+class PresentationReconnectCallback final
+    : public PresentationRequesterCallback {
+ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(PresentationReconnectCallback,
                                        PresentationRequesterCallback)
   NS_DECL_NSIPRESENTATIONSERVICECALLBACK
 
   PresentationReconnectCallback(PresentationRequest* aRequest,
-                                const nsAString& aSessionId,
-                                Promise* aPromise,
+                                const nsAString& aSessionId, Promise* aPromise,
                                 PresentationConnection* aConnection);
 
-private:
+ private:
   virtual ~PresentationReconnectCallback();
 
   RefPtr<PresentationConnection> mConnection;
 };
 
-class PresentationResponderLoadingCallback final : public nsIWebProgressListener
-                                                 , public nsSupportsWeakReference
-{
-public:
+class PresentationResponderLoadingCallback final
+    : public nsIWebProgressListener,
+      public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
 
@@ -71,7 +68,7 @@ public:
 
   nsresult Init(nsIDocShell* aDocShell);
 
-private:
+ private:
   ~PresentationResponderLoadingCallback();
 
   nsresult NotifyReceiverReady(bool aIsLoading);
@@ -80,7 +77,7 @@ private:
   nsCOMPtr<nsIWebProgress> mProgress;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationCallbacks_h
+#endif  // mozilla_dom_PresentationCallbacks_h

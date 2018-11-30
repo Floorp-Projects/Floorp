@@ -54,64 +54,28 @@
 
 #include "nsHtml5UTF16Buffer.h"
 
-int32_t
-nsHtml5UTF16Buffer::getStart()
-{
-  return start;
-}
+int32_t nsHtml5UTF16Buffer::getStart() { return start; }
 
-void
-nsHtml5UTF16Buffer::setStart(int32_t start)
-{
-  this->start = start;
-}
+void nsHtml5UTF16Buffer::setStart(int32_t start) { this->start = start; }
 
-char16_t*
-nsHtml5UTF16Buffer::getBuffer()
-{
-  return buffer;
-}
+char16_t* nsHtml5UTF16Buffer::getBuffer() { return buffer; }
 
-int32_t
-nsHtml5UTF16Buffer::getEnd()
-{
-  return end;
-}
+int32_t nsHtml5UTF16Buffer::getEnd() { return end; }
 
-bool
-nsHtml5UTF16Buffer::hasMore()
-{
-  return start < end;
-}
+bool nsHtml5UTF16Buffer::hasMore() { return start < end; }
 
-int32_t
-nsHtml5UTF16Buffer::getLength()
-{
-  return end - start;
-}
+int32_t nsHtml5UTF16Buffer::getLength() { return end - start; }
 
-void
-nsHtml5UTF16Buffer::adjust(bool lastWasCR)
-{
+void nsHtml5UTF16Buffer::adjust(bool lastWasCR) {
   if (lastWasCR && buffer[start] == '\n') {
     start++;
   }
 }
 
-void
-nsHtml5UTF16Buffer::setEnd(int32_t end)
-{
-  this->end = end;
-}
+void nsHtml5UTF16Buffer::setEnd(int32_t end) { this->end = end; }
 
-void
-nsHtml5UTF16Buffer::initializeStatics()
-{
-}
+void nsHtml5UTF16Buffer::initializeStatics() {}
 
-void
-nsHtml5UTF16Buffer::releaseStatics()
-{
-}
+void nsHtml5UTF16Buffer::releaseStatics() {}
 
 #include "nsHtml5UTF16BufferCppSupplement.h"

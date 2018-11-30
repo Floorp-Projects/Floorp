@@ -16,7 +16,6 @@
 
 class ChildThread;
 
-
 // Base class for child processes of the browser process (i.e. renderer and
 // plugin host). This is a singleton object for each child process.
 class ChildProcess {

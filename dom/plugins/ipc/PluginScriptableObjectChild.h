@@ -20,18 +20,12 @@ namespace plugins {
 class PluginInstanceChild;
 class PluginScriptableObjectChild;
 
-struct ChildNPObject : NPObject
-{
-  ChildNPObject()
-    : NPObject(), parent(nullptr), invalidated(false)
-  {
+struct ChildNPObject : NPObject {
+  ChildNPObject() : NPObject(), parent(nullptr), invalidated(false) {
     MOZ_COUNT_CTOR(ChildNPObject);
   }
 
-  ~ChildNPObject()
-  {
-    MOZ_COUNT_DTOR(ChildNPObject);
-  }
+  ~ChildNPObject() { MOZ_COUNT_DTOR(ChildNPObject); }
 
   // |parent| is always valid as long as the actor is alive. Once the actor is
   // destroyed this will be set to null.
@@ -39,88 +33,60 @@ struct ChildNPObject : NPObject
   bool invalidated;
 };
 
-class PluginScriptableObjectChild : public PPluginScriptableObjectChild
-{
+class PluginScriptableObjectChild : public PPluginScriptableObjectChild {
   friend class PluginInstanceChild;
 
-public:
+ public:
   explicit PluginScriptableObjectChild(ScriptableObjectType aType);
   virtual ~PluginScriptableObjectChild();
 
-  bool
-  InitializeProxy();
+  bool InitializeProxy();
 
-  void
-  InitializeLocal(NPObject* aObject);
+  void InitializeLocal(NPObject* aObject);
 
+  virtual mozilla::ipc::IPCResult AnswerInvalidate() override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerInvalidate() override;
+  virtual mozilla::ipc::IPCResult AnswerHasMethod(const PluginIdentifier& aId,
+                                                  bool* aHasMethod) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerHasMethod(const PluginIdentifier& aId,
-                  bool* aHasMethod) override;
+  virtual mozilla::ipc::IPCResult AnswerInvoke(
+      const PluginIdentifier& aId, InfallibleTArray<Variant>&& aArgs,
+      Variant* aResult, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerInvoke(const PluginIdentifier& aId,
-               InfallibleTArray<Variant>&& aArgs,
-               Variant* aResult,
-               bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerInvokeDefault(
+      InfallibleTArray<Variant>&& aArgs, Variant* aResult,
+      bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
-                      Variant* aResult,
-                      bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerHasProperty(
+      const PluginIdentifier& aId, bool* aHasProperty) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerHasProperty(const PluginIdentifier& aId,
-                    bool* aHasProperty) override;
+  virtual mozilla::ipc::IPCResult AnswerGetChildProperty(
+      const PluginIdentifier& aId, bool* aHasProperty, bool* aHasMethod,
+      Variant* aResult, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerGetChildProperty(const PluginIdentifier& aId,
-                         bool* aHasProperty,
-                         bool* aHasMethod,
-                         Variant* aResult,
-                         bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerSetProperty(const PluginIdentifier& aId,
+                                                    const Variant& aValue,
+                                                    bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerSetProperty(const PluginIdentifier& aId,
-                    const Variant& aValue,
-                    bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerRemoveProperty(
+      const PluginIdentifier& aId, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerRemoveProperty(const PluginIdentifier& aId,
-                       bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerEnumerate(
+      InfallibleTArray<PluginIdentifier>* aProperties, bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
-                  bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult AnswerConstruct(
+      InfallibleTArray<Variant>&& aArgs, Variant* aResult,
+      bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult
-  AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
-                  Variant* aResult,
-                  bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult RecvProtect() override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvProtect() override;
+  virtual mozilla::ipc::IPCResult RecvUnprotect() override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvUnprotect() override;
+  NPObject* GetObject(bool aCanResurrect);
 
-  NPObject*
-  GetObject(bool aCanResurrect);
+  static const NPClass* GetClass() { return &sNPClass; }
 
-  static const NPClass*
-  GetClass()
-  {
-    return &sNPClass;
-  }
-
-  PluginInstanceChild*
-  GetInstance() const
-  {
-    return mInstance;
-  }
+  PluginInstanceChild* GetInstance() const { return mInstance; }
 
   // Protect only affects LocalObject actors. It is called by the
   // ProtectedVariant/Actor helper classes before the actor is used as an
@@ -148,18 +114,12 @@ public:
    */
   void NPObjectDestroyed();
 
-  bool
-  Evaluate(NPString* aScript,
-           NPVariant* aResult);
+  bool Evaluate(NPString* aScript, NPVariant* aResult);
 
-  ScriptableObjectType
-  Type() const {
-    return mType;
-  }
+  ScriptableObjectType Type() const { return mType; }
 
-private:
-  struct StoredIdentifier
-  {
+ private:
+  struct StoredIdentifier {
     nsCString mIdentifier;
     nsAutoRefCnt mRefCnt;
     bool mPermanent;
@@ -179,29 +139,30 @@ private:
     }
 
     explicit StoredIdentifier(const nsCString& aIdentifier)
-      : mIdentifier(aIdentifier), mRefCnt(), mPermanent(false)
-    { MOZ_COUNT_CTOR(StoredIdentifier); }
+        : mIdentifier(aIdentifier), mRefCnt(), mPermanent(false) {
+      MOZ_COUNT_CTOR(StoredIdentifier);
+    }
 
     ~StoredIdentifier() { MOZ_COUNT_DTOR(StoredIdentifier); }
   };
 
-public:
-  class MOZ_STACK_CLASS StackIdentifier
-  {
-  public:
+ public:
+  class MOZ_STACK_CLASS StackIdentifier {
+   public:
     explicit StackIdentifier(const PluginIdentifier& aIdentifier);
     explicit StackIdentifier(NPIdentifier aIdentifier);
     ~StackIdentifier();
 
-    void MakePermanent()
-    {
+    void MakePermanent() {
       if (mStored) {
         mStored->mPermanent = true;
       }
     }
     NPIdentifier ToNPIdentifier() const;
 
-    bool IsString() const { return mIdentifier.type() == PluginIdentifier::TnsCString; }
+    bool IsString() const {
+      return mIdentifier.type() == PluginIdentifier::TnsCString;
+    }
     const nsCString& GetString() const { return mIdentifier.get_nsCString(); }
 
     int32_t GetInt() const { return mIdentifier.get_int32_t(); }
@@ -233,72 +194,47 @@ public:
    */
   static void NotifyOfInstanceShutdown(PluginInstanceChild* aInstance);
 
-private:
-  static NPObject*
-  ScriptableAllocate(NPP aInstance,
-                     NPClass* aClass);
+ private:
+  static NPObject* ScriptableAllocate(NPP aInstance, NPClass* aClass);
 
-  static void
-  ScriptableInvalidate(NPObject* aObject);
+  static void ScriptableInvalidate(NPObject* aObject);
 
-  static void
-  ScriptableDeallocate(NPObject* aObject);
+  static void ScriptableDeallocate(NPObject* aObject);
 
-  static bool
-  ScriptableHasMethod(NPObject* aObject,
-                      NPIdentifier aName);
+  static bool ScriptableHasMethod(NPObject* aObject, NPIdentifier aName);
 
-  static bool
-  ScriptableInvoke(NPObject* aObject,
-                   NPIdentifier aName,
-                   const NPVariant* aArgs,
-                   uint32_t aArgCount,
-                   NPVariant* aResult);
+  static bool ScriptableInvoke(NPObject* aObject, NPIdentifier aName,
+                               const NPVariant* aArgs, uint32_t aArgCount,
+                               NPVariant* aResult);
 
-  static bool
-  ScriptableInvokeDefault(NPObject* aObject,
-                          const NPVariant* aArgs,
-                          uint32_t aArgCount,
-                          NPVariant* aResult);
+  static bool ScriptableInvokeDefault(NPObject* aObject, const NPVariant* aArgs,
+                                      uint32_t aArgCount, NPVariant* aResult);
 
-  static bool
-  ScriptableHasProperty(NPObject* aObject,
-                        NPIdentifier aName);
+  static bool ScriptableHasProperty(NPObject* aObject, NPIdentifier aName);
 
-  static bool
-  ScriptableGetProperty(NPObject* aObject,
-                        NPIdentifier aName,
-                        NPVariant* aResult);
+  static bool ScriptableGetProperty(NPObject* aObject, NPIdentifier aName,
+                                    NPVariant* aResult);
 
-  static bool
-  ScriptableSetProperty(NPObject* aObject,
-                        NPIdentifier aName,
-                        const NPVariant* aValue);
+  static bool ScriptableSetProperty(NPObject* aObject, NPIdentifier aName,
+                                    const NPVariant* aValue);
 
-  static bool
-  ScriptableRemoveProperty(NPObject* aObject,
-                           NPIdentifier aName);
+  static bool ScriptableRemoveProperty(NPObject* aObject, NPIdentifier aName);
 
-  static bool
-  ScriptableEnumerate(NPObject* aObject,
-                      NPIdentifier** aIdentifiers,
-                      uint32_t* aCount);
+  static bool ScriptableEnumerate(NPObject* aObject,
+                                  NPIdentifier** aIdentifiers,
+                                  uint32_t* aCount);
 
-  static bool
-  ScriptableConstruct(NPObject* aObject,
-                      const NPVariant* aArgs,
-                      uint32_t aArgCount,
-                      NPVariant* aResult);
+  static bool ScriptableConstruct(NPObject* aObject, const NPVariant* aArgs,
+                                  uint32_t aArgCount, NPVariant* aResult);
 
-  NPObject*
-  CreateProxyObject();
+  NPObject* CreateProxyObject();
 
   // ResurrectProxyObject is only used with Proxy actors. It is called when the
   // parent process uses an actor whose NPObject was deleted by the child
   // process.
   bool ResurrectProxyObject();
 
-private:
+ private:
   PluginInstanceChild* mInstance;
   NPObject* mObject;
   bool mInvalidated;
@@ -311,16 +247,13 @@ private:
   static StoredIdentifier* HashIdentifier(const nsCString& aIdentifier);
   static void UnhashIdentifier(StoredIdentifier* aIdentifier);
 
-  typedef nsDataHashtable<nsCStringHashKey, RefPtr<StoredIdentifier>> IdentifierTable;
+  typedef nsDataHashtable<nsCStringHashKey, RefPtr<StoredIdentifier>>
+      IdentifierTable;
   static IdentifierTable sIdentifiers;
 
-  struct NPObjectData : public nsPtrHashKey<NPObject>
-  {
+  struct NPObjectData : public nsPtrHashKey<NPObject> {
     explicit NPObjectData(const NPObject* key)
-    : nsPtrHashKey<NPObject>(key),
-      instance(nullptr),
-      actor(nullptr)
-    { }
+        : nsPtrHashKey<NPObject>(key), instance(nullptr), actor(nullptr) {}
 
     // never nullptr
     PluginInstanceChild* instance;
@@ -330,8 +263,9 @@ private:
   };
 
   /**
-   * mObjectMap contains all the currently active NPObjects (from NPN_CreateObject until the
-   * final release/dealloc, whether or not an actor is currently associated with the object.
+   * mObjectMap contains all the currently active NPObjects (from
+   * NPN_CreateObject until the final release/dealloc, whether or not an actor
+   * is currently associated with the object.
    */
   static nsTHashtable<NPObjectData>* sObjectMap;
 };

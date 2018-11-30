@@ -29,31 +29,24 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(Crypto)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Crypto, mParent, mSubtle)
 
-Crypto::Crypto(nsIGlobalObject* aParent)
-  : mParent(aParent)
-{
-}
+Crypto::Crypto(nsIGlobalObject* aParent) : mParent(aParent) {}
 
-Crypto::~Crypto()
-{
-}
+Crypto::~Crypto() {}
 
-/* virtual */ JSObject*
-Crypto::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* Crypto::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return Crypto_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
-                        JS::MutableHandle<JSObject*> aRetval,
-                        ErrorResult& aRv)
-{
+void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
+                             JS::MutableHandle<JSObject*> aRetval,
+                             ErrorResult& aRv) {
   JS::Rooted<JSObject*> view(aCx, aArray.Obj());
 
   if (JS_IsTypedArrayObject(view) && JS_GetTypedArraySharedness(view)) {
     // Throw if the object is mapping shared memory (must opt in).
-    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(NS_LITERAL_STRING("Argument of Crypto.getRandomValues"));
+    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(
+        NS_LITERAL_STRING("Argument of Crypto.getRandomValues"));
     return;
   }
 
@@ -85,7 +78,7 @@ Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
   }
 
   nsCOMPtr<nsIRandomGenerator> randomGenerator =
-    do_GetService("@mozilla.org/security/random-generator;1");
+      do_GetService("@mozilla.org/security/random-generator;1");
   if (!randomGenerator) {
     aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
     return;
@@ -105,14 +98,12 @@ Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
   aRetval.set(view);
 }
 
-SubtleCrypto*
-Crypto::Subtle()
-{
-  if(!mSubtle) {
+SubtleCrypto* Crypto::Subtle() {
+  if (!mSubtle) {
     mSubtle = new SubtleCrypto(GetParentObject());
   }
   return mSubtle;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

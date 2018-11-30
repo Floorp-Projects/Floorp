@@ -8,11 +8,11 @@
 #include "mozilla/mozalloc_abort.h"
 
 #ifdef ANDROID
-# include <android/log.h>
+#include <android/log.h>
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-# include "APKOpen.h"
-# include "dlfcn.h"
+#include "APKOpen.h"
+#include "dlfcn.h"
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -20,40 +20,38 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Sprintf.h"
 
-void
-mozalloc_abort(const char* const msg)
-{
+void mozalloc_abort(const char* const msg) {
 #ifndef ANDROID
-    fputs(msg, stderr);
-    fputs("\n", stderr);
+  fputs(msg, stderr);
+  fputs("\n", stderr);
 #else
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "mozalloc_abort: %s", msg);
+  __android_log_print(ANDROID_LOG_ERROR, "Gecko", "mozalloc_abort: %s", msg);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-    abortThroughJava(msg);
+  abortThroughJava(msg);
 #endif
-    MOZ_CRASH();
+  MOZ_CRASH();
 }
 
 #ifdef MOZ_WIDGET_ANDROID
 template <size_t N>
 void fillAbortMessage(char (&msg)[N], uintptr_t retAddress) {
-    /*
-     * On Android, we often don't have reliable backtrace when crashing inside
-     * abort(). Therefore, we try to find out who is calling abort() and add
-     * that to the message.
-     */
-    Dl_info info = {};
-    dladdr(reinterpret_cast<void*>(retAddress), &info);
+  /*
+   * On Android, we often don't have reliable backtrace when crashing inside
+   * abort(). Therefore, we try to find out who is calling abort() and add
+   * that to the message.
+   */
+  Dl_info info = {};
+  dladdr(reinterpret_cast<void*>(retAddress), &info);
 
-    const char* const module = info.dli_fname ? info.dli_fname : "";
-    const char* const base_module = strrchr(module, '/');
-    const void* const module_offset =
-        reinterpret_cast<void*>(retAddress - uintptr_t(info.dli_fbase));
-    const char* const sym = info.dli_sname ? info.dli_sname : "";
+  const char* const module = info.dli_fname ? info.dli_fname : "";
+  const char* const base_module = strrchr(module, '/');
+  const void* const module_offset =
+      reinterpret_cast<void*>(retAddress - uintptr_t(info.dli_fbase));
+  const char* const sym = info.dli_sname ? info.dli_sname : "";
 
-    SprintfLiteral(msg, "abort() called from %s:%p (%s)",
-                   base_module ? base_module + 1 : module, module_offset, sym);
+  SprintfLiteral(msg, "abort() called from %s:%p (%s)",
+                 base_module ? base_module + 1 : module, module_offset, sym);
 }
 #endif
 
@@ -70,22 +68,20 @@ void fillAbortMessage(char (&msg)[N], uintptr_t retAddress) {
 //
 // That segmentation fault will be interpreted as another bug by ASan and as a
 // result, ASan will just exit(1) instead of aborting.
-extern "C" void abort(void)
-{
+extern "C" void abort(void) {
 #ifdef MOZ_WIDGET_ANDROID
-    char msg[64] = {};
-    fillAbortMessage(msg, uintptr_t(__builtin_return_address(0)));
+  char msg[64] = {};
+  fillAbortMessage(msg, uintptr_t(__builtin_return_address(0)));
 #else
-    const char* const msg = "Redirecting call to abort() to mozalloc_abort\n";
+  const char* const msg = "Redirecting call to abort() to mozalloc_abort\n";
 #endif
 
-    mozalloc_abort(msg);
+  mozalloc_abort(msg);
 
-    // We won't reach here because mozalloc_abort() is MOZ_NORETURN. But that
-    // annotation isn't used on ARM (see mozalloc_abort.h for why) so we add a
-    // redundant MOZ_CRASH() here to avoid a "'noreturn' function does return"
-    // warning.
-    MOZ_CRASH();
+  // We won't reach here because mozalloc_abort() is MOZ_NORETURN. But that
+  // annotation isn't used on ARM (see mozalloc_abort.h for why) so we add a
+  // redundant MOZ_CRASH() here to avoid a "'noreturn' function does return"
+  // warning.
+  MOZ_CRASH();
 }
 #endif
-

@@ -23,11 +23,10 @@ class XMLHttpRequestStringSnapshotReaderHelper;
 // responseText for events dispatched during the loading state. For this reason
 // we use this class, able to create snapshots of the current size of itself
 // without making extra copies.
-class XMLHttpRequestString final
-{
+class XMLHttpRequestString final {
   friend class XMLHttpRequestStringWriterHelper;
 
-public:
+ public:
   XMLHttpRequestString();
   ~XMLHttpRequestString();
 
@@ -50,7 +49,7 @@ public:
 
   void CreateSnapshot(XMLHttpRequestStringSnapshot& aSnapshot);
 
-private:
+ private:
   XMLHttpRequestString(const XMLHttpRequestString&) = delete;
   XMLHttpRequestString& operator=(const XMLHttpRequestString&) = delete;
   XMLHttpRequestString& operator=(const XMLHttpRequestString&&) = delete;
@@ -59,24 +58,25 @@ private:
 };
 
 // This class locks the buffer and allows the callee to write data into it.
-class MOZ_STACK_CLASS XMLHttpRequestStringWriterHelper final
-{
-public:
+class MOZ_STACK_CLASS XMLHttpRequestStringWriterHelper final {
+ public:
   explicit XMLHttpRequestStringWriterHelper(XMLHttpRequestString& aString);
 
   /**
    * The existing length of the string. Do not call during BulkWrite().
    */
-  uint32_t
-  Length() const;
+  uint32_t Length() const;
 
-  mozilla::BulkWriteHandle<char16_t>
-  BulkWrite(uint32_t aCapacity, nsresult& aRv);
+  mozilla::BulkWriteHandle<char16_t> BulkWrite(uint32_t aCapacity,
+                                               nsresult& aRv);
 
-private:
-  XMLHttpRequestStringWriterHelper(const XMLHttpRequestStringWriterHelper&) = delete;
-  XMLHttpRequestStringWriterHelper& operator=(const XMLHttpRequestStringWriterHelper&) = delete;
-  XMLHttpRequestStringWriterHelper& operator=(const XMLHttpRequestStringWriterHelper&&) = delete;
+ private:
+  XMLHttpRequestStringWriterHelper(const XMLHttpRequestStringWriterHelper&) =
+      delete;
+  XMLHttpRequestStringWriterHelper& operator=(
+      const XMLHttpRequestStringWriterHelper&) = delete;
+  XMLHttpRequestStringWriterHelper& operator=(
+      const XMLHttpRequestStringWriterHelper&&) = delete;
 
   RefPtr<XMLHttpRequestStringBuffer> mBuffer;
   MutexAutoLock mLock;
@@ -86,42 +86,30 @@ private:
 // XMLHttpRequestString plus the current length. GetAsString will return the
 // string with that particular length also if the XMLHttpRequestStringBuffer is
 // grown in the meantime.
-class XMLHttpRequestStringSnapshot final
-{
+class XMLHttpRequestStringSnapshot final {
   friend class XMLHttpRequestStringBuffer;
   friend class XMLHttpRequestStringSnapshotReaderHelper;
 
-public:
+ public:
   XMLHttpRequestStringSnapshot();
   ~XMLHttpRequestStringSnapshot();
 
   XMLHttpRequestStringSnapshot& operator=(const XMLHttpRequestStringSnapshot&);
 
-  void Reset()
-  {
-    ResetInternal(false /* isVoid */);
-  }
+  void Reset() { ResetInternal(false /* isVoid */); }
 
-  void SetVoid()
-  {
-    ResetInternal(true /* isVoid */);
-  }
+  void SetVoid() { ResetInternal(true /* isVoid */); }
 
-  bool IsVoid() const
-  {
-    return mVoid;
-  }
+  bool IsVoid() const { return mVoid; }
 
-  bool IsEmpty() const
-  {
-    return !mLength;
-  }
+  bool IsEmpty() const { return !mLength; }
 
   MOZ_MUST_USE bool GetAsString(DOMString& aString) const;
 
-private:
+ private:
   XMLHttpRequestStringSnapshot(const XMLHttpRequestStringSnapshot&) = delete;
-  XMLHttpRequestStringSnapshot& operator=(const XMLHttpRequestStringSnapshot&&) = delete;
+  XMLHttpRequestStringSnapshot& operator=(
+      const XMLHttpRequestStringSnapshot&&) = delete;
 
   void Set(XMLHttpRequestStringBuffer* aBuffer, uint32_t aLength);
 
@@ -133,27 +121,28 @@ private:
 };
 
 // This class locks the buffer and allows the callee to read data from it.
-class MOZ_STACK_CLASS XMLHttpRequestStringSnapshotReaderHelper final
-{
-public:
-  explicit XMLHttpRequestStringSnapshotReaderHelper(XMLHttpRequestStringSnapshot& aSnapshot);
+class MOZ_STACK_CLASS XMLHttpRequestStringSnapshotReaderHelper final {
+ public:
+  explicit XMLHttpRequestStringSnapshotReaderHelper(
+      XMLHttpRequestStringSnapshot& aSnapshot);
 
-  const char16_t*
-  Buffer() const;
+  const char16_t* Buffer() const;
 
-  uint32_t
-  Length() const;
+  uint32_t Length() const;
 
-private:
-  XMLHttpRequestStringSnapshotReaderHelper(const XMLHttpRequestStringSnapshotReaderHelper&) = delete;
-  XMLHttpRequestStringSnapshotReaderHelper& operator=(const XMLHttpRequestStringSnapshotReaderHelper&) = delete;
-  XMLHttpRequestStringSnapshotReaderHelper& operator=(const XMLHttpRequestStringSnapshotReaderHelper&&) = delete;
+ private:
+  XMLHttpRequestStringSnapshotReaderHelper(
+      const XMLHttpRequestStringSnapshotReaderHelper&) = delete;
+  XMLHttpRequestStringSnapshotReaderHelper& operator=(
+      const XMLHttpRequestStringSnapshotReaderHelper&) = delete;
+  XMLHttpRequestStringSnapshotReaderHelper& operator=(
+      const XMLHttpRequestStringSnapshotReaderHelper&&) = delete;
 
   RefPtr<XMLHttpRequestStringBuffer> mBuffer;
   MutexAutoLock mLock;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_XMLHttpRequestString_h
+#endif  // mozilla_dom_XMLHttpRequestString_h

@@ -12,8 +12,7 @@
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/RsdparsaSdpInc.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 struct FreeRustSdpSession {
   void operator()(RustSdpSession* aSess) { sdp_free_session(aSess); }
@@ -29,7 +28,6 @@ std::vector<uint16_t> convertU16Vec(U16Vec* vec);
 std::vector<uint32_t> convertU32Vec(U32Vec* vec);
 std::vector<float> convertF32Vec(F32Vec* vec);
 
-}
-
+}  // namespace mozilla
 
 #endif

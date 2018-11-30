@@ -27,7 +27,7 @@ class DrawEventRecorder;
  * platform specific cairo_surface_t*.
  */
 class PrintTarget {
-public:
+ public:
   typedef std::function<void(nsresult)> PageDoneCallback;
 
   NS_INLINE_DECL_REFCOUNTING(PrintTarget);
@@ -35,13 +35,10 @@ public:
   /// Must be matched 1:1 by an EndPrinting/AbortPrinting call.
   virtual nsresult BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName,
-                                 int32_t aStartPage,
-                                 int32_t aEndPage) {
+                                 int32_t aStartPage, int32_t aEndPage) {
     return NS_OK;
   }
-  virtual nsresult EndPrinting() {
-    return NS_OK;
-  }
+  virtual nsresult EndPrinting() { return NS_OK; }
   virtual nsresult AbortPrinting() {
 #ifdef DEBUG
     mHasActivePage = false;
@@ -76,13 +73,9 @@ public:
    * Returns true if to print landscape our consumers must apply a 90 degrees
    * rotation to our DrawTarget.
    */
-  virtual bool RotateNeededForLandscape() const {
-    return false;
-  }
+  virtual bool RotateNeededForLandscape() const { return false; }
 
-  const IntSize& GetSize() const {
-    return mSize;
-  }
+  const IntSize& GetSize() const { return mSize; }
 
   /**
    * Makes a DrawTarget to draw the printer output to, or returns null on
@@ -127,9 +120,8 @@ public:
    * TODO: Consider adding a SetDPI method that calls
    * cairo_surface_set_fallback_resolution.
    */
-  virtual already_AddRefed<DrawTarget>
-  MakeDrawTarget(const IntSize& aSize,
-                 DrawEventRecorder* aRecorder = nullptr);
+  virtual already_AddRefed<DrawTarget> MakeDrawTarget(
+      const IntSize& aSize, DrawEventRecorder* aRecorder = nullptr);
 
   /**
    * Returns a reference DrawTarget. Unlike MakeDrawTarget, this method is not
@@ -154,20 +146,18 @@ public:
   static void AdjustPrintJobNameForIPP(const nsAString& aJobName,
                                        nsString& aAdjustedJobName);
 
-protected:
-
+ protected:
   // Only created via subclass's constructors
   explicit PrintTarget(cairo_surface_t* aCairoSurface, const IntSize& aSize);
 
   // Protected because we're refcounted
   virtual ~PrintTarget();
 
-  static already_AddRefed<DrawTarget>
-  CreateWrapAndRecordDrawTarget(DrawEventRecorder* aRecorder,
-                                DrawTarget* aDrawTarget);
+  static already_AddRefed<DrawTarget> CreateWrapAndRecordDrawTarget(
+      DrawEventRecorder* aRecorder, DrawTarget* aDrawTarget);
 
   cairo_surface_t* mCairoSurface;
-  RefPtr<DrawTarget> mRefDT; // reference DT
+  RefPtr<DrawTarget> mRefDT;  // reference DT
 
   IntSize mSize;
   bool mIsFinished;
@@ -178,7 +168,7 @@ protected:
   PageDoneCallback mPageDoneCallback;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_PRINTTARGET_H */

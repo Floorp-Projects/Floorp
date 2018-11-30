@@ -6,9 +6,8 @@
 
 #include "nsCOMPtr.h"
 
-nsresult
-nsQueryInterfaceISupports::operator()(const nsIID& aIID, void** aAnswer) const
-{
+nsresult nsQueryInterfaceISupports::operator()(const nsIID& aIID,
+                                               void** aAnswer) const {
   nsresult status;
   if (mRawPtr) {
     status = mRawPtr->QueryInterface(aIID, aAnswer);
@@ -19,9 +18,8 @@ nsQueryInterfaceISupports::operator()(const nsIID& aIID, void** aAnswer) const
   return status;
 }
 
-nsresult
-nsQueryInterfaceISupportsWithError::operator()(const nsIID& aIID, void** aAnswer) const
-{
+nsresult nsQueryInterfaceISupportsWithError::operator()(const nsIID& aIID,
+                                                        void** aAnswer) const {
   nsresult status;
   if (mRawPtr) {
     status = mRawPtr->QueryInterface(aIID, aAnswer);
@@ -35,18 +33,15 @@ nsQueryInterfaceISupportsWithError::operator()(const nsIID& aIID, void** aAnswer
   return status;
 }
 
-void
-nsCOMPtr_base::assign_with_AddRef(nsISupports* aRawPtr)
-{
+void nsCOMPtr_base::assign_with_AddRef(nsISupports* aRawPtr) {
   if (aRawPtr) {
     NSCAP_ADDREF(this, aRawPtr);
   }
   assign_assuming_AddRef(aRawPtr);
 }
 
-void
-nsCOMPtr_base::assign_from_qi(const nsQueryInterfaceISupports aQI, const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_qi(const nsQueryInterfaceISupports aQI,
+                                   const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aQI(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -54,10 +49,8 @@ nsCOMPtr_base::assign_from_qi(const nsQueryInterfaceISupports aQI, const nsIID& 
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void
-nsCOMPtr_base::assign_from_qi_with_error(const nsQueryInterfaceISupportsWithError& aQI,
-                                         const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_qi_with_error(
+    const nsQueryInterfaceISupportsWithError& aQI, const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aQI(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -65,10 +58,8 @@ nsCOMPtr_base::assign_from_qi_with_error(const nsQueryInterfaceISupportsWithErro
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void
-nsCOMPtr_base::assign_from_gs_cid(const nsGetServiceByCID aGS,
-                                  const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_gs_cid(const nsGetServiceByCID aGS,
+                                       const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aGS(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -76,10 +67,8 @@ nsCOMPtr_base::assign_from_gs_cid(const nsGetServiceByCID aGS,
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void
-nsCOMPtr_base::assign_from_gs_cid_with_error(
-    const nsGetServiceByCIDWithError& aGS, const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_gs_cid_with_error(
+    const nsGetServiceByCIDWithError& aGS, const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aGS(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -87,10 +76,8 @@ nsCOMPtr_base::assign_from_gs_cid_with_error(
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void
-nsCOMPtr_base::assign_from_gs_contractid(const nsGetServiceByContractID aGS,
-                                         const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_gs_contractid(
+    const nsGetServiceByContractID aGS, const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aGS(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -98,10 +85,8 @@ nsCOMPtr_base::assign_from_gs_contractid(const nsGetServiceByContractID aGS,
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void
-nsCOMPtr_base::assign_from_gs_contractid_with_error(
-    const nsGetServiceByContractIDWithError& aGS, const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_gs_contractid_with_error(
+    const nsGetServiceByContractIDWithError& aGS, const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aGS(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -109,10 +94,8 @@ nsCOMPtr_base::assign_from_gs_contractid_with_error(
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void
-nsCOMPtr_base::assign_from_query_referent(
-    const nsQueryReferent& aQueryReferent, const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_query_referent(
+    const nsQueryReferent& aQueryReferent, const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aQueryReferent(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -120,10 +103,8 @@ nsCOMPtr_base::assign_from_query_referent(
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void
-nsCOMPtr_base::assign_from_helper(const nsCOMPtr_helper& aHelper,
-                                  const nsIID& aIID)
-{
+void nsCOMPtr_base::assign_from_helper(const nsCOMPtr_helper& aHelper,
+                                       const nsIID& aIID) {
   void* newRawPtr;
   if (NS_FAILED(aHelper(aIID, &newRawPtr))) {
     newRawPtr = nullptr;
@@ -131,9 +112,7 @@ nsCOMPtr_base::assign_from_helper(const nsCOMPtr_helper& aHelper,
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
 
-void**
-nsCOMPtr_base::begin_assignment()
-{
+void** nsCOMPtr_base::begin_assignment() {
   assign_assuming_AddRef(nullptr);
   return reinterpret_cast<void**>(&mRawPtr);
 }

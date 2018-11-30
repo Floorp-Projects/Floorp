@@ -22,7 +22,7 @@
 #include <stdint.h>
 
 // Decodes a base64 encoded string. Returns true on success.
-bool
-DecodeBase64(const std::string& aEncoded, std::vector<uint8_t>& aOutDecoded);
+bool DecodeBase64(const std::string& aEncoded,
+                  std::vector<uint8_t>& aOutDecoded);
 
 #endif

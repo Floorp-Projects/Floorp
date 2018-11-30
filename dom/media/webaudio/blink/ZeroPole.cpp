@@ -35,49 +35,49 @@
 
 namespace WebCore {
 
-void ZeroPole::process(const float *source, float *destination, int framesToProcess)
-{
-    float zero = m_zero;
-    float pole = m_pole;
+void ZeroPole::process(const float *source, float *destination,
+                       int framesToProcess) {
+  float zero = m_zero;
+  float pole = m_pole;
 
-    // Gain compensation to make 0dB @ 0Hz
-    const float k1 = 1 / (1 - zero);
-    const float k2 = 1 - pole;
+  // Gain compensation to make 0dB @ 0Hz
+  const float k1 = 1 / (1 - zero);
+  const float k2 = 1 - pole;
 
-    // Member variables to locals.
-    float lastX = m_lastX;
-    float lastY = m_lastY;
+  // Member variables to locals.
+  float lastX = m_lastX;
+  float lastY = m_lastY;
 
-    for (int i = 0; i < framesToProcess; ++i) {
-        float input = source[i];
+  for (int i = 0; i < framesToProcess; ++i) {
+    float input = source[i];
 
-        // Zero
-        float output1 = k1 * (input - zero * lastX);
-        lastX = input;
+    // Zero
+    float output1 = k1 * (input - zero * lastX);
+    lastX = input;
 
-        // Pole
-        float output2 = k2 * output1 + pole * lastY;
-        lastY = output2;
+    // Pole
+    float output2 = k2 * output1 + pole * lastY;
+    lastY = output2;
 
-        destination[i] = output2;
+    destination[i] = output2;
+  }
+
+// Locals to member variables. Flush denormals here so we don't
+// slow down the inner loop above.
+#ifndef HAVE_DENORMAL
+  if (lastX == 0.0f && lastY != 0.0f && fabsf(lastY) < FLT_MIN) {
+    // Flush future values to zero (until there is new input).
+    lastY = 0.0;
+
+    // Flush calculated values.
+    for (int i = framesToProcess; i-- && fabsf(destination[i]) < FLT_MIN;) {
+      destination[i] = 0.0f;
     }
+  }
+#endif
 
-    // Locals to member variables. Flush denormals here so we don't
-    // slow down the inner loop above.
-    #ifndef HAVE_DENORMAL
-    if (lastX == 0.0f && lastY != 0.0f && fabsf(lastY) < FLT_MIN) {
-        // Flush future values to zero (until there is new input).
-        lastY = 0.0;
-
-        // Flush calculated values.
-        for (int i = framesToProcess; i-- && fabsf(destination[i]) < FLT_MIN; ) {
-            destination[i] = 0.0f;
-        }
-    }
-    #endif
-
-    m_lastX = lastX;
-    m_lastY = lastY;
+  m_lastX = lastX;
+  m_lastY = lastY;
 }
 
-} // namespace WebCore
+}  // namespace WebCore

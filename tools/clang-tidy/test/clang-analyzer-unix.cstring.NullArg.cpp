@@ -2,13 +2,11 @@
 
 #include "structures.h"
 
-int my_strlen(const char* s)
-{
-  return strlen(s); // warning
+int my_strlen(const char* s) {
+  return strlen(s);  // warning
 }
 
-int bad_caller()
-{
+int bad_caller() {
   const char* s = nullptr;
   return my_strlen(s);
 }

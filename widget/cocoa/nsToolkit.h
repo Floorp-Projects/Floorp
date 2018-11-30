@@ -13,41 +13,38 @@
 #import <objc/Object.h>
 #import <IOKit/IOKitLib.h>
 
-class nsToolkit
-{
-public:
-                     nsToolkit();
-  virtual            ~nsToolkit();
+class nsToolkit {
+ public:
+  nsToolkit();
+  virtual ~nsToolkit();
 
-  static nsToolkit*  GetToolkit();
+  static nsToolkit* GetToolkit();
 
   static void Shutdown() {
     delete gToolkit;
     gToolkit = nullptr;
   }
 
-  static void        PostSleepWakeNotification(const char* aNotification);
+  static void PostSleepWakeNotification(const char* aNotification);
 
-  static nsresult    SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
-                                    bool classMethods = false);
+  static nsresult SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
+                                 bool classMethods = false);
 
-  void               RegisterForAllProcessMouseEvents();
-  void               UnregisterAllProcessMouseEventHandlers();
+  void RegisterForAllProcessMouseEvents();
+  void UnregisterAllProcessMouseEventHandlers();
 
-protected:
+ protected:
+  nsresult RegisterForSleepWakeNotifications();
+  void RemoveSleepWakeNotifications();
 
-  nsresult           RegisterForSleepWakeNotifications();
-  void               RemoveSleepWakeNotifications();
-
-protected:
-
-  static nsToolkit*  gToolkit;
+ protected:
+  static nsToolkit* gToolkit;
 
   CFRunLoopSourceRef mSleepWakeNotificationRLS;
-  io_object_t        mPowerNotifier;
+  io_object_t mPowerNotifier;
 
-  CFMachPortRef      mEventTapPort;
+  CFMachPortRef mEventTapPort;
   CFRunLoopSourceRef mEventTapRLS;
 };
 
-#endif // nsToolkit_h_
+#endif  // nsToolkit_h_

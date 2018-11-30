@@ -21,13 +21,10 @@ namespace ipc {
 
 namespace {
 
-class IPCStreamSourceChild final : public PChildToParentStreamChild
-                                 , public IPCStreamSource
-{
-public:
-  static IPCStreamSourceChild*
-  Create(nsIAsyncInputStream* aInputStream)
-  {
+class IPCStreamSourceChild final : public PChildToParentStreamChild,
+                                   public IPCStreamSource {
+ public:
+  static IPCStreamSourceChild* Create(nsIAsyncInputStream* aInputStream) {
     MOZ_ASSERT(aInputStream);
 
     IPCStreamSourceChild* source = new IPCStreamSourceChild(aInputStream);
@@ -41,51 +38,36 @@ public:
 
   // PChildToParentStreamChild methods
 
-  void
-  ActorDestroy(ActorDestroyReason aReason) override
-  {
-    ActorDestroyed();
-  }
+  void ActorDestroy(ActorDestroyReason aReason) override { ActorDestroyed(); }
 
-  IPCResult
-  RecvStartReading() override
-  {
+  IPCResult RecvStartReading() override {
     Start();
     return IPC_OK();
   }
 
-  IPCResult
-  RecvRequestClose(const nsresult& aRv) override
-  {
+  IPCResult RecvRequestClose(const nsresult& aRv) override {
     OnEnd(aRv);
     return IPC_OK();
   }
 
-  void
-  Close(nsresult aRv) override
-  {
+  void Close(nsresult aRv) override {
     MOZ_ASSERT(IPCStreamSource::mState == IPCStreamSource::eClosed);
     Unused << SendClose(aRv);
   }
 
-  void
-  SendData(const wr::ByteBuffer& aBuffer) override
-  {
+  void SendData(const wr::ByteBuffer& aBuffer) override {
     Unused << SendBuffer(aBuffer);
   }
 
-private:
+ private:
   explicit IPCStreamSourceChild(nsIAsyncInputStream* aInputStream)
-    :IPCStreamSource(aInputStream)
-  {}
+      : IPCStreamSource(aInputStream) {}
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-/* static */ PChildToParentStreamChild*
-IPCStreamSource::Create(nsIAsyncInputStream* aInputStream,
-                        dom::nsIContentChild* aManager)
-{
+/* static */ PChildToParentStreamChild* IPCStreamSource::Create(
+    nsIAsyncInputStream* aInputStream, dom::nsIContentChild* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
 
@@ -105,10 +87,8 @@ IPCStreamSource::Create(nsIAsyncInputStream* aInputStream,
   return source;
 }
 
-/* static */ PChildToParentStreamChild*
-IPCStreamSource::Create(nsIAsyncInputStream* aInputStream,
-                        PBackgroundChild* aManager)
-{
+/* static */ PChildToParentStreamChild* IPCStreamSource::Create(
+    nsIAsyncInputStream* aInputStream, PBackgroundChild* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
 
@@ -125,9 +105,8 @@ IPCStreamSource::Create(nsIAsyncInputStream* aInputStream,
   return source;
 }
 
-/* static */ IPCStreamSource*
-IPCStreamSource::Cast(PChildToParentStreamChild* aActor)
-{
+/* static */ IPCStreamSource* IPCStreamSource::Cast(
+    PChildToParentStreamChild* aActor) {
   MOZ_ASSERT(aActor);
   return static_cast<IPCStreamSourceChild*>(aActor);
 }
@@ -137,68 +116,43 @@ IPCStreamSource::Cast(PChildToParentStreamChild* aActor)
 
 namespace {
 
-class IPCStreamDestinationChild final : public PParentToChildStreamChild
-                                      , public IPCStreamDestination
-{
-public:
-  nsresult Initialize()
-  {
-    return IPCStreamDestination::Initialize();
-  }
+class IPCStreamDestinationChild final : public PParentToChildStreamChild,
+                                        public IPCStreamDestination {
+ public:
+  nsresult Initialize() { return IPCStreamDestination::Initialize(); }
 
-  ~IPCStreamDestinationChild()
-  {}
+  ~IPCStreamDestinationChild() {}
 
-private:
+ private:
   // PParentToChildStreamChild methods
 
-  void
-  ActorDestroy(ActorDestroyReason aReason) override
-  {
-    ActorDestroyed();
-  }
+  void ActorDestroy(ActorDestroyReason aReason) override { ActorDestroyed(); }
 
-  IPCResult
-  RecvBuffer(const wr::ByteBuffer& aBuffer) override
-  {
+  IPCResult RecvBuffer(const wr::ByteBuffer& aBuffer) override {
     BufferReceived(aBuffer);
     return IPC_OK();
   }
 
-  IPCResult
-  RecvClose(const nsresult& aRv) override
-  {
+  IPCResult RecvClose(const nsresult& aRv) override {
     CloseReceived(aRv);
     return IPC_OK();
   }
 
   // IPCStreamDestination methods
 
-  void
-  StartReading() override
-  {
+  void StartReading() override {
     MOZ_ASSERT(HasDelayedStart());
     Unused << SendStartReading();
   }
 
-  void
-  RequestClose(nsresult aRv) override
-  {
-    Unused << SendRequestClose(aRv);
-  }
+  void RequestClose(nsresult aRv) override { Unused << SendRequestClose(aRv); }
 
-  void
-  TerminateDestination() override
-  {
-    Unused << Send__delete__(this);
-  }
+  void TerminateDestination() override { Unused << Send__delete__(this); }
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-PParentToChildStreamChild*
-AllocPParentToChildStreamChild()
-{
+PParentToChildStreamChild* AllocPParentToChildStreamChild() {
   IPCStreamDestinationChild* actor = new IPCStreamDestinationChild();
 
   if (NS_WARN_IF(NS_FAILED(actor->Initialize()))) {
@@ -209,18 +163,15 @@ AllocPParentToChildStreamChild()
   return actor;
 }
 
-void
-DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor)
-{
+void DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor) {
   delete aActor;
 }
 
-/* static */ IPCStreamDestination*
-IPCStreamDestination::Cast(PParentToChildStreamChild* aActor)
-{
+/* static */ IPCStreamDestination* IPCStreamDestination::Cast(
+    PParentToChildStreamChild* aActor) {
   MOZ_ASSERT(aActor);
   return static_cast<IPCStreamDestinationChild*>(aActor);
 }
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla

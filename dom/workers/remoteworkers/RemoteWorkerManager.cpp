@@ -25,11 +25,10 @@ namespace {
 // actors.
 RemoteWorkerManager* sRemoteWorkerManager;
 
-} // anonymous
+}  // namespace
 
 /* static */ already_AddRefed<RemoteWorkerManager>
-RemoteWorkerManager::GetOrCreate()
-{
+RemoteWorkerManager::GetOrCreate() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -41,25 +40,20 @@ RemoteWorkerManager::GetOrCreate()
   return rwm.forget();
 }
 
-RemoteWorkerManager::RemoteWorkerManager()
-  : mParentActor(nullptr)
-{
+RemoteWorkerManager::RemoteWorkerManager() : mParentActor(nullptr) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!sRemoteWorkerManager);
 }
 
-RemoteWorkerManager::~RemoteWorkerManager()
-{
+RemoteWorkerManager::~RemoteWorkerManager() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(sRemoteWorkerManager == this);
   sRemoteWorkerManager = nullptr;
 }
 
-void
-RemoteWorkerManager::RegisterActor(RemoteWorkerServiceParent* aActor)
-{
+void RemoteWorkerManager::RegisterActor(RemoteWorkerServiceParent* aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aActor);
@@ -88,9 +82,7 @@ RemoteWorkerManager::RegisterActor(RemoteWorkerServiceParent* aActor)
   }
 }
 
-void
-RemoteWorkerManager::UnregisterActor(RemoteWorkerServiceParent* aActor)
-{
+void RemoteWorkerManager::UnregisterActor(RemoteWorkerServiceParent* aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aActor);
@@ -103,11 +95,9 @@ RemoteWorkerManager::UnregisterActor(RemoteWorkerServiceParent* aActor)
   }
 }
 
-void
-RemoteWorkerManager::Launch(RemoteWorkerController* aController,
-                            const RemoteWorkerData& aData,
-                            base::ProcessId aProcessId)
-{
+void RemoteWorkerManager::Launch(RemoteWorkerController* aController,
+                                 const RemoteWorkerData& aData,
+                                 base::ProcessId aProcessId) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -133,11 +123,9 @@ RemoteWorkerManager::Launch(RemoteWorkerController* aController,
   LaunchInternal(aController, targetActor, aData);
 }
 
-void
-RemoteWorkerManager::LaunchInternal(RemoteWorkerController* aController,
-                                    RemoteWorkerServiceParent* aTargetActor,
-                                    const RemoteWorkerData& aData)
-{
+void RemoteWorkerManager::LaunchInternal(
+    RemoteWorkerController* aController,
+    RemoteWorkerServiceParent* aTargetActor, const RemoteWorkerData& aData) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aController);
@@ -145,8 +133,7 @@ RemoteWorkerManager::LaunchInternal(RemoteWorkerController* aController,
   MOZ_ASSERT(aTargetActor == mParentActor ||
              mChildActors.Contains(aTargetActor));
 
-  RemoteWorkerParent* workerActor =
-    static_cast<RemoteWorkerParent*>(
+  RemoteWorkerParent* workerActor = static_cast<RemoteWorkerParent*>(
       aTargetActor->Manager()->SendPRemoteWorkerConstructor(aData));
   if (NS_WARN_IF(!workerActor)) {
     AsyncCreationFailed(aController);
@@ -160,23 +147,18 @@ RemoteWorkerManager::LaunchInternal(RemoteWorkerController* aController,
   workerActor->SetController(aController);
 }
 
-void
-RemoteWorkerManager::AsyncCreationFailed(RemoteWorkerController* aController)
-{
+void RemoteWorkerManager::AsyncCreationFailed(
+    RemoteWorkerController* aController) {
   RefPtr<RemoteWorkerController> controller = aController;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("RemoteWorkerManager::AsyncCreationFailed",
-                           [controller]() {
-      controller->CreationFailed();
-  });
+      NS_NewRunnableFunction("RemoteWorkerManager::AsyncCreationFailed",
+                             [controller]() { controller->CreationFailed(); });
 
   NS_DispatchToCurrentThread(r.forget());
 }
 
-RemoteWorkerServiceParent*
-RemoteWorkerManager::SelectTargetActor(const RemoteWorkerData& aData,
-                                       base::ProcessId aProcessId)
-{
+RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActor(
+    const RemoteWorkerData& aData, base::ProcessId aProcessId) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -211,26 +193,22 @@ RemoteWorkerManager::SelectTargetActor(const RemoteWorkerData& aData,
   return mChildActors[id];
 }
 
-void
-RemoteWorkerManager::LaunchNewContentProcess()
-{
+void RemoteWorkerManager::LaunchNewContentProcess() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
   // This runnable will spawn a new process if it doesn't exist yet.
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("LaunchNewContentProcess", [] () {
-      RefPtr<ContentParent> unused =
-        ContentParent::GetNewOrUsedBrowserProcess(
-          nullptr,
-          NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
-    }
-  );
+      NS_NewRunnableFunction("LaunchNewContentProcess", []() {
+        RefPtr<ContentParent> unused =
+            ContentParent::GetNewOrUsedBrowserProcess(
+                nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+      });
 
   nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
+      SystemGroup::EventTargetFor(TaskCategory::Other);
   target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

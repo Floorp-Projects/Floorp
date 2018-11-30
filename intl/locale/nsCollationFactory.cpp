@@ -12,17 +12,15 @@
 
 NS_IMPL_ISUPPORTS(nsCollationFactory, nsICollationFactory)
 
-nsresult nsCollationFactory::CreateCollation(nsICollation** instancePtr)
-{
+nsresult nsCollationFactory::CreateCollation(nsICollation** instancePtr) {
   nsAutoCString appLocale;
   mozilla::intl::LocaleService::GetInstance()->GetAppLocaleAsLangTag(appLocale);
 
   return CreateCollationForLocale(appLocale, instancePtr);
 }
 
-nsresult
-nsCollationFactory::CreateCollationForLocale(const nsACString& locale, nsICollation** instancePtr)
-{
+nsresult nsCollationFactory::CreateCollationForLocale(
+    const nsACString& locale, nsICollation** instancePtr) {
   // Create a collation interface instance.
   //
   nsCOMPtr<nsICollation> inst = new nsCollation();

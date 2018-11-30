@@ -22,10 +22,9 @@
 namespace mozilla {
 namespace storage {
 
-class BindingParams : public mozIStorageBindingParams
-                    , public IStorageBindingParamsInternal
-{
-public:
+class BindingParams : public mozIStorageBindingParams,
+                      public IStorageBindingParamsInternal {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEBINDINGPARAMS
   NS_DECL_ISTORAGEBINDINGPARAMSINTERNAL
@@ -54,7 +53,8 @@ public:
 
   BindingParams(mozIStorageBindingParamsArray *aOwningArray,
                 Statement *aOwningStatement);
-protected:
+
+ protected:
   virtual ~BindingParams() {}
 
   explicit BindingParams(mozIStorageBindingParamsArray *aOwningArray);
@@ -63,8 +63,7 @@ protected:
   nsTArray<RefPtr<Variant_base> > mParameters;
   bool mLocked;
 
-private:
-
+ private:
   /**
    * Track the BindingParamsArray that created us until we are added to it.
    * (Once we are added we are locked and no one needs to look up our owner.)
@@ -91,23 +90,22 @@ private:
  * We support *either* binding by name or binding by index.  Trying to do both
  * results in only binding by name at sqlite3_stmt bind time.
  */
-class AsyncBindingParams : public BindingParams
-{
-public:
-  NS_IMETHOD BindByName(const nsACString & aName,
-                        nsIVariant *aValue) override;
+class AsyncBindingParams : public BindingParams {
+ public:
+  NS_IMETHOD BindByName(const nsACString &aName, nsIVariant *aValue) override;
   NS_IMETHOD BindByIndex(uint32_t aIndex, nsIVariant *aValue) override;
 
-  virtual already_AddRefed<mozIStorageError> bind(sqlite3_stmt * aStatement) override;
+  virtual already_AddRefed<mozIStorageError> bind(
+      sqlite3_stmt *aStatement) override;
 
   explicit AsyncBindingParams(mozIStorageBindingParamsArray *aOwningArray);
   virtual ~AsyncBindingParams() {}
 
-private:
+ private:
   nsInterfaceHashtable<nsCStringHashKey, nsIVariant> mNamedParameters;
 };
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla
 
-#endif // mozStorageBindingParams_h
+#endif  // mozStorageBindingParams_h

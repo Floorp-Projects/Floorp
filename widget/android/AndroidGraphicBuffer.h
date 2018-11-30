@@ -9,8 +9,8 @@
 #include "gfxTypes.h"
 #include "nsRect.h"
 
-typedef void* EGLImageKHR;
-typedef void* EGLClientBuffer;
+typedef void *EGLImageKHR;
+typedef void *EGLClientBuffer;
 
 namespace mozilla {
 
@@ -23,9 +23,8 @@ namespace mozilla {
  * In order to use the buffer in OpenGL, just call Bind() and it will attach
  * to whatever texture is bound to GL_TEXTURE_2D.
  */
-class AndroidGraphicBuffer
-{
-public:
+class AndroidGraphicBuffer {
+ public:
   enum {
     UsageSoftwareRead = 1,
     UsageSoftwareWrite = 1 << 1,
@@ -34,11 +33,12 @@ public:
     Usage2D = 1 << 4
   };
 
-  AndroidGraphicBuffer(uint32_t width, uint32_t height, uint32_t usage, gfxImageFormat format);
+  AndroidGraphicBuffer(uint32_t width, uint32_t height, uint32_t usage,
+                       gfxImageFormat format);
   virtual ~AndroidGraphicBuffer();
 
   int Lock(uint32_t usage, unsigned char **bits);
-  int Lock(uint32_t usage, const nsIntRect& rect, unsigned char **bits);
+  int Lock(uint32_t usage, const nsIntRect &rect, unsigned char **bits);
   int Unlock();
   bool Reallocate(uint32_t aWidth, uint32_t aHeight, gfxImageFormat aFormat);
 
@@ -49,7 +49,7 @@ public:
 
   static bool IsBlacklisted();
 
-private:
+ private:
   uint32_t mWidth;
   uint32_t mHeight;
   uint32_t mUsage;
@@ -68,5 +68,5 @@ private:
   void *mEGLImage;
 };
 
-} /* mozilla */
+}  // namespace mozilla
 #endif /* AndroidGraphicBuffer_h_ */

@@ -10,7 +10,6 @@
 #include "nsError.h"
 #include <iostream>
 
-
 #include "signaling/src/sdp/SdpErrorHolder.h"
 #include "signaling/src/sdp/RsdparsaSdpInc.h"
 #include "signaling/src/sdp/RsdparsaSdpMediaSection.h"
@@ -20,105 +19,85 @@
 #endif
 #define CRLF "\r\n"
 
-namespace mozilla
-{
+namespace mozilla {
 
 RsdparsaSdp::RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin)
-  : mSession(std::move(session))
-  , mOrigin(origin)
-{
+    : mSession(std::move(session)), mOrigin(origin) {
   RsdparsaSessionHandle attributeSession(sdp_new_reference(mSession.get()));
-  mAttributeList.reset(new RsdparsaSdpAttributeList(std::move(attributeSession)));
+  mAttributeList.reset(
+      new RsdparsaSdpAttributeList(std::move(attributeSession)));
 
   size_t section_count = sdp_media_section_count(mSession.get());
   for (size_t level = 0; level < section_count; level++) {
-    RustMediaSection* mediaSection = sdp_get_media_section(mSession.get(),
-                                                           level);
+    RustMediaSection* mediaSection =
+        sdp_get_media_section(mSession.get(), level);
     if (!mediaSection) {
-      MOZ_ASSERT(false, "sdp_get_media_section failed because level was out of"
-                        " bounds, but we did a bounds check!");
+      MOZ_ASSERT(false,
+                 "sdp_get_media_section failed because level was out of"
+                 " bounds, but we did a bounds check!");
       break;
     }
     RsdparsaSessionHandle newSession(sdp_new_reference(mSession.get()));
     RsdparsaSdpMediaSection* sdpMediaSection;
-    sdpMediaSection = new RsdparsaSdpMediaSection(level,
-                                                  std::move(newSession),
-                                                  mediaSection,
-                                                  mAttributeList.get());
+    sdpMediaSection = new RsdparsaSdpMediaSection(
+        level, std::move(newSession), mediaSection, mAttributeList.get());
     mMediaSections.emplace_back(sdpMediaSection);
   }
 }
 
-const SdpOrigin&
-RsdparsaSdp::GetOrigin() const
-{
-  return mOrigin;
-}
+const SdpOrigin& RsdparsaSdp::GetOrigin() const { return mOrigin; }
 
-uint32_t
-RsdparsaSdp::GetBandwidth(const std::string& type) const
-{
+uint32_t RsdparsaSdp::GetBandwidth(const std::string& type) const {
   return get_sdp_bandwidth(mSession.get(), type.c_str());
 }
 
-const SdpMediaSection&
-RsdparsaSdp::GetMediaSection(size_t level) const
-{
+const SdpMediaSection& RsdparsaSdp::GetMediaSection(size_t level) const {
   if (level > mMediaSections.size()) {
     MOZ_CRASH();
   }
   return *mMediaSections[level];
 }
 
-SdpMediaSection&
-RsdparsaSdp::GetMediaSection(size_t level)
-{
+SdpMediaSection& RsdparsaSdp::GetMediaSection(size_t level) {
   if (level > mMediaSections.size()) {
     MOZ_CRASH();
   }
   return *mMediaSections[level];
 }
 
-SdpMediaSection&
-RsdparsaSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
-                             SdpDirectionAttribute::Direction dir,
-                             uint16_t port,
-                             SdpMediaSection::Protocol protocol,
-                             sdp::AddrType addrType, const std::string& addr)
-{
-  StringView rustAddr{addr.c_str(),addr.size()};
-  auto nr = sdp_add_media_section(mSession.get(),mediaType,dir,port,
-                                                 protocol,addrType,rustAddr);
+SdpMediaSection& RsdparsaSdp::AddMediaSection(
+    SdpMediaSection::MediaType mediaType, SdpDirectionAttribute::Direction dir,
+    uint16_t port, SdpMediaSection::Protocol protocol, sdp::AddrType addrType,
+    const std::string& addr) {
+  StringView rustAddr{addr.c_str(), addr.size()};
+  auto nr = sdp_add_media_section(mSession.get(), mediaType, dir, port,
+                                  protocol, addrType, rustAddr);
 
   if (NS_SUCCEEDED(nr)) {
     size_t level = mMediaSections.size();
     RsdparsaSessionHandle newSessHandle(sdp_new_reference(mSession.get()));
 
     auto rustMediaSection = sdp_get_media_section(mSession.get(), level);
-    auto mediaSection = new RsdparsaSdpMediaSection(level,
-                                                    std::move(newSessHandle),
-                                                    rustMediaSection,
-                                                    mAttributeList.get());
+    auto mediaSection =
+        new RsdparsaSdpMediaSection(level, std::move(newSessHandle),
+                                    rustMediaSection, mAttributeList.get());
     mMediaSections.emplace_back(mediaSection);
 
     return *mediaSection;
   } else {
     // Return the last media section if the construction of this one fails
-    return GetMediaSection(mMediaSections.size()-1);
+    return GetMediaSection(mMediaSections.size() - 1);
   }
-
 }
 
-void
-RsdparsaSdp::Serialize(std::ostream& os) const
-{
+void RsdparsaSdp::Serialize(std::ostream& os) const {
   os << "v=0" << CRLF << mOrigin << "s=-" << CRLF;
 
   // We don't support creating i=, u=, e=, p=
   // We don't generate c= at the session level (only in media)
 
   BandwidthVec* bwVec = sdp_get_session_bandwidth_vec(mSession.get());
-  char *bwString = sdp_serialize_bandwidth(bwVec);
+  char* bwString = sdp_serialize_bandwidth(bwVec);
   if (bwString) {
     os << bwString;
     sdp_free_string(bwString);
@@ -137,4 +116,4 @@ RsdparsaSdp::Serialize(std::ostream& os) const
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

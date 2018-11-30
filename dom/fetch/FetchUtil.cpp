@@ -17,9 +17,8 @@ namespace mozilla {
 namespace dom {
 
 // static
-nsresult
-FetchUtil::GetValidRequestMethod(const nsACString& aMethod, nsCString& outMethod)
-{
+nsresult FetchUtil::GetValidRequestMethod(const nsACString& aMethod,
+                                          nsCString& outMethod) {
   nsAutoCString upperCaseMethod(aMethod);
   ToUpperCase(upperCaseMethod);
   if (!NS_IsValidHTTPToken(aMethod)) {
@@ -41,28 +40,23 @@ FetchUtil::GetValidRequestMethod(const nsACString& aMethod, nsCString& outMethod
       upperCaseMethod.EqualsLiteral("POST") ||
       upperCaseMethod.EqualsLiteral("PUT")) {
     outMethod = upperCaseMethod;
-  }
-  else {
-    outMethod = aMethod; // Case unchanged for non-standard methods
+  } else {
+    outMethod = aMethod;  // Case unchanged for non-standard methods
   }
   return NS_OK;
 }
 
-static bool
-FindCRLF(nsACString::const_iterator& aStart,
-         nsACString::const_iterator& aEnd)
-{
+static bool FindCRLF(nsACString::const_iterator& aStart,
+                     nsACString::const_iterator& aEnd) {
   nsACString::const_iterator end(aEnd);
   return FindInReadable(NS_LITERAL_CSTRING("\r\n"), aStart, end);
 }
 
 // Reads over a CRLF and positions start after it.
-static bool
-PushOverLine(nsACString::const_iterator& aStart,
-	     const nsACString::const_iterator& aEnd)
-{
+static bool PushOverLine(nsACString::const_iterator& aStart,
+                         const nsACString::const_iterator& aEnd) {
   if (*aStart == nsCRT::CR && (aEnd - aStart > 1) && *(++aStart) == nsCRT::LF) {
-    ++aStart; // advance to after CRLF
+    ++aStart;  // advance to after CRLF
     return true;
   }
 
@@ -70,13 +64,10 @@ PushOverLine(nsACString::const_iterator& aStart,
 }
 
 // static
-bool
-FetchUtil::ExtractHeader(nsACString::const_iterator& aStart,
-                         nsACString::const_iterator& aEnd,
-                         nsCString& aHeaderName,
-                         nsCString& aHeaderValue,
-                         bool* aWasEmptyHeader)
-{
+bool FetchUtil::ExtractHeader(nsACString::const_iterator& aStart,
+                              nsACString::const_iterator& aEnd,
+                              nsCString& aHeaderName, nsCString& aHeaderValue,
+                              bool* aWasEmptyHeader) {
   MOZ_ASSERT(aWasEmptyHeader);
   // Set it to a valid value here so we don't forget later.
   *aWasEmptyHeader = false;
@@ -118,11 +109,10 @@ FetchUtil::ExtractHeader(nsACString::const_iterator& aStart,
 }
 
 // static
-nsresult
-FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal,
-                              nsIDocument* aDoc,
-                              nsIHttpChannel* aChannel,
-                              InternalRequest* aRequest) {
+nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal,
+                                       nsIDocument* aDoc,
+                                       nsIHttpChannel* aChannel,
+                                       InternalRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoString referrer;
@@ -135,10 +125,8 @@ FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal,
     rv = aChannel->SetReferrerWithPolicy(nullptr, net::RP_No_Referrer);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (referrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
-    rv = nsContentUtils::SetFetchReferrerURIWithPolicy(aPrincipal,
-                                                       aDoc,
-                                                       aChannel,
-                                                       policy);
+    rv = nsContentUtils::SetFetchReferrerURIWithPolicy(aPrincipal, aDoc,
+                                                       aChannel, policy);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // From "Determine request's Referrer" step 3
@@ -171,17 +159,15 @@ FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-class WindowStreamOwner final : public nsIObserver
-                              , public nsSupportsWeakReference
-{
+class WindowStreamOwner final : public nsIObserver,
+                                public nsSupportsWeakReference {
   // Read from any thread but only set/cleared on the main thread. The lifecycle
   // of WindowStreamOwner prevents concurrent read/clear.
   nsCOMPtr<nsIAsyncInputStream> mStream;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
-  ~WindowStreamOwner()
-  {
+  ~WindowStreamOwner() {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -190,20 +176,17 @@ class WindowStreamOwner final : public nsIObserver
     }
   }
 
-public:
+ public:
   NS_DECL_ISUPPORTS
 
   WindowStreamOwner(nsIAsyncInputStream* aStream, nsIGlobalObject* aGlobal)
-    : mStream(aStream)
-    , mGlobal(aGlobal)
-  {
+      : mStream(aStream), mGlobal(aGlobal) {
     MOZ_DIAGNOSTIC_ASSERT(mGlobal);
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  static already_AddRefed<WindowStreamOwner>
-  Create(nsIAsyncInputStream* aStream, nsIGlobalObject* aGlobal)
-  {
+  static already_AddRefed<WindowStreamOwner> Create(
+      nsIAsyncInputStream* aStream, nsIGlobalObject* aGlobal) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (NS_WARN_IF(!os)) {
       return nullptr;
@@ -220,18 +203,14 @@ public:
     return self.forget();
   }
 
-  struct Destroyer final : Runnable
-  {
+  struct Destroyer final : Runnable {
     RefPtr<WindowStreamOwner> mDoomed;
 
     explicit Destroyer(already_AddRefed<WindowStreamOwner> aDoomed)
-      : Runnable("WindowStreamOwner::Destroyer")
-      , mDoomed(aDoomed)
-    {}
+        : Runnable("WindowStreamOwner::Destroyer"), mDoomed(aDoomed) {}
 
     NS_IMETHOD
-    Run() override
-    {
+    Run() override {
       mDoomed = nullptr;
       return NS_OK;
     }
@@ -240,8 +219,8 @@ public:
   // nsIObserver:
 
   NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) override
-  {
+  Observe(nsISupports* aSubject, const char* aTopic,
+          const char16_t* aData) override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0);
 
@@ -267,18 +246,14 @@ public:
 
 NS_IMPL_ISUPPORTS(WindowStreamOwner, nsIObserver, nsISupportsWeakReference)
 
-class WorkerStreamOwner final
-{
-public:
+class WorkerStreamOwner final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(WorkerStreamOwner)
 
-  explicit WorkerStreamOwner(nsIAsyncInputStream* aStream)
-    : mStream(aStream)
-  {}
+  explicit WorkerStreamOwner(nsIAsyncInputStream* aStream) : mStream(aStream) {}
 
-  static already_AddRefed<WorkerStreamOwner>
-  Create(nsIAsyncInputStream* aStream, WorkerPrivate* aWorker)
-  {
+  static already_AddRefed<WorkerStreamOwner> Create(
+      nsIAsyncInputStream* aStream, WorkerPrivate* aWorker) {
     RefPtr<WorkerStreamOwner> self = new WorkerStreamOwner(aStream);
 
     self->mWorkerRef = WeakWorkerRef::Create(aWorker, [self]() {
@@ -299,41 +274,32 @@ public:
     return self.forget();
   }
 
-  struct Destroyer final : CancelableRunnable
-  {
+  struct Destroyer final : CancelableRunnable {
     RefPtr<WorkerStreamOwner> mDoomed;
 
     explicit Destroyer(already_AddRefed<WorkerStreamOwner>&& aDoomed)
-      : CancelableRunnable("WorkerStreamOwner::Destroyer")
-      , mDoomed(std::move(aDoomed))
-    {}
+        : CancelableRunnable("WorkerStreamOwner::Destroyer"),
+          mDoomed(std::move(aDoomed)) {}
 
     NS_IMETHOD
-    Run() override
-    {
+    Run() override {
       mDoomed = nullptr;
       return NS_OK;
     }
 
-    nsresult
-    Cancel() override
-    {
-      return Run();
-    }
+    nsresult Cancel() override { return Run(); }
   };
 
-private:
+ private:
   ~WorkerStreamOwner() = default;
 
   // Read from any thread but only set/cleared on the worker thread. The
   // lifecycle of WorkerStreamOwner prevents concurrent read/clear.
   nsCOMPtr<nsIAsyncInputStream> mStream;
   RefPtr<WeakWorkerRef> mWorkerRef;
-
 };
 
-class JSStreamConsumer final : public nsIInputStreamCallback
-{
+class JSStreamConsumer final : public nsIInputStreamCallback {
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   RefPtr<WindowStreamOwner> mWindowStreamOwner;
   RefPtr<WorkerStreamOwner> mWorkerStreamOwner;
@@ -341,31 +307,26 @@ class JSStreamConsumer final : public nsIInputStreamCallback
   bool mConsumerAborted;
 
   JSStreamConsumer(already_AddRefed<WindowStreamOwner> aWindowStreamOwner,
-                   nsIGlobalObject* aGlobal,
-                   JS::StreamConsumer* aConsumer)
-   : mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other))
-   , mWindowStreamOwner(aWindowStreamOwner)
-   , mConsumer(aConsumer)
-   , mConsumerAborted(false)
-  {
+                   nsIGlobalObject* aGlobal, JS::StreamConsumer* aConsumer)
+      : mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other)),
+        mWindowStreamOwner(aWindowStreamOwner),
+        mConsumer(aConsumer),
+        mConsumerAborted(false) {
     MOZ_DIAGNOSTIC_ASSERT(mWindowStreamOwner);
     MOZ_DIAGNOSTIC_ASSERT(mConsumer);
   }
 
   JSStreamConsumer(RefPtr<WorkerStreamOwner> aWorkerStreamOwner,
-                   nsIGlobalObject* aGlobal,
-                   JS::StreamConsumer* aConsumer)
-   : mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other))
-   , mWorkerStreamOwner(std::move(aWorkerStreamOwner))
-   , mConsumer(aConsumer)
-   , mConsumerAborted(false)
-  {
+                   nsIGlobalObject* aGlobal, JS::StreamConsumer* aConsumer)
+      : mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other)),
+        mWorkerStreamOwner(std::move(aWorkerStreamOwner)),
+        mConsumer(aConsumer),
+        mConsumerAborted(false) {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerStreamOwner);
     MOZ_DIAGNOSTIC_ASSERT(mConsumer);
   }
 
-  ~JSStreamConsumer()
-  {
+  ~JSStreamConsumer() {
     // Both WindowStreamOwner and WorkerStreamOwner need to be destroyed on
     // their global's event target thread.
 
@@ -381,13 +342,9 @@ class JSStreamConsumer final : public nsIInputStreamCallback
     MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(destroyer.forget()));
   }
 
-  static nsresult WriteSegment(nsIInputStream* aStream,
-                               void* aClosure,
-                               const char* aFromSegment,
-                               uint32_t aToOffset,
-                               uint32_t aCount,
-                               uint32_t* aWriteCount)
-  {
+  static nsresult WriteSegment(nsIInputStream* aStream, void* aClosure,
+                               const char* aFromSegment, uint32_t aToOffset,
+                               uint32_t aCount, uint32_t* aWriteCount) {
     JSStreamConsumer* self = reinterpret_cast<JSStreamConsumer*>(aClosure);
     MOZ_DIAGNOSTIC_ASSERT(!self->mConsumerAborted);
 
@@ -402,14 +359,11 @@ class JSStreamConsumer final : public nsIInputStreamCallback
     return NS_OK;
   }
 
-public:
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static bool Start(nsIInputStream* aStream,
-                    JS::StreamConsumer* aConsumer,
-                    nsIGlobalObject* aGlobal,
-                    WorkerPrivate* aMaybeWorker)
-  {
+  static bool Start(nsIInputStream* aStream, JS::StreamConsumer* aConsumer,
+                    nsIGlobalObject* aGlobal, WorkerPrivate* aMaybeWorker) {
     nsresult rv;
 
     bool nonBlocking = false;
@@ -422,17 +376,16 @@ public:
     nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
     if (!asyncStream || !nonBlocking) {
       nsCOMPtr<nsIAsyncOutputStream> pipe;
-      rv = NS_NewPipe2(getter_AddRefs(asyncStream), getter_AddRefs(pipe),
-                       true, true);
+      rv = NS_NewPipe2(getter_AddRefs(asyncStream), getter_AddRefs(pipe), true,
+                       true);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return false;
       }
 
       nsCOMPtr<nsIEventTarget> thread =
-        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
 
-      rv = NS_AsyncCopy(aStream, pipe, thread,
-                        NS_ASYNCCOPY_VIA_WRITESEGMENTS);
+      rv = NS_AsyncCopy(aStream, pipe, thread, NS_ASYNCCOPY_VIA_WRITESEGMENTS);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return false;
       }
@@ -441,7 +394,7 @@ public:
     RefPtr<JSStreamConsumer> consumer;
     if (aMaybeWorker) {
       RefPtr<WorkerStreamOwner> owner =
-        WorkerStreamOwner::Create(asyncStream, aMaybeWorker);
+          WorkerStreamOwner::Create(asyncStream, aMaybeWorker);
       if (!owner) {
         return false;
       }
@@ -449,7 +402,7 @@ public:
       consumer = new JSStreamConsumer(std::move(owner), aGlobal, aConsumer);
     } else {
       RefPtr<WindowStreamOwner> owner =
-        WindowStreamOwner::Create(asyncStream, aGlobal);
+          WindowStreamOwner::Create(asyncStream, aGlobal);
       if (!owner) {
         return false;
       }
@@ -469,8 +422,7 @@ public:
   // nsIInputStreamCallback:
 
   NS_IMETHOD
-  OnInputStreamReady(nsIAsyncInputStream* aStream) override
-  {
+  OnInputStreamReady(nsIAsyncInputStream* aStream) override {
     // Can be called on any stream. The JS API calls made below explicitly
     // support being called from any thread.
     MOZ_DIAGNOSTIC_ASSERT(!mConsumerAborted);
@@ -515,24 +467,18 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(JSStreamConsumer,
-                  nsIInputStreamCallback)
+NS_IMPL_ISUPPORTS(JSStreamConsumer, nsIInputStreamCallback)
 
-static bool
-ThrowException(JSContext* aCx, unsigned errorNumber)
-{
+static bool ThrowException(JSContext* aCx, unsigned errorNumber) {
   JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr, errorNumber);
   return false;
 }
 
 // static
-bool
-FetchUtil::StreamResponseToJS(JSContext* aCx,
-                              JS::HandleObject aObj,
-                              JS::MimeType aMimeType,
-                              JS::StreamConsumer* aConsumer,
-                              WorkerPrivate* aMaybeWorker)
-{
+bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
+                                   JS::MimeType aMimeType,
+                                   JS::StreamConsumer* aConsumer,
+                                   WorkerPrivate* aMaybeWorker) {
   MOZ_ASSERT(!aMaybeWorker == NS_IsMainThread());
 
   RefPtr<Response> response;
@@ -577,13 +523,14 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
       response->GetUrl(url);
 
       nsCString sourceMapUrl;
-      response->GetInternalHeaders()->Get(NS_LITERAL_CSTRING("SourceMap"), sourceMapUrl, result);
+      response->GetInternalHeaders()->Get(NS_LITERAL_CSTRING("SourceMap"),
+                                          sourceMapUrl, result);
       if (NS_WARN_IF(result.Failed())) {
         return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
       }
       NS_ConvertUTF16toUTF8 urlUTF8(url);
-      aConsumer->noteResponseURLs(urlUTF8.get(),
-                                  sourceMapUrl.IsVoid() ? nullptr : sourceMapUrl.get());
+      aConsumer->noteResponseURLs(
+          urlUTF8.get(), sourceMapUrl.IsVoid() ? nullptr : sourceMapUrl.get());
       break;
   }
 
@@ -615,9 +562,7 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
 }
 
 // static
-void
-FetchUtil::ReportJSStreamError(JSContext* aCx, size_t aErrorCode)
-{
+void FetchUtil::ReportJSStreamError(JSContext* aCx, size_t aErrorCode) {
   // For now, convert *all* errors into AbortError.
 
   RefPtr<DOMException> e = DOMException::Create(NS_ERROR_DOM_ABORT_ERR);
@@ -630,5 +575,5 @@ FetchUtil::ReportJSStreamError(JSContext* aCx, size_t aErrorCode)
   JS_SetPendingException(aCx, value);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

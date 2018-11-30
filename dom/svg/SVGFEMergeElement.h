@@ -9,37 +9,41 @@
 
 #include "nsSVGFilters.h"
 
-nsresult NS_NewSVGFEMergeElement(nsIContent **aResult,
-                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGFEMergeElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 typedef nsSVGFE SVGFEMergeElementBase;
 
-class SVGFEMergeElement : public SVGFEMergeElementBase
-{
-  friend nsresult (::NS_NewSVGFEMergeElement(nsIContent **aResult,
-                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-protected:
-  explicit SVGFEMergeElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : SVGFEMergeElementBase(std::move(aNodeInfo))
-  {
-  }
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+class SVGFEMergeElement : public SVGFEMergeElementBase {
+  friend nsresult(::NS_NewSVGFEMergeElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-public:
-  virtual FilterPrimitiveDescription
-    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
-                            const IntRect& aFilterSubregion,
-                            const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
-  virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) override;
+ protected:
+  explicit SVGFEMergeElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGFEMergeElementBase(std::move(aNodeInfo)) {}
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
+
+ public:
+  virtual FilterPrimitiveDescription GetPrimitiveDescription(
+      nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
+      const nsTArray<bool>& aInputsAreTainted,
+      nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
+  virtual nsSVGString& GetResultImageName() override {
+    return mStringAttributes[RESULT];
+  }
+  virtual void GetSourceImageNames(
+      nsTArray<nsSVGStringInfo>& aSources) override;
 
   // nsIContent
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-protected:
+
+ protected:
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { RESULT };
@@ -47,7 +51,7 @@ protected:
   static StringInfo sStringInfo[1];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGFEMergeElement_h
+#endif  // mozilla_dom_SVGFEMergeElement_h

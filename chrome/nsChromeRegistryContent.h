@@ -13,27 +13,24 @@ struct ChromePackage;
 struct SubstitutionMapping;
 struct OverrideMapping;
 
-class nsChromeRegistryContent : public nsChromeRegistry
-{
+class nsChromeRegistryContent : public nsChromeRegistry {
  public:
   nsChromeRegistryContent();
 
-  void RegisterRemoteChrome(const InfallibleTArray<ChromePackage>& aPackages,
-                            const InfallibleTArray<SubstitutionMapping>& aResources,
-                            const InfallibleTArray<OverrideMapping>& aOverrides,
-                            const nsACString& aLocale,
-                            bool aReset);
+  void RegisterRemoteChrome(
+      const InfallibleTArray<ChromePackage>& aPackages,
+      const InfallibleTArray<SubstitutionMapping>& aResources,
+      const InfallibleTArray<OverrideMapping>& aOverrides,
+      const nsACString& aLocale, bool aReset);
 
   NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
-                                  nsIUTF8StringEnumerator* *aResult) override;
+                                  nsIUTF8StringEnumerator** aResult) override;
   NS_IMETHOD CheckForNewChrome() override;
   NS_IMETHOD CheckForOSAccessibility() override;
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override;
-  NS_IMETHOD IsLocaleRTL(const nsACString& package,
-                         bool *aResult) override;
-  NS_IMETHOD GetSelectedLocale(const nsACString& aPackage,
-                               bool aAsBCP47,
+  NS_IMETHOD IsLocaleRTL(const nsACString& package, bool* aResult) override;
+  NS_IMETHOD GetSelectedLocale(const nsACString& aPackage, bool aAsBCP47,
                                nsACString& aLocale) override;
 
   void RegisterPackage(const ChromePackage& aPackage);
@@ -41,35 +38,35 @@ class nsChromeRegistryContent : public nsChromeRegistry
   void RegisterSubstitution(const SubstitutionMapping& aResource);
 
  private:
-  struct PackageEntry
-  {
-    PackageEntry() : flags(0) { }
-    ~PackageEntry() { }
+  struct PackageEntry {
+    PackageEntry() : flags(0) {}
+    ~PackageEntry() {}
 
     nsCOMPtr<nsIURI> contentBaseURI;
     nsCOMPtr<nsIURI> localeBaseURI;
     nsCOMPtr<nsIURI> skinBaseURI;
-    uint32_t         flags;
+    uint32_t flags;
   };
 
   nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
-                     const nsCString& aProvider,
-                     const nsCString& aPath) override;
-  nsresult GetFlagsFromPackage(const nsCString& aPackage, uint32_t* aFlags) override;
+                                const nsCString& aProvider,
+                                const nsCString& aPath) override;
+  nsresult GetFlagsFromPackage(const nsCString& aPackage,
+                               uint32_t* aFlags) override;
 
   nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;
   nsCString mLocale;
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) override;
+                               char* const* argv, int flags) override;
   virtual void ManifestLocale(ManifestProcessingContext& cx, int lineno,
-                              char *const * argv, int flags) override;
+                              char* const* argv, int flags) override;
   virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
-                            char *const * argv, int flags) override;
+                            char* const* argv, int flags) override;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) override;
+                                char* const* argv, int flags) override;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) override;
+                                char* const* argv, int flags) override;
 };
 
-#endif // nsChromeRegistryContent_h
+#endif  // nsChromeRegistryContent_h

@@ -7,7 +7,7 @@
 #include "ModuleEvaluator_windows.h"
 
 #include <windows.h>
-#include <algorithm> // For std::find()
+#include <algorithm>  // For std::find()
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/UniquePtr.h"
@@ -23,9 +23,8 @@ namespace mozilla {
 
 // Utility function to get the parent directory of aFile.
 // Returns true upon success.
-static bool
-GetDirectoryName(const nsCOMPtr<nsIFile> aFile, nsAString& aParent)
-{
+static bool GetDirectoryName(const nsCOMPtr<nsIFile> aFile,
+                             nsAString& aParent) {
   nsCOMPtr<nsIFile> parentDir;
   if (NS_FAILED(aFile->GetParent(getter_AddRefs(parentDir))) || !parentDir) {
     return false;
@@ -36,9 +35,9 @@ GetDirectoryName(const nsCOMPtr<nsIFile> aFile, nsAString& aParent)
   return true;
 }
 
-ModuleLoadEvent::ModuleInfo::ModuleInfo(const glue::ModuleLoadEvent::ModuleInfo& aOther)
-  : mBase(aOther.mBase)
-{
+ModuleLoadEvent::ModuleInfo::ModuleInfo(
+    const glue::ModuleLoadEvent::ModuleInfo& aOther)
+    : mBase(aOther.mBase) {
   if (aOther.mLdrName) {
     mLdrName.Assign(aOther.mLdrName.get());
   }
@@ -48,12 +47,12 @@ ModuleLoadEvent::ModuleInfo::ModuleInfo(const glue::ModuleLoadEvent::ModuleInfo&
   }
 }
 
-ModuleLoadEvent::ModuleLoadEvent(const ModuleLoadEvent& aOther, CopyOption aOption)
-  : mIsStartup(aOther.mIsStartup)
-  , mThreadID(aOther.mThreadID)
-  , mThreadName(aOther.mThreadName)
-  , mProcessUptimeMS(aOther.mProcessUptimeMS)
-{
+ModuleLoadEvent::ModuleLoadEvent(const ModuleLoadEvent& aOther,
+                                 CopyOption aOption)
+    : mIsStartup(aOther.mIsStartup),
+      mThreadID(aOther.mThreadID),
+      mThreadName(aOther.mThreadName),
+      mProcessUptimeMS(aOther.mProcessUptimeMS) {
   Unused << mStack.reserve(aOther.mStack.length());
   for (auto& x : aOther.mStack) {
     Unused << mStack.append(x);
@@ -67,10 +66,11 @@ ModuleLoadEvent::ModuleLoadEvent(const ModuleLoadEvent& aOther, CopyOption aOpti
 }
 
 ModuleLoadEvent::ModuleLoadEvent(const glue::ModuleLoadEvent& aOther)
-  : mIsStartup(false) // Events originating in glue:: cannot be a startup event.
-  , mThreadID(aOther.mThreadID)
-  , mProcessUptimeMS(aOther.mProcessUptimeMS)
-{
+    : mIsStartup(
+          false)  // Events originating in glue:: cannot be a startup event.
+      ,
+      mThreadID(aOther.mThreadID),
+      mProcessUptimeMS(aOther.mProcessUptimeMS) {
   for (auto& frame : aOther.mStack) {
     Unused << mStack.append(frame);
   }
@@ -83,9 +83,8 @@ ModuleLoadEvent::ModuleLoadEvent(const glue::ModuleLoadEvent& aOther)
 // These are leaf names only, not full paths. Here we will convert them to
 // lowercase before returning, to facilitate case-insensitive searches.
 // On error, this may return partial results.
-static void
-GetKeyboardLayoutDlls(Vector<nsString, 0, InfallibleAllocPolicy>& aOut)
-{
+static void GetKeyboardLayoutDlls(
+    Vector<nsString, 0, InfallibleAllocPolicy>& aOut) {
   HKEY rawKey;
   if (::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
@@ -98,36 +97,34 @@ GetKeyboardLayoutDlls(Vector<nsString, 0, InfallibleAllocPolicy>& aOut)
   wchar_t strTemp[MAX_PATH] = {0};
   while (true) {
     DWORD strTempSize = ArrayLength(strTemp);
-    if (RegEnumKeyExW(rawKey, iKey, strTemp, &strTempSize,
-                      nullptr, nullptr, nullptr, nullptr) != ERROR_SUCCESS) {
-      return; // ERROR_NO_MORE_ITEMS or a real error: bail with what we have.
+    if (RegEnumKeyExW(rawKey, iKey, strTemp, &strTempSize, nullptr, nullptr,
+                      nullptr, nullptr) != ERROR_SUCCESS) {
+      return;  // ERROR_NO_MORE_ITEMS or a real error: bail with what we have.
     }
     iKey++;
 
     strTempSize = sizeof(strTemp);
-    if (::RegGetValueW(rawKey, strTemp, L"Layout File",
-                       RRF_RT_REG_SZ, nullptr, strTemp,
-                       &strTempSize) == ERROR_SUCCESS) {
+    if (::RegGetValueW(rawKey, strTemp, L"Layout File", RRF_RT_REG_SZ, nullptr,
+                       strTemp, &strTempSize) == ERROR_SUCCESS) {
       nsString ws(strTemp, (strTempSize / sizeof(wchar_t)) - 1);
-      ToLowerCase(ws); // To facilitate searches
+      ToLowerCase(ws);  // To facilitate searches
       Unused << aOut.emplaceBack(ws);
     }
   }
 }
 
-ModuleEvaluator::ModuleEvaluator()
-{
+ModuleEvaluator::ModuleEvaluator() {
   GetKeyboardLayoutDlls(mKeyboardLayoutDlls);
 
   nsCOMPtr<nsIFile> sysDir;
-  if (NS_SUCCEEDED(NS_GetSpecialDirectory(NS_OS_SYSTEM_DIR,
-                                          getter_AddRefs(sysDir)))) {
+  if (NS_SUCCEEDED(
+          NS_GetSpecialDirectory(NS_OS_SYSTEM_DIR, getter_AddRefs(sysDir)))) {
     sysDir->GetPath(mSysDirectory);
   }
 
   nsCOMPtr<nsIFile> exeDir;
-  if (NS_SUCCEEDED(NS_GetSpecialDirectory(NS_GRE_DIR,
-                                          getter_AddRefs(exeDir)))) {
+  if (NS_SUCCEEDED(
+          NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(exeDir)))) {
     exeDir->GetPath(mExeDirectory);
   }
 
@@ -143,11 +140,9 @@ ModuleEvaluator::ModuleEvaluator()
   }
 }
 
-Maybe<bool>
-ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
-                                 const ModuleLoadEvent& aEvent,
-                                 Authenticode* aSvc) const
-{
+Maybe<bool> ModuleEvaluator::IsModuleTrusted(
+    ModuleLoadEvent::ModuleInfo& aDllInfo, const ModuleLoadEvent& aEvent,
+    Authenticode* aSvc) const {
   // The JIT profiling module doesn't really have any other practical way to
   // match; hard-code it as being trusted.
   if (aDllInfo.mLdrName.EqualsLiteral("JitPI.dll")) {
@@ -158,12 +153,13 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
   aDllInfo.mTrustFlags = ModuleTrustFlags::None;
 
   if (!aDllInfo.mFile) {
-    return Nothing(); // Every check here depends on having a valid image file.
+    return Nothing();  // Every check here depends on having a valid image file.
   }
 
   using PathTransformFlags = widget::WinUtils::PathTransformFlags;
 
-  Unused << widget::WinUtils::PreparePathForTelemetry(aDllInfo.mLdrName,
+  Unused << widget::WinUtils::PreparePathForTelemetry(
+      aDllInfo.mLdrName,
       PathTransformFlags::Default & ~PathTransformFlags::Canonicalize);
 
   nsAutoString dllFullPath;
@@ -173,9 +169,10 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
   widget::WinUtils::MakeLongPath(dllFullPath);
 
   aDllInfo.mFilePathClean = dllFullPath;
-  if (!widget::WinUtils::PreparePathForTelemetry(aDllInfo.mFilePathClean,
-      PathTransformFlags::Default &
-      ~(PathTransformFlags::Canonicalize | PathTransformFlags::Lengthen))) {
+  if (!widget::WinUtils::PreparePathForTelemetry(
+          aDllInfo.mFilePathClean,
+          PathTransformFlags::Default & ~(PathTransformFlags::Canonicalize |
+                                          PathTransformFlags::Lengthen))) {
     return Nothing();
   }
 
@@ -193,7 +190,7 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
   if (NS_FAILED(aDllInfo.mFile->GetLeafName(dllLeafLower))) {
     return Nothing();
   }
-  ToLowerCase(dllLeafLower); // To facilitate case-insensitive searching
+  ToLowerCase(dllLeafLower);  // To facilitate case-insensitive searching
 
 #if ENABLE_TESTS
   int scoreThreshold = 100;
@@ -210,15 +207,15 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
   int score = 0;
 
   // Is the DLL in the system directory?
-  if (!mSysDirectory.IsEmpty() && StringBeginsWith(dllFullPath, mSysDirectory,
-                                                   nsCaseInsensitiveStringComparator())) {
+  if (!mSysDirectory.IsEmpty() &&
+      StringBeginsWith(dllFullPath, mSysDirectory,
+                       nsCaseInsensitiveStringComparator())) {
     aDllInfo.mTrustFlags |= ModuleTrustFlags::SystemDirectory;
     score += 50;
   }
 
   // Is it a keyboard layout DLL?
-  if (std::find(mKeyboardLayoutDlls.begin(),
-                mKeyboardLayoutDlls.end(),
+  if (std::find(mKeyboardLayoutDlls.begin(), mKeyboardLayoutDlls.end(),
                 dllLeafLower) != mKeyboardLayoutDlls.end()) {
     aDllInfo.mTrustFlags |= ModuleTrustFlags::KeyboardLayout;
     // This doesn't guarantee trustworthiness by itself. Keyboard layouts also
@@ -236,8 +233,9 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
         score += 50;
       }
 
-      if (!mExeDirectory.IsEmpty() && StringBeginsWith(dllFullPath, mExeDirectory,
-                                                       nsCaseInsensitiveStringComparator())) {
+      if (!mExeDirectory.IsEmpty() &&
+          StringBeginsWith(dllFullPath, mExeDirectory,
+                           nsCaseInsensitiveStringComparator())) {
         score += 50;
         aDllInfo.mTrustFlags |= ModuleTrustFlags::FirefoxDirectory;
 
@@ -254,7 +252,8 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
 
   if (score < scoreThreshold) {
     if (aSvc) {
-      UniquePtr<wchar_t[]> szSignedBy = aSvc->GetBinaryOrgName(dllFullPath.get());
+      UniquePtr<wchar_t[]> szSignedBy =
+          aSvc->GetBinaryOrgName(dllFullPath.get());
       if (szSignedBy) {
         nsAutoString signedBy(szSignedBy.get());
         if (signedBy.EqualsLiteral("Microsoft Windows")) {
@@ -274,4 +273,4 @@ ModuleEvaluator::IsModuleTrusted(ModuleLoadEvent::ModuleInfo& aDllInfo,
   return Some(score >= scoreThreshold);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

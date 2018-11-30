@@ -20,9 +20,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class ManagerId final
-{
-public:
+class ManagerId final {
+ public:
   // Main thread only
   static nsresult Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut);
 
@@ -31,12 +30,11 @@ public:
 
   const nsACString& QuotaOrigin() const { return mQuotaOrigin; }
 
-  bool operator==(const ManagerId& aOther) const
-  {
+  bool operator==(const ManagerId& aOther) const {
     return mQuotaOrigin == aOther.mQuotaOrigin;
   }
 
-private:
+ private:
   ManagerId(nsIPrincipal* aPrincipal, const nsACString& aOrigin);
   ~ManagerId();
 
@@ -49,12 +47,12 @@ private:
   // immutable to allow threadsfe access
   const nsCString mQuotaOrigin;
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::cache::ManagerId)
 };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_ManagerId_h
+#endif  // mozilla_dom_cache_ManagerId_h

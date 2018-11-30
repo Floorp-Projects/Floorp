@@ -20,11 +20,13 @@
  */
 
 #define DEFINE_VK_INTERNAL(aKeyName) \
-  NS_DEFINE_VK(VK##aKeyName, mozilla::dom::KeyboardEvent_Binding::DOM_VK##aKeyName)
+  NS_DEFINE_VK(VK##aKeyName,         \
+               mozilla::dom::KeyboardEvent_Binding::DOM_VK##aKeyName)
 
 // Some keycode may have different name in KeyboardEvent from its key name.
 #define DEFINE_VK_INTERNAL2(aKeyName, aKeyCodeName) \
-  NS_DEFINE_VK(VK##aKeyName, mozilla::dom::KeyboardEvent_Binding::DOM_VK##aKeyCodeName)
+  NS_DEFINE_VK(VK##aKeyName,                        \
+               mozilla::dom::KeyboardEvent_Binding::DOM_VK##aKeyCodeName)
 
 DEFINE_VK_INTERNAL(_CANCEL)
 DEFINE_VK_INTERNAL(_HELP)
@@ -39,7 +41,7 @@ DEFINE_VK_INTERNAL(_PAUSE)
 DEFINE_VK_INTERNAL(_CAPS_LOCK)
 #ifdef NS_DISALLOW_SAME_KEYCODE
 DEFINE_VK_INTERNAL2(_KANA_OR_HANGUL, _KANA)
-#else // #ifdef NS_DISALLOW_SAME_KEYCODE
+#else  // #ifdef NS_DISALLOW_SAME_KEYCODE
 DEFINE_VK_INTERNAL(_KANA)
 DEFINE_VK_INTERNAL(_HANGUL)
 #endif
@@ -48,7 +50,7 @@ DEFINE_VK_INTERNAL(_JUNJA)
 DEFINE_VK_INTERNAL(_FINAL)
 #ifdef NS_DISALLOW_SAME_KEYCODE
 DEFINE_VK_INTERNAL2(_HANJA_OR_KANJI, _HANJA)
-#else // #ifdef NS_DISALLOW_SAME_KEYCODE
+#else  // #ifdef NS_DISALLOW_SAME_KEYCODE
 DEFINE_VK_INTERNAL(_HANJA)
 DEFINE_VK_INTERNAL(_KANJI)
 #endif

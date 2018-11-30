@@ -14,21 +14,20 @@ namespace dom {
 
 class Timeout;
 
-class TimeoutBudgetManager
-{
-public:
+class TimeoutBudgetManager {
+ public:
   static TimeoutBudgetManager& Get();
   void StartRecording(const TimeStamp& aNow);
   void StopRecording();
-  TimeDuration RecordExecution(const TimeStamp& aNow,
-                               const Timeout* aTimeout);
-private:
+  TimeDuration RecordExecution(const TimeStamp& aNow, const Timeout* aTimeout);
+
+ private:
   TimeoutBudgetManager() = default;
 
   TimeStamp mStart;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_timeoutbudgetmanager_h
+#endif  // mozilla_dom_timeoutbudgetmanager_h

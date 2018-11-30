@@ -44,8 +44,7 @@ typedef int32_t nscoord;
 
 inline void VERIFY_COORD(nscoord aCoord) {
 #ifdef NS_COORD_IS_FLOAT
-  NS_ASSERTION(floorf(aCoord) == aCoord,
-               "Coords cannot have fractions");
+  NS_ASSERTION(floorf(aCoord) == aCoord, "Coords cannot have fractions");
 #endif
 }
 
@@ -53,8 +52,7 @@ inline void VERIFY_COORD(nscoord aCoord) {
  * Divide aSpace by aN.  Assign the resulting quotient to aQuotient and
  * return the remainder.
  */
-inline nscoord NSCoordDivRem(nscoord aSpace, size_t aN, nscoord* aQuotient)
-{
+inline nscoord NSCoordDivRem(nscoord aSpace, size_t aN, nscoord* aQuotient) {
 #ifdef NS_COORD_IS_FLOAT
   *aQuotient = aSpace / aN;
   return 0.0f;
@@ -73,26 +71,25 @@ inline nscoord NSCoordMulDiv(nscoord aMult1, nscoord aMult2, nscoord aDiv) {
 #endif
 }
 
-inline nscoord NSToCoordRound(float aValue)
-{
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)
+inline nscoord NSToCoordRound(float aValue) {
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && \
+    !defined(__clang__)
   return NS_lroundup30(aValue);
 #else
   return nscoord(floorf(aValue + 0.5f));
 #endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
 }
 
-inline nscoord NSToCoordRound(double aValue)
-{
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)
+inline nscoord NSToCoordRound(double aValue) {
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && \
+    !defined(__clang__)
   return NS_lroundup30((float)aValue);
 #else
   return nscoord(floor(aValue + 0.5f));
 #endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
 }
 
-inline nscoord NSToCoordRoundWithClamp(float aValue)
-{
+inline nscoord NSToCoordRoundWithClamp(float aValue) {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
   if (aValue >= nscoord_MAX) {
@@ -123,7 +120,8 @@ inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
 #else
   float product = aCoord * aScale;
   if (requireNotNegative ? aCoord > 0 : (aCoord > 0) == (aScale > 0))
-    return NSToCoordRoundWithClamp(std::min<float>((float)nscoord_MAX, product));
+    return NSToCoordRoundWithClamp(
+        std::min<float>((float)nscoord_MAX, product));
   return NSToCoordRoundWithClamp(std::max<float>((float)nscoord_MIN, product));
 #endif
 }
@@ -134,7 +132,8 @@ inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
  * negative; use this method when you know that aScale should never be
  * negative to get a sanity check of that invariant in debug builds.
  */
-inline nscoord NSCoordSaturatingNonnegativeMultiply(nscoord aCoord, float aScale) {
+inline nscoord NSCoordSaturatingNonnegativeMultiply(nscoord aCoord,
+                                                    float aScale) {
   return _nscoordSaturatingMultiply(aCoord, aScale, true);
 }
 
@@ -155,9 +154,7 @@ inline nscoord NSCoordSaturatingMultiply(nscoord aCoord, float aScale) {
  * necessary.  Normal float addition correctly handles adding with infinity,
  * assuming we aren't adding nscoord_MIN. (-infinity)
  */
-inline nscoord
-NSCoordSaturatingAdd(nscoord a, nscoord b)
-{
+inline nscoord NSCoordSaturatingAdd(nscoord a, nscoord b) {
   VERIFY_COORD(a);
   VERIFY_COORD(b);
 
@@ -192,10 +189,8 @@ NSCoordSaturatingAdd(nscoord a, nscoord b)
  * and (b), though.  (Under normal float math, those cases would return NaN
  * and -infinity, respectively.)
  */
-inline nscoord 
-NSCoordSaturatingSubtract(nscoord a, nscoord b, 
-                          nscoord infMinusInfResult)
-{
+inline nscoord NSCoordSaturatingSubtract(nscoord a, nscoord b,
+                                         nscoord infMinusInfResult) {
   VERIFY_COORD(a);
   VERIFY_COORD(b);
 
@@ -236,18 +231,11 @@ inline float NSCoordToFloat(nscoord aCoord) {
 /*
  * Coord Rounding Functions
  */
-inline nscoord NSToCoordFloor(float aValue)
-{
-  return nscoord(floorf(aValue));
-}
+inline nscoord NSToCoordFloor(float aValue) { return nscoord(floorf(aValue)); }
 
-inline nscoord NSToCoordFloor(double aValue)
-{
-  return nscoord(floor(aValue));
-}
+inline nscoord NSToCoordFloor(double aValue) { return nscoord(floor(aValue)); }
 
-inline nscoord NSToCoordFloorClamped(float aValue)
-{
+inline nscoord NSToCoordFloorClamped(float aValue) {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
   if (aValue >= nscoord_MAX) {
@@ -260,18 +248,11 @@ inline nscoord NSToCoordFloorClamped(float aValue)
   return NSToCoordFloor(aValue);
 }
 
-inline nscoord NSToCoordCeil(float aValue)
-{
-  return nscoord(ceilf(aValue));
-}
+inline nscoord NSToCoordCeil(float aValue) { return nscoord(ceilf(aValue)); }
 
-inline nscoord NSToCoordCeil(double aValue)
-{
-  return nscoord(ceil(aValue));
-}
+inline nscoord NSToCoordCeil(double aValue) { return nscoord(ceil(aValue)); }
 
-inline nscoord NSToCoordCeilClamped(double aValue)
-{
+inline nscoord NSToCoordCeilClamped(double aValue) {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of double, to avoid overflow
   if (aValue >= nscoord_MAX) {
@@ -288,22 +269,19 @@ inline nscoord NSToCoordCeilClamped(double aValue)
 // aValue, and are thus equivalent to NSToCoordFloor* for positive
 // values and NSToCoordCeil* for negative values.
 
-inline nscoord NSToCoordTrunc(float aValue)
-{
+inline nscoord NSToCoordTrunc(float aValue) {
   // There's no need to use truncf() since it matches the default
   // rules for float to integer conversion.
   return nscoord(aValue);
 }
 
-inline nscoord NSToCoordTrunc(double aValue)
-{
+inline nscoord NSToCoordTrunc(double aValue) {
   // There's no need to use trunc() since it matches the default
   // rules for float to integer conversion.
   return nscoord(aValue);
 }
 
-inline nscoord NSToCoordTruncClamped(float aValue)
-{
+inline nscoord NSToCoordTruncClamped(float aValue) {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
   if (aValue >= nscoord_MAX) {
@@ -316,8 +294,7 @@ inline nscoord NSToCoordTruncClamped(float aValue)
   return NSToCoordTrunc(aValue);
 }
 
-inline nscoord NSToCoordTruncClamped(double aValue)
-{
+inline nscoord NSToCoordTruncClamped(double aValue) {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of double, to avoid overflow
   if (aValue >= nscoord_MAX) {
@@ -333,41 +310,27 @@ inline nscoord NSToCoordTruncClamped(double aValue)
 /*
  * Int Rounding Functions
  */
-inline int32_t NSToIntFloor(float aValue)
-{
-  return int32_t(floorf(aValue));
-}
+inline int32_t NSToIntFloor(float aValue) { return int32_t(floorf(aValue)); }
 
-inline int32_t NSToIntCeil(float aValue)
-{
-  return int32_t(ceilf(aValue));
-}
+inline int32_t NSToIntCeil(float aValue) { return int32_t(ceilf(aValue)); }
 
-inline int32_t NSToIntRound(float aValue)
-{
-  return NS_lroundf(aValue);
-}
+inline int32_t NSToIntRound(float aValue) { return NS_lroundf(aValue); }
 
-inline int32_t NSToIntRound(double aValue)
-{
-  return NS_lround(aValue);
-}
+inline int32_t NSToIntRound(double aValue) { return NS_lround(aValue); }
 
-inline int32_t NSToIntRoundUp(double aValue)
-{
+inline int32_t NSToIntRoundUp(double aValue) {
   return int32_t(floor(aValue + 0.5));
 }
 
-/* 
+/*
  * App Unit/Pixel conversions
  */
-inline nscoord NSFloatPixelsToAppUnits(float aPixels, float aAppUnitsPerPixel)
-{
+inline nscoord NSFloatPixelsToAppUnits(float aPixels, float aAppUnitsPerPixel) {
   return NSToCoordRoundWithClamp(aPixels * aAppUnitsPerPixel);
 }
 
-inline nscoord NSIntPixelsToAppUnits(int32_t aPixels, int32_t aAppUnitsPerPixel)
-{
+inline nscoord NSIntPixelsToAppUnits(int32_t aPixels,
+                                     int32_t aAppUnitsPerPixel) {
   // The cast to nscoord makes sure we don't overflow if we ever change
   // nscoord to float
   nscoord r = aPixels * (nscoord)aAppUnitsPerPixel;
@@ -375,60 +338,60 @@ inline nscoord NSIntPixelsToAppUnits(int32_t aPixels, int32_t aAppUnitsPerPixel)
   return r;
 }
 
-inline float NSAppUnitsToFloatPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
-{
+inline float NSAppUnitsToFloatPixels(nscoord aAppUnits,
+                                     float aAppUnitsPerPixel) {
   return (float(aAppUnits) / aAppUnitsPerPixel);
 }
 
-inline double NSAppUnitsToDoublePixels(nscoord aAppUnits, double aAppUnitsPerPixel)
-{
+inline double NSAppUnitsToDoublePixels(nscoord aAppUnits,
+                                       double aAppUnitsPerPixel) {
   return (double(aAppUnits) / aAppUnitsPerPixel);
 }
 
-inline int32_t NSAppUnitsToIntPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
-{
+inline int32_t NSAppUnitsToIntPixels(nscoord aAppUnits,
+                                     float aAppUnitsPerPixel) {
   return NSToIntRound(float(aAppUnits) / aAppUnitsPerPixel);
 }
 
-inline float NSCoordScale(nscoord aCoord, int32_t aFromAPP, int32_t aToAPP)
-{
+inline float NSCoordScale(nscoord aCoord, int32_t aFromAPP, int32_t aToAPP) {
   return (NSCoordToFloat(aCoord) * aToAPP) / aFromAPP;
 }
 
 /// handy constants
-#define TWIPS_PER_POINT_INT           20
-#define TWIPS_PER_POINT_FLOAT         20.0f
-#define POINTS_PER_INCH_INT           72
-#define POINTS_PER_INCH_FLOAT         72.0f
-#define CM_PER_INCH_FLOAT             2.54f
-#define MM_PER_INCH_FLOAT             25.4f
+#define TWIPS_PER_POINT_INT 20
+#define TWIPS_PER_POINT_FLOAT 20.0f
+#define POINTS_PER_INCH_INT 72
+#define POINTS_PER_INCH_FLOAT 72.0f
+#define CM_PER_INCH_FLOAT 2.54f
+#define MM_PER_INCH_FLOAT 25.4f
 
-/* 
+/*
  * Twips/unit conversions
  */
-inline float NSUnitsToTwips(float aValue, float aPointsPerUnit)
-{
+inline float NSUnitsToTwips(float aValue, float aPointsPerUnit) {
   return aValue * aPointsPerUnit * TWIPS_PER_POINT_FLOAT;
 }
 
-inline float NSTwipsToUnits(float aTwips, float aUnitsPerPoint)
-{
+inline float NSTwipsToUnits(float aTwips, float aUnitsPerPoint) {
   return (aTwips * (aUnitsPerPoint / TWIPS_PER_POINT_FLOAT));
 }
 
 /// Unit conversion macros
 //@{
-#define NS_POINTS_TO_TWIPS(x)         NSUnitsToTwips((x), 1.0f)
-#define NS_INCHES_TO_TWIPS(x)         NSUnitsToTwips((x), POINTS_PER_INCH_FLOAT)                      // 72 points per inch
+#define NS_POINTS_TO_TWIPS(x) NSUnitsToTwips((x), 1.0f)
+#define NS_INCHES_TO_TWIPS(x) \
+  NSUnitsToTwips((x), POINTS_PER_INCH_FLOAT)  // 72 points per inch
 
-#define NS_MILLIMETERS_TO_TWIPS(x)    NSUnitsToTwips((x), (POINTS_PER_INCH_FLOAT * 0.03937f))
+#define NS_MILLIMETERS_TO_TWIPS(x) \
+  NSUnitsToTwips((x), (POINTS_PER_INCH_FLOAT * 0.03937f))
 
-#define NS_POINTS_TO_INT_TWIPS(x)     NSToIntRound(NS_POINTS_TO_TWIPS(x))
-#define NS_INCHES_TO_INT_TWIPS(x)     NSToIntRound(NS_INCHES_TO_TWIPS(x))
+#define NS_POINTS_TO_INT_TWIPS(x) NSToIntRound(NS_POINTS_TO_TWIPS(x))
+#define NS_INCHES_TO_INT_TWIPS(x) NSToIntRound(NS_INCHES_TO_TWIPS(x))
 
-#define NS_TWIPS_TO_INCHES(x)         NSTwipsToUnits((x), 1.0f / POINTS_PER_INCH_FLOAT)
+#define NS_TWIPS_TO_INCHES(x) NSTwipsToUnits((x), 1.0f / POINTS_PER_INCH_FLOAT)
 
-#define NS_TWIPS_TO_MILLIMETERS(x)    NSTwipsToUnits((x), 1.0f / (POINTS_PER_INCH_FLOAT * 0.03937f))
+#define NS_TWIPS_TO_MILLIMETERS(x) \
+  NSTwipsToUnits((x), 1.0f / (POINTS_PER_INCH_FLOAT * 0.03937f))
 //@}
 
 #endif /* NSCOORD_H */

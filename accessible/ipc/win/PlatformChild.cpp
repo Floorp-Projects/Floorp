@@ -29,44 +29,45 @@ namespace a11y {
  * @see mozilla::mscom::ArrayData
  */
 static const mozilla::mscom::ArrayData sPlatformChildArrayData[] = {
-  {IID_IEnumVARIANT, 3, 1, VT_DISPATCH, IID_IDispatch, 2},
-  {IID_IAccessible2, 30, 1, VT_UNKNOWN | VT_BYREF, IID_IAccessibleRelation, 2},
-  {IID_IAccessibleRelation, 7, 1, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 2},
-  {IID_IAccessible2_2, 48, 2, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 3,
-   mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
-  {IID_IAccessibleTableCell, 4, 0, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 1,
-   mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
-  {IID_IAccessibleTableCell, 7, 0, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 1,
-   mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
-  {IID_IAccessibleHypertext2, 25, 0, VT_UNKNOWN | VT_BYREF,
-   IID_IAccessibleHyperlink, 1,
-   mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
-  {IID_IAccessibleTable2, 12, 0, VT_UNKNOWN | VT_BYREF,
-   NEWEST_IA2_IID, 1, mozilla::mscom::ArrayData::Flag::eAllocatedByServer}
-};
+    {IID_IEnumVARIANT, 3, 1, VT_DISPATCH, IID_IDispatch, 2},
+    {IID_IAccessible2, 30, 1, VT_UNKNOWN | VT_BYREF, IID_IAccessibleRelation,
+     2},
+    {IID_IAccessibleRelation, 7, 1, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 2},
+    {IID_IAccessible2_2, 48, 2, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 3,
+     mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
+    {IID_IAccessibleTableCell, 4, 0, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 1,
+     mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
+    {IID_IAccessibleTableCell, 7, 0, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 1,
+     mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
+    {IID_IAccessibleHypertext2, 25, 0, VT_UNKNOWN | VT_BYREF,
+     IID_IAccessibleHyperlink, 1,
+     mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
+    {IID_IAccessibleTable2, 12, 0, VT_UNKNOWN | VT_BYREF, NEWEST_IA2_IID, 1,
+     mozilla::mscom::ArrayData::Flag::eAllocatedByServer}};
 
 // Type libraries are thread-neutral, so we can register those from any
 // apartment. OTOH, proxies must be registered from within the apartment where
 // we intend to instantiate them. Therefore RegisterProxy() must be called
 // via EnsureMTA.
 PlatformChild::PlatformChild()
-  : mIA2Proxy(mozilla::mscom::RegisterProxy(L"ia2marshal.dll"))
-  , mAccTypelib(mozilla::mscom::RegisterTypelib(L"oleacc.dll",
-        mozilla::mscom::RegistrationFlags::eUseSystemDirectory))
-  , mMiscTypelib(mozilla::mscom::RegisterTypelib(L"Accessible.tlb"))
-  , mSdnTypelib(mozilla::mscom::RegisterTypelib(L"AccessibleMarshal.dll"))
-{
+    : mIA2Proxy(mozilla::mscom::RegisterProxy(L"ia2marshal.dll")),
+      mAccTypelib(mozilla::mscom::RegisterTypelib(
+          L"oleacc.dll",
+          mozilla::mscom::RegistrationFlags::eUseSystemDirectory)),
+      mMiscTypelib(mozilla::mscom::RegisterTypelib(L"Accessible.tlb")),
+      mSdnTypelib(mozilla::mscom::RegisterTypelib(L"AccessibleMarshal.dll")) {
   WORD actCtxResourceId = Compatibility::GetActCtxResourceId();
 
-  mozilla::mscom::MTADeletePtr<mozilla::mscom::ActivationContextRegion> tmpActCtxMTA;
+  mozilla::mscom::MTADeletePtr<mozilla::mscom::ActivationContextRegion>
+      tmpActCtxMTA;
   mozilla::mscom::EnsureMTA([actCtxResourceId, &tmpActCtxMTA]() -> void {
-    tmpActCtxMTA.reset(new mozilla::mscom::ActivationContextRegion(actCtxResourceId));
+    tmpActCtxMTA.reset(
+        new mozilla::mscom::ActivationContextRegion(actCtxResourceId));
   });
   mActCtxMTA = std::move(tmpActCtxMTA);
 
   mozilla::mscom::InterceptorLog::Init();
   mozilla::mscom::RegisterArrayData(sPlatformChildArrayData);
-
 
   UniquePtr<mozilla::mscom::RegisteredProxy> customProxy;
   mozilla::mscom::EnsureMTA([&customProxy]() -> void {
@@ -82,6 +83,5 @@ PlatformChild::PlatformChild()
   mIA2ProxyMTA = std::move(ia2ProxyMTA);
 }
 
-} // namespace a11y
-} // namespace mozilla
-
+}  // namespace a11y
+}  // namespace mozilla

@@ -16,20 +16,11 @@
 namespace mozilla {
 namespace dom {
 
-ImageTracker::ImageTracker()
-  : mLocking(false)
-  , mAnimating(true)
-{
-}
+ImageTracker::ImageTracker() : mLocking(false), mAnimating(true) {}
 
-ImageTracker::~ImageTracker()
-{
-  SetLockingState(false);
-}
+ImageTracker::~ImageTracker() { SetLockingState(false); }
 
-nsresult
-ImageTracker::Add(imgIRequest* aImage)
-{
+nsresult ImageTracker::Add(imgIRequest* aImage) {
   MOZ_ASSERT(aImage);
 
   nsresult rv = NS_OK;
@@ -58,9 +49,7 @@ ImageTracker::Add(imgIRequest* aImage)
   return rv;
 }
 
-nsresult
-ImageTracker::Remove(imgIRequest* aImage, uint32_t aFlags)
-{
+nsresult ImageTracker::Remove(imgIRequest* aImage, uint32_t aFlags) {
   NS_ENSURE_ARG_POINTER(aImage);
 
   // Get the old count. It should exist and be > 0.
@@ -101,17 +90,15 @@ ImageTracker::Remove(imgIRequest* aImage, uint32_t aFlags)
   return rv;
 }
 
-nsresult
-ImageTracker::SetLockingState(bool aLocked)
-{
+nsresult ImageTracker::SetLockingState(bool aLocked) {
   if (XRE_IsContentProcess() &&
-      !Preferences::GetBool("image.mem.allow_locking_in_content_processes", true)) {
+      !Preferences::GetBool("image.mem.allow_locking_in_content_processes",
+                            true)) {
     return NS_OK;
   }
 
   // If there's no change, there's nothing to do.
-  if (mLocking == aLocked)
-    return NS_OK;
+  if (mLocking == aLocked) return NS_OK;
 
   // Otherwise, iterate over our images and perform the appropriate action.
   for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
@@ -129,12 +116,9 @@ ImageTracker::SetLockingState(bool aLocked)
   return NS_OK;
 }
 
-void
-ImageTracker::SetAnimatingState(bool aAnimating)
-{
+void ImageTracker::SetAnimatingState(bool aAnimating) {
   // If there's no change, there's nothing to do.
-  if (mAnimating == aAnimating)
-    return;
+  if (mAnimating == aAnimating) return;
 
   // Otherwise, iterate over our images and perform the appropriate action.
   for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
@@ -150,13 +134,11 @@ ImageTracker::SetAnimatingState(bool aAnimating)
   mAnimating = aAnimating;
 }
 
-void
-ImageTracker::RequestDiscardAll()
-{
+void ImageTracker::RequestDiscardAll() {
   for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
     iter.Key()->RequestDiscard();
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

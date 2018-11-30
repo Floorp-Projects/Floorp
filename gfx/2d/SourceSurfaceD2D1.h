@@ -18,17 +18,18 @@ namespace gfx {
 
 class DrawTargetD2D1;
 
-class SourceSurfaceD2D1 : public SourceSurface
-{
-public:
+class SourceSurfaceD2D1 : public SourceSurface {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceD2D1, override)
 
-  SourceSurfaceD2D1(ID2D1Image* aImage, ID2D1DeviceContext *aDC,
+  SourceSurfaceD2D1(ID2D1Image *aImage, ID2D1DeviceContext *aDC,
                     SurfaceFormat aFormat, const IntSize &aSize,
                     DrawTargetD2D1 *aDT = nullptr);
   ~SourceSurfaceD2D1();
 
-  virtual SurfaceType GetType() const override { return SurfaceType::D2D1_1_IMAGE; }
+  virtual SurfaceType GetType() const override {
+    return SurfaceType::D2D1_1_IMAGE;
+  }
   virtual IntSize GetSize() const override { return mSize; }
   virtual SurfaceFormat GetFormat() const override { return mFormat; }
   virtual bool IsValid() const override;
@@ -36,9 +37,12 @@ public:
 
   ID2D1Image *GetImage() { return mImage; }
 
-  void EnsureIndependent() { if (!mDrawTarget) return; DrawTargetWillChange(); }
+  void EnsureIndependent() {
+    if (!mDrawTarget) return;
+    DrawTargetWillChange();
+  }
 
-private:
+ private:
   friend class DrawTargetD2D1;
 
   bool EnsureRealizedBitmap();
@@ -62,19 +66,18 @@ private:
 
   SurfaceFormat mFormat;
   IntSize mSize;
-  DrawTargetD2D1* mDrawTarget;
+  DrawTargetD2D1 *mDrawTarget;
   std::shared_ptr<Mutex> mSnapshotLock;
 };
 
-class DataSourceSurfaceD2D1 : public DataSourceSurface
-{
-public:
+class DataSourceSurfaceD2D1 : public DataSourceSurface {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceD2D1, override)
 
   DataSourceSurfaceD2D1(ID2D1Bitmap1 *aMappableBitmap, SurfaceFormat aFormat);
   ~DataSourceSurfaceD2D1();
 
-  virtual SurfaceType GetType() const  override{ return SurfaceType::DATA; }
+  virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
   virtual IntSize GetSize() const override;
   virtual SurfaceFormat GetFormat() const override { return mFormat; }
   virtual bool IsValid() const override { return !!mBitmap; }
@@ -83,7 +86,7 @@ public:
   virtual bool Map(MapType, MappedSurface *aMappedSurface) override;
   virtual void Unmap() override;
 
-private:
+ private:
   friend class SourceSurfaceD2DTarget;
   void EnsureMapped();
 
@@ -94,7 +97,7 @@ private:
   bool mImplicitMapped;
 };
 
-}
-}
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACED2D2TARGET_H_ */

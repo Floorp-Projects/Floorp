@@ -19,8 +19,8 @@ namespace dom {
 class ServiceWorkerRegistrationInfo;
 class ServiceWorkerRegistrationParent;
 
-class ServiceWorkerRegistrationProxy final : public ServiceWorkerRegistrationListener
-{
+class ServiceWorkerRegistrationProxy final
+    : public ServiceWorkerRegistrationListener {
   // Background thread only
   ServiceWorkerRegistrationParent* mActor;
 
@@ -34,60 +34,50 @@ class ServiceWorkerRegistrationProxy final : public ServiceWorkerRegistrationLis
   ~ServiceWorkerRegistrationProxy();
 
   // Background thread methods
-  void
-  MaybeShutdownOnBGThread();
+  void MaybeShutdownOnBGThread();
 
-  void
-  UpdateStateOnBGThread(const ServiceWorkerRegistrationDescriptor& aDescriptor);
+  void UpdateStateOnBGThread(
+      const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
-  void
-  FireUpdateFoundOnBGThread();
+  void FireUpdateFoundOnBGThread();
 
   // Main thread methods
-  void
-  InitOnMainThread();
+  void InitOnMainThread();
 
-  void
-  MaybeShutdownOnMainThread();
+  void MaybeShutdownOnMainThread();
 
-  void
-  StopListeningOnMainThread();
+  void StopListeningOnMainThread();
 
   // ServiceWorkerRegistrationListener interface
-  void
-  UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
+  void UpdateState(
+      const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
 
-  void
-  FireUpdateFound() override;
+  void FireUpdateFound() override;
 
-  void
-  RegistrationRemoved() override;
+  void RegistrationRemoved() override;
 
-  void
-  GetScope(nsAString& aScope) const override;
+  void GetScope(nsAString& aScope) const override;
 
-  bool
-  MatchesDescriptor(const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
+  bool MatchesDescriptor(
+      const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
 
-public:
-  explicit ServiceWorkerRegistrationProxy(const ServiceWorkerRegistrationDescriptor& aDescriptor);
+ public:
+  explicit ServiceWorkerRegistrationProxy(
+      const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
-  void
-  Init(ServiceWorkerRegistrationParent* aActor);
+  void Init(ServiceWorkerRegistrationParent* aActor);
 
-  void
-  RevokeActor(ServiceWorkerRegistrationParent* aActor);
+  void RevokeActor(ServiceWorkerRegistrationParent* aActor);
 
-  RefPtr<GenericPromise>
-  Unregister();
+  RefPtr<GenericPromise> Unregister();
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  Update();
+  RefPtr<ServiceWorkerRegistrationPromise> Update();
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerRegistrationProxy, override);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerRegistrationProxy,
+                                        override);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // moz_dom_ServiceWorkerRegistrationProxy_h
+#endif  // moz_dom_ServiceWorkerRegistrationProxy_h

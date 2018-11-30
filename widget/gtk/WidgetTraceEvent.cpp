@@ -20,25 +20,22 @@ CondVar* sCondVar = nullptr;
 bool sTracerProcessed = false;
 
 // This function is called from the main (UI) thread.
-gboolean TracerCallback(gpointer data)
-{
+gboolean TracerCallback(gpointer data) {
   mozilla::SignalTracerThread();
   return FALSE;
 }
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 
-bool InitWidgetTracing()
-{
+bool InitWidgetTracing() {
   sMutex = new Mutex("Event tracer thread mutex");
   sCondVar = new CondVar(*sMutex, "Event tracer thread condvar");
   return true;
 }
 
-void CleanUpWidgetTracing()
-{
+void CleanUpWidgetTracing() {
   delete sMutex;
   delete sCondVar;
   sMutex = nullptr;
@@ -46,28 +43,21 @@ void CleanUpWidgetTracing()
 }
 
 // This function is called from the background tracer thread.
-bool FireAndWaitForTracerEvent()
-{
+bool FireAndWaitForTracerEvent() {
   MOZ_ASSERT(sMutex && sCondVar, "Tracing not initialized!");
 
   // Send a default-priority idle event through the
   // event loop, and wait for it to finish.
   MutexAutoLock lock(*sMutex);
   MOZ_ASSERT(!sTracerProcessed, "Tracer synchronization state is wrong");
-  g_idle_add_full(G_PRIORITY_DEFAULT,
-                  TracerCallback,
-                  nullptr,
-                  nullptr);
-  while (!sTracerProcessed)
-    sCondVar->Wait();
+  g_idle_add_full(G_PRIORITY_DEFAULT, TracerCallback, nullptr, nullptr);
+  while (!sTracerProcessed) sCondVar->Wait();
   sTracerProcessed = false;
   return true;
 }
 
-void SignalTracerThread()
-{
-  if (!sMutex || !sCondVar)
-    return;
+void SignalTracerThread() {
+  if (!sMutex || !sCondVar) return;
   MutexAutoLock lock(*sMutex);
   if (!sTracerProcessed) {
     sTracerProcessed = true;
@@ -75,4 +65,4 @@ void SignalTracerThread()
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

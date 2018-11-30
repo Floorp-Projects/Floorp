@@ -33,17 +33,14 @@
 // to ensure that the pending callback is dispatched when it wants to have its
 // ReadSegments method called again.
 
-class nsBaseContentStream : public nsIAsyncInputStream
-{
-public:
+class nsBaseContentStream : public nsIAsyncInputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
 
   explicit nsBaseContentStream(bool nonBlocking)
-    : mStatus(NS_OK)
-    , mNonBlocking(nonBlocking) {
-  }
+      : mStatus(NS_OK), mNonBlocking(nonBlocking) {}
 
   nsresult Status() { return mStatus; }
   bool IsNonBlocking() { return mNonBlocking; }
@@ -64,19 +61,19 @@ public:
   // Helper function to make code more self-documenting.
   void DispatchCallbackSync() { DispatchCallback(false); }
 
-protected:
+ protected:
   virtual ~nsBaseContentStream() = default;
 
-private:
+ private:
   // Called from the base stream's AsyncWait method when a pending callback
   // is installed on the stream.
   virtual void OnCallbackPending() {}
 
-private:
+ private:
   nsCOMPtr<nsIInputStreamCallback> mCallback;
-  nsCOMPtr<nsIEventTarget>         mCallbackTarget;
-  nsresult                         mStatus;
-  bool                             mNonBlocking;
+  nsCOMPtr<nsIEventTarget> mCallbackTarget;
+  nsresult mStatus;
+  bool mNonBlocking;
 };
 
-#endif // nsBaseContentStream_h__
+#endif  // nsBaseContentStream_h__

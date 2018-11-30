@@ -34,68 +34,48 @@ typedef unsigned long long CSArchitecture;
 
 extern "C" {
 
-CSSymbolicatorRef
-CSSymbolicatorCreateWithPid(pid_t pid);
+CSSymbolicatorRef CSSymbolicatorCreateWithPid(pid_t pid);
 
-CSSymbolicatorRef
-CSSymbolicatorCreateWithPidFlagsAndNotification(pid_t pid,
-                                                uint32_t flags,
-                                                uint32_t notification);
+CSSymbolicatorRef CSSymbolicatorCreateWithPidFlagsAndNotification(
+    pid_t pid, uint32_t flags, uint32_t notification);
 
-CSArchitecture
-CSSymbolicatorGetArchitecture(CSSymbolicatorRef symbolicator);
+CSArchitecture CSSymbolicatorGetArchitecture(CSSymbolicatorRef symbolicator);
 
-CSSymbolOwnerRef
-CSSymbolicatorGetSymbolOwnerWithAddressAtTime(CSSymbolicatorRef symbolicator,
-                                              unsigned long long address,
-                                              long time);
+CSSymbolOwnerRef CSSymbolicatorGetSymbolOwnerWithAddressAtTime(
+    CSSymbolicatorRef symbolicator, unsigned long long address, long time);
 
-const char*
-CSSymbolOwnerGetName(CSSymbolOwnerRef owner);
+const char* CSSymbolOwnerGetName(CSSymbolOwnerRef owner);
 
-unsigned long long
-CSSymbolOwnerGetBaseAddress(CSSymbolOwnerRef owner);
+unsigned long long CSSymbolOwnerGetBaseAddress(CSSymbolOwnerRef owner);
 
-CSSymbolRef
-CSSymbolOwnerGetSymbolWithAddress(CSSymbolOwnerRef owner,
-                                  unsigned long long address);
+CSSymbolRef CSSymbolOwnerGetSymbolWithAddress(CSSymbolOwnerRef owner,
+                                              unsigned long long address);
 
-CSSourceInfoRef
-CSSymbolOwnerGetSourceInfoWithAddress(CSSymbolOwnerRef owner,
-                                      unsigned long long address);
+CSSourceInfoRef CSSymbolOwnerGetSourceInfoWithAddress(
+    CSSymbolOwnerRef owner, unsigned long long address);
 
-const char*
-CSSymbolGetName(CSSymbolRef symbol);
+const char* CSSymbolGetName(CSSymbolRef symbol);
 
-CSRange
-CSSymbolGetRange(CSSymbolRef symbol);
+CSRange CSSymbolGetRange(CSSymbolRef symbol);
 
-const char*
-CSSourceInfoGetFilename(CSSourceInfoRef info);
+const char* CSSourceInfoGetFilename(CSSourceInfoRef info);
 
-uint32_t
-CSSourceInfoGetLineNumber(CSSourceInfoRef info);
+uint32_t CSSourceInfoGetLineNumber(CSSourceInfoRef info);
 
-CSTypeRef
-CSRetain(CSTypeRef);
+CSTypeRef CSRetain(CSTypeRef);
 
-void
-CSRelease(CSTypeRef);
+void CSRelease(CSTypeRef);
 
-bool
-CSIsNull(CSTypeRef);
+bool CSIsNull(CSTypeRef);
 
-void
-CSShow(CSTypeRef);
+void CSShow(CSTypeRef);
 
-const char*
-CSArchitectureGetFamilyName(CSArchitecture);
+const char* CSArchitectureGetFamilyName(CSArchitecture);
 
-} // extern "C"
+}  // extern "C"
 
-class nsCocoaDebugUtils
-{
-public:
+class nsCocoaDebugUtils {
+ public:
   // Like NSLog() but records more information (for example the full path to
   // the executable and the "thread name").  Like NSLog(), writes to both
   // stdout and the system log.
@@ -113,7 +93,7 @@ public:
   // free()ed by the caller.
   static char* GetAddressString(void* aAddress);
 
-private:
+ private:
   static void DebugLogInt(bool aDecorate, const char* aFormat, ...);
   static void DebugLogV(bool aDecorate, CFStringRef aFormat, va_list aArgs);
 
@@ -121,8 +101,7 @@ private:
 
   // The values returned by GetOwnerNameInt() and GetAddressStringInt() must
   // be free()ed by the caller.
-  static char* GetOwnerNameInt(void* aAddress,
-                               CSTypeRef aOwner = sInitializer);
+  static char* GetOwnerNameInt(void* aAddress, CSTypeRef aOwner = sInitializer);
   static char* GetAddressStringInt(void* aAddress,
                                    CSTypeRef aOwner = sInitializer);
 
@@ -133,4 +112,4 @@ private:
   static CSSymbolicatorRef sSymbolicator;
 };
 
-#endif // nsCocoaDebugUtils_h_
+#endif  // nsCocoaDebugUtils_h_

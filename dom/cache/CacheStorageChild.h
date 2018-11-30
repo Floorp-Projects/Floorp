@@ -25,10 +25,8 @@ class CacheStorage;
 class CacheWorkerHolder;
 class PCacheChild;
 
-class CacheStorageChild final : public PCacheStorageChild
-                              , public ActorChild
-{
-public:
+class CacheStorageChild final : public PCacheStorageChild, public ActorChild {
+ public:
   CacheStorageChild(CacheStorage* aListener, CacheWorkerHolder* aWorkerHolder);
   ~CacheStorageChild();
 
@@ -38,14 +36,13 @@ public:
   // ActorDestroy() if it has not been called yet.
   void ClearListener();
 
-  void
-  ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-            nsISupports* aParent, const CacheOpArgs& aArgs);
+  void ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
+                 nsISupports* aParent, const CacheOpArgs& aArgs);
 
   // Our parent Listener object has gone out of scope and is being destroyed.
   void StartDestroyFromListener();
 
-private:
+ private:
   // ActorChild methods
 
   // CacheWorkerHolder is trying to destroy due to worker shutdown.
@@ -54,15 +51,13 @@ private:
   // PCacheStorageChild methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  virtual PCacheOpChild*
-  AllocPCacheOpChild(const CacheOpArgs& aOpArgs) override;
+  virtual PCacheOpChild* AllocPCacheOpChild(
+      const CacheOpArgs& aOpArgs) override;
 
-  virtual bool
-  DeallocPCacheOpChild(PCacheOpChild* aActor) override;
+  virtual bool DeallocPCacheOpChild(PCacheOpChild* aActor) override;
 
   // utility methods
-  void
-  NoteDeletedActor();
+  void NoteDeletedActor();
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The CacheStorage object must call ClearListener() to null this before its
@@ -74,8 +69,8 @@ private:
   NS_DECL_OWNINGTHREAD
 };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_CacheStorageChild_h
+#endif  // mozilla_dom_cache_CacheStorageChild_h

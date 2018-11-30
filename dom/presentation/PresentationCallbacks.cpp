@@ -25,26 +25,20 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(PresentationRequesterCallback, nsIPresentationServiceCallback)
 
-PresentationRequesterCallback::PresentationRequesterCallback(PresentationRequest* aRequest,
-                                                             const nsAString& aSessionId,
-                                                             Promise* aPromise)
-  : mRequest(aRequest)
-  , mSessionId(aSessionId)
-  , mPromise(aPromise)
-{
+PresentationRequesterCallback::PresentationRequesterCallback(
+    PresentationRequest* aRequest, const nsAString& aSessionId,
+    Promise* aPromise)
+    : mRequest(aRequest), mSessionId(aSessionId), mPromise(aPromise) {
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mPromise);
   MOZ_ASSERT(!mSessionId.IsEmpty());
 }
 
-PresentationRequesterCallback::~PresentationRequesterCallback()
-{
-}
+PresentationRequesterCallback::~PresentationRequesterCallback() {}
 
 // nsIPresentationServiceCallback
 NS_IMETHODIMP
-PresentationRequesterCallback::NotifySuccess(const nsAString& aUrl)
-{
+PresentationRequesterCallback::NotifySuccess(const nsAString& aUrl) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUrl.IsEmpty()) {
@@ -52,8 +46,8 @@ PresentationRequesterCallback::NotifySuccess(const nsAString& aUrl)
   }
 
   RefPtr<PresentationConnection> connection =
-    PresentationConnection::Create(mRequest->GetOwner(), mSessionId, aUrl,
-                                   nsIPresentationService::ROLE_CONTROLLER);
+      PresentationConnection::Create(mRequest->GetOwner(), mSessionId, aUrl,
+                                     nsIPresentationService::ROLE_CONTROLLER);
   if (NS_WARN_IF(!connection)) {
     return NotifyError(NS_ERROR_DOM_OPERATION_ERR);
   }
@@ -65,8 +59,7 @@ PresentationRequesterCallback::NotifySuccess(const nsAString& aUrl)
 }
 
 NS_IMETHODIMP
-PresentationRequesterCallback::NotifyError(nsresult aError)
-{
+PresentationRequesterCallback::NotifyError(nsresult aError) {
   MOZ_ASSERT(NS_IsMainThread());
 
   mRequest->NotifyPromiseSettled();
@@ -79,26 +72,19 @@ PresentationRequesterCallback::NotifyError(nsresult aError)
  */
 
 PresentationReconnectCallback::PresentationReconnectCallback(
-                                           PresentationRequest* aRequest,
-                                           const nsAString& aSessionId,
-                                           Promise* aPromise,
-                                           PresentationConnection* aConnection)
-  : PresentationRequesterCallback(aRequest, aSessionId, aPromise)
-  , mConnection(aConnection)
-{
-}
+    PresentationRequest* aRequest, const nsAString& aSessionId,
+    Promise* aPromise, PresentationConnection* aConnection)
+    : PresentationRequesterCallback(aRequest, aSessionId, aPromise),
+      mConnection(aConnection) {}
 
-PresentationReconnectCallback::~PresentationReconnectCallback()
-{
-}
+PresentationReconnectCallback::~PresentationReconnectCallback() {}
 
 NS_IMETHODIMP
-PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl)
-{
+PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIPresentationService> service =
-    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -109,9 +95,7 @@ PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl)
   // the event.
   if (mConnection) {
     mConnection->NotifyStateChange(
-      mSessionId,
-      nsIPresentationSessionListener::STATE_CONNECTING,
-      NS_OK);
+        mSessionId, nsIPresentationSessionListener::STATE_CONNECTING, NS_OK);
     mPromise->MaybeResolve(mConnection);
     rv = mRequest->DispatchConnectionAvailableEvent(mConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -125,9 +109,9 @@ PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl)
       return rv;
     }
 
-    rv = service->UpdateWindowIdBySessionId(mSessionId,
-                                            nsIPresentationService::ROLE_CONTROLLER,
-                                            mRequest->GetOwner()->WindowID());
+    rv = service->UpdateWindowIdBySessionId(
+        mSessionId, nsIPresentationService::ROLE_CONTROLLER,
+        mRequest->GetOwner()->WindowID());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -135,45 +119,37 @@ PresentationReconnectCallback::NotifySuccess(const nsAString& aUrl)
 
   nsString sessionId = nsString(mSessionId);
   return NS_DispatchToMainThread(NS_NewRunnableFunction(
-    "dom::PresentationReconnectCallback::NotifySuccess",
-    [sessionId, service]() -> void {
-      service->BuildTransport(sessionId,
-                              nsIPresentationService::ROLE_CONTROLLER);
-    }));
+      "dom::PresentationReconnectCallback::NotifySuccess",
+      [sessionId, service]() -> void {
+        service->BuildTransport(sessionId,
+                                nsIPresentationService::ROLE_CONTROLLER);
+      }));
 }
 
 NS_IMETHODIMP
-PresentationReconnectCallback::NotifyError(nsresult aError)
-{
+PresentationReconnectCallback::NotifyError(nsresult aError) {
   if (mConnection) {
     mConnection->NotifyStateChange(
-      mSessionId,
-      nsIPresentationSessionListener::STATE_CLOSED,
-      aError);
+        mSessionId, nsIPresentationSessionListener::STATE_CLOSED, aError);
   }
   return PresentationRequesterCallback::NotifyError(aError);
 }
 
-NS_IMPL_ISUPPORTS(PresentationResponderLoadingCallback,
-                  nsIWebProgressListener,
+NS_IMPL_ISUPPORTS(PresentationResponderLoadingCallback, nsIWebProgressListener,
                   nsISupportsWeakReference)
 
-PresentationResponderLoadingCallback::PresentationResponderLoadingCallback(const nsAString& aSessionId)
-  : mSessionId(aSessionId)
-{
-}
+PresentationResponderLoadingCallback::PresentationResponderLoadingCallback(
+    const nsAString& aSessionId)
+    : mSessionId(aSessionId) {}
 
-PresentationResponderLoadingCallback::~PresentationResponderLoadingCallback()
-{
+PresentationResponderLoadingCallback::~PresentationResponderLoadingCallback() {
   if (mProgress) {
     mProgress->RemoveProgressListener(this);
     mProgress = nullptr;
   }
 }
 
-nsresult
-PresentationResponderLoadingCallback::Init(nsIDocShell* aDocShell)
-{
+nsresult PresentationResponderLoadingCallback::Init(nsIDocShell* aDocShell) {
   mProgress = do_GetInterface(aDocShell);
   if (NS_WARN_IF(!mProgress)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -183,18 +159,19 @@ PresentationResponderLoadingCallback::Init(nsIDocShell* aDocShell)
 
   if ((busyFlags == nsIDocShell::BUSY_FLAGS_NONE) ||
       (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)) {
-    // The docshell has finished loading or is receiving data (|STATE_TRANSFERRING|
-    // has already been fired), so the page is ready for presentation use.
+    // The docshell has finished loading or is receiving data
+    // (|STATE_TRANSFERRING| has already been fired), so the page is ready for
+    // presentation use.
     return NotifyReceiverReady(/* isLoading = */ true);
   }
 
   // Start to listen to document state change event |STATE_TRANSFERRING|.
-  return mProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+  return mProgress->AddProgressListener(this,
+                                        nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 }
 
-nsresult
-PresentationResponderLoadingCallback::NotifyReceiverReady(bool aIsLoading)
-{
+nsresult PresentationResponderLoadingCallback::NotifyReceiverReady(
+    bool aIsLoading) {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(mProgress);
   if (NS_WARN_IF(!window || !window->GetCurrentInnerWindow())) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -202,25 +179,22 @@ PresentationResponderLoadingCallback::NotifyReceiverReady(bool aIsLoading)
   uint64_t windowId = window->GetCurrentInnerWindow()->WindowID();
 
   nsCOMPtr<nsIPresentationService> service =
-    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<nsIPresentationTransportBuilderConstructor> constructor =
-    PresentationTransportBuilderConstructor::Create();
-  return service->NotifyReceiverReady(mSessionId,
-                                      windowId,aIsLoading,
+      PresentationTransportBuilderConstructor::Create();
+  return service->NotifyReceiverReady(mSessionId, windowId, aIsLoading,
                                       constructor);
 }
 
 // nsIWebProgressListener
 NS_IMETHODIMP
-PresentationResponderLoadingCallback::OnStateChange(nsIWebProgress* aWebProgress,
-                                                    nsIRequest* aRequest,
-                                                    uint32_t aStateFlags,
-                                                    nsresult aStatus)
-{
+PresentationResponderLoadingCallback::OnStateChange(
+    nsIWebProgress* aWebProgress, nsIRequest* aRequest, uint32_t aStateFlags,
+    nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aStateFlags & (nsIWebProgressListener::STATE_TRANSFERRING |
@@ -235,44 +209,34 @@ PresentationResponderLoadingCallback::OnStateChange(nsIWebProgress* aWebProgress
 }
 
 NS_IMETHODIMP
-PresentationResponderLoadingCallback::OnProgressChange(nsIWebProgress* aWebProgress,
-                                                       nsIRequest* aRequest,
-                                                       int32_t aCurSelfProgress,
-                                                       int32_t aMaxSelfProgress,
-                                                       int32_t aCurTotalProgress,
-                                                       int32_t aMaxTotalProgress)
-{
+PresentationResponderLoadingCallback::OnProgressChange(
+    nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+    int32_t aCurSelfProgress, int32_t aMaxSelfProgress,
+    int32_t aCurTotalProgress, int32_t aMaxTotalProgress) {
   // Do nothing.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationResponderLoadingCallback::OnLocationChange(nsIWebProgress* aWebProgress,
-                                                       nsIRequest* aRequest,
-                                                       nsIURI* aURI,
-                                                       uint32_t aFlags)
-{
+PresentationResponderLoadingCallback::OnLocationChange(
+    nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsIURI* aURI,
+    uint32_t aFlags) {
   // Do nothing.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationResponderLoadingCallback::OnStatusChange(nsIWebProgress* aWebProgress,
-                                                     nsIRequest* aRequest,
-                                                     nsresult aStatus,
-                                                     const char16_t* aMessage)
-{
+PresentationResponderLoadingCallback::OnStatusChange(
+    nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsresult aStatus,
+    const char16_t* aMessage) {
   // Do nothing.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationResponderLoadingCallback::OnSecurityChange(nsIWebProgress* aWebProgress,
-                                                       nsIRequest* aRequest,
-                                                       uint32_t aOldState,
-                                                       uint32_t aState,
-                                                       const nsAString& aContentBlockingLogJSON)
-{
+PresentationResponderLoadingCallback::OnSecurityChange(
+    nsIWebProgress* aWebProgress, nsIRequest* aRequest, uint32_t aOldState,
+    uint32_t aState, const nsAString& aContentBlockingLogJSON) {
   // Do nothing.
   return NS_OK;
 }

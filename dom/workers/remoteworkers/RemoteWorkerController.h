@@ -83,82 +83,61 @@ class MessagePortIdentifier;
 class RemoteWorkerManager;
 class RemoteWorkerParent;
 
-class RemoteWorkerObserver
-{
-public:
+class RemoteWorkerObserver {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void
-  CreationFailed() = 0;
+  virtual void CreationFailed() = 0;
 
-  virtual void
-  CreationSucceeded() = 0;
+  virtual void CreationSucceeded() = 0;
 
-  virtual void
-  ErrorReceived(const ErrorValue& aValue) = 0;
+  virtual void ErrorReceived(const ErrorValue& aValue) = 0;
 
-  virtual void
-  Terminated() = 0;
+  virtual void Terminated() = 0;
 };
 
-class RemoteWorkerController final
-{
+class RemoteWorkerController final {
   friend class RemoteWorkerManager;
   friend class RemoteWorkerParent;
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerController)
 
-  static already_AddRefed<RemoteWorkerController>
-  Create(const RemoteWorkerData& aData,
-         RemoteWorkerObserver* aObserver,
-         base::ProcessId = 0);
+  static already_AddRefed<RemoteWorkerController> Create(
+      const RemoteWorkerData& aData, RemoteWorkerObserver* aObserver,
+      base::ProcessId = 0);
 
-  void
-  AddWindowID(uint64_t aWindowID);
+  void AddWindowID(uint64_t aWindowID);
 
-  void
-  RemoveWindowID(uint64_t aWindowID);
+  void RemoveWindowID(uint64_t aWindowID);
 
-  void
-  AddPortIdentifier(const MessagePortIdentifier& aPortIdentifier);
+  void AddPortIdentifier(const MessagePortIdentifier& aPortIdentifier);
 
-  void
-  Terminate();
+  void Terminate();
 
-  void
-  Suspend();
+  void Suspend();
 
-  void
-  Resume();
+  void Resume();
 
-  void
-  Freeze();
+  void Freeze();
 
-  void
-  Thaw();
+  void Thaw();
 
-private:
+ private:
   explicit RemoteWorkerController(RemoteWorkerObserver* aObserver);
   ~RemoteWorkerController();
 
-  void
-  SetWorkerActor(RemoteWorkerParent* aActor);
+  void SetWorkerActor(RemoteWorkerParent* aActor);
 
-  void
-  ErrorPropagation(const ErrorValue& aValue);
+  void ErrorPropagation(const ErrorValue& aValue);
 
-  void
-  WorkerTerminated();
+  void WorkerTerminated();
 
-  void
-  Shutdown();
+  void Shutdown();
 
-  void
-  CreationFailed();
+  void CreationFailed();
 
-  void
-  CreationSucceeded();
+  void CreationSucceeded();
 
   RefPtr<RemoteWorkerObserver> mObserver;
   RefPtr<RemoteWorkerParent> mActor;
@@ -182,19 +161,15 @@ private:
     };
 
     explicit Op(Type aType, uint64_t aWindowID = 0)
-      : mType(aType)
-      , mWindowID(aWindowID)
-      , mCompleted(false)
-    {
-       MOZ_COUNT_CTOR(Op);
+        : mType(aType), mWindowID(aWindowID), mCompleted(false) {
+      MOZ_COUNT_CTOR(Op);
     }
 
     explicit Op(const MessagePortIdentifier& aPortIdentifier)
-      : mType(ePortIdentifier)
-      , mPortIdentifier(aPortIdentifier)
-      , mCompleted(false)
-    {
-       MOZ_COUNT_CTOR(Op);
+        : mType(ePortIdentifier),
+          mPortIdentifier(aPortIdentifier),
+          mCompleted(false) {
+      MOZ_COUNT_CTOR(Op);
     }
 
     // This object cannot be copied.
@@ -203,11 +178,7 @@ private:
 
     ~Op();
 
-    void
-    Completed()
-    {
-      mCompleted = true;
-    }
+    void Completed() { mCompleted = true; }
 
     Type mType;
 
@@ -219,7 +190,7 @@ private:
   nsTArray<UniquePtr<Op>> mPendingOps;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RemoteWorkerController_h
+#endif  // mozilla_dom_RemoteWorkerController_h

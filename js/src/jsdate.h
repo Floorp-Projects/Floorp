@@ -27,8 +27,8 @@ namespace js {
  * Construct a new Date Object from a time value given in milliseconds UTC
  * since the epoch.
  */
-extern JSObject*
-NewDateObjectMsec(JSContext* cx, JS::ClippedTime t, JS::HandleObject proto = nullptr);
+extern JSObject* NewDateObjectMsec(JSContext* cx, JS::ClippedTime t,
+                                   JS::HandleObject proto = nullptr);
 
 /*
  * Construct a new Date Object from an exploded local time value.
@@ -37,15 +37,14 @@ NewDateObjectMsec(JSContext* cx, JS::ClippedTime t, JS::HandleObject proto = nul
  * due to the 0-based month numbering copied into JS from Java (java.util.Date
  * in 1995).
  */
-extern JS_FRIEND_API JSObject*
-NewDateObject(JSContext* cx, int year, int mon, int mday, int hour, int min, int sec);
+extern JS_FRIEND_API JSObject* NewDateObject(JSContext* cx, int year, int mon,
+                                             int mday, int hour, int min,
+                                             int sec);
 
 /* Date methods exposed so they can be installed in the self-hosting global. */
-bool
-date_now(JSContext* cx, unsigned argc, JS::Value* vp);
+bool date_now(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
-date_valueOf(JSContext* cx, unsigned argc, JS::Value* vp);
+bool date_valueOf(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } /* namespace js */
 

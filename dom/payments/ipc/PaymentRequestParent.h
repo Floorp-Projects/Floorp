@@ -14,10 +14,9 @@
 namespace mozilla {
 namespace dom {
 
-class PaymentRequestParent final : public PPaymentRequestParent
-{
+class PaymentRequestParent final : public PPaymentRequestParent {
   NS_INLINE_DECL_REFCOUNTING(PaymentRequestParent)
-public:
+ public:
   PaymentRequestParent();
 
   nsresult RespondPayment(nsIPaymentActionResponse* aResponse);
@@ -33,14 +32,15 @@ public:
                                const nsAString& aMethodName,
                                nsIMethodChangeDetails* aMethodDetails);
 
-protected:
-  mozilla::ipc::IPCResult
-  RecvRequestPayment(const IPCPaymentActionRequest& aRequest) override;
+ protected:
+  mozilla::ipc::IPCResult RecvRequestPayment(
+      const IPCPaymentActionRequest& aRequest) override;
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
-private:
+
+ private:
   ~PaymentRequestParent() = default;
 
   nsresult SerializeAddress(IPCPaymentAddress& ipcAddress,
@@ -52,7 +52,7 @@ private:
   nsString mRequestId;
 };
 
-} // end of namespace dom
-} // end of namespace mozilla
+}  // end of namespace dom
+}  // end of namespace mozilla
 
 #endif

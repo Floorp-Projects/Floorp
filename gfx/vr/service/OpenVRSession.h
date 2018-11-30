@@ -24,9 +24,8 @@ class VRThread;
 
 static const int kNumOpenVRHaptics = 1;
 
-class OpenVRSession : public VRSession
-{
-public:
+class OpenVRSession : public VRSession {
+ public:
   OpenVRSession();
   virtual ~OpenVRSession();
 
@@ -37,11 +36,11 @@ public:
   bool StartPresentation() override;
   void StopPresentation() override;
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                    float aIntensity, float aDuration) override;
+                     float aIntensity, float aDuration) override;
   void StopVibrateHaptic(uint32_t aControllerIdx) override;
   void StopAllHaptics() override;
 
-protected:
+ protected:
 #if defined(XP_WIN)
   bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                    ID3D11Texture2D* aTexture) override;
@@ -50,7 +49,7 @@ protected:
                    const VRLayerTextureHandle& aTexture) override;
 #endif
 
-private:
+ private:
   // OpenVR State
   ::vr::IVRSystem* mVRSystem = nullptr;
   ::vr::IVRChaperone* mVRChaperone = nullptr;
@@ -91,7 +90,7 @@ private:
   mozilla::Mutex mControllerHapticStateMutex;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_SERVICE_OPENVRSESSION_H
+#endif  // GFX_VR_SERVICE_OPENVRSESSION_H

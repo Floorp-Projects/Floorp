@@ -39,8 +39,7 @@ enum PlatformFileFlags {
 // Creates or open the given file. If PLATFORM_FILE_OPEN_ALWAYS is used, and
 // |created| is provided, |created| will be set to true if the file was created
 // or to false in case the file was just opened.
-PlatformFile CreatePlatformFile(const std::wstring& name,
-                                int flags,
+PlatformFile CreatePlatformFile(const std::wstring& name, int flags,
                                 bool* created);
 
 }  // namespace base

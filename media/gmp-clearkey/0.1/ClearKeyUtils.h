@@ -32,9 +32,8 @@ void CK_Log(const char* aFmt, ...);
 #define CK_LOGE(...) CK_Log(__VA_ARGS__)
 #define CK_LOGD(...) CK_Log(__VA_ARGS__)
 #define CK_LOGW(...) CK_Log(__VA_ARGS__)
-#define CK_LOGARRAY(APREPEND, ADATA, ADATA_SIZE) CK_LogArray(APREPEND, \
-  ADATA, \
-  ADATA_SIZE)
+#define CK_LOGARRAY(APREPEND, ADATA, ADATA_SIZE) \
+  CK_LogArray(APREPEND, ADATA, ADATA_SIZE)
 #else
 // Note: Enabling logging slows things down a LOT, especially when logging to
 // a file.
@@ -55,21 +54,19 @@ static const uint32_t kMaxSessionResponseLength = 65536;
 static const uint32_t kMaxWebmInitDataSize = 65536;
 static const uint32_t kMaxKeyIdsLength = 512;
 
-void CK_LogArray(const char* aPrepend,
-                 const uint8_t* aData,
+void CK_LogArray(const char* aPrepend, const uint8_t* aData,
                  const uint32_t aDataSize);
 
-struct KeyIdPair
-{
+struct KeyIdPair {
   KeyId mKeyId;
   Key mKey;
 };
 
-class ClearKeyUtils
-{
-public:
+class ClearKeyUtils {
+ public:
   static void DecryptAES(const std::vector<uint8_t>& aKey,
-                         std::vector<uint8_t>& aData, std::vector<uint8_t>& aIV);
+                         std::vector<uint8_t>& aData,
+                         std::vector<uint8_t>& aIV);
 
   static bool ParseKeyIdsInitData(const uint8_t* aInitData,
                                   uint32_t aInitDataSize,
@@ -86,21 +83,17 @@ public:
 
   static bool IsValidSessionId(const char* aBuff, uint32_t aLength);
 
-  static std::string ToHexString(const uint8_t * aBytes, uint32_t aLength);
+  static std::string ToHexString(const uint8_t* aBytes, uint32_t aLength);
 };
 
-template<class Container, class Element>
-inline bool
-Contains(const Container& aContainer, const Element& aElement)
-{
+template <class Container, class Element>
+inline bool Contains(const Container& aContainer, const Element& aElement) {
   return aContainer.find(aElement) != aContainer.end();
 }
 
-template<typename T>
-inline void
-Assign(std::vector<T>& aVec, const T* aData, size_t aLength)
-{
+template <typename T>
+inline void Assign(std::vector<T>& aVec, const T* aData, size_t aLength) {
   aVec.assign(aData, aData + aLength);
 }
 
-#endif // __ClearKeyUtils_h__
+#endif  // __ClearKeyUtils_h__

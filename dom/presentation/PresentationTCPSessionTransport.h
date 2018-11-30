@@ -28,19 +28,19 @@ namespace dom {
 
 /*
  * App-to-App transport channel for the presentation session. It's usually
- * initialized with an |InitWithSocketTransport| call if at the presenting sender
- * side; whereas it's initialized with an |InitWithChannelDescription| if at the
- * presenting receiver side. The lifetime is managed in either
+ * initialized with an |InitWithSocketTransport| call if at the presenting
+ * sender side; whereas it's initialized with an |InitWithChannelDescription| if
+ * at the presenting receiver side. The lifetime is managed in either
  * |PresentationControllingInfo| (sender side) or |PresentationPresentingInfo|
  * (receiver side) in PresentationSessionInfo.cpp.
  */
-class PresentationTCPSessionTransport final : public nsIPresentationSessionTransport
-                                            , public nsIPresentationTCPSessionTransportBuilder
-                                            , public nsITransportEventSink
-                                            , public nsIInputStreamCallback
-                                            , public nsIStreamListener
-{
-public:
+class PresentationTCPSessionTransport final
+    : public nsIPresentationSessionTransport,
+      public nsIPresentationTCPSessionTransportBuilder,
+      public nsITransportEventSink,
+      public nsIInputStreamCallback,
+      public nsIStreamListener {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PresentationTCPSessionTransport,
                                            nsIPresentationSessionTransport)
@@ -57,7 +57,7 @@ public:
 
   void NotifyCopyComplete(nsresult aStatus);
 
-private:
+ private:
   ~PresentationTCPSessionTransport();
 
   nsresult CreateStream();
@@ -66,17 +66,11 @@ private:
 
   nsresult EnsureCopying();
 
-  enum class ReadyState {
-    CONNECTING,
-    OPEN,
-    CLOSING,
-    CLOSED
-  };
+  enum class ReadyState { CONNECTING, OPEN, CLOSING, CLOSED };
 
   void SetReadyState(ReadyState aReadyState);
 
-  bool IsReadyToNotifyData()
-  {
+  bool IsReadyToNotifyData() {
     return mDataNotificationEnabled && mReadyState == ReadyState::OPEN;
   }
 
@@ -103,7 +97,7 @@ private:
   nsTArray<nsCOMPtr<nsIInputStream>> mPendingData;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationSessionTransport_h
+#endif  // mozilla_dom_PresentationSessionTransport_h

@@ -42,8 +42,8 @@
 #include "nsString.h"
 #endif
 
-#if defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) \
- || defined(__NetBSD__) || defined(__OpenBSD__)
+#if defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) || \
+    defined(__NetBSD__) || defined(__OpenBSD__)
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/param.h>
@@ -81,19 +81,16 @@
 
 #include "mozilla/mozalloc_abort.h"
 
-static void
-Abort(const char* aMsg);
+static void Abort(const char* aMsg);
 
-static void
-RealBreak();
+static void RealBreak();
 
-static void
-Break(const char* aMsg);
+static void Break(const char* aMsg);
 
 #if defined(_WIN32)
 #include <windows.h>
 #include <signal.h>
-#include <malloc.h> // for _alloca
+#include <malloc.h>  // for _alloca
 #elif defined(XP_UNIX)
 #include <stdlib.h>
 #endif
@@ -107,42 +104,32 @@ static Atomic<int32_t> gAssertionCount;
 NS_IMPL_QUERY_INTERFACE(nsDebugImpl, nsIDebug2)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-nsDebugImpl::AddRef()
-{
-  return 2;
-}
+nsDebugImpl::AddRef() { return 2; }
 
 NS_IMETHODIMP_(MozExternalRefCountType)
-nsDebugImpl::Release()
-{
-  return 1;
-}
+nsDebugImpl::Release() { return 1; }
 
 NS_IMETHODIMP
-nsDebugImpl::Assertion(const char* aStr, const char* aExpr,
-                       const char* aFile, int32_t aLine)
-{
+nsDebugImpl::Assertion(const char* aStr, const char* aExpr, const char* aFile,
+                       int32_t aLine) {
   NS_DebugBreak(NS_DEBUG_ASSERTION, aStr, aExpr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::Warning(const char* aStr, const char* aFile, int32_t aLine)
-{
+nsDebugImpl::Warning(const char* aStr, const char* aFile, int32_t aLine) {
   NS_DebugBreak(NS_DEBUG_WARNING, aStr, nullptr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::Break(const char* aFile, int32_t aLine)
-{
+nsDebugImpl::Break(const char* aFile, int32_t aLine) {
   NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, aFile, aLine);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::Abort(const char* aFile, int32_t aLine)
-{
+nsDebugImpl::Abort(const char* aFile, int32_t aLine) {
   NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, aFile, aLine);
   return NS_OK;
 }
@@ -151,15 +138,13 @@ nsDebugImpl::Abort(const char* aFile, int32_t aLine)
 extern "C" void intentional_panic(const char* message);
 
 NS_IMETHODIMP
-nsDebugImpl::RustPanic(const char* aMessage)
-{
+nsDebugImpl::RustPanic(const char* aMessage) {
   intentional_panic(aMessage);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::GetIsDebugBuild(bool* aResult)
-{
+nsDebugImpl::GetIsDebugBuild(bool* aResult) {
 #ifdef DEBUG
   *aResult = true;
 #else
@@ -169,15 +154,13 @@ nsDebugImpl::GetIsDebugBuild(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsDebugImpl::GetAssertionCount(int32_t* aResult)
-{
+nsDebugImpl::GetAssertionCount(int32_t* aResult) {
   *aResult = gAssertionCount;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
-{
+nsDebugImpl::GetIsDebuggerAttached(bool* aResult) {
   *aResult = false;
 
 #if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
@@ -186,8 +169,8 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
 #endif
 #if defined(XP_WIN)
   *aResult = ::IsDebuggerPresent();
-#elif defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) \
-   || defined(__NetBSD__) || defined(__OpenBSD__)
+#elif defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) || \
+    defined(__NetBSD__) || defined(__OpenBSD__)
   // Specify the info we're looking for
   int mib[] = {
     CTL_KERN,
@@ -219,15 +202,11 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
   return NS_OK;
 }
 
-/* static */ void
-nsDebugImpl::SetMultiprocessMode(const char* aDesc)
-{
+/* static */ void nsDebugImpl::SetMultiprocessMode(const char* aDesc) {
   sMultiprocessDescription = aDesc;
 }
 
-/* static */ const char *
-nsDebugImpl::GetMultiprocessMode()
-{
+/* static */ const char* nsDebugImpl::GetMultiprocessMode() {
   return sMultiprocessDescription;
 }
 
@@ -236,8 +215,7 @@ nsDebugImpl::GetMultiprocessMode()
  * always compiled in, in case some other module that uses it is
  * compiled with debugging even if this library is not.
  */
-enum nsAssertBehavior
-{
+enum nsAssertBehavior {
   NS_ASSERT_UNINITIALIZED,
   NS_ASSERT_WARN,
   NS_ASSERT_SUSPEND,
@@ -247,9 +225,7 @@ enum nsAssertBehavior
   NS_ASSERT_STACK_AND_ABORT
 };
 
-static nsAssertBehavior
-GetAssertBehavior()
-{
+static nsAssertBehavior GetAssertBehavior() {
   static nsAssertBehavior gAssertBehavior = NS_ASSERT_UNINITIALIZED;
   if (gAssertBehavior != NS_ASSERT_UNINITIALIZED) {
     return gAssertBehavior;
@@ -284,12 +260,8 @@ GetAssertBehavior()
   return gAssertBehavior;
 }
 
-struct FixedBuffer final : public mozilla::PrintfTarget
-{
-  FixedBuffer() : curlen(0)
-  {
-    buffer[0] = '\0';
-  }
+struct FixedBuffer final : public mozilla::PrintfTarget {
+  FixedBuffer() : curlen(0) { buffer[0] = '\0'; }
 
   char buffer[500];
   uint32_t curlen;
@@ -297,9 +269,7 @@ struct FixedBuffer final : public mozilla::PrintfTarget
   bool append(const char* sp, size_t len) override;
 };
 
-bool
-FixedBuffer::append(const char* aBuf, size_t aLen)
-{
+bool FixedBuffer::append(const char* aBuf, size_t aLen) {
   if (!aLen) {
     return true;
   }
@@ -319,8 +289,7 @@ FixedBuffer::append(const char* aBuf, size_t aLen)
 
 EXPORT_XPCOM_API(void)
 NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
-              const char* aFile, int32_t aLine)
-{
+              const char* aFile, int32_t aLine) {
   // Allow messages to be printed during GC if we are recording or replaying.
   recordreplay::AutoEnsurePassThroughThreadEvents pt;
 
@@ -366,14 +335,15 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
   }
 
   bool isMainthread = (NS_IsMainThreadTLSInitialized() && NS_IsMainThread());
-  PRThread *currentThread = PR_GetCurrentThread();
-  const char *currentThreadName = isMainthread
-    ? "Main Thread"
-    : PR_GetThreadName(currentThread);
-  if(currentThreadName) {
-    buf.print("%d, %s] %s", base::GetCurrentProcId(), currentThreadName , nonPIDBuf.buffer);
+  PRThread* currentThread = PR_GetCurrentThread();
+  const char* currentThreadName =
+      isMainthread ? "Main Thread" : PR_GetThreadName(currentThread);
+  if (currentThreadName) {
+    buf.print("%d, %s] %s", base::GetCurrentProcId(), currentThreadName,
+              nonPIDBuf.buffer);
   } else {
-    buf.print("%d, Unnamed thread %p] %s", base::GetCurrentProcId(), currentThread, nonPIDBuf.buffer);
+    buf.print("%d, Unnamed thread %p] %s", base::GetCurrentProcId(),
+              currentThread, nonPIDBuf.buffer);
   }
 
   // errors on platforms without a debugdlg ring a bell on stderr
@@ -414,8 +384,8 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
         note += ")";
         CrashReporter::AppendAppNotesToCrashReport(note);
         CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::AbortMessage,
-          nsDependentCString(nonPIDBuf.buffer));
+            CrashReporter::Annotation::AbortMessage,
+            nsDependentCString(nonPIDBuf.buffer));
       }
 
 #if defined(DEBUG) && defined(_WIN32)
@@ -459,38 +429,33 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
       return;
 
     case NS_ASSERT_TRAP:
-    case NS_ASSERT_UNINITIALIZED: // Default to "trap" behavior
+    case NS_ASSERT_UNINITIALIZED:  // Default to "trap" behavior
       Break(buf.buffer);
       return;
   }
 }
 
-static void
-Abort(const char* aMsg)
-{
-  mozalloc_abort(aMsg);
-}
+static void Abort(const char* aMsg) { mozalloc_abort(aMsg); }
 
-static void
-RealBreak()
-{
+static void RealBreak() {
 #if defined(_WIN32)
   ::DebugBreak();
 #elif defined(XP_MACOSX)
   raise(SIGTRAP);
-#elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
+#elif defined(__GNUC__) && \
+    (defined(__i386__) || defined(__i386) || defined(__x86_64__))
   asm("int $3");
 #elif defined(__arm__)
   asm(
 #ifdef __ARM_ARCH_4T__
-    /* ARMv4T doesn't support the BKPT instruction, so if the compiler target
-     * is ARMv4T, we want to ensure the assembler will understand that ARMv5T
-     * instruction, while keeping the resulting object tagged as ARMv4T.
-     */
-    ".arch armv5t\n"
-    ".object_arch armv4t\n"
+      /* ARMv4T doesn't support the BKPT instruction, so if the compiler target
+       * is ARMv4T, we want to ensure the assembler will understand that ARMv5T
+       * instruction, while keeping the resulting object tagged as ARMv4T.
+       */
+      ".arch armv5t\n"
+      ".object_arch armv4t\n"
 #endif
-    "BKPT #0");
+      "BKPT #0");
 #elif defined(__aarch64__)
   asm("brk #0");
 #elif defined(SOLARIS)
@@ -505,15 +470,13 @@ RealBreak()
 }
 
 // Abort() calls this function, don't call it!
-static void
-Break(const char* aMsg)
-{
+static void Break(const char* aMsg) {
 #if defined(_WIN32)
   static int ignoreDebugger;
   if (!ignoreDebugger) {
     const char* shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
     ignoreDebugger =
-      1 + (shouldIgnoreDebugger && !strcmp(shouldIgnoreDebugger, "1"));
+        1 + (shouldIgnoreDebugger && !strcmp(shouldIgnoreDebugger, "1"));
   }
   if ((ignoreDebugger == 2) || !::IsDebuggerPresent()) {
     DWORD code = IDRETRY;
@@ -531,19 +494,20 @@ Break(const char* aMsg)
     memset(&pi, 0, sizeof(pi));
 
     memset(&si, 0, sizeof(si));
-    si.cb          = sizeof(si);
+    si.cb = sizeof(si);
     si.wShowWindow = SW_SHOW;
 
     // 2nd arg of CreateProcess is in/out
     wchar_t* msgCopy = (wchar_t*)_alloca((strlen(aMsg) + 1) * sizeof(wchar_t));
     wcscpy(msgCopy, NS_ConvertUTF8toUTF16(aMsg).get());
 
-    if (GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), executable, MAX_PATH) &&
+    if (GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), executable,
+                           MAX_PATH) &&
         (pName = wcsrchr(executable, '\\')) != nullptr &&
         wcscpy(pName + 1, L"windbgdlg.exe") &&
-        CreateProcessW(executable, msgCopy, nullptr, nullptr,
-                       false, DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
-                       nullptr, nullptr, &si, &pi)) {
+        CreateProcessW(executable, msgCopy, nullptr, nullptr, false,
+                       DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr,
+                       nullptr, &si, &pi)) {
       WaitForSingleObject(pi.hProcess, INFINITE);
       GetExitCodeProcess(pi.hProcess, &code);
       CloseHandle(pi.hProcess);
@@ -552,9 +516,9 @@ Break(const char* aMsg)
 
     switch (code) {
       case IDABORT:
-        //This should exit us
+        // This should exit us
         raise(SIGABRT);
-        //If we are ignored exit this way..
+        // If we are ignored exit this way..
         _exit(3);
 
       case IDIGNORE:
@@ -569,7 +533,8 @@ Break(const char* aMsg)
    * impls to be the same.
    */
   RealBreak();
-#elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
+#elif defined(__GNUC__) && \
+    (defined(__i386__) || defined(__i386) || defined(__x86_64__))
   RealBreak();
 #elif defined(__arm__) || defined(__aarch64__)
   RealBreak();
@@ -580,9 +545,8 @@ Break(const char* aMsg)
 #endif
 }
 
-nsresult
-nsDebugImpl::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr)
-{
+nsresult nsDebugImpl::Create(nsISupports* aOuter, const nsIID& aIID,
+                             void** aInstancePtr) {
   static const nsDebugImpl* sImpl;
 
   if (NS_WARN_IF(aOuter)) {
@@ -598,32 +562,43 @@ nsDebugImpl::Create(nsISupports* aOuter, const nsIID& aIID, void** aInstancePtr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_ErrorAccordingToNSPR()
-{
+nsresult NS_ErrorAccordingToNSPR() {
   PRErrorCode err = PR_GetError();
   switch (err) {
-    case PR_OUT_OF_MEMORY_ERROR:         return NS_ERROR_OUT_OF_MEMORY;
-    case PR_WOULD_BLOCK_ERROR:           return NS_BASE_STREAM_WOULD_BLOCK;
-    case PR_FILE_NOT_FOUND_ERROR:        return NS_ERROR_FILE_NOT_FOUND;
-    case PR_READ_ONLY_FILESYSTEM_ERROR:  return NS_ERROR_FILE_READ_ONLY;
-    case PR_NOT_DIRECTORY_ERROR:         return NS_ERROR_FILE_NOT_DIRECTORY;
-    case PR_IS_DIRECTORY_ERROR:          return NS_ERROR_FILE_IS_DIRECTORY;
-    case PR_LOOP_ERROR:                  return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
-    case PR_FILE_EXISTS_ERROR:           return NS_ERROR_FILE_ALREADY_EXISTS;
-    case PR_FILE_IS_LOCKED_ERROR:        return NS_ERROR_FILE_IS_LOCKED;
-    case PR_FILE_TOO_BIG_ERROR:          return NS_ERROR_FILE_TOO_BIG;
-    case PR_NO_DEVICE_SPACE_ERROR:       return NS_ERROR_FILE_NO_DEVICE_SPACE;
-    case PR_NAME_TOO_LONG_ERROR:         return NS_ERROR_FILE_NAME_TOO_LONG;
-    case PR_DIRECTORY_NOT_EMPTY_ERROR:   return NS_ERROR_FILE_DIR_NOT_EMPTY;
-    case PR_NO_ACCESS_RIGHTS_ERROR:      return NS_ERROR_FILE_ACCESS_DENIED;
-    default:                             return NS_ERROR_FAILURE;
+    case PR_OUT_OF_MEMORY_ERROR:
+      return NS_ERROR_OUT_OF_MEMORY;
+    case PR_WOULD_BLOCK_ERROR:
+      return NS_BASE_STREAM_WOULD_BLOCK;
+    case PR_FILE_NOT_FOUND_ERROR:
+      return NS_ERROR_FILE_NOT_FOUND;
+    case PR_READ_ONLY_FILESYSTEM_ERROR:
+      return NS_ERROR_FILE_READ_ONLY;
+    case PR_NOT_DIRECTORY_ERROR:
+      return NS_ERROR_FILE_NOT_DIRECTORY;
+    case PR_IS_DIRECTORY_ERROR:
+      return NS_ERROR_FILE_IS_DIRECTORY;
+    case PR_LOOP_ERROR:
+      return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+    case PR_FILE_EXISTS_ERROR:
+      return NS_ERROR_FILE_ALREADY_EXISTS;
+    case PR_FILE_IS_LOCKED_ERROR:
+      return NS_ERROR_FILE_IS_LOCKED;
+    case PR_FILE_TOO_BIG_ERROR:
+      return NS_ERROR_FILE_TOO_BIG;
+    case PR_NO_DEVICE_SPACE_ERROR:
+      return NS_ERROR_FILE_NO_DEVICE_SPACE;
+    case PR_NAME_TOO_LONG_ERROR:
+      return NS_ERROR_FILE_NAME_TOO_LONG;
+    case PR_DIRECTORY_NOT_EMPTY_ERROR:
+      return NS_ERROR_FILE_DIR_NOT_EMPTY;
+    case PR_NO_ACCESS_RIGHTS_ERROR:
+      return NS_ERROR_FILE_ACCESS_DENIED;
+    default:
+      return NS_ERROR_FAILURE;
   }
 }
 
-void
-NS_ABORT_OOM(size_t aSize)
-{
+void NS_ABORT_OOM(size_t aSize) {
   CrashReporter::AnnotateOOMAllocationSize(aSize);
   MOZ_CRASH("OOM");
 }

@@ -14,18 +14,16 @@ namespace mozilla {
 /**
  * Mail citations using standard Internet style.
  */
-class InternetCiter final
-{
-public:
+class InternetCiter final {
+ public:
   static nsresult GetCiteString(const nsAString& aInString,
                                 nsAString& aOutString);
 
-  static nsresult Rewrap(const nsAString& aInString,
-                         uint32_t aWrapCol, uint32_t aFirstLineOffset,
-                         bool aRespectNewlines,
+  static nsresult Rewrap(const nsAString& aInString, uint32_t aWrapCol,
+                         uint32_t aFirstLineOffset, bool aRespectNewlines,
                          nsAString& aOutString);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef InternetCiter_h
+#endif  // #ifndef InternetCiter_h

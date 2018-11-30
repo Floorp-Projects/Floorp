@@ -6,15 +6,13 @@
 
 #include "VRGPUChild.h"
 
-
 namespace mozilla {
 namespace gfx {
 
 static StaticRefPtr<VRGPUChild> sVRGPUChildSingleton;
 
-/* static */ bool
-VRGPUChild::InitForGPUProcess(Endpoint<PVRGPUChild>&& aEndpoint)
-{
+/* static */ bool VRGPUChild::InitForGPUProcess(
+    Endpoint<PVRGPUChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRGPUChildSingleton);
 
@@ -26,25 +24,17 @@ VRGPUChild::InitForGPUProcess(Endpoint<PVRGPUChild>&& aEndpoint)
   return true;
 }
 
-/* static */ bool
-VRGPUChild::IsCreated()
-{
-  return !!sVRGPUChildSingleton;
-}
+/* static */ bool VRGPUChild::IsCreated() { return !!sVRGPUChildSingleton; }
 
-/* static */ VRGPUChild*
-VRGPUChild::Get()
-{
+/* static */ VRGPUChild* VRGPUChild::Get() {
   MOZ_ASSERT(IsCreated(), "VRGPUChild haven't initialized yet.");
   return sVRGPUChildSingleton;
 }
 
-/*static*/ void
-VRGPUChild::ShutDown()
-{
+/*static*/ void VRGPUChild::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   sVRGPUChildSingleton = nullptr;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

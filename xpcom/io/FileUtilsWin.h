@@ -14,14 +14,12 @@
 
 namespace mozilla {
 
-inline bool
-EnsureLongPath(nsAString& aDosPath)
-{
+inline bool EnsureLongPath(nsAString& aDosPath) {
   nsAutoString inputPath(aDosPath);
   while (true) {
-    DWORD requiredLength = GetLongPathNameW(inputPath.get(),
-                                            reinterpret_cast<wchar_t*>(aDosPath.BeginWriting()),
-                                            aDosPath.Length());
+    DWORD requiredLength = GetLongPathNameW(
+        inputPath.get(), reinterpret_cast<wchar_t*>(aDosPath.BeginWriting()),
+        aDosPath.Length());
     if (!requiredLength) {
       return false;
     }
@@ -38,9 +36,7 @@ EnsureLongPath(nsAString& aDosPath)
   }
 }
 
-inline bool
-NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
-{
+inline bool NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath) {
   aDosPath.Truncate();
   if (aNtPath.IsEmpty()) {
     return true;
@@ -59,7 +55,8 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
   nsAutoString logicalDrives;
   while (true) {
     DWORD requiredLength = GetLogicalDriveStringsW(
-      logicalDrives.Length(), reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
+        logicalDrives.Length(),
+        reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
     if (!requiredLength) {
       return false;
     }
@@ -89,9 +86,9 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
     DWORD targetPathLen = 0;
     SetLastError(ERROR_SUCCESS);
     while (true) {
-      targetPathLen = QueryDosDeviceW(driveTemplate,
-                                      reinterpret_cast<wchar_t*>(targetPath.BeginWriting()),
-                                      targetPath.Length());
+      targetPathLen = QueryDosDeviceW(
+          driveTemplate, reinterpret_cast<wchar_t*>(targetPath.BeginWriting()),
+          targetPath.Length());
       if (targetPathLen || GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
         break;
       }
@@ -100,10 +97,10 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
     if (targetPathLen) {
       // Need to use wcslen here because targetPath contains embedded NULL chars
       size_t firstTargetPathLen = wcslen(targetPath.get());
-      const char16_t* pathComponent = aNtPath.BeginReading() +
-                                      firstTargetPathLen;
-      bool found = _wcsnicmp(char16ptr_t(aNtPath.BeginReading()), targetPath.get(),
-                             firstTargetPathLen) == 0 &&
+      const char16_t* pathComponent =
+          aNtPath.BeginReading() + firstTargetPathLen;
+      bool found = _wcsnicmp(char16ptr_t(aNtPath.BeginReading()),
+                             targetPath.get(), firstTargetPathLen) == 0 &&
                    *pathComponent == L'\\';
       if (found) {
         aDosPath = driveTemplate;
@@ -140,10 +137,9 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
   return false;
 }
 
-bool
-HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
-                 nsAString& aFilename);
+bool HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
+                      nsAString& aFilename);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_FileUtilsWin_h
+#endif  // mozilla_FileUtilsWin_h

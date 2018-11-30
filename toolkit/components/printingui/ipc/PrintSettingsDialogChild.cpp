@@ -9,20 +9,16 @@ using mozilla::Unused;
 namespace mozilla {
 namespace embedding {
 
-PrintSettingsDialogChild::PrintSettingsDialogChild()
-: mReturned(false)
-{
+PrintSettingsDialogChild::PrintSettingsDialogChild() : mReturned(false) {
   MOZ_COUNT_CTOR(PrintSettingsDialogChild);
 }
 
-PrintSettingsDialogChild::~PrintSettingsDialogChild()
-{
+PrintSettingsDialogChild::~PrintSettingsDialogChild() {
   MOZ_COUNT_DTOR(PrintSettingsDialogChild);
 }
 
-mozilla::ipc::IPCResult
-PrintSettingsDialogChild::Recv__delete__(const PrintDataOrNSResult& aData)
-{
+mozilla::ipc::IPCResult PrintSettingsDialogChild::Recv__delete__(
+    const PrintDataOrNSResult& aData) {
   if (aData.type() == PrintDataOrNSResult::Tnsresult) {
     mResult = aData.get_nsresult();
     MOZ_ASSERT(NS_FAILED(mResult), "expected a failure result");
@@ -34,5 +30,5 @@ PrintSettingsDialogChild::Recv__delete__(const PrintDataOrNSResult& aData)
   return IPC_OK();
 }
 
-} // namespace embedding
-} // namespace mozilla
+}  // namespace embedding
+}  // namespace mozilla

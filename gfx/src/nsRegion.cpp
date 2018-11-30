@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsRegion.h"
 #include "nsTArray.h"
 #include "gfxUtils.h"
@@ -12,9 +11,7 @@
 
 using namespace std;
 
-void
-nsRegion::AssertStateInternal() const
-{
+void nsRegion::AssertStateInternal() const {
   bool failed = false;
   // Verify consistent state inside the region.
   int32_t lastY = INT32_MIN;
@@ -77,8 +74,7 @@ nsRegion::AssertStateInternal() const
   }
 }
 
-bool nsRegion::Contains(const nsRegion& aRgn) const
-{
+bool nsRegion::Contains(const nsRegion& aRgn) const {
   // XXX this could be made faster by iterating over
   // both regions at the same time some how
   for (auto iter = aRgn.RectIter(); !iter.Done(); iter.Next()) {
@@ -89,8 +85,7 @@ bool nsRegion::Contains(const nsRegion& aRgn) const
   return true;
 }
 
-bool nsRegion::Intersects(const nsRectAbsolute& aRect) const
-{
+bool nsRegion::Intersects(const nsRectAbsolute& aRect) const {
   if (mBands.IsEmpty()) {
     return mBounds.Intersects(aRect);
   }
@@ -126,8 +121,7 @@ bool nsRegion::Intersects(const nsRectAbsolute& aRect) const
   return false;
 }
 
-void nsRegion::Inflate(const nsMargin& aMargin)
-{
+void nsRegion::Inflate(const nsMargin& aMargin) {
   nsRegion newRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
     nsRectAbsolute rect = iter.GetAbsolute();
@@ -138,8 +132,7 @@ void nsRegion::Inflate(const nsMargin& aMargin)
   *this = std::move(newRegion);
 }
 
-void nsRegion::SimplifyOutward (uint32_t aMaxRects)
-{
+void nsRegion::SimplifyOutward(uint32_t aMaxRects) {
   MOZ_ASSERT(aMaxRects >= 1, "Invalid max rect count");
 
   if (GetNumRects() <= aMaxRects) {
@@ -160,14 +153,17 @@ void nsRegion::SimplifyOutward (uint32_t aMaxRects)
 
   while (idx < mBands.Length()) {
     size_t oldIdx = idx;
-    mBands[idx].mStrips.begin()->right = mBands[idx].mStrips.LastElement().right;
+    mBands[idx].mStrips.begin()->right =
+        mBands[idx].mStrips.LastElement().right;
     mBands[idx].mStrips.TruncateLength(1);
     idx++;
 
     // Merge any bands with the same bounds.
     while (idx < mBands.Length() &&
-           mBands[idx].mStrips.begin()->left == mBands[oldIdx].mStrips.begin()->left &&
-           mBands[idx].mStrips.LastElement().right == mBands[oldIdx].mStrips.begin()->right) {
+           mBands[idx].mStrips.begin()->left ==
+               mBands[oldIdx].mStrips.begin()->left &&
+           mBands[idx].mStrips.LastElement().right ==
+               mBands[oldIdx].mStrips.begin()->right) {
       mBands[oldIdx].bottom = mBands[idx].bottom;
       mBands.RemoveElementAt(idx);
     }
@@ -185,35 +181,37 @@ void nsRegion::SimplifyOutward (uint32_t aMaxRects)
 // by iterating over both rows simultaneously and adding up
 // the additional increase in area caused by extending each
 // of the rectangles to the combined height of both rows
-uint32_t
-nsRegion::ComputeMergedAreaIncrease(const Band& aTopBand,
-                                    const Band& aBottomBand)
-{
+uint32_t nsRegion::ComputeMergedAreaIncrease(const Band& aTopBand,
+                                             const Band& aBottomBand) {
   uint32_t totalArea = 0;
 
   uint32_t topHeight = aBottomBand.top - aTopBand.top;
   uint32_t bottomHeight = aBottomBand.bottom - aTopBand.bottom;
   uint32_t currentStripBottom = 0;
 
-  // This could be done with slightly better worse case performance by merging these two
-  // for-loops, but this makes the code a lot easier to understand.
+  // This could be done with slightly better worse case performance by merging
+  // these two for-loops, but this makes the code a lot easier to understand.
   for (auto& strip : aTopBand.mStrips) {
-    if (currentStripBottom == aBottomBand.mStrips.Length() || strip.right < aBottomBand.mStrips[currentStripBottom].left) {
+    if (currentStripBottom == aBottomBand.mStrips.Length() ||
+        strip.right < aBottomBand.mStrips[currentStripBottom].left) {
       totalArea += bottomHeight * strip.Size();
       continue;
     }
 
     int32_t currentX = strip.left;
-    while (currentStripBottom != aBottomBand.mStrips.Length() && aBottomBand.mStrips[currentStripBottom].left < strip.right) {
+    while (currentStripBottom != aBottomBand.mStrips.Length() &&
+           aBottomBand.mStrips[currentStripBottom].left < strip.right) {
       if (currentX >= strip.right) {
         break;
       }
       if (currentX < aBottomBand.mStrips[currentStripBottom].left) {
         // Add the part that's not intersecting.
-        totalArea += (aBottomBand.mStrips[currentStripBottom].left - currentX) * bottomHeight;
+        totalArea += (aBottomBand.mStrips[currentStripBottom].left - currentX) *
+                     bottomHeight;
       }
 
-      currentX = std::max(aBottomBand.mStrips[currentStripBottom].right, currentX);
+      currentX =
+          std::max(aBottomBand.mStrips[currentStripBottom].right, currentX);
       currentStripBottom++;
     }
 
@@ -227,19 +225,22 @@ nsRegion::ComputeMergedAreaIncrease(const Band& aTopBand,
   }
   uint32_t currentStripTop = 0;
   for (auto& strip : aBottomBand.mStrips) {
-    if (currentStripTop == aTopBand.mStrips.Length() || strip.right < aTopBand.mStrips[currentStripTop].left) {
+    if (currentStripTop == aTopBand.mStrips.Length() ||
+        strip.right < aTopBand.mStrips[currentStripTop].left) {
       totalArea += topHeight * strip.Size();
       continue;
     }
 
     int32_t currentX = strip.left;
-    while (currentStripTop != aTopBand.mStrips.Length() && aTopBand.mStrips[currentStripTop].left < strip.right) {
+    while (currentStripTop != aTopBand.mStrips.Length() &&
+           aTopBand.mStrips[currentStripTop].left < strip.right) {
       if (currentX >= strip.right) {
         break;
       }
       if (currentX < aTopBand.mStrips[currentStripTop].left) {
         // Add the part that's not intersecting.
-        totalArea += (aTopBand.mStrips[currentStripTop].left - currentX) * topHeight;
+        totalArea +=
+            (aTopBand.mStrips[currentStripTop].left - currentX) * topHeight;
       }
 
       currentX = std::max(aTopBand.mStrips[currentStripTop].right, currentX);
@@ -257,8 +258,7 @@ nsRegion::ComputeMergedAreaIncrease(const Band& aTopBand,
   return totalArea;
 }
 
-void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
-{
+void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold) {
   if (mBands.Length() < 2) {
     // We have only one or no row and we're done.
     return;
@@ -268,7 +268,8 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
   do {
     Band& band = mBands[currentBand];
 
-    uint32_t totalArea = ComputeMergedAreaIncrease(band, mBands[currentBand + 1]);
+    uint32_t totalArea =
+        ComputeMergedAreaIncrease(band, mBands[currentBand + 1]);
 
     if (totalArea <= aThreshold) {
       for (Strip& strip : mBands[currentBand + 1].mStrips) {
@@ -286,16 +287,19 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
   AssertState();
 }
 
+typedef void (*visit_fn)(void* closure, VisitSide side, int x1, int y1, int x2,
+                         int y2);
 
-typedef void (*visit_fn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
-
-void nsRegion::VisitEdges (visit_fn visit, void *closure) const
-{
+void nsRegion::VisitEdges(visit_fn visit, void* closure) const {
   if (mBands.IsEmpty()) {
-    visit(closure, VisitSide::LEFT, mBounds.X(), mBounds.Y(), mBounds.X(), mBounds.YMost());
-    visit(closure, VisitSide::RIGHT, mBounds.XMost(), mBounds.Y(), mBounds.XMost(), mBounds.YMost());
-    visit(closure, VisitSide::TOP, mBounds.X() - 1, mBounds.Y(), mBounds.XMost() + 1, mBounds.Y());
-    visit(closure, VisitSide::BOTTOM, mBounds.X() - 1, mBounds.YMost(), mBounds.XMost() + 1, mBounds.YMost());
+    visit(closure, VisitSide::LEFT, mBounds.X(), mBounds.Y(), mBounds.X(),
+          mBounds.YMost());
+    visit(closure, VisitSide::RIGHT, mBounds.XMost(), mBounds.Y(),
+          mBounds.XMost(), mBounds.YMost());
+    visit(closure, VisitSide::TOP, mBounds.X() - 1, mBounds.Y(),
+          mBounds.XMost() + 1, mBounds.Y());
+    visit(closure, VisitSide::BOTTOM, mBounds.X() - 1, mBounds.YMost(),
+          mBounds.XMost() + 1, mBounds.YMost());
     return;
   }
 
@@ -303,9 +307,12 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure) const
   auto bandFinal = std::end(mBands);
   bandFinal--;
   for (const Strip& strip : band->mStrips) {
-    visit(closure, VisitSide::LEFT, strip.left, band->top, strip.left, band->bottom);
-    visit(closure, VisitSide::RIGHT, strip.right, band->top, strip.right, band->bottom);
-    visit(closure, VisitSide::TOP, strip.left - 1, band->top, strip.right + 1, band->top);
+    visit(closure, VisitSide::LEFT, strip.left, band->top, strip.left,
+          band->bottom);
+    visit(closure, VisitSide::RIGHT, strip.right, band->top, strip.right,
+          band->bottom);
+    visit(closure, VisitSide::TOP, strip.left - 1, band->top, strip.right + 1,
+          band->top);
   }
 
   if (band != bandFinal) {
@@ -314,8 +321,10 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure) const
       band++;
 
       for (const Strip& strip : band->mStrips) {
-        visit(closure, VisitSide::LEFT, strip.left, band->top, strip.left, band->bottom);
-        visit(closure, VisitSide::RIGHT, strip.right, band->top, strip.right, band->bottom);
+        visit(closure, VisitSide::LEFT, strip.left, band->top, strip.left,
+              band->bottom);
+        visit(closure, VisitSide::RIGHT, strip.right, band->top, strip.right,
+              band->bottom);
       }
 
       if (band->top == topBand.bottom) {
@@ -345,7 +354,8 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure) const
         // 0 - left, 1 - right.
         bool topEdgeIsLeft = true;
         bool bottomEdgeIsLeft = true;
-        while (topStrip != std::end(topBand.mStrips) && bottomStrip != std::end(bottomBand.mStrips)) {
+        while (topStrip != std::end(topBand.mStrips) &&
+               bottomStrip != std::end(bottomBand.mStrips)) {
           int topPos;
           int bottomPos;
           if (topEdgeIsLeft) {
@@ -424,7 +434,8 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure) const
             topStrip++;
           }
           while (topStrip != std::end(topBand.mStrips)) {
-            visit(closure, VisitSide::BOTTOM, topStrip->left - 1, y, topStrip->right + 1, y);
+            visit(closure, VisitSide::BOTTOM, topStrip->left - 1, y,
+                  topStrip->right + 1, y);
             topStrip++;
           }
         } else if (bottomStrip != std::end(bottomBand.mStrips)) {
@@ -433,39 +444,39 @@ void nsRegion::VisitEdges (visit_fn visit, void *closure) const
             bottomStrip++;
           }
           while (bottomStrip != std::end(bottomBand.mStrips)) {
-            visit(closure, VisitSide::TOP, bottomStrip->left - 1, y, bottomStrip->right + 1, y);
+            visit(closure, VisitSide::TOP, bottomStrip->left - 1, y,
+                  bottomStrip->right + 1, y);
             bottomStrip++;
           }
         }
       } else {
         for (const Strip& strip : topBand.mStrips) {
-          visit(closure, VisitSide::BOTTOM, strip.left - 1, topBand.bottom, strip.right + 1, topBand.bottom);
+          visit(closure, VisitSide::BOTTOM, strip.left - 1, topBand.bottom,
+                strip.right + 1, topBand.bottom);
         }
         for (const Strip& strip : band->mStrips) {
-          visit(closure, VisitSide::TOP, strip.left - 1, band->top, strip.right + 1, band->top);
+          visit(closure, VisitSide::TOP, strip.left - 1, band->top,
+                strip.right + 1, band->top);
         }
       }
     } while (band != bandFinal);
   }
 
   for (const Strip& strip : band->mStrips) {
-    visit(closure, VisitSide::BOTTOM, strip.left - 1, band->bottom, strip.right + 1, band->bottom);
+    visit(closure, VisitSide::BOTTOM, strip.left - 1, band->bottom,
+          strip.right + 1, band->bottom);
   }
 }
 
-
-void nsRegion::SimplifyInward (uint32_t aMaxRects)
-{
+void nsRegion::SimplifyInward(uint32_t aMaxRects) {
   NS_ASSERTION(aMaxRects >= 1, "Invalid max rect count");
 
-  if (GetNumRects() <= aMaxRects)
-    return;
+  if (GetNumRects() <= aMaxRects) return;
 
   SetEmpty();
 }
 
-uint64_t nsRegion::Area () const
-{
+uint64_t nsRegion::Area() const {
   if (mBands.IsEmpty()) {
     return mBounds.Area();
   }
@@ -481,8 +492,7 @@ uint64_t nsRegion::Area () const
   return area;
 }
 
-nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
-{
+nsRegion& nsRegion::ScaleRoundOut(float aXScale, float aYScale) {
   if (mozilla::gfx::FuzzyEqual(aXScale, 1.0f) &&
       mozilla::gfx::FuzzyEqual(aYScale, 1.0f)) {
     return *this;
@@ -499,8 +509,7 @@ nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
   return *this;
 }
 
-nsRegion& nsRegion::ScaleInverseRoundOut (float aXScale, float aYScale)
-{
+nsRegion& nsRegion::ScaleInverseRoundOut(float aXScale, float aYScale) {
   nsRegion newRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
     nsRectAbsolute rect = iter.GetAbsolute();
@@ -512,30 +521,32 @@ nsRegion& nsRegion::ScaleInverseRoundOut (float aXScale, float aYScale)
   return *this;
 }
 
-static mozilla::gfx::IntRect
-TransformRect(const mozilla::gfx::IntRect& aRect, const mozilla::gfx::Matrix4x4& aTransform)
-{
-    if (aRect.IsEmpty()) {
-        return mozilla::gfx::IntRect();
-    }
+static mozilla::gfx::IntRect TransformRect(
+    const mozilla::gfx::IntRect& aRect,
+    const mozilla::gfx::Matrix4x4& aTransform) {
+  if (aRect.IsEmpty()) {
+    return mozilla::gfx::IntRect();
+  }
 
-    mozilla::gfx::RectDouble rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
-    rect = aTransform.TransformAndClipBounds(rect, mozilla::gfx::RectDouble::MaxIntRect());
-    rect.RoundOut();
+  mozilla::gfx::RectDouble rect(aRect.X(), aRect.Y(), aRect.Width(),
+                                aRect.Height());
+  rect = aTransform.TransformAndClipBounds(
+      rect, mozilla::gfx::RectDouble::MaxIntRect());
+  rect.RoundOut();
 
-    mozilla::gfx::IntRect intRect;
-    if (!gfxUtils::GfxRectToIntRect(ThebesRect(rect), &intRect)) {
-        return mozilla::gfx::IntRect();
-    }
+  mozilla::gfx::IntRect intRect;
+  if (!gfxUtils::GfxRectToIntRect(ThebesRect(rect), &intRect)) {
+    return mozilla::gfx::IntRect();
+  }
 
-    return intRect;
+  return intRect;
 }
 
-nsRegion& nsRegion::Transform (const mozilla::gfx::Matrix4x4 &aTransform)
-{
+nsRegion& nsRegion::Transform(const mozilla::gfx::Matrix4x4& aTransform) {
   nsRegion newRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = nsIntRegion::ToRect(TransformRect(nsIntRegion::FromRect(iter.Get()), aTransform));
+    nsRect rect = nsIntRegion::ToRect(
+        TransformRect(nsIntRegion::FromRect(iter.Get()), aTransform));
     newRegion.AddRect(nsRectAbsolute::FromRect(rect));
   }
 
@@ -543,9 +554,8 @@ nsRegion& nsRegion::Transform (const mozilla::gfx::Matrix4x4 &aTransform)
   return *this;
 }
 
-
-nsRegion nsRegion::ScaleToOtherAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) const
-{
+nsRegion nsRegion::ScaleToOtherAppUnitsRoundOut(int32_t aFromAPP,
+                                                int32_t aToAPP) const {
   if (aFromAPP == aToAPP) {
     return *this;
   }
@@ -559,8 +569,8 @@ nsRegion nsRegion::ScaleToOtherAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAP
   return newRegion;
 }
 
-nsRegion nsRegion::ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const
-{
+nsRegion nsRegion::ScaleToOtherAppUnitsRoundIn(int32_t aFromAPP,
+                                               int32_t aToAPP) const {
   if (aFromAPP == aToAPP) {
     return *this;
   }
@@ -575,8 +585,8 @@ nsRegion nsRegion::ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP
   return newRegion;
 }
 
-nsIntRegion nsRegion::ToPixels (nscoord aAppUnitsPerPixel, bool aOutsidePixels) const
-{
+nsIntRegion nsRegion::ToPixels(nscoord aAppUnitsPerPixel,
+                               bool aOutsidePixels) const {
   nsIntRegion intRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
     mozilla::gfx::IntRect deviceRect;
@@ -591,58 +601,55 @@ nsIntRegion nsRegion::ToPixels (nscoord aAppUnitsPerPixel, bool aOutsidePixels) 
   return intRegion;
 }
 
-nsIntRegion nsRegion::ToOutsidePixels (nscoord aAppUnitsPerPixel) const
-{
+nsIntRegion nsRegion::ToOutsidePixels(nscoord aAppUnitsPerPixel) const {
   return ToPixels(aAppUnitsPerPixel, true);
 }
 
-nsIntRegion nsRegion::ToNearestPixels (nscoord aAppUnitsPerPixel) const
-{
+nsIntRegion nsRegion::ToNearestPixels(nscoord aAppUnitsPerPixel) const {
   return ToPixels(aAppUnitsPerPixel, false);
 }
 
-nsIntRegion nsRegion::ScaleToNearestPixels (float aScaleX, float aScaleY,
-                                            nscoord aAppUnitsPerPixel) const
-{
+nsIntRegion nsRegion::ScaleToNearestPixels(float aScaleX, float aScaleY,
+                                           nscoord aAppUnitsPerPixel) const {
   nsIntRegion result;
   for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
     mozilla::gfx::IntRect deviceRect =
-      iter.Get().ScaleToNearestPixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+        iter.Get().ScaleToNearestPixels(aScaleX, aScaleY, aAppUnitsPerPixel);
     result.Or(result, deviceRect);
   }
   return result;
 }
 
-nsIntRegion nsRegion::ScaleToOutsidePixels (float aScaleX, float aScaleY,
-                                            nscoord aAppUnitsPerPixel) const
-{
+nsIntRegion nsRegion::ScaleToOutsidePixels(float aScaleX, float aScaleY,
+                                           nscoord aAppUnitsPerPixel) const {
   // make a copy of the region so that we can mutate it inplace
   nsIntRegion intRegion;
   for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
     nsRect rect = iter.Get();
-    intRegion.OrWith(rect.ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel));
+    intRegion.OrWith(
+        rect.ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel));
   }
   return intRegion;
 }
 
-nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
-                                           nscoord aAppUnitsPerPixel) const
-{
-  /* When scaling a rect, walk forward through the rect list up until the y value is greater
-   * than the current rect's YMost() value.
+nsIntRegion nsRegion::ScaleToInsidePixels(float aScaleX, float aScaleY,
+                                          nscoord aAppUnitsPerPixel) const {
+  /* When scaling a rect, walk forward through the rect list up until the y
+   * value is greater than the current rect's YMost() value.
    *
-   * For each rect found, check if the rects have a touching edge (in unscaled coordinates),
-   * and if one edge is entirely contained within the other.
+   * For each rect found, check if the rects have a touching edge (in unscaled
+   * coordinates), and if one edge is entirely contained within the other.
    *
-   * If it is, then the contained edge can be moved (in scaled pixels) to ensure that no
-   * gap exists.
+   * If it is, then the contained edge can be moved (in scaled pixels) to ensure
+   * that no gap exists.
    *
-   * Since this could be potentially expensive - O(n^2), we only attempt this algorithm
-   * for the first rect.
+   * Since this could be potentially expensive - O(n^2), we only attempt this
+   * algorithm for the first rect.
    */
 
   if (mBands.IsEmpty()) {
-    nsIntRect rect = mBounds.ToNSRect().ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+    nsIntRect rect = mBounds.ToNSRect().ScaleToInsidePixels(aScaleX, aScaleY,
+                                                            aAppUnitsPerPixel);
     return nsIntRegion(rect);
   }
 
@@ -652,25 +659,25 @@ nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
   nsRect first = iter.Get();
 
   mozilla::gfx::IntRect firstDeviceRect =
-    first.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+      first.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
 
   for (iter.Next(); !iter.Done(); iter.Next()) {
     nsRect rect = iter.Get();
     mozilla::gfx::IntRect deviceRect =
-                          rect.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+        rect.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
 
     if (rect.Y() <= first.YMost()) {
       if (rect.XMost() == first.X() && rect.YMost() <= first.YMost()) {
-        // rect is touching on the left edge of the first rect and contained within
-        // the length of its left edge
+        // rect is touching on the left edge of the first rect and contained
+        // within the length of its left edge
         deviceRect.SetRightEdge(firstDeviceRect.X());
       } else if (rect.X() == first.XMost() && rect.YMost() <= first.YMost()) {
-        // rect is touching on the right edge of the first rect and contained within
-        // the length of its right edge
+        // rect is touching on the right edge of the first rect and contained
+        // within the length of its right edge
         deviceRect.SetLeftEdge(firstDeviceRect.XMost());
       } else if (rect.Y() == first.YMost()) {
-        // The bottom of the first rect is on the same line as the top of rect, but
-        // they aren't necessarily contained.
+        // The bottom of the first rect is on the same line as the top of rect,
+        // but they aren't necessarily contained.
         if (rect.X() <= first.X() && rect.XMost() >= first.XMost()) {
           // The top of rect contains the bottom of the first rect
           firstDeviceRect.SetBottomEdge(deviceRect.Y());
@@ -771,113 +778,107 @@ nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
 // }
 
 namespace {
-  // This class represents a partitioning of an axis delineated by coordinates.
-  // It internally maintains a sorted array of coordinates.
-  class AxisPartition {
-  public:
-    // Adds a new partition at the given coordinate to this partitioning. If
-    // the coordinate is already present in the partitioning, this does nothing.
-    void InsertCoord(nscoord c) {
-      uint32_t i = mStops.IndexOfFirstElementGt(c);
-      if (i == 0 || mStops[i-1] != c) {
-        mStops.InsertElementAt(i, c);
-      }
+// This class represents a partitioning of an axis delineated by coordinates.
+// It internally maintains a sorted array of coordinates.
+class AxisPartition {
+ public:
+  // Adds a new partition at the given coordinate to this partitioning. If
+  // the coordinate is already present in the partitioning, this does nothing.
+  void InsertCoord(nscoord c) {
+    uint32_t i = mStops.IndexOfFirstElementGt(c);
+    if (i == 0 || mStops[i - 1] != c) {
+      mStops.InsertElementAt(i, c);
     }
-
-    // Returns the array index of the given partition point. The partition
-    // point must already be present in the partitioning.
-    int32_t IndexOf(nscoord p) const {
-      return mStops.BinaryIndexOf(p);
-    }
-
-    // Returns the partition at the given index which must be non-zero and
-    // less than the number of partitions in this partitioning.
-    nscoord StopAt(int32_t index) const {
-      return mStops[index];
-    }
-
-    // Returns the size of the gap between the partition at the given index and
-    // the next partition in this partitioning. If the index is the last index
-    // in the partitioning, the result is undefined.
-    nscoord StopSize(int32_t index) const {
-      return mStops[index+1] - mStops[index];
-    }
-
-    // Returns the number of partitions in this partitioning.
-    int32_t GetNumStops() const { return mStops.Length(); }
-
-  private:
-    nsTArray<nscoord> mStops;
-  };
-
-  const int64_t kVeryLargeNegativeNumber = 0xffff000000000000ll;
-
-  struct SizePair {
-    int64_t mSizeContainingRect;
-    int64_t mSize;
-
-    SizePair() : mSizeContainingRect(0), mSize(0) {}
-
-    static SizePair VeryLargeNegative() {
-      SizePair result;
-      result.mSize = result.mSizeContainingRect = kVeryLargeNegativeNumber;
-      return result;
-    }
-    bool operator<(const SizePair& aOther) const {
-      if (mSizeContainingRect < aOther.mSizeContainingRect)
-        return true;
-      if (mSizeContainingRect > aOther.mSizeContainingRect)
-        return false;
-      return mSize < aOther.mSize;
-    }
-    bool operator>(const SizePair& aOther) const {
-      return aOther.operator<(*this);
-    }
-    SizePair operator+(const SizePair& aOther) const {
-      SizePair result = *this;
-      result.mSizeContainingRect += aOther.mSizeContainingRect;
-      result.mSize += aOther.mSize;
-      return result;
-    }
-    SizePair operator-(const SizePair& aOther) const {
-      SizePair result = *this;
-      result.mSizeContainingRect -= aOther.mSizeContainingRect;
-      result.mSize -= aOther.mSize;
-      return result;
-    }
-  };
-
-  // Returns the sum and indices of the subarray with the maximum sum of the
-  // given array (A,n), assuming the array is already in prefix sum form.
-  SizePair MaxSum1D(const nsTArray<SizePair> &A, int32_t n,
-                    int32_t *minIdx, int32_t *maxIdx) {
-    // The min/max indicies of the largest subarray found so far
-    SizePair min, max;
-    int32_t currentMinIdx = 0;
-
-    *minIdx = 0;
-    *maxIdx = 0;
-
-    // Because we're given the array in prefix sum form, we know the first
-    // element is 0
-    for(int32_t i = 1; i < n; i++) {
-      SizePair cand = A[i] - min;
-      if (cand > max) {
-        max = cand;
-        *minIdx = currentMinIdx;
-        *maxIdx = i;
-      }
-      if (min > A[i]) {
-        min = A[i];
-        currentMinIdx = i;
-      }
-    }
-
-    return max;
   }
-} // namespace
 
-nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
+  // Returns the array index of the given partition point. The partition
+  // point must already be present in the partitioning.
+  int32_t IndexOf(nscoord p) const { return mStops.BinaryIndexOf(p); }
+
+  // Returns the partition at the given index which must be non-zero and
+  // less than the number of partitions in this partitioning.
+  nscoord StopAt(int32_t index) const { return mStops[index]; }
+
+  // Returns the size of the gap between the partition at the given index and
+  // the next partition in this partitioning. If the index is the last index
+  // in the partitioning, the result is undefined.
+  nscoord StopSize(int32_t index) const {
+    return mStops[index + 1] - mStops[index];
+  }
+
+  // Returns the number of partitions in this partitioning.
+  int32_t GetNumStops() const { return mStops.Length(); }
+
+ private:
+  nsTArray<nscoord> mStops;
+};
+
+const int64_t kVeryLargeNegativeNumber = 0xffff000000000000ll;
+
+struct SizePair {
+  int64_t mSizeContainingRect;
+  int64_t mSize;
+
+  SizePair() : mSizeContainingRect(0), mSize(0) {}
+
+  static SizePair VeryLargeNegative() {
+    SizePair result;
+    result.mSize = result.mSizeContainingRect = kVeryLargeNegativeNumber;
+    return result;
+  }
+  bool operator<(const SizePair& aOther) const {
+    if (mSizeContainingRect < aOther.mSizeContainingRect) return true;
+    if (mSizeContainingRect > aOther.mSizeContainingRect) return false;
+    return mSize < aOther.mSize;
+  }
+  bool operator>(const SizePair& aOther) const {
+    return aOther.operator<(*this);
+  }
+  SizePair operator+(const SizePair& aOther) const {
+    SizePair result = *this;
+    result.mSizeContainingRect += aOther.mSizeContainingRect;
+    result.mSize += aOther.mSize;
+    return result;
+  }
+  SizePair operator-(const SizePair& aOther) const {
+    SizePair result = *this;
+    result.mSizeContainingRect -= aOther.mSizeContainingRect;
+    result.mSize -= aOther.mSize;
+    return result;
+  }
+};
+
+// Returns the sum and indices of the subarray with the maximum sum of the
+// given array (A,n), assuming the array is already in prefix sum form.
+SizePair MaxSum1D(const nsTArray<SizePair>& A, int32_t n, int32_t* minIdx,
+                  int32_t* maxIdx) {
+  // The min/max indicies of the largest subarray found so far
+  SizePair min, max;
+  int32_t currentMinIdx = 0;
+
+  *minIdx = 0;
+  *maxIdx = 0;
+
+  // Because we're given the array in prefix sum form, we know the first
+  // element is 0
+  for (int32_t i = 1; i < n; i++) {
+    SizePair cand = A[i] - min;
+    if (cand > max) {
+      max = cand;
+      *minIdx = currentMinIdx;
+      *maxIdx = i;
+    }
+    if (min > A[i]) {
+      min = A[i];
+      currentMinIdx = i;
+    }
+  }
+
+  return max;
+}
+}  // namespace
+
+nsRect nsRegion::GetLargestRectangle(const nsRect& aContainingRect) const {
   nsRect bestRect;
 
   if (GetNumRects() <= 1) {
@@ -922,11 +923,11 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
       nscoord height = yaxis.StopSize(y);
       for (int32_t x = xstart; x < xend; x++) {
         nscoord width = xaxis.StopSize(x);
-        int64_t size = width*int64_t(height);
+        int64_t size = width * int64_t(height);
         if (rect.Intersects(aContainingRect)) {
-          areas[y*matrixWidth+x].mSizeContainingRect = size;
+          areas[y * matrixWidth + x].mSizeContainingRect = size;
         }
-        areas[y*matrixWidth+x].mSize = size;
+        areas[y * matrixWidth + x].mSize = size;
       }
     }
   }
@@ -936,18 +937,17 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
     // First get the prefix sum array
     int32_t m = matrixHeight + 1;
     int32_t n = matrixWidth + 1;
-    nsTArray<SizePair> pareas(m*n);
-    pareas.SetLength(m*n);
+    nsTArray<SizePair> pareas(m * n);
+    pareas.SetLength(m * n);
     for (int32_t y = 1; y < m; y++) {
       for (int32_t x = 1; x < n; x++) {
-        SizePair area = areas[(y-1)*matrixWidth+x-1];
+        SizePair area = areas[(y - 1) * matrixWidth + x - 1];
         if (!area.mSize) {
           area = SizePair::VeryLargeNegative();
         }
-        area = area + pareas[    y*n+x-1]
-                    + pareas[(y-1)*n+x  ]
-                    - pareas[(y-1)*n+x-1];
-        pareas[y*n+x] = area;
+        area = area + pareas[y * n + x - 1] + pareas[(y - 1) * n + x] -
+               pareas[(y - 1) * n + x - 1];
+        pareas[y * n + x] = area;
       }
     }
 
@@ -957,13 +957,13 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
     SizePair bestArea;
     struct {
       int32_t left, top, right, bottom;
-    } bestRectIndices = { 0, 0, 0, 0 };
+    } bestRectIndices = {0, 0, 0, 0};
     for (int32_t m1 = 0; m1 < m; m1++) {
-      for (int32_t m2 = m1+1; m2 < m; m2++) {
+      for (int32_t m2 = m1 + 1; m2 < m; m2++) {
         nsTArray<SizePair> B;
         B.SetLength(n);
         for (int32_t i = 0; i < n; i++) {
-          B[i] = pareas[m2*n+i] - pareas[m1*n+i];
+          B[i] = pareas[m2 * n + i] - pareas[m1 * n + i];
         }
         int32_t minIdx, maxIdx;
         SizePair area = MaxSum1D(B, n, &minIdx, &maxIdx);
@@ -997,28 +997,29 @@ std::ostream& operator<<(std::ostream& stream, const nsRegion& m) {
       first = true;
     }
     const nsRect& rect = iter.Get();
-    stream << rect.X() << "," << rect.Y() << "," << rect.XMost() << "," << rect.YMost();
+    stream << rect.X() << "," << rect.Y() << "," << rect.XMost() << ","
+           << rect.YMost();
   }
 
   stream << "]";
   return stream;
 }
 
-void
-nsRegion::OutputToStream(std::string aObjName, std::ostream& stream) const
-{
+void nsRegion::OutputToStream(std::string aObjName,
+                              std::ostream& stream) const {
   auto iter = RectIter();
   nsRect r = iter.Get();
-  stream << "nsRegion " << aObjName << "(nsRect(" << r.X() << ", " << r.Y() << ", " << r.Width() << ", " << r.Height() << "));\n";
+  stream << "nsRegion " << aObjName << "(nsRect(" << r.X() << ", " << r.Y()
+         << ", " << r.Width() << ", " << r.Height() << "));\n";
   iter.Next();
 
   for (; !iter.Done(); iter.Next()) {
     nsRect r = iter.Get();
-    stream << aObjName << ".OrWith(nsRect(" << r.X() << ", " << r.Y() << ", " << r.Width() << ", " << r.Height() << "));\n";
+    stream << aObjName << ".OrWith(nsRect(" << r.X() << ", " << r.Y() << ", "
+           << r.Width() << ", " << r.Height() << "));\n";
   }
 }
 
-nsCString
-nsRegion::ToString() const {
+nsCString nsRegion::ToString() const {
   return nsCString(mozilla::ToString(*this).c_str());
 }

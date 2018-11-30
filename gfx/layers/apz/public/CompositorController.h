@@ -7,25 +7,24 @@
 #ifndef mozilla_layers_CompositorController_h
 #define mozilla_layers_CompositorController_h
 
-#include "nsISupportsImpl.h" // for NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+#include "nsISupportsImpl.h"  // for NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
 namespace mozilla {
 namespace layers {
 
-class CompositorController
-{
-public:
+class CompositorController {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual void ScheduleRenderOnCompositorThread() = 0;
   virtual void ScheduleHideAllPluginWindows() = 0;
   virtual void ScheduleShowAllPluginWindows() = 0;
 
-protected:
+ protected:
   virtual ~CompositorController() {}
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_CompositorController_h
+#endif  // mozilla_layers_CompositorController_h

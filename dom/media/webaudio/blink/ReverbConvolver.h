@@ -45,46 +45,48 @@ namespace WebCore {
 class ReverbConvolverStage;
 
 class ReverbConvolver {
-public:
-    // maxFFTSize can be adjusted (from say 2048 to 32768) depending on how much precision is necessary.
-    // For certain tweaky de-convolving applications the phase errors add up quickly and lead to non-sensical results with
-    // larger FFT sizes and single-precision floats.  In these cases 2048 is a good size.
-    // If not doing multi-threaded convolution, then should not go > 8192.
-    ReverbConvolver(const float* impulseResponseData,
-                    size_t impulseResponseLength, size_t maxFFTSize,
-                    size_t convolverRenderPhase, bool useBackgroundThreads);
-    ~ReverbConvolver();
+ public:
+  // maxFFTSize can be adjusted (from say 2048 to 32768) depending on how much
+  // precision is necessary. For certain tweaky de-convolving applications the
+  // phase errors add up quickly and lead to non-sensical results with larger
+  // FFT sizes and single-precision floats.  In these cases 2048 is a good size.
+  // If not doing multi-threaded convolution, then should not go > 8192.
+  ReverbConvolver(const float* impulseResponseData,
+                  size_t impulseResponseLength, size_t maxFFTSize,
+                  size_t convolverRenderPhase, bool useBackgroundThreads);
+  ~ReverbConvolver();
 
-    void process(const float* sourceChannelData,
-                 float* destinationChannelData);
+  void process(const float* sourceChannelData, float* destinationChannelData);
 
-    size_t impulseResponseLength() const { return m_impulseResponseLength; }
+  size_t impulseResponseLength() const { return m_impulseResponseLength; }
 
-    ReverbInputBuffer* inputBuffer() { return &m_inputBuffer; }
+  ReverbInputBuffer* inputBuffer() { return &m_inputBuffer; }
 
-    bool useBackgroundThreads() const { return m_useBackgroundThreads; }
-    void backgroundThreadEntry();
+  bool useBackgroundThreads() const { return m_useBackgroundThreads; }
+  void backgroundThreadEntry();
 
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-private:
-    nsTArray<nsAutoPtr<ReverbConvolverStage> > m_stages;
-    nsTArray<nsAutoPtr<ReverbConvolverStage> > m_backgroundStages;
-    size_t m_impulseResponseLength;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-    ReverbAccumulationBuffer m_accumulationBuffer;
+ private:
+  nsTArray<nsAutoPtr<ReverbConvolverStage> > m_stages;
+  nsTArray<nsAutoPtr<ReverbConvolverStage> > m_backgroundStages;
+  size_t m_impulseResponseLength;
 
-    // One or more background threads read from this input buffer which is fed from the realtime thread.
-    ReverbInputBuffer m_inputBuffer;
+  ReverbAccumulationBuffer m_accumulationBuffer;
 
-    // Background thread and synchronization
-    base::Thread m_backgroundThread;
-    Lock m_backgroundThreadLock;
-    ConditionVariable m_backgroundThreadCondition;
-    bool m_useBackgroundThreads;
-    bool m_wantsToExit;
-    bool m_moreInputBuffered;
+  // One or more background threads read from this input buffer which is fed
+  // from the realtime thread.
+  ReverbInputBuffer m_inputBuffer;
+
+  // Background thread and synchronization
+  base::Thread m_backgroundThread;
+  Lock m_backgroundThreadLock;
+  ConditionVariable m_backgroundThreadCondition;
+  bool m_useBackgroundThreads;
+  bool m_wantsToExit;
+  bool m_moreInputBuffered;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // ReverbConvolver_h
+#endif  // ReverbConvolver_h

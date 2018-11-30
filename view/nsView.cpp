@@ -17,7 +17,7 @@
 #include "nsPresArena.h"
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
-#include "nsContentUtils.h" // for nsAutoScriptBlocker
+#include "nsContentUtils.h"  // for nsAutoScriptBlocker
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/CompositeTimelineMarker.h"
 
@@ -26,21 +26,20 @@ using namespace mozilla;
 static bool sShowPreviousPage = true;
 
 nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
-  : mViewManager(aViewManager)
-  , mParent(nullptr)
-  , mNextSibling(nullptr)
-  , mFirstChild(nullptr)
-  , mFrame(nullptr)
-  , mDirtyRegion(nullptr)
-  , mZIndex(0)
-  , mVis(aVisibility)
-  , mPosX(0)
-  , mPosY(0)
-  , mVFlags(0)
-  , mWidgetIsTopLevel(false)
-  , mForcedRepaint(false)
-  , mNeedsWindowPropertiesSync(false)
-{
+    : mViewManager(aViewManager),
+      mParent(nullptr),
+      mNextSibling(nullptr),
+      mFirstChild(nullptr),
+      mFrame(nullptr),
+      mDirtyRegion(nullptr),
+      mZIndex(0),
+      mVis(aVisibility),
+      mPosX(0),
+      mPosY(0),
+      mVFlags(0),
+      mWidgetIsTopLevel(false),
+      mForcedRepaint(false),
+      mNeedsWindowPropertiesSync(false) {
   MOZ_COUNT_CTOR(nsView);
 
   // Views should be transparent by default. Not being transparent is
@@ -50,24 +49,21 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
 
   static bool sShowPreviousPageInitialized = false;
   if (!sShowPreviousPageInitialized) {
-    Preferences::AddBoolVarCache(&sShowPreviousPage, "layout.show_previous_page", true);
+    Preferences::AddBoolVarCache(&sShowPreviousPage,
+                                 "layout.show_previous_page", true);
     sShowPreviousPageInitialized = true;
   }
 }
 
-void nsView::DropMouseGrabbing()
-{
+void nsView::DropMouseGrabbing() {
   nsIPresShell* presShell = mViewManager->GetPresShell();
-  if (presShell)
-    presShell->ClearMouseCaptureOnView(this);
+  if (presShell) presShell->ClearMouseCaptureOnView(this);
 }
 
-nsView::~nsView()
-{
+nsView::~nsView() {
   MOZ_COUNT_DTOR(nsView);
 
-  while (GetFirstChild())
-  {
+  while (GetFirstChild()) {
     nsView* child = GetFirstChild();
     if (child->GetViewManager() == mViewManager) {
       child->Destroy();
@@ -77,35 +73,27 @@ nsView::~nsView()
     }
   }
 
-  if (mViewManager)
-  {
+  if (mViewManager) {
     DropMouseGrabbing();
 
-    nsView *rootView = mViewManager->GetRootView();
+    nsView* rootView = mViewManager->GetRootView();
 
-    if (rootView)
-    {
+    if (rootView) {
       // Root views can have parents!
-      if (mParent)
-      {
+      if (mParent) {
         mViewManager->RemoveChild(this);
       }
 
-      if (rootView == this)
-      {
+      if (rootView == this) {
         // Inform the view manager that the root view has gone away...
         mViewManager->SetRootView(nullptr);
       }
-    }
-    else if (mParent)
-    {
+    } else if (mParent) {
       mParent->RemoveChild(this);
     }
 
     mViewManager = nullptr;
-  }
-  else if (mParent)
-  {
+  } else if (mParent) {
     mParent->RemoveChild(this);
   }
 
@@ -120,43 +108,35 @@ nsView::~nsView()
 }
 
 class DestroyWidgetRunnable : public Runnable {
-public:
+ public:
   NS_DECL_NSIRUNNABLE
 
   explicit DestroyWidgetRunnable(nsIWidget* aWidget)
-    : mozilla::Runnable("DestroyWidgetRunnable")
-    , mWidget(aWidget)
-  {
-  }
+      : mozilla::Runnable("DestroyWidgetRunnable"), mWidget(aWidget) {}
 
-private:
+ private:
   nsCOMPtr<nsIWidget> mWidget;
 };
 
-NS_IMETHODIMP DestroyWidgetRunnable::Run()
-{
+NS_IMETHODIMP DestroyWidgetRunnable::Run() {
   mWidget->Destroy();
   mWidget = nullptr;
   return NS_OK;
 }
 
-
-void nsView::DestroyWidget()
-{
-  if (mWindow)
-  {
+void nsView::DestroyWidget() {
+  if (mWindow) {
     // If we are not attached to a base window, we're going to tear down our
     // widget here. However, if we're attached to somebody elses widget, we
     // want to leave the widget alone: don't reset the client data or call
     // Destroy. Just clear our event view ptr and free our reference to it.
     if (mWidgetIsTopLevel) {
       mWindow->SetAttachedWidgetListener(nullptr);
-    }
-    else {
+    } else {
       mWindow->SetWidgetListener(nullptr);
 
       nsCOMPtr<nsIRunnable> widgetDestroyer =
-        new DestroyWidgetRunnable(mWindow);
+          new DestroyWidgetRunnable(mWindow);
 
       // Don't leak if we happen to arrive here after the main thread
       // has disappeared.
@@ -170,30 +150,26 @@ void nsView::DestroyWidget()
   }
 }
 
-nsView* nsView::GetViewFor(nsIWidget* aWidget)
-{
+nsView* nsView::GetViewFor(nsIWidget* aWidget) {
   MOZ_ASSERT(nullptr != aWidget, "null widget ptr");
 
   nsIWidgetListener* listener = aWidget->GetWidgetListener();
   if (listener) {
     nsView* view = listener->GetView();
-    if (view)
-      return view;
+    if (view) return view;
   }
 
   listener = aWidget->GetAttachedWidgetListener();
   return listener ? listener->GetView() : nullptr;
 }
 
-void nsView::Destroy()
-{
+void nsView::Destroy() {
   this->~nsView();
   mozWritePoison(this, sizeof(*this));
   nsView::operator delete(this);
 }
 
-void nsView::SetPosition(nscoord aX, nscoord aY)
-{
+void nsView::SetPosition(nscoord aX, nscoord aY) {
   mDimBounds.MoveBy(aX - mPosX, aY - mPosY);
   mPosX = aX;
   mPosY = aY;
@@ -204,8 +180,7 @@ void nsView::SetPosition(nscoord aX, nscoord aY)
   ResetWidgetBounds(true, false);
 }
 
-void nsView::ResetWidgetBounds(bool aRecurse, bool aForceSync)
-{
+void nsView::ResetWidgetBounds(bool aRecurse, bool aForceSync) {
   if (mWindow) {
     if (!aForceSync) {
       // Don't change widget geometry synchronously, since that can
@@ -225,17 +200,14 @@ void nsView::ResetWidgetBounds(bool aRecurse, bool aForceSync)
   }
 }
 
-bool nsView::IsEffectivelyVisible()
-{
+bool nsView::IsEffectivelyVisible() {
   for (nsView* v = this; v; v = v->mParent) {
-    if (v->GetVisibility() == nsViewVisibility_kHide)
-      return false;
+    if (v->GetVisibility() == nsViewVisibility_kHide) return false;
   }
   return true;
 }
 
-LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
-{
+LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType) {
   int32_t p2a = mViewManager->AppUnitsPerDevPixel();
 
   nsRect viewBounds(mDimBounds);
@@ -248,8 +220,7 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
     // make viewBounds be relative to the parent widget, in appunits
     viewBounds += offset;
 
-    if (parentWidget && aType == eWindowType_popup &&
-        IsEffectivelyVisible()) {
+    if (parentWidget && aType == eWindowType_popup && IsEffectivelyVisible()) {
       // put offset into screen coordinates. (based on client area origin)
       LayoutDeviceIntPoint screenPoint = parentWidget->WidgetToScreenOffset();
       viewBounds += nsPoint(NSIntPixelsToAppUnits(screenPoint.x, p2a),
@@ -259,7 +230,7 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 
   // Compute widget bounds in device pixels
   LayoutDeviceIntRect newBounds =
-    LayoutDeviceIntRect::FromUnknownRect(viewBounds.ToNearestPixels(p2a));
+      LayoutDeviceIntRect::FromUnknownRect(viewBounds.ToNearestPixels(p2a));
 
 #if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
   // cocoa and GTK round widget coordinates to the nearest global "display
@@ -271,12 +242,22 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
       ((round = widget->RoundsWidgetCoordinatesTo()) > 1)) {
     LayoutDeviceIntSize pixelRoundedSize = newBounds.Size();
     // round the top left and bottom right to the nearest round pixel
-    newBounds.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.x, p2a) / round) * round;
-    newBounds.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.y, p2a) / round) * round;
+    newBounds.x =
+        NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.x, p2a) / round) *
+        round;
+    newBounds.y =
+        NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.y, p2a) / round) *
+        round;
     newBounds.width =
-      NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.XMost(), p2a) / round) * round - newBounds.x;
+        NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.XMost(), p2a) /
+                       round) *
+            round -
+        newBounds.x;
     newBounds.height =
-      NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.YMost(), p2a) / round) * round - newBounds.y;
+        NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.YMost(), p2a) /
+                       round) *
+            round -
+        newBounds.y;
     // but if that makes the widget larger then our frame may not paint the
     // extra pixels, so reduce the size to the nearest round value
     if (newBounds.width > pixelRoundedSize.width) {
@@ -298,14 +279,13 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
   // The view origin, relative to the parent widget, is at
   // (mPosX,mPosY) - mDimBounds.TopLeft() + viewBounds.TopLeft().
   // Our widget, relative to the parent widget, is roundedOffset.
-  mViewToWidgetOffset = nsPoint(mPosX, mPosY)
-    - mDimBounds.TopLeft() + viewBounds.TopLeft() - roundedOffset;
+  mViewToWidgetOffset = nsPoint(mPosX, mPosY) - mDimBounds.TopLeft() +
+                        viewBounds.TopLeft() - roundedOffset;
 
   return newBounds;
 }
 
-void nsView::DoResetWidgetBounds(bool aMoveOnly,
-                                 bool aInvalidateChangedSize) {
+void nsView::DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize) {
   // The geometry of a root view's widget is controlled externally,
   // NOT by sizing or positioning the view
   if (mViewManager->GetRootView() == this) {
@@ -344,9 +324,10 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   if (invisiblePopup) {
     // Don't manipulate empty or hidden popup widgets. For example there's no
     // point moving hidden comboboxes around, or doing X server roundtrips
-    // to compute their true screen position. This could mean that WidgetToScreen
-    // operations on these widgets don't return up-to-date values, but popup
-    // positions aren't reliable anyway because of correction to be on or off-screen.
+    // to compute their true screen position. This could mean that
+    // WidgetToScreen operations on these widgets don't return up-to-date
+    // values, but popup positions aren't reliable anyway because of correction
+    // to be on or off-screen.
     return;
   }
 
@@ -365,9 +346,8 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   DesktopRect deskRect = newBounds / scale;
   if (changedPos) {
     if (changedSize && !aMoveOnly) {
-      widget->ResizeClient(deskRect.X(), deskRect.Y(),
-                           deskRect.Width(), deskRect.Height(),
-                           aInvalidateChangedSize);
+      widget->ResizeClient(deskRect.X(), deskRect.Y(), deskRect.Width(),
+                           deskRect.Height(), aInvalidateChangedSize);
     } else {
       widget->MoveClient(deskRect.X(), deskRect.Y());
     }
@@ -375,7 +355,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
     if (changedSize && !aMoveOnly) {
       widget->ResizeClient(deskRect.Width(), deskRect.Height(),
                            aInvalidateChangedSize);
-    } // else do nothing!
+    }  // else do nothing!
   }
 
   if (!curVisibility && newVisibility) {
@@ -383,8 +363,8 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   }
 }
 
-void nsView::SetDimensions(const nsRect& aRect, bool aPaint, bool aResizeWidget)
-{
+void nsView::SetDimensions(const nsRect& aRect, bool aPaint,
+                           bool aResizeWidget) {
   nsRect dims = aRect;
   dims.MoveBy(mPosX, mPosY);
 
@@ -403,17 +383,14 @@ void nsView::SetDimensions(const nsRect& aRect, bool aPaint, bool aResizeWidget)
   }
 }
 
-void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible)
-{
-  if (!aEffectivelyVisible)
-  {
+void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible) {
+  if (!aEffectivelyVisible) {
     DropMouseGrabbing();
   }
 
   SetForcedRepaint(true);
 
-  if (nullptr != mWindow)
-  {
+  if (nullptr != mWindow) {
     ResetWidgetBounds(false, false);
   }
 
@@ -427,46 +404,38 @@ void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible)
   }
 }
 
-void nsView::SetVisibility(nsViewVisibility aVisibility)
-{
+void nsView::SetVisibility(nsViewVisibility aVisibility) {
   mVis = aVisibility;
   NotifyEffectiveVisibilityChanged(IsEffectivelyVisible());
 }
 
-void nsView::SetFloating(bool aFloatingView)
-{
-	if (aFloatingView)
-		mVFlags |= NS_VIEW_FLAG_FLOATING;
-	else
-		mVFlags &= ~NS_VIEW_FLAG_FLOATING;
+void nsView::SetFloating(bool aFloatingView) {
+  if (aFloatingView)
+    mVFlags |= NS_VIEW_FLAG_FLOATING;
+  else
+    mVFlags &= ~NS_VIEW_FLAG_FLOATING;
 }
 
-void nsView::InvalidateHierarchy()
-{
-  if (mViewManager->GetRootView() == this)
-    mViewManager->InvalidateHierarchy();
+void nsView::InvalidateHierarchy() {
+  if (mViewManager->GetRootView() == this) mViewManager->InvalidateHierarchy();
 
-  for (nsView *child = mFirstChild; child; child = child->GetNextSibling())
+  for (nsView* child = mFirstChild; child; child = child->GetNextSibling())
     child->InvalidateHierarchy();
 }
 
-void nsView::InsertChild(nsView *aChild, nsView *aSibling)
-{
+void nsView::InsertChild(nsView* aChild, nsView* aSibling) {
   MOZ_ASSERT(nullptr != aChild, "null ptr");
 
-  if (nullptr != aChild)
-  {
-    if (nullptr != aSibling)
-    {
+  if (nullptr != aChild) {
+    if (nullptr != aSibling) {
 #ifdef DEBUG
-      NS_ASSERTION(aSibling->GetParent() == this, "tried to insert view with invalid sibling");
+      NS_ASSERTION(aSibling->GetParent() == this,
+                   "tried to insert view with invalid sibling");
 #endif
-      //insert after sibling
+      // insert after sibling
       aChild->SetNextSibling(aSibling->GetNextSibling());
       aSibling->SetNextSibling(aChild);
-    }
-    else
-    {
+    } else {
       aChild->SetNextSibling(mFirstChild);
       mFirstChild = aChild;
     }
@@ -475,20 +444,17 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
     // If we just inserted a root view, then update the RootViewManager
     // on all view managers in the new subtree.
 
-    nsViewManager *vm = aChild->GetViewManager();
-    if (vm->GetRootView() == aChild)
-    {
+    nsViewManager* vm = aChild->GetViewManager();
+    if (vm->GetRootView() == aChild) {
       aChild->InvalidateHierarchy();
     }
   }
 }
 
-void nsView::RemoveChild(nsView *child)
-{
+void nsView::RemoveChild(nsView* child) {
   MOZ_ASSERT(nullptr != child, "null ptr");
 
-  if (nullptr != child)
-  {
+  if (nullptr != child) {
     nsView* prevKid = nullptr;
     nsView* kid = mFirstChild;
     DebugOnly<bool> found = false;
@@ -504,16 +470,15 @@ void nsView::RemoveChild(nsView *child)
         break;
       }
       prevKid = kid;
-	    kid = kid->GetNextSibling();
+      kid = kid->GetNextSibling();
     }
     NS_ASSERTION(found, "tried to remove non child");
 
     // If we just removed a root view, then update the RootViewManager
     // on all view managers in the removed subtree.
 
-    nsViewManager *vm = child->GetViewManager();
-    if (vm->GetRootView() == child)
-    {
+    nsViewManager* vm = child->GetViewManager();
+    if (vm->GetRootView() == child) {
       child->InvalidateHierarchy();
     }
   }
@@ -524,8 +489,7 @@ void nsView::RemoveChild(nsView *child)
 // because in many simple common cases the widgets do end up in the
 // right order. We set each widget's z-index to the z-index of the
 // nearest ancestor that has non-auto z-index.
-static void UpdateNativeWidgetZIndexes(nsView* aView, int32_t aZIndex)
-{
+static void UpdateNativeWidgetZIndexes(nsView* aView, int32_t aZIndex) {
   if (aView->HasWidget()) {
     nsIWidget* widget = aView->GetWidget();
     if (widget->GetZIndex() != aZIndex) {
@@ -540,8 +504,7 @@ static void UpdateNativeWidgetZIndexes(nsView* aView, int32_t aZIndex)
   }
 }
 
-static int32_t FindNonAutoZIndex(nsView* aView)
-{
+static int32_t FindNonAutoZIndex(nsView* aView) {
   while (aView) {
     if (!aView->GetZIndexIsAuto()) {
       return aView->GetZIndex();
@@ -552,34 +515,31 @@ static int32_t FindNonAutoZIndex(nsView* aView)
 }
 
 struct DefaultWidgetInitData : public nsWidgetInitData {
-  DefaultWidgetInitData() : nsWidgetInitData()
-  {
+  DefaultWidgetInitData() : nsWidgetInitData() {
     mWindowType = eWindowType_child;
     clipChildren = true;
     clipSiblings = true;
   }
 };
 
-nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
-                               bool aEnableDragDrop,
-                               bool aResetVisibility)
-{
+nsresult nsView::CreateWidget(nsWidgetInitData* aWidgetInitData,
+                              bool aEnableDragDrop, bool aResetVisibility) {
   AssertNoWindow();
-  MOZ_ASSERT(!aWidgetInitData ||
-             aWidgetInitData->mWindowType != eWindowType_popup,
-             "Use CreateWidgetForPopup");
+  MOZ_ASSERT(
+      !aWidgetInitData || aWidgetInitData->mWindowType != eWindowType_popup,
+      "Use CreateWidgetForPopup");
 
   DefaultWidgetInitData defaultInitData;
   bool initDataPassedIn = !!aWidgetInitData;
   aWidgetInitData = aWidgetInitData ? aWidgetInitData : &defaultInitData;
   defaultInitData.mListenForResizes =
-    (!initDataPassedIn && GetParent() &&
-     GetParent()->GetViewManager() != mViewManager);
+      (!initDataPassedIn && GetParent() &&
+       GetParent()->GetViewManager() != mViewManager);
 
   LayoutDeviceIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
   nsIWidget* parentWidget =
-    GetParent() ? GetParent()->GetNearestWidget(nullptr) : nullptr;
+      GetParent() ? GetParent()->GetNearestWidget(nullptr) : nullptr;
   if (!parentWidget) {
     NS_ERROR("nsView::CreateWidget without suitable parent widget??");
     return NS_ERROR_FAILURE;
@@ -598,14 +558,13 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
 }
 
 nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
-                                        nsWidgetInitData *aWidgetInitData,
-                                        bool aEnableDragDrop,
-                                        bool aResetVisibility)
-{
+                                       nsWidgetInitData* aWidgetInitData,
+                                       bool aEnableDragDrop,
+                                       bool aResetVisibility) {
   AssertNoWindow();
-  MOZ_ASSERT(!aWidgetInitData ||
-             aWidgetInitData->mWindowType != eWindowType_popup,
-             "Use CreateWidgetForPopup");
+  MOZ_ASSERT(
+      !aWidgetInitData || aWidgetInitData->mWindowType != eWindowType_popup,
+      "Use CreateWidgetForPopup");
   MOZ_ASSERT(aParentWidget, "Parent widget required");
 
   DefaultWidgetInitData defaultInitData;
@@ -623,11 +582,10 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
   return NS_OK;
 }
 
-nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
-                                       nsIWidget* aParentWidget,
-                                       bool aEnableDragDrop,
-                                       bool aResetVisibility)
-{
+nsresult nsView::CreateWidgetForPopup(nsWidgetInitData* aWidgetInitData,
+                                      nsIWidget* aParentWidget,
+                                      bool aEnableDragDrop,
+                                      bool aResetVisibility) {
   AssertNoWindow();
   MOZ_ASSERT(aWidgetInitData, "Widget init data required");
   MOZ_ASSERT(aWidgetInitData->mWindowType == eWindowType_popup,
@@ -643,10 +601,9 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
     // XXX: using aForceUseIWidgetParent=true to preserve previous
     // semantics.  It's not clear that it's actually needed.
     mWindow = aParentWidget->CreateChild(trect, aWidgetInitData, true);
-  }
-  else {
-    nsIWidget* nearestParent = GetParent() ? GetParent()->GetNearestWidget(nullptr)
-                                           : nullptr;
+  } else {
+    nsIWidget* nearestParent =
+        GetParent() ? GetParent()->GetNearestWidget(nullptr) : nullptr;
     if (!nearestParent) {
       // Without a parent, we can't make a popup.  This can happen
       // when printing
@@ -664,9 +621,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
   return NS_OK;
 }
 
-void
-nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
-{
+void nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility) {
   MOZ_ASSERT(mWindow, "Must have a window to initialize");
 
   mWindow->SetWidgetListener(this);
@@ -678,33 +633,29 @@ nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
   // propagate the z-index to the widget.
   UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
 
-  //make sure visibility state is accurate
+  // make sure visibility state is accurate
 
   if (aResetVisibility) {
     SetVisibility(GetVisibility());
   }
 }
 
-void
-nsView::SetNeedsWindowPropertiesSync()
-{
+void nsView::SetNeedsWindowPropertiesSync() {
   mNeedsWindowPropertiesSync = true;
   if (mViewManager) {
     mViewManager->PostPendingUpdate();
   }
 }
 
-
 // Attach to a top level widget and start receiving mirrored events.
-nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget)
-{
+nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
   MOZ_ASSERT(nullptr != aWidget, "null widget ptr");
 
   /// XXXjimm This is a temporary workaround to an issue w/document
   // viewer (bug 513162).
   nsIWidgetListener* listener = aWidget->GetAttachedWidgetListener();
   if (listener) {
-    nsView *oldView = listener->GetView();
+    nsView* oldView = listener->GetView();
     if (oldView) {
       oldView->DetachFromTopLevelWidget();
     }
@@ -730,8 +681,7 @@ nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget)
 }
 
 // Detach this view from an attached widget.
-nsresult nsView::DetachFromTopLevelWidget()
-{
+nsresult nsView::DetachFromTopLevelWidget() {
   MOZ_ASSERT(mWidgetIsTopLevel, "Not attached currently!");
   MOZ_ASSERT(mWindow, "null mWindow for DetachFromTopLevelWidget!");
 
@@ -755,10 +705,10 @@ nsresult nsView::DetachFromTopLevelWidget()
   return NS_OK;
 }
 
-void nsView::SetZIndex(bool aAuto, int32_t aZIndex)
-{
+void nsView::SetZIndex(bool aAuto, int32_t aZIndex) {
   bool oldIsAuto = GetZIndexIsAuto();
-  mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
+  mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) |
+            (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
   mZIndex = aZIndex;
 
   if (HasWidget() || !oldIsAuto || !aAuto) {
@@ -766,8 +716,7 @@ void nsView::SetZIndex(bool aAuto, int32_t aZIndex)
   }
 }
 
-void nsView::AssertNoWindow()
-{
+void nsView::AssertNoWindow() {
   // XXX: it would be nice to make this a strong assert
   if (MOZ_UNLIKELY(mWindow)) {
     NS_ERROR("We already have a window for this view? BAD");
@@ -780,8 +729,7 @@ void nsView::AssertNoWindow()
 //
 // internal window creation functions
 //
-void nsView::AttachWidgetEventHandler(nsIWidget* aWidget)
-{
+void nsView::AttachWidgetEventHandler(nsIWidget* aWidget) {
 #ifdef DEBUG
   NS_ASSERTION(!aWidget->GetWidgetListener(), "Already have a widget listener");
 #endif
@@ -789,18 +737,17 @@ void nsView::AttachWidgetEventHandler(nsIWidget* aWidget)
   aWidget->SetWidgetListener(this);
 }
 
-void nsView::DetachWidgetEventHandler(nsIWidget* aWidget)
-{
+void nsView::DetachWidgetEventHandler(nsIWidget* aWidget) {
   NS_ASSERTION(!aWidget->GetWidgetListener() ||
-               aWidget->GetWidgetListener()->GetView() == this, "Wrong view");
+                   aWidget->GetWidgetListener()->GetView() == this,
+               "Wrong view");
   aWidget->SetWidgetListener(nullptr);
 }
 
 #ifdef DEBUG
-void nsView::List(FILE* out, int32_t aIndent) const
-{
+void nsView::List(FILE* out, int32_t aIndent) const {
   int32_t i;
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  for (i = aIndent; --i >= 0;) fputs("  ", out);
   fprintf(out, "%p ", (void*)this);
   if (nullptr != mWindow) {
     nscoord p2a = mViewManager->AppUnitsPerDevPixel();
@@ -812,31 +759,28 @@ void nsView::List(FILE* out, int32_t aIndent) const
     mWindow.get()->Release();
     int32_t Z = mWindow->GetZIndex();
     fprintf(out, "(widget=%p[%" PRIuPTR "] z=%d pos={%d,%d,%d,%d}) ",
-            (void*)mWindow, widgetRefCnt, Z,
-            nonclientBounds.X(), nonclientBounds.Y(),
-            windowBounds.Width(), windowBounds.Height());
+            (void*)mWindow, widgetRefCnt, Z, nonclientBounds.X(),
+            nonclientBounds.Y(), windowBounds.Width(), windowBounds.Height());
   }
   nsRect brect = GetBounds();
-  fprintf(out, "{%d,%d,%d,%d}",
-          brect.X(), brect.Y(), brect.Width(), brect.Height());
-  fprintf(out, " z=%d vis=%d frame=%p <\n",
-          mZIndex, mVis, static_cast<void*>(mFrame));
+  fprintf(out, "{%d,%d,%d,%d}", brect.X(), brect.Y(), brect.Width(),
+          brect.Height());
+  fprintf(out, " z=%d vis=%d frame=%p <\n", mZIndex, mVis,
+          static_cast<void*>(mFrame));
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     NS_ASSERTION(kid->GetParent() == this, "incorrect parent");
     kid->List(out, aIndent + 1);
   }
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  for (i = aIndent; --i >= 0;) fputs("  ", out);
   fputs(">\n", out);
 }
-#endif // DEBUG
+#endif  // DEBUG
 
-nsPoint nsView::GetOffsetTo(const nsView* aOther) const
-{
+nsPoint nsView::GetOffsetTo(const nsView* aOther) const {
   return GetOffsetTo(aOther, GetViewManager()->AppUnitsPerDevPixel());
 }
 
-nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const
-{
+nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const {
   MOZ_ASSERT(GetParent() || !aOther || aOther->GetParent() || this == aOther,
              "caller of (outer) GetOffsetTo must not pass unrelated views");
   // We accumulate the final result in offset
@@ -847,7 +791,7 @@ nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const
   nsViewManager* currVM = v->GetViewManager();
   int32_t currAPD = currVM->AppUnitsPerDevPixel();
   const nsView* root = nullptr;
-  for ( ; v != aOther && v; root = v, v = v->GetParent()) {
+  for (; v != aOther && v; root = v, v = v->GetParent()) {
     nsViewManager* newVM = v->GetViewManager();
     if (newVM != currVM) {
       int32_t newAPD = newVM->AppUnitsPerDevPixel();
@@ -873,8 +817,7 @@ nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const
   return offset;
 }
 
-nsPoint nsView::GetOffsetToWidget(nsIWidget* aWidget) const
-{
+nsPoint nsView::GetOffsetToWidget(nsIWidget* aWidget) const {
   nsPoint pt;
   // Get the view for widget
   nsView* widgetView = GetViewFor(aWidget);
@@ -900,24 +843,23 @@ nsPoint nsView::GetOffsetToWidget(nsIWidget* aWidget) const
   return pt;
 }
 
-nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset) const
-{
+nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset) const {
   return GetNearestWidget(aOffset, GetViewManager()->AppUnitsPerDevPixel());
 }
 
-nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const
-{
+nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset,
+                                    const int32_t aAPD) const {
   // aOffset is based on the view's position, which ignores any chrome on
   // attached parent widgets.
 
   // We accumulate the final result in pt
   nsPoint pt(0, 0);
   // The offset currently accumulated at the current APD
-  nsPoint docPt(0,0);
+  nsPoint docPt(0, 0);
   const nsView* v = this;
   nsViewManager* currVM = v->GetViewManager();
   int32_t currAPD = currVM->AppUnitsPerDevPixel();
-  for ( ; v && !v->HasWidget(); v = v->GetParent()) {
+  for (; v && !v->HasWidget(); v = v->GetParent()) {
     nsViewManager* newVM = v->GetViewManager();
     if (newVM != currVM) {
       int32_t newAPD = newVM->AppUnitsPerDevPixel();
@@ -948,15 +890,13 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const
   return v->GetWidget();
 }
 
-bool nsView::IsRoot() const
-{
-  NS_ASSERTION(mViewManager != nullptr," View manager is null in nsView::IsRoot()");
+bool nsView::IsRoot() const {
+  NS_ASSERTION(mViewManager != nullptr,
+               " View manager is null in nsView::IsRoot()");
   return mViewManager->GetRootView() == this;
 }
 
-nsRect
-nsView::GetBoundsInParentUnits() const
-{
+nsRect nsView::GetBoundsInParentUnits() const {
   nsView* parent = GetParent();
   nsViewManager* VM = GetViewManager();
   if (this != VM->GetRootView() || !parent) {
@@ -967,34 +907,26 @@ nsView::GetBoundsInParentUnits() const
   return mDimBounds.ScaleToOtherAppUnitsRoundOut(ourAPD, parentAPD);
 }
 
-nsPoint
-nsView::ConvertFromParentCoords(nsPoint aPt) const
-{
+nsPoint nsView::ConvertFromParentCoords(nsPoint aPt) const {
   const nsView* parent = GetParent();
   if (parent) {
     aPt = aPt.ScaleToOtherAppUnits(
-      parent->GetViewManager()->AppUnitsPerDevPixel(),
-      GetViewManager()->AppUnitsPerDevPixel());
+        parent->GetViewManager()->AppUnitsPerDevPixel(),
+        GetViewManager()->AppUnitsPerDevPixel());
   }
   aPt -= GetPosition();
   return aPt;
 }
 
-static bool
-IsPopupWidget(nsIWidget* aWidget)
-{
+static bool IsPopupWidget(nsIWidget* aWidget) {
   return (aWidget->WindowType() == eWindowType_popup);
 }
 
-nsIPresShell*
-nsView::GetPresShell()
-{
+nsIPresShell* nsView::GetPresShell() {
   return GetViewManager()->GetPresShell();
 }
 
-bool
-nsView::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y)
-{
+bool nsView::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && IsPopupWidget(aWidget)) {
     pm->PopupMoved(mFrame, nsIntPoint(x, y));
@@ -1004,9 +936,8 @@ nsView::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y)
   return false;
 }
 
-bool
-nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
-{
+bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
+                           int32_t aHeight) {
   // The root view may not be set if this is the resize associated with
   // window creation
   SetForcedRepaint(true);
@@ -1040,9 +971,7 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
   return false;
 }
 
-bool
-nsView::RequestWindowClose(nsIWidget* aWidget)
-{
+bool nsView::RequestWindowClose(nsIWidget* aWidget) {
   if (mFrame && IsPopupWidget(aWidget) && mFrame->IsMenuPopupFrame()) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
@@ -1054,16 +983,12 @@ nsView::RequestWindowClose(nsIWidget* aWidget)
   return false;
 }
 
-void
-nsView::WillPaintWindow(nsIWidget* aWidget)
-{
+void nsView::WillPaintWindow(nsIWidget* aWidget) {
   RefPtr<nsViewManager> vm = mViewManager;
   vm->WillPaintWindow(aWidget);
 }
 
-bool
-nsView::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion)
-{
+bool nsView::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion) {
   NS_ASSERTION(this == nsView::GetViewFor(aWidget), "wrong view for widget?");
 
   RefPtr<nsViewManager> vm = mViewManager;
@@ -1071,18 +996,14 @@ nsView::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion)
   return result;
 }
 
-void
-nsView::DidPaintWindow()
-{
+void nsView::DidPaintWindow() {
   RefPtr<nsViewManager> vm = mViewManager;
   vm->DidPaintWindow();
 }
 
-void
-nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
-                           const TimeStamp& aCompositeStart,
-                           const TimeStamp& aCompositeEnd)
-{
+void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
+                                const TimeStamp& aCompositeStart,
+                                const TimeStamp& aCompositeEnd) {
   nsIPresShell* presShell = mViewManager->GetPresShell();
   if (presShell) {
     nsAutoScriptBlocker scriptBlocker;
@@ -1103,27 +1024,25 @@ nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
     if (timelines && timelines->HasConsumer(docShell)) {
-      timelines->AddMarkerForDocShell(docShell,
-        MakeUnique<CompositeTimelineMarker>(aCompositeStart, MarkerTracingType::START));
-      timelines->AddMarkerForDocShell(docShell,
-        MakeUnique<CompositeTimelineMarker>(aCompositeEnd, MarkerTracingType::END));
+      timelines->AddMarkerForDocShell(
+          docShell, MakeUnique<CompositeTimelineMarker>(
+                        aCompositeStart, MarkerTracingType::START));
+      timelines->AddMarkerForDocShell(
+          docShell, MakeUnique<CompositeTimelineMarker>(
+                        aCompositeEnd, MarkerTracingType::END));
     }
   }
 }
 
-void
-nsView::RequestRepaint()
-{
+void nsView::RequestRepaint() {
   nsIPresShell* presShell = mViewManager->GetPresShell();
   if (presShell) {
     presShell->ScheduleViewManagerFlush();
   }
 }
 
-nsEventStatus
-nsView::HandleEvent(WidgetGUIEvent* aEvent,
-                    bool aUseAttachedEvents)
-{
+nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent,
+                                  bool aUseAttachedEvents) {
   MOZ_ASSERT(nullptr != aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
@@ -1131,8 +1050,7 @@ nsView::HandleEvent(WidgetGUIEvent* aEvent,
   if (aUseAttachedEvents) {
     nsIWidgetListener* listener = aEvent->mWidget->GetAttachedWidgetListener();
     view = listener ? listener->GetView() : nullptr;
-  }
-  else {
+  } else {
     view = GetViewFor(aEvent->mWidget);
   }
 
@@ -1144,8 +1062,7 @@ nsView::HandleEvent(WidgetGUIEvent* aEvent,
   return result;
 }
 
-bool
-nsView::IsPrimaryFramePaintSuppressed()
-{
-  return sShowPreviousPage && mFrame && mFrame->PresShell()->IsPaintingSuppressed();
+bool nsView::IsPrimaryFramePaintSuppressed() {
+  return sShowPreviousPage && mFrame &&
+         mFrame->PresShell()->IsPaintingSuppressed();
 }

@@ -21,21 +21,18 @@ struct nsWidgetInitData;
 
 namespace mozilla {
 class WebShellWindowTimerCallback;
-} // namespace mozilla
+}  // namespace mozilla
 
 class nsWebShellWindow final : public nsXULWindow,
-                               public nsIWebProgressListener
-{
-public:
-
+                               public nsIWebProgressListener {
+ public:
   // The implementation of non-refcounted nsIWidgetListener, which would hold a
   // strong reference on stack before calling nsWebShellWindow's
   // MOZ_CAN_RUN_SCRIPT methods.
-  class WidgetListenerDelegate : public nsIWidgetListener
-  {
-  public:
+  class WidgetListenerDelegate : public nsIWidgetListener {
+   public:
     explicit WidgetListenerDelegate(nsWebShellWindow* aWebShellWindow)
-      : mWebShellWindow(aWebShellWindow) {}
+        : mWebShellWindow(aWebShellWindow) {}
 
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual nsIXULWindow* GetXULWindow() override;
@@ -44,7 +41,8 @@ public:
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) override;
+    virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
+                               int32_t aHeight) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual bool RequestWindowClose(nsIWidget* aWidget) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -60,8 +58,7 @@ public:
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void OSToolbarButtonPressed() override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual bool ZLevelChanged(bool aImmediate,
-                               nsWindowZ *aPlacement,
+    virtual bool ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
                                nsIWidget* aRequestBelow,
                                nsIWidget** aActualBelow) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -69,7 +66,7 @@ public:
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void WindowDeactivated() override;
 
-  private:
+   private:
     // The lifetime of WidgetListenerDelegate is bound to nsWebShellWindow so
     // we just use a raw pointer here.
     nsWebShellWindow* mWebShellWindow;
@@ -81,12 +78,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsWebShellWindow methods...
-  nsresult Initialize(nsIXULWindow * aParent, nsIXULWindow * aOpener,
-                      nsIURI* aUrl,
-                      int32_t aInitialWidth, int32_t aInitialHeight,
-                      bool aIsHiddenWindow,
-                      nsITabParent *aOpeningTab,
-                      mozIDOMWindowProxy *aOpenerWIndow,
+  nsresult Initialize(nsIXULWindow* aParent, nsIXULWindow* aOpener,
+                      nsIURI* aUrl, int32_t aInitialWidth,
+                      int32_t aInitialHeight, bool aIsHiddenWindow,
+                      nsITabParent* aOpeningTab,
+                      mozIDOMWindowProxy* aOpenerWIndow,
                       nsWidgetInitData& widgetInitData);
 
   nsresult Toolbar();
@@ -112,25 +108,25 @@ public:
   MOZ_CAN_RUN_SCRIPT void OcclusionStateChanged(bool aIsFullyOccluded);
   MOZ_CAN_RUN_SCRIPT void OSToolbarButtonPressed();
   MOZ_CAN_RUN_SCRIPT
-  bool ZLevelChanged(bool aImmediate, nsWindowZ *aPlacement,
+  bool ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
                      nsIWidget* aRequestBelow, nsIWidget** aActualBelow);
   MOZ_CAN_RUN_SCRIPT void WindowActivated();
   MOZ_CAN_RUN_SCRIPT void WindowDeactivated();
 
-protected:
+ protected:
   friend class mozilla::WebShellWindowTimerCallback;
 
   virtual ~nsWebShellWindow();
 
-  bool                     ExecuteCloseHandler();
-  void                     ConstrainToOpenerScreen(int32_t* aX, int32_t* aY);
+  bool ExecuteCloseHandler();
+  void ConstrainToOpenerScreen(int32_t* aX, int32_t* aY);
 
-  nsCOMPtr<nsITimer>      mSPTimer;
-  mozilla::Mutex          mSPTimerLock;
-  WidgetListenerDelegate  mWidgetListenerDelegate;
+  nsCOMPtr<nsITimer> mSPTimer;
+  mozilla::Mutex mSPTimerLock;
+  WidgetListenerDelegate mWidgetListenerDelegate;
 
-  void        SetPersistenceTimer(uint32_t aDirtyFlags);
-  void        FirePersistenceTimer();
+  void SetPersistenceTimer(uint32_t aDirtyFlags);
+  void FirePersistenceTimer();
 };
 
 #endif /* nsWebShellWindow_h__ */

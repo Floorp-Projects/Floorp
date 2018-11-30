@@ -96,8 +96,7 @@ bool OggCodecState::IsValidVorbisTagName(nsCString& aName) {
 }
 
 bool OggCodecState::AddVorbisComment(UniquePtr<MetadataTags>& aTags,
-                                     const char* aComment,
-                                     uint32_t aLength) {
+                                     const char* aComment, uint32_t aLength) {
   const char* div = (const char*)memchr(aComment, '=', aLength);
   if (!div) {
     LOG(LogLevel::Debug, ("Skipping comment: no separator"));
@@ -1226,9 +1225,7 @@ nsresult FlacState::PageIn(ogg_page* aPage) {
 }
 
 // Return a hash table with tag metadata.
-UniquePtr<MetadataTags> FlacState::GetTags() {
-  return mParser.GetTags();
-}
+UniquePtr<MetadataTags> FlacState::GetTags() { return mParser.GetTags(); }
 
 const TrackInfo* FlacState::GetInfo() const { return &mParser.mInfo; }
 

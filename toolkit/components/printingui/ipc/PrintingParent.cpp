@@ -29,19 +29,17 @@ using namespace mozilla::layout;
 
 namespace mozilla {
 namespace embedding {
-mozilla::ipc::IPCResult
-PrintingParent::RecvShowProgress(PBrowserParent* parent,
-                                 PPrintProgressDialogParent* printProgressDialog,
-                                 PRemotePrintJobParent* remotePrintJob,
-                                 const bool& isForPrinting)
-{
+mozilla::ipc::IPCResult PrintingParent::RecvShowProgress(
+    PBrowserParent* parent, PPrintProgressDialogParent* printProgressDialog,
+    PRemotePrintJobParent* remotePrintJob, const bool& isForPrinting) {
   bool notifyOnOpen = false;
 
   nsCOMPtr<nsPIDOMWindowOuter> parentWin = DOMWindowFromBrowserParent(parent);
-  nsCOMPtr<nsIPrintingPromptService> pps(do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
+  nsCOMPtr<nsIPrintingPromptService> pps(
+      do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
 
   PrintProgressDialogParent* dialogParent =
-    static_cast<PrintProgressDialogParent*>(printProgressDialog);
+      static_cast<PrintProgressDialogParent*>(printProgressDialog);
   nsCOMPtr<nsIObserver> observer = dialogParent;
 
   nsCOMPtr<nsIWebProgressListener> printProgressListener;
@@ -49,11 +47,9 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
 
   nsresult rv = NS_ERROR_INVALID_ARG;
   if (parentWin && pps) {
-    rv = pps->ShowProgress(parentWin, nullptr, nullptr, observer,
-                           isForPrinting,
+    rv = pps->ShowProgress(parentWin, nullptr, nullptr, observer, isForPrinting,
                            getter_AddRefs(printProgressListener),
-                           getter_AddRefs(printProgressParams),
-                           &notifyOnOpen);
+                           getter_AddRefs(printProgressParams), &notifyOnOpen);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -86,11 +82,9 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
   return IPC_OK();
 }
 
-nsresult
-PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
-                                const PrintData& aData,
-                                PrintData* aResult)
-{
+nsresult PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
+                                         const PrintData& aData,
+                                         PrintData* aResult) {
   // If aParent is null this call is just being used to get print settings from
   // the printer for print preview.
   bool isPrintPreview = !aParent;
@@ -102,7 +96,8 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
     }
   }
 
-  nsCOMPtr<nsIPrintingPromptService> pps(do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
+  nsCOMPtr<nsIPrintingPromptService> pps(
+      do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
   if (!pps) {
     return NS_ERROR_FAILURE;
   }
@@ -115,7 +110,7 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   // Use the existing RemotePrintJob and its settings, if we have one, to make
   // sure they stay current.
   RemotePrintJobParent* remotePrintJob =
-    static_cast<RemotePrintJobParent*>(aData.remotePrintJobParent());
+      static_cast<RemotePrintJobParent*>(aData.remotePrintJobParent());
   nsCOMPtr<nsIPrintSettings> settings;
   nsresult rv;
   if (remotePrintJob) {
@@ -174,11 +169,9 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   return rv;
 }
 
-mozilla::ipc::IPCResult
-PrintingParent::RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
-                                    PBrowserParent* aParent,
-                                    const PrintData& aData)
-{
+mozilla::ipc::IPCResult PrintingParent::RecvShowPrintDialog(
+    PPrintSettingsDialogParent* aDialog, PBrowserParent* aParent,
+    const PrintData& aData) {
   PrintData resultData;
   nsresult rv = ShowPrintDialog(aParent, aData, &resultData);
 
@@ -187,19 +180,20 @@ PrintingParent::RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
   // with an async message which frees the child process from
   // its nested event loop.
   if (NS_FAILED(rv)) {
-    mozilla::Unused << PPrintingParent::PPrintSettingsDialogParent::Send__delete__(aDialog, rv);
+    mozilla::Unused
+        << PPrintingParent::PPrintSettingsDialogParent::Send__delete__(aDialog,
+                                                                       rv);
   } else {
-    mozilla::Unused << PPrintingParent::PPrintSettingsDialogParent::Send__delete__(aDialog, resultData);
+    mozilla::Unused
+        << PPrintingParent::PPrintSettingsDialogParent::Send__delete__(
+               aDialog, resultData);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PrintingParent::RecvSavePrintSettings(const PrintData& aData,
-                                      const bool& aUsePrinterNamePrefix,
-                                      const uint32_t& aFlags,
-                                      nsresult* aResult)
-{
+mozilla::ipc::IPCResult PrintingParent::RecvSavePrintSettings(
+    const PrintData& aData, const bool& aUsePrinterNamePrefix,
+    const uint32_t& aFlags, nsresult* aResult) {
   nsCOMPtr<nsIPrintSettings> settings;
   *aResult = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
   NS_ENSURE_SUCCESS(*aResult, IPC_OK());
@@ -207,68 +201,55 @@ PrintingParent::RecvSavePrintSettings(const PrintData& aData,
   *aResult = mPrintSettingsSvc->DeserializeToPrintSettings(aData, settings);
   NS_ENSURE_SUCCESS(*aResult, IPC_OK());
 
-  *aResult = mPrintSettingsSvc->SavePrintSettingsToPrefs(settings,
-                                                        aUsePrinterNamePrefix,
-                                                        aFlags);
+  *aResult = mPrintSettingsSvc->SavePrintSettingsToPrefs(
+      settings, aUsePrinterNamePrefix, aFlags);
 
   return IPC_OK();
 }
 
-PPrintProgressDialogParent*
-PrintingParent::AllocPPrintProgressDialogParent()
-{
+PPrintProgressDialogParent* PrintingParent::AllocPPrintProgressDialogParent() {
   PrintProgressDialogParent* actor = new PrintProgressDialogParent();
-  NS_ADDREF(actor); // De-ref'd in the __delete__ handler for
-                    // PrintProgressDialogParent.
+  NS_ADDREF(actor);  // De-ref'd in the __delete__ handler for
+                     // PrintProgressDialogParent.
   return actor;
 }
 
-bool
-PrintingParent::DeallocPPrintProgressDialogParent(PPrintProgressDialogParent* doomed)
-{
+bool PrintingParent::DeallocPPrintProgressDialogParent(
+    PPrintProgressDialogParent* doomed) {
   // We can't just delete the PrintProgressDialogParent since somebody might
   // still be holding a reference to it as nsIObserver, so just decrement the
   // refcount instead.
-  PrintProgressDialogParent* actor = static_cast<PrintProgressDialogParent*>(doomed);
+  PrintProgressDialogParent* actor =
+      static_cast<PrintProgressDialogParent*>(doomed);
   NS_RELEASE(actor);
   return true;
 }
 
-PPrintSettingsDialogParent*
-PrintingParent::AllocPPrintSettingsDialogParent()
-{
+PPrintSettingsDialogParent* PrintingParent::AllocPPrintSettingsDialogParent() {
   return new PrintSettingsDialogParent();
 }
 
-bool
-PrintingParent::DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aDoomed)
-{
+bool PrintingParent::DeallocPPrintSettingsDialogParent(
+    PPrintSettingsDialogParent* aDoomed) {
   delete aDoomed;
   return true;
 }
 
-PRemotePrintJobParent*
-PrintingParent::AllocPRemotePrintJobParent()
-{
+PRemotePrintJobParent* PrintingParent::AllocPRemotePrintJobParent() {
   MOZ_ASSERT_UNREACHABLE("No default constructors for implementations.");
   return nullptr;
 }
 
-bool
-PrintingParent::DeallocPRemotePrintJobParent(PRemotePrintJobParent* aDoomed)
-{
+bool PrintingParent::DeallocPRemotePrintJobParent(
+    PRemotePrintJobParent* aDoomed) {
   delete aDoomed;
   return true;
 }
 
-void
-PrintingParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-}
+void PrintingParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
-nsPIDOMWindowOuter*
-PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
-{
+nsPIDOMWindowOuter* PrintingParent::DOMWindowFromBrowserParent(
+    PBrowserParent* parent) {
   if (!parent) {
     return nullptr;
   }
@@ -296,11 +277,9 @@ PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
   return parentWin;
 }
 
-nsresult
-PrintingParent::SerializeAndEnsureRemotePrintJob(
-  nsIPrintSettings* aPrintSettings, nsIWebProgressListener* aListener,
-  layout::RemotePrintJobParent* aRemotePrintJob, PrintData* aPrintData)
-{
+nsresult PrintingParent::SerializeAndEnsureRemotePrintJob(
+    nsIPrintSettings* aPrintSettings, nsIWebProgressListener* aListener,
+    layout::RemotePrintJobParent* aRemotePrintJob, PrintData* aPrintData) {
   MOZ_ASSERT(aPrintData);
 
   nsresult rv;
@@ -327,7 +306,7 @@ PrintingParent::SerializeAndEnsureRemotePrintJob(
   } else {
     remotePrintJob = new RemotePrintJobParent(aPrintSettings);
     aPrintData->remotePrintJobParent() =
-      SendPRemotePrintJobConstructor(remotePrintJob);
+        SendPRemotePrintJobConstructor(remotePrintJob);
   }
   if (aListener) {
     remotePrintJob->RegisterListener(aListener);
@@ -336,17 +315,12 @@ PrintingParent::SerializeAndEnsureRemotePrintJob(
   return NS_OK;
 }
 
-PrintingParent::PrintingParent()
-{
-  mPrintSettingsSvc =
-    do_GetService("@mozilla.org/gfx/printsettings-service;1");
+PrintingParent::PrintingParent() {
+  mPrintSettingsSvc = do_GetService("@mozilla.org/gfx/printsettings-service;1");
   MOZ_ASSERT(mPrintSettingsSvc);
 }
 
-PrintingParent::~PrintingParent()
-{
-}
+PrintingParent::~PrintingParent() {}
 
-} // namespace embedding
-} // namespace mozilla
-
+}  // namespace embedding
+}  // namespace mozilla

@@ -34,12 +34,9 @@ using namespace mozilla::dom;
 
 namespace {
 
-nsresult
-LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
-                           bool aIsDirectory,
-                           nsIFile* aFile,
-                           nsISupports** aResult)
-{
+nsresult LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
+                                    bool aIsDirectory, nsIFile* aFile,
+                                    nsISupports** aResult) {
   if (aIsDirectory) {
 #ifdef DEBUG
     bool isDir;
@@ -59,25 +56,21 @@ LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
   return NS_OK;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 /**
  * A runnable to dispatch from the main thread to the main thread to display
  * the file picker while letting the showAsync method return right away.
-*/
-class nsBaseFilePicker::AsyncShowFilePicker : public mozilla::Runnable
-{
-public:
+ */
+class nsBaseFilePicker::AsyncShowFilePicker : public mozilla::Runnable {
+ public:
   AsyncShowFilePicker(nsBaseFilePicker* aFilePicker,
                       nsIFilePickerShownCallback* aCallback)
-    : mozilla::Runnable("AsyncShowFilePicker")
-    , mFilePicker(aFilePicker)
-    , mCallback(aCallback)
-  {
-  }
+      : mozilla::Runnable("AsyncShowFilePicker"),
+        mFilePicker(aFilePicker),
+        mCallback(aCallback) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     NS_ASSERTION(NS_IsMainThread(),
                  "AsyncShowFilePicker should be on the main thread!");
 
@@ -96,27 +89,23 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<nsBaseFilePicker> mFilePicker;
   RefPtr<nsIFilePickerShownCallback> mCallback;
 };
 
-class nsBaseFilePickerEnumerator : public nsSimpleEnumerator
-{
-public:
+class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
+ public:
   nsBaseFilePickerEnumerator(nsPIDOMWindowOuter* aParent,
-                             nsISimpleEnumerator* iterator,
-                             int16_t aMode)
-    : mIterator(iterator)
-    , mParent(aParent->GetCurrentInnerWindow())
-    , mMode(aMode)
-  {}
+                             nsISimpleEnumerator* iterator, int16_t aMode)
+      : mIterator(iterator),
+        mParent(aParent->GetCurrentInnerWindow()),
+        mMode(aMode) {}
 
   const nsID& DefaultInterface() override { return NS_GET_IID(nsIFile); }
 
   NS_IMETHOD
-  GetNext(nsISupports** aResult) override
-  {
+  GetNext(nsISupports** aResult) override {
     nsCOMPtr<nsISupports> tmp;
     nsresult rv = mIterator->GetNext(getter_AddRefs(tmp));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -130,48 +119,37 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    return LocalFileToDirectoryOrBlob(mParent,
-                                      mMode == nsIFilePicker::modeGetFolder,
-                                      localFile,
-                                      aResult);
+    return LocalFileToDirectoryOrBlob(
+        mParent, mMode == nsIFilePicker::modeGetFolder, localFile, aResult);
   }
 
   NS_IMETHOD
-  HasMoreElements(bool* aResult) override
-  {
+  HasMoreElements(bool* aResult) override {
     return mIterator->HasMoreElements(aResult);
   }
 
-private:
+ private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   int16_t mMode;
 };
 
 nsBaseFilePicker::nsBaseFilePicker()
-  : mAddToRecentDocs(true)
-  , mMode(nsIFilePicker::modeOpen)
-{
+    : mAddToRecentDocs(true), mMode(nsIFilePicker::modeOpen) {}
 
-}
-
-nsBaseFilePicker::~nsBaseFilePicker()
-{
-
-}
+nsBaseFilePicker::~nsBaseFilePicker() {}
 
 NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
-                                     const nsAString& aTitle,
-                                     int16_t aMode)
-{
-  MOZ_ASSERT(aParent, "Null parent passed to filepicker, no file "
-                  "picker for you!");
+                                     const nsAString& aTitle, int16_t aMode) {
+  MOZ_ASSERT(aParent,
+             "Null parent passed to filepicker, no file "
+             "picker for you!");
 
   mParent = nsPIDOMWindowOuter::From(aParent);
 
-  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(mParent->GetOuterWindow());
+  nsCOMPtr<nsIWidget> widget =
+      WidgetUtils::DOMWindowToWidget(mParent->GetOuterWindow());
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
 
   mMode = aMode;
   InitNative(widget, aTitle);
@@ -180,31 +158,27 @@ NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::Open(nsIFilePickerShownCallback *aCallback)
-{
+nsBaseFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
   nsCOMPtr<nsIRunnable> filePickerEvent =
-    new AsyncShowFilePicker(this, aCallback);
+      new AsyncShowFilePicker(this, aCallback);
   return NS_DispatchToMainThread(filePickerEvent);
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::AppendFilters(int32_t aFilterMask)
-{
+nsBaseFilePicker::AppendFilters(int32_t aFilterMask) {
   nsCOMPtr<nsIStringBundleService> stringService =
-    mozilla::services::GetStringBundleService();
-  if (!stringService)
-    return NS_ERROR_FAILURE;
+      mozilla::services::GetStringBundleService();
+  if (!stringService) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> titleBundle, filterBundle;
 
   nsresult rv = stringService->CreateBundle(FILEPICKER_TITLES,
                                             getter_AddRefs(titleBundle));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  rv = stringService->CreateBundle(FILEPICKER_FILTERS, getter_AddRefs(filterBundle));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+  rv = stringService->CreateBundle(FILEPICKER_FILTERS,
+                                   getter_AddRefs(filterBundle));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   nsAutoString title;
   nsAutoString filter;
@@ -212,37 +186,37 @@ nsBaseFilePicker::AppendFilters(int32_t aFilterMask)
   if (aFilterMask & filterAll) {
     titleBundle->GetStringFromName("allTitle", title);
     filterBundle->GetStringFromName("allFilter", filter);
-    AppendFilter(title,filter);
+    AppendFilter(title, filter);
   }
   if (aFilterMask & filterHTML) {
     titleBundle->GetStringFromName("htmlTitle", title);
     filterBundle->GetStringFromName("htmlFilter", filter);
-    AppendFilter(title,filter);
+    AppendFilter(title, filter);
   }
   if (aFilterMask & filterText) {
     titleBundle->GetStringFromName("textTitle", title);
     filterBundle->GetStringFromName("textFilter", filter);
-    AppendFilter(title,filter);
+    AppendFilter(title, filter);
   }
   if (aFilterMask & filterImages) {
     titleBundle->GetStringFromName("imageTitle", title);
     filterBundle->GetStringFromName("imageFilter", filter);
-    AppendFilter(title,filter);
+    AppendFilter(title, filter);
   }
   if (aFilterMask & filterAudio) {
     titleBundle->GetStringFromName("audioTitle", title);
     filterBundle->GetStringFromName("audioFilter", filter);
-    AppendFilter(title,filter);
+    AppendFilter(title, filter);
   }
   if (aFilterMask & filterVideo) {
     titleBundle->GetStringFromName("videoTitle", title);
     filterBundle->GetStringFromName("videoFilter", filter);
-    AppendFilter(title,filter);
+    AppendFilter(title, filter);
   }
   if (aFilterMask & filterXML) {
     titleBundle->GetStringFromName("xmlTitle", title);
     filterBundle->GetStringFromName("xmlFilter", filter);
-    AppendFilter(title,filter);
+    AppendFilter(title, filter);
   }
   if (aFilterMask & filterXUL) {
     titleBundle->GetStringFromName("xulTitle", title);
@@ -259,29 +233,26 @@ nsBaseFilePicker::AppendFilters(int32_t aFilterMask)
 }
 
 // Set the filter index
-NS_IMETHODIMP nsBaseFilePicker::GetFilterIndex(int32_t *aFilterIndex)
-{
+NS_IMETHODIMP nsBaseFilePicker::GetFilterIndex(int32_t* aFilterIndex) {
   *aFilterIndex = 0;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseFilePicker::SetFilterIndex(int32_t aFilterIndex)
-{
+NS_IMETHODIMP nsBaseFilePicker::SetFilterIndex(int32_t aFilterIndex) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
-{
+NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator** aFiles) {
   NS_ENSURE_ARG_POINTER(aFiles);
-  nsCOMArray <nsIFile> files;
+  nsCOMArray<nsIFile> files;
   nsresult rv;
 
   // if we get into the base class, the platform
   // doesn't implement GetFiles() yet.
   // so we fake it.
-  nsCOMPtr <nsIFile> file;
+  nsCOMPtr<nsIFile> file;
   rv = GetFile(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   files.AppendObject(file);
 
@@ -289,8 +260,7 @@ NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 }
 
 // Set the display directory
-NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
-{
+NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsIFile* aDirectory) {
   // if displaySpecialDirectory has been previously called, let's abort this
   // operation.
   if (!mDisplaySpecialDirectory.IsEmpty()) {
@@ -303,15 +273,13 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
   }
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aDirectory->Clone(getter_AddRefs(directory));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
   mDisplayDirectory = directory;
   return NS_OK;
 }
 
 // Get the display directory
-NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsIFile **aDirectory)
-{
+NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsIFile** aDirectory) {
   *aDirectory = nullptr;
 
   // if displaySpecialDirectory has been previously called, let's abort this
@@ -320,8 +288,7 @@ NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsIFile **aDirectory)
     return NS_OK;
   }
 
-  if (!mDisplayDirectory)
-    return NS_OK;
+  if (!mDisplayDirectory) return NS_OK;
   nsCOMPtr<nsIFile> directory;
   nsresult rv = mDisplayDirectory->Clone(getter_AddRefs(directory));
   if (NS_FAILED(rv)) {
@@ -332,8 +299,8 @@ NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsIFile **aDirectory)
 }
 
 // Set the display special directory
-NS_IMETHODIMP nsBaseFilePicker::SetDisplaySpecialDirectory(const nsAString& aDirectory)
-{
+NS_IMETHODIMP nsBaseFilePicker::SetDisplaySpecialDirectory(
+    const nsAString& aDirectory) {
   // if displayDirectory has been previously called, let's abort this operation.
   if (mDisplayDirectory && mDisplaySpecialDirectory.IsEmpty()) {
     return NS_OK;
@@ -345,55 +312,50 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplaySpecialDirectory(const nsAString& aDir
     return NS_OK;
   }
 
-  return NS_GetSpecialDirectory(NS_ConvertUTF16toUTF8(mDisplaySpecialDirectory).get(),
-                                getter_AddRefs(mDisplayDirectory));
+  return NS_GetSpecialDirectory(
+      NS_ConvertUTF16toUTF8(mDisplaySpecialDirectory).get(),
+      getter_AddRefs(mDisplayDirectory));
 }
 
 // Get the display special directory
-NS_IMETHODIMP nsBaseFilePicker::GetDisplaySpecialDirectory(nsAString& aDirectory)
-{
+NS_IMETHODIMP nsBaseFilePicker::GetDisplaySpecialDirectory(
+    nsAString& aDirectory) {
   aDirectory = mDisplaySpecialDirectory;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetAddToRecentDocs(bool *aFlag)
-{
+nsBaseFilePicker::GetAddToRecentDocs(bool* aFlag) {
   *aFlag = mAddToRecentDocs;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::SetAddToRecentDocs(bool aFlag)
-{
+nsBaseFilePicker::SetAddToRecentDocs(bool aFlag) {
   mAddToRecentDocs = aFlag;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetMode(int16_t* aMode)
-{
+nsBaseFilePicker::GetMode(int16_t* aMode) {
   *aMode = mMode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::SetOkButtonLabel(const nsAString& aLabel)
-{
+nsBaseFilePicker::SetOkButtonLabel(const nsAString& aLabel) {
   mOkButtonLabel = aLabel;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetOkButtonLabel(nsAString& aLabel)
-{
+nsBaseFilePicker::GetOkButtonLabel(nsAString& aLabel) {
   aLabel = mOkButtonLabel;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue)
-{
+nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue) {
   nsCOMPtr<nsIFile> localFile;
   nsresult rv = GetFile(getter_AddRefs(localFile));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -405,21 +367,19 @@ nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue)
 
   auto* innerParent = mParent ? mParent->GetCurrentInnerWindow() : nullptr;
 
-  return LocalFileToDirectoryOrBlob(innerParent,
-                                    mMode == nsIFilePicker::modeGetFolder,
-                                    localFile,
-                                    aValue);
+  return LocalFileToDirectoryOrBlob(
+      innerParent, mMode == nsIFilePicker::modeGetFolder, localFile, aValue);
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue)
-{
+nsBaseFilePicker::GetDomFileOrDirectoryEnumerator(
+    nsISimpleEnumerator** aValue) {
   nsCOMPtr<nsISimpleEnumerator> iter;
   nsresult rv = GetFiles(getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsBaseFilePickerEnumerator> retIter =
-    new nsBaseFilePickerEnumerator(mParent, iter, mMode);
+      new nsBaseFilePickerEnumerator(mParent, iter, mMode);
 
   retIter.forget(aValue);
   return NS_OK;

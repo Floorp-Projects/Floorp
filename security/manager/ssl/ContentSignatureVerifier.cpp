@@ -27,10 +27,8 @@
 #include "mozpkix/pkixtypes.h"
 #include "secerr.h"
 
-NS_IMPL_ISUPPORTS(ContentSignatureVerifier,
-                  nsIContentSignatureVerifier,
-                  nsIInterfaceRequestor,
-                  nsIStreamListener)
+NS_IMPL_ISUPPORTS(ContentSignatureVerifier, nsIContentSignatureVerifier,
+                  nsIInterfaceRequestor, nsIStreamListener)
 
 using namespace mozilla;
 using namespace mozilla::pkix;
@@ -43,10 +41,11 @@ static LazyLogModule gCSVerifierPRLog("ContentSignatureVerifier");
 const nsLiteralCString kPREFIX = NS_LITERAL_CSTRING("Content-Signature:\x00");
 
 NS_IMETHODIMP
-ContentSignatureVerifier::VerifyContentSignature(
-  const nsACString& aData, const nsACString& aCSHeader,
-  const nsACString& aCertChain, const nsACString& aName, bool* _retval)
-{
+ContentSignatureVerifier::VerifyContentSignature(const nsACString& aData,
+                                                 const nsACString& aCSHeader,
+                                                 const nsACString& aCertChain,
+                                                 const nsACString& aName,
+                                                 bool* _retval) {
   NS_ENSURE_ARG(_retval);
   nsresult rv = CreateContext(aData, aCSHeader, aCertChain, aName);
   if (NS_FAILED(rv)) {
@@ -58,23 +57,19 @@ ContentSignatureVerifier::VerifyContentSignature(
     // This failure can have many different reasons but we don't treat it as
     // invalid signature.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 3);
-    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err3);
+    Telemetry::AccumulateCategoricalKeyed(
+        mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err3);
     return rv;
   }
 
   return End(_retval);
 }
 
-bool
-IsNewLine(char16_t c)
-{
-  return c == '\n' || c == '\r';
-}
+bool IsNewLine(char16_t c) { return c == '\n' || c == '\r'; }
 
-nsresult
-ReadChainIntoCertList(const nsACString& aCertChain, CERTCertList* aCertList)
-{
+nsresult ReadChainIntoCertList(const nsACString& aCertChain,
+                               CERTCertList* aCertList) {
   bool inBlock = false;
   bool certFound = false;
 
@@ -101,13 +96,12 @@ ReadChainIntoCertList(const nsACString& aCertChain, CERTCertList* aCertList)
           return rv;
         }
         SECItem der = {
-          siBuffer,
-          BitwiseCast<unsigned char*, const char*>(derString.get()),
-          derString.Length(),
+            siBuffer,
+            BitwiseCast<unsigned char*, const char*>(derString.get()),
+            derString.Length(),
         };
-        UniqueCERTCertificate tmpCert(
-          CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der, nullptr, false,
-                                  true));
+        UniqueCERTCertificate tmpCert(CERT_NewTempCertificate(
+            CERT_GetDefaultCertDB(), &der, nullptr, false, true));
         if (!tmpCert) {
           return NS_ERROR_FAILURE;
         }
@@ -133,11 +127,9 @@ ReadChainIntoCertList(const nsACString& aCertChain, CERTCertList* aCertList)
   return NS_OK;
 }
 
-nsresult
-ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
-                                                const nsACString& aCertChain,
-                                                const nsACString& aName)
-{
+nsresult ContentSignatureVerifier::CreateContextInternal(
+    const nsACString& aData, const nsACString& aCertChain,
+    const nsACString& aName) {
   MOZ_ASSERT(NS_IsMainThread());
 
   UniqueCERTCertList certCertList(CERT_NewCertList());
@@ -159,17 +151,16 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
 
   Input certDER;
   mozilla::pkix::Result result =
-    certDER.Init(BitwiseCast<uint8_t*, unsigned char*>(certSecItem->data),
-                 certSecItem->len);
+      certDER.Init(BitwiseCast<uint8_t*, unsigned char*>(certSecItem->data),
+                   certSecItem->len);
   if (result != Success) {
     return NS_ERROR_FAILURE;
   }
 
   // Get EE certificate fingerprint for telemetry.
   unsigned char fingerprint[SHA256_LENGTH] = {0};
-  SECStatus srv =
-    PK11_HashBuf(SEC_OID_SHA256, fingerprint, certSecItem->data,
-                 AssertedCast<int32_t>(certSecItem->len));
+  SECStatus srv = PK11_HashBuf(SEC_OID_SHA256, fingerprint, certSecItem->data,
+                               AssertedCast<int32_t>(certSecItem->len));
   if (srv != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
@@ -180,12 +171,10 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
 
   // Check the signerCert chain is good
   CSTrustDomain trustDomain(certCertList);
-  result = BuildCertChain(trustDomain, certDER, Now(),
-                          EndEntityOrCA::MustBeEndEntity,
-                          KeyUsage::noParticularKeyUsageRequired,
-                          KeyPurposeId::id_kp_codeSigning,
-                          CertPolicyId::anyPolicy,
-                          nullptr/*stapledOCSPResponse*/);
+  result = BuildCertChain(
+      trustDomain, certDER, Now(), EndEntityOrCA::MustBeEndEntity,
+      KeyUsage::noParticularKeyUsageRequired, KeyPurposeId::id_kp_codeSigning,
+      CertPolicyId::anyPolicy, nullptr /*stapledOCSPResponse*/);
   if (result != Success) {
     // if there was a library error, return an appropriate error
     if (IsFatalError(result)) {
@@ -194,18 +183,21 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
     // otherwise, assume the signature was invalid
     if (result == mozilla::pkix::Result::ERROR_EXPIRED_CERTIFICATE) {
       Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 4);
-      Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err4);
+      Telemetry::AccumulateCategoricalKeyed(
+          mFingerprint,
+          Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err4);
     } else if (result ==
                mozilla::pkix::Result::ERROR_NOT_YET_VALID_CERTIFICATE) {
       Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 5);
-      Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err5);
+      Telemetry::AccumulateCategoricalKeyed(
+          mFingerprint,
+          Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err5);
     } else {
       // Building cert chain failed for some other reason.
       Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 6);
-      Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err6);
+      Telemetry::AccumulateCategoricalKeyed(
+          mFingerprint,
+          Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err6);
     }
     CSVerifier_LOG(("CSVerifier: The supplied chain is bad (%s)\n",
                     MapResultToName(result)));
@@ -216,8 +208,8 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   Input hostnameInput;
 
   result = hostnameInput.Init(
-    BitwiseCast<const uint8_t*, const char*>(aName.BeginReading()),
-    aName.Length());
+      BitwiseCast<const uint8_t*, const char*>(aName.BeginReading()),
+      aName.Length());
   if (result != Success) {
     return NS_ERROR_FAILURE;
   }
@@ -227,8 +219,9 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   if (result != Success) {
     // EE cert isnot valid for the given host name.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 7);
-    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err7);
+    Telemetry::AccumulateCategoricalKeyed(
+        mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err7);
     return NS_ERROR_INVALID_SIGNATURE;
   }
 
@@ -237,8 +230,9 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   // in case we were not able to extract a key
   if (!mKey) {
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 8);
-    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err8);
+    Telemetry::AccumulateCategoricalKeyed(
+        mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err8);
     CSVerifier_LOG(("CSVerifier: unable to extract a key\n"));
     return NS_ERROR_INVALID_SIGNATURE;
   }
@@ -254,9 +248,9 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   // get signature object
   ScopedAutoSECItem signatureItem;
   SECItem rawSignatureItem = {
-    siBuffer,
-    BitwiseCast<unsigned char*, const char*>(rawSignature.get()),
-    rawSignature.Length(),
+      siBuffer,
+      BitwiseCast<unsigned char*, const char*>(rawSignature.get()),
+      rawSignature.Length(),
   };
   // We have a raw ecdsa signature r||s so we have to DER-encode it first
   // Note that we have to check rawSignatureItem->len % 2 here as
@@ -275,20 +269,22 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   SECOidTag oid = SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE;
 
   mCx = UniqueVFYContext(
-    VFY_CreateContext(mKey.get(), &signatureItem, oid, nullptr));
+      VFY_CreateContext(mKey.get(), &signatureItem, oid, nullptr));
   if (!mCx) {
     // Creating context failed.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 9);
-    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err9);
+    Telemetry::AccumulateCategoricalKeyed(
+        mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err9);
     return NS_ERROR_INVALID_SIGNATURE;
   }
 
   if (VFY_Begin(mCx.get()) != SECSuccess) {
     // Creating context failed.
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 9);
-    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err9);
+    Telemetry::AccumulateCategoricalKeyed(
+        mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err9);
     return NS_ERROR_INVALID_SIGNATURE;
   }
 
@@ -300,9 +296,7 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   return UpdateInternal(aData);
 }
 
-nsresult
-ContentSignatureVerifier::DownloadCertChain()
-{
+nsresult ContentSignatureVerifier::DownloadCertChain() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mCertChainURL.IsEmpty()) {
@@ -347,14 +341,14 @@ ContentSignatureVerifier::DownloadCertChain()
   return NS_OK;
 }
 
-// Create a context for content signature verification using CreateContext below.
-// This function doesn't require a cert chain to be passed, but instead aCSHeader
-// must contain an x5u value that is then used to download the cert chain.
+// Create a context for content signature verification using CreateContext
+// below. This function doesn't require a cert chain to be passed, but instead
+// aCSHeader must contain an x5u value that is then used to download the cert
+// chain.
 NS_IMETHODIMP
 ContentSignatureVerifier::CreateContextWithoutCertChain(
-  nsIContentSignatureReceiverCallback *aCallback, const nsACString& aCSHeader,
-  const nsACString& aName)
-{
+    nsIContentSignatureReceiverCallback* aCallback, const nsACString& aCSHeader,
+    const nsACString& aName) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCallback);
   if (mInitialised) {
@@ -384,13 +378,13 @@ NS_IMETHODIMP
 ContentSignatureVerifier::CreateContext(const nsACString& aData,
                                         const nsACString& aCSHeader,
                                         const nsACString& aCertChain,
-                                        const nsACString& aName)
-{
+                                        const nsACString& aName) {
   if (mInitialised) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   mInitialised = true;
-  // The cert chain is given in aCertChain so we don't have to download anything.
+  // The cert chain is given in aCertChain so we don't have to download
+  // anything.
   mHasCertChain = true;
 
   // we get the raw content-signature header here, so first parse aCSHeader
@@ -402,12 +396,11 @@ ContentSignatureVerifier::CreateContext(const nsACString& aData,
   return CreateContextInternal(aData, aCertChain, aName);
 }
 
-nsresult
-ContentSignatureVerifier::UpdateInternal(const nsACString& aData)
-{
+nsresult ContentSignatureVerifier::UpdateInternal(const nsACString& aData) {
   if (!aData.IsEmpty()) {
-    if (VFY_Update(mCx.get(), (const unsigned char*)nsPromiseFlatCString(aData).get(),
-                   aData.Length()) != SECSuccess){
+    if (VFY_Update(mCx.get(),
+                   (const unsigned char*)nsPromiseFlatCString(aData).get(),
+                   aData.Length()) != SECSuccess) {
       return NS_ERROR_INVALID_SIGNATURE;
     }
   }
@@ -418,15 +411,14 @@ ContentSignatureVerifier::UpdateInternal(const nsACString& aData)
  * Add data to the context that shold be verified.
  */
 NS_IMETHODIMP
-ContentSignatureVerifier::Update(const nsACString& aData)
-{
+ContentSignatureVerifier::Update(const nsACString& aData) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // If we didn't create the context yet, bail!
   if (!mHasCertChain) {
     MOZ_ASSERT_UNREACHABLE(
-      "Someone called ContentSignatureVerifier::Update before "
-      "downloading the cert chain.");
+        "Someone called ContentSignatureVerifier::Update before "
+        "downloading the cert chain.");
     return NS_ERROR_FAILURE;
   }
 
@@ -437,8 +429,7 @@ ContentSignatureVerifier::Update(const nsACString& aData)
  * Finish signature verification and return the result in _retval.
  */
 NS_IMETHODIMP
-ContentSignatureVerifier::End(bool* _retval)
-{
+ContentSignatureVerifier::End(bool* _retval) {
   NS_ENSURE_ARG(_retval);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -446,8 +437,8 @@ ContentSignatureVerifier::End(bool* _retval)
   if (!mHasCertChain) {
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 2);
     MOZ_ASSERT_UNREACHABLE(
-      "Someone called ContentSignatureVerifier::End before "
-      "downloading the cert chain.");
+        "Someone called ContentSignatureVerifier::End before "
+        "downloading the cert chain.");
     return NS_ERROR_FAILURE;
   }
 
@@ -456,18 +447,17 @@ ContentSignatureVerifier::End(bool* _retval)
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 0);
   } else {
     Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 1);
-    Telemetry::AccumulateCategoricalKeyed(mFingerprint,
-      Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err1);
+    Telemetry::AccumulateCategoricalKeyed(
+        mFingerprint,
+        Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err1);
   }
   *_retval = result;
 
   return NS_OK;
 }
 
-nsresult
-ContentSignatureVerifier::ParseContentSignatureHeader(
-  const nsACString& aContentSignatureHeader)
-{
+nsresult ContentSignatureVerifier::ParseContentSignatureHeader(
+    const nsACString& aContentSignatureHeader) {
   MOZ_ASSERT(NS_IsMainThread());
   // We only support p384 ecdsa according to spec
   NS_NAMED_LITERAL_CSTRING(signature_var, "p384ecdsa");
@@ -484,7 +474,8 @@ ContentSignatureVerifier::ParseContentSignatureHeader(
 
   for (nsSecurityHeaderDirective* directive = directives->getFirst();
        directive != nullptr; directive = directive->getNext()) {
-    CSVerifier_LOG(("CSVerifier: found directive %s\n", directive->mName.get()));
+    CSVerifier_LOG(
+        ("CSVerifier: found directive %s\n", directive->mName.get()));
     if (directive->mName.Length() == signature_var.Length() &&
         directive->mName.EqualsIgnoreCase(signature_var.get(),
                                           signature_var.Length())) {
@@ -511,7 +502,9 @@ ContentSignatureVerifier::ParseContentSignatureHeader(
 
   // we have to ensure that we found a signature at this point
   if (mSignature.IsEmpty()) {
-    CSVerifier_LOG(("CSVerifier: got a Content-Signature header but didn't find a signature.\n"));
+    CSVerifier_LOG(
+        ("CSVerifier: got a Content-Signature header but didn't find a "
+         "signature.\n"));
     return NS_ERROR_FAILURE;
   }
 
@@ -528,16 +521,15 @@ ContentSignatureVerifier::ParseContentSignatureHeader(
 
 NS_IMETHODIMP
 ContentSignatureVerifier::OnStartRequest(nsIRequest* aRequest,
-                                         nsISupports* aContext)
-{
+                                         nsISupports* aContext) {
   MOZ_ASSERT(NS_IsMainThread());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ContentSignatureVerifier::OnStopRequest(nsIRequest* aRequest,
-                                        nsISupports* aContext, nsresult aStatus)
-{
+                                        nsISupports* aContext,
+                                        nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIContentSignatureReceiverCallback> callback;
   callback.swap(mCallback);
@@ -578,8 +570,7 @@ NS_IMETHODIMP
 ContentSignatureVerifier::OnDataAvailable(nsIRequest* aRequest,
                                           nsISupports* aContext,
                                           nsIInputStream* aInputStream,
-                                          uint64_t aOffset, uint32_t aCount)
-{
+                                          uint64_t aOffset, uint32_t aCount) {
   MOZ_ASSERT(NS_IsMainThread());
   nsAutoCString buffer;
 
@@ -597,7 +588,6 @@ ContentSignatureVerifier::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-ContentSignatureVerifier::GetInterface(const nsIID& uuid, void** result)
-{
+ContentSignatureVerifier::GetInterface(const nsIID& uuid, void** result) {
   return QueryInterface(uuid, result);
 }

@@ -10,11 +10,9 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<BlobImpl>
-EmptyBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
-                           const nsAString& aContentType,
-                           ErrorResult& aRv)
-{
+already_AddRefed<BlobImpl> EmptyBlobImpl::CreateSlice(
+    uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
+    ErrorResult& aRv) {
   MOZ_ASSERT(!aStart && !aLength);
   RefPtr<BlobImpl> impl = new EmptyBlobImpl(aContentType);
 
@@ -25,10 +23,8 @@ EmptyBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   return impl.forget();
 }
 
-void
-EmptyBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                 ErrorResult& aRv)
-{
+void EmptyBlobImpl::CreateInputStream(nsIInputStream** aStream,
+                                      ErrorResult& aRv) {
   if (NS_WARN_IF(!aStream)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -41,5 +37,5 @@ EmptyBlobImpl::CreateInputStream(nsIInputStream** aStream,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

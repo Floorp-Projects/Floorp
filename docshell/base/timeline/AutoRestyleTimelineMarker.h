@@ -14,23 +14,22 @@ class nsIDocShell;
 
 namespace mozilla {
 
-class MOZ_RAII AutoRestyleTimelineMarker
-{
+class MOZ_RAII AutoRestyleTimelineMarker {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   RefPtr<nsIDocShell> mDocShell;
   bool mIsAnimationOnly;
 
-public:
+ public:
   AutoRestyleTimelineMarker(nsIDocShell* aDocShell,
                             bool aIsAnimationOnly
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~AutoRestyleTimelineMarker();
 
   AutoRestyleTimelineMarker(const AutoRestyleTimelineMarker& aOther) = delete;
   void operator=(const AutoRestyleTimelineMarker& aOther) = delete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_AutoRestyleTimelineMarker_h_ */

@@ -13,45 +13,39 @@
 namespace mozilla {
 namespace dom {
 
-nsXULElement*
-NS_NewXULTooltipElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-{
-  RefPtr<XULTooltipElement> tooltip = new XULTooltipElement(std::move(aNodeInfo));
+nsXULElement* NS_NewXULTooltipElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
+  RefPtr<XULTooltipElement> tooltip =
+      new XULTooltipElement(std::move(aNodeInfo));
   NS_ENSURE_SUCCESS(tooltip->Init(), nullptr);
   return tooltip;
 }
 
-nsresult
-XULTooltipElement::Init()
-{
+nsresult XULTooltipElement::Init() {
   // Create the default child label node that will contain the text of the
   // tooltip.
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(nsGkAtoms::description,
-                                                       nullptr,
-                                                       kNameSpaceID_XUL,
-                                                       nsINode::ELEMENT_NODE);
+  nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(
+      nsGkAtoms::description, nullptr, kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
   nsCOMPtr<Element> description;
-  nsresult rv = NS_NewXULElement(getter_AddRefs(description),
-                                 nodeInfo.forget(), dom::NOT_FROM_PARSER);
+  nsresult rv = NS_NewXULElement(getter_AddRefs(description), nodeInfo.forget(),
+                                 dom::NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
   description->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                 NS_LITERAL_STRING("tooltip-label"), false);
+                       NS_LITERAL_STRING("tooltip-label"), false);
   description->SetAttr(kNameSpaceID_None, nsGkAtoms::flex,
-                 NS_LITERAL_STRING("true"), false);
+                       NS_LITERAL_STRING("true"), false);
   ErrorResult error;
   AppendChild(*description, error);
 
   return error.StealNSResult();
 }
 
-nsresult
-XULTooltipElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify)
-{
+nsresult XULTooltipElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                         const nsAttrValue* aValue,
+                                         const nsAttrValue* aOldValue,
+                                         nsIPrincipal* aSubjectPrincipal,
+                                         bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::label) {
     // When the label attribute of this node changes propagate the text down
     // into child description element.
@@ -62,31 +56,26 @@ XULTooltipElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         aValue->ToString(value);
       }
       nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-        "XULTooltipElement::AfterSetAttr",
-        [description, value]() {
-          Element* descriptionElement = description->AsElement();
-          descriptionElement->SetTextContent(value, IgnoreErrors());
-        })
-      );
+          "XULTooltipElement::AfterSetAttr", [description, value]() {
+            Element* descriptionElement = description->AsElement();
+            descriptionElement->SetTextContent(value, IgnoreErrors());
+          }));
     }
   }
   return nsXULElement::AfterSetAttr(aNameSpaceID, aName, aValue, aOldValue,
                                     aSubjectPrincipal, aNotify);
 }
 
-nsresult
-XULTooltipElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
-{
+nsresult XULTooltipElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   if (aVisitor.mEvent->mMessage == eXULPopupShowing &&
-      aVisitor.mEvent->IsTrusted() &&
-      !aVisitor.mEvent->DefaultPrevented() &&
+      aVisitor.mEvent->IsTrusted() && !aVisitor.mEvent->DefaultPrevented() &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::page, nsGkAtoms::_true,
                   eCaseMatters)) {
     // When the tooltip node has the "page" attribute set to "true" the
     // tooltip text provider is used to find the tooltip text from page where
     // mouse is hovering over.
     nsCOMPtr<nsITooltipTextProvider> textProvider =
-      do_GetService(NS_DEFAULTTOOLTIPTEXTPROVIDER_CONTRACTID);
+        do_GetService(NS_DEFAULTTOOLTIPTEXTPROVIDER_CONTRACTID);
     nsString text;
     nsString direction;
     bool shouldChange = false;
@@ -105,5 +94,5 @@ XULTooltipElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

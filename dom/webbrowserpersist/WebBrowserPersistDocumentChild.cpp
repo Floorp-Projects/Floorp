@@ -16,148 +16,128 @@
 
 namespace mozilla {
 
-WebBrowserPersistDocumentChild::WebBrowserPersistDocumentChild()
-{
-}
+WebBrowserPersistDocumentChild::WebBrowserPersistDocumentChild() {}
 
 WebBrowserPersistDocumentChild::~WebBrowserPersistDocumentChild() = default;
 
-void
-WebBrowserPersistDocumentChild::Start(nsIDocument* aDocument)
-{
-    RefPtr<WebBrowserPersistLocalDocument> doc;
-    if (aDocument) {
-        doc = new WebBrowserPersistLocalDocument(aDocument);
-    }
-    Start(doc);
+void WebBrowserPersistDocumentChild::Start(nsIDocument* aDocument) {
+  RefPtr<WebBrowserPersistLocalDocument> doc;
+  if (aDocument) {
+    doc = new WebBrowserPersistLocalDocument(aDocument);
+  }
+  Start(doc);
 }
 
-void
-WebBrowserPersistDocumentChild::Start(nsIWebBrowserPersistDocument* aDocument)
-{
-    MOZ_ASSERT(!mDocument);
-    if (!aDocument) {
-        SendInitFailure(NS_ERROR_FAILURE);
-        return;
-    }
+void WebBrowserPersistDocumentChild::Start(
+    nsIWebBrowserPersistDocument* aDocument) {
+  MOZ_ASSERT(!mDocument);
+  if (!aDocument) {
+    SendInitFailure(NS_ERROR_FAILURE);
+    return;
+  }
 
-    nsCOMPtr<nsIPrincipal> principal;
-    WebBrowserPersistDocumentAttrs attrs;
-    nsCOMPtr<nsIInputStream> postDataStream;
-#define ENSURE(e) do {           \
-        nsresult rv = (e);       \
-        if (NS_FAILED(rv)) {     \
-            SendInitFailure(rv); \
-            return;              \
-        }                        \
-    } while(0)
-    ENSURE(aDocument->GetIsPrivate(&(attrs.isPrivate())));
-    ENSURE(aDocument->GetDocumentURI(attrs.documentURI()));
-    ENSURE(aDocument->GetBaseURI(attrs.baseURI()));
-    ENSURE(aDocument->GetContentType(attrs.contentType()));
-    ENSURE(aDocument->GetCharacterSet(attrs.characterSet()));
-    ENSURE(aDocument->GetTitle(attrs.title()));
-    ENSURE(aDocument->GetReferrer(attrs.referrer()));
-    ENSURE(aDocument->GetContentDisposition(attrs.contentDisposition()));
-    ENSURE(aDocument->GetCacheKey(&(attrs.cacheKey())));
-    ENSURE(aDocument->GetPersistFlags(&(attrs.persistFlags())));
+  nsCOMPtr<nsIPrincipal> principal;
+  WebBrowserPersistDocumentAttrs attrs;
+  nsCOMPtr<nsIInputStream> postDataStream;
+#define ENSURE(e)          \
+  do {                     \
+    nsresult rv = (e);     \
+    if (NS_FAILED(rv)) {   \
+      SendInitFailure(rv); \
+      return;              \
+    }                      \
+  } while (0)
+  ENSURE(aDocument->GetIsPrivate(&(attrs.isPrivate())));
+  ENSURE(aDocument->GetDocumentURI(attrs.documentURI()));
+  ENSURE(aDocument->GetBaseURI(attrs.baseURI()));
+  ENSURE(aDocument->GetContentType(attrs.contentType()));
+  ENSURE(aDocument->GetCharacterSet(attrs.characterSet()));
+  ENSURE(aDocument->GetTitle(attrs.title()));
+  ENSURE(aDocument->GetReferrer(attrs.referrer()));
+  ENSURE(aDocument->GetContentDisposition(attrs.contentDisposition()));
+  ENSURE(aDocument->GetCacheKey(&(attrs.cacheKey())));
+  ENSURE(aDocument->GetPersistFlags(&(attrs.persistFlags())));
 
-    ENSURE(aDocument->GetPrincipal(getter_AddRefs(principal)));
-    ENSURE(ipc::PrincipalToPrincipalInfo(principal, &(attrs.principal())));
+  ENSURE(aDocument->GetPrincipal(getter_AddRefs(principal)));
+  ENSURE(ipc::PrincipalToPrincipalInfo(principal, &(attrs.principal())));
 
-    ENSURE(aDocument->GetPostData(getter_AddRefs(postDataStream)));
+  ENSURE(aDocument->GetPostData(getter_AddRefs(postDataStream)));
 #undef ENSURE
 
-    mozilla::ipc::AutoIPCStream autoStream;
-    autoStream.Serialize(postDataStream,
-                         static_cast<mozilla::dom::ContentChild*>(Manager()));
+  mozilla::ipc::AutoIPCStream autoStream;
+  autoStream.Serialize(postDataStream,
+                       static_cast<mozilla::dom::ContentChild*>(Manager()));
 
-    mDocument = aDocument;
-    SendAttributes(attrs, autoStream.TakeOptionalValue());
+  mDocument = aDocument;
+  SendAttributes(attrs, autoStream.TakeOptionalValue());
 }
 
-mozilla::ipc::IPCResult
-WebBrowserPersistDocumentChild::RecvSetPersistFlags(const uint32_t& aNewFlags)
-{
-    mDocument->SetPersistFlags(aNewFlags);
-    return IPC_OK();
+mozilla::ipc::IPCResult WebBrowserPersistDocumentChild::RecvSetPersistFlags(
+    const uint32_t& aNewFlags) {
+  mDocument->SetPersistFlags(aNewFlags);
+  return IPC_OK();
 }
 
 PWebBrowserPersistResourcesChild*
-WebBrowserPersistDocumentChild::AllocPWebBrowserPersistResourcesChild()
-{
-    auto* actor = new WebBrowserPersistResourcesChild();
-    NS_ADDREF(actor);
-    return actor;
+WebBrowserPersistDocumentChild::AllocPWebBrowserPersistResourcesChild() {
+  auto* actor = new WebBrowserPersistResourcesChild();
+  NS_ADDREF(actor);
+  return actor;
 }
 
 mozilla::ipc::IPCResult
-WebBrowserPersistDocumentChild::RecvPWebBrowserPersistResourcesConstructor(PWebBrowserPersistResourcesChild* aActor)
-{
-    RefPtr<WebBrowserPersistResourcesChild> visitor =
-        static_cast<WebBrowserPersistResourcesChild*>(aActor);
-    nsresult rv = mDocument->ReadResources(visitor);
-    if (NS_FAILED(rv)) {
-        // This is a sync failure on the child side but an async
-        // failure on the parent side -- it already got NS_OK from
-        // ReadResources, so the error has to be reported via the
-        // visitor instead.
-        visitor->EndVisit(mDocument, rv);
-    }
-    return IPC_OK();
+WebBrowserPersistDocumentChild::RecvPWebBrowserPersistResourcesConstructor(
+    PWebBrowserPersistResourcesChild* aActor) {
+  RefPtr<WebBrowserPersistResourcesChild> visitor =
+      static_cast<WebBrowserPersistResourcesChild*>(aActor);
+  nsresult rv = mDocument->ReadResources(visitor);
+  if (NS_FAILED(rv)) {
+    // This is a sync failure on the child side but an async
+    // failure on the parent side -- it already got NS_OK from
+    // ReadResources, so the error has to be reported via the
+    // visitor instead.
+    visitor->EndVisit(mDocument, rv);
+  }
+  return IPC_OK();
 }
 
-bool
-WebBrowserPersistDocumentChild::DeallocPWebBrowserPersistResourcesChild(PWebBrowserPersistResourcesChild* aActor)
-{
-    auto* castActor =
-        static_cast<WebBrowserPersistResourcesChild*>(aActor);
-    NS_RELEASE(castActor);
-    return true;
+bool WebBrowserPersistDocumentChild::DeallocPWebBrowserPersistResourcesChild(
+    PWebBrowserPersistResourcesChild* aActor) {
+  auto* castActor = static_cast<WebBrowserPersistResourcesChild*>(aActor);
+  NS_RELEASE(castActor);
+  return true;
 }
 
 PWebBrowserPersistSerializeChild*
 WebBrowserPersistDocumentChild::AllocPWebBrowserPersistSerializeChild(
-            const WebBrowserPersistURIMap& aMap,
-            const nsCString& aRequestedContentType,
-            const uint32_t& aEncoderFlags,
-            const uint32_t& aWrapColumn)
-{
-    auto* actor = new WebBrowserPersistSerializeChild(aMap);
-    NS_ADDREF(actor);
-    return actor;
+    const WebBrowserPersistURIMap& aMap, const nsCString& aRequestedContentType,
+    const uint32_t& aEncoderFlags, const uint32_t& aWrapColumn) {
+  auto* actor = new WebBrowserPersistSerializeChild(aMap);
+  NS_ADDREF(actor);
+  return actor;
 }
 
 mozilla::ipc::IPCResult
 WebBrowserPersistDocumentChild::RecvPWebBrowserPersistSerializeConstructor(
-            PWebBrowserPersistSerializeChild* aActor,
-            const WebBrowserPersistURIMap& aMap,
-            const nsCString& aRequestedContentType,
-            const uint32_t& aEncoderFlags,
-            const uint32_t& aWrapColumn)
-{
-    auto* castActor =
-        static_cast<WebBrowserPersistSerializeChild*>(aActor);
-    // This actor performs the roles of: completion, URI map, and output stream.
-    nsresult rv = mDocument->WriteContent(castActor,
-                                          castActor,
-                                          aRequestedContentType,
-                                          aEncoderFlags,
-                                          aWrapColumn,
-                                          castActor);
-    if (NS_FAILED(rv)) {
-        castActor->OnFinish(mDocument, castActor, aRequestedContentType, rv);
-    }
-    return IPC_OK();
+    PWebBrowserPersistSerializeChild* aActor,
+    const WebBrowserPersistURIMap& aMap, const nsCString& aRequestedContentType,
+    const uint32_t& aEncoderFlags, const uint32_t& aWrapColumn) {
+  auto* castActor = static_cast<WebBrowserPersistSerializeChild*>(aActor);
+  // This actor performs the roles of: completion, URI map, and output stream.
+  nsresult rv =
+      mDocument->WriteContent(castActor, castActor, aRequestedContentType,
+                              aEncoderFlags, aWrapColumn, castActor);
+  if (NS_FAILED(rv)) {
+    castActor->OnFinish(mDocument, castActor, aRequestedContentType, rv);
+  }
+  return IPC_OK();
 }
 
-bool
-WebBrowserPersistDocumentChild::DeallocPWebBrowserPersistSerializeChild(PWebBrowserPersistSerializeChild* aActor)
-{
-    auto* castActor =
-        static_cast<WebBrowserPersistSerializeChild*>(aActor);
-    NS_RELEASE(castActor);
-    return true;
+bool WebBrowserPersistDocumentChild::DeallocPWebBrowserPersistSerializeChild(
+    PWebBrowserPersistSerializeChild* aActor) {
+  auto* castActor = static_cast<WebBrowserPersistSerializeChild*>(aActor);
+  NS_RELEASE(castActor);
+  return true;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -22,14 +22,12 @@
 namespace mozilla {
 namespace dom {
 
-class SimpleGlobalObject : public nsIGlobalObject,
-                           public nsWrapperCache
-{
-public:
+class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
+ public:
   enum class GlobalType {
-    BindingDetail, // Should only be used by DOM bindings code.
+    BindingDetail,  // Should only be used by DOM bindings code.
     WorkerDebuggerSandbox,
-    NotSimpleGlobal // Sentinel to be used by BasicGlobalType.
+    NotSimpleGlobal  // Sentinel to be used by BasicGlobalType.
   };
 
   // Create a new JS global object that can be used to do some work.  This
@@ -48,52 +46,39 @@ public:
   //
   // Note that creating new globals is not cheap and should not be done
   // gratuitously.  Please think carefully before you use this function.
-  static JSObject* Create(GlobalType globalType,
-                          JS::Handle<JS::Value> proto =
-                            JS::UndefinedHandleValue);
+  static JSObject* Create(GlobalType globalType, JS::Handle<JS::Value> proto =
+                                                     JS::UndefinedHandleValue);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SimpleGlobalObject,
                                                          nsIGlobalObject)
 
   // Gets the GlobalType of this SimpleGlobalObject.
-  GlobalType Type() const
-  {
-    return mType;
-  }
+  GlobalType Type() const { return mType; }
 
   // Gets the GlobalType of the SimpleGlobalObject for the given JSObject*, if
   // the given JSObject* is the global corresponding to a SimpleGlobalObject.
   // Oherwise, returns GlobalType::NotSimpleGlobal.
   static GlobalType SimpleGlobalType(JSObject* obj);
 
-  virtual JSObject *GetGlobalJSObject() override
-  {
-    return GetWrapper();
-  }
+  virtual JSObject* GetGlobalJSObject() override { return GetWrapper(); }
 
   virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override
-  {
+                               JS::Handle<JSObject*> aGivenProto) override {
     MOZ_CRASH("SimpleGlobalObject doesn't use DOM bindings!");
   }
 
-private:
-  SimpleGlobalObject(JSObject *global, GlobalType type)
-    : mType(type)
-  {
+ private:
+  SimpleGlobalObject(JSObject* global, GlobalType type) : mType(type) {
     SetWrapper(global);
   }
 
-  virtual ~SimpleGlobalObject()
-  {
-    MOZ_ASSERT(!GetWrapperMaybeDead());
-  }
+  virtual ~SimpleGlobalObject() { MOZ_ASSERT(!GetWrapperMaybeDead()); }
 
   const GlobalType mType;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_SimpleGlobalObject_h__ */

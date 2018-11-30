@@ -22,15 +22,12 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileList)
 
-JSObject*
-FileList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* FileList::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::FileList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-File*
-FileList::Item(uint32_t aIndex) const
-{
+File* FileList::Item(uint32_t aIndex) const {
   if (aIndex >= mFiles.Length()) {
     return nullptr;
   }
@@ -38,24 +35,19 @@ FileList::Item(uint32_t aIndex) const
   return mFiles[aIndex];
 }
 
-File*
-FileList::IndexedGetter(uint32_t aIndex, bool& aFound) const
-{
+File* FileList::IndexedGetter(uint32_t aIndex, bool& aFound) const {
   aFound = aIndex < mFiles.Length();
   return Item(aIndex);
 }
 
-void
-FileList::ToSequence(Sequence<RefPtr<File>>& aSequence,
-                     ErrorResult& aRv) const
-{
+void FileList::ToSequence(Sequence<RefPtr<File>>& aSequence,
+                          ErrorResult& aRv) const {
   MOZ_ASSERT(aSequence.IsEmpty());
   if (mFiles.IsEmpty()) {
     return;
   }
 
-  if (!aSequence.SetLength(mFiles.Length(),
-                           mozilla::fallible_t())) {
+  if (!aSequence.SetLength(mFiles.Length(), mozilla::fallible_t())) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -65,5 +57,5 @@ FileList::ToSequence(Sequence<RefPtr<File>>& aSequence,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

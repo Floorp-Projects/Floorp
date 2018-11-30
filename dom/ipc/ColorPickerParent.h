@@ -13,32 +13,25 @@
 namespace mozilla {
 namespace dom {
 
-class ColorPickerParent : public PColorPickerParent
-{
+class ColorPickerParent : public PColorPickerParent {
  public:
-  ColorPickerParent(const nsString& aTitle,
-                    const nsString& aInitialColor)
-  : mTitle(aTitle)
-  , mInitialColor(aInitialColor)
-  {}
+  ColorPickerParent(const nsString& aTitle, const nsString& aInitialColor)
+      : mTitle(aTitle), mInitialColor(aInitialColor) {}
 
   virtual mozilla::ipc::IPCResult RecvOpen() override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  class ColorPickerShownCallback final
-    : public nsIColorPickerShownCallback
-  {
-  public:
+  class ColorPickerShownCallback final : public nsIColorPickerShownCallback {
+   public:
     explicit ColorPickerShownCallback(ColorPickerParent* aColorPickerParnet)
-      : mColorPickerParent(aColorPickerParnet)
-    {}
+        : mColorPickerParent(aColorPickerParnet) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOLORPICKERSHOWNCALLBACK
 
     void Destroy();
 
-  private:
+   private:
     ~ColorPickerShownCallback() {}
     ColorPickerParent* mColorPickerParent;
   };
@@ -55,7 +48,7 @@ class ColorPickerParent : public PColorPickerParent
   nsString mInitialColor;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ColorPickerParent_h
+#endif  // mozilla_dom_ColorPickerParent_h

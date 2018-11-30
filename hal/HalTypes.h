@@ -46,21 +46,20 @@ enum ProcessPriority {
  * If you pass an unknown process priority, we fatally assert in debug
  * builds and otherwise return "???".
  */
-const char*
-ProcessPriorityToString(ProcessPriority aPriority);
+const char* ProcessPriorityToString(ProcessPriority aPriority);
 
 /**
  * Used by ModifyWakeLock
  */
 enum WakeLockControl {
   WAKE_LOCK_REMOVE_ONE = -1,
-  WAKE_LOCK_NO_CHANGE  = 0,
-  WAKE_LOCK_ADD_ONE    = 1,
+  WAKE_LOCK_NO_CHANGE = 0,
+  WAKE_LOCK_ADD_ONE = 1,
   NUM_WAKE_LOCK
 };
 
-} // namespace hal
-} // namespace mozilla
+}  // namespace hal
+}  // namespace mozilla
 
 namespace IPC {
 
@@ -69,21 +68,16 @@ namespace IPC {
  */
 template <>
 struct ParamTraits<mozilla::hal::WakeLockControl>
-  : public ContiguousEnumSerializer<
-             mozilla::hal::WakeLockControl,
-             mozilla::hal::WAKE_LOCK_REMOVE_ONE,
-             mozilla::hal::NUM_WAKE_LOCK>
-{};
+    : public ContiguousEnumSerializer<mozilla::hal::WakeLockControl,
+                                      mozilla::hal::WAKE_LOCK_REMOVE_ONE,
+                                      mozilla::hal::NUM_WAKE_LOCK> {};
 
 template <>
-struct ParamTraits<mozilla::hal::ProcessPriority>:
-  public ContiguousEnumSerializer<
-           mozilla::hal::ProcessPriority,
-           mozilla::hal::PROCESS_PRIORITY_UNKNOWN,
-           mozilla::hal::NUM_PROCESS_PRIORITY> {
-};
+struct ParamTraits<mozilla::hal::ProcessPriority>
+    : public ContiguousEnumSerializer<mozilla::hal::ProcessPriority,
+                                      mozilla::hal::PROCESS_PRIORITY_UNKNOWN,
+                                      mozilla::hal::NUM_PROCESS_PRIORITY> {};
 
+}  // namespace IPC
 
-} // namespace IPC
-
-#endif // mozilla_hal_Types_h
+#endif  // mozilla_hal_Types_h

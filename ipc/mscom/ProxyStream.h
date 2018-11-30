@@ -17,8 +17,7 @@
 namespace mozilla {
 namespace mscom {
 
-enum class ProxyStreamFlags : uint32_t
-{
+enum class ProxyStreamFlags : uint32_t {
   eDefault = 0,
   // When ePreservable is set on a ProxyStream, its caller *must* call
   // GetPreservableStream() before the ProxyStream is destroyed.
@@ -27,20 +26,17 @@ enum class ProxyStreamFlags : uint32_t
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ProxyStreamFlags);
 
-class ProxyStream final
-{
-public:
-  class MOZ_RAII Environment
-  {
-  public:
+class ProxyStream final {
+ public:
+  class MOZ_RAII Environment {
+   public:
     virtual ~Environment() = default;
     virtual bool Push() = 0;
     virtual bool Pop() = 0;
   };
 
-  class MOZ_RAII DefaultEnvironment : public Environment
-  {
-  public:
+  class MOZ_RAII DefaultEnvironment : public Environment {
+   public:
     bool Push() override { return true; }
     bool Pop() override { return true; }
   };
@@ -60,40 +56,33 @@ public:
   ProxyStream(ProxyStream&& aOther);
   ProxyStream& operator=(ProxyStream&& aOther);
 
-  inline bool IsValid() const
-  {
-    return !(mUnmarshaledProxy && mStream);
-  }
+  inline bool IsValid() const { return !(mUnmarshaledProxy && mStream); }
 
   bool GetInterface(void** aOutInterface);
   const BYTE* GetBuffer(int& aReturnedBufSize) const;
 
   PreservedStreamPtr GetPreservedStream();
 
-  bool operator==(const ProxyStream& aOther) const
-  {
-    return this == &aOther;
-  }
+  bool operator==(const ProxyStream& aOther) const { return this == &aOther; }
 
-private:
+ private:
   RefPtr<IStream> mStream;
-  BYTE*           mGlobalLockedBuf;
-  HGLOBAL         mHGlobal;
-  int             mBufSize;
+  BYTE* mGlobalLockedBuf;
+  HGLOBAL mHGlobal;
+  int mBufSize;
   ProxyUniquePtr<IUnknown> mUnmarshaledProxy;
-  bool            mPreserveStream;
+  bool mPreserveStream;
 };
 
 namespace detail {
 
 template <typename Interface>
-struct EnvironmentSelector
-{
+struct EnvironmentSelector {
   typedef ProxyStream::DefaultEnvironment Type;
 };
 
-} // namespace detail
-} // namespace mscom
-} // namespace mozilla
+}  // namespace detail
+}  // namespace mscom
+}  // namespace mozilla
 
-#endif // mozilla_mscom_ProxyStream_h
+#endif  // mozilla_mscom_ProxyStream_h

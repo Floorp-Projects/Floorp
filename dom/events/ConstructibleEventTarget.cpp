@@ -10,11 +10,10 @@
 namespace mozilla {
 namespace dom {
 
-JSObject*
-ConstructibleEventTarget::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ConstructibleEventTarget::WrapObject(
+    JSContext* cx, JS::Handle<JSObject*> aGivenProto) {
   return EventTarget_Binding::Wrap(cx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

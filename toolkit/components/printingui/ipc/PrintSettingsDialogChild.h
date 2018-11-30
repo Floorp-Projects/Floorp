@@ -9,27 +9,27 @@
 namespace mozilla {
 namespace embedding {
 
-class PrintSettingsDialogChild final : public PPrintSettingsDialogChild
-{
+class PrintSettingsDialogChild final : public PPrintSettingsDialogChild {
   NS_INLINE_DECL_REFCOUNTING(PrintSettingsDialogChild)
 
-public:
+ public:
   MOZ_IMPLICIT PrintSettingsDialogChild();
 
-  virtual mozilla::ipc::IPCResult Recv__delete__(const PrintDataOrNSResult& aData) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(
+      const PrintDataOrNSResult& aData) override;
 
   bool returned() { return mReturned; };
   nsresult result() { return mResult; };
   PrintData data() { return mData; };
 
-private:
+ private:
   virtual ~PrintSettingsDialogChild();
   bool mReturned;
   nsresult mResult;
   PrintData mData;
 };
 
-} // namespace embedding
-} // namespace mozilla
+}  // namespace embedding
+}  // namespace mozilla
 
 #endif

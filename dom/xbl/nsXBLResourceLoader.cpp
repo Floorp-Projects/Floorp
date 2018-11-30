@@ -39,22 +39,19 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXBLResourceLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXBLResourceLoader)
 
-struct nsXBLResource
-{
+struct nsXBLResource {
   nsXBLResource* mNext;
   nsAtom* mType;
   nsString mSrc;
 
-  nsXBLResource(nsAtom* aType, const nsAString& aSrc)
-  {
+  nsXBLResource(nsAtom* aType, const nsAString& aSrc) {
     MOZ_COUNT_CTOR(nsXBLResource);
     mNext = nullptr;
     mType = aType;
     mSrc = aSrc;
   }
 
-  ~nsXBLResource()
-  {
+  ~nsXBLResource() {
     MOZ_COUNT_DTOR(nsXBLResource);
     NS_CONTENT_DELETE_LIST_MEMBER(nsXBLResource, this, mNext);
   }
@@ -62,25 +59,18 @@ struct nsXBLResource
 
 nsXBLResourceLoader::nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,
                                          nsXBLPrototypeResources* aResources)
-:mBinding(aBinding),
- mResources(aResources),
- mResourceList(nullptr),
- mLastResource(nullptr),
- mLoadingResources(false),
- mInLoadResourcesFunc(false),
- mPendingSheets(0),
- mBoundDocument(nullptr)
-{
-}
+    : mBinding(aBinding),
+      mResources(aResources),
+      mResourceList(nullptr),
+      mLastResource(nullptr),
+      mLoadingResources(false),
+      mInLoadResourcesFunc(false),
+      mPendingSheets(0),
+      mBoundDocument(nullptr) {}
 
-nsXBLResourceLoader::~nsXBLResourceLoader()
-{
-  delete mResourceList;
-}
+nsXBLResourceLoader::~nsXBLResourceLoader() { delete mResourceList; }
 
-bool
-nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
-{
+bool nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement) {
   mInLoadResourcesFunc = true;
 
   if (mLoadingResources) {
@@ -97,14 +87,13 @@ nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
   MOZ_ASSERT(cssLoader->GetDocument(), "Loader must have document");
 
-  nsIURI *docURL = doc->GetDocumentURI();
+  nsIURI* docURL = doc->GetDocumentURI();
   nsIPrincipal* docPrincipal = doc->NodePrincipal();
 
   nsCOMPtr<nsIURI> url;
 
   for (nsXBLResource* curr = mResourceList; curr; curr = curr->mNext) {
-    if (curr->mSrc.IsEmpty())
-      continue;
+    if (curr->mSrc.IsEmpty()) continue;
 
     if (NS_FAILED(NS_NewURI(getter_AddRefs(url), curr->mSrc,
                             doc->GetDocumentCharacterSet(), docURL)))
@@ -119,35 +108,29 @@ nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
                                 doc->GetReferrerPolicy(), nullptr,
                                 nsIRequest::LOAD_BACKGROUND, EmptyString(),
                                 getter_AddRefs(req));
-    }
-    else if (curr->mType == nsGkAtoms::stylesheet) {
+    } else if (curr->mType == nsGkAtoms::stylesheet) {
       // Kick off the load of the stylesheet.
 
       // Always load chrome synchronously
       // XXXbz should that still do a content policy check?
       bool chrome;
       nsresult rv;
-      if (NS_SUCCEEDED(url->SchemeIs("chrome", &chrome)) && chrome)
-      {
-        rv = nsContentUtils::GetSecurityManager()->
-          CheckLoadURIWithPrincipal(docPrincipal, url,
-                                    nsIScriptSecurityManager::ALLOW_CHROME);
+      if (NS_SUCCEEDED(url->SchemeIs("chrome", &chrome)) && chrome) {
+        rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
+            docPrincipal, url, nsIScriptSecurityManager::ALLOW_CHROME);
         if (NS_SUCCEEDED(rv)) {
           RefPtr<StyleSheet> sheet;
           rv = cssLoader->LoadSheetSync(url, &sheet);
           NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
-          if (NS_SUCCEEDED(rv))
-          {
+          if (NS_SUCCEEDED(rv)) {
             rv = StyleSheetLoaded(sheet, false, NS_OK);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "Processing the style sheet failed!!!");
+            NS_ASSERTION(NS_SUCCEEDED(rv),
+                         "Processing the style sheet failed!!!");
           }
         }
-      }
-      else
-      {
+      } else {
         rv = cssLoader->LoadSheet(url, false, docPrincipal, nullptr, this);
-        if (NS_SUCCEEDED(rv))
-          ++mPendingSheets;
+        if (NS_SUCCEEDED(rv)) ++mPendingSheets;
       }
     }
   }
@@ -163,10 +146,8 @@ nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
 
 // nsICSSLoaderObserver
 NS_IMETHODIMP
-nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
-                                      bool aWasDeferred,
-                                      nsresult aStatus)
-{
+nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
+                                      nsresult aStatus) {
   if (!mResources) {
     // Our resources got destroyed -- just bail out
     return NS_OK;
@@ -174,8 +155,7 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
 
   mResources->AppendStyleSheet(aSheet);
 
-  if (!mInLoadResourcesFunc)
-    mPendingSheets--;
+  if (!mInLoadResourcesFunc) mPendingSheets--;
 
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
@@ -187,15 +167,13 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
     }
 
     // XXX Check for mPendingScripts when scripts also come online.
-    if (!mInLoadResourcesFunc)
-      NotifyBoundElements();
+    if (!mInLoadResourcesFunc) NotifyBoundElements();
   }
   return NS_OK;
 }
 
-void
-nsXBLResourceLoader::AddResource(nsAtom* aResourceType, const nsAString& aSrc)
-{
+void nsXBLResourceLoader::AddResource(nsAtom* aResourceType,
+                                      const nsAString& aSrc) {
   nsXBLResource* res = new nsXBLResource(aResourceType, aSrc);
   if (!mResourceList)
     mResourceList = res;
@@ -205,21 +183,16 @@ nsXBLResourceLoader::AddResource(nsAtom* aResourceType, const nsAString& aSrc)
   mLastResource = res;
 }
 
-void
-nsXBLResourceLoader::AddResourceListener(nsIContent* aBoundElement)
-{
+void nsXBLResourceLoader::AddResourceListener(nsIContent* aBoundElement) {
   if (aBoundElement) {
     mBoundElements.AppendObject(aBoundElement);
     aBoundElement->OwnerDoc()->BlockOnload();
   }
 }
 
-void
-nsXBLResourceLoader::NotifyBoundElements()
-{
+void nsXBLResourceLoader::NotifyBoundElements() {
   nsXBLService* xblService = nsXBLService::GetInstance();
-  if (!xblService)
-    return;
+  if (!xblService) return;
 
   nsIURI* bindingURI = mBinding->BindingURI();
 
@@ -256,9 +229,7 @@ nsXBLResourceLoader::NotifyBoundElements()
   mResources->ClearLoader();
 }
 
-nsresult
-nsXBLResourceLoader::Write(nsIObjectOutputStream* aStream)
-{
+nsresult nsXBLResourceLoader::Write(nsIObjectOutputStream* aStream) {
   nsresult rv;
 
   for (nsXBLResource* curr = mResourceList; curr; curr = curr->mNext) {

@@ -44,61 +44,51 @@ namespace mozilla {
  * uniquely identifies T, and the Arena method must return the nsPresArena
  * (or a proxy for it) in which the object was allocated.
  */
-template<typename T>
-class ArenaRefPtr
-{
+template <typename T>
+class ArenaRefPtr {
   friend class ::nsPresArena;
 
-public:
-  ArenaRefPtr()
-  {
-    AssertValidType();
-  }
+ public:
+  ArenaRefPtr() { AssertValidType(); }
 
-  template<typename I>
-  MOZ_IMPLICIT ArenaRefPtr(already_AddRefed<I>& aRhs)
-  {
+  template <typename I>
+  MOZ_IMPLICIT ArenaRefPtr(already_AddRefed<I>& aRhs) {
     AssertValidType();
     assign(aRhs);
   }
 
-  template<typename I>
-  MOZ_IMPLICIT ArenaRefPtr(already_AddRefed<I>&& aRhs)
-  {
+  template <typename I>
+  MOZ_IMPLICIT ArenaRefPtr(already_AddRefed<I>&& aRhs) {
     AssertValidType();
     assign(aRhs);
   }
 
-  MOZ_IMPLICIT ArenaRefPtr(T* aRhs)
-  {
+  MOZ_IMPLICIT ArenaRefPtr(T* aRhs) {
     AssertValidType();
     assign(aRhs);
   }
 
-  template<typename I>
-  ArenaRefPtr<T>& operator=(already_AddRefed<I>& aRhs)
-  {
+  template <typename I>
+  ArenaRefPtr<T>& operator=(already_AddRefed<I>& aRhs) {
     assign(aRhs);
     return *this;
   }
 
-  template<typename I>
-  ArenaRefPtr<T>& operator=(already_AddRefed<I>&& aRhs)
-  {
+  template <typename I>
+  ArenaRefPtr<T>& operator=(already_AddRefed<I>&& aRhs) {
     assign(aRhs);
     return *this;
   }
 
-  ArenaRefPtr<T>& operator=(T* aRhs)
-  {
+  ArenaRefPtr<T>& operator=(T* aRhs) {
     assign(aRhs);
     return *this;
   }
 
   ~ArenaRefPtr() { assign(nullptr); }
 
-  operator T*() const & { return get(); }
-  operator T*() const && = delete;
+  operator T*() const& { return get(); }
+  operator T*() const&& = delete;
   explicit operator bool() const { return !!mPtr; }
   bool operator!() const { return !mPtr; }
   T* operator->() const { return mPtr.operator->(); }
@@ -106,7 +96,7 @@ public:
 
   T* get() const { return mPtr; }
 
-private:
+ private:
   void AssertValidType();
 
   /**
@@ -115,30 +105,24 @@ private:
    * method is called by nsPresArena when clearing all registered ArenaRefPtrs
    * so that it can deregister them all at once, avoiding hash table churn.
    */
-  void ClearWithoutDeregistering()
-  {
-    mPtr = nullptr;
-  }
+  void ClearWithoutDeregistering() { mPtr = nullptr; }
 
-  template<typename I>
-  void assign(already_AddRefed<I>& aSmartPtr)
-  {
+  template <typename I>
+  void assign(already_AddRefed<I>& aSmartPtr) {
     RefPtr<T> newPtr(aSmartPtr);
     assignFrom(newPtr);
   }
 
-  template<typename I>
-  void assign(already_AddRefed<I>&& aSmartPtr)
-  {
+  template <typename I>
+  void assign(already_AddRefed<I>&& aSmartPtr) {
     RefPtr<T> newPtr(aSmartPtr);
     assignFrom(newPtr);
   }
 
   void assign(T* aPtr) { assignFrom(aPtr); }
 
-  template<typename I>
-  void assignFrom(I& aPtr)
-  {
+  template <typename I>
+  void assignFrom(I& aPtr) {
     if (aPtr == mPtr) {
       return;
     }
@@ -157,6 +141,6 @@ private:
   RefPtr<T> mPtr;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ArenaRefPtr_h
+#endif  // mozilla_ArenaRefPtr_h

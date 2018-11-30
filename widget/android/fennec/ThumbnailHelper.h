@@ -28,259 +28,240 @@
 namespace mozilla {
 
 class ThumbnailHelper final
-    : public java::ThumbnailHelper::Natives<ThumbnailHelper>
-{
-    ThumbnailHelper() = delete;
+    : public java::ThumbnailHelper::Natives<ThumbnailHelper> {
+  ThumbnailHelper() = delete;
 
-    static already_AddRefed<mozIDOMWindowProxy>
-    GetWindowForTab(int32_t aTabId)
-    {
-        nsAppShell* const appShell = nsAppShell::Get();
-        if (!appShell) {
-            return nullptr;
-        }
-
-        nsCOMPtr<nsIAndroidBrowserApp> browserApp = appShell->GetBrowserApp();
-        if (!browserApp) {
-            return nullptr;
-        }
-
-        nsCOMPtr<mozIDOMWindowProxy> window;
-        nsCOMPtr<nsIBrowserTab> tab;
-
-        if (NS_FAILED(browserApp->GetBrowserTab(aTabId, getter_AddRefs(tab))) ||
-                !tab ||
-                NS_FAILED(tab->GetWindow(getter_AddRefs(window))) ||
-                !window) {
-            return nullptr;
-        }
-
-        return window.forget();
+  static already_AddRefed<mozIDOMWindowProxy> GetWindowForTab(int32_t aTabId) {
+    nsAppShell* const appShell = nsAppShell::Get();
+    if (!appShell) {
+      return nullptr;
     }
 
-    // Decides if we should store thumbnails for a given docshell based on the
-    // presence of a Cache-Control: no-store header and the
-    // "browser.cache.disk_cache_ssl" pref.
-    static bool
-    ShouldStoreThumbnail(nsIDocShell* docShell)
-    {
-        nsCOMPtr<nsIChannel> channel;
-        if (NS_FAILED(docShell->GetCurrentDocumentChannel(
-                getter_AddRefs(channel))) || !channel) {
-            return false;
-        }
-
-        nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-        if (!httpChannel) {
-            // Allow storing non-HTTP thumbnails.
-            return true;
-        }
-
-        // Don't store thumbnails for sites that didn't load or have
-        // Cache-Control: no-store.
-        uint32_t responseStatus = 0;
-        bool isNoStoreResponse = false;
-
-        if (NS_FAILED(httpChannel->GetResponseStatus(&responseStatus)) ||
-                (responseStatus / 100) != 2 ||
-                NS_FAILED(httpChannel->IsNoStoreResponse(&isNoStoreResponse)) ||
-                isNoStoreResponse) {
-            return false;
-        }
-
-        // Deny storage if we're viewing a HTTPS page with a 'Cache-Control'
-        // header having a value that is not 'public', unless enabled by user.
-        nsCOMPtr<nsIURI> uri;
-        bool isHttps = false;
-
-        if (NS_FAILED(channel->GetURI(getter_AddRefs(uri))) ||
-                !uri ||
-                NS_FAILED(uri->SchemeIs("https", &isHttps))) {
-            return false;
-        }
-
-        if (!isHttps ||
-                Preferences::GetBool("browser.cache.disk_cache_ssl", false)) {
-            // Allow storing non-HTTPS thumbnails, and HTTPS ones if enabled by
-            // user.
-            return true;
-        }
-
-        nsAutoCString cacheControl;
-        if (NS_FAILED(httpChannel->GetResponseHeader(
-                NS_LITERAL_CSTRING("Cache-Control"), cacheControl))) {
-            return false;
-        }
-
-        if (cacheControl.IsEmpty() ||
-                cacheControl.LowerCaseEqualsLiteral("public")) {
-            // Allow no cache-control, or public cache-control.
-            return true;
-        }
-        return false;
+    nsCOMPtr<nsIAndroidBrowserApp> browserApp = appShell->GetBrowserApp();
+    if (!browserApp) {
+      return nullptr;
     }
 
-    // Return a non-null nsIDocShell to indicate success.
-    static already_AddRefed<nsIDocShell>
-    GetThumbnailAndDocShell(mozIDOMWindowProxy* aWindow,
-                            jni::ByteBuffer::Param aData,
-                            int32_t aThumbWidth, int32_t aThumbHeight,
-                            const CSSRect& aPageRect, float aZoomFactor)
-    {
-        nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(aWindow);
-        nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
- 
-        if (!docShell) {
-            return nullptr;
-        }
+    nsCOMPtr<mozIDOMWindowProxy> window;
+    nsCOMPtr<nsIBrowserTab> tab;
 
-        RefPtr<nsPresContext> presContext = docShell->GetPresContext();
-        if (!presContext) {
-            return nullptr;
-        }
-
-        uint8_t* const data = static_cast<uint8_t*>(aData->Address());
-        if (!data) {
-            return nullptr;
-        }
-
-        const bool is24bit = !AndroidBridge::Bridge() ||
-                AndroidBridge::Bridge()->GetScreenDepth() == 24;
-        const uint32_t stride = aThumbWidth * (is24bit ? 4 : 2);
-
-        RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForData(
-                data,
-                IntSize(aThumbWidth, aThumbHeight),
-                stride,
-                is24bit ? SurfaceFormat::B8G8R8A8
-                        : SurfaceFormat::R5G6B5_UINT16);
-
-        if (!dt || !dt->IsValid()) {
-            return nullptr;
-        }
-
-        nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
-        RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-        MOZ_ASSERT(context); // checked the draw target above
-
-        context->SetMatrix(context->CurrentMatrix().PreScale(
-                aZoomFactor * float(aThumbWidth) / aPageRect.width,
-                aZoomFactor * float(aThumbHeight) / aPageRect.height));
-
-        const nsRect drawRect(
-                nsPresContext::CSSPixelsToAppUnits(aPageRect.x),
-                nsPresContext::CSSPixelsToAppUnits(aPageRect.y),
-                nsPresContext::CSSPixelsToAppUnits(aPageRect.width),
-                nsPresContext::CSSPixelsToAppUnits(aPageRect.height));
-        const uint32_t renderDocFlags =
-                nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
-                nsIPresShell::RENDER_DOCUMENT_RELATIVE;
-        const nscolor bgColor = NS_RGB(255, 255, 255);
-
-        if (NS_FAILED(presShell->RenderDocument(
-                drawRect, renderDocFlags, bgColor, context))) {
-            return nullptr;
-        }
-
-        if (is24bit) {
-            gfxUtils::ConvertBGRAtoRGBA(data, stride * aThumbHeight);
-        }
-
-        return docShell.forget();
+    if (NS_FAILED(browserApp->GetBrowserTab(aTabId, getter_AddRefs(tab))) ||
+        !tab || NS_FAILED(tab->GetWindow(getter_AddRefs(window))) || !window) {
+      return nullptr;
     }
 
-public:
-    static void Init()
-    {
-        java::ThumbnailHelper::Natives<ThumbnailHelper>::Init();
+    return window.forget();
+  }
+
+  // Decides if we should store thumbnails for a given docshell based on the
+  // presence of a Cache-Control: no-store header and the
+  // "browser.cache.disk_cache_ssl" pref.
+  static bool ShouldStoreThumbnail(nsIDocShell* docShell) {
+    nsCOMPtr<nsIChannel> channel;
+    if (NS_FAILED(
+            docShell->GetCurrentDocumentChannel(getter_AddRefs(channel))) ||
+        !channel) {
+      return false;
     }
 
-    template<class Functor>
-    static void OnNativeCall(Functor&& aCall)
-    {
-        class IdleEvent : public Runnable
-        {
-            Functor mLambda;
-            bool mIdlePass;
-
-        public:
-            explicit IdleEvent(Functor&& aCall)
-                : Runnable("ThumbnailHelperIdle")
-                , mLambda(std::move(aCall))
-                , mIdlePass(false)
-            {}
-
-            NS_IMETHOD Run() override
-            {
-                // Because we can only post to the idle queue from the main
-                // queue, we must first post to the main queue and then to the
-                // idle queue. However, we use the same runnable object for
-                // both queues, and use mIdlePass to track our progress.
-                if (mIdlePass) {
-                    mLambda();
-                    return NS_OK;
-                }
-
-                mIdlePass = true;
-                MessageLoop::current()->PostIdleTask(
-                        nsCOMPtr<nsIRunnable>(this).forget());
-                return NS_OK;
-            }
-        };
-
-        NS_DispatchToMainThread(new IdleEvent(std::move(aCall)));
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (!httpChannel) {
+      // Allow storing non-HTTP thumbnails.
+      return true;
     }
 
-    static void
-    RequestThumbnail(jni::ByteBuffer::Param aData, jni::Object::Param aTab,
-                     int32_t aTabId, int32_t aWidth, int32_t aHeight)
-    {
-        nsCOMPtr<mozIDOMWindowProxy> window = GetWindowForTab(aTabId);
-        if (!window || !aData) {
-            java::ThumbnailHelper::NotifyThumbnail(
-                    aData, aTab, /* success */ false, /* store */ false);
-            return;
-        }
+    // Don't store thumbnails for sites that didn't load or have
+    // Cache-Control: no-store.
+    uint32_t responseStatus = 0;
+    bool isNoStoreResponse = false;
 
-        // take a screenshot, as wide as possible, proportional to the destination size
-        nsCOMPtr<nsIDOMWindowUtils> utils =
-            nsGlobalWindowOuter::Cast(window)->WindowUtils();
-        RefPtr<DOMRect> rect;
-        if (!utils ||
-                NS_FAILED(utils->GetRootBounds(getter_AddRefs(rect))) ||
-                !rect) {
-            java::ThumbnailHelper::NotifyThumbnail(
-                    aData, aTab, /* success */ false, /* store */ false);
-            return;
-        }
-        float pageLeft = rect->Left();
-        float pageTop = rect->Top();
-        float pageWidth = rect->Width();
-        float pageHeight = rect->Height();
-        if (int32_t(pageWidth) == 0 || int32_t(pageHeight) == 0) {
-            java::ThumbnailHelper::NotifyThumbnail(
-                    aData, aTab, /* success */ false, /* store */ false);
-            return;
-        }
-
-        const float aspectRatio = float(aWidth) / float(aHeight);
-        if (pageWidth / aspectRatio < pageHeight) {
-            pageHeight = pageWidth / aspectRatio;
-        } else {
-            pageWidth = pageHeight * aspectRatio;
-        }
-
-        nsCOMPtr<nsIDocShell> docShell = GetThumbnailAndDocShell(
-                window, aData, aWidth, aHeight,
-                CSSRect(pageLeft, pageTop, pageWidth, pageHeight),
-                /* aZoomFactor */ 1.0f);
-        const bool success = !!docShell;
-        const bool store = success ? ShouldStoreThumbnail(docShell) : false;
-
-        java::ThumbnailHelper::NotifyThumbnail(aData, aTab, success, store);
+    if (NS_FAILED(httpChannel->GetResponseStatus(&responseStatus)) ||
+        (responseStatus / 100) != 2 ||
+        NS_FAILED(httpChannel->IsNoStoreResponse(&isNoStoreResponse)) ||
+        isNoStoreResponse) {
+      return false;
     }
+
+    // Deny storage if we're viewing a HTTPS page with a 'Cache-Control'
+    // header having a value that is not 'public', unless enabled by user.
+    nsCOMPtr<nsIURI> uri;
+    bool isHttps = false;
+
+    if (NS_FAILED(channel->GetURI(getter_AddRefs(uri))) || !uri ||
+        NS_FAILED(uri->SchemeIs("https", &isHttps))) {
+      return false;
+    }
+
+    if (!isHttps ||
+        Preferences::GetBool("browser.cache.disk_cache_ssl", false)) {
+      // Allow storing non-HTTPS thumbnails, and HTTPS ones if enabled by
+      // user.
+      return true;
+    }
+
+    nsAutoCString cacheControl;
+    if (NS_FAILED(httpChannel->GetResponseHeader(
+            NS_LITERAL_CSTRING("Cache-Control"), cacheControl))) {
+      return false;
+    }
+
+    if (cacheControl.IsEmpty() ||
+        cacheControl.LowerCaseEqualsLiteral("public")) {
+      // Allow no cache-control, or public cache-control.
+      return true;
+    }
+    return false;
+  }
+
+  // Return a non-null nsIDocShell to indicate success.
+  static already_AddRefed<nsIDocShell> GetThumbnailAndDocShell(
+      mozIDOMWindowProxy* aWindow, jni::ByteBuffer::Param aData,
+      int32_t aThumbWidth, int32_t aThumbHeight, const CSSRect& aPageRect,
+      float aZoomFactor) {
+    nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(aWindow);
+    nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
+
+    if (!docShell) {
+      return nullptr;
+    }
+
+    RefPtr<nsPresContext> presContext = docShell->GetPresContext();
+    if (!presContext) {
+      return nullptr;
+    }
+
+    uint8_t* const data = static_cast<uint8_t*>(aData->Address());
+    if (!data) {
+      return nullptr;
+    }
+
+    const bool is24bit = !AndroidBridge::Bridge() ||
+                         AndroidBridge::Bridge()->GetScreenDepth() == 24;
+    const uint32_t stride = aThumbWidth * (is24bit ? 4 : 2);
+
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForData(
+        data, IntSize(aThumbWidth, aThumbHeight), stride,
+        is24bit ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::R5G6B5_UINT16);
+
+    if (!dt || !dt->IsValid()) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+    MOZ_ASSERT(context);  // checked the draw target above
+
+    context->SetMatrix(context->CurrentMatrix().PreScale(
+        aZoomFactor * float(aThumbWidth) / aPageRect.width,
+        aZoomFactor * float(aThumbHeight) / aPageRect.height));
+
+    const nsRect drawRect(nsPresContext::CSSPixelsToAppUnits(aPageRect.x),
+                          nsPresContext::CSSPixelsToAppUnits(aPageRect.y),
+                          nsPresContext::CSSPixelsToAppUnits(aPageRect.width),
+                          nsPresContext::CSSPixelsToAppUnits(aPageRect.height));
+    const uint32_t renderDocFlags =
+        nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+        nsIPresShell::RENDER_DOCUMENT_RELATIVE;
+    const nscolor bgColor = NS_RGB(255, 255, 255);
+
+    if (NS_FAILED(presShell->RenderDocument(drawRect, renderDocFlags, bgColor,
+                                            context))) {
+      return nullptr;
+    }
+
+    if (is24bit) {
+      gfxUtils::ConvertBGRAtoRGBA(data, stride * aThumbHeight);
+    }
+
+    return docShell.forget();
+  }
+
+ public:
+  static void Init() {
+    java::ThumbnailHelper::Natives<ThumbnailHelper>::Init();
+  }
+
+  template <class Functor>
+  static void OnNativeCall(Functor&& aCall) {
+    class IdleEvent : public Runnable {
+      Functor mLambda;
+      bool mIdlePass;
+
+     public:
+      explicit IdleEvent(Functor&& aCall)
+          : Runnable("ThumbnailHelperIdle"),
+            mLambda(std::move(aCall)),
+            mIdlePass(false) {}
+
+      NS_IMETHOD Run() override {
+        // Because we can only post to the idle queue from the main
+        // queue, we must first post to the main queue and then to the
+        // idle queue. However, we use the same runnable object for
+        // both queues, and use mIdlePass to track our progress.
+        if (mIdlePass) {
+          mLambda();
+          return NS_OK;
+        }
+
+        mIdlePass = true;
+        MessageLoop::current()->PostIdleTask(
+            nsCOMPtr<nsIRunnable>(this).forget());
+        return NS_OK;
+      }
+    };
+
+    NS_DispatchToMainThread(new IdleEvent(std::move(aCall)));
+  }
+
+  static void RequestThumbnail(jni::ByteBuffer::Param aData,
+                               jni::Object::Param aTab, int32_t aTabId,
+                               int32_t aWidth, int32_t aHeight) {
+    nsCOMPtr<mozIDOMWindowProxy> window = GetWindowForTab(aTabId);
+    if (!window || !aData) {
+      java::ThumbnailHelper::NotifyThumbnail(aData, aTab, /* success */ false,
+                                             /* store */ false);
+      return;
+    }
+
+    // take a screenshot, as wide as possible, proportional to the destination
+    // size
+    nsCOMPtr<nsIDOMWindowUtils> utils =
+        nsGlobalWindowOuter::Cast(window)->WindowUtils();
+    RefPtr<DOMRect> rect;
+    if (!utils || NS_FAILED(utils->GetRootBounds(getter_AddRefs(rect))) ||
+        !rect) {
+      java::ThumbnailHelper::NotifyThumbnail(aData, aTab, /* success */ false,
+                                             /* store */ false);
+      return;
+    }
+    float pageLeft = rect->Left();
+    float pageTop = rect->Top();
+    float pageWidth = rect->Width();
+    float pageHeight = rect->Height();
+    if (int32_t(pageWidth) == 0 || int32_t(pageHeight) == 0) {
+      java::ThumbnailHelper::NotifyThumbnail(aData, aTab, /* success */ false,
+                                             /* store */ false);
+      return;
+    }
+
+    const float aspectRatio = float(aWidth) / float(aHeight);
+    if (pageWidth / aspectRatio < pageHeight) {
+      pageHeight = pageWidth / aspectRatio;
+    } else {
+      pageWidth = pageHeight * aspectRatio;
+    }
+
+    nsCOMPtr<nsIDocShell> docShell = GetThumbnailAndDocShell(
+        window, aData, aWidth, aHeight,
+        CSSRect(pageLeft, pageTop, pageWidth, pageHeight),
+        /* aZoomFactor */ 1.0f);
+    const bool success = !!docShell;
+    const bool store = success ? ShouldStoreThumbnail(docShell) : false;
+
+    java::ThumbnailHelper::NotifyThumbnail(aData, aTab, success, store);
+  }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // ThumbnailHelper_h
+#endif  // ThumbnailHelper_h

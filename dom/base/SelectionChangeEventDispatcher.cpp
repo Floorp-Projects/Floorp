@@ -23,8 +23,7 @@ namespace mozilla {
 using namespace dom;
 
 SelectionChangeEventDispatcher::RawRangeData::RawRangeData(
-                                                const nsRange* aRange)
-{
+    const nsRange* aRange) {
   mozilla::ErrorResult rv;
   mStartContainer = aRange->GetStartContainer(rv);
   rv.SuppressException();
@@ -36,9 +35,8 @@ SelectionChangeEventDispatcher::RawRangeData::RawRangeData(
   rv.SuppressException();
 }
 
-bool
-SelectionChangeEventDispatcher::RawRangeData::Equals(const nsRange* aRange)
-{
+bool SelectionChangeEventDispatcher::RawRangeData::Equals(
+    const nsRange* aRange) {
   mozilla::ErrorResult rv;
   bool eq = mStartContainer == aRange->GetStartContainer(rv);
   rv.SuppressException();
@@ -51,17 +49,14 @@ SelectionChangeEventDispatcher::RawRangeData::Equals(const nsRange* aRange)
   return eq;
 }
 
-inline void
-ImplCycleCollectionTraverse(
-  nsCycleCollectionTraversalCallback& aCallback,
-  SelectionChangeEventDispatcher::RawRangeData& aField,
-  const char* aName,
-  uint32_t aFlags = 0)
-{
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    SelectionChangeEventDispatcher::RawRangeData& aField, const char* aName,
+    uint32_t aFlags = 0) {
   ImplCycleCollectionTraverse(aCallback, aField.mStartContainer,
                               "mStartContainer", aFlags);
-  ImplCycleCollectionTraverse(aCallback, aField.mEndContainer,
-                              "mEndContainer", aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mEndContainer, "mEndContainer",
+                              aFlags);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SelectionChangeEventDispatcher)
@@ -77,11 +72,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SelectionChangeEventDispatcher, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SelectionChangeEventDispatcher, Release)
 
-void
-SelectionChangeEventDispatcher::OnSelectionChange(nsIDocument* aDoc,
-                                                  Selection* aSel,
-                                                  int16_t aReason)
-{
+void SelectionChangeEventDispatcher::OnSelectionChange(nsIDocument* aDoc,
+                                                       Selection* aSel,
+                                                       int16_t aReason) {
   nsIDocument* doc = aSel->GetParentObject();
   if (!(doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal())) &&
       !nsFrameSelection::sSelectionEventsEnabled) {
@@ -136,8 +129,8 @@ SelectionChangeEventDispatcher::OnSelectionChange(nsIDocument* aDoc,
     // Check if we should be firing this event to a different node than the
     // document. The limiter of the nsFrameSelection will be within the native
     // anonymous subtree of the node we want to fire the event on. We need to
-    // climb up the parent chain to escape the native anonymous subtree, and then
-    // fire the event.
+    // climb up the parent chain to escape the native anonymous subtree, and
+    // then fire the event.
     if (const nsFrameSelection* fs = aSel->GetFrameSelection()) {
       if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
         while (root && root->IsInNativeAnonymousSubtree()) {
@@ -148,14 +141,15 @@ SelectionChangeEventDispatcher::OnSelectionChange(nsIDocument* aDoc,
       }
     }
 
-    // If we didn't get a target before, we can instead fire the event at the document.
+    // If we didn't get a target before, we can instead fire the event at the
+    // document.
     if (!target) {
       target = aDoc;
     }
 
     if (target) {
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(target, eSelectionChange, CanBubble::eNo);
+          new AsyncEventDispatcher(target, eSelectionChange, CanBubble::eNo);
       asyncDispatcher->PostDOMEvent();
     }
   } else {
@@ -169,10 +163,10 @@ SelectionChangeEventDispatcher::OnSelectionChange(nsIDocument* aDoc,
 
     if (aDoc) {
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(aDoc, eSelectionChange, CanBubble::eNo);
+          new AsyncEventDispatcher(aDoc, eSelectionChange, CanBubble::eNo);
       asyncDispatcher->PostDOMEvent();
     }
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

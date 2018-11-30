@@ -14,21 +14,20 @@
 
 namespace mozilla {
 
-class nsRelativeFilePref final : public nsIRelativeFilePref
-{
-public:
+class nsRelativeFilePref final : public nsIRelativeFilePref {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRELATIVEFILEPREF
 
   nsRelativeFilePref();
 
-private:
+ private:
   virtual ~nsRelativeFilePref();
 
   nsCOMPtr<nsIFile> mFile;
   nsCString mRelativeToKey;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_nsRelativeFilePref_h
+#endif  // mozilla_nsRelativeFilePref_h

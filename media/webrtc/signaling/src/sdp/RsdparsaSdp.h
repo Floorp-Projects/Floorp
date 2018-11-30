@@ -17,18 +17,15 @@
 #include "signaling/src/sdp/RsdparsaSdpInc.h"
 #include "signaling/src/sdp/RsdparsaSdpGlue.h"
 
-
-namespace mozilla
-{
+namespace mozilla {
 
 class RsdparsaSdpParser;
 class SdpErrorHolder;
 
-class RsdparsaSdp final : public Sdp
-{
+class RsdparsaSdp final : public Sdp {
   friend class RsdparsaSdpParser;
 
-public:
+ public:
   explicit RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin);
 
   const SdpOrigin& GetOrigin() const override;
@@ -36,37 +33,30 @@ public:
   // Note: connection information is always retrieved from media sections
   uint32_t GetBandwidth(const std::string& type) const override;
 
-  size_t
-  GetMediaSectionCount() const override
-  {
+  size_t GetMediaSectionCount() const override {
     return sdp_media_section_count(mSession.get());
   }
 
-  const SdpAttributeList&
-  GetAttributeList() const override
-  {
+  const SdpAttributeList& GetAttributeList() const override {
     return *mAttributeList;
   }
 
-  SdpAttributeList&
-  GetAttributeList() override
-  {
-    return *mAttributeList;
-  }
+  SdpAttributeList& GetAttributeList() override { return *mAttributeList; }
 
-  const SdpMediaSection& GetMediaSection(size_t level) const
-      override;
+  const SdpMediaSection& GetMediaSection(size_t level) const override;
 
   SdpMediaSection& GetMediaSection(size_t level) override;
 
-  SdpMediaSection& AddMediaSection(
-      SdpMediaSection::MediaType media, SdpDirectionAttribute::Direction dir,
-      uint16_t port, SdpMediaSection::Protocol proto, sdp::AddrType addrType,
-      const std::string& addr) override;
+  SdpMediaSection& AddMediaSection(SdpMediaSection::MediaType media,
+                                   SdpDirectionAttribute::Direction dir,
+                                   uint16_t port,
+                                   SdpMediaSection::Protocol proto,
+                                   sdp::AddrType addrType,
+                                   const std::string& addr) override;
 
   void Serialize(std::ostream&) const override;
 
-private:
+ private:
   RsdparsaSdp() : mOrigin("", 0, 0, sdp::kIPv4, "") {}
 
   RsdparsaSessionHandle mSession;
@@ -75,6 +65,6 @@ private:
   std::vector<UniquePtr<RsdparsaSdpMediaSection>> mMediaSections;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

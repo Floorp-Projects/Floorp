@@ -26,7 +26,7 @@ class TextComposition;
 
 namespace dom {
 class Selection;
-} // namespace dom
+}  // namespace dom
 
 /**
  * IMEStateManager manages InputContext (e.g., active editor type, IME enabled
@@ -34,8 +34,7 @@ class Selection;
  * and provides useful API for IME.
  */
 
-class IMEStateManager
-{
+class IMEStateManager {
   typedef dom::TabParent TabParent;
   typedef widget::IMEMessage IMEMessage;
   typedef widget::IMENotification IMENotification;
@@ -43,7 +42,7 @@ class IMEStateManager
   typedef widget::InputContext InputContext;
   typedef widget::InputContextAction InputContextAction;
 
-public:
+ public:
   static void Init();
   static void Shutdown();
 
@@ -52,8 +51,7 @@ public:
    * managed by the focused content (sContent).  If the focused content isn't
    * managing another process, this returns nullptr.
    */
-  static TabParent* GetActiveTabParent()
-  {
+  static TabParent* GetActiveTabParent() {
     // If menu has pseudo focus, we should ignore active child process.
     if (sInstalledMenuKeyboardListener) {
       return nullptr;
@@ -69,8 +67,7 @@ public:
    * composition events in different TabParent.  (Anyway, such case shouldn't
    * occur.)
    */
-  static bool DoesTabParentHaveIMEFocus(const TabParent* aTabParent)
-  {
+  static bool DoesTabParentHaveIMEFocus(const TabParent* aTabParent) {
     MOZ_ASSERT(aTabParent);
     return sFocusedIMETabParent == aTabParent;
   }
@@ -94,8 +91,7 @@ public:
    * IMEStateManager may have already changed shared input context via the
    * widget.
    */
-  static nsIWidget* GetWidgetForActiveInputContext()
-  {
+  static nsIWidget* GetWidgetForActiveInputContext() {
     return sActiveInputContextWidget;
   }
 
@@ -160,8 +156,7 @@ public:
   // isn't changed by the new state, this method does nothing.
   // Note that this method changes the IME state of the active element in the
   // widget.  So, the caller must have focus.
-  static void UpdateIMEState(const IMEState &aNewIMEState,
-                             nsIContent* aContent,
+  static void UpdateIMEState(const IMEState& aNewIMEState, nsIContent* aContent,
                              EditorBase* aEditorBase);
 
   // This method is called when user operates mouse button in focused editor
@@ -176,8 +171,7 @@ public:
   //   If the editor is for <input> or <textarea>, the element.
   //   If the editor is for contenteditable, the active editinghost.
   //   If the editor is for designMode, nullptr.
-  static void OnClickInEditor(nsPresContext* aPresContext,
-                              nsIContent* aContent,
+  static void OnClickInEditor(nsPresContext* aPresContext, nsIContent* aContent,
                               const WidgetMouseEvent* aMouseEvent);
 
   // This method is called when editor actually gets focus.
@@ -185,8 +179,7 @@ public:
   //   If the editor is for <input> or <textarea>, the element.
   //   If the editor is for contenteditable, the active editinghost.
   //   If the editor is for designMode, nullptr.
-  static void OnFocusInEditor(nsPresContext* aPresContext,
-                              nsIContent* aContent,
+  static void OnFocusInEditor(nsPresContext* aPresContext, nsIContent* aContent,
                               EditorBase& aEditorBase);
 
   // This method is called when the editor is initialized.
@@ -203,12 +196,9 @@ public:
    * target is destroying, this removes the stored composition automatically.
    */
   static void DispatchCompositionEvent(
-                nsINode* aEventTargetNode,
-                nsPresContext* aPresContext,
-                WidgetCompositionEvent* aCompositionEvent,
-                nsEventStatus* aStatus,
-                EventDispatchingCallback* aCallBack,
-                bool aIsSynthesized = false);
+      nsINode* aEventTargetNode, nsPresContext* aPresContext,
+      WidgetCompositionEvent* aCompositionEvent, nsEventStatus* aStatus,
+      EventDispatchingCallback* aCallBack, bool aIsSynthesized = false);
 
   /**
    * All selection events must be handled via HandleSelectionEvent()
@@ -224,27 +214,27 @@ public:
    * to dispatch events.
    */
   static void OnCompositionEventDiscarded(
-                WidgetCompositionEvent* aCompositionEvent);
+      WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * Get TextComposition from widget.
    */
-  static already_AddRefed<TextComposition>
-    GetTextCompositionFor(nsIWidget* aWidget);
+  static already_AddRefed<TextComposition> GetTextCompositionFor(
+      nsIWidget* aWidget);
 
   /**
    * Returns TextComposition instance for the event.
    */
-  static already_AddRefed<TextComposition>
-    GetTextCompositionFor(const WidgetCompositionEvent* aCompositionEvent);
+  static already_AddRefed<TextComposition> GetTextCompositionFor(
+      const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * Returns TextComposition instance for the pres context.
    * Be aware, even if another pres context which shares native IME context with
    * specified pres context has composition, this returns nullptr.
    */
-  static already_AddRefed<TextComposition>
-    GetTextCompositionFor(nsPresContext* aPresContext);
+  static already_AddRefed<TextComposition> GetTextCompositionFor(
+      nsPresContext* aPresContext);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what
@@ -253,11 +243,9 @@ public:
   static nsresult NotifyIME(const IMENotification& aNotification,
                             nsIWidget* aWidget,
                             TabParent* aTabParent = nullptr);
-  static nsresult NotifyIME(IMEMessage aMessage,
-                            nsIWidget* aWidget,
+  static nsresult NotifyIME(IMEMessage aMessage, nsIWidget* aWidget,
                             TabParent* aTabParent = nullptr);
-  static nsresult NotifyIME(IMEMessage aMessage,
-                            nsPresContext* aPresContext,
+  static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext,
                             TabParent* aTabParent = nullptr);
 
   static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
@@ -269,14 +257,12 @@ public:
    */
   static IMEContentObserver* GetActiveContentObserver();
 
-protected:
+ protected:
   static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
                                         nsIContent* aContent,
                                         InputContextAction aAction);
-  static void SetIMEState(const IMEState &aState,
-                          nsPresContext* aPresContext,
-                          nsIContent* aContent,
-                          nsIWidget* aWidget,
+  static void SetIMEState(const IMEState& aState, nsPresContext* aPresContext,
+                          nsIContent* aContent, nsIWidget* aWidget,
                           InputContextAction aAction,
                           InputContext::Origin aOrigin);
   static void SetInputContext(nsIWidget* aWidget,
@@ -366,23 +352,21 @@ protected:
   static bool sCheckForIMEUnawareWebApps;
   static bool sInputModeSupported;
 
-  class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
-  {
-  public:
+  class MOZ_STACK_CLASS GettingNewIMEStateBlocker final {
+   public:
     GettingNewIMEStateBlocker()
-      : mOldValue(IMEStateManager::sIsGettingNewIMEState)
-    {
+        : mOldValue(IMEStateManager::sIsGettingNewIMEState) {
       IMEStateManager::sIsGettingNewIMEState = true;
     }
-    ~GettingNewIMEStateBlocker()
-    {
+    ~GettingNewIMEStateBlocker() {
       IMEStateManager::sIsGettingNewIMEState = mOldValue;
     }
-  private:
+
+   private:
     bool mOldValue;
   };
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_IMEStateManager_h_
+#endif  // mozilla_IMEStateManager_h_

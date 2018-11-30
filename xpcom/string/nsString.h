@@ -38,104 +38,86 @@ static_assert(sizeof(nsTLiteralString<char16_t>) == sizeof(nsTString<char16_t>),
               "nsTLiteralString can masquerade as nsString, "
               "so they must have identical layout");
 
-
 /**
  * A helper class that converts a UTF-16 string to ASCII in a lossy manner
  */
-class NS_LossyConvertUTF16toASCII : public nsAutoCString
-{
-public:
-  explicit NS_LossyConvertUTF16toASCII(const char16ptr_t aString)
-  {
+class NS_LossyConvertUTF16toASCII : public nsAutoCString {
+ public:
+  explicit NS_LossyConvertUTF16toASCII(const char16ptr_t aString) {
     LossyAppendUTF16toASCII(mozilla::MakeStringSpan(aString), *this);
   }
 
-  NS_LossyConvertUTF16toASCII(const char16ptr_t aString, uint32_t aLength)
-  {
-    LossyAppendUTF16toASCII(Substring(static_cast<const char16_t*>(aString), aLength), *this);
+  NS_LossyConvertUTF16toASCII(const char16ptr_t aString, uint32_t aLength) {
+    LossyAppendUTF16toASCII(
+        Substring(static_cast<const char16_t*>(aString), aLength), *this);
   }
 
-  explicit NS_LossyConvertUTF16toASCII(const nsAString& aString)
-  {
+  explicit NS_LossyConvertUTF16toASCII(const nsAString& aString) {
     LossyAppendUTF16toASCII(aString, *this);
   }
 
-private:
+ private:
   // NOT TO BE IMPLEMENTED
   NS_LossyConvertUTF16toASCII(char) = delete;
 };
 
-
-class NS_ConvertASCIItoUTF16 : public nsAutoString
-{
-public:
-  explicit NS_ConvertASCIItoUTF16(const char* aCString)
-  {
+class NS_ConvertASCIItoUTF16 : public nsAutoString {
+ public:
+  explicit NS_ConvertASCIItoUTF16(const char* aCString) {
     AppendASCIItoUTF16(mozilla::MakeStringSpan(aCString), *this);
   }
 
-  NS_ConvertASCIItoUTF16(const char* aCString, uint32_t aLength)
-  {
+  NS_ConvertASCIItoUTF16(const char* aCString, uint32_t aLength) {
     AppendASCIItoUTF16(Substring(aCString, aLength), *this);
   }
 
-  explicit NS_ConvertASCIItoUTF16(const nsACString& aCString)
-  {
+  explicit NS_ConvertASCIItoUTF16(const nsACString& aCString) {
     AppendASCIItoUTF16(aCString, *this);
   }
 
-private:
+ private:
   // NOT TO BE IMPLEMENTED
   NS_ConvertASCIItoUTF16(char16_t) = delete;
 };
 
-
 /**
  * A helper class that converts a UTF-16 string to UTF-8
  */
-class NS_ConvertUTF16toUTF8 : public nsAutoCString
-{
-public:
-  explicit NS_ConvertUTF16toUTF8(const char16ptr_t aString)
-  {
+class NS_ConvertUTF16toUTF8 : public nsAutoCString {
+ public:
+  explicit NS_ConvertUTF16toUTF8(const char16ptr_t aString) {
     AppendUTF16toUTF8(mozilla::MakeStringSpan(aString), *this);
   }
 
-  NS_ConvertUTF16toUTF8(const char16ptr_t aString, uint32_t aLength)
-  {
-    AppendUTF16toUTF8(Substring(static_cast<const char16_t*>(aString), aLength), *this);
+  NS_ConvertUTF16toUTF8(const char16ptr_t aString, uint32_t aLength) {
+    AppendUTF16toUTF8(Substring(static_cast<const char16_t*>(aString), aLength),
+                      *this);
   }
 
-  explicit NS_ConvertUTF16toUTF8(const nsAString& aString)
-  {
+  explicit NS_ConvertUTF16toUTF8(const nsAString& aString) {
     AppendUTF16toUTF8(aString, *this);
   }
 
-private:
+ private:
   // NOT TO BE IMPLEMENTED
   NS_ConvertUTF16toUTF8(char) = delete;
 };
 
-
-class NS_ConvertUTF8toUTF16 : public nsAutoString
-{
-public:
-  explicit NS_ConvertUTF8toUTF16(const char* aCString)
-  {
+class NS_ConvertUTF8toUTF16 : public nsAutoString {
+ public:
+  explicit NS_ConvertUTF8toUTF16(const char* aCString) {
     AppendUTF8toUTF16(mozilla::MakeStringSpan(aCString), *this);
   }
 
-  NS_ConvertUTF8toUTF16(const char* aCString, uint32_t aLength)
-  {
+  NS_ConvertUTF8toUTF16(const char* aCString, uint32_t aLength) {
     AppendUTF8toUTF16(Substring(aCString, aLength), *this);
   }
 
-  explicit NS_ConvertUTF8toUTF16(const nsACString& aCString)
-  {
+  explicit NS_ConvertUTF8toUTF16(const nsACString& aCString) {
     AppendUTF8toUTF16(aCString, *this);
   }
 
-private:
+ private:
   // NOT TO BE IMPLEMENTED
   NS_ConvertUTF8toUTF16(char16_t) = delete;
 };
@@ -145,4 +127,4 @@ private:
 #include "nsLiteralString.h"
 #include "nsPromiseFlatString.h"
 
-#endif // !defined(nsString_h___)
+#endif  // !defined(nsString_h___)

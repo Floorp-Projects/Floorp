@@ -39,8 +39,8 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 //  TQ3 dispatches to TQ1
 //
 // This ensures there is only ever a single runnable from the entire chain on
-// the main thread.  It also ensures that TQ2 and TQ3 only have a single runnable
-// in TQ1 at any time.
+// the main thread.  It also ensures that TQ2 and TQ3 only have a single
+// runnable in TQ1 at any time.
 //
 // This arrangement lets you prioritize work by dispatching runnables directly
 // to TQ1.  You can issue many runnables for important work.  Meanwhile the TQ2
@@ -49,28 +49,25 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // A TaskQueue does not require explicit shutdown, however it provides a
 // BeginShutdown() method that places TaskQueue in a shut down state and returns
 // a promise that gets resolved once all pending tasks have completed
-class TaskQueue : public AbstractThread
-{
+class TaskQueue : public AbstractThread {
   class EventTargetWrapper;
 
-public:
+ public:
   explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                      bool aSupportsTailDispatch = false);
 
-  TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-            const char* aName,
+  TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
             bool aSupportsTailDispatch = false);
 
   TaskDispatcher& TailDispatcher() override;
 
   MOZ_MUST_USE nsresult
   Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-           DispatchReason aReason = NormalDispatch) override
-  {
+           DispatchReason aReason = NormalDispatch) override {
     nsCOMPtr<nsIRunnable> r = aRunnable;
     {
       MonitorAutoLock mon(mQueueMonitor);
-      return DispatchLocked(/* passed by ref */r, aReason);
+      return DispatchLocked(/* passed by ref */ r, aReason);
     }
     // If the ownership of |r| is not transferred in DispatchLocked() due to
     // dispatch failure, it will be deleted here outside the lock. We do so
@@ -106,9 +103,8 @@ public:
   // TaskQueue.
   already_AddRefed<nsISerialEventTarget> WrapAsEventTarget();
 
-protected:
+ protected:
   virtual ~TaskQueue();
-
 
   // Blocks until all task finish executing. Called internally by methods
   // that need to wait until the task queue is idle.
@@ -118,8 +114,7 @@ protected:
   nsresult DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
                           DispatchReason aReason = NormalDispatch);
 
-  void MaybeResolveShutdown()
-  {
+  void MaybeResolveShutdown() {
     mQueueMonitor.AssertCurrentThreadOwns();
     if (mIsShutdown && !mIsRunning) {
       mShutdownPromise.ResolveIfExists(true, __func__);
@@ -146,13 +141,12 @@ protected:
   Atomic<PRThread*> mRunningThread;
 
   // RAII class that gets instantiated for each dispatched task.
-  class AutoTaskGuard : public AutoTaskDispatcher
-  {
-  public:
+  class AutoTaskGuard : public AutoTaskDispatcher {
+   public:
     explicit AutoTaskGuard(TaskQueue* aQueue)
-      : AutoTaskDispatcher(/* aIsTailDispatcher = */ true), mQueue(aQueue)
-      , mLastCurrentThread(nullptr)
-    {
+        : AutoTaskDispatcher(/* aIsTailDispatcher = */ true),
+          mQueue(aQueue),
+          mLastCurrentThread(nullptr) {
       // NB: We don't hold the lock to aQueue here. Don't do anything that
       // might require it.
       MOZ_ASSERT(!mQueue->mTailDispatcher);
@@ -165,8 +159,7 @@ protected:
       mQueue->mRunningThread = GetCurrentPhysicalThread();
     }
 
-    ~AutoTaskGuard()
-    {
+    ~AutoTaskGuard() {
       DrainDirectTasks();
 
       MOZ_ASSERT(mQueue->mRunningThread == GetCurrentPhysicalThread());
@@ -176,9 +169,9 @@ protected:
       mQueue->mTailDispatcher = nullptr;
     }
 
-  private:
-  TaskQueue* mQueue;
-  AbstractThread* mLastCurrentThread;
+   private:
+    TaskQueue* mQueue;
+    AbstractThread* mLastCurrentThread;
   };
 
   TaskDispatcher* mTailDispatcher;
@@ -195,18 +188,16 @@ protected:
   const char* const mName;
 
   class Runner : public Runnable {
-  public:
+   public:
     explicit Runner(TaskQueue* aQueue)
-      : Runnable("TaskQueue::Runner")
-      , mQueue(aQueue)
-    {
-    }
+        : Runnable("TaskQueue::Runner"), mQueue(aQueue) {}
     NS_IMETHOD Run() override;
-  private:
+
+   private:
     RefPtr<TaskQueue> mQueue;
   };
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // TaskQueue_h_
+#endif  // TaskQueue_h_

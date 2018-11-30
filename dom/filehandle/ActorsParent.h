@@ -18,7 +18,8 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsTHashtable.h"
 
-template <class> struct already_AddRefed;
+template <class>
+struct already_AddRefed;
 class nsIFile;
 class nsIRunnable;
 class nsIThreadPool;
@@ -29,7 +30,7 @@ namespace ipc {
 
 class PBackgroundParent;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -37,8 +38,7 @@ class BlobImpl;
 class FileHandle;
 class FileHandleOp;
 
-class FileHandleThreadPool final
-{
+class FileHandleThreadPool final {
   class FileHandleQueue;
   struct DelayedEnqueueInfo;
   class DirectoryInfo;
@@ -54,58 +54,43 @@ class FileHandleThreadPool final
   bool mShutdownRequested;
   bool mShutdownComplete;
 
-public:
-  static already_AddRefed<FileHandleThreadPool>
-  Create();
+ public:
+  static already_AddRefed<FileHandleThreadPool> Create();
 
 #ifdef DEBUG
-  void
-  AssertIsOnOwningThread() const;
+  void AssertIsOnOwningThread() const;
 
-  nsIEventTarget*
-  GetThreadPoolEventTarget() const;
+  nsIEventTarget* GetThreadPoolEventTarget() const;
 #else
-  void
-  AssertIsOnOwningThread() const
-  { }
+  void AssertIsOnOwningThread() const {}
 #endif
 
-  void
-  Enqueue(FileHandle* aFileHandle,
-          FileHandleOp* aFileHandleOp,
-          bool aFinish);
+  void Enqueue(FileHandle* aFileHandle, FileHandleOp* aFileHandleOp,
+               bool aFinish);
 
   NS_INLINE_DECL_REFCOUNTING(FileHandleThreadPool)
 
-  void
-  WaitForDirectoriesToComplete(nsTArray<nsCString>&& aDirectoryIds,
-                               nsIRunnable* aCallback);
+  void WaitForDirectoriesToComplete(nsTArray<nsCString>&& aDirectoryIds,
+                                    nsIRunnable* aCallback);
 
-  void
-  Shutdown();
+  void Shutdown();
 
-private:
+ private:
   FileHandleThreadPool();
 
   // Reference counted.
   ~FileHandleThreadPool();
 
-  nsresult
-  Init();
+  nsresult Init();
 
-  void
-  Cleanup();
+  void Cleanup();
 
-  void
-  FinishFileHandle(FileHandle* aFileHandle);
+  void FinishFileHandle(FileHandle* aFileHandle);
 
-  bool
-  MaybeFireCallback(StoragesCompleteCallback* aCallback);
+  bool MaybeFireCallback(StoragesCompleteCallback* aCallback);
 };
 
-class BackgroundMutableFileParentBase
-  : public PBackgroundMutableFileParent
-{
+class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
   nsTHashtable<nsPtrHashKey<FileHandle>> mFileHandles;
   nsCString mDirectoryId;
   nsString mFileName;
@@ -114,110 +99,74 @@ class BackgroundMutableFileParentBase
   bool mActorWasAlive;
   bool mActorDestroyed;
 
-protected:
+ protected:
   nsCOMPtr<nsIFile> mFile;
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BackgroundMutableFileParentBase)
 
-  void
-  Invalidate();
+  void Invalidate();
 
-  FileHandleStorage
-  Storage() const
-  {
-    return mStorage;
-  }
+  FileHandleStorage Storage() const { return mStorage; }
 
-  const nsCString&
-  DirectoryId() const
-  {
-    return mDirectoryId;
-  }
+  const nsCString& DirectoryId() const { return mDirectoryId; }
 
-  const nsString&
-  FileName() const
-  {
-    return mFileName;
-  }
+  const nsString& FileName() const { return mFileName; }
 
-  bool
-  RegisterFileHandle(FileHandle* aFileHandle);
+  bool RegisterFileHandle(FileHandle* aFileHandle);
 
-  void
-  UnregisterFileHandle(FileHandle* aFileHandle);
+  void UnregisterFileHandle(FileHandle* aFileHandle);
 
-  void
-  SetActorAlive();
+  void SetActorAlive();
 
-  bool
-  IsActorDestroyed() const
-  {
+  bool IsActorDestroyed() const {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
     return mActorWasAlive && mActorDestroyed;
   }
 
-  bool
-  IsInvalidated() const
-  {
+  bool IsInvalidated() const {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
     return mInvalidated;
   }
 
-  virtual void
-  NoteActiveState()
-  { }
+  virtual void NoteActiveState() {}
 
-  virtual void
-  NoteInactiveState()
-  { }
+  virtual void NoteInactiveState() {}
 
-  virtual mozilla::ipc::PBackgroundParent*
-  GetBackgroundParent() const = 0;
+  virtual mozilla::ipc::PBackgroundParent* GetBackgroundParent() const = 0;
 
-  virtual already_AddRefed<nsISupports>
-  CreateStream(bool aReadOnly);
+  virtual already_AddRefed<nsISupports> CreateStream(bool aReadOnly);
 
-  virtual already_AddRefed<BlobImpl>
-  CreateBlobImpl()
-  {
-    return nullptr;
-  }
+  virtual already_AddRefed<BlobImpl> CreateBlobImpl() { return nullptr; }
 
-protected:
+ protected:
   BackgroundMutableFileParentBase(FileHandleStorage aStorage,
                                   const nsACString& aDirectoryId,
-                                  const nsAString& aFileName,
-                                  nsIFile* aFile);
+                                  const nsAString& aFileName, nsIFile* aFile);
 
   // Reference counted.
   ~BackgroundMutableFileParentBase();
 
   // IPDL methods are only called by IPDL.
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PBackgroundFileHandleParent*
-  AllocPBackgroundFileHandleParent(const FileMode& aMode) override;
+  virtual PBackgroundFileHandleParent* AllocPBackgroundFileHandleParent(
+      const FileMode& aMode) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvPBackgroundFileHandleConstructor(PBackgroundFileHandleParent* aActor,
-                                       const FileMode& aMode) override;
+  virtual mozilla::ipc::IPCResult RecvPBackgroundFileHandleConstructor(
+      PBackgroundFileHandleParent* aActor, const FileMode& aMode) override;
 
-  virtual bool
-  DeallocPBackgroundFileHandleParent(PBackgroundFileHandleParent* aActor)
-                                     override;
+  virtual bool DeallocPBackgroundFileHandleParent(
+      PBackgroundFileHandleParent* aActor) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvDeleteMe() override;
+  virtual mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvGetFileId(int64_t* aFileId) override;
+  virtual mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_filehandle_ActorsParent_h
+#endif  // mozilla_dom_filehandle_ActorsParent_h

@@ -22,29 +22,26 @@ class Worklet;
 class WorkletGlobalScope;
 class WorkletThread;
 
-} // namespace dom
+}  // namespace dom
 
-class WorkletLoadInfo
-{
-public:
+class WorkletLoadInfo {
+ public:
   WorkletLoadInfo(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
   ~WorkletLoadInfo();
 
   uint64_t OuterWindowID() const { return mOuterWindowID; }
   uint64_t InnerWindowID() const { return mInnerWindowID; }
 
-  const OriginAttributes& OriginAttributesRef() const
-  {
+  const OriginAttributes& OriginAttributesRef() const {
     return mOriginAttributes;
   }
 
-  nsIPrincipal* Principal() const
-  {
+  nsIPrincipal* Principal() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mPrincipal;
   }
 
-private:
+ private:
   // Modified only in constructor.
   uint64_t mOuterWindowID;
   const uint64_t mInnerWindowID;
@@ -63,16 +60,14 @@ private:
  * are owned indefinitely by WorkletImpl because WorkletImpl is not cycle
  * collected.
  */
-class WorkletImpl
-{
-public:
+class WorkletImpl {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkletImpl);
 
   // Methods for parent thread only:
 
-  virtual JSObject*
-  WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
-              JS::Handle<JSObject*> aGivenProto);
+  virtual JSObject* WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
+                                JS::Handle<JSObject*> aGivenProto);
 
   nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable);
 
@@ -85,7 +80,7 @@ public:
 
   const WorkletLoadInfo& LoadInfo() const { return mWorkletLoadInfo; }
 
-protected:
+ protected:
   WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
   virtual ~WorkletImpl();
 
@@ -100,6 +95,6 @@ protected:
   bool mTerminated;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_dom_worklet_WorkletImpl_h
+#endif  // mozilla_dom_worklet_WorkletImpl_h

@@ -9,31 +9,24 @@
 
 #include "unicode/ubidi.h"
 #include "ICUUtils.h"
-#include "nsIFrame.h" // for nsBidiLevel/nsBidiDirection declarations
+#include "nsIFrame.h"  // for nsBidiLevel/nsBidiDirection declarations
 
 // nsBidi implemented as a simple wrapper around the bidi reordering engine
 // from ICU.
 // We could eliminate this and let callers use the ICU functions directly
 // once we no longer care about building without ICU available.
 
-class nsBidi
-{
-public:
+class nsBidi {
+ public:
   /** @brief Default constructor.
    *
    * The nsBidi object is initially empty. It is assigned
    * the Bidi properties of a paragraph by <code>SetPara()</code>.
    */
-  nsBidi()
-  {
-    mBiDi = ubidi_open();
-  }
+  nsBidi() { mBiDi = ubidi_open(); }
 
   /** @brief Destructor. */
-  ~nsBidi()
-  {
-    ubidi_close(mBiDi);
-  }
+  ~nsBidi() { ubidi_close(mBiDi); }
 
   /**
    * Perform the Unicode Bidi algorithm.
@@ -41,7 +34,8 @@ public:
    * @param aText is a pointer to the single-paragraph text that the
    *      Bidi algorithm will be performed on
    *      (step (P1) of the algorithm is performed externally).
-   *      <strong>The text must be (at least) <code>aLength</code> long.</strong>
+   *      <strong>The text must be (at least) <code>aLength</code>
+   * long.</strong>
    *
    * @param aLength is the length of the text; if <code>aLength==-1</code> then
    *      the text must be zero-terminated.
@@ -58,8 +52,7 @@ public:
    *      is also valid, with odd levels indicating RTL.
    */
   nsresult SetPara(const char16_t* aText, int32_t aLength,
-                   nsBidiLevel aParaLevel)
-  {
+                   nsBidiLevel aParaLevel) {
     UErrorCode error = U_ZERO_ERROR;
     ubidi_setPara(mBiDi, reinterpret_cast<const UChar*>(aText), aLength,
                   aParaLevel, nullptr, &error);
@@ -75,8 +68,7 @@ public:
    *
    * @see nsBidiDirection
    */
-  nsBidiDirection GetDirection()
-  {
+  nsBidiDirection GetDirection() {
     return nsBidiDirection(ubidi_getDirection(mBiDi));
   }
 
@@ -88,10 +80,7 @@ public:
    *
    * @see nsBidiLevel
    */
-  nsBidiLevel GetParaLevel()
-  {
-    return ubidi_getParaLevel(mBiDi);
-  }
+  nsBidiLevel GetParaLevel() { return ubidi_getParaLevel(mBiDi); }
 
   /**
    * Get a logical run.
@@ -112,8 +101,8 @@ public:
    * @param aLevel will receive the level of the run.
    *      This pointer cannot be <code>nullptr</code>.
    */
-  void GetLogicalRun(int32_t aLogicalStart,
-                     int32_t* aLogicalLimit, nsBidiLevel* aLevel);
+  void GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimit,
+                     nsBidiLevel* aLevel);
 
   /**
    * Get the number of runs.
@@ -175,18 +164,17 @@ public:
    * modifier letters before base characters and second surrogates
    * before first ones.
    */
-  nsBidiDirection GetVisualRun(int32_t aRunIndex,
-                               int32_t* aLogicalStart, int32_t* aLength)
-  {
-    return nsBidiDirection(ubidi_getVisualRun(mBiDi, aRunIndex,
-                                              aLogicalStart, aLength));
+  nsBidiDirection GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart,
+                               int32_t* aLength) {
+    return nsBidiDirection(
+        ubidi_getVisualRun(mBiDi, aRunIndex, aLogicalStart, aLength));
   }
 
   /**
    * This is a convenience function that does not use a nsBidi object.
    * It is intended to be used for when an application has determined the levels
-   * of objects (character sequences) and just needs to have them reordered (L2).
-   * This is equivalent to using <code>GetVisualMap</code> on a
+   * of objects (character sequences) and just needs to have them reordered
+   * (L2). This is equivalent to using <code>GetVisualMap</code> on a
    * <code>nsBidi</code> object.
    *
    * @param aLevels is an array with <code>aLength</code> levels that have been
@@ -203,12 +191,11 @@ public:
    *        <code>aIndexMap[aVisualIndex]==aLogicalIndex</code>.
    */
   static void ReorderVisual(const nsBidiLevel* aLevels, int32_t aLength,
-                            int32_t* aIndexMap)
-  {
+                            int32_t* aIndexMap) {
     ubidi_reorderVisual(aLevels, aLength, aIndexMap);
   }
 
-private:
+ private:
   nsBidi(const nsBidi&) = delete;
   void operator=(const nsBidi&) = delete;
 
@@ -218,4 +205,4 @@ private:
   int32_t mLength = 0;
 };
 
-#endif // _nsBidi_h_
+#endif  // _nsBidi_h_

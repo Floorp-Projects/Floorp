@@ -11,38 +11,32 @@
 #include "txExprResult.h"
 #include "txXPathNode.h"
 
-class txResultTreeFragment : public txAExprResult
-{
-public:
-    explicit txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer);
+class txResultTreeFragment : public txAExprResult {
+ public:
+  explicit txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer);
 
-    TX_DECL_EXPRRESULT
+  TX_DECL_EXPRRESULT
 
-    nsresult flushToHandler(txAXMLEventHandler* aHandler);
+  nsresult flushToHandler(txAXMLEventHandler* aHandler);
 
-    void setNode(const txXPathNode* aNode)
-    {
-        NS_ASSERTION(!mNode, "Already converted!");
+  void setNode(const txXPathNode* aNode) {
+    NS_ASSERTION(!mNode, "Already converted!");
 
-        mNode = aNode;
-    }
-    const txXPathNode *getNode() const
-    {
-        return mNode;
-    }
+    mNode = aNode;
+  }
+  const txXPathNode* getNode() const { return mNode; }
 
-private:
-    nsAutoPtr<txResultBuffer> mBuffer;
-    nsAutoPtr<const txXPathNode> mNode;
+ private:
+  nsAutoPtr<txResultBuffer> mBuffer;
+  nsAutoPtr<const txXPathNode> mNode;
 };
 
-class txRtfHandler : public txBufferingHandler
-{
-public:
-    nsresult getAsRTF(txAExprResult** aResult);
+class txRtfHandler : public txBufferingHandler {
+ public:
+  nsresult getAsRTF(txAExprResult** aResult);
 
-    nsresult endDocument(nsresult aResult) override;
-    nsresult startDocument() override;
+  nsresult endDocument(nsresult aResult) override;
+  nsresult startDocument() override;
 };
 
 #endif /* txRtfHandler_h___ */

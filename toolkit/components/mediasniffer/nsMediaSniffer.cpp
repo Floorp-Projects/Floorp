@@ -30,31 +30,32 @@ static const uint32_t MAX_BYTES_SNIFFED_MP3 = 320 * 144 / 32 + 1 + 4;
 NS_IMPL_ISUPPORTS(nsMediaSniffer, nsIContentSniffer)
 
 nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
-  // The string OggS, followed by the null byte.
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF\xFF", "OggS", APPLICATION_OGG),
-  // The string RIFF, followed by four bytes, followed by the string WAVE
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF", "RIFF\x00\x00\x00\x00WAVE", AUDIO_WAV),
-  // mp3 with ID3 tags, the string "ID3".
-  PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3),
-  // FLAC with standard header
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "fLaC", AUDIO_FLAC)
-};
+    // The string OggS, followed by the null byte.
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF\xFF", "OggS", APPLICATION_OGG),
+    // The string RIFF, followed by four bytes, followed by the string WAVE
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF",
+                  "RIFF\x00\x00\x00\x00WAVE", AUDIO_WAV),
+    // mp3 with ID3 tags, the string "ID3".
+    PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3),
+    // FLAC with standard header
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "fLaC", AUDIO_FLAC)};
 
 // For a complete list of file types, see http://www.ftyps.com/index.html
 nsMediaSnifferEntry sFtypEntries[] = {
-  PATTERN_ENTRY("\xFF\xFF\xFF", "mp4", VIDEO_MP4), // Could be mp41 or mp42.
-  PATTERN_ENTRY("\xFF\xFF\xFF", "avc", VIDEO_MP4), // Could be avc1, avc2, ...
-  PATTERN_ENTRY("\xFF\xFF\xFF", "3gp", VIDEO_3GPP), // Could be 3gp4, 3gp5, ...
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4V ", VIDEO_MP4),
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4A ", AUDIO_MP4),
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4P ", AUDIO_MP4),
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "qt  ", VIDEO_QUICKTIME),
-  PATTERN_ENTRY("\xFF\xFF\xFF", "iso", VIDEO_MP4), // Could be isom or iso2.
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "mmp4", VIDEO_MP4),
+    PATTERN_ENTRY("\xFF\xFF\xFF", "mp4", VIDEO_MP4),  // Could be mp41 or mp42.
+    PATTERN_ENTRY("\xFF\xFF\xFF", "avc",
+                  VIDEO_MP4),  // Could be avc1, avc2, ...
+    PATTERN_ENTRY("\xFF\xFF\xFF", "3gp",
+                  VIDEO_3GPP),  // Could be 3gp4, 3gp5, ...
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4V ", VIDEO_MP4),
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4A ", AUDIO_MP4),
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4P ", AUDIO_MP4),
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "qt  ", VIDEO_QUICKTIME),
+    PATTERN_ENTRY("\xFF\xFF\xFF", "iso", VIDEO_MP4),  // Could be isom or iso2.
+    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "mmp4", VIDEO_MP4),
 };
 
-static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType)
-{
+static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType) {
   for (size_t i = 0; i < mozilla::ArrayLength(sFtypEntries); ++i) {
     const auto& currentEntry = sFtypEntries[i];
     bool matched = true;
@@ -76,27 +77,24 @@ static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType)
 }
 
 // This function implements sniffing algorithm for MP4 family file types,
-// including MP4 (described at http://mimesniff.spec.whatwg.org/#signature-for-mp4),
-// M4A (Apple iTunes audio), and 3GPP.
-static bool
-MatchesMP4(const uint8_t* aData, const uint32_t aLength,
-           nsACString& aSniffedType)
-{
+// including MP4 (described at
+// http://mimesniff.spec.whatwg.org/#signature-for-mp4), M4A (Apple iTunes
+// audio), and 3GPP.
+static bool MatchesMP4(const uint8_t* aData, const uint32_t aLength,
+                       nsACString& aSniffedType) {
   if (aLength <= MP4_MIN_BYTES_COUNT) {
     return false;
   }
   // Conversion from big endian to host byte order.
   uint32_t boxSize =
-    (uint32_t)(aData[3] | aData[2] << 8 | aData[1] << 16 | aData[0] << 24);
+      (uint32_t)(aData[3] | aData[2] << 8 | aData[1] << 16 | aData[0] << 24);
 
   // Boxsize should be evenly divisible by 4.
   if (boxSize % 4 || aLength < boxSize) {
     return false;
   }
   // The string "ftyp".
-  if (aData[4] != 0x66 ||
-      aData[5] != 0x74 ||
-      aData[6] != 0x79 ||
+  if (aData[4] != 0x66 || aData[5] != 0x74 || aData[6] != 0x79 ||
       aData[7] != 0x70) {
     return false;
   }
@@ -115,25 +113,21 @@ MatchesMP4(const uint8_t* aData, const uint32_t aLength,
   return false;
 }
 
-static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength)
-{
+static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength) {
   return nestegg_sniff((uint8_t*)aData, aLength) ? true : false;
 }
 
 // This function implements mp3 sniffing based on parsing
 // packet headers and looking for expected boundaries.
-static bool MatchesMP3(const uint8_t* aData, const uint32_t aLength)
-{
+static bool MatchesMP3(const uint8_t* aData, const uint32_t aLength) {
   return mp3_sniff(aData, (long)aLength);
 }
 
-static bool MatchesFLAC(const uint8_t* aData, const uint32_t aLength)
-{
+static bool MatchesFLAC(const uint8_t* aData, const uint32_t aLength) {
   return mozilla::FlacDemuxer::FlacSniffer(aData, aLength);
 }
 
-static bool MatchesADTS(const uint8_t* aData, const uint32_t aLength)
-{
+static bool MatchesADTS(const uint8_t* aData, const uint32_t aLength) {
   return mozilla::ADTSDemuxer::ADTSSniffer(aData, aLength);
 }
 
@@ -141,8 +135,7 @@ NS_IMETHODIMP
 nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        const uint8_t* aData,
                                        const uint32_t aLength,
-                                       nsACString& aSniffedType)
-{
+                                       nsACString& aSniffedType) {
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel) {
     nsLoadFlags loadFlags = 0;

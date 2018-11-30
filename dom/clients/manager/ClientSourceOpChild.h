@@ -14,30 +14,25 @@ namespace dom {
 
 class ClientSource;
 
-class ClientSourceOpChild final : public PClientSourceOpChild
-{
+class ClientSourceOpChild final : public PClientSourceOpChild {
   MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
 
-  ClientSource*
-  GetSource() const;
+  ClientSource* GetSource() const;
 
   template <typename Method, typename Args>
-  void
-  DoSourceOp(Method aMethod, const Args& aArgs);
+  void DoSourceOp(Method aMethod, const Args& aArgs);
 
   // PClientSourceOpChild interface
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-public:
+ public:
   ClientSourceOpChild() = default;
   ~ClientSourceOpChild() = default;
 
-  void
-  Init(const ClientOpConstructorArgs& aArgs);
+  void Init(const ClientOpConstructorArgs& aArgs);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientSourceOpChild_h
+#endif  // _mozilla_dom_ClientSourceOpChild_h

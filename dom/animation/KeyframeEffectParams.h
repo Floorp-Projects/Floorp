@@ -7,17 +7,16 @@
 #ifndef mozilla_KeyframeEffectParams_h
 #define mozilla_KeyframeEffectParams_h
 
-#include "mozilla/dom/KeyframeEffectBinding.h" // IterationCompositeOperation
+#include "mozilla/dom/KeyframeEffectBinding.h"  // IterationCompositeOperation
 
 namespace mozilla {
 
-struct KeyframeEffectParams
-{
+struct KeyframeEffectParams {
   dom::IterationCompositeOperation mIterationComposite =
-    dom::IterationCompositeOperation::Replace;
+      dom::IterationCompositeOperation::Replace;
   dom::CompositeOperation mComposite = dom::CompositeOperation::Replace;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_KeyframeEffectParams_h
+#endif  // mozilla_KeyframeEffectParams_h

@@ -12,38 +12,35 @@
 namespace js {
 namespace jit {
 
-class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared
-{
-  protected:
-    LIRGeneratorMIPS64(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : LIRGeneratorMIPSShared(gen, graph, lirGraph)
-    { }
+class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared {
+ protected:
+  LIRGeneratorMIPS64(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
+      : LIRGeneratorMIPSShared(gen, graph, lirGraph) {}
 
-    void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t);
-    void defineInt64Phi(MPhi*, size_t);
+  void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t);
+  void defineInt64Phi(MPhi*, size_t);
 
-    // Returns a box allocation. reg2 is ignored on 64-bit platforms.
-    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
-                               bool useAtStart = false);
+  // Returns a box allocation. reg2 is ignored on 64-bit platforms.
+  LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
+                             bool useAtStart = false);
 
-    inline LDefinition tempToUnbox() {
-        return temp();
-    }
+  inline LDefinition tempToUnbox() { return temp(); }
 
-    void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
+  void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block,
+                            size_t lirIndex);
 
-    void lowerTruncateDToInt32(MTruncateToInt32* ins);
-    void lowerTruncateFToInt32(MTruncateToInt32* ins);
+  void lowerTruncateDToInt32(MTruncateToInt32* ins);
+  void lowerTruncateFToInt32(MTruncateToInt32* ins);
 
-    void lowerDivI64(MDiv* div);
-    void lowerModI64(MMod* mod);
-    void lowerUDivI64(MDiv* div);
-    void lowerUModI64(MMod* mod);
+  void lowerDivI64(MDiv* div);
+  void lowerModI64(MMod* mod);
+  void lowerUDivI64(MDiv* div);
+  void lowerUModI64(MMod* mod);
 };
 
 typedef LIRGeneratorMIPS64 LIRGeneratorSpecific;
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_mips64_Lowering_mips64_h */

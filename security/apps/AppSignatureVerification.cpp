@@ -41,7 +41,6 @@
 #include "plstr.h"
 #include "secmime.h"
 
-
 using namespace mozilla::pkix;
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -52,10 +51,8 @@ namespace {
 
 // A convenient way to pair the bytes of a digest with the algorithm that
 // purportedly produced those bytes. Only SHA-1 and SHA-256 are supported.
-struct DigestWithAlgorithm
-{
-  nsresult ValidateLength() const
-  {
+struct DigestWithAlgorithm {
+  nsresult ValidateLength() const {
     size_t hashLen;
     switch (mAlgorithm) {
       case SEC_OID_SHA256:
@@ -66,7 +63,7 @@ struct DigestWithAlgorithm
         break;
       default:
         MOZ_ASSERT_UNREACHABLE(
-          "unsupported hash type in DigestWithAlgorithm::ValidateLength");
+            "unsupported hash type in DigestWithAlgorithm::ValidateLength");
         return NS_ERROR_FAILURE;
     }
     if (mDigest.Length() != hashLen) {
@@ -80,12 +77,9 @@ struct DigestWithAlgorithm
 };
 
 // The digest must have a lifetime greater than or equal to the returned string.
-inline nsDependentCSubstring
-DigestToDependentString(const Digest& digest)
-{
+inline nsDependentCSubstring DigestToDependentString(const Digest& digest) {
   return nsDependentCSubstring(
-    BitwiseCast<char*, unsigned char*>(digest.get().data),
-    digest.get().len);
+      BitwiseCast<char*, unsigned char*>(digest.get().data), digest.get().len);
 }
 
 // Reads a maximum of 1MB from a stream into the supplied buffer.
@@ -98,9 +92,8 @@ DigestToDependentString(const Digest& digest)
 // @param stream  The input stream to read from.
 // @param buf     The buffer that we read the stream into, which must have
 //                already been allocated.
-nsresult
-ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
-{
+nsresult ReadStream(const nsCOMPtr<nsIInputStream>& stream,
+                    /*out*/ SECItem& buf) {
   // The size returned by Available() might be inaccurate so we need
   // to check that Available() matches up with the actual length of
   // the file.
@@ -111,8 +104,8 @@ ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
   }
 
   // Cap the maximum accepted size of signature-related files at 1MB (which is
-  // still crazily huge) to avoid OOM. The uncompressed length of an entry can be
-  // hundreds of times larger than the compressed version, especially if
+  // still crazily huge) to avoid OOM. The uncompressed length of an entry can
+  // be hundreds of times larger than the compressed version, especially if
   // someone has speifically crafted the entry to cause OOM or to consume
   // massive amounts of disk space.
   static const uint32_t MAX_LENGTH = 1024 * 1024;
@@ -137,7 +130,7 @@ ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  buf.data[buf.len - 1] = 0; // null-terminate
+  buf.data[buf.len - 1] = 0;  // null-terminate
 
   return NS_OK;
 }
@@ -147,14 +140,12 @@ ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
 // there is more than one match. If bufDigest is not null then on success
 // bufDigest will contain the digeset of the entry using the given digest
 // algorithm.
-nsresult
-FindAndLoadOneEntry(nsIZipReader* zip,
-                    const nsACString& searchPattern,
-                    /*out*/ nsACString& filename,
-                    /*out*/ SECItem& buf,
-                    /*optional, in*/ SECOidTag digestAlgorithm = SEC_OID_SHA1,
-                    /*optional, out*/ Digest* bufDigest = nullptr)
-{
+nsresult FindAndLoadOneEntry(
+    nsIZipReader* zip, const nsACString& searchPattern,
+    /*out*/ nsACString& filename,
+    /*out*/ SECItem& buf,
+    /*optional, in*/ SECOidTag digestAlgorithm = SEC_OID_SHA1,
+    /*optional, out*/ Digest* bufDigest = nullptr) {
   nsCOMPtr<nsIUTF8StringEnumerator> files;
   nsresult rv = zip->FindEntries(searchPattern, getter_AddRefs(files));
   if (NS_FAILED(rv) || !files) {
@@ -206,11 +197,9 @@ FindAndLoadOneEntry(nsIZipReader* zip,
 // @param buf A scratch buffer that we use for doing the I/O, which must have
 //            already been allocated. The size of this buffer is the unit
 //            size of our I/O.
-nsresult
-VerifyStreamContentDigest(nsIInputStream* stream,
-                          const DigestWithAlgorithm& digestFromManifest,
-                          SECItem& buf)
-{
+nsresult VerifyStreamContentDigest(
+    nsIInputStream* stream, const DigestWithAlgorithm& digestFromManifest,
+    SECItem& buf) {
   MOZ_ASSERT(buf.len > 0);
   nsresult rv = digestFromManifest.ValidateLength();
   if (NS_FAILED(rv)) {
@@ -225,7 +214,7 @@ VerifyStreamContentDigest(nsIInputStream* stream,
   }
 
   UniquePK11Context digestContext(
-    PK11_CreateDigestContext(digestFromManifest.mAlgorithm));
+      PK11_CreateDigestContext(digestFromManifest.mAlgorithm));
   if (!digestContext) {
     return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
@@ -241,7 +230,7 @@ VerifyStreamContentDigest(nsIInputStream* stream,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (bytesRead == 0) {
-      break; // EOF
+      break;  // EOF
     }
 
     totalBytesRead += bytesRead;
@@ -272,11 +261,10 @@ VerifyStreamContentDigest(nsIInputStream* stream,
   return NS_OK;
 }
 
-nsresult
-VerifyEntryContentDigest(nsIZipReader* zip, const nsACString& aFilename,
-                         const DigestWithAlgorithm& digestFromManifest,
-                         SECItem& buf)
-{
+nsresult VerifyEntryContentDigest(nsIZipReader* zip,
+                                  const nsACString& aFilename,
+                                  const DigestWithAlgorithm& digestFromManifest,
+                                  SECItem& buf) {
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = zip->GetInputStream(aFilename, getter_AddRefs(stream));
   if (NS_FAILED(rv)) {
@@ -288,17 +276,15 @@ VerifyEntryContentDigest(nsIZipReader* zip, const nsACString& aFilename,
 
 // On input, nextLineStart is the start of the current line. On output,
 // nextLineStart is the start of the next line.
-nsresult
-ReadLine(/*in/out*/ const char* & nextLineStart, /*out*/ nsCString & line,
-         bool allowContinuations = true)
-{
+nsresult ReadLine(/*in/out*/ const char*& nextLineStart,
+                  /*out*/ nsCString& line, bool allowContinuations = true) {
   line.Truncate();
   size_t previousLength = 0;
   size_t currentLength = 0;
   for (;;) {
     const char* eol = PL_strpbrk(nextLineStart, "\r\n");
 
-    if (!eol) { // Reached end of file before newline
+    if (!eol) {  // Reached end of file before newline
       eol = nextLineStart + strlen(nextLineStart);
     }
 
@@ -338,7 +324,7 @@ ReadLine(/*in/out*/ const char* & nextLineStart, /*out*/ nsCString & line,
       return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
     }
 
-    ++nextLineStart; // skip space and keep appending
+    ++nextLineStart;  // skip space and keep appending
   }
 }
 
@@ -352,11 +338,9 @@ ReadLine(/*in/out*/ const char* & nextLineStart, /*out*/ nsCString & line,
 #define JAR_MF_HEADER "Manifest-Version: 1.0"
 #define JAR_SF_HEADER "Signature-Version: 1.0"
 
-nsresult
-ParseAttribute(const nsAutoCString & curLine,
-               /*out*/ nsAutoCString & attrName,
-               /*out*/ nsAutoCString & attrValue)
-{
+nsresult ParseAttribute(const nsAutoCString& curLine,
+                        /*out*/ nsAutoCString& attrName,
+                        /*out*/ nsAutoCString& attrValue) {
   // Find the colon that separates the name from the value.
   int32_t colonPos = curLine.FindChar(':');
   if (colonPos == kNotFound) {
@@ -367,10 +351,9 @@ ParseAttribute(const nsAutoCString & curLine,
   int32_t nameEnd = colonPos;
   for (;;) {
     if (nameEnd == 0) {
-      return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID; // colon with no name
+      return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;  // colon with no name
     }
-    if (curLine[nameEnd - 1] != ' ')
-      break;
+    if (curLine[nameEnd - 1] != ' ') break;
     --nameEnd;
   }
   curLine.Left(attrName, nameEnd);
@@ -388,10 +371,8 @@ ParseAttribute(const nsAutoCString & curLine,
 }
 
 // Parses the version line of the MF or SF header.
-nsresult
-CheckManifestVersion(const char* & nextLineStart,
-                     const nsACString & expectedHeader)
-{
+nsresult CheckManifestVersion(const char*& nextLineStart,
+                              const nsACString& expectedHeader) {
   // The JAR spec says: "Manifest-Version and Signature-Version must be first,
   // and in exactly that case (so that they can be recognized easily as magic
   // strings)."
@@ -424,10 +405,8 @@ CheckManifestVersion(const char* & nextLineStart,
 //
 // filebuf must be null-terminated. On output, mfDigest will contain the
 // decoded value of the appropriate SHA*-DigestManifest, if found.
-nsresult
-ParseSF(const char* filebuf, SECOidTag digestAlgorithm,
-        /*out*/ nsAutoCString& mfDigest)
-{
+nsresult ParseSF(const char* filebuf, SECOidTag digestAlgorithm,
+                 /*out*/ nsAutoCString& mfDigest) {
   const char* digestNameToFind = nullptr;
   switch (digestAlgorithm) {
     case SEC_OID_SHA256:
@@ -442,8 +421,8 @@ ParseSF(const char* filebuf, SECOidTag digestAlgorithm,
   }
 
   const char* nextLineStart = filebuf;
-  nsresult rv = CheckManifestVersion(nextLineStart,
-                                     NS_LITERAL_CSTRING(JAR_SF_HEADER));
+  nsresult rv =
+      CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_SF_HEADER));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -499,10 +478,10 @@ ParseSF(const char* filebuf, SECOidTag digestAlgorithm,
 // the signature file. If the signature file has a SHA-256 digest, then SHA-256
 // entries must be present in the manifest file. If the signature file only has
 // a SHA-1 digest, then only SHA-1 digests will be used in the manifest file.
-nsresult
-ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
-        /*out*/ nsTHashtable<nsCStringHashKey>& mfItems, ScopedAutoSECItem& buf)
-{
+nsresult ParseMF(const char* filebuf, nsIZipReader* zip,
+                 SECOidTag digestAlgorithm,
+                 /*out*/ nsTHashtable<nsCStringHashKey>& mfItems,
+                 ScopedAutoSECItem& buf) {
   const char* digestNameToFind = nullptr;
   switch (digestAlgorithm) {
     case SEC_OID_SHA256:
@@ -517,8 +496,8 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
   }
 
   const char* nextLineStart = filebuf;
-  nsresult rv = CheckManifestVersion(nextLineStart,
-                                     NS_LITERAL_CSTRING(JAR_MF_HEADER));
+  nsresult rv =
+      CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_MF_HEADER));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -571,7 +550,7 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
 
       // Verify that the entry's content digest matches the digest from this
       // MF section.
-      DigestWithAlgorithm digestWithAlgorithm = { digest, digestAlgorithm };
+      DigestWithAlgorithm digestWithAlgorithm = {digest, digestAlgorithm};
       rv = VerifyEntryContentDigest(zip, curItemName, digestWithAlgorithm, buf);
       if (NS_FAILED(rv)) {
         return rv;
@@ -589,7 +568,7 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
       curItemName.Truncate();
       digest.Truncate();
 
-      continue; // skip the rest of the loop below
+      continue;  // skip the rest of the loop below
     }
 
     nsAutoCString attrName;
@@ -603,7 +582,7 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
 
     // (1) Digest:
     if (attrName.EqualsIgnoreCase(digestNameToFind)) {
-      if (!digest.IsEmpty()) { // multiple SHA* digests in section
+      if (!digest.IsEmpty()) {  // multiple SHA* digests in section
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
       }
 
@@ -617,7 +596,7 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
 
     // (2) Name: associates this manifest section with a file in the jar.
     if (attrName.LowerCaseEqualsLiteral("name")) {
-      if (MOZ_UNLIKELY(curItemName.Length() > 0)) // multiple names in section
+      if (MOZ_UNLIKELY(curItemName.Length() > 0))  // multiple names in section
         return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
 
       if (MOZ_UNLIKELY(attrValue.Length() == 0))
@@ -642,10 +621,9 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
   return NS_OK;
 }
 
-nsresult
-VerifyCertificate(CERTCertificate* signerCert, AppTrustedRoot trustedRoot,
-                  /*out*/ UniqueCERTCertList& builtChain)
-{
+nsresult VerifyCertificate(CERTCertificate* signerCert,
+                           AppTrustedRoot trustedRoot,
+                           /*out*/ UniqueCERTCertList& builtChain) {
   if (NS_WARN_IF(!signerCert)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -656,18 +634,16 @@ VerifyCertificate(CERTCertificate* signerCert, AppTrustedRoot trustedRoot,
     return rv;
   }
   Input certDER;
-  mozilla::pkix::Result result = certDER.Init(signerCert->derCert.data,
-                                              signerCert->derCert.len);
+  mozilla::pkix::Result result =
+      certDER.Init(signerCert->derCert.data, signerCert->derCert.len);
   if (result != Success) {
     return mozilla::psm::GetXPCOMFromNSSError(MapResultToPRErrorCode(result));
   }
 
-  result = BuildCertChain(trustDomain, certDER, Now(),
-                          EndEntityOrCA::MustBeEndEntity,
-                          KeyUsage::digitalSignature,
-                          KeyPurposeId::id_kp_codeSigning,
-                          CertPolicyId::anyPolicy,
-                          nullptr /*stapledOCSPResponse*/);
+  result = BuildCertChain(
+      trustDomain, certDER, Now(), EndEntityOrCA::MustBeEndEntity,
+      KeyUsage::digitalSignature, KeyPurposeId::id_kp_codeSigning,
+      CertPolicyId::anyPolicy, nullptr /*stapledOCSPResponse*/);
   if (result == mozilla::pkix::Result::ERROR_EXPIRED_CERTIFICATE) {
     // For code-signing you normally need trusted 3rd-party timestamps to
     // handle expiration properly. The signer could always mess with their
@@ -703,10 +679,8 @@ VerifyCertificate(CERTCertificate* signerCert, AppTrustedRoot trustedRoot,
 // The returned signerInfo is owned by signedData, so the caller must ensure
 // that the lifetime of the signerInfo is contained by the lifetime of the
 // signedData.
-NSSCMSSignerInfo*
-GetSignerInfoForDigestAlgorithm(NSSCMSSignedData* signedData,
-                                SECOidTag digestAlgorithm)
-{
+NSSCMSSignerInfo* GetSignerInfoForDigestAlgorithm(NSSCMSSignedData* signedData,
+                                                  SECOidTag digestAlgorithm) {
   MOZ_ASSERT(digestAlgorithm == SEC_OID_SHA1 ||
              digestAlgorithm == SEC_OID_SHA256);
   if (digestAlgorithm != SEC_OID_SHA1 && digestAlgorithm != SEC_OID_SHA256) {
@@ -719,7 +693,7 @@ GetSignerInfoForDigestAlgorithm(NSSCMSSignedData* signedData,
   }
   for (int i = 0; i < numSigners; i++) {
     NSSCMSSignerInfo* signerInfo =
-      NSS_CMSSignedData_GetSignerInfo(signedData, i);
+        NSS_CMSSignedData_GetSignerInfo(signedData, i);
     // NSS_CMSSignerInfo_GetDigestAlgTag isn't exported from NSS.
     SECOidData* digestAlgOID = SECOID_FindOID(&signerInfo->digestAlg.algorithm);
     if (!digestAlgOID) {
@@ -732,23 +706,20 @@ GetSignerInfoForDigestAlgorithm(NSSCMSSignedData* signedData,
   return nullptr;
 }
 
-nsresult
-VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
-                const SECItem& detachedSHA1Digest,
-                const SECItem& detachedSHA256Digest,
-                /*out*/ SECOidTag& digestAlgorithm,
-                /*out*/ UniqueCERTCertList& builtChain)
-{
+nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
+                         const SECItem& detachedSHA1Digest,
+                         const SECItem& detachedSHA256Digest,
+                         /*out*/ SECOidTag& digestAlgorithm,
+                         /*out*/ UniqueCERTCertList& builtChain) {
   if (NS_WARN_IF(!buffer.data || buffer.len == 0 || !detachedSHA1Digest.data ||
                  detachedSHA1Digest.len == 0 || !detachedSHA256Digest.data ||
                  detachedSHA256Digest.len == 0)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  UniqueNSSCMSMessage
-    cmsMsg(NSS_CMSMessage_CreateFromDER(const_cast<SECItem*>(&buffer), nullptr,
-                                        nullptr, nullptr, nullptr, nullptr,
-                                        nullptr));
+  UniqueNSSCMSMessage cmsMsg(NSS_CMSMessage_CreateFromDER(
+      const_cast<SECItem*>(&buffer), nullptr, nullptr, nullptr, nullptr,
+      nullptr, nullptr));
   if (!cmsMsg) {
     return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
   }
@@ -763,14 +734,14 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
   }
 
   // We're expecting this to be a PKCS#7 signedData content info.
-  if (NSS_CMSContentInfo_GetContentTypeTag(cinfo)
-        != SEC_OID_PKCS7_SIGNED_DATA) {
+  if (NSS_CMSContentInfo_GetContentTypeTag(cinfo) !=
+      SEC_OID_PKCS7_SIGNED_DATA) {
     return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
   }
 
   // signedData is non-owning
   NSSCMSSignedData* signedData =
-    static_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
+      static_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
   if (!signedData) {
     return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
   }
@@ -783,10 +754,9 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
   }
   if (signedData->rawCerts) {
     for (size_t i = 0; signedData->rawCerts[i]; ++i) {
-      UniqueCERTCertificate
-        cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                     signedData->rawCerts[i], nullptr, false,
-                                     true));
+      UniqueCERTCertificate cert(CERT_NewTempCertificate(
+          CERT_GetDefaultCertDB(), signedData->rawCerts[i], nullptr, false,
+          true));
       // Skip certificates that fail to parse
       if (!cert) {
         continue;
@@ -796,12 +766,12 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      Unused << cert.release(); // Ownership transferred to the cert list.
+      Unused << cert.release();  // Ownership transferred to the cert list.
     }
   }
 
   NSSCMSSignerInfo* signerInfo =
-    GetSignerInfoForDigestAlgorithm(signedData, SEC_OID_SHA256);
+      GetSignerInfoForDigestAlgorithm(signedData, SEC_OID_SHA256);
   const SECItem* detachedDigest = &detachedSHA256Digest;
   digestAlgorithm = SEC_OID_SHA256;
   if (!signerInfo) {
@@ -814,9 +784,8 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
   }
 
   // Get the end-entity certificate.
-  CERTCertificate* signerCert =
-    NSS_CMSSignerInfo_GetSigningCertificate(signerInfo,
-                                            CERT_GetDefaultCertDB());
+  CERTCertificate* signerCert = NSS_CMSSignerInfo_GetSigningCertificate(
+      signerInfo, CERT_GetDefaultCertDB());
   if (!signerCert) {
     return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
   }
@@ -829,30 +798,23 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
   // Ensure that the PKCS#7 data OID is present as the PKCS#9 contentType.
   const char* pkcs7DataOidString = "1.2.840.113549.1.7.1";
   ScopedAutoSECItem pkcs7DataOid;
-  if (SEC_StringToOID(nullptr, &pkcs7DataOid, pkcs7DataOidString, 0)
-        != SECSuccess) {
+  if (SEC_StringToOID(nullptr, &pkcs7DataOid, pkcs7DataOidString, 0) !=
+      SECSuccess) {
     return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
   }
 
-  return MapSECStatus(
-    NSS_CMSSignerInfo_Verify(signerInfo, const_cast<SECItem*>(detachedDigest),
-                             &pkcs7DataOid));
+  return MapSECStatus(NSS_CMSSignerInfo_Verify(
+      signerInfo, const_cast<SECItem*>(detachedDigest), &pkcs7DataOid));
 }
 
-class CoseVerificationContext
-{
-public:
+class CoseVerificationContext {
+ public:
   explicit CoseVerificationContext(AppTrustedRoot aTrustedRoot)
-    : mTrustedRoot(aTrustedRoot)
-    , mCertDER(nullptr)
-    , mCertDERLen(0)
-  {
-  }
+      : mTrustedRoot(aTrustedRoot), mCertDER(nullptr), mCertDERLen(0) {}
   ~CoseVerificationContext() {}
 
   AppTrustedRoot GetTrustedRoot() { return mTrustedRoot; }
-  nsresult SetCert(SECItem* aCertDER)
-  {
+  nsresult SetCert(SECItem* aCertDER) {
     mCertDERLen = aCertDER->len;
     mCertDER = MakeUnique<uint8_t[]>(mCertDERLen);
     if (!mCertDER) {
@@ -864,7 +826,7 @@ public:
   uint8_t* GetCert() { return mCertDER.get(); }
   unsigned int GetCertLen() { return mCertDERLen; }
 
-private:
+ private:
   AppTrustedRoot mTrustedRoot;
   UniquePtr<uint8_t[]> mCertDER;
   unsigned int mCertDERLen;
@@ -873,19 +835,12 @@ private:
 // Verification function called from cose-rust.
 // Returns true if everything goes well and the signature and certificate chain
 // are good, false in any other case.
-bool
-CoseVerificationCallback(const uint8_t* aPayload,
-                         size_t aPayloadLen,
-                         const uint8_t** aCertChain,
-                         size_t aCertChainLen,
-                         const size_t* aCertsLen,
-                         const uint8_t* aEECert,
-                         size_t aEECertLen,
-                         const uint8_t* aSignature,
-                         size_t aSignatureLen,
-                         uint8_t aSignatureAlgorithm,
-                         void* ctx)
-{
+bool CoseVerificationCallback(const uint8_t* aPayload, size_t aPayloadLen,
+                              const uint8_t** aCertChain, size_t aCertChainLen,
+                              const size_t* aCertsLen, const uint8_t* aEECert,
+                              size_t aEECertLen, const uint8_t* aSignature,
+                              size_t aSignatureLen, uint8_t aSignatureAlgorithm,
+                              void* ctx) {
   if (!ctx || !aPayload || !aEECert || !aSignature) {
     return false;
   }
@@ -896,7 +851,7 @@ CoseVerificationCallback(const uint8_t* aPayload,
   CK_MECHANISM_TYPE mechanism;
   SECOidTag oid;
   uint32_t hash_length;
-  SECItem param = { siBuffer, nullptr, 0 };
+  SECItem param = {siBuffer, nullptr, 0};
   switch (aSignatureAlgorithm) {
     case ES256:
       mechanism = CKM_ECDSA;
@@ -922,16 +877,15 @@ CoseVerificationCallback(const uint8_t* aPayload,
   if (rv != SECSuccess) {
     return false;
   }
-  SECItem hashItem = { siBuffer, hashBuf, hash_length };
+  SECItem hashItem = {siBuffer, hashBuf, hash_length};
   CERTCertDBHandle* dbHandle = CERT_GetDefaultCertDB();
   if (!dbHandle) {
     return false;
   }
-  SECItem derCert = { siBuffer,
-                      const_cast<uint8_t*>(aEECert),
-                      static_cast<unsigned int>(aEECertLen) };
+  SECItem derCert = {siBuffer, const_cast<uint8_t*>(aEECert),
+                     static_cast<unsigned int>(aEECertLen)};
   UniqueCERTCertificate cert(
-    CERT_NewTempCertificate(dbHandle, &derCert, nullptr, false, true));
+      CERT_NewTempCertificate(dbHandle, &derCert, nullptr, false, true));
   if (!cert) {
     return false;
   }
@@ -939,11 +893,10 @@ CoseVerificationCallback(const uint8_t* aPayload,
   if (!key) {
     return false;
   }
-  SECItem signatureItem = { siBuffer,
-                             const_cast<uint8_t*>(aSignature),
-                             static_cast<unsigned int>(aSignatureLen) };
-  rv = PK11_VerifyWithMechanism(
-    key.get(), mechanism, &param, &signatureItem, &hashItem, nullptr);
+  SECItem signatureItem = {siBuffer, const_cast<uint8_t*>(aSignature),
+                           static_cast<unsigned int>(aSignatureLen)};
+  rv = PK11_VerifyWithMechanism(key.get(), mechanism, &param, &signatureItem,
+                                &hashItem, nullptr);
   if (rv != SECSuccess) {
     return false;
   }
@@ -951,11 +904,10 @@ CoseVerificationCallback(const uint8_t* aPayload,
   // Load intermediate certs into NSS so we can verify the cert chain.
   UniqueCERTCertList tempCerts(CERT_NewCertList());
   for (size_t i = 0; i < aCertChainLen; ++i) {
-    SECItem derCert = { siBuffer,
-                        const_cast<uint8_t*>(aCertChain[i]),
-                        static_cast<unsigned int>(aCertsLen[i]) };
+    SECItem derCert = {siBuffer, const_cast<uint8_t*>(aCertChain[i]),
+                       static_cast<unsigned int>(aCertsLen[i])};
     UniqueCERTCertificate tempCert(
-      CERT_NewTempCertificate(dbHandle, &derCert, nullptr, false, true));
+        CERT_NewTempCertificate(dbHandle, &derCert, nullptr, false, true));
     // Skip certs that we can't parse. If it was one we needed, the verification
     // will fail later.
     if (!tempCert) {
@@ -983,11 +935,9 @@ CoseVerificationCallback(const uint8_t* aPayload,
   return result;
 }
 
-nsresult
-VerifyAppManifest(SECOidTag aDigestToUse, nsCOMPtr<nsIZipReader> aZip,
-                  nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
-                  const SECItem& aManifestBuffer)
-{
+nsresult VerifyAppManifest(SECOidTag aDigestToUse, nsCOMPtr<nsIZipReader> aZip,
+                           nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
+                           const SECItem& aManifestBuffer) {
   // Allocate the I/O buffer only once per JAR, instead of once per entry, in
   // order to minimize malloc/free calls and in order to avoid fragmenting
   // memory.
@@ -995,8 +945,9 @@ VerifyAppManifest(SECOidTag aDigestToUse, nsCOMPtr<nsIZipReader> aZip,
 
   nsTHashtable<nsCStringHashKey> items;
 
-  nsresult rv = ParseMF(BitwiseCast<char*, unsigned char*>(aManifestBuffer.data),
-    aZip, aDigestToUse, items, buf);
+  nsresult rv =
+      ParseMF(BitwiseCast<char*, unsigned char*>(aManifestBuffer.data), aZip,
+              aDigestToUse, items, buf);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1024,8 +975,7 @@ VerifyAppManifest(SECOidTag aDigestToUse, nsCOMPtr<nsIZipReader> aZip,
     rv = entries->GetNext(entryFilename);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MOZ_LOG(gPIPNSSLog,
-            LogLevel::Debug,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("Verifying digests for %s", entryFilename.get()));
 
     if (entryFilename.Length() == 0) {
@@ -1075,17 +1025,15 @@ VerifyAppManifest(SECOidTag aDigestToUse, nsCOMPtr<nsIZipReader> aZip,
 // x_01_x: COSE is verified if present, PKCS#7 must verify
 // x_10_x: COSE is required, PKCS#7 must verify if present
 // x_11_x: COSE is required, PKCS#7 disabled (fail when present)
-class SignaturePolicy
-{
-public:
+class SignaturePolicy {
+ public:
   explicit SignaturePolicy(int32_t preference)
-    : mProcessCose(true)
-    , mCoseRequired(false)
-    , mProcessPK7(true)
-    , mPK7Required(true)
-    , mSHA1Allowed(true)
-    , mSHA256Allowed(true)
-  {
+      : mProcessCose(true),
+        mCoseRequired(false),
+        mProcessPK7(true),
+        mPK7Required(true),
+        mSHA1Allowed(true),
+        mSHA256Allowed(true) {
     mCoseRequired = (preference & 0b100) != 0;
     mProcessCose = (preference & 0b110) != 0;
     mPK7Required = (preference & 0b100) == 0;
@@ -1098,15 +1046,12 @@ public:
       mSHA256Allowed = true;
     }
   }
-  ~SignaturePolicy()
-  {
-  }
+  ~SignaturePolicy() {}
   bool ProcessCOSE() { return mProcessCose; }
   bool COSERequired() { return mCoseRequired; }
   bool PK7Required() { return mPK7Required; }
   bool ProcessPK7() { return mProcessPK7; }
-  bool IsPK7HashAllowed(SECOidTag aHashAlg)
-  {
+  bool IsPK7HashAllowed(SECOidTag aHashAlg) {
     if (aHashAlg == SEC_OID_SHA256 && mSHA256Allowed) {
       return true;
     }
@@ -1116,7 +1061,7 @@ public:
     return false;
   }
 
-private:
+ private:
   bool mProcessCose;
   bool mCoseRequired;
   bool mProcessPK7;
@@ -1125,13 +1070,11 @@ private:
   bool mSHA256Allowed;
 };
 
-nsresult
-VerifyCOSESignature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
-                    SignaturePolicy& aPolicy,
-                    nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
-                    /* out */ bool& aVerified,
-                    /* out */ UniqueSECItem* aCoseCertItem)
-{
+nsresult VerifyCOSESignature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
+                             SignaturePolicy& aPolicy,
+                             nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
+                             /* out */ bool& aVerified,
+                             /* out */ UniqueSECItem* aCoseCertItem) {
   NS_ENSURE_ARG_POINTER(aZip);
   NS_ENSURE_ARG_POINTER(aCoseCertItem);
   bool required = aPolicy.COSERequired();
@@ -1140,8 +1083,9 @@ VerifyCOSESignature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   // Read COSE signature file.
   nsAutoCString coseFilename;
   ScopedAutoSECItem coseBuffer;
-  nsresult rv = FindAndLoadOneEntry(
-    aZip, NS_LITERAL_CSTRING(JAR_COSE_SEARCH_STRING), coseFilename, coseBuffer);
+  nsresult rv =
+      FindAndLoadOneEntry(aZip, NS_LITERAL_CSTRING(JAR_COSE_SEARCH_STRING),
+                          coseFilename, coseBuffer);
   if (NS_FAILED(rv)) {
     return required ? NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE : NS_OK;
   }
@@ -1149,28 +1093,23 @@ VerifyCOSESignature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   // Verify COSE signature.
   nsAutoCString mfFilename;
   ScopedAutoSECItem manifestBuffer;
-  rv = FindAndLoadOneEntry(aZip,
-                           NS_LITERAL_CSTRING(JAR_COSE_MF_SEARCH_STRING),
-                           mfFilename,
-                           manifestBuffer);
+  rv = FindAndLoadOneEntry(aZip, NS_LITERAL_CSTRING(JAR_COSE_MF_SEARCH_STRING),
+                           mfFilename, manifestBuffer);
   if (NS_FAILED(rv)) {
     return required ? NS_ERROR_SIGNED_JAR_WRONG_SIGNATURE : rv;
   }
   MOZ_ASSERT(manifestBuffer.len >= 1);
   MOZ_ASSERT(coseBuffer.len >= 1);
   CoseVerificationContext context(aTrustedRoot);
-  bool coseVerification = verify_cose_signature_ffi(manifestBuffer.data,
-                                                    manifestBuffer.len - 1,
-                                                    coseBuffer.data,
-                                                    coseBuffer.len - 1,
-                                                    &context,
-                                                    CoseVerificationCallback);
+  bool coseVerification = verify_cose_signature_ffi(
+      manifestBuffer.data, manifestBuffer.len - 1, coseBuffer.data,
+      coseBuffer.len - 1, &context, CoseVerificationCallback);
   if (!coseVerification) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
   // CoseVerificationCallback sets the context certificate to the first cert
   // it encounters.
-  const SECItem derCert = { siBuffer, context.GetCert(), context.GetCertLen() };
+  const SECItem derCert = {siBuffer, context.GetCert(), context.GetCertLen()};
   aCoseCertItem->reset(SECITEM_DupItem(&derCert));
   if (!aCoseCertItem) {
     return NS_ERROR_FAILURE;
@@ -1189,13 +1128,11 @@ VerifyCOSESignature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   return NS_OK;
 }
 
-nsresult
-VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
-                   SignaturePolicy& aPolicy,
-                   /* out */ nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
-                   /* out */ bool& aVerified,
-                   /* out */ UniqueCERTCertList& aBuiltChain)
-{
+nsresult VerifyPK7Signature(
+    AppTrustedRoot aTrustedRoot, nsIZipReader* aZip, SignaturePolicy& aPolicy,
+    /* out */ nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
+    /* out */ bool& aVerified,
+    /* out */ UniqueCERTCertList& aBuiltChain) {
   NS_ENSURE_ARG_POINTER(aZip);
   bool required = aPolicy.PK7Required();
   aVerified = false;
@@ -1204,7 +1141,7 @@ VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   nsAutoCString sigFilename;
   ScopedAutoSECItem sigBuffer;
   nsresult rv = FindAndLoadOneEntry(
-    aZip, nsLiteralCString(JAR_RSA_SEARCH_STRING), sigFilename, sigBuffer);
+      aZip, nsLiteralCString(JAR_RSA_SEARCH_STRING), sigFilename, sigBuffer);
   if (NS_FAILED(rv)) {
     return required ? NS_ERROR_SIGNED_JAR_NOT_SIGNED : NS_OK;
   }
@@ -1212,8 +1149,8 @@ VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   // Signature (SF) file
   nsAutoCString sfFilename;
   ScopedAutoSECItem sfBuffer;
-  rv = FindAndLoadOneEntry(
-    aZip, NS_LITERAL_CSTRING(JAR_SF_SEARCH_STRING), sfFilename, sfBuffer);
+  rv = FindAndLoadOneEntry(aZip, NS_LITERAL_CSTRING(JAR_SF_SEARCH_STRING),
+                           sfFilename, sfBuffer);
   if (NS_FAILED(rv)) {
     return required ? NS_ERROR_SIGNED_JAR_MANIFEST_INVALID : NS_OK;
   }
@@ -1221,14 +1158,14 @@ VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   // Calculate both the SHA-1 and SHA-256 hashes of the signature file - we
   // don't know what algorithm the PKCS#7 signature used.
   Digest sfCalculatedSHA1Digest;
-  rv = sfCalculatedSHA1Digest.DigestBuf(
-    SEC_OID_SHA1, sfBuffer.data, sfBuffer.len - 1);
+  rv = sfCalculatedSHA1Digest.DigestBuf(SEC_OID_SHA1, sfBuffer.data,
+                                        sfBuffer.len - 1);
   if (NS_FAILED(rv)) {
     return rv;
   }
   Digest sfCalculatedSHA256Digest;
-  rv = sfCalculatedSHA256Digest.DigestBuf(
-    SEC_OID_SHA256, sfBuffer.data, sfBuffer.len - 1);
+  rv = sfCalculatedSHA256Digest.DigestBuf(SEC_OID_SHA256, sfBuffer.data,
+                                          sfBuffer.len - 1);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1237,12 +1174,9 @@ VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   // If we get here, the signature has to verify even if PKCS#7 is not required.
   sigBuffer.type = siBuffer;
   SECOidTag digestToUse;
-  rv = VerifySignature(aTrustedRoot,
-                       sigBuffer,
-                       sfCalculatedSHA1Digest.get(),
-                       sfCalculatedSHA256Digest.get(),
-                       digestToUse,
-                       aBuiltChain);
+  rv =
+      VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedSHA1Digest.get(),
+                      sfCalculatedSHA256Digest.get(), digestToUse, aBuiltChain);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1253,8 +1187,8 @@ VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   }
 
   nsAutoCString mfDigest;
-  rv = ParseSF(
-    BitwiseCast<char*, unsigned char*>(sfBuffer.data), digestToUse, mfDigest);
+  rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), digestToUse,
+               mfDigest);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1263,18 +1197,15 @@ VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   ScopedAutoSECItem manifestBuffer;
   Digest mfCalculatedDigest;
   nsAutoCString mfFilename;
-  rv = FindAndLoadOneEntry(aZip,
-                           NS_LITERAL_CSTRING(JAR_MF_SEARCH_STRING),
-                           mfFilename,
-                           manifestBuffer,
-                           digestToUse,
+  rv = FindAndLoadOneEntry(aZip, NS_LITERAL_CSTRING(JAR_MF_SEARCH_STRING),
+                           mfFilename, manifestBuffer, digestToUse,
                            &mfCalculatedDigest);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsDependentCSubstring calculatedDigest(
-    DigestToDependentString(mfCalculatedDigest));
+      DigestToDependentString(mfCalculatedDigest));
   if (!mfDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
@@ -1293,13 +1224,10 @@ VerifyPK7Signature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   return NS_OK;
 }
 
-nsresult
-OpenSignedAppFile(AppTrustedRoot aTrustedRoot,
-                  nsIFile* aJarFile,
-                  SignaturePolicy aPolicy,
-                  /* out, optional */ nsIZipReader** aZipReader,
-                  /* out, optional */ nsIX509Cert** aSignerCert)
-{
+nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
+                           SignaturePolicy aPolicy,
+                           /* out, optional */ nsIZipReader** aZipReader,
+                           /* out, optional */ nsIX509Cert** aSignerCert) {
   NS_ENSURE_ARG_POINTER(aJarFile);
 
   if (aZipReader) {
@@ -1331,16 +1259,16 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot,
   // successful the respective files will be ignored in the subsequent COSE
   // signature verification.
   if (aPolicy.ProcessPK7()) {
-    rv = VerifyPK7Signature(
-      aTrustedRoot, zip, aPolicy, ignoredFiles, pk7Verified, pk7BuiltChain);
+    rv = VerifyPK7Signature(aTrustedRoot, zip, aPolicy, ignoredFiles,
+                            pk7Verified, pk7BuiltChain);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
   if (aPolicy.ProcessCOSE()) {
-    rv = VerifyCOSESignature(
-      aTrustedRoot, zip, aPolicy, ignoredFiles, coseVerified, &coseCertItem);
+    rv = VerifyCOSESignature(aTrustedRoot, zip, aPolicy, ignoredFiles,
+                             coseVerified, &coseCertItem);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1369,7 +1297,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot,
         return NS_ERROR_FAILURE;
       }
       UniqueCERTCertificate cert(CERT_NewTempCertificate(
-        dbHandle, coseCertItem.get(), nullptr, false, true));
+          dbHandle, coseCertItem.get(), nullptr, false, true));
       if (!cert) {
         return NS_ERROR_FAILURE;
       }
@@ -1385,7 +1313,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot,
         return NS_ERROR_FAILURE;
       }
       nsCOMPtr<nsIX509Cert> signerCert =
-        nsNSSCertificate::Create(signerCertNode->cert);
+          nsNSSCertificate::Create(signerCertNode->cert);
       NS_ENSURE_TRUE(signerCert, NS_ERROR_OUT_OF_MEMORY);
       signerCert.forget(aSignerCert);
     }
@@ -1394,62 +1322,54 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot,
   return NS_OK;
 }
 
-class OpenSignedAppFileTask final : public CryptoTask
-{
-public:
+class OpenSignedAppFileTask final : public CryptoTask {
+ public:
   OpenSignedAppFileTask(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
                         SignaturePolicy aPolicy,
                         nsIOpenSignedAppFileCallback* aCallback)
-    : mTrustedRoot(aTrustedRoot)
-    , mJarFile(aJarFile)
-    , mPolicy(aPolicy)
-    , mCallback(new nsMainThreadPtrHolder<nsIOpenSignedAppFileCallback>(
-        "OpenSignedAppFileTask::mCallback", aCallback))
-  {
-  }
+      : mTrustedRoot(aTrustedRoot),
+        mJarFile(aJarFile),
+        mPolicy(aPolicy),
+        mCallback(new nsMainThreadPtrHolder<nsIOpenSignedAppFileCallback>(
+            "OpenSignedAppFileTask::mCallback", aCallback)) {}
 
-private:
-  virtual nsresult CalculateResult() override
-  {
+ private:
+  virtual nsresult CalculateResult() override {
     return OpenSignedAppFile(mTrustedRoot, mJarFile, mPolicy,
                              getter_AddRefs(mZipReader),
                              getter_AddRefs(mSignerCert));
   }
 
-  virtual void CallCallback(nsresult rv) override
-  {
-    (void) mCallback->OpenSignedAppFileFinished(rv, mZipReader, mSignerCert);
+  virtual void CallCallback(nsresult rv) override {
+    (void)mCallback->OpenSignedAppFileFinished(rv, mZipReader, mSignerCert);
   }
 
   const AppTrustedRoot mTrustedRoot;
   const nsCOMPtr<nsIFile> mJarFile;
   const SignaturePolicy mPolicy;
   nsMainThreadPtrHandle<nsIOpenSignedAppFileCallback> mCallback;
-  nsCOMPtr<nsIZipReader> mZipReader; // out
-  nsCOMPtr<nsIX509Cert> mSignerCert; // out
+  nsCOMPtr<nsIZipReader> mZipReader;  // out
+  nsCOMPtr<nsIX509Cert> mSignerCert;  // out
 };
 
 static const int32_t sDefaultSignaturePolicy = 0b10;
 
-} // unnamed namespace
+}  // unnamed namespace
 
 NS_IMETHODIMP
 nsNSSCertificateDB::OpenSignedAppFileAsync(
-  AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
-  nsIOpenSignedAppFileCallback* aCallback)
-{
+    AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
+    nsIOpenSignedAppFileCallback* aCallback) {
   NS_ENSURE_ARG_POINTER(aJarFile);
   NS_ENSURE_ARG_POINTER(aCallback);
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
   int32_t policyInt =
-    Preferences::GetInt("security.signed_app_signatures.policy",
-                        static_cast<int32_t>(sDefaultSignaturePolicy));
+      Preferences::GetInt("security.signed_app_signatures.policy",
+                          static_cast<int32_t>(sDefaultSignaturePolicy));
   SignaturePolicy policy(policyInt);
-  RefPtr<OpenSignedAppFileTask> task(new OpenSignedAppFileTask(aTrustedRoot,
-                                                               aJarFile,
-                                                               policy,
-                                                               aCallback));
+  RefPtr<OpenSignedAppFileTask> task(
+      new OpenSignedAppFileTask(aTrustedRoot, aJarFile, policy, aCallback));
   return task->Dispatch("SignedJAR");
 }

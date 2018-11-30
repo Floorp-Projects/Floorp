@@ -15,66 +15,59 @@
 namespace js {
 namespace jit {
 
-inline RegExpObject*
-CompileInfo::getRegExp(jsbytecode* pc) const
-{
-    return script_->getRegExp(pc);
+inline RegExpObject* CompileInfo::getRegExp(jsbytecode* pc) const {
+  return script_->getRegExp(pc);
 }
 
-inline JSFunction*
-CompileInfo::getFunction(jsbytecode* pc) const
-{
-    return script_->getFunction(GET_UINT32_INDEX(pc));
+inline JSFunction* CompileInfo::getFunction(jsbytecode* pc) const {
+  return script_->getFunction(GET_UINT32_INDEX(pc));
 }
 
-InlineScriptTree*
-InlineScriptTree::New(TempAllocator* allocator, InlineScriptTree* callerTree,
-                      jsbytecode* callerPc, JSScript* script)
-{
-    MOZ_ASSERT_IF(!callerTree, !callerPc);
-    MOZ_ASSERT_IF(callerTree, callerTree->script()->containsPC(callerPc));
+InlineScriptTree* InlineScriptTree::New(TempAllocator* allocator,
+                                        InlineScriptTree* callerTree,
+                                        jsbytecode* callerPc,
+                                        JSScript* script) {
+  MOZ_ASSERT_IF(!callerTree, !callerPc);
+  MOZ_ASSERT_IF(callerTree, callerTree->script()->containsPC(callerPc));
 
-    // Allocate a new InlineScriptTree
-    void* treeMem = allocator->allocate(sizeof(InlineScriptTree));
-    if (!treeMem) {
-        return nullptr;
-    }
+  // Allocate a new InlineScriptTree
+  void* treeMem = allocator->allocate(sizeof(InlineScriptTree));
+  if (!treeMem) {
+    return nullptr;
+  }
 
-    // Initialize it.
-    return new (treeMem) InlineScriptTree(callerTree, callerPc, script);
+  // Initialize it.
+  return new (treeMem) InlineScriptTree(callerTree, callerPc, script);
 }
 
-InlineScriptTree*
-InlineScriptTree::addCallee(TempAllocator* allocator, jsbytecode* callerPc,
-                            JSScript* calleeScript)
-{
-    MOZ_ASSERT(script_ && script_->containsPC(callerPc));
-    InlineScriptTree* calleeTree = New(allocator, this, callerPc, calleeScript);
-    if (!calleeTree) {
-        return nullptr;
-    }
+InlineScriptTree* InlineScriptTree::addCallee(TempAllocator* allocator,
+                                              jsbytecode* callerPc,
+                                              JSScript* calleeScript) {
+  MOZ_ASSERT(script_ && script_->containsPC(callerPc));
+  InlineScriptTree* calleeTree = New(allocator, this, callerPc, calleeScript);
+  if (!calleeTree) {
+    return nullptr;
+  }
 
-    calleeTree->nextCallee_ = children_;
-    children_ = calleeTree;
-    return calleeTree;
+  calleeTree->nextCallee_ = children_;
+  children_ = calleeTree;
+  return calleeTree;
 }
 
-static inline const char*
-AnalysisModeString(AnalysisMode mode)
-{
-    switch (mode) {
-      case Analysis_None:
-        return "Analysis_None";
-      case Analysis_DefiniteProperties:
-        return "Analysis_DefiniteProperties";
-      case Analysis_ArgumentsUsage:
-        return "Analysis_ArgumentsUsage";
-      default:
-        MOZ_CRASH("Invalid AnalysisMode");
-    }
+static inline const char* AnalysisModeString(AnalysisMode mode) {
+  switch (mode) {
+    case Analysis_None:
+      return "Analysis_None";
+    case Analysis_DefiniteProperties:
+      return "Analysis_DefiniteProperties";
+    case Analysis_ArgumentsUsage:
+      return "Analysis_ArgumentsUsage";
+    default:
+      MOZ_CRASH("Invalid AnalysisMode");
+  }
 }
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_CompileInfo_inl_h */

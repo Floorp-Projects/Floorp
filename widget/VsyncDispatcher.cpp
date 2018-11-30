@@ -16,24 +16,21 @@ using namespace mozilla::layers;
 namespace mozilla {
 
 CompositorVsyncDispatcher::CompositorVsyncDispatcher()
-  : mCompositorObserverLock("CompositorObserverLock")
-  , mDidShutdown(false)
-{
+    : mCompositorObserverLock("CompositorObserverLock"), mDidShutdown(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-CompositorVsyncDispatcher::~CompositorVsyncDispatcher()
-{
+CompositorVsyncDispatcher::~CompositorVsyncDispatcher() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  // We auto remove this vsync dispatcher from the vsync source in the nsBaseWidget
+  // We auto remove this vsync dispatcher from the vsync source in the
+  // nsBaseWidget
 }
 
-void
-CompositorVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
-{
+void CompositorVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp) {
   // In vsync thread
-  layers::CompositorBridgeParent::PostInsertVsyncProfilerMarker(aVsyncTimestamp);
+  layers::CompositorBridgeParent::PostInsertVsyncProfilerMarker(
+      aVsyncTimestamp);
 
   MutexAutoLock lock(mCompositorObserverLock);
   if (mCompositorVsyncObserver) {
@@ -41,9 +38,7 @@ CompositorVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
   }
 }
 
-void
-CompositorVsyncDispatcher::ObserveVsync(bool aEnable)
-{
+void CompositorVsyncDispatcher::ObserveVsync(bool aEnable) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
   if (mDidShutdown) {
@@ -51,66 +46,62 @@ CompositorVsyncDispatcher::ObserveVsync(bool aEnable)
   }
 
   if (aEnable) {
-    gfxPlatform::GetPlatform()->GetHardwareVsync()->AddCompositorVsyncDispatcher(this);
+    gfxPlatform::GetPlatform()
+        ->GetHardwareVsync()
+        ->AddCompositorVsyncDispatcher(this);
   } else {
-    gfxPlatform::GetPlatform()->GetHardwareVsync()->RemoveCompositorVsyncDispatcher(this);
+    gfxPlatform::GetPlatform()
+        ->GetHardwareVsync()
+        ->RemoveCompositorVsyncDispatcher(this);
   }
 }
 
-void
-CompositorVsyncDispatcher::SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver)
-{
+void CompositorVsyncDispatcher::SetCompositorVsyncObserver(
+    VsyncObserver* aVsyncObserver) {
   // When remote compositing or running gtests, vsync observation is
-  // initiated on the main thread. Otherwise, it is initiated from the compositor
-  // thread.
-  MOZ_ASSERT(NS_IsMainThread() || CompositorThreadHolder::IsInCompositorThread());
+  // initiated on the main thread. Otherwise, it is initiated from the
+  // compositor thread.
+  MOZ_ASSERT(NS_IsMainThread() ||
+             CompositorThreadHolder::IsInCompositorThread());
 
-  { // scope lock
+  {  // scope lock
     MutexAutoLock lock(mCompositorObserverLock);
     mCompositorVsyncObserver = aVsyncObserver;
   }
 
   bool observeVsync = aVsyncObserver != nullptr;
-  nsCOMPtr<nsIRunnable> vsyncControl =
-    NewRunnableMethod<bool>("CompositorVsyncDispatcher::ObserveVsync",
-                            this,
-                            &CompositorVsyncDispatcher::ObserveVsync,
-                            observeVsync);
+  nsCOMPtr<nsIRunnable> vsyncControl = NewRunnableMethod<bool>(
+      "CompositorVsyncDispatcher::ObserveVsync", this,
+      &CompositorVsyncDispatcher::ObserveVsync, observeVsync);
   NS_DispatchToMainThread(vsyncControl);
 }
 
-void
-CompositorVsyncDispatcher::Shutdown()
-{
-  // Need to explicitly remove CompositorVsyncDispatcher when the nsBaseWidget shuts down.
-  // Otherwise, we would get dead vsync notifications between when the nsBaseWidget
-  // shuts down and the CompositorBridgeParent shuts down.
+void CompositorVsyncDispatcher::Shutdown() {
+  // Need to explicitly remove CompositorVsyncDispatcher when the nsBaseWidget
+  // shuts down. Otherwise, we would get dead vsync notifications between when
+  // the nsBaseWidget shuts down and the CompositorBridgeParent shuts down.
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   ObserveVsync(false);
   mDidShutdown = true;
-  { // scope lock
+  {  // scope lock
     MutexAutoLock lock(mCompositorObserverLock);
     mCompositorVsyncObserver = nullptr;
   }
 }
 
 RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher()
-  : mRefreshTimersLock("RefreshTimers lock")
-{
+    : mRefreshTimersLock("RefreshTimers lock") {
   MOZ_ASSERT(XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying());
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-RefreshTimerVsyncDispatcher::~RefreshTimerVsyncDispatcher()
-{
+RefreshTimerVsyncDispatcher::~RefreshTimerVsyncDispatcher() {
   MOZ_ASSERT(XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying());
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-void
-RefreshTimerVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
-{
+void RefreshTimerVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp) {
   MutexAutoLock lock(mRefreshTimersLock);
 
   for (size_t i = 0; i < mChildRefreshTimers.Length(); i++) {
@@ -122,11 +113,11 @@ RefreshTimerVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
   }
 }
 
-void
-RefreshTimerVsyncDispatcher::SetParentRefreshTimer(VsyncObserver* aVsyncObserver)
-{
+void RefreshTimerVsyncDispatcher::SetParentRefreshTimer(
+    VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(NS_IsMainThread());
-  { // lock scope because UpdateVsyncStatus runs on main thread and will deadlock
+  {  // lock scope because UpdateVsyncStatus runs on main thread and will
+     // deadlock
     MutexAutoLock lock(mRefreshTimersLock);
     mParentRefreshTimer = aVsyncObserver;
   }
@@ -134,10 +125,9 @@ RefreshTimerVsyncDispatcher::SetParentRefreshTimer(VsyncObserver* aVsyncObserver
   UpdateVsyncStatus();
 }
 
-void
-RefreshTimerVsyncDispatcher::AddChildRefreshTimer(VsyncObserver* aVsyncObserver)
-{
-  { // scope lock - called on pbackground thread
+void RefreshTimerVsyncDispatcher::AddChildRefreshTimer(
+    VsyncObserver* aVsyncObserver) {
+  {  // scope lock - called on pbackground thread
     MutexAutoLock lock(mRefreshTimersLock);
     MOZ_ASSERT(aVsyncObserver);
     if (!mChildRefreshTimers.Contains(aVsyncObserver)) {
@@ -148,10 +138,9 @@ RefreshTimerVsyncDispatcher::AddChildRefreshTimer(VsyncObserver* aVsyncObserver)
   UpdateVsyncStatus();
 }
 
-void
-RefreshTimerVsyncDispatcher::RemoveChildRefreshTimer(VsyncObserver* aVsyncObserver)
-{
-  { // scope lock - called on pbackground thread
+void RefreshTimerVsyncDispatcher::RemoveChildRefreshTimer(
+    VsyncObserver* aVsyncObserver) {
+  {  // scope lock - called on pbackground thread
     MutexAutoLock lock(mRefreshTimersLock);
     MOZ_ASSERT(aVsyncObserver);
     mChildRefreshTimers.RemoveElement(aVsyncObserver);
@@ -160,27 +149,23 @@ RefreshTimerVsyncDispatcher::RemoveChildRefreshTimer(VsyncObserver* aVsyncObserv
   UpdateVsyncStatus();
 }
 
-void
-RefreshTimerVsyncDispatcher::UpdateVsyncStatus()
-{
+void RefreshTimerVsyncDispatcher::UpdateVsyncStatus() {
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(
-      NewRunnableMethod("RefreshTimerVsyncDispatcher::UpdateVsyncStatus",
-                        this,
-                        &RefreshTimerVsyncDispatcher::UpdateVsyncStatus));
+    NS_DispatchToMainThread(NewRunnableMethod(
+        "RefreshTimerVsyncDispatcher::UpdateVsyncStatus", this,
+        &RefreshTimerVsyncDispatcher::UpdateVsyncStatus));
     return;
   }
 
-  gfx::VsyncSource::Display& display = gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay();
+  gfx::VsyncSource::Display& display =
+      gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay();
   display.NotifyRefreshTimerVsyncStatus(NeedsVsync());
 }
 
-bool
-RefreshTimerVsyncDispatcher::NeedsVsync()
-{
+bool RefreshTimerVsyncDispatcher::NeedsVsync() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mRefreshTimersLock);
   return (mParentRefreshTimer != nullptr) || !mChildRefreshTimers.IsEmpty();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

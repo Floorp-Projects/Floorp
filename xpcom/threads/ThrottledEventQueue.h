@@ -11,9 +11,12 @@
 
 #include "nsISerialEventTarget.h"
 
-#define NS_THROTTLEDEVENTQUEUE_IID \
-{ 0x8f3cf7dc, 0xfc14, 0x4ad5, \
-  { 0x9f, 0xd5, 0xdb, 0x79, 0xbc, 0xe6, 0xd5, 0x08 } }
+#define NS_THROTTLEDEVENTQUEUE_IID                   \
+  {                                                  \
+    0x8f3cf7dc, 0xfc14, 0x4ad5, {                    \
+      0x9f, 0xd5, 0xdb, 0x79, 0xbc, 0xe6, 0xd5, 0x08 \
+    }                                                \
+  }
 
 namespace mozilla {
 
@@ -55,18 +58,17 @@ namespace mozilla {
 // If you drop a ThrottledEventQueue while its queue still has events to be run,
 // they will continue to be dispatched as usual to the base. Only once the last
 // event has run will all the ThrottledEventQueue's memory be freed.
-class ThrottledEventQueue final : public nsISerialEventTarget
-{
+class ThrottledEventQueue final : public nsISerialEventTarget {
   class Inner;
   RefPtr<Inner> mInner;
 
   explicit ThrottledEventQueue(already_AddRefed<Inner> aInner);
   ~ThrottledEventQueue() = default;
 
-public:
+ public:
   // Create a ThrottledEventQueue for the given target.
-  static already_AddRefed<ThrottledEventQueue>
-  Create(nsISerialEventTarget* aBaseTarget);
+  static already_AddRefed<ThrottledEventQueue> Create(
+      nsISerialEventTarget* aBaseTarget);
 
   // Determine if there are any events pending in the queue.
   bool IsEmpty() const;
@@ -108,6 +110,6 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ThrottledEventQueue, NS_THROTTLEDEVENTQUEUE_IID);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ThrottledEventQueue_h
+#endif  // mozilla_ThrottledEventQueue_h

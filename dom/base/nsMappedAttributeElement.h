@@ -27,27 +27,23 @@ typedef void (*nsMapRuleToAttributesFunc)(const nsMappedAttributes* aAttributes,
 
 typedef nsStyledElement nsMappedAttributeElementBase;
 
-class nsMappedAttributeElement : public nsMappedAttributeElementBase
-{
+class nsMappedAttributeElement : public nsMappedAttributeElementBase {
+ protected:
+  explicit nsMappedAttributeElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : nsMappedAttributeElementBase(std::move(aNodeInfo)) {}
 
-protected:
-
-  explicit nsMappedAttributeElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsMappedAttributeElementBase(std::move(aNodeInfo))
-  {}
-
-public:
+ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   static void MapNoAttributesInto(const nsMappedAttributes* aAttributes,
                                   mozilla::MappedDeclarations&);
 
-  virtual bool SetAndSwapMappedAttribute(nsAtom* aName,
-                                         nsAttrValue& aValue,
+  virtual bool SetAndSwapMappedAttribute(nsAtom* aName, nsAttrValue& aValue,
                                          bool* aValueWasSet,
                                          nsresult* aRetval) override;
 
   virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
 };
 
-#endif // NS_MAPPEDATTRIBUTEELEMENT_H_
+#endif  // NS_MAPPEDATTRIBUTEELEMENT_H_

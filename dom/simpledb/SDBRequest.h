@@ -19,9 +19,7 @@ namespace dom {
 
 class SDBConnection;
 
-class SDBRequest final
-  : public nsISDBRequest
-{
+class SDBRequest final : public nsISDBRequest {
   RefPtr<SDBConnection> mConnection;
 
   nsCOMPtr<nsIVariant> mResult;
@@ -30,41 +28,32 @@ class SDBRequest final
   nsresult mResultCode;
   bool mHaveResultOrErrorCode;
 
-public:
+ public:
   explicit SDBRequest(SDBConnection* aConnection);
 
-  void
-  AssertIsOnOwningThread() const
-  {
-    NS_ASSERT_OWNINGTHREAD(SDBRequest);
-  }
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(SDBRequest); }
 
-  SDBConnection*
-  GetConnection() const
-  {
+  SDBConnection* GetConnection() const {
     AssertIsOnOwningThread();
 
     return mConnection;
   }
 
-  void
-  SetResult(nsIVariant* aResult);
+  void SetResult(nsIVariant* aResult);
 
-  void
-  SetError(nsresult aRv);
+  void SetError(nsresult aRv);
 
-private:
+ private:
   ~SDBRequest();
 
-  void
-  FireCallback();
+  void FireCallback();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSISDBREQUEST
   NS_DECL_CYCLE_COLLECTION_CLASS(SDBRequest)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_simpledb_SDBRequest_h
+#endif  // mozilla_dom_simpledb_SDBRequest_h

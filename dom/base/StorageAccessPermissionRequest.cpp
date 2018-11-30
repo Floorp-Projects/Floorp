@@ -16,32 +16,27 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(StorageAccessPermissionRequest,
                                                ContentPermissionRequestBase)
 
 StorageAccessPermissionRequest::StorageAccessPermissionRequest(
-    nsPIDOMWindowInner* aWindow,
-    nsIPrincipal* aNodePrincipal,
+    nsPIDOMWindowInner* aWindow, nsIPrincipal* aNodePrincipal,
     AllowCallback&& aAllowCallback,
     AllowAutoGrantCallback&& aAllowAutoGrantCallback,
     AllowAnySiteCallback&& aAllowAnySiteCallback,
     CancelCallback&& aCancelCallback)
-  : ContentPermissionRequestBase(aNodePrincipal, false, aWindow,
-                                 NS_LITERAL_CSTRING("dom.storage_access"),
-                                 NS_LITERAL_CSTRING("storage-access")),
-    mAllowCallback(std::move(aAllowCallback)),
-    mAllowAutoGrantCallback(std::move(aAllowAutoGrantCallback)),
-    mAllowAnySiteCallback(std::move(aAllowAnySiteCallback)),
-    mCancelCallback(std::move(aCancelCallback)),
-    mCallbackCalled(false)
-{
-  mPermissionRequests.AppendElement(PermissionRequest(mType, nsTArray<nsString>()));
+    : ContentPermissionRequestBase(aNodePrincipal, false, aWindow,
+                                   NS_LITERAL_CSTRING("dom.storage_access"),
+                                   NS_LITERAL_CSTRING("storage-access")),
+      mAllowCallback(std::move(aAllowCallback)),
+      mAllowAutoGrantCallback(std::move(aAllowAutoGrantCallback)),
+      mAllowAnySiteCallback(std::move(aAllowAnySiteCallback)),
+      mCancelCallback(std::move(aCancelCallback)),
+      mCallbackCalled(false) {
+  mPermissionRequests.AppendElement(
+      PermissionRequest(mType, nsTArray<nsString>()));
 }
 
-StorageAccessPermissionRequest::~StorageAccessPermissionRequest()
-{
-  Cancel();
-}
+StorageAccessPermissionRequest::~StorageAccessPermissionRequest() { Cancel(); }
 
 NS_IMETHODIMP
-StorageAccessPermissionRequest::Cancel()
-{
+StorageAccessPermissionRequest::Cancel() {
   if (!mCallbackCalled) {
     mCallbackCalled = true;
     mCancelCallback();
@@ -50,8 +45,7 @@ StorageAccessPermissionRequest::Cancel()
 }
 
 NS_IMETHODIMP
-StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices)
-{
+StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices) {
   nsTArray<PermissionChoice> choices;
   nsresult rv = TranslateChoices(aChoices, mPermissionRequests, choices);
   if (NS_FAILED(rv)) {
@@ -74,12 +68,11 @@ StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices)
 }
 
 already_AddRefed<StorageAccessPermissionRequest>
-StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
-                                       AllowCallback&& aAllowCallback,
-                                       AllowAutoGrantCallback&& aAllowAutoGrantCallback,
-                                       AllowAnySiteCallback&& aAllowAnySiteCallback,
-                                       CancelCallback&& aCancelCallback)
-{
+StorageAccessPermissionRequest::Create(
+    nsPIDOMWindowInner* aWindow, AllowCallback&& aAllowCallback,
+    AllowAutoGrantCallback&& aAllowAutoGrantCallback,
+    AllowAnySiteCallback&& aAllowAnySiteCallback,
+    CancelCallback&& aCancelCallback) {
   if (!aWindow) {
     return nullptr;
   }
@@ -88,14 +81,12 @@ StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
     return nullptr;
   }
   RefPtr<StorageAccessPermissionRequest> request =
-    new StorageAccessPermissionRequest(aWindow,
-                                       win->GetPrincipal(),
-                                       std::move(aAllowCallback),
-                                       std::move(aAllowAutoGrantCallback),
-                                       std::move(aAllowAnySiteCallback),
-                                       std::move(aCancelCallback));
+      new StorageAccessPermissionRequest(
+          aWindow, win->GetPrincipal(), std::move(aAllowCallback),
+          std::move(aAllowAutoGrantCallback), std::move(aAllowAnySiteCallback),
+          std::move(aCancelCallback));
   return request.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

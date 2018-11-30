@@ -15,12 +15,9 @@ namespace recordreplay {
 // Simple wrapper around mozglue mutexes and condvars. This is a lighter weight
 // abstraction than mozilla::Monitor and has simpler interactions with the
 // record/replay system.
-class Monitor : public detail::MutexImpl
-{
-public:
-  Monitor()
-    : detail::MutexImpl(Behavior::DontPreserve)
-  {}
+class Monitor : public detail::MutexImpl {
+ public:
+  Monitor() : detail::MutexImpl(Behavior::DontPreserve) {}
 
   void Lock() { detail::MutexImpl::lock(); }
   void Unlock() { detail::MutexImpl::unlock(); }
@@ -33,47 +30,35 @@ public:
     mCondVar.wait_for(*this, aTime - TimeStamp::Now());
   }
 
-private:
+ private:
   detail::ConditionVariableImpl mCondVar;
 };
 
 // RAII class to lock a monitor.
-struct MOZ_RAII MonitorAutoLock
-{
-  explicit MonitorAutoLock(Monitor& aMonitor)
-    : mMonitor(aMonitor)
-  {
+struct MOZ_RAII MonitorAutoLock {
+  explicit MonitorAutoLock(Monitor& aMonitor) : mMonitor(aMonitor) {
     mMonitor.Lock();
   }
 
-  ~MonitorAutoLock()
-  {
-    mMonitor.Unlock();
-  }
+  ~MonitorAutoLock() { mMonitor.Unlock(); }
 
-private:
+ private:
   Monitor& mMonitor;
 };
 
 // RAII class to unlock a monitor.
-struct MOZ_RAII MonitorAutoUnlock
-{
-  explicit MonitorAutoUnlock(Monitor& aMonitor)
-    : mMonitor(aMonitor)
-  {
+struct MOZ_RAII MonitorAutoUnlock {
+  explicit MonitorAutoUnlock(Monitor& aMonitor) : mMonitor(aMonitor) {
     mMonitor.Unlock();
   }
 
-  ~MonitorAutoUnlock()
-  {
-    mMonitor.Lock();
-  }
+  ~MonitorAutoUnlock() { mMonitor.Lock(); }
 
-private:
+ private:
   Monitor& mMonitor;
 };
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_Monitor_h
+#endif  // mozilla_recordreplay_Monitor_h

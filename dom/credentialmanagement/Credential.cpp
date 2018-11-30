@@ -21,42 +21,22 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Credential)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Credential::Credential(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
-{}
+Credential::Credential(nsPIDOMWindowInner* aParent) : mParent(aParent) {}
 
-Credential::~Credential()
-{}
+Credential::~Credential() {}
 
-JSObject*
-Credential::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Credential::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return Credential_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Credential::GetId(nsAString& aId) const
-{
-  aId.Assign(mId);
-}
+void Credential::GetId(nsAString& aId) const { aId.Assign(mId); }
 
-void
-Credential::GetType(nsAString& aType) const
-{
-  aType.Assign(mType);
-}
+void Credential::GetType(nsAString& aType) const { aType.Assign(mType); }
 
-void
-Credential::SetId(const nsAString& aId)
-{
-  mId.Assign(aId);
-}
+void Credential::SetId(const nsAString& aId) { mId.Assign(aId); }
 
-void
-Credential::SetType(const nsAString& aType)
-{
-  mType.Assign(aType);
-}
+void Credential::SetType(const nsAString& aType) { mType.Assign(aType); }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

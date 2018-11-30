@@ -26,14 +26,14 @@ namespace intl {
 /**
  * Initialize a new Intl.* object using the named self-hosted function.
  */
-extern bool
-InitializeObject(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<PropertyName*> initializer,
-                 JS::Handle<JS::Value> locales, JS::Handle<JS::Value> options);
+extern bool InitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,
+                             JS::Handle<PropertyName*> initializer,
+                             JS::Handle<JS::Value> locales,
+                             JS::Handle<JS::Value> options);
 
-enum class DateTimeFormatOptions
-{
-    Standard,
-    EnableMozExtensions,
+enum class DateTimeFormatOptions {
+  Standard,
+  EnableMozExtensions,
 };
 
 /**
@@ -41,44 +41,40 @@ enum class DateTimeFormatOptions
  * self-hosted function.  This is only for a few old Intl.* constructors, for
  * legacy reasons -- new ones should use the function above instead.
  */
-extern bool
-LegacyInitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,
-                       JS::Handle<PropertyName*> initializer, JS::Handle<JS::Value> thisValue,
-                       JS::Handle<JS::Value> locales, JS::Handle<JS::Value> options,
-                       DateTimeFormatOptions dtfOptions, JS::MutableHandle<JS::Value> result);
+extern bool LegacyInitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,
+                                   JS::Handle<PropertyName*> initializer,
+                                   JS::Handle<JS::Value> thisValue,
+                                   JS::Handle<JS::Value> locales,
+                                   JS::Handle<JS::Value> options,
+                                   DateTimeFormatOptions dtfOptions,
+                                   JS::MutableHandle<JS::Value> result);
 
 /**
  * Returns the object holding the internal properties for obj.
  */
-extern JSObject*
-GetInternalsObject(JSContext* cx, JS::Handle<JSObject*> obj);
+extern JSObject* GetInternalsObject(JSContext* cx, JS::Handle<JSObject*> obj);
 
 /** Report an Intl internal error not directly tied to a spec step. */
-extern void
-ReportInternalError(JSContext* cx);
+extern void ReportInternalError(JSContext* cx);
 
-static inline bool
-StringsAreEqual(const char* s1, const char* s2)
-{
-    return !strcmp(s1, s2);
+static inline bool StringsAreEqual(const char* s1, const char* s2) {
+  return !strcmp(s1, s2);
 }
 
-static inline const char*
-IcuLocale(const char* locale)
-{
-    if (StringsAreEqual(locale, "und")) {
-        return ""; // ICU root locale
-    }
+static inline const char* IcuLocale(const char* locale) {
+  if (StringsAreEqual(locale, "und")) {
+    return "";  // ICU root locale
+  }
 
-    return locale;
+  return locale;
 }
 
-extern UniqueChars
-EncodeLocale(JSContext* cx, JSString* locale);
+extern UniqueChars EncodeLocale(JSContext* cx, JSString* locale);
 
 // Starting with ICU 59, UChar defaults to char16_t.
-static_assert(mozilla::IsSame<UChar, char16_t>::value,
-              "SpiderMonkey doesn't support redefining UChar to a different type");
+static_assert(
+    mozilla::IsSame<UChar, char16_t>::value,
+    "SpiderMonkey doesn't support redefining UChar to a different type");
 
 // The inline capacity we use for a Vector<char16_t>.  Use this to ensure that
 // our uses of ICU string functions, below and elsewhere, will try to fill the
@@ -86,43 +82,40 @@ static_assert(mozilla::IsSame<UChar, char16_t>::value,
 constexpr size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
 template <typename ICUStringFunction, size_t InlineCapacity>
-static int32_t
-CallICU(JSContext* cx, const ICUStringFunction& strFn, Vector<char16_t, InlineCapacity>& chars)
-{
-    MOZ_ASSERT(chars.length() >= InlineCapacity);
+static int32_t CallICU(JSContext* cx, const ICUStringFunction& strFn,
+                       Vector<char16_t, InlineCapacity>& chars) {
+  MOZ_ASSERT(chars.length() >= InlineCapacity);
 
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t size = strFn(chars.begin(), chars.length(), &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size_t(size))) {
-            return -1;
-        }
-        status = U_ZERO_ERROR;
-        strFn(chars.begin(), size, &status);
-    }
-    if (U_FAILURE(status)) {
-        ReportInternalError(cx);
-        return -1;
-    }
-
+  UErrorCode status = U_ZERO_ERROR;
+  int32_t size = strFn(chars.begin(), chars.length(), &status);
+  if (status == U_BUFFER_OVERFLOW_ERROR) {
     MOZ_ASSERT(size >= 0);
-    return size;
+    if (!chars.resize(size_t(size))) {
+      return -1;
+    }
+    status = U_ZERO_ERROR;
+    strFn(chars.begin(), size, &status);
+  }
+  if (U_FAILURE(status)) {
+    ReportInternalError(cx);
+    return -1;
+  }
+
+  MOZ_ASSERT(size >= 0);
+  return size;
 }
 
 template <typename ICUStringFunction>
-static JSString*
-CallICU(JSContext* cx, const ICUStringFunction& strFn)
-{
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    MOZ_ALWAYS_TRUE(chars.resize(INITIAL_CHAR_BUFFER_SIZE));
+static JSString* CallICU(JSContext* cx, const ICUStringFunction& strFn) {
+  Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+  MOZ_ALWAYS_TRUE(chars.resize(INITIAL_CHAR_BUFFER_SIZE));
 
-    int32_t size = CallICU(cx, strFn, chars);
-    if (size < 0) {
-        return nullptr;
-    }
+  int32_t size = CallICU(cx, strFn, chars);
+  if (size < 0) {
+    return nullptr;
+  }
 
-    return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
+  return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
 }
 
 // CountAvailable and GetAvailable describe the signatures used for ICU API
@@ -141,12 +134,12 @@ using GetAvailable = const char* (*)(int32_t localeIndex);
  *       return false;
  *   }
  */
-extern bool
-GetAvailableLocales(JSContext* cx, CountAvailable countAvailable, GetAvailable getAvailable,
-                    JS::MutableHandle<JS::Value> result);
+extern bool GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
+                                GetAvailable getAvailable,
+                                JS::MutableHandle<JS::Value> result);
 
-} // namespace intl
+}  // namespace intl
 
-} // namespace js
+}  // namespace js
 
 #endif /* builtin_intl_CommonFunctions_h */

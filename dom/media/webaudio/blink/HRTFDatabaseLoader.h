@@ -35,115 +35,115 @@
 #include "mozilla/Mutex.h"
 #include "HRTFDatabase.h"
 
-template <class EntryType> class nsTHashtable;
-template <class T> class nsAutoRef;
+template <class EntryType>
+class nsTHashtable;
+template <class T>
+class nsAutoRef;
 
 namespace WebCore {
 
-// HRTFDatabaseLoader will asynchronously load the default HRTFDatabase in a new thread.
+// HRTFDatabaseLoader will asynchronously load the default HRTFDatabase in a new
+// thread.
 
 class HRTFDatabaseLoader {
-public:
-    // Lazily creates a HRTFDatabaseLoader (if not already created) for the given sample-rate
-    // and starts loading asynchronously (when created the first time).
-    // Returns the HRTFDatabaseLoader.
-    // Must be called from the main thread.
-    static already_AddRefed<HRTFDatabaseLoader> createAndLoadAsynchronouslyIfNecessary(float sampleRate);
+ public:
+  // Lazily creates a HRTFDatabaseLoader (if not already created) for the given
+  // sample-rate and starts loading asynchronously (when created the first
+  // time). Returns the HRTFDatabaseLoader. Must be called from the main thread.
+  static already_AddRefed<HRTFDatabaseLoader>
+  createAndLoadAsynchronouslyIfNecessary(float sampleRate);
 
-    // AddRef and Release may be called from any thread.
-    void AddRef()
-    {
+  // AddRef and Release may be called from any thread.
+  void AddRef() {
 #if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
-        int count =
+    int count =
 #endif
-          ++m_refCnt;
-        MOZ_ASSERT(count > 0, "invalid ref count");
-        NS_LOG_ADDREF(this, count, "HRTFDatabaseLoader", sizeof(*this));
+        ++m_refCnt;
+    MOZ_ASSERT(count > 0, "invalid ref count");
+    NS_LOG_ADDREF(this, count, "HRTFDatabaseLoader", sizeof(*this));
+  }
+
+  void Release() {
+    // The last reference can't be removed on a non-main thread because
+    // the object can be accessed on the main thread from the hash
+    // table via createAndLoadAsynchronouslyIfNecessary().
+    int count = m_refCnt;
+    MOZ_ASSERT(count > 0, "extra release");
+    // Optimization attempt to possibly skip proxying the release to the
+    // main thread.
+    if (count != 1 && m_refCnt.compareExchange(count, count - 1)) {
+      NS_LOG_RELEASE(this, count - 1, "HRTFDatabaseLoader");
+      return;
     }
 
-    void Release()
-    {
-        // The last reference can't be removed on a non-main thread because
-        // the object can be accessed on the main thread from the hash
-        // table via createAndLoadAsynchronouslyIfNecessary().
-        int count = m_refCnt;
-        MOZ_ASSERT(count > 0, "extra release");
-        // Optimization attempt to possibly skip proxying the release to the
-        // main thread.
-        if (count != 1 && m_refCnt.compareExchange(count, count - 1)) {
-            NS_LOG_RELEASE(this, count - 1, "HRTFDatabaseLoader");
-            return;
-        }
+    ProxyRelease();
+  }
 
-        ProxyRelease();
+  // Returns true once the default database has been completely loaded.
+  bool isLoaded() const;
+
+  // waitForLoaderThreadCompletion() may be called more than once,
+  // on any thread except m_databaseLoaderThread.
+  void waitForLoaderThreadCompletion();
+
+  HRTFDatabase* database() { return m_hrtfDatabase.get(); }
+
+  float databaseSampleRate() const { return m_databaseSampleRate; }
+
+  static void shutdown();
+
+  // Called in asynchronous loading thread.
+  void load();
+
+  // Sums the size of all cached database loaders.
+  static size_t sizeOfLoaders(mozilla::MallocSizeOf aMallocSizeOf);
+
+ private:
+  // Both constructor and destructor must be called from the main thread.
+  explicit HRTFDatabaseLoader(float sampleRate);
+  ~HRTFDatabaseLoader();
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  void ProxyRelease();       // any thread
+  void MainThreadRelease();  // main thread only
+  class ProxyReleaseEvent;
+
+  // If it hasn't already been loaded, creates a new thread and initiates
+  // asynchronous loading of the default database. This must be called from the
+  // main thread.
+  void loadAsynchronously();
+
+  // Map from sample-rate to loader.
+  class LoaderByRateEntry : public nsFloatHashKey {
+   public:
+    explicit LoaderByRateEntry(KeyTypePointer aKey)
+        : nsFloatHashKey(aKey),
+          mLoader()  // so PutEntry() will zero-initialize
+    {}
+
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+      return mLoader ? mLoader->sizeOfIncludingThis(aMallocSizeOf) : 0;
     }
 
-    // Returns true once the default database has been completely loaded.
-    bool isLoaded() const;
+    // The HRTFDatabaseLoader removes itself from s_loaderMap on destruction.
+    HRTFDatabaseLoader* MOZ_NON_OWNING_REF mLoader;
+  };
 
-    // waitForLoaderThreadCompletion() may be called more than once,
-    // on any thread except m_databaseLoaderThread.
-    void waitForLoaderThreadCompletion();
+  // Keeps track of loaders on a per-sample-rate basis.
+  static nsTHashtable<LoaderByRateEntry>* s_loaderMap;  // singleton
 
-    HRTFDatabase* database() { return m_hrtfDatabase.get(); }
+  mozilla::Atomic<int> m_refCnt;
 
-    float databaseSampleRate() const { return m_databaseSampleRate; }
+  nsAutoRef<HRTFDatabase> m_hrtfDatabase;
 
-    static void shutdown();
+  // Holding a m_threadLock is required when accessing m_databaseLoaderThread.
+  mozilla::Mutex m_threadLock;
+  PRThread* m_databaseLoaderThread;
 
-    // Called in asynchronous loading thread.
-    void load();
-
-    // Sums the size of all cached database loaders.
-    static size_t sizeOfLoaders(mozilla::MallocSizeOf aMallocSizeOf);
-
-private:
-    // Both constructor and destructor must be called from the main thread.
-    explicit HRTFDatabaseLoader(float sampleRate);
-    ~HRTFDatabaseLoader();
-
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-    void ProxyRelease(); // any thread
-    void MainThreadRelease(); // main thread only
-    class ProxyReleaseEvent;
-
-    // If it hasn't already been loaded, creates a new thread and initiates asynchronous loading of the default database.
-    // This must be called from the main thread.
-    void loadAsynchronously();
-
-    // Map from sample-rate to loader.
-    class LoaderByRateEntry : public nsFloatHashKey {
-    public:
-        explicit LoaderByRateEntry(KeyTypePointer aKey)
-            : nsFloatHashKey(aKey)
-            , mLoader() // so PutEntry() will zero-initialize
-        {
-        }
-
-        size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-        {
-            return mLoader ? mLoader->sizeOfIncludingThis(aMallocSizeOf) : 0;
-        }
-
-        // The HRTFDatabaseLoader removes itself from s_loaderMap on destruction.
-        HRTFDatabaseLoader* MOZ_NON_OWNING_REF mLoader;
-    };
-
-    // Keeps track of loaders on a per-sample-rate basis.
-    static nsTHashtable<LoaderByRateEntry> *s_loaderMap; // singleton
-
-    mozilla::Atomic<int> m_refCnt;
-
-    nsAutoRef<HRTFDatabase> m_hrtfDatabase;
-
-    // Holding a m_threadLock is required when accessing m_databaseLoaderThread.
-    mozilla::Mutex m_threadLock;
-    PRThread* m_databaseLoaderThread;
-
-    float m_databaseSampleRate;
+  float m_databaseSampleRate;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // HRTFDatabaseLoader_h
+#endif  // HRTFDatabaseLoader_h

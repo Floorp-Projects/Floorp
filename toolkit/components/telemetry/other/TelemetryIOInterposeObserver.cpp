@@ -11,8 +11,7 @@ namespace mozilla {
 namespace Telemetry {
 
 TelemetryIOInterposeObserver::TelemetryIOInterposeObserver(nsIFile* aXreDir)
-  : mCurStage(STAGE_STARTUP)
-{
+    : mCurStage(STAGE_STARTUP) {
   nsAutoString xreDirPath;
   nsresult rv = aXreDir->GetPath(xreDirPath);
   if (NS_SUCCEEDED(rv)) {
@@ -21,16 +20,15 @@ TelemetryIOInterposeObserver::TelemetryIOInterposeObserver(nsIFile* aXreDir)
 }
 
 void TelemetryIOInterposeObserver::AddPath(const nsAString& aPath,
-                                           const nsAString& aSubstName)
-{
+                                           const nsAString& aSubstName) {
   mSafeDirs.AppendElement(SafeDir(aPath, aSubstName));
 }
 
 // Threshold for reporting slow main-thread I/O (50 milliseconds).
-const TimeDuration kTelemetryReportThreshold = TimeDuration::FromMilliseconds(50);
+const TimeDuration kTelemetryReportThreshold =
+    TimeDuration::FromMilliseconds(50);
 
-void TelemetryIOInterposeObserver::Observe(Observation& aOb)
-{
+void TelemetryIOInterposeObserver::Observe(Observation& aOb) {
   // We only report main-thread I/O
   if (!IsMainThread()) {
     return;
@@ -60,7 +58,7 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb)
 #else
   nsDefaultStringComparator comparator;
 #endif
-  nsAutoString      processedName;
+  nsAutoString processedName;
   uint32_t safeDirsLen = mSafeDirs.Length();
   for (uint32_t i = 0; i < safeDirsLen; ++i) {
     if (StringBeginsWith(filename, mSafeDirs[i].mPath, comparator)) {
@@ -79,7 +77,7 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb)
   if (entry) {
     FileStats& stats = entry->mData.mStats[mCurStage];
     // Update the statistics
-    stats.totalTime += (double) aOb.Duration().ToMilliseconds();
+    stats.totalTime += (double)aOb.Duration().ToMilliseconds();
     switch (aOb.ObservedOperation()) {
       case OpCreateOrOpen:
         stats.creates++;
@@ -103,9 +101,8 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb)
 }
 
 bool TelemetryIOInterposeObserver::ReflectFileStats(FileIOEntryType* entry,
-                                                    JSContext *cx,
-                                                    JS::Handle<JSObject*> obj)
-{
+                                                    JSContext* cx,
+                                                    JS::Handle<JSObject*> obj) {
   JS::AutoValueArray<NUM_STAGES> stages(cx);
 
   FileStatsByStage& statsByStage = entry->mData;
@@ -145,13 +142,12 @@ bool TelemetryIOInterposeObserver::ReflectFileStats(FileIOEntryType* entry,
 
   // Add jsEntry to top-level dictionary
   const nsAString& key = entry->GetKey();
-  return JS_DefineUCProperty(cx, obj, key.Data(), key.Length(),
-                             jsEntry, JSPROP_ENUMERATE | JSPROP_READONLY);
+  return JS_DefineUCProperty(cx, obj, key.Data(), key.Length(), jsEntry,
+                             JSPROP_ENUMERATE | JSPROP_READONLY);
 }
 
-bool TelemetryIOInterposeObserver::ReflectIntoJS(JSContext *cx,
-                                                 JS::Handle<JSObject*> rootObj)
-{
+bool TelemetryIOInterposeObserver::ReflectIntoJS(
+    JSContext* cx, JS::Handle<JSObject*> rootObj) {
   return mFileStats.ReflectIntoJS(ReflectFileStats, cx, rootObj);
 }
 
@@ -159,15 +155,13 @@ bool TelemetryIOInterposeObserver::ReflectIntoJS(JSContext *cx,
  * Get size of hash table with file stats
  */
 
-size_t TelemetryIOInterposeObserver::SizeOfIncludingThis
-(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t TelemetryIOInterposeObserver::SizeOfIncludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-size_t TelemetryIOInterposeObserver::SizeOfExcludingThis
-(mozilla::MallocSizeOf aMallocSizeOf) const
-{
+size_t TelemetryIOInterposeObserver::SizeOfExcludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t size = 0;
   size += mFileStats.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mFileStats.ConstIter(); !iter.Done(); iter.Next()) {
@@ -181,5 +175,5 @@ size_t TelemetryIOInterposeObserver::SizeOfExcludingThis
   return size;
 }
 
-} // namespace Telemetry
-} // namespace mozilla
+}  // namespace Telemetry
+}  // namespace mozilla

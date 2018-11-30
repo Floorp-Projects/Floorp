@@ -52,10 +52,11 @@ void NotifyPaintStart();
 void NotifyPaintComplete();
 
 // Get a draw target which the compositor thread can paint to.
-already_AddRefed<gfx::DrawTarget> DrawTargetForRemoteDrawing(LayoutDeviceIntSize aSize);
+already_AddRefed<gfx::DrawTarget> DrawTargetForRemoteDrawing(
+    LayoutDeviceIntSize aSize);
 
-} // namespace child
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace child
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_ChildIPC_h
+#endif  // mozilla_recordreplay_ChildIPC_h

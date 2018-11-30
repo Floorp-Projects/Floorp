@@ -20,15 +20,13 @@ typedef RootAccessible RootAccessibleWrap;
  * It is added into root when the toplevel window is created, and removed
  * from root when the toplevel window is destroyed.
  */
-class GtkWindowAccessible final : public DummyAccessible
-{
-public:
+class GtkWindowAccessible final : public DummyAccessible {
+ public:
   explicit GtkWindowAccessible(AtkObject* aAccessible);
   virtual ~GtkWindowAccessible();
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif   /* mozilla_a11y_Root_Accessible_Wrap_h__ */
-
+#endif /* mozilla_a11y_Root_Accessible_Wrap_h__ */

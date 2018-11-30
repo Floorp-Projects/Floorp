@@ -20,13 +20,11 @@ class nsSMILValue;
 namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsSVGInteger
-{
-
-public:
+class nsSVGInteger {
+ public:
   void Init(uint8_t aAttrEnum = 0xff, int32_t aValue = 0) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
@@ -35,71 +33,58 @@ public:
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement);
+                              nsSVGElement* aSVGElement);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(int32_t aValue, nsSVGElement *aSVGElement);
-  int32_t GetBaseValue() const
-    { return mBaseVal; }
+  void SetBaseValue(int32_t aValue, nsSVGElement* aSVGElement);
+  int32_t GetBaseValue() const { return mBaseVal; }
 
-  void SetAnimValue(int aValue, nsSVGElement *aSVGElement);
-  int GetAnimValue() const
-    { return mAnimVal; }
+  void SetAnimValue(int aValue, nsSVGElement* aSVGElement);
+  int GetAnimValue() const { return mAnimVal; }
 
   // Returns true if the animated value of this integer has been explicitly
   // set (either by animation, or by taking on the base value which has been
   // explicitly set by markup or a DOM call), false otherwise.
   // If this returns false, the animated value is still valid, that is,
   // usable, and represents the default base value of the attribute.
-  bool IsExplicitlySet() const
-    { return mIsAnimated || mIsBaseSet; }
+  bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedInteger>
-    ToDOMAnimatedInteger(nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAnimatedInteger> ToDOMAnimatedInteger(
+      nsSVGElement* aSVGElement);
   mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
-private:
-
+ private:
   int32_t mAnimVal;
   int32_t mBaseVal;
-  uint8_t mAttrEnum; // element specified tracking for attribute
+  uint8_t mAttrEnum;  // element specified tracking for attribute
   bool mIsAnimated;
   bool mIsBaseSet;
 
-public:
-  struct DOMAnimatedInteger final : public mozilla::dom::SVGAnimatedInteger
-  {
+ public:
+  struct DOMAnimatedInteger final : public mozilla::dom::SVGAnimatedInteger {
     DOMAnimatedInteger(nsSVGInteger* aVal, nsSVGElement* aSVGElement)
-      : mozilla::dom::SVGAnimatedInteger(aSVGElement)
-      , mVal(aVal)
-    {}
+        : mozilla::dom::SVGAnimatedInteger(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedInteger();
 
-    nsSVGInteger* mVal; // kept alive because it belongs to content
+    nsSVGInteger* mVal;  // kept alive because it belongs to content
 
-    virtual int32_t BaseVal() override
-    {
-      return mVal->GetBaseValue();
-    }
-    virtual void SetBaseVal(int32_t aValue) override
-    {
+    virtual int32_t BaseVal() override { return mVal->GetBaseValue(); }
+    virtual void SetBaseVal(int32_t aValue) override {
       mVal->SetBaseValue(aValue, mSVGElement);
     }
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    virtual int32_t AnimVal() override
-    {
+    virtual int32_t AnimVal() override {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue();
     }
   };
 
-  struct SMILInteger : public nsISMILAttr
-  {
-  public:
+  struct SMILInteger : public nsISMILAttr {
+   public:
     SMILInteger(nsSVGInteger* aVal, nsSVGElement* aSVGElement)
-      : mVal(aVal), mSVGElement(aSVGElement) {}
+        : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
@@ -108,14 +93,14 @@ public:
     nsSVGElement* mSVGElement;
 
     // nsISMILAttr methods
-    virtual nsresult ValueFromString(const nsAString& aStr,
-                                     const mozilla::dom::SVGAnimationElement* aSrcElement,
-                                     nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsresult ValueFromString(
+        const nsAString& aStr,
+        const mozilla::dom::SVGAnimationElement* aSrcElement,
+        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual nsSMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 
-#endif //__NS_SVGINTEGER_H__
+#endif  //__NS_SVGINTEGER_H__

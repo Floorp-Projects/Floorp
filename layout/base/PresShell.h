@@ -16,7 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/UniquePtr.h"
-#include "nsContentUtils.h" // For AddScriptBlocker().
+#include "nsContentUtils.h"  // For AddScriptBlocker().
 #include "nsCRT.h"
 #include "nsIObserver.h"
 #include "nsIPresShell.h"
@@ -67,11 +67,10 @@ typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
 class PresShell final : public nsIPresShell,
                         public nsISelectionController,
                         public nsIObserver,
-                        public nsSupportsWeakReference
-{
+                        public nsSupportsWeakReference {
   typedef layers::FocusTarget FocusTarget;
 
-public:
+ public:
   PresShell();
 
   // nsISupports
@@ -80,8 +79,7 @@ public:
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
-            nsViewManager* aViewManager,
-            UniquePtr<ServoStyleSet> aStyleSet);
+            nsViewManager* aViewManager, UniquePtr<ServoStyleSet> aStyleSet);
   void Destroy() override;
 
   void UpdatePreferenceStyles() override;
@@ -93,33 +91,31 @@ public:
   dom::Selection* GetCurrentSelection(SelectionType aSelectionType) override;
 
   already_AddRefed<nsISelectionController>
-    GetSelectionControllerForFocusedContent(
+  GetSelectionControllerForFocusedContent(
       nsIContent** aFocusedContent = nullptr) override;
 
   NS_IMETHOD SetDisplaySelection(int16_t aToggle) override;
-  NS_IMETHOD GetDisplaySelection(int16_t *aToggle) override;
+  NS_IMETHOD GetDisplaySelection(int16_t* aToggle) override;
   NS_IMETHOD ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
                                      SelectionRegion aRegion,
                                      int16_t aFlags) override;
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
 
   nsresult Initialize() override;
-  nsresult ResizeReflow(nscoord aWidth, nscoord aHeight,
-                        nscoord aOldWidth = 0, nscoord aOldHeight = 0,
-                        ResizeReflowOptions aOptions =
-                        ResizeReflowOptions::eBSizeExact) override;
-  nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
-                                      nscoord aOldWidth, nscoord aOldHeight,
-                                      ResizeReflowOptions aOptions =
-                                      ResizeReflowOptions::eBSizeExact) override;
+  nsresult ResizeReflow(
+      nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
+      nscoord aOldHeight = 0,
+      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
+  nsresult ResizeReflowIgnoreOverride(
+      nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
+      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
   nsIPageSequenceFrame* GetPageSequenceFrame() const override;
   nsCanvasFrame* GetCanvasFrame() const override;
 
-  void FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
-                                nsFrameState aBitToAdd,
-                                ReflowRootHandling aRootHandling =
-                                  eInferFromBitToAdd) override;
-  void FrameNeedsToContinueReflow(nsIFrame *aFrame) override;
+  void FrameNeedsReflow(
+      nsIFrame* aFrame, IntrinsicDirty aIntrinsicDirty, nsFrameState aBitToAdd,
+      ReflowRootHandling aRootHandling = eInferFromBitToAdd) override;
+  void FrameNeedsToContinueReflow(nsIFrame* aFrame) override;
   void CancelAllPendingReflows() override;
   void DoFlushPendingNotifications(FlushType aType) override;
   void DoFlushPendingNotifications(ChangesToFlush aType) override;
@@ -133,45 +129,38 @@ public:
   void ClearFrameRefs(nsIFrame* aFrame) override;
   already_AddRefed<gfxContext> CreateReferenceRenderingContext() override;
   nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
-                              uint32_t aAdditionalScrollFlags = 0) override;
+                      uint32_t aAdditionalScrollFlags = 0) override;
   nsresult ScrollToAnchor() override;
 
-  nsresult ScrollContentIntoView(nsIContent* aContent,
-                                                     ScrollAxis  aVertical,
-                                                     ScrollAxis  aHorizontal,
-                                                     uint32_t    aFlags) override;
-  bool ScrollFrameRectIntoView(nsIFrame*     aFrame,
-                                       const nsRect& aRect,
-                                       ScrollAxis    aVertical,
-                                       ScrollAxis    aHorizontal,
-                                       uint32_t      aFlags) override;
-  nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
-                                             const nsRect &aRect,
-                                             nscoord aMinTwips) const override;
+  nsresult ScrollContentIntoView(nsIContent* aContent, ScrollAxis aVertical,
+                                 ScrollAxis aHorizontal,
+                                 uint32_t aFlags) override;
+  bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
+                               ScrollAxis aVertical, ScrollAxis aHorizontal,
+                               uint32_t aFlags) override;
+  nsRectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
+                                     nscoord aMinTwips) const override;
 
   void SetIgnoreFrameDestruction(bool aIgnore) override;
   void NotifyDestroyingFrame(nsIFrame* aFrame) override;
 
-  nsresult CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) override;
+  nsresult CaptureHistoryState(
+      nsILayoutHistoryState** aLayoutHistoryState) override;
 
   void UnsuppressPainting() override;
 
-  nsresult GetAgentStyleSheets(
-      nsTArray<RefPtr<StyleSheet>>& aSheets) override;
+  nsresult GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets) override;
   nsresult SetAgentStyleSheets(
       const nsTArray<RefPtr<StyleSheet>>& aSheets) override;
 
   nsresult AddOverrideStyleSheet(StyleSheet* aSheet) override;
   nsresult RemoveOverrideStyleSheet(StyleSheet* aSheet) override;
 
-  nsresult HandleEventWithTarget(WidgetEvent* aEvent,
-                                 nsIFrame* aFrame,
-                                 nsIContent* aContent,
-                                 nsEventStatus* aStatus,
-                                 bool aIsHandlingNativeEvent = false,
-                                 nsIContent** aTargetContent = nullptr,
-                                 nsIContent* aOverrideClickTarget = nullptr)
-                                 override;
+  nsresult HandleEventWithTarget(
+      WidgetEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent,
+      nsEventStatus* aStatus, bool aIsHandlingNativeEvent = false,
+      nsIContent** aTargetContent = nullptr,
+      nsIContent* aOverrideClickTarget = nullptr) override;
 
   void NotifyCounterStylesAreDirty() override;
 
@@ -180,27 +169,24 @@ public:
   void Thaw() override;
   void FireOrClearDelayedEvents(bool aFireEvents) override;
 
-  nsresult RenderDocument(const nsRect& aRect,
-                          uint32_t aFlags,
+  nsresult RenderDocument(const nsRect& aRect, uint32_t aFlags,
                           nscolor aBackgroundColor,
                           gfxContext* aThebesContext) override;
 
-  already_AddRefed<SourceSurface>
-  RenderNode(nsINode* aNode,
-             const Maybe<CSSIntRegion>& aRegion,
-             const LayoutDeviceIntPoint aPoint,
-             LayoutDeviceIntRect* aScreenRect,
-             uint32_t aFlags) override;
+  already_AddRefed<SourceSurface> RenderNode(nsINode* aNode,
+                                             const Maybe<CSSIntRegion>& aRegion,
+                                             const LayoutDeviceIntPoint aPoint,
+                                             LayoutDeviceIntRect* aScreenRect,
+                                             uint32_t aFlags) override;
 
-  already_AddRefed<SourceSurface>
-  RenderSelection(dom::Selection* aSelection,
-                  const LayoutDeviceIntPoint aPoint,
-                  LayoutDeviceIntRect* aScreenRect,
-                  uint32_t aFlags) override;
+  already_AddRefed<SourceSurface> RenderSelection(
+      dom::Selection* aSelection, const LayoutDeviceIntPoint aPoint,
+      LayoutDeviceIntRect* aScreenRect, uint32_t aFlags) override;
 
   already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() override;
 
-  already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() override;
+  already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow()
+      override;
 
   LayerManager* GetLayerManager() override;
 
@@ -220,7 +206,7 @@ public:
   void SetRestoreResolution(float aResolution,
                             LayoutDeviceIntSize aDisplaySize) override;
 
-  //nsIViewObserver interface
+  // nsIViewObserver interface
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
              uint32_t aFlags) override;
@@ -245,24 +231,26 @@ public:
   void RespectDisplayportSuppression(bool aEnabled) override;
   bool IsDisplayportSuppressed() override;
 
-  already_AddRefed<AccessibleCaretEventHub> GetAccessibleCaretEventHub() const override;
+  already_AddRefed<AccessibleCaretEventHub> GetAccessibleCaretEventHub()
+      const override;
 
   // caret handling
   already_AddRefed<nsCaret> GetCaret() const override;
   NS_IMETHOD SetCaretEnabled(bool aInEnable) override;
   NS_IMETHOD SetCaretReadOnly(bool aReadOnly) override;
-  NS_IMETHOD GetCaretEnabled(bool *aOutEnabled) override;
+  NS_IMETHOD GetCaretEnabled(bool* aOutEnabled) override;
   NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility) override;
-  NS_IMETHOD GetCaretVisible(bool *_retval) override;
-  void SetCaret(nsCaret *aNewCaret) override;
+  NS_IMETHOD GetCaretVisible(bool* _retval) override;
+  void SetCaret(nsCaret* aNewCaret) override;
   void RestoreCaret() override;
 
   NS_IMETHOD SetSelectionFlags(int16_t aInEnable) override;
-  NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable) override;
+  NS_IMETHOD GetSelectionFlags(int16_t* aOutEnable) override;
 
   // nsISelectionController
 
-  NS_IMETHOD PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend) override;
+  NS_IMETHOD PhysicalMove(int16_t aDirection, int16_t aAmount,
+                          bool aExtend) override;
   NS_IMETHOD CharacterMove(bool aForward, bool aExtend) override;
   NS_IMETHOD CharacterExtendForDelete() override;
   NS_IMETHOD CharacterExtendForBackspace() override;
@@ -278,7 +266,8 @@ public:
   NS_IMETHOD CompleteScroll(bool aForward) override;
   NS_IMETHOD CompleteMove(bool aForward, bool aExtend) override;
   NS_IMETHOD SelectAll() override;
-  NS_IMETHOD CheckVisibility(nsINode *node, int16_t startOffset, int16_t EndOffset, bool *_retval) override;
+  NS_IMETHOD CheckVisibility(nsINode* node, int16_t startOffset,
+                             int16_t EndOffset, bool* _retval) override;
   nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
                                   int16_t aEndOffset, bool* aRetval) override;
 
@@ -300,21 +289,18 @@ public:
 
 #ifdef MOZ_REFLOW_PERF
   void DumpReflows() override;
-  void CountReflows(const char * aName, nsIFrame * aFrame) override;
-  void PaintCount(const char * aName,
-                  gfxContext* aRenderingContext,
-                  nsPresContext* aPresContext,
-                  nsIFrame * aFrame,
-                  const nsPoint& aOffset,
-                  uint32_t aColor) override;
+  void CountReflows(const char* aName, nsIFrame* aFrame) override;
+  void PaintCount(const char* aName, gfxContext* aRenderingContext,
+                  nsPresContext* aPresContext, nsIFrame* aFrame,
+                  const nsPoint& aOffset, uint32_t aColor) override;
   void SetPaintFrameCount(bool aOn) override;
   bool IsPaintingFrameCounts() override;
 #endif
 
 #ifdef DEBUG
-  void ListComputedStyles(FILE *out, int32_t aIndent = 0) override;
+  void ListComputedStyles(FILE* out, int32_t aIndent = 0) override;
 
-  void ListStyleSheets(FILE *out, int32_t aIndent = 0) override;
+  void ListStyleSheets(FILE* out, int32_t aIndent = 0) override;
 #endif
 
   static LazyLogModule gLog;
@@ -324,15 +310,13 @@ public:
   void UpdateCanvasBackground() override;
 
   void AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
-                                    nsDisplayList& aList,
-                                    nsIFrame* aFrame,
+                                    nsDisplayList& aList, nsIFrame* aFrame,
                                     const nsRect& aBounds,
                                     nscolor aBackstopColor,
                                     uint32_t aFlags) override;
 
   void AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
-                                     nsDisplayList& aList,
-                                     nsIFrame* aFrame,
+                                     nsDisplayList& aList, nsIFrame* aFrame,
                                      const nsRect& aBounds) override;
 
   nscolor ComputeBackstopColor(nsView* aDisplayRoot) override;
@@ -349,16 +333,13 @@ public:
 
   void UpdateViewportOverridden(bool aAfterInitialization) override;
 
-  bool IsLayoutFlushObserver() override
-  {
-    return GetPresContext()->RefreshDriver()->
-      IsLayoutFlushObserver(this);
+  bool IsLayoutFlushObserver() override {
+    return GetPresContext()->RefreshDriver()->IsLayoutFlushObserver(this);
   }
 
   void LoadComplete() override;
 
-  void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes)
-    const override;
+  void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const override;
   size_t SizeOfTextRuns(MallocSizeOf aMallocSizeOf) const;
 
   // This data is stored as a content property (nsGkAtoms::scrolling) on
@@ -366,9 +347,8 @@ public:
   struct ScrollIntoViewData {
     ScrollAxis mContentScrollVAxis;
     ScrollAxis mContentScrollHAxis;
-    uint32_t   mContentToScrollToFlags;
+    uint32_t mContentToScrollToFlags;
   };
-
 
   //////////////////////////////////////////////////////////////////////////////
   // Approximate frame visibility tracking public API.
@@ -377,7 +357,8 @@ public:
   void ScheduleApproximateFrameVisibilityUpdateSoon() override;
   void ScheduleApproximateFrameVisibilityUpdateNow() override;
 
-  void RebuildApproximateFrameVisibilityDisplayList(const nsDisplayList& aList) override;
+  void RebuildApproximateFrameVisibilityDisplayList(
+      const nsDisplayList& aList) override;
   void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
                                          bool aRemoveOnly = false) override;
 
@@ -395,9 +376,7 @@ public:
   void NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
                                            uint32_t aSheetType) override;
 
-  bool HasHandledUserInput() const override {
-    return mHasHandledUserInput;
-  }
+  bool HasHandledUserInput() const override { return mHasHandledUserInput; }
 
   void FireResizeEvent() override;
 
@@ -405,7 +384,7 @@ public:
                                            nsIContent* aContent);
   static PresShell* GetShellForTouchEvent(WidgetGUIEvent* aEvent);
 
-private:
+ private:
   ~PresShell();
 
   void HandlePostedReflowCallbacks(bool aInterruptible);
@@ -422,33 +401,30 @@ private:
   friend class ::nsAutoCauseReflowNotifier;
   friend class ::AutoPointerEventTargetUpdater;
 
-  nsresult DispatchEventToDOM(WidgetEvent* aEvent,
-                              nsEventStatus* aStatus,
+  nsresult DispatchEventToDOM(WidgetEvent* aEvent, nsEventStatus* aStatus,
                               nsPresShellEventCB* aEventCB);
-  void DispatchTouchEventToDOM(WidgetEvent* aEvent,
-                               nsEventStatus* aStatus,
-                               nsPresShellEventCB* aEventCB,
-                               bool aTouchIsNew);
+  void DispatchTouchEventToDOM(WidgetEvent* aEvent, nsEventStatus* aStatus,
+                               nsPresShellEventCB* aEventCB, bool aTouchIsNew);
 
-  void     WillDoReflow();
+  void WillDoReflow();
 
   /**
    * Callback handler for whether reflow happened.
    *
    * @param aInterruptible Whether or not reflow interruption is allowed.
    */
-  void     DidDoReflow(bool aInterruptible);
+  void DidDoReflow(bool aInterruptible);
   // ProcessReflowCommands returns whether we processed all our dirty roots
   // without interruptions.
-  bool     ProcessReflowCommands(bool aInterruptible);
+  bool ProcessReflowCommands(bool aInterruptible);
   // MaybeScheduleReflow checks if posting a reflow is needed, then checks if
   // the last reflow was interrupted. In the interrupted case ScheduleReflow is
   // called off a timer, otherwise it is called directly.
-  void     MaybeScheduleReflow();
+  void MaybeScheduleReflow();
   // Actually schedules a reflow.  This should only be called by
   // MaybeScheduleReflow and the reflow timer ScheduleReflowOffTimer
   // sets up.
-  void     ScheduleReflow();
+  void ScheduleReflow();
 
   // DoReflow returns whether the reflow finished without interruption
   bool DoReflow(nsIFrame* aFrame, bool aInterruptible);
@@ -472,21 +448,17 @@ private:
 
   struct RenderingState {
     explicit RenderingState(PresShell* aPresShell)
-      : mResolution(aPresShell->mResolution)
-      , mRenderFlags(aPresShell->mRenderFlags)
-    { }
+        : mResolution(aPresShell->mResolution),
+          mRenderFlags(aPresShell->mRenderFlags) {}
     Maybe<float> mResolution;
     RenderFlags mRenderFlags;
   };
 
   struct AutoSaveRestoreRenderingState {
     explicit AutoSaveRestoreRenderingState(PresShell* aPresShell)
-      : mPresShell(aPresShell)
-      , mOldState(aPresShell)
-    {}
+        : mPresShell(aPresShell), mOldState(aPresShell) {}
 
-    ~AutoSaveRestoreRenderingState()
-    {
+    ~AutoSaveRestoreRenderingState() {
       mPresShell->mRenderFlags = mOldState.mRenderFlags;
       mPresShell->mResolution = mOldState.mResolution;
     }
@@ -495,11 +467,9 @@ private:
     RenderingState mOldState;
   };
   static RenderFlags ChangeFlag(RenderFlags aFlags, bool aOnOff,
-                                eRenderFlag aFlag)
-  {
+                                eRenderFlag aFlag) {
     return aOnOff ? (aFlags | aFlag) : (aFlag & ~aFlag);
   }
-
 
   void SetRenderingState(const RenderingState& aState);
 
@@ -520,16 +490,14 @@ private:
 
   // given a display list, clip the items within the list to
   // the range
-  nsRect ClipListToRange(nsDisplayListBuilder *aBuilder,
-                         nsDisplayList* aList,
+  nsRect ClipListToRange(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
                          nsRange* aRange);
 
   // create a RangePaintInfo for the range aRange containing the
   // display list needed to paint the range to a surface
-  UniquePtr<RangePaintInfo>
-  CreateRangePaintInfo(nsRange* aRange,
-                       nsRect& aSurfaceRect,
-                       bool aForPrimarySelection);
+  UniquePtr<RangePaintInfo> CreateRangePaintInfo(nsRange* aRange,
+                                                 nsRect& aSurfaceRect,
+                                                 bool aForPrimarySelection);
 
   /*
    * Paint the items to a new surface and return it.
@@ -543,14 +511,11 @@ private:
    * aFlags - set RENDER_AUTO_SCALE to scale down large images, but it must not
    *          be set if a custom image was specified
    */
-  already_AddRefed<SourceSurface>
-  PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems,
-                      dom::Selection* aSelection,
-                      const Maybe<CSSIntRegion>& aRegion,
-                      nsRect aArea,
-                      const LayoutDeviceIntPoint aPoint,
-                      LayoutDeviceIntRect* aScreenRect,
-                      uint32_t aFlags);
+  already_AddRefed<SourceSurface> PaintRangePaintInfo(
+      const nsTArray<UniquePtr<RangePaintInfo>>& aItems,
+      dom::Selection* aSelection, const Maybe<CSSIntRegion>& aRegion,
+      nsRect aArea, const LayoutDeviceIntPoint aPoint,
+      LayoutDeviceIntRect* aScreenRect, uint32_t aFlags);
 
   /**
    * Methods to handle changes to user and UA sheet lists that we get
@@ -569,10 +534,8 @@ private:
 
   void MaybeReleaseCapturingContent();
 
-  nsresult HandleRetargetedEvent(WidgetEvent* aEvent,
-                                 nsEventStatus* aStatus,
-                                 nsIContent* aTarget)
-  {
+  nsresult HandleRetargetedEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
+                                 nsIContent* aTarget) {
     PushCurrentEventInfo(nullptr, nullptr);
     mCurrentEventContent = aTarget;
     nsresult rv = NS_OK;
@@ -583,35 +546,31 @@ private:
     return rv;
   }
 
-  class DelayedEvent
-  {
-  public:
-    virtual ~DelayedEvent() { }
-    virtual void Dispatch() { }
+  class DelayedEvent {
+   public:
+    virtual ~DelayedEvent() {}
+    virtual void Dispatch() {}
     virtual bool IsKeyPressEvent() { return false; }
   };
 
-  class DelayedInputEvent : public DelayedEvent
-  {
-  public:
+  class DelayedInputEvent : public DelayedEvent {
+   public:
     void Dispatch() override;
 
-  protected:
+   protected:
     DelayedInputEvent();
     ~DelayedInputEvent() override;
 
     WidgetInputEvent* mEvent;
   };
 
-  class DelayedMouseEvent : public DelayedInputEvent
-  {
-  public:
+  class DelayedMouseEvent : public DelayedInputEvent {
+   public:
     explicit DelayedMouseEvent(WidgetMouseEvent* aEvent);
   };
 
-  class DelayedKeyEvent : public DelayedInputEvent
-  {
-  public:
+  class DelayedKeyEvent : public DelayedInputEvent {
+   public:
     explicit DelayedKeyEvent(WidgetKeyboardEvent* aEvent);
     bool IsKeyPressEvent() override;
   };
@@ -620,25 +579,23 @@ private:
   // synth mouse moves.
   void RecordMouseLocation(WidgetGUIEvent* aEvent);
   class nsSynthMouseMoveEvent final : public nsARefreshObserver {
-  public:
+   public:
     nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
-      : mPresShell(aPresShell), mFromScroll(aFromScroll) {
+        : mPresShell(aPresShell), mFromScroll(aFromScroll) {
       NS_ASSERTION(mPresShell, "null parameter");
     }
 
-  private:
-  // Private destructor, to discourage deletion outside of Release():
-    ~nsSynthMouseMoveEvent() {
-      Revoke();
-    }
+   private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~nsSynthMouseMoveEvent() { Revoke(); }
 
-  public:
+   public:
     NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent, override)
 
     void Revoke() {
       if (mPresShell) {
-        mPresShell->GetPresContext()->RefreshDriver()->
-          RemoveRefreshObserver(this, FlushType::Display);
+        mPresShell->GetPresContext()->RefreshDriver()->RemoveRefreshObserver(
+            this, FlushType::Display);
         mPresShell = nullptr;
       }
     }
@@ -648,7 +605,8 @@ private:
         shell->ProcessSynthMouseMoveEvent(mFromScroll);
       }
     }
-  private:
+
+   private:
     PresShell* mPresShell;
     bool mFromScroll;
   };
@@ -657,7 +615,7 @@ private:
   void QueryIsActive();
   nsresult UpdateImageLockingState();
 
-  bool InZombieDocument(nsIContent *aContent);
+  bool InZombieDocument(nsIContent* aContent);
   already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
   MOZ_CAN_RUN_SCRIPT nsresult
   RetargetEventToParent(WidgetGUIEvent* aEvent, nsEventStatus* aEventStatus);
@@ -667,8 +625,7 @@ private:
    *                                    an event which is caused by native
    *                                    event.  Otherwise, false.
    */
-  nsresult HandleEventInternal(WidgetEvent* aEvent,
-                               nsEventStatus* aStatus,
+  nsresult HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus,
                                bool aIsHandlingNativeEvent,
                                nsIContent* aOverrideClickTarget = nullptr);
 
@@ -696,9 +653,9 @@ private:
   // Get the selected item and coordinates in device pixels relative to root
   // document's root view for element, first ensuring the element is onscreen
   void GetCurrentItemAndPositionForElement(dom::Element* aFocusedElement,
-                                           nsIContent **aTargetToUse,
+                                           nsIContent** aTargetToUse,
                                            LayoutDeviceIntPoint& aTargetPt,
-                                           nsIWidget *aRootWidget);
+                                           nsIWidget* aRootWidget);
 
   void SynthesizeMouseMove(bool aFromScroll) override;
 
@@ -719,7 +676,9 @@ private:
   void WindowSizeMoveDone() override;
   void SysColorChanged() override { mPresContext->SysColorChanged(); }
   void ThemeChanged() override { mPresContext->ThemeChanged(); }
-  void BackingScaleFactorChanged() override { mPresContext->UIResolutionChangedSync(); }
+  void BackingScaleFactorChanged() override {
+    mPresContext->UIResolutionChangedSync();
+  }
   nsIDocument* GetPrimaryContentDocument() override;
 
   void PausePainting() override;
@@ -732,18 +691,21 @@ private:
   void UpdateApproximateFrameVisibility();
   void DoUpdateApproximateFrameVisibility(bool aRemoveOnly);
 
-  void ClearApproximatelyVisibleFramesList(const Maybe<OnNonvisible>& aNonvisibleAction
-                                             = Nothing());
-  static void ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear);
+  void ClearApproximatelyVisibleFramesList(
+      const Maybe<OnNonvisible>& aNonvisibleAction = Nothing());
+  static void ClearApproximateFrameVisibilityVisited(nsView* aView,
+                                                     bool aClear);
   static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList);
   void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
                                                const nsRect& aRect,
                                                bool aRemoveOnly = false);
 
-  void DecApproximateVisibleCount(VisibleFrames& aFrames,
-                                  const Maybe<OnNonvisible>& aNonvisibleAction = Nothing());
+  void DecApproximateVisibleCount(
+      VisibleFrames& aFrames,
+      const Maybe<OnNonvisible>& aNonvisibleAction = Nothing());
 
-  nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
+  nsRevocableEventPtr<nsRunnableMethod<PresShell>>
+      mUpdateApproximateFrameVisibilityEvent;
 
   // A set of frames that were visible or could be visible soon at the time
   // that we last did an approximate frame visibility update.
@@ -751,8 +713,7 @@ private:
 
   nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution);
 
-  nsIContent* GetOverrideClickTarget(WidgetGUIEvent* aEvent,
-                                     nsIFrame* aFrame);
+  nsIContent* GetOverrideClickTarget(WidgetGUIEvent* aEvent, nsIFrame* aFrame);
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
   // not in reflow.
@@ -782,10 +743,11 @@ private:
 
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.
-  nsTHashtable<nsPtrHashKey<nsIFrame> > mFramesToDirty;
+  nsTHashtable<nsPtrHashKey<nsIFrame>> mFramesToDirty;
 
   nsTArray<UniquePtr<DelayedEvent>> mDelayedEvents;
-private:
+
+ private:
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
   nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
   RefPtr<nsCaret> mCaret;
@@ -888,6 +850,6 @@ private:
   static bool sProcessInteractable;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_PresShell_h
+#endif  // mozilla_PresShell_h

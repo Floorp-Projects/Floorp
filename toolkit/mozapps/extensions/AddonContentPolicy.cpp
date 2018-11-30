@@ -32,24 +32,19 @@ using namespace mozilla;
  *    script-src and object-src directives.
  */
 
-#define VERSIONED_JS_BLOCKED_MESSAGE \
+#define VERSIONED_JS_BLOCKED_MESSAGE                                       \
   u"Versioned JavaScript is a non-standard, deprecated extension, and is " \
-  u"not supported in WebExtension code. For alternatives, please see: " \
+  u"not supported in WebExtension code. For alternatives, please see: "    \
   u"https://developer.mozilla.org/Add-ons/WebExtensions/Tips"
 
-AddonContentPolicy::AddonContentPolicy()
-{
-}
+AddonContentPolicy::AddonContentPolicy() {}
 
-AddonContentPolicy::~AddonContentPolicy()
-{
-}
+AddonContentPolicy::~AddonContentPolicy() {}
 
 NS_IMPL_ISUPPORTS(AddonContentPolicy, nsIContentPolicy, nsIAddonContentPolicy)
 
-static nsresult
-GetWindowIDFromContext(nsISupports* aContext, uint64_t *aResult)
-{
+static nsresult GetWindowIDFromContext(nsISupports* aContext,
+                                       uint64_t* aResult) {
   NS_ENSURE_TRUE(aContext, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
@@ -65,38 +60,34 @@ GetWindowIDFromContext(nsISupports* aContext, uint64_t *aResult)
   return NS_OK;
 }
 
-static nsresult
-LogMessage(const nsAString &aMessage, nsIURI* aSourceURI, const nsAString &aSourceSample,
-           nsISupports* aContext)
-{
+static nsresult LogMessage(const nsAString& aMessage, nsIURI* aSourceURI,
+                           const nsAString& aSourceSample,
+                           nsISupports* aContext) {
   nsCOMPtr<nsIScriptError> error = do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   NS_ENSURE_TRUE(error, NS_ERROR_OUT_OF_MEMORY);
 
   uint64_t windowID = 0;
   GetWindowIDFromContext(aContext, &windowID);
 
-  nsresult rv =
-    error->InitWithSourceURI(aMessage, aSourceURI,
-                             aSourceSample, 0, 0, nsIScriptError::errorFlag,
-                             "JavaScript", windowID);
+  nsresult rv = error->InitWithSourceURI(aMessage, aSourceURI, aSourceSample, 0,
+                                         0, nsIScriptError::errorFlag,
+                                         "JavaScript", windowID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIConsoleService> console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  nsCOMPtr<nsIConsoleService> console =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   NS_ENSURE_TRUE(console, NS_ERROR_OUT_OF_MEMORY);
 
   console->LogMessage(error);
   return NS_OK;
 }
 
-
 // Content policy enforcement:
 
 NS_IMETHODIMP
-AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
-                               nsILoadInfo* aLoadInfo,
+AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
                                const nsACString& aMimeTypeGuess,
-                               int16_t* aShouldLoad)
-{
+                               int16_t* aShouldLoad) {
   if (!aContentLocation || !aLoadInfo) {
     *aShouldLoad = REJECT_REQUEST;
     return NS_ERROR_FAILURE;
@@ -109,7 +100,8 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
     loadingPrincipal->GetURI(getter_AddRefs(requestOrigin));
   }
 
-  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
+                                contentType),
              "We should only see external content policy types here.");
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
@@ -121,8 +113,10 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
   // Only apply this policy to requests from documents loaded from
   // moz-extension URLs, or to resources being loaded from moz-extension URLs.
   bool equals;
-  if (!((NS_SUCCEEDED(aContentLocation->SchemeIs("moz-extension", &equals)) && equals) ||
-        (NS_SUCCEEDED(requestOrigin->SchemeIs("moz-extension", &equals)) && equals))) {
+  if (!((NS_SUCCEEDED(aContentLocation->SchemeIs("moz-extension", &equals)) &&
+         equals) ||
+        (NS_SUCCEEDED(requestOrigin->SchemeIs("moz-extension", &equals)) &&
+         equals))) {
     return NS_OK;
   }
 
@@ -138,8 +132,8 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
       *aShouldLoad = nsIContentPolicy::REJECT_REQUEST;
 
       nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
-      LogMessage(NS_LITERAL_STRING(VERSIONED_JS_BLOCKED_MESSAGE),
-                 requestOrigin, typeString, context);
+      LogMessage(NS_LITERAL_STRING(VERSIONED_JS_BLOCKED_MESSAGE), requestOrigin,
+                 typeString, context);
       return NS_OK;
     }
   }
@@ -151,11 +145,11 @@ NS_IMETHODIMP
 AddonContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                   nsILoadInfo* aLoadInfo,
                                   const nsACString& aMimeTypeGuess,
-                                  int16_t* aShouldProcess)
-{
+                                  int16_t* aShouldProcess) {
 #ifdef DEBUG
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
-  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
+                                contentType),
              "We should only see external content policy types here.");
 #endif
 
@@ -163,20 +157,11 @@ AddonContentPolicy::ShouldProcess(nsIURI* aContentLocation,
   return NS_OK;
 }
 
-
 // CSP Validation:
 
-static const char* allowedSchemes[] = {
-  "blob",
-  "filesystem",
-  nullptr
-};
+static const char* allowedSchemes[] = {"blob", "filesystem", nullptr};
 
-static const char* allowedHostSchemes[] = {
-  "https",
-  "moz-extension",
-  nullptr
-};
+static const char* allowedHostSchemes[] = {"https", "moz-extension", nullptr};
 
 /**
  * Validates a CSP directive to ensure that it is sufficiently stringent.
@@ -196,201 +181,180 @@ static const char* allowedHostSchemes[] = {
  *    and hash sources.
  */
 class CSPValidator final : public nsCSPSrcVisitor {
-  public:
-    CSPValidator(nsAString& aURL, CSPDirective aDirective, bool aDirectiveRequired = true) :
-      mURL(aURL),
-      mDirective(CSP_CSPDirectiveToString(aDirective)),
-      mFoundSelf(false)
-    {
-      // Start with the default error message for a missing directive, since no
-      // visitors will be called if the directive isn't present.
-      mError.SetIsVoid(true);
-      if (aDirectiveRequired) {
-        FormatError("csp.error.missing-directive");
-      }
+ public:
+  CSPValidator(nsAString& aURL, CSPDirective aDirective,
+               bool aDirectiveRequired = true)
+      : mURL(aURL),
+        mDirective(CSP_CSPDirectiveToString(aDirective)),
+        mFoundSelf(false) {
+    // Start with the default error message for a missing directive, since no
+    // visitors will be called if the directive isn't present.
+    mError.SetIsVoid(true);
+    if (aDirectiveRequired) {
+      FormatError("csp.error.missing-directive");
     }
+  }
 
-    // Visitors
+  // Visitors
 
-    bool visitSchemeSrc(const nsCSPSchemeSrc& src) override
-    {
-      nsAutoString scheme;
-      src.getScheme(scheme);
+  bool visitSchemeSrc(const nsCSPSchemeSrc& src) override {
+    nsAutoString scheme;
+    src.getScheme(scheme);
 
-      if (SchemeInList(scheme, allowedHostSchemes)) {
+    if (SchemeInList(scheme, allowedHostSchemes)) {
+      FormatError("csp.error.missing-host", scheme);
+      return false;
+    }
+    if (!SchemeInList(scheme, allowedSchemes)) {
+      FormatError("csp.error.illegal-protocol", scheme);
+      return false;
+    }
+    return true;
+  };
+
+  bool visitHostSrc(const nsCSPHostSrc& src) override {
+    nsAutoString scheme, host;
+
+    src.getScheme(scheme);
+    src.getHost(host);
+
+    if (scheme.LowerCaseEqualsLiteral("https")) {
+      if (!HostIsAllowed(host)) {
+        FormatError("csp.error.illegal-host-wildcard", scheme);
+        return false;
+      }
+    } else if (scheme.LowerCaseEqualsLiteral("moz-extension")) {
+      // The CSP parser silently converts 'self' keywords to the origin
+      // URL, so we need to reconstruct the URL to see if it was present.
+      if (!mFoundSelf) {
+        nsAutoString url(u"moz-extension://");
+        url.Append(host);
+
+        mFoundSelf = url.Equals(mURL);
+      }
+
+      if (host.IsEmpty() || host.EqualsLiteral("*")) {
         FormatError("csp.error.missing-host", scheme);
         return false;
       }
-      if (!SchemeInList(scheme, allowedSchemes)) {
-        FormatError("csp.error.illegal-protocol", scheme);
-        return false;
-      }
-      return true;
-    };
+    } else if (!SchemeInList(scheme, allowedSchemes)) {
+      FormatError("csp.error.illegal-protocol", scheme);
+      return false;
+    }
 
-    bool visitHostSrc(const nsCSPHostSrc& src) override
-    {
-      nsAutoString scheme, host;
+    return true;
+  };
 
-      src.getScheme(scheme);
-      src.getHost(host);
-
-      if (scheme.LowerCaseEqualsLiteral("https")) {
-        if (!HostIsAllowed(host)) {
-          FormatError("csp.error.illegal-host-wildcard", scheme);
-          return false;
-        }
-      } else if (scheme.LowerCaseEqualsLiteral("moz-extension")) {
-        // The CSP parser silently converts 'self' keywords to the origin
-        // URL, so we need to reconstruct the URL to see if it was present.
-        if (!mFoundSelf) {
-          nsAutoString url(u"moz-extension://");
-          url.Append(host);
-
-          mFoundSelf = url.Equals(mURL);
-        }
-
-        if (host.IsEmpty() || host.EqualsLiteral("*")) {
-          FormatError("csp.error.missing-host", scheme);
-          return false;
-        }
-      } else if (!SchemeInList(scheme, allowedSchemes)) {
-        FormatError("csp.error.illegal-protocol", scheme);
-        return false;
-      }
-
-      return true;
-    };
-
-    bool visitKeywordSrc(const nsCSPKeywordSrc& src) override
-    {
-      switch (src.getKeyword()) {
+  bool visitKeywordSrc(const nsCSPKeywordSrc& src) override {
+    switch (src.getKeyword()) {
       case CSP_NONE:
       case CSP_SELF:
       case CSP_UNSAFE_EVAL:
         return true;
 
       default:
-        FormatError("csp.error.illegal-keyword",
-                    nsDependentString(CSP_EnumToUTF16Keyword(src.getKeyword())));
+        FormatError(
+            "csp.error.illegal-keyword",
+            nsDependentString(CSP_EnumToUTF16Keyword(src.getKeyword())));
+        return false;
+    }
+  };
+
+  bool visitNonceSrc(const nsCSPNonceSrc& src) override {
+    FormatError("csp.error.illegal-keyword", NS_LITERAL_STRING("'nonce-*'"));
+    return false;
+  };
+
+  bool visitHashSrc(const nsCSPHashSrc& src) override { return true; };
+
+  // Accessors
+
+  inline nsAString& GetError() { return mError; };
+
+  inline bool FoundSelf() { return mFoundSelf; };
+
+  // Formatters
+
+  template <typename... T>
+  inline void FormatError(const char* aName, const T... aParams) {
+    const char16_t* params[] = {mDirective.get(), aParams.get()...};
+    FormatErrorParams(aName, params, MOZ_ARRAY_LENGTH(params));
+  };
+
+ private:
+  // Validators
+
+  bool HostIsAllowed(nsAString& host) {
+    if (host.First() == '*') {
+      if (host.EqualsLiteral("*") || host[1] != '.') {
         return false;
       }
-    };
 
-    bool visitNonceSrc(const nsCSPNonceSrc& src) override
-    {
-      FormatError("csp.error.illegal-keyword", NS_LITERAL_STRING("'nonce-*'"));
-      return false;
-    };
+      host.Cut(0, 2);
 
-    bool visitHashSrc(const nsCSPHashSrc& src) override
-    {
-      return true;
-    };
-
-    // Accessors
-
-    inline nsAString& GetError()
-    {
-      return mError;
-    };
-
-    inline bool FoundSelf()
-    {
-      return mFoundSelf;
-    };
-
-
-    // Formatters
-
-    template <typename... T>
-    inline void FormatError(const char* aName, const T ...aParams)
-    {
-      const char16_t* params[] = { mDirective.get(), aParams.get()... };
-      FormatErrorParams(aName, params, MOZ_ARRAY_LENGTH(params));
-    };
-
-  private:
-    // Validators
-
-    bool HostIsAllowed(nsAString& host)
-    {
-      if (host.First() == '*') {
-        if (host.EqualsLiteral("*") || host[1] != '.') {
-          return false;
-        }
-
-        host.Cut(0, 2);
-
-        nsCOMPtr<nsIEffectiveTLDService> tldService =
+      nsCOMPtr<nsIEffectiveTLDService> tldService =
           do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
 
-        if (!tldService) {
-          return false;
-        }
-
-        NS_ConvertUTF16toUTF8 cHost(host);
-        nsAutoCString publicSuffix;
-
-        nsresult rv = tldService->GetPublicSuffixFromHost(cHost, publicSuffix);
-
-        return NS_SUCCEEDED(rv) && !cHost.Equals(publicSuffix);
+      if (!tldService) {
+        return false;
       }
 
-      return true;
-    };
+      NS_ConvertUTF16toUTF8 cHost(host);
+      nsAutoCString publicSuffix;
 
-    bool SchemeInList(nsAString& scheme, const char** schemes)
-    {
-      for (; *schemes; schemes++) {
-        if (scheme.LowerCaseEqualsASCII(*schemes)) {
-          return true;
-        }
+      nsresult rv = tldService->GetPublicSuffixFromHost(cHost, publicSuffix);
+
+      return NS_SUCCEEDED(rv) && !cHost.Equals(publicSuffix);
+    }
+
+    return true;
+  };
+
+  bool SchemeInList(nsAString& scheme, const char** schemes) {
+    for (; *schemes; schemes++) {
+      if (scheme.LowerCaseEqualsASCII(*schemes)) {
+        return true;
       }
-      return false;
-    };
+    }
+    return false;
+  };
 
+  // Formatters
 
-    // Formatters
-
-    already_AddRefed<nsIStringBundle>
-    GetStringBundle()
-    {
-      nsCOMPtr<nsIStringBundleService> sbs =
+  already_AddRefed<nsIStringBundle> GetStringBundle() {
+    nsCOMPtr<nsIStringBundleService> sbs =
         mozilla::services::GetStringBundleService();
-      NS_ENSURE_TRUE(sbs, nullptr);
+    NS_ENSURE_TRUE(sbs, nullptr);
 
-      nsCOMPtr<nsIStringBundle> stringBundle;
-      sbs->CreateBundle("chrome://global/locale/extensions.properties",
-                        getter_AddRefs(stringBundle));
+    nsCOMPtr<nsIStringBundle> stringBundle;
+    sbs->CreateBundle("chrome://global/locale/extensions.properties",
+                      getter_AddRefs(stringBundle));
 
-      return stringBundle.forget();
-    };
+    return stringBundle.forget();
+  };
 
-    void FormatErrorParams(const char* aName, const char16_t** aParams, int32_t aLength)
-    {
-      nsresult rv = NS_ERROR_FAILURE;
+  void FormatErrorParams(const char* aName, const char16_t** aParams,
+                         int32_t aLength) {
+    nsresult rv = NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsIStringBundle> stringBundle = GetStringBundle();
+    nsCOMPtr<nsIStringBundle> stringBundle = GetStringBundle();
 
-      if (stringBundle) {
-        rv =
-          stringBundle->FormatStringFromName(aName, aParams, aLength, mError);
-      }
+    if (stringBundle) {
+      rv = stringBundle->FormatStringFromName(aName, aParams, aLength, mError);
+    }
 
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mError.AssignLiteral("An unexpected error occurred");
-      }
-    };
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mError.AssignLiteral("An unexpected error occurred");
+    }
+  };
 
+  // Data members
 
-    // Data members
+  nsAutoString mURL;
+  NS_ConvertASCIItoUTF16 mDirective;
+  nsString mError;
 
-    nsAutoString mURL;
-    NS_ConvertASCIItoUTF16 mDirective;
-    nsString mError;
-
-    bool mFoundSelf;
+  bool mFoundSelf;
 };
 
 /**
@@ -404,8 +368,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
  */
 NS_IMETHODIMP
 AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
-                                     nsAString& aResult)
-{
+                                     nsAString& aResult) {
   nsresult rv;
 
   // Validate against a randomly-generated extension origin.
@@ -430,14 +393,12 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
     url.AppendASCII(idString + 1, NSID_LENGTH - 3);
   }
 
-
   RefPtr<BasePrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(NS_ConvertUTF16toUTF8(url));
+      BasePrincipal::CreateCodebasePrincipal(NS_ConvertUTF16toUTF8(url));
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = principal->EnsureCSP(nullptr, getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
-
 
   csp->AppendPolicy(aPolicyString, false, false);
 
@@ -464,7 +425,8 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
     if (!policy->visitDirectiveSrcs(directive, &validator)) {
       aResult.Assign(validator.GetError());
     } else if (!validator.FoundSelf()) {
-      validator.FormatError("csp.error.missing-source", NS_LITERAL_STRING("'self'"));
+      validator.FormatError("csp.error.missing-source",
+                            NS_LITERAL_STRING("'self'"));
       aResult.Assign(validator.GetError());
     }
   }

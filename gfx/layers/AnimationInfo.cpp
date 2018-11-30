@@ -15,27 +15,17 @@
 namespace mozilla {
 namespace layers {
 
-AnimationInfo::AnimationInfo() :
-  mCompositorAnimationsId(0),
-  mMutated(false)
-{
-}
+AnimationInfo::AnimationInfo() : mCompositorAnimationsId(0), mMutated(false) {}
 
-AnimationInfo::~AnimationInfo()
-{
-}
+AnimationInfo::~AnimationInfo() {}
 
-void
-AnimationInfo::EnsureAnimationsId()
-{
+void AnimationInfo::EnsureAnimationsId() {
   if (!mCompositorAnimationsId) {
     mCompositorAnimationsId = AnimationHelper::GetNextCompositorAnimationsId();
   }
 }
 
-Animation*
-AnimationInfo::AddAnimation()
-{
+Animation* AnimationInfo::AddAnimation() {
   // Here generates a new id when the first animation is added and
   // this id is used to represent the animations in this layer.
   EnsureAnimationsId();
@@ -49,9 +39,7 @@ AnimationInfo::AddAnimation()
   return anim;
 }
 
-Animation*
-AnimationInfo::AddAnimationForNextTransaction()
-{
+Animation* AnimationInfo::AddAnimationForNextTransaction() {
   MOZ_ASSERT(mPendingAnimations,
              "should have called ClearAnimationsForNextTransaction first");
 
@@ -60,9 +48,7 @@ AnimationInfo::AddAnimationForNextTransaction()
   return anim;
 }
 
-void
-AnimationInfo::ClearAnimations()
-{
+void AnimationInfo::ClearAnimations() {
   mPendingAnimations = nullptr;
 
   if (mAnimations.IsEmpty() && mAnimationData.IsEmpty()) {
@@ -75,9 +61,7 @@ AnimationInfo::ClearAnimations()
   mMutated = true;
 }
 
-void
-AnimationInfo::ClearAnimationsForNextTransaction()
-{
+void AnimationInfo::ClearAnimationsForNextTransaction() {
   // Ensure we have a non-null mPendingAnimations to mark a future clear.
   if (!mPendingAnimations) {
     mPendingAnimations = new AnimationArray;
@@ -86,23 +70,19 @@ AnimationInfo::ClearAnimationsForNextTransaction()
   mPendingAnimations->Clear();
 }
 
-void
-AnimationInfo::SetCompositorAnimations(const CompositorAnimations& aCompositorAnimations)
-{
+void AnimationInfo::SetCompositorAnimations(
+    const CompositorAnimations& aCompositorAnimations) {
   mAnimations = aCompositorAnimations.animations();
   mCompositorAnimationsId = aCompositorAnimations.id();
   mAnimationData.Clear();
-  AnimationHelper::SetAnimations(mAnimations,
-                                 mAnimationData,
+  AnimationHelper::SetAnimations(mAnimations, mAnimationData,
                                  mBaseAnimationStyle);
 }
 
-bool
-AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime)
-{
+bool AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime) {
   bool updated = false;
-  for (size_t animIdx = 0, animEnd = mAnimations.Length();
-       animIdx < animEnd; animIdx++) {
+  for (size_t animIdx = 0, animEnd = mAnimations.Length(); animIdx < animEnd;
+       animIdx++) {
     Animation& anim = mAnimations[animIdx];
 
     // If the animation is doing an async update of its playback rate, then we
@@ -112,38 +92,32 @@ AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime)
         !anim.originTime().IsNull() && !anim.isNotPlaying()) {
       TimeDuration readyTime = aReadyTime - anim.originTime();
       anim.holdTime() = dom::Animation::CurrentTimeFromTimelineTime(
-        readyTime,
-        anim.startTime().get_TimeDuration(),
-        anim.previousPlaybackRate());
+          readyTime, anim.startTime().get_TimeDuration(),
+          anim.previousPlaybackRate());
       // Make start time null so that we know to update it below.
       anim.startTime() = null_t();
     }
 
     // If the animation is play-pending, resolve the start time.
     if (anim.startTime().type() == MaybeTimeDuration::Tnull_t &&
-        !anim.originTime().IsNull() &&
-        !anim.isNotPlaying()) {
+        !anim.originTime().IsNull() && !anim.isNotPlaying()) {
       TimeDuration readyTime = aReadyTime - anim.originTime();
       anim.startTime() = dom::Animation::StartTimeFromTimelineTime(
-        readyTime, anim.holdTime(), anim.playbackRate());
+          readyTime, anim.holdTime(), anim.playbackRate());
       updated = true;
     }
   }
   return updated;
 }
 
-void
-AnimationInfo::TransferMutatedFlagToLayer(Layer* aLayer)
-{
+void AnimationInfo::TransferMutatedFlagToLayer(Layer* aLayer) {
   if (mMutated) {
     aLayer->Mutated();
     mMutated = false;
   }
 }
 
-bool
-AnimationInfo::ApplyPendingUpdatesForThisTransaction()
-{
+bool AnimationInfo::ApplyPendingUpdatesForThisTransaction() {
   if (mPendingAnimations) {
     mPendingAnimations->SwapElements(mAnimations);
     mPendingAnimations = nullptr;
@@ -153,9 +127,7 @@ AnimationInfo::ApplyPendingUpdatesForThisTransaction()
   return false;
 }
 
-bool
-AnimationInfo::HasTransformAnimation() const
-{
+bool AnimationInfo::HasTransformAnimation() const {
   for (uint32_t i = 0; i < mAnimations.Length(); i++) {
     if (mAnimations[i].property() == eCSSProperty_transform) {
       return true;
@@ -164,15 +136,13 @@ AnimationInfo::HasTransformAnimation() const
   return false;
 }
 
-/* static */ Maybe<uint64_t>
-AnimationInfo::GetGenerationFromFrame(nsIFrame* aFrame,
-                                      DisplayItemType aDisplayItemKey)
-{
+/* static */ Maybe<uint64_t> AnimationInfo::GetGenerationFromFrame(
+    nsIFrame* aFrame, DisplayItemType aDisplayItemKey) {
   MOZ_ASSERT(aFrame->IsPrimaryFrame() ||
              nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame));
 
   layers::Layer* layer =
-    FrameLayerBuilder::GetDedicatedLayer(aFrame, aDisplayItemKey);
+      FrameLayerBuilder::GetDedicatedLayer(aFrame, aDisplayItemKey);
   if (layer) {
     return layer->GetAnimationInfo().GetAnimationGeneration();
   }
@@ -184,7 +154,8 @@ AnimationInfo::GetGenerationFromFrame(nsIFrame* aFrame,
     aFrame = nsLayoutUtils::LastContinuationOrIBSplitSibling(aFrame);
   }
   RefPtr<WebRenderAnimationData> animationData =
-      GetWebRenderUserData<WebRenderAnimationData>(aFrame, (uint32_t)aDisplayItemKey);
+      GetWebRenderUserData<WebRenderAnimationData>(aFrame,
+                                                   (uint32_t)aDisplayItemKey);
   if (animationData) {
     return animationData->GetAnimationInfo().GetAnimationGeneration();
   }
@@ -192,13 +163,10 @@ AnimationInfo::GetGenerationFromFrame(nsIFrame* aFrame,
   return Nothing();
 }
 
-/* static */ void
-AnimationInfo::EnumerateGenerationOnFrame(
-  const nsIFrame* aFrame,
-  const nsIContent* aContent,
-  const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
-  const AnimationGenerationCallback& aCallback)
-{
+/* static */ void AnimationInfo::EnumerateGenerationOnFrame(
+    const nsIFrame* aFrame, const nsIContent* aContent,
+    const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
+    const AnimationGenerationCallback& aCallback) {
   if (XRE_IsContentProcess()) {
     if (nsIWidget* widget = nsContentUtils::WidgetForContent(aContent)) {
       // In case of child processes, we might not have yet created the layer
@@ -222,7 +190,7 @@ AnimationInfo::EnumerateGenerationOnFrame(
   }
 
   RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForContent(aContent);
+      nsContentUtils::LayerManagerForContent(aContent);
 
   if (layerManager &&
       layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
@@ -234,8 +202,8 @@ AnimationInfo::EnumerateGenerationOnFrame(
 
     for (auto displayItem : LayerAnimationInfo::sDisplayItemTypes) {
       RefPtr<WebRenderAnimationData> animationData =
-        GetWebRenderUserData<WebRenderAnimationData>(aFrame,
-                                                     (uint32_t)displayItem);
+          GetWebRenderUserData<WebRenderAnimationData>(aFrame,
+                                                       (uint32_t)displayItem);
       Maybe<uint64_t> generation;
       if (animationData) {
         generation = animationData->GetAnimationInfo().GetAnimationGeneration();
@@ -246,10 +214,8 @@ AnimationInfo::EnumerateGenerationOnFrame(
   }
 
   FrameLayerBuilder::EnumerateGenerationForDedicatedLayers(
-    aFrame,
-    LayerAnimationInfo::sDisplayItemTypes,
-    aCallback);
+      aFrame, LayerAnimationInfo::sDisplayItemTypes, aCallback);
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

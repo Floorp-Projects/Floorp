@@ -16,39 +16,35 @@ namespace mozilla {
 namespace dom {
 namespace ipc {
 
-class SharedMapChangeEvent final : public Event
-{
-public:
+class SharedMapChangeEvent final : public Event {
+ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(SharedMapChangeEvent, Event)
 
-  JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  JSObject* WrapObjectInternal(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
     return MozSharedMapChangeEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  static already_AddRefed<SharedMapChangeEvent>
-  Constructor(EventTarget* aEventTarget,
-              const nsAString& aType,
-              const MozSharedMapChangeEventInit& aInit);
+  static already_AddRefed<SharedMapChangeEvent> Constructor(
+      EventTarget* aEventTarget, const nsAString& aType,
+      const MozSharedMapChangeEventInit& aInit);
 
-  void GetChangedKeys(nsTArray<nsString>& aChangedKeys) const
-  {
+  void GetChangedKeys(nsTArray<nsString>& aChangedKeys) const {
     aChangedKeys.AppendElements(mChangedKeys);
   }
 
-protected:
+ protected:
   ~SharedMapChangeEvent() override = default;
 
-private:
+ private:
   explicit SharedMapChangeEvent(EventTarget* aEventTarget)
-    : Event(aEventTarget, nullptr, nullptr)
-  {}
+      : Event(aEventTarget, nullptr, nullptr) {}
 
   nsTArray<nsString> mChangedKeys;
 };
 
-} // ipc
-} // dom
-} // mozilla
+}  // namespace ipc
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // dom_ipc_SharedMapChangeEvent_h
+#endif  // dom_ipc_SharedMapChangeEvent_h

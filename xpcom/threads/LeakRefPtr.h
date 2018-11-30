@@ -17,25 +17,21 @@ namespace mozilla {
  * Instance of this class behaves like a raw pointer which leaks the
  * resource it's owning if not explicitly released.
  */
-template<class T>
-class LeakRefPtr
-{
-public:
-  explicit LeakRefPtr(already_AddRefed<T>&& aPtr)
-    : mRawPtr(aPtr.take()) { }
+template <class T>
+class LeakRefPtr {
+ public:
+  explicit LeakRefPtr(already_AddRefed<T>&& aPtr) : mRawPtr(aPtr.take()) {}
 
   explicit operator bool() const { return !!mRawPtr; }
 
-  LeakRefPtr<T>& operator=(already_AddRefed<T>&& aPtr)
-  {
+  LeakRefPtr<T>& operator=(already_AddRefed<T>&& aPtr) {
     mRawPtr = aPtr.take();
     return *this;
   }
 
   T* get() const { return mRawPtr; }
 
-  already_AddRefed<T> take()
-  {
+  already_AddRefed<T> take() {
     T* rawPtr = mRawPtr;
     mRawPtr = nullptr;
     return already_AddRefed<T>(rawPtr);
@@ -43,10 +39,10 @@ public:
 
   void release() { NS_RELEASE(mRawPtr); }
 
-private:
+ private:
   T* MOZ_OWNING_REF mRawPtr;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // LeakRefPtr_h
+#endif  // LeakRefPtr_h

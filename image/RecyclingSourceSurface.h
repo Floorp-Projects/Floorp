@@ -21,9 +21,8 @@ class imgFrame;
  * alive for an indeterminate period of time (e.g. imgFrame::GetSourceSurface,
  * imgFrame::Draw with a recording or capture DrawTarget).
  */
-class RecyclingSourceSurface final : public gfx::DataSourceSurface
-{
-public:
+class RecyclingSourceSurface final : public gfx::DataSourceSurface {
+ public:
   RecyclingSourceSurface(imgFrame* aParent, gfx::DataSourceSurface* aSurface);
 
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(RecyclingSourceSurface, override);
@@ -32,26 +31,24 @@ public:
   int32_t Stride() override { return mSurface->Stride(); }
   gfx::SurfaceType GetType() const override { return mType; }
   gfx::IntSize GetSize() const override { return mSurface->GetSize(); }
-  gfx::SurfaceFormat GetFormat() const override { return mSurface->GetFormat(); }
+  gfx::SurfaceFormat GetFormat() const override {
+    return mSurface->GetFormat();
+  }
 
-  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                              size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut,
-                              size_t& aExtHandlesOut,
-                              uint64_t& aExtIdOut) const override
-  { }
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
+                              size_t& aNonHeapSizeOut, size_t& aExtHandlesOut,
+                              uint64_t& aExtIdOut) const override {}
 
   bool OnHeap() const override { return mSurface->OnHeap(); }
-  bool Map(MapType aType, MappedSurface* aMappedSurface) override
-  {
+  bool Map(MapType aType, MappedSurface* aMappedSurface) override {
     return mSurface->Map(aType, aMappedSurface);
   }
   void Unmap() override { mSurface->Unmap(); }
 
   gfx::DataSourceSurface* GetChildSurface() const { return mSurface; }
 
-protected:
-  void GuaranteePersistance() override { }
+ protected:
+  void GuaranteePersistance() override {}
 
   ~RecyclingSourceSurface() override;
 
@@ -60,7 +57,7 @@ protected:
   gfx::SurfaceType mType;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif //mozilla_image_RecyclingSourceSurface_h
+#endif  // mozilla_image_RecyclingSourceSurface_h

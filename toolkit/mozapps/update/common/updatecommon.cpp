@@ -4,9 +4,8 @@
 
 #if defined(XP_WIN)
 #include <windows.h>
-#include <winioctl.h> // for FSCTL_GET_REPARSE_POINT
+#include <winioctl.h>  // for FSCTL_GET_REPARSE_POINT
 #endif
-
 
 #include <stdio.h>
 #include <string.h>
@@ -21,57 +20,48 @@
 
 // This struct isn't in any SDK header, so this definition was copied from:
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer
-typedef struct _REPARSE_DATA_BUFFER
-{
-  ULONG  ReparseTag;
+typedef struct _REPARSE_DATA_BUFFER {
+  ULONG ReparseTag;
   USHORT ReparseDataLength;
   USHORT Reserved;
-  union
-  {
-    struct
-    {
+  union {
+    struct {
       USHORT SubstituteNameOffset;
       USHORT SubstituteNameLength;
       USHORT PrintNameOffset;
       USHORT PrintNameLength;
-      ULONG  Flags;
-      WCHAR  PathBuffer[1];
+      ULONG Flags;
+      WCHAR PathBuffer[1];
     } SymbolicLinkReparseBuffer;
-    struct
-    {
+    struct {
       USHORT SubstituteNameOffset;
       USHORT SubstituteNameLength;
       USHORT PrintNameOffset;
       USHORT PrintNameLength;
-      WCHAR  PathBuffer[1];
+      WCHAR PathBuffer[1];
     } MountPointReparseBuffer;
-    struct
-    {
+    struct {
       UCHAR DataBuffer[1];
     } GenericReparseBuffer;
   } DUMMYUNIONNAME;
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 #endif
 
-UpdateLog::UpdateLog() : logFP(nullptr)
-{
-}
+UpdateLog::UpdateLog() : logFP(nullptr) {}
 
-void UpdateLog::Init(NS_tchar* sourcePath,
-                     const NS_tchar* fileName)
-{
+void UpdateLog::Init(NS_tchar* sourcePath, const NS_tchar* fileName) {
   if (logFP) {
     return;
   }
 
-  int dstFilePathLen = NS_tsnprintf(mDstFilePath,
-    sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
-    NS_T("%s/%s"), sourcePath, fileName);
+  int dstFilePathLen =
+      NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath) / sizeof(mDstFilePath[0]),
+                   NS_T("%s/%s"), sourcePath, fileName);
   // If the destination path was over the length limit,
   // disable logging by skipping opening the file and setting logFP.
   if ((dstFilePathLen > 0) &&
       (dstFilePathLen <
-         static_cast<int>(sizeof(mDstFilePath)/sizeof(mDstFilePath[0])))) {
+       static_cast<int>(sizeof(mDstFilePath) / sizeof(mDstFilePath[0])))) {
 #ifdef XP_WIN
     if (GetUUIDTempFilePath(sourcePath, L"log", mTmpFilePath)) {
       logFP = NS_tfopen(mTmpFilePath, NS_T("w"));
@@ -93,8 +83,7 @@ void UpdateLog::Init(NS_tchar* sourcePath,
   }
 }
 
-void UpdateLog::Finish()
-{
+void UpdateLog::Finish() {
   if (!logFP) {
     return;
   }
@@ -105,7 +94,7 @@ void UpdateLog::Finish()
   fflush(logFP);
   rewind(logFP);
 
-  FILE *updateLogFP = NS_tfopen(mDstFilePath, NS_T("wb+"));
+  FILE* updateLogFP = NS_tfopen(mDstFilePath, NS_T("wb+"));
   while (!feof(logFP)) {
     size_t read = fread(buffer, 1, blockSize, logFP);
     if (ferror(logFP)) {
@@ -149,8 +138,7 @@ void UpdateLog::Finish()
 #endif
 }
 
-void UpdateLog::Flush()
-{
+void UpdateLog::Flush() {
   if (!logFP) {
     return;
   }
@@ -158,8 +146,7 @@ void UpdateLog::Flush()
   fflush(logFP);
 }
 
-void UpdateLog::Printf(const char *fmt, ... )
-{
+void UpdateLog::Printf(const char* fmt, ...) {
   if (!logFP) {
     return;
   }
@@ -171,8 +158,7 @@ void UpdateLog::Printf(const char *fmt, ... )
   va_end(ap);
 }
 
-void UpdateLog::WarnPrintf(const char *fmt, ... )
-{
+void UpdateLog::WarnPrintf(const char* fmt, ...) {
   if (!logFP) {
     return;
   }
@@ -193,9 +179,7 @@ void UpdateLog::WarnPrintf(const char *fmt, ... )
  * @return true if the path contains invalid links or on errors,
  *         false if the check passes and the path can be used
  */
-bool
-PathContainsInvalidLinks(wchar_t * const fullPath)
-{
+bool PathContainsInvalidLinks(wchar_t* const fullPath) {
   wchar_t pathCopy[MAXPATHLEN + 1] = L"";
   wcsncpy(pathCopy, fullPath, MAXPATHLEN);
   wchar_t* remainingPath = nullptr;
@@ -204,11 +188,11 @@ PathContainsInvalidLinks(wchar_t * const fullPath)
 
   while (nextToken) {
     if ((GetFileAttributesW(partialPath) & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
-      nsAutoHandle h(CreateFileW(partialPath, 0,
-                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                                 nullptr, OPEN_EXISTING,
-                                 FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-                                 nullptr));
+      nsAutoHandle h(CreateFileW(
+          partialPath, 0,
+          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+          OPEN_EXISTING,
+          FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
       if (h == INVALID_HANDLE_VALUE) {
         if (GetLastError() == ERROR_FILE_NOT_FOUND) {
           // The path can't be an invalid link if it doesn't exist.
@@ -219,7 +203,7 @@ PathContainsInvalidLinks(wchar_t * const fullPath)
       }
 
       mozilla::UniquePtr<UINT8[]> byteBuffer =
-        mozilla::MakeUnique<UINT8[]>(MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+          mozilla::MakeUnique<UINT8[]>(MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
       if (!byteBuffer) {
         return true;
       }
@@ -234,16 +218,20 @@ PathContainsInvalidLinks(wchar_t * const fullPath)
       wchar_t* reparseTarget = nullptr;
       switch (buffer->ReparseTag) {
         case IO_REPARSE_TAG_MOUNT_POINT:
-          reparseTarget = buffer->MountPointReparseBuffer.PathBuffer +
-            (buffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t));
+          reparseTarget =
+              buffer->MountPointReparseBuffer.PathBuffer +
+              (buffer->MountPointReparseBuffer.SubstituteNameOffset /
+               sizeof(wchar_t));
           if (buffer->MountPointReparseBuffer.SubstituteNameLength <
               ARRAYSIZE(L"\\??\\")) {
             return false;
           }
           break;
         case IO_REPARSE_TAG_SYMLINK:
-          reparseTarget = buffer->SymbolicLinkReparseBuffer.PathBuffer +
-            (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(wchar_t));
+          reparseTarget =
+              buffer->SymbolicLinkReparseBuffer.PathBuffer +
+              (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset /
+               sizeof(wchar_t));
           if (buffer->SymbolicLinkReparseBuffer.SubstituteNameLength <
               ARRAYSIZE(L"\\??\\")) {
             return false;
@@ -277,9 +265,7 @@ PathContainsInvalidLinks(wchar_t * const fullPath)
  *         The full path to check.
  * @return true if the path is valid for this application and false otherwise.
  */
-bool
-IsValidFullPath(NS_tchar* origFullPath)
-{
+bool IsValidFullPath(NS_tchar* origFullPath) {
   // Subtract 1 from MAXPATHLEN for null termination.
   if (NS_tstrlen(origFullPath) > MAXPATHLEN - 1) {
     // The path is longer than acceptable for this application.

@@ -18,10 +18,10 @@ struct nsPoint;
 namespace mozilla {
 namespace a11y {
 
-class sdnTextAccessible final : public ISimpleDOMText
-{
-public:
-  explicit sdnTextAccessible(AccessibleWrap* aAccessible) : mAccessible(aAccessible) {};
+class sdnTextAccessible final : public ISimpleDOMText {
+ public:
+  explicit sdnTextAccessible(AccessibleWrap* aAccessible)
+      : mAccessible(aAccessible){};
   ~sdnTextAccessible() {}
 
   DECL_IUNKNOWN
@@ -29,43 +29,42 @@ public:
   // ISimpleDOMText
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_domText(
-    /* [retval][out] */ BSTR __RPC_FAR *aText);
+      /* [retval][out] */ BSTR __RPC_FAR* aText);
 
   virtual HRESULT STDMETHODCALLTYPE get_clippedSubstringBounds(
-    /* [in] */ unsigned int startIndex,
-    /* [in] */ unsigned int endIndex,
-    /* [out] */ int __RPC_FAR* aX,
-    /* [out] */ int __RPC_FAR* aY,
-    /* [out] */ int __RPC_FAR* aWidth,
-    /* [out] */ int __RPC_FAR* aHeight);
+      /* [in] */ unsigned int startIndex,
+      /* [in] */ unsigned int endIndex,
+      /* [out] */ int __RPC_FAR* aX,
+      /* [out] */ int __RPC_FAR* aY,
+      /* [out] */ int __RPC_FAR* aWidth,
+      /* [out] */ int __RPC_FAR* aHeight);
 
   virtual HRESULT STDMETHODCALLTYPE get_unclippedSubstringBounds(
-    /* [in] */ unsigned int aStartIndex,
-    /* [in] */ unsigned int aEndIndex,
-    /* [out] */ int __RPC_FAR* aX,
-    /* [out] */ int __RPC_FAR* aY,
-    /* [out] */ int __RPC_FAR* aWidth,
-    /* [out] */ int __RPC_FAR* aHeight);
+      /* [in] */ unsigned int aStartIndex,
+      /* [in] */ unsigned int aEndIndex,
+      /* [out] */ int __RPC_FAR* aX,
+      /* [out] */ int __RPC_FAR* aY,
+      /* [out] */ int __RPC_FAR* aWidth,
+      /* [out] */ int __RPC_FAR* aHeight);
 
   virtual HRESULT STDMETHODCALLTYPE scrollToSubstring(
-    /* [in] */ unsigned int aStartIndex,
-    /* [in] */ unsigned int aEndIndex);
+      /* [in] */ unsigned int aStartIndex,
+      /* [in] */ unsigned int aEndIndex);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_fontFamily(
-    /* [retval][out] */ BSTR __RPC_FAR* aFontFamily);
+      /* [retval][out] */ BSTR __RPC_FAR* aFontFamily);
 
-private:
+ private:
   /**
    *  Return child frame containing offset on success.
    */
-  nsIFrame* GetPointFromOffset(nsIFrame* aContainingFrame,
-                               int32_t aOffset, bool aPreferNext,
-                               nsPoint& aOutPoint);
+  nsIFrame* GetPointFromOffset(nsIFrame* aContainingFrame, int32_t aOffset,
+                               bool aPreferNext, nsPoint& aOutPoint);
 
   RefPtr<AccessibleWrap> mAccessible;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

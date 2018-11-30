@@ -16,16 +16,15 @@
 namespace mozilla {
 namespace jsinspector {
 
-class nsJSInspector final : public nsIJSInspector
-{
-public:
+class nsJSInspector final : public nsIJSInspector {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsJSInspector)
   NS_DECL_NSIJSINSPECTOR
 
   nsJSInspector();
 
-private:
+ private:
   ~nsJSInspector();
 
   uint32_t mNestedLoopLevel;
@@ -33,7 +32,7 @@ private:
   JS::Heap<JS::Value> mLastRequestor;
 };
 
-} // namespace jsinspector
-} // namespace mozilla
+}  // namespace jsinspector
+}  // namespace mozilla
 
 #endif

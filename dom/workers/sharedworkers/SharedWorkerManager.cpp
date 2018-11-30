@@ -19,44 +19,39 @@
 namespace mozilla {
 namespace dom {
 
-SharedWorkerManager::SharedWorkerManager(nsIEventTarget* aPBackgroundEventTarget,
-                                         const RemoteWorkerData& aData,
-                                         nsIPrincipal* aLoadingPrincipal)
-  : mPBackgroundEventTarget(aPBackgroundEventTarget)
-  , mLoadingPrincipal(aLoadingPrincipal)
-  , mDomain(aData.domain())
-  , mResolvedScriptURL(DeserializeURI(aData.resolvedScriptURL()))
-  , mName(aData.name())
-  , mIsSecureContext(aData.isSecureContext())
-  , mSuspended(false)
-  , mFrozen(false)
-{
+SharedWorkerManager::SharedWorkerManager(
+    nsIEventTarget* aPBackgroundEventTarget, const RemoteWorkerData& aData,
+    nsIPrincipal* aLoadingPrincipal)
+    : mPBackgroundEventTarget(aPBackgroundEventTarget),
+      mLoadingPrincipal(aLoadingPrincipal),
+      mDomain(aData.domain()),
+      mResolvedScriptURL(DeserializeURI(aData.resolvedScriptURL())),
+      mName(aData.name()),
+      mIsSecureContext(aData.isSecureContext()),
+      mSuspended(false),
+      mFrozen(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoadingPrincipal);
 }
 
-SharedWorkerManager::~SharedWorkerManager()
-{
+SharedWorkerManager::~SharedWorkerManager() {
   nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
+      SystemGroup::EventTargetFor(TaskCategory::Other);
 
-  NS_ProxyRelease("SharedWorkerManager::mLoadingPrincipal",
-                  target, mLoadingPrincipal.forget());
+  NS_ProxyRelease("SharedWorkerManager::mLoadingPrincipal", target,
+                  mLoadingPrincipal.forget());
   NS_ProxyRelease("SharedWorkerManager::mRemoteWorkerController",
                   mPBackgroundEventTarget, mRemoteWorkerController.forget());
 }
 
-bool
-SharedWorkerManager::MaybeCreateRemoteWorker(const RemoteWorkerData& aData,
-                                             uint64_t aWindowID,
-                                             const MessagePortIdentifier& aPortIdentifier,
-                                             base::ProcessId aProcessId)
-{
+bool SharedWorkerManager::MaybeCreateRemoteWorker(
+    const RemoteWorkerData& aData, uint64_t aWindowID,
+    const MessagePortIdentifier& aPortIdentifier, base::ProcessId aProcessId) {
   AssertIsOnBackgroundThread();
 
   if (!mRemoteWorkerController) {
     mRemoteWorkerController =
-      RemoteWorkerController::Create(aData, this, aProcessId);
+        RemoteWorkerController::Create(aData, this, aProcessId);
     if (NS_WARN_IF(!mRemoteWorkerController)) {
       return false;
     }
@@ -70,30 +65,23 @@ SharedWorkerManager::MaybeCreateRemoteWorker(const RemoteWorkerData& aData,
   return true;
 }
 
-bool
-SharedWorkerManager::MatchOnMainThread(const nsACString& aDomain,
-                                       nsIURI* aScriptURL,
-                                       const nsAString& aName,
-                                       nsIPrincipal* aLoadingPrincipal) const
-{
+bool SharedWorkerManager::MatchOnMainThread(
+    const nsACString& aDomain, nsIURI* aScriptURL, const nsAString& aName,
+    nsIPrincipal* aLoadingPrincipal) const {
   MOZ_ASSERT(NS_IsMainThread());
   bool urlEquals;
   if (NS_FAILED(aScriptURL->Equals(mResolvedScriptURL, &urlEquals))) {
     return false;
   }
 
-  return aDomain == mDomain &&
-         urlEquals &&
-         aName == mName &&
+  return aDomain == mDomain && urlEquals && aName == mName &&
          // We want to be sure that the window's principal subsumes the
          // SharedWorker's loading principal and vice versa.
          mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
          aLoadingPrincipal->Subsumes(mLoadingPrincipal);
 }
 
-void
-SharedWorkerManager::AddActor(SharedWorkerParent* aParent)
-{
+void SharedWorkerManager::AddActor(SharedWorkerParent* aParent) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(!mActors.Contains(aParent));
@@ -106,9 +94,7 @@ SharedWorkerManager::AddActor(SharedWorkerParent* aParent)
   // not frozen and we are, we would just need to thaw ourselves.
 }
 
-void
-SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent)
-{
+void SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mActors.Contains(aParent));
@@ -136,9 +122,7 @@ SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent)
   SharedWorkerService::Get()->RemoveWorkerManager(this);
 }
 
-void
-SharedWorkerManager::UpdateSuspend()
-{
+void SharedWorkerManager::UpdateSuspend() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mRemoteWorkerController);
 
@@ -166,9 +150,7 @@ SharedWorkerManager::UpdateSuspend()
   }
 }
 
-void
-SharedWorkerManager::UpdateFrozen()
-{
+void SharedWorkerManager::UpdateFrozen() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mRemoteWorkerController);
 
@@ -196,15 +178,9 @@ SharedWorkerManager::UpdateFrozen()
   }
 }
 
-bool
-SharedWorkerManager::IsSecureContext() const
-{
-  return mIsSecureContext;
-}
+bool SharedWorkerManager::IsSecureContext() const { return mIsSecureContext; }
 
-void
-SharedWorkerManager::CreationFailed()
-{
+void SharedWorkerManager::CreationFailed() {
   AssertIsOnBackgroundThread();
 
   for (SharedWorkerParent* actor : mActors) {
@@ -212,16 +188,12 @@ SharedWorkerManager::CreationFailed()
   }
 }
 
-void
-SharedWorkerManager::CreationSucceeded()
-{
+void SharedWorkerManager::CreationSucceeded() {
   AssertIsOnBackgroundThread();
   // Nothing to do here.
 }
 
-void
-SharedWorkerManager::ErrorReceived(const ErrorValue& aValue)
-{
+void SharedWorkerManager::ErrorReceived(const ErrorValue& aValue) {
   AssertIsOnBackgroundThread();
 
   for (SharedWorkerParent* actor : mActors) {
@@ -229,9 +201,7 @@ SharedWorkerManager::ErrorReceived(const ErrorValue& aValue)
   }
 }
 
-void
-SharedWorkerManager::Terminated()
-{
+void SharedWorkerManager::Terminated() {
   AssertIsOnBackgroundThread();
 
   for (SharedWorkerParent* actor : mActors) {
@@ -239,5 +209,5 @@ SharedWorkerManager::Terminated()
   }
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

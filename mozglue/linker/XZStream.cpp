@@ -14,9 +14,8 @@ static const size_t kFooterSize = 12;
 
 // Parses a variable-length integer (VLI),
 // see http://tukaani.org/xz/xz-file-format.txt for details.
-static size_t
-ParseVarLenInt(const uint8_t* aBuf, size_t aBufSize, uint64_t* aValue)
-{
+static size_t ParseVarLenInt(const uint8_t* aBuf, size_t aBufSize,
+                             uint64_t* aValue) {
   if (!aBufSize) {
     return 0;
   }
@@ -34,33 +33,26 @@ ParseVarLenInt(const uint8_t* aBuf, size_t aBufSize, uint64_t* aValue)
   return i;
 }
 
-/* static */ bool
-XZStream::IsXZ(const void* aBuf, size_t aBufSize)
-{
+/* static */ bool XZStream::IsXZ(const void* aBuf, size_t aBufSize) {
   static const uint8_t kXzMagic[] = {0xfd, '7', 'z', 'X', 'Z', 0x0};
   MOZ_ASSERT(aBuf);
   return aBufSize > sizeof(kXzMagic) &&
-         !memcmp(reinterpret_cast<const void*>(kXzMagic), aBuf, sizeof(kXzMagic));
+         !memcmp(reinterpret_cast<const void*>(kXzMagic), aBuf,
+                 sizeof(kXzMagic));
 }
 
 XZStream::XZStream(const void* aInBuf, size_t aInSize)
-  : mInBuf(static_cast<const uint8_t*>(aInBuf))
-  , mUncompSize(0)
-  , mDec(nullptr)
-{
+    : mInBuf(static_cast<const uint8_t*>(aInBuf)),
+      mUncompSize(0),
+      mDec(nullptr) {
   mBuffers.in = mInBuf;
   mBuffers.in_pos = 0;
   mBuffers.in_size = aInSize;
 }
 
-XZStream::~XZStream()
-{
-  xz_dec_end(mDec);
-}
+XZStream::~XZStream() { xz_dec_end(mDec); }
 
-bool
-XZStream::Init()
-{
+bool XZStream::Init() {
 #ifdef XZ_USE_CRC64
   xz_crc64_init();
 #endif
@@ -80,9 +72,7 @@ XZStream::Init()
   return true;
 }
 
-size_t
-XZStream::Decode(void* aOutBuf, size_t aOutSize)
-{
+size_t XZStream::Decode(void* aOutBuf, size_t aOutSize) {
   if (!mDec) {
     return 0;
   }
@@ -139,27 +129,15 @@ XZStream::Decode(void* aOutBuf, size_t aOutSize)
   return mBuffers.out_pos;
 }
 
-size_t
-XZStream::RemainingInput() const
-{
+size_t XZStream::RemainingInput() const {
   return mBuffers.in_size - mBuffers.in_pos;
 }
 
-size_t
-XZStream::Size() const
-{
-  return mBuffers.in_size;
-}
+size_t XZStream::Size() const { return mBuffers.in_size; }
 
-size_t
-XZStream::UncompressedSize() const
-{
-  return mUncompSize;
-}
+size_t XZStream::UncompressedSize() const { return mUncompSize; }
 
-size_t
-XZStream::ParseIndexSize() const
-{
+size_t XZStream::ParseIndexSize() const {
   static const uint8_t kFooterMagic[] = {'Y', 'Z'};
 
   const uint8_t* footer = mInBuf + mBuffers.in_size - kFooterSize;
@@ -171,9 +149,9 @@ XZStream::ParseIndexSize() const
     ERROR("XZ parsing: Invalid footer at end of stream");
     return 0;
   }
-  // Backward size is a 32 bit LE integer field positioned after the 32 bit CRC32
-  // code. It encodes the index size as a multiple of 4 bytes with a minimum
-  // size of 4 bytes.
+  // Backward size is a 32 bit LE integer field positioned after the 32 bit
+  // CRC32 code. It encodes the index size as a multiple of 4 bytes with a
+  // minimum size of 4 bytes.
   const uint32_t backwardSizeRaw = *(footer + 4);
   // Check for overflow.
   mozilla::CheckedInt<size_t> backwardSizeBytes(backwardSizeRaw);
@@ -185,9 +163,7 @@ XZStream::ParseIndexSize() const
   return backwardSizeBytes.value();
 }
 
-size_t
-XZStream::ParseUncompressedSize() const
-{
+size_t XZStream::ParseUncompressedSize() const {
   static const uint8_t kIndexIndicator[] = {0x0};
 
   const size_t indexSize = ParseIndexSize();
@@ -203,11 +179,11 @@ XZStream::ParseUncompressedSize() const
   //  (2) a Variable Length Integer (VLI) field for the number of records
   //  (3) a list of records
   // See https://tukaani.org/xz/xz-file-format-1.0.4.txt
-  // Each record contains a VLI field for unpadded size followed by a var field for
-  // uncompressed size. We only support xz streams with a single record.
+  // Each record contains a VLI field for unpadded size followed by a var field
+  // for uncompressed size. We only support xz streams with a single record.
 
-  if (memcmp(reinterpret_cast<const void*>(kIndexIndicator),
-             index, sizeof(kIndexIndicator))) {
+  if (memcmp(reinterpret_cast<const void*>(kIndexIndicator), index,
+             sizeof(kIndexIndicator))) {
     ERROR("XZ parsing: Invalid stream index");
     return 0;
   }

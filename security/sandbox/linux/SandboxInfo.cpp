@@ -27,7 +27,6 @@
 #include <valgrind/valgrind.h>
 #endif
 
-
 // A note about assertions: in general, the worst thing this module
 // should be able to do is disable sandboxing features, so release
 // asserts or MOZ_CRASH should be avoided, even for seeming
@@ -44,9 +43,7 @@
 
 namespace mozilla {
 
-static bool
-HasSeccompBPF()
-{
+static bool HasSeccompBPF() {
   // Allow simulating the absence of seccomp-bpf support, for testing.
   if (getenv("MOZ_FAKE_NO_SANDBOX")) {
     return false;
@@ -55,11 +52,11 @@ HasSeccompBPF()
   // Valgrind and the sandbox don't interact well, probably because Valgrind
   // does various system calls which aren't allowed, even if Firefox itself
   // is playing by the rules.
-# if defined(MOZ_VALGRIND)
+#if defined(MOZ_VALGRIND)
   if (RUNNING_ON_VALGRIND) {
     return false;
   }
-# endif
+#endif
 
   // Determine whether seccomp-bpf is supported by trying to
   // enable it with an invalid pointer for the filter.  This will
@@ -67,15 +64,14 @@ HasSeccompBPF()
   // changing the process's state.
 
   int rv = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr);
-  MOZ_DIAGNOSTIC_ASSERT(rv == -1, "prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER,"
+  MOZ_DIAGNOSTIC_ASSERT(rv == -1,
+                        "prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER,"
                         " nullptr) didn't fail");
   MOZ_DIAGNOSTIC_ASSERT(errno == EFAULT || errno == EINVAL);
   return rv == -1 && errno == EFAULT;
 }
 
-static bool
-HasSeccompTSync()
-{
+static bool HasSeccompTSync() {
   // Similar to above, but for thread-sync mode.  See also Chromium's
   // sandbox::SandboxBPF::SupportsSeccompThreadFilterSynchronization
   if (getenv("MOZ_FAKE_NO_SECCOMP_TSYNC")) {
@@ -83,15 +79,14 @@ HasSeccompTSync()
   }
   int rv = syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER,
                    SECCOMP_FILTER_FLAG_TSYNC, nullptr);
-  MOZ_DIAGNOSTIC_ASSERT(rv == -1, "seccomp(..., SECCOMP_FILTER_FLAG_TSYNC,"
+  MOZ_DIAGNOSTIC_ASSERT(rv == -1,
+                        "seccomp(..., SECCOMP_FILTER_FLAG_TSYNC,"
                         " nullptr) didn't fail");
   MOZ_DIAGNOSTIC_ASSERT(errno == EFAULT || errno == EINVAL || errno == ENOSYS);
   return rv == -1 && errno == EFAULT;
 }
 
-static bool
-HasUserNamespaceSupport()
-{
+static bool HasUserNamespaceSupport() {
   // Note: the /proc/<pid>/ns/* files track setns(2) support, which in
   // some cases (e.g., pid) significantly postdates kernel support for
   // the namespace type, so in general this type of check could be a
@@ -102,10 +97,10 @@ HasUserNamespaceSupport()
   // The non-user namespaces all default to "y" in init/Kconfig, but
   // check them explicitly in case someone has a weird custom config.
   static const char* const paths[] = {
-    "/proc/self/ns/user",
-    "/proc/self/ns/pid",
-    "/proc/self/ns/net",
-    "/proc/self/ns/ipc",
+      "/proc/self/ns/user",
+      "/proc/self/ns/pid",
+      "/proc/self/ns/net",
+      "/proc/self/ns/ipc",
   };
   for (size_t i = 0; i < ArrayLength(paths); ++i) {
     if (access(paths[i], F_OK) == -1) {
@@ -116,9 +111,7 @@ HasUserNamespaceSupport()
   return true;
 }
 
-static bool
-CanCreateUserNamespace()
-{
+static bool CanCreateUserNamespace() {
   // Unfortunately, the only way to verify that this process can
   // create a new user namespace is to actually create one; because
   // this process's namespaces shouldn't be side-effected (yet), it's
@@ -149,9 +142,9 @@ CanCreateUserNamespace()
   }
   if (pid == -1) {
     // Failure.
-    MOZ_ASSERT(errno == EINVAL || // unsupported
-               errno == EPERM  || // root-only, or we're already chrooted
-               errno == EUSERS);  // already at user namespace nesting limit
+    MOZ_ASSERT(errno == EINVAL ||  // unsupported
+               errno == EPERM ||   // root-only, or we're already chrooted
+               errno == EUSERS);   // already at user namespace nesting limit
     setenv(kCacheEnvName, "0", 1);
     return false;
   }
@@ -209,4 +202,4 @@ SandboxInfo::SandboxInfo() {
   mFlags = static_cast<Flags>(flags);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

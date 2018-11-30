@@ -13,8 +13,7 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PublicKeyCredential)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PublicKeyCredential,
-                                                Credential)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PublicKeyCredential, Credential)
   tmp->mRawIdCachedObj = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -23,7 +22,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PublicKeyCredential, Credential)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRawIdCachedObj)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PublicKeyCredential, Credential)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PublicKeyCredential,
+                                                  Credential)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(PublicKeyCredential, Credential)
@@ -33,59 +33,44 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PublicKeyCredential)
 NS_INTERFACE_MAP_END_INHERITING(Credential)
 
 PublicKeyCredential::PublicKeyCredential(nsPIDOMWindowInner* aParent)
-  : Credential(aParent)
-  , mRawIdCachedObj(nullptr)
-{
+    : Credential(aParent), mRawIdCachedObj(nullptr) {
   mozilla::HoldJSObjects(this);
 }
 
-PublicKeyCredential::~PublicKeyCredential()
-{
-  mozilla::DropJSObjects(this);
-}
+PublicKeyCredential::~PublicKeyCredential() { mozilla::DropJSObjects(this); }
 
-JSObject*
-PublicKeyCredential::WrapObject(JSContext* aCx,
-                                JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PublicKeyCredential::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return PublicKeyCredential_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-PublicKeyCredential::GetRawId(JSContext* aCx,
-                              JS::MutableHandle<JSObject*> aRetVal)
-{
+void PublicKeyCredential::GetRawId(JSContext* aCx,
+                                   JS::MutableHandle<JSObject*> aRetVal) {
   if (!mRawIdCachedObj) {
     mRawIdCachedObj = mRawId.ToArrayBuffer(aCx);
   }
   aRetVal.set(mRawIdCachedObj);
 }
 
-already_AddRefed<AuthenticatorResponse>
-PublicKeyCredential::Response() const
-{
+already_AddRefed<AuthenticatorResponse> PublicKeyCredential::Response() const {
   RefPtr<AuthenticatorResponse> temp(mResponse);
   return temp.forget();
 }
 
-nsresult
-PublicKeyCredential::SetRawId(CryptoBuffer& aBuffer)
-{
+nsresult PublicKeyCredential::SetRawId(CryptoBuffer& aBuffer) {
   if (NS_WARN_IF(!mRawId.Assign(aBuffer))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-void
-PublicKeyCredential::SetResponse(RefPtr<AuthenticatorResponse> aResponse)
-{
+void PublicKeyCredential::SetResponse(RefPtr<AuthenticatorResponse> aResponse) {
   mResponse = aResponse;
 }
 
 /* static */ already_AddRefed<Promise>
-PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal)
-{
+PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
+    GlobalObject& aGlobal) {
   nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aGlobal.Context());
   if (NS_WARN_IF(!globalObject)) {
     return nullptr;
@@ -114,19 +99,15 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject&
   return promise.forget();
 }
 
-void
-PublicKeyCredential::GetClientExtensionResults(AuthenticationExtensionsClientOutputs& aResult)
-{
+void PublicKeyCredential::GetClientExtensionResults(
+    AuthenticationExtensionsClientOutputs& aResult) {
   aResult = mClientExtensionOutputs;
 }
 
-void
-PublicKeyCredential::SetClientExtensionResultAppId(bool aResult)
-{
+void PublicKeyCredential::SetClientExtensionResultAppId(bool aResult) {
   mClientExtensionOutputs.mAppid.Construct();
   mClientExtensionOutputs.mAppid.Value() = aResult;
 }
 
-
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

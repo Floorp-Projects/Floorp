@@ -22,13 +22,12 @@
 namespace mozilla {
 namespace safebrowsing {
 
-#define PREFIX_SIZE   4
+#define PREFIX_SIZE 4
 #define COMPLETE_SIZE 32
 
 // This is the struct that contains 4-byte hash prefixes.
 template <uint32_t S, class Comparator>
-struct SafebrowsingHash
-{
+struct SafebrowsingHash {
   static_assert(S >= 4, "The SafebrowsingHash should be at least 4 bytes.");
 
   static const uint32_t sHashSize = S;
@@ -41,15 +40,15 @@ struct SafebrowsingHash
     // of the SHA 256 hash of a suffix/prefix expression.
     nsresult rv;
     nsCOMPtr<nsICryptoHash> hash =
-      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+        do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = hash->Init(nsICryptoHash::SHA256);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = hash->Update
-      (reinterpret_cast<const uint8_t*>(aPlainText.BeginReading()),
-       aPlainText.Length());
+    rv = hash->Update(
+        reinterpret_cast<const uint8_t*>(aPlainText.BeginReading()),
+        aPlainText.Length());
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString hashed;
@@ -112,27 +111,25 @@ struct SafebrowsingHash
     memcpy(&n, buf, sizeof(n));
     return n;
   }
-  void FromUint32(uint32_t aHash) {
-    memcpy(buf, &aHash, sizeof(aHash));
-  }
+  void FromUint32(uint32_t aHash) { memcpy(buf, &aHash, sizeof(aHash)); }
 };
 
 class PrefixComparator {
-public:
+ public:
   static int Compare(const uint8_t* a, const uint8_t* b) {
-      uint32_t first;
-      memcpy(&first, a, sizeof(uint32_t));
+    uint32_t first;
+    memcpy(&first, a, sizeof(uint32_t));
 
-      uint32_t second;
-      memcpy(&second, b, sizeof(uint32_t));
+    uint32_t second;
+    memcpy(&second, b, sizeof(uint32_t));
 
-      if (first > second) {
-          return 1;
-      } else if (first == second) {
-          return 0;
-      } else {
-          return -1;
-      }
+    if (first > second) {
+      return 1;
+    } else if (first == second) {
+      return 0;
+    } else {
+      return -1;
+    }
   }
 };
 // Use this for 4-byte hashes
@@ -140,7 +137,7 @@ typedef SafebrowsingHash<PREFIX_SIZE, PrefixComparator> Prefix;
 typedef nsTArray<Prefix> PrefixArray;
 
 class CompletionComparator {
-public:
+ public:
   static int Compare(const uint8_t* a, const uint8_t* b) {
     return memcmp(a, b, COMPLETE_SIZE);
   }
@@ -159,9 +156,9 @@ struct AddPrefix {
 
   // Returns the chunk number.
   uint32_t Chunk() const { return addChunk; }
-  const Prefix &PrefixHash() const { return prefix; }
+  const Prefix& PrefixHash() const { return prefix; }
 
-  template<class T>
+  template <class T>
   int Compare(const T& other) const {
     int cmp = prefix.Compare(other.PrefixHash());
     if (cmp != 0) {
@@ -181,9 +178,9 @@ struct AddComplete {
   // The 4-byte prefix of the sha256 hash.
   uint32_t ToUint32() const { return complete.ToUint32(); }
   // The 32-byte sha256 hash.
-  const Completion &CompleteHash() const { return complete; }
+  const Completion& CompleteHash() const { return complete; }
 
-  template<class T>
+  template <class T>
   int Compare(const T& other) const {
     int cmp = complete.Compare(other.CompleteHash());
     if (cmp != 0) {
@@ -208,30 +205,27 @@ struct SubPrefix {
   // The chunk number of this sub chunk.
   uint32_t subChunk;
 
-  SubPrefix(): addChunk(0), subChunk(0) {}
+  SubPrefix() : addChunk(0), subChunk(0) {}
 
   uint32_t Chunk() const { return subChunk; }
   uint32_t AddChunk() const { return addChunk; }
-  const Prefix &PrefixHash() const { return prefix; }
+  const Prefix& PrefixHash() const { return prefix; }
 
-  template<class T>
+  template <class T>
   // Returns 0 if and only if the chunks are the same in every way.
   int Compare(const T& aOther) const {
     int cmp = prefix.Compare(aOther.PrefixHash());
-    if (cmp != 0)
-      return cmp;
-    if (addChunk != aOther.addChunk)
-      return addChunk - aOther.addChunk;
+    if (cmp != 0) return cmp;
+    if (addChunk != aOther.addChunk) return addChunk - aOther.addChunk;
     return subChunk - aOther.subChunk;
   }
 
-  template<class T>
+  template <class T>
   int CompareAlt(const T& aOther) const {
     Prefix other;
     other.FromUint32(aOther.ToUint32());
     int cmp = prefix.Compare(other);
-    if (cmp != 0)
-      return cmp;
+    if (cmp != 0) return cmp;
     return addChunk - aOther.addChunk;
   }
 };
@@ -245,32 +239,30 @@ struct SubComplete {
 
   uint32_t Chunk() const { return subChunk; }
   uint32_t AddChunk() const { return addChunk; }
-  const Completion &CompleteHash() const { return complete; }
+  const Completion& CompleteHash() const { return complete; }
   // The 4-byte prefix of the sha256 hash.
   uint32_t ToUint32() const { return complete.ToUint32(); }
 
   int Compare(const SubComplete& aOther) const {
     int cmp = complete.Compare(aOther.complete);
-    if (cmp != 0)
-      return cmp;
-    if (addChunk != aOther.addChunk)
-      return addChunk - aOther.addChunk;
+    if (cmp != 0) return cmp;
+    if (addChunk != aOther.addChunk) return addChunk - aOther.addChunk;
     return subChunk - aOther.subChunk;
   }
 };
 
-typedef FallibleTArray<AddPrefix>   AddPrefixArray;
+typedef FallibleTArray<AddPrefix> AddPrefixArray;
 typedef FallibleTArray<AddComplete> AddCompleteArray;
-typedef FallibleTArray<SubPrefix>   SubPrefixArray;
+typedef FallibleTArray<SubPrefix> SubPrefixArray;
 typedef FallibleTArray<SubComplete> SubCompleteArray;
-typedef FallibleTArray<Prefix>      MissPrefixArray;
+typedef FallibleTArray<Prefix> MissPrefixArray;
 
 /**
  * Compares chunks by their add chunk, then their prefix.
  */
-template<class T>
+template <class T>
 class EntryCompare {
-public:
+ public:
   typedef T elem_type;
   static int Compare(const void* e1, const void* e2) {
     const elem_type* a = static_cast<const elem_type*>(e1);
@@ -284,36 +276,30 @@ public:
  * to sort, this does a single Compare so it's a bit quicker over the
  * large sorts we do.
  */
-template<class T, class Alloc>
-void
-EntrySort(nsTArray_Impl<T, Alloc>& aArray)
-{
+template <class T, class Alloc>
+void EntrySort(nsTArray_Impl<T, Alloc>& aArray) {
   qsort(aArray.Elements(), aArray.Length(), sizeof(T),
         EntryCompare<T>::Compare);
 }
 
-template<class T, class Alloc>
-nsresult
-ReadTArray(nsIInputStream* aStream, nsTArray_Impl<T, Alloc>* aArray, uint32_t aNumElements)
-{
-  if (!aArray->SetLength(aNumElements, fallible))
-    return NS_ERROR_OUT_OF_MEMORY;
+template <class T, class Alloc>
+nsresult ReadTArray(nsIInputStream* aStream, nsTArray_Impl<T, Alloc>* aArray,
+                    uint32_t aNumElements) {
+  if (!aArray->SetLength(aNumElements, fallible)) return NS_ERROR_OUT_OF_MEMORY;
 
-  void *buffer = aArray->Elements();
-  nsresult rv = NS_ReadInputStreamToBuffer(aStream, &buffer,
-                                           (aNumElements * sizeof(T)));
+  void* buffer = aArray->Elements();
+  nsresult rv =
+      NS_ReadInputStreamToBuffer(aStream, &buffer, (aNumElements * sizeof(T)));
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
-template<class T, class Alloc>
-nsresult
-WriteTArray(nsIOutputStream* aStream, nsTArray_Impl<T, Alloc>& aArray)
-{
+template <class T, class Alloc>
+nsresult WriteTArray(nsIOutputStream* aStream,
+                     nsTArray_Impl<T, Alloc>& aArray) {
   uint32_t written;
   return aStream->Write(reinterpret_cast<char*>(aArray.Elements()),
-                        aArray.Length() * sizeof(T),
-                        &written);
+                        aArray.Length() * sizeof(T), &written);
 }
 
 typedef nsClassHashtable<nsUint32HashKey, nsCString> PrefixStringMap;
@@ -327,7 +313,8 @@ typedef nsDataHashtable<FullHashString, int64_t> FullHashExpiryCache;
 struct CachedFullHashResponse {
   int64_t negativeCacheExpirySec;
 
-  // Map contains all matches found in Fullhash response, this field might be empty.
+  // Map contains all matches found in Fullhash response, this field might be
+  // empty.
   FullHashExpiryCache fullHashes;
 
   CachedFullHashResponse& operator=(const CachedFullHashResponse& aOther) {
@@ -355,19 +342,18 @@ struct CachedFullHashResponse {
   }
 };
 
-typedef nsClassHashtable<nsUint32HashKey, CachedFullHashResponse> FullHashResponseMap;
+typedef nsClassHashtable<nsUint32HashKey, CachedFullHashResponse>
+    FullHashResponseMap;
 
-template<class T>
-void
-CopyClassHashTable(const T& aSource, T& aDestination)
-{
+template <class T>
+void CopyClassHashTable(const T& aSource, T& aDestination) {
   for (auto iter = aSource.ConstIter(); !iter.Done(); iter.Next()) {
     auto value = aDestination.LookupOrAdd(iter.Key());
     *value = *(iter.Data());
   }
 }
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
-#endif // SBEntries_h__
+#endif  // SBEntries_h__

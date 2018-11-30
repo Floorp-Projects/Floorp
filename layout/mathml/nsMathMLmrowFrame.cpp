@@ -13,21 +13,17 @@ using namespace mozilla;
 // <mrow> -- horizontally group any number of subexpressions - implementation
 //
 
-nsIFrame*
-NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell,
+                                ComputedStyle* aStyle) {
   return new (aPresShell) nsMathMLmrowFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmrowFrame)
 
-nsMathMLmrowFrame::~nsMathMLmrowFrame()
-{
-}
+nsMathMLmrowFrame::~nsMathMLmrowFrame() {}
 
 NS_IMETHODIMP
-nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent)
-{
+nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent) {
   // let the base class get the default from our parent
   nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
@@ -36,17 +32,15 @@ nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent)
   return NS_OK;
 }
 
-nsresult
-nsMathMLmrowFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                    nsAtom* aAttribute,
-                                    int32_t  aModType)
-{
+nsresult nsMathMLmrowFrame::AttributeChanged(int32_t aNameSpaceID,
+                                             nsAtom* aAttribute,
+                                             int32_t aModType) {
   // Special for <mtable>: In the frame construction code, we also use
   // this frame class as a wrapper for mtable. Hence, we should pass the
   // notification to the real mtable
   if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
     nsIFrame* frame = mFrames.FirstChild();
-    for ( ; frame; frame = frame->PrincipalChildList().FirstChild()) {
+    for (; frame; frame = frame->PrincipalChildList().FirstChild()) {
       // drill down to the real mtable
       if (frame->IsTableWrapperFrame())
         return frame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
@@ -54,12 +48,11 @@ nsMathMLmrowFrame::AttributeChanged(int32_t  aNameSpaceID,
     MOZ_ASSERT_UNREACHABLE("mtable wrapper without the real table frame");
   }
 
-  return nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  return nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                                  aModType);
 }
 
-/* virtual */ eMathMLFrameType
-nsMathMLmrowFrame::GetMathMLFrameType()
-{
+/* virtual */ eMathMLFrameType nsMathMLmrowFrame::GetMathMLFrameType() {
   if (!IsMrowLike()) {
     nsIMathMLFrame* child = do_QueryFrame(mFrames.FirstChild());
     if (child) {

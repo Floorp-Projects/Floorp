@@ -16,22 +16,21 @@
 #include <wpcevent.h>
 #endif
 
-class nsParentalControlsService : public nsIParentalControlsService
-{
-public:
+class nsParentalControlsService : public nsIParentalControlsService {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPARENTALCONTROLSSERVICE
 
   nsParentalControlsService();
 
-protected:
+ protected:
   virtual ~nsParentalControlsService();
 
-private:
+ private:
   bool mEnabled;
 #if defined(XP_WIN)
   REGHANDLE mProvider;
-  IWindowsParentalControls * mPC;
+  IWindowsParentalControls *mPC;
   void LogFileDownload(bool blocked, nsIURI *aSource, nsIFile *aTarget);
 #endif
 };

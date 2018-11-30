@@ -17,18 +17,17 @@
 #define INITAL_REPEAT_DELAY 250
 
 #ifdef XP_MACOSX
-#define REPEAT_DELAY        25
+#define REPEAT_DELAY 25
 #else
-#define REPEAT_DELAY        50
+#define REPEAT_DELAY 50
 #endif
 
 class nsIDocument;
 class nsITimer;
 
-class nsRepeatService final
-{
-public:
-  typedef void (* Callback)(void* aData);
+class nsRepeatService final {
+ public:
+  typedef void (*Callback)(void* aData);
 
   ~nsRepeatService();
 
@@ -41,8 +40,8 @@ public:
   //
   // aDocument is used to get the event target in Start(). We need an event
   // target to init mRepeatTimer.
-  void Start(Callback aCallback, void* aCallbackData,
-             nsIDocument* aDocument, const nsACString& aCallbackName,
+  void Start(Callback aCallback, void* aCallbackData, nsIDocument* aDocument,
+             const nsACString& aCallbackName,
              uint32_t aInitialDelay = INITAL_REPEAT_DELAY);
   // Stop dispatching timer events to the callback. If the repeat service
   // is not currently configured with the given callback and data, this
@@ -52,18 +51,18 @@ public:
   static nsRepeatService* GetInstance();
   static void Shutdown();
 
-protected:
+ protected:
   nsRepeatService();
 
-private:
+ private:
   // helper function to initialize callback function to mRepeatTimer
   void InitTimerCallback(uint32_t aInitialDelay);
 
-  Callback           mCallback;
-  void*              mCallbackData;
-  nsCString          mCallbackName;
+  Callback mCallback;
+  void* mCallbackData;
+  nsCString mCallbackName;
   nsCOMPtr<nsITimer> mRepeatTimer;
 
-}; // class nsRepeatService
+};  // class nsRepeatService
 
 #endif

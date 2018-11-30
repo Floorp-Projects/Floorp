@@ -15,36 +15,23 @@
 namespace mozilla {
 namespace gfx {
 
-template<typename T>
-class ArrayView
-{
-    public:
-        MOZ_IMPLICIT ArrayView(const nsTArray<T>& aData) :
-            mData(aData.Elements()), mLength(aData.Length())
-        {
-        }
-        ArrayView(const T* aData, const size_t aLength) :
-            mData(aData), mLength(aLength)
-        {
-        }
-        const T& operator[](const size_t aIdx) const
-        {
-            return mData[aIdx];
-        }
-        size_t Length() const
-        {
-            return mLength;
-        }
-        const T* Data() const
-        {
-            return mData;
-        }
-    private:
-        const T* mData;
-        const size_t mLength;
+template <typename T>
+class ArrayView {
+ public:
+  MOZ_IMPLICIT ArrayView(const nsTArray<T>& aData)
+      : mData(aData.Elements()), mLength(aData.Length()) {}
+  ArrayView(const T* aData, const size_t aLength)
+      : mData(aData), mLength(aLength) {}
+  const T& operator[](const size_t aIdx) const { return mData[aIdx]; }
+  size_t Length() const { return mLength; }
+  const T* Data() const { return mData; }
+
+ private:
+  const T* mData;
+  const size_t mLength;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_ARRAY_VIEW_H_ */

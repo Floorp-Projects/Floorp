@@ -28,13 +28,13 @@
  *   Ted Mielczarek <ted.mielczarek@gmail.com>
  */
 /*
- * win32-screenshot.cpp: Save a screenshot of the Windows desktop in .png format.
- *  If a filename is specified as the first argument on the commandline,
+ * win32-screenshot.cpp: Save a screenshot of the Windows desktop in .png
+ * format. If a filename is specified as the first argument on the commandline,
  *  then the image will be saved to that filename. Otherwise, the image will
  *  be saved as "screenshot.png" in the current working directory.
  */
 
- // VS2015: Platform SDK 8.1's GdiplusTypes.h uses the min macro
+// VS2015: Platform SDK 8.1's GdiplusTypes.h uses the min macro
 #undef NOMINMAX
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -49,32 +49,27 @@
 using namespace Gdiplus;
 
 // From http://msdn.microsoft.com/en-us/library/ms533843%28VS.85%29.aspx
-static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
-{
-  UINT  num = 0;          // number of image encoders
-  UINT  size = 0;         // size of the image encoder array in bytes
+static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
+  UINT num = 0;   // number of image encoders
+  UINT size = 0;  // size of the image encoder array in bytes
 
   ImageCodecInfo* pImageCodecInfo = nullptr;
 
   GetImageEncodersSize(&num, &size);
-  if(size == 0)
-    return -1;  // Failure
+  if (size == 0) return -1;  // Failure
 
   pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
-  if(pImageCodecInfo == nullptr)
-    return -1;  // Failure
+  if (pImageCodecInfo == nullptr) return -1;  // Failure
 
   GetImageEncoders(num, size, pImageCodecInfo);
 
-  for(UINT j = 0; j < num; ++j)
-    {
-      if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 )
-        {
-          *pClsid = pImageCodecInfo[j].Clsid;
-          free(pImageCodecInfo);
-          return j;  // Success
-        }
+  for (UINT j = 0; j < num; ++j) {
+    if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0) {
+      *pClsid = pImageCodecInfo[j].Clsid;
+      free(pImageCodecInfo);
+      return j;  // Success
     }
+  }
 
   free(pImageCodecInfo);
   return -1;  // Failure
@@ -83,8 +78,8 @@ static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 #ifdef __MINGW32__
 extern "C"
 #endif
-int wmain(int argc, wchar_t** argv)
-{
+    int
+    wmain(int argc, wchar_t** argv) {
   GdiplusStartupInput gdiplusStartupInput;
   ULONG_PTR gdiplusToken;
   GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
@@ -96,18 +91,17 @@ int wmain(int argc, wchar_t** argv)
   int height = GetSystemMetrics(SM_CYSCREEN);
   HBITMAP mybmp = CreateCompatibleBitmap(desktopdc, width, height);
   HBITMAP oldbmp = (HBITMAP)SelectObject(mydc, mybmp);
-  BitBlt(mydc,0,0,width,height,desktopdc,0,0, SRCCOPY|CAPTUREBLT);
+  BitBlt(mydc, 0, 0, width, height, desktopdc, 0, 0, SRCCOPY | CAPTUREBLT);
   SelectObject(mydc, oldbmp);
 
   const wchar_t* filename = (argc > 1) ? argv[1] : L"screenshot.png";
   Bitmap* b = Bitmap::FromHBITMAP(mybmp, nullptr);
-  CLSID  encoderClsid;
+  CLSID encoderClsid;
   Status stat = GenericError;
   if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
     stat = b->Save(filename, &encoderClsid, nullptr);
   }
-  if (b)
-    delete b;
+  if (b) delete b;
 
   // cleanup
   GdiplusShutdown(gdiplusToken);

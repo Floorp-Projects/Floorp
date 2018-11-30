@@ -9,20 +9,18 @@
 #include "ScopedNSSTypes.h"
 #include "nsIX509CertValidity.h"
 
-class nsX509CertValidity : public nsIX509CertValidity
-{
-public:
+class nsX509CertValidity : public nsIX509CertValidity {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTVALIDITY
 
   explicit nsX509CertValidity(const mozilla::UniqueCERTCertificate& cert);
 
-protected:
+ protected:
   virtual ~nsX509CertValidity() {}
 
-private:
-  nsresult FormatTime(const PRTime& aTime,
-                      PRTimeParamFn aParamFn,
+ private:
+  nsresult FormatTime(const PRTime& aTime, PRTimeParamFn aParamFn,
                       const mozilla::nsTimeFormatSelector aTimeFormatSelector,
                       nsAString& aFormattedTimeDate);
 
@@ -34,4 +32,4 @@ private:
   nsX509CertValidity& operator=(const nsX509CertValidity& x) = delete;
 };
 
-#endif // nsNSSCertValidity_h
+#endif  // nsNSSCertValidity_h

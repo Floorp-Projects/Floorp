@@ -7,23 +7,23 @@
 #ifndef mozilla_layers_ShadowLayers_h
 #define mozilla_layers_ShadowLayers_h 1
 
-#include <stddef.h>                     // for size_t
-#include <stdint.h>                     // for uint64_t
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for uint64_t
 #include "gfxTypes.h"
-#include "mozilla/Attributes.h"         // for override
+#include "mozilla/Attributes.h"  // for override
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/WidgetUtils.h"        // for ScreenRotation
-#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/HalScreenConfiguration.h" // for ScreenOrientation
+#include "mozilla/WidgetUtils.h"             // for ScreenRotation
+#include "mozilla/ipc/SharedMemory.h"        // for SharedMemory, etc
+#include "mozilla/HalScreenConfiguration.h"  // for ScreenOrientation
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"  // for OpenMode, etc
 #include "mozilla/layers/CompositorBridgeChild.h"
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
+#include "nsCOMPtr.h"                // for already_AddRefed
+#include "nsRegion.h"                // for nsIntRegion
+#include "nsTArrayForwardDeclare.h"  // for InfallibleTArray
 #include "nsIWidget.h"
 #include <vector>
 
@@ -87,10 +87,10 @@ class Transaction;
  *
  * The mecanism to shadow the layer tree on the compositor through IPC works as
  * follows:
- * The layer tree is managed on the content thread, and shadowed in the compositor
- * thread. The shadow layer tree is only kept in sync with whatever happens in
- * the content thread. To do this we use IPDL protocols. IPDL is a domain
- * specific language that describes how two processes or thread should
+ * The layer tree is managed on the content thread, and shadowed in the
+ * compositor thread. The shadow layer tree is only kept in sync with whatever
+ * happens in the content thread. To do this we use IPDL protocols. IPDL is a
+ * domain specific language that describes how two processes or thread should
  * communicate. C++ code is generated from .ipdl files to implement the message
  * passing, synchronization and serialization logic. To use the generated code
  * we implement classes that inherit the generated IPDL actor. the ipdl actors
@@ -117,13 +117,12 @@ class Transaction;
  * from the content thread. (See CompositableForwarder.h and ImageBridgeChild.h)
  */
 
-class ShadowLayerForwarder final : public LayersIPCActor
-                                 , public CompositableForwarder
-                                 , public LegacySurfaceDescriptorAllocator
-{
+class ShadowLayerForwarder final : public LayersIPCActor,
+                                   public CompositableForwarder,
+                                   public LegacySurfaceDescriptorAllocator {
   friend class ClientLayerManager;
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ShadowLayerForwarder, override);
 
   /**
@@ -138,8 +137,7 @@ public:
    * the corresponding compositable and layer on the compositor side.
    * Connect must have been called on aCompositable beforehand.
    */
-  void Attach(CompositableClient* aCompositable,
-              ShadowableLayer* aLayer);
+  void Attach(CompositableClient* aCompositable, ShadowableLayer* aLayer);
 
   /**
    * Adds an edit in the transaction in order to attach a Compositable that
@@ -193,13 +191,10 @@ public:
    * nullptr to indicated that |aChild| should be appended to the end of
    * |aContainer|'s child list.
    */
-  void InsertAfter(ShadowableLayer* aContainer,
-                   ShadowableLayer* aChild,
+  void InsertAfter(ShadowableLayer* aContainer, ShadowableLayer* aChild,
                    ShadowableLayer* aAfter = nullptr);
-  void RemoveChild(ShadowableLayer* aContainer,
-                   ShadowableLayer* aChild);
-  void RepositionChild(ShadowableLayer* aContainer,
-                       ShadowableLayer* aChild,
+  void RemoveChild(ShadowableLayer* aContainer, ShadowableLayer* aChild);
+  void RepositionChild(ShadowableLayer* aContainer, ShadowableLayer* aChild,
                        ShadowableLayer* aAfter = nullptr);
 
   /**
@@ -209,14 +204,14 @@ public:
    * will need changing to update properties for other kinds
    * of mask layer.
    */
-  void SetMask(ShadowableLayer* aLayer,
-               ShadowableLayer* aMaskLayer);
+  void SetMask(ShadowableLayer* aLayer, ShadowableLayer* aMaskLayer);
 
   /**
    * See CompositableForwarder::UseTiledLayerBuffer
    */
-  void UseTiledLayerBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
+  void UseTiledLayerBuffer(
+      CompositableClient* aCompositable,
+      const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
   bool DestroyInTransaction(PTextureChild* aTexture) override;
@@ -226,8 +221,8 @@ public:
                                              TextureClient* aTexture) override;
 
   /**
-   * Communicate to the compositor that aRegion in the texture identified by aLayer
-   * and aIdentifier has been updated to aThebesBuffer.
+   * Communicate to the compositor that aRegion in the texture identified by
+   * aLayer and aIdentifier has been updated to aThebesBuffer.
    */
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
@@ -236,14 +231,16 @@ public:
   /**
    * See CompositableForwarder::UseTextures
    */
-  virtual void UseTextures(CompositableClient* aCompositable,
-                           const nsTArray<TimedTextureClient>& aTextures) override;
-  virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
-                                         TextureClient* aClientOnBlack,
-                                         TextureClient* aClientOnWhite) override;
+  virtual void UseTextures(
+      CompositableClient* aCompositable,
+      const nsTArray<TimedTextureClient>& aTextures) override;
+  virtual void UseComponentAlphaTextures(
+      CompositableClient* aCompositable, TextureClient* aClientOnBlack,
+      TextureClient* aClientOnWhite) override;
 
   /**
-   * Used for debugging to tell the compositor how long this frame took to paint.
+   * Used for debugging to tell the compositor how long this frame took to
+   * paint.
    */
   void SendPaintTime(TransactionId aId, TimeDuration aPaintTime);
 
@@ -252,15 +249,12 @@ public:
    * |aReplies| are directions from the LayerManagerComposite to the
    * caller of EndTransaction().
    */
-  bool EndTransaction(const nsIntRegion& aRegionToClear,
-                      TransactionId aId,
-                      bool aScheduleComposite,
-                      uint32_t aPaintSequenceNumber,
+  bool EndTransaction(const nsIntRegion& aRegionToClear, TransactionId aId,
+                      bool aScheduleComposite, uint32_t aPaintSequenceNumber,
                       bool aIsRepeatTransaction,
                       const mozilla::TimeStamp& aRefreshStart,
                       const mozilla::TimeStamp& aTransactionStart,
-                      const nsCString& aURL,
-                      bool* aSent);
+                      const nsCString& aURL, bool* aSent);
 
   /**
    * Set an actor through which layer updates will be pushed.
@@ -272,8 +266,8 @@ public:
    * data. We ship this across with the rest of the layer updates when
    * we update. Chrome handles applying these changes.
    */
-  void StorePluginWidgetConfigurations(const nsTArray<nsIWidget::Configuration>&
-                                       aConfigurations);
+  void StorePluginWidgetConfigurations(
+      const nsTArray<nsIWidget::Configuration>& aConfigurations);
 
   void StopReceiveAsyncParentMessge();
 
@@ -285,7 +279,9 @@ public:
    * True if this is forwarding to a LayerManagerComposite.
    */
   bool HasShadowManager() const { return !!mShadowManager; }
-  LayerTransactionChild* GetShadowManager() const { return mShadowManager.get(); }
+  LayerTransactionChild* GetShadowManager() const {
+    return mShadowManager.get();
+  }
 
   // Send a synchronous message asking the LayerTransactionParent in the
   // compositor to shutdown.
@@ -342,7 +338,9 @@ public:
   /**
    * Set the current focus target to be sent with the next paint.
    */
-  void SetFocusTarget(const FocusTarget& aFocusTarget) { mFocusTarget = aFocusTarget; }
+  void SetFocusTarget(const FocusTarget& aFocusTarget) {
+    mFocusTarget = aFocusTarget;
+  }
 
   void SetLayersObserverEpoch(LayersObserverEpoch aEpoch);
 
@@ -352,10 +350,9 @@ public:
                                       gfxContentType aContent,
                                       SurfaceDescriptor* aBuffer) override;
 
-  virtual bool AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
-                                              gfxContentType aContent,
-                                              uint32_t aCaps,
-                                              SurfaceDescriptor* aBuffer) override;
+  virtual bool AllocSurfaceDescriptorWithCaps(
+      const gfx::IntSize& aSize, gfxContentType aContent, uint32_t aCaps,
+      SurfaceDescriptor* aBuffer) override;
 
   virtual void DestroySurfaceDescriptor(SurfaceDescriptor* aSurface) override;
 
@@ -367,13 +364,9 @@ public:
 
   void ReleaseLayer(const LayerHandle& aHandle);
 
-  bool InForwarderThread() override {
-    return NS_IsMainThread();
-  }
+  bool InForwarderThread() override { return NS_IsMainThread(); }
 
-  PaintTiming& GetPaintTiming() {
-    return mPaintTiming;
-  }
+  PaintTiming& GetPaintTiming() { return mPaintTiming; }
 
   ShadowLayerForwarder* AsLayerForwarder() override { return this; }
 
@@ -382,10 +375,14 @@ public:
 
   void SyncWithCompositor() override;
 
-  TextureForwarder* GetTextureForwarder() override { return GetCompositorBridgeChild(); }
+  TextureForwarder* GetTextureForwarder() override {
+    return GetCompositorBridgeChild();
+  }
   LayersIPCActor* GetLayersIPCActor() override { return this; }
 
-  ActiveResourceTracker* GetActiveResourceTracker() override { return mActiveResourceTracker.get(); }
+  ActiveResourceTracker* GetActiveResourceTracker() override {
+    return mActiveResourceTracker.get();
+  }
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 
@@ -395,7 +392,7 @@ public:
 
   virtual RefPtr<KnowsCompositor> GetForMedia() override;
 
-protected:
+ protected:
   virtual ~ShadowLayerForwarder();
 
   explicit ShadowLayerForwarder(ClientLayerManager* aClientLayerManager);
@@ -406,15 +403,15 @@ protected:
   void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
 #endif
 
-  RefPtr<CompositableClient> FindCompositable(const CompositableHandle& aHandle);
+  RefPtr<CompositableClient> FindCompositable(
+      const CompositableHandle& aHandle);
 
   bool InWorkerThread();
 
   RefPtr<LayerTransactionChild> mShadowManager;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
 
-private:
-
+ private:
   ClientLayerManager* mClientLayerManager;
   Transaction* mTxn;
   MessageLoop* mMessageLoop;
@@ -444,9 +441,8 @@ class CompositableClient;
  *
  * Note that ShadowLayers can themselves be ShadowableLayers.
  */
-class ShadowableLayer
-{
-public:
+class ShadowableLayer {
+ public:
   virtual ~ShadowableLayer();
 
   virtual Layer* AsLayer() = 0;
@@ -470,15 +466,15 @@ public:
 
   virtual CompositableClient* GetCompositableClient() { return nullptr; }
 
-protected:
+ protected:
   ShadowableLayer() {}
 
-private:
+ private:
   RefPtr<ShadowLayerForwarder> mForwarder;
   LayerHandle mShadow;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // ifndef mozilla_layers_ShadowLayers_h
+#endif  // ifndef mozilla_layers_ShadowLayers_h

@@ -17,7 +17,8 @@ namespace mozilla {
 #endif
 #define LOGTAG "WebrtcVideoSessionConduit"
 
-#define MB_OF(w,h) ((unsigned int)((((w+15)>>4))*((unsigned int)((h+15)>>4))))
+#define MB_OF(w, h) \
+  ((unsigned int)((((w + 15) >> 4)) * ((unsigned int)((h + 15) >> 4))))
 // For now, try to set the max rates well above the knee in the curve.
 // Chosen somewhat arbitrarily; it's hard to find good data oriented for
 // realtime interactive/talking-head recording.  These rates assume
@@ -25,8 +26,9 @@ namespace mozilla {
 
 // XXX Populate this based on a pref (which we should consider sorting because
 // people won't assume they need to).
-static VideoStreamFactory::ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
-  // clang-format off
+static VideoStreamFactory::ResolutionAndBitrateLimits
+    kResolutionAndBitrateLimits[] = {
+        // clang-format off
   {MB_OF(1920, 1200), KBPS(1500), KBPS(2000), KBPS(10000)}, // >HD (3K, 4K, etc)
   {MB_OF(1280, 720), KBPS(1200), KBPS(1500), KBPS(5000)}, // HD ~1080-1200
   {MB_OF(800, 480), KBPS(600), KBPS(800), KBPS(2500)}, // HD ~720
@@ -34,12 +36,11 @@ static VideoStreamFactory::ResolutionAndBitrateLimits kResolutionAndBitrateLimit
   {tl::Max<MB_OF(400, 240), MB_OF(352, 288)>::value, KBPS(125), KBPS(300), KBPS(1300)}, // VGA
   {MB_OF(176, 144), KBPS(100), KBPS(150), KBPS(500)}, // WQVGA, CIF
   {0 , KBPS(40), KBPS(80), KBPS(250)} // QCIF and below
-  // clang-format on
+        // clang-format on
 };
 
-static VideoStreamFactory::ResolutionAndBitrateLimits
-GetLimitsFor(unsigned int aWidth, unsigned int aHeight, int aCapBps = 0)
-{
+static VideoStreamFactory::ResolutionAndBitrateLimits GetLimitsFor(
+    unsigned int aWidth, unsigned int aHeight, int aCapBps = 0) {
   // max bandwidth should be proportional (not linearly!) to resolution, and
   // proportional (perhaps linearly, or close) to current frame rate.
   int fs = MB_OF(aWidth, aHeight);
@@ -48,8 +49,7 @@ GetLimitsFor(unsigned int aWidth, unsigned int aHeight, int aCapBps = 0)
     if (fs > resAndLimits.resolution_in_mb &&
         // pick the highest range where at least start rate is within cap
         // (or if we're at the end of the array).
-        (aCapBps == 0 ||
-         resAndLimits.start_bitrate_bps <= aCapBps ||
+        (aCapBps == 0 || resAndLimits.start_bitrate_bps <= aCapBps ||
          resAndLimits.resolution_in_mb == 0)) {
       return resAndLimits;
     }
@@ -59,7 +59,8 @@ GetLimitsFor(unsigned int aWidth, unsigned int aHeight, int aCapBps = 0)
 }
 
 /**
- * Function to set the encoding bitrate limits based on incoming frame size and rate
+ * Function to set the encoding bitrate limits based on incoming frame size and
+ * rate
  * @param width, height: dimensions of the frame
  * @param min: minimum bitrate in bps
  * @param start: bitrate in bps that the encoder should start with
@@ -68,19 +69,15 @@ GetLimitsFor(unsigned int aWidth, unsigned int aHeight, int aCapBps = 0)
  * @param negotiated_cap: cap negotiated through SDP
  * @param aVideoStream stream to apply bitrates to
  */
-static void
-SelectBitrates(
-  unsigned short width, unsigned short height,
-  int min, int start,
-  int cap, int pref_cap, int negotiated_cap,
-  webrtc::VideoStream& aVideoStream)
-{
+static void SelectBitrates(unsigned short width, unsigned short height, int min,
+                           int start, int cap, int pref_cap, int negotiated_cap,
+                           webrtc::VideoStream& aVideoStream) {
   int& out_min = aVideoStream.min_bitrate_bps;
   int& out_start = aVideoStream.target_bitrate_bps;
   int& out_max = aVideoStream.max_bitrate_bps;
 
   VideoStreamFactory::ResolutionAndBitrateLimits resAndLimits =
-    GetLimitsFor(width, height);
+      GetLimitsFor(width, height);
   out_min = MinIgnoreZero(resAndLimits.min_bitrate_bps, cap);
   out_start = MinIgnoreZero(resAndLimits.start_bitrate_bps, cap);
   out_max = MinIgnoreZero(resAndLimits.max_bitrate_bps, cap);
@@ -113,24 +110,18 @@ SelectBitrates(
   MOZ_ASSERT(pref_cap == 0 || out_max <= pref_cap);
 }
 
-void
-VideoStreamFactory::SetCodecMode(webrtc::VideoCodecMode aCodecMode)
-{
+void VideoStreamFactory::SetCodecMode(webrtc::VideoCodecMode aCodecMode) {
   MOZ_ASSERT(NS_IsMainThread());
   mCodecMode = aCodecMode;
 }
 
-void
-VideoStreamFactory::SetSendingFramerate(unsigned int aSendingFramerate)
-{
+void VideoStreamFactory::SetSendingFramerate(unsigned int aSendingFramerate) {
   MOZ_ASSERT(NS_IsMainThread());
   mSendingFramerate = aSendingFramerate;
 }
 
-std::vector<webrtc::VideoStream>
-VideoStreamFactory::CreateEncoderStreams(
-  int width, int height, const webrtc::VideoEncoderConfig& config)
-{
+std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
+    int width, int height, const webrtc::VideoEncoderConfig& config) {
   size_t streamCount = config.number_of_streams;
 
   // We only allow one layer when screensharing
@@ -143,9 +134,10 @@ VideoStreamFactory::CreateEncoderStreams(
 
   // We assume that the first stream is the full-resolution stream.
 
-  // This ensures all simulcast layers will be of the same aspect ratio as the input.
+  // This ensures all simulcast layers will be of the same aspect ratio as the
+  // input.
   mSimulcastAdapter->OnOutputFormatRequest(
-    cricket::VideoFormat(width, height, 0, 0));
+      cricket::VideoFormat(width, height, 0, 0));
 
   for (size_t idx = streamCount - 1; streamCount > 0; idx--, streamCount--) {
     webrtc::VideoStream video_stream;
@@ -165,25 +157,22 @@ VideoStreamFactory::CreateEncoderStreams(
       outHeight = height;
     } else {
       float effectiveScaleDownBy =
-        simulcastEncoding.constraints.scaleDownBy /
-        mCodecConfig.mSimulcastEncodings[0].constraints.scaleDownBy;
+          simulcastEncoding.constraints.scaleDownBy /
+          mCodecConfig.mSimulcastEncodings[0].constraints.scaleDownBy;
       MOZ_ASSERT(effectiveScaleDownBy >= 1.0);
       mSimulcastAdapter->OnScaleResolutionBy(
-        effectiveScaleDownBy > 1.0 ?
-          rtc::Optional<float>(effectiveScaleDownBy) :
-          rtc::Optional<float>());
+          effectiveScaleDownBy > 1.0
+              ? rtc::Optional<float>(effectiveScaleDownBy)
+              : rtc::Optional<float>());
       bool rv = mSimulcastAdapter->AdaptFrameResolution(
-        width,
-        height,
-        0, // Ok, since we don't request an output format with an interval
-        &unusedCropWidth,
-        &unusedCropHeight,
-        &outWidth,
-        &outHeight);
+          width, height,
+          0,  // Ok, since we don't request an output format with an interval
+          &unusedCropWidth, &unusedCropHeight, &outWidth, &outHeight);
 
       if (!rv) {
         // The only thing that can make AdaptFrameResolution fail in this case
-        // is if this layer is scaled so far down that it has less than one pixel.
+        // is if this layer is scaled so far down that it has less than one
+        // pixel.
         outWidth = 0;
         outHeight = 0;
       }
@@ -215,10 +204,9 @@ VideoStreamFactory::CreateEncoderStreams(
     // We want to ensure this picks up the current framerate, so indirect
     video_stream.max_framerate = mSendingFramerate;
 
-    SelectBitrates(
-      video_stream.width, video_stream.height,
-      mMinBitrate, mStartBitrate, simulcastEncoding.constraints.maxBr,
-      mPrefMaxBitrate, mNegotiatedMaxBitrate, video_stream);
+    SelectBitrates(video_stream.width, video_stream.height, mMinBitrate,
+                   mStartBitrate, simulcastEncoding.constraints.maxBr,
+                   mPrefMaxBitrate, mNegotiatedMaxBitrate, video_stream);
 
     video_stream.max_qp = kQpMax;
     video_stream.SetRid(simulcastEncoding.rid);
@@ -237,7 +225,8 @@ VideoStreamFactory::CreateEncoderStreams(
       // video_codec_initializer.cc it uses [0] to set the target bitrate
       // for the screenshare.
       if (mCodecMode == webrtc::VideoCodecMode::kScreensharing) {
-        video_stream.temporal_layer_thresholds_bps.push_back(video_stream.target_bitrate_bps);
+        video_stream.temporal_layer_thresholds_bps.push_back(
+            video_stream.target_bitrate_bps);
       } else {
         video_stream.temporal_layer_thresholds_bps.resize(2);
       }
@@ -248,7 +237,8 @@ VideoStreamFactory::CreateEncoderStreams(
     if (mCodecConfig.mName == "H264") {
       if (mCodecConfig.mEncodingConstraints.maxMbps > 0) {
         // Not supported yet!
-        CSFLogError(LOGTAG, "%s H.264 max_mbps not supported yet", __FUNCTION__);
+        CSFLogError(LOGTAG, "%s H.264 max_mbps not supported yet",
+                    __FUNCTION__);
       }
     }
     streams.push_back(video_stream);
@@ -256,5 +246,4 @@ VideoStreamFactory::CreateEncoderStreams(
   return streams;
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

@@ -16,19 +16,20 @@ class nsBoxLayoutState;
 struct nsSize;
 struct nsMargin;
 
-#define NS_BOX_LAYOUT_IID \
-{ 0x09d522a7, 0x304c, 0x4137, \
- { 0xaf, 0xc9, 0xe0, 0x80, 0x2e, 0x89, 0xb7, 0xe8 } }
+#define NS_BOX_LAYOUT_IID                            \
+  {                                                  \
+    0x09d522a7, 0x304c, 0x4137, {                    \
+      0xaf, 0xc9, 0xe0, 0x80, 0x2e, 0x89, 0xb7, 0xe8 \
+    }                                                \
+  }
 
 class nsIGridPart;
 
 class nsBoxLayout : public nsISupports {
-
-protected:
+ protected:
   virtual ~nsBoxLayout() {}
 
-public:
-
+ public:
   nsBoxLayout() {}
 
   NS_DECL_ISUPPORTS
@@ -37,17 +38,22 @@ public:
 
   NS_IMETHOD XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState);
 
-  virtual nsSize GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetXULPrefSize(nsIFrame* aBox,
+                                nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetXULMinSize(nsIFrame* aBox,
+                               nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetXULMaxSize(nsIFrame* aBox,
+                               nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetAscent(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 nsIFrame* aPrevBox,
                                 const nsFrameList::Slice& aNewChildren) {}
   virtual void ChildrenAppended(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 const nsFrameList::Slice& aNewChildren) {}
-  virtual void ChildrenRemoved(nsIFrame* aBox, nsBoxLayoutState& aState, nsIFrame* aChildList) {}
-  virtual void ChildrenSet(nsIFrame* aBox, nsBoxLayoutState& aState, nsIFrame* aChildList) {}
+  virtual void ChildrenRemoved(nsIFrame* aBox, nsBoxLayoutState& aState,
+                               nsIFrame* aChildList) {}
+  virtual void ChildrenSet(nsIFrame* aBox, nsBoxLayoutState& aState,
+                           nsIFrame* aChildList) {}
   virtual void IntrinsicISizesDirty(nsIFrame* aBox, nsBoxLayoutState& aState) {}
 
   virtual void AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
@@ -63,4 +69,3 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsBoxLayout, NS_BOX_LAYOUT_IID)
 
 #endif
-

@@ -25,44 +25,42 @@ using namespace mozilla;
  * with the other implementations of `nsWifiMonitor::DoScan` since a lot
  * of the code is identical
  */
-nsresult
-nsWifiMonitor::DoScan()
-{
+nsresult nsWifiMonitor::DoScan() {
+  if (!mWinWifiScanner) {
+    mWinWifiScanner = new WinWifiScanner();
     if (!mWinWifiScanner) {
-      mWinWifiScanner = new WinWifiScanner();
-      if (!mWinWifiScanner) {
-        // TODO: Probably return OOM error
-        return NS_ERROR_FAILURE;
-      }
+      // TODO: Probably return OOM error
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Regularly get the access point data.
+
+  nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
+  nsCOMArray<nsWifiAccessPoint> accessPoints;
+
+  do {
+    accessPoints.Clear();
+    nsresult rv = mWinWifiScanner->GetAccessPointsFromWLAN(accessPoints);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
-    // Regularly get the access point data.
+    bool accessPointsChanged =
+        !AccessPointsEqual(accessPoints, lastAccessPoints);
+    ReplaceArray(lastAccessPoints, accessPoints);
 
-    nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
-    nsCOMArray<nsWifiAccessPoint> accessPoints;
+    rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    do {
-      accessPoints.Clear();
-      nsresult rv = mWinWifiScanner->GetAccessPointsFromWLAN(accessPoints);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+    // wait for some reasonable amount of time.  pref?
+    LOG(("waiting on monitor\n"));
 
-      bool accessPointsChanged = !AccessPointsEqual(accessPoints, lastAccessPoints);
-      ReplaceArray(lastAccessPoints, accessPoints);
-
-      rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // wait for some reasonable amount of time.  pref?
-      LOG(("waiting on monitor\n"));
-
-      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-      if (mKeepGoing) {
-          mon.Wait(PR_SecondsToInterval(kDefaultWifiScanInterval));
-      }
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    if (mKeepGoing) {
+      mon.Wait(PR_SecondsToInterval(kDefaultWifiScanInterval));
     }
-    while (mKeepGoing);
+  } while (mKeepGoing);
 
-    return NS_OK;
+  return NS_OK;
 }

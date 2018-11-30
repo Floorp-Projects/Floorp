@@ -9,7 +9,7 @@
 #ifndef BASE_STRING_UTIL_H_
 #define BASE_STRING_UTIL_H_
 
-#include <stdarg.h>   // va_list
+#include <stdarg.h>  // va_list
 #include <ctype.h>
 
 #include <string>
@@ -47,8 +47,8 @@ int vsnprintf(char* buffer, size_t size, const char* format, va_list arguments);
 // return -1 or the number of characters that would be in an untruncated
 // formatted string.  The actual return value depends on the underlying
 // C library's vswprintf implementation.
-int vswprintf(wchar_t* buffer, size_t size,
-              const wchar_t* format, va_list arguments);
+int vswprintf(wchar_t* buffer, size_t size, const wchar_t* format,
+              va_list arguments);
 
 // Some of these implementations need to be inlined.
 
@@ -120,22 +120,19 @@ bool IsWprintfFormatPortable(const wchar_t* format);
 // Please choose the best one according to your usage.
 // NOTE: Safe to use the same variable for both input and output.
 enum TrimPositions {
-  TRIM_NONE     = 0,
-  TRIM_LEADING  = 1 << 0,
+  TRIM_NONE = 0,
+  TRIM_LEADING = 1 << 0,
   TRIM_TRAILING = 1 << 1,
-  TRIM_ALL      = TRIM_LEADING | TRIM_TRAILING
+  TRIM_ALL = TRIM_LEADING | TRIM_TRAILING
 };
-TrimPositions TrimWhitespace(const std::wstring& input,
-                             TrimPositions positions,
+TrimPositions TrimWhitespace(const std::wstring& input, TrimPositions positions,
                              std::wstring* output);
 TrimPositions TrimWhitespaceASCII(const std::string& input,
-                                  TrimPositions positions,
-                                  std::string* output);
+                                  TrimPositions positions, std::string* output);
 
 // Deprecated. This function is only for backward compatibility and calls
 // TrimWhitespaceASCII().
-TrimPositions TrimWhitespace(const std::string& input,
-                             TrimPositions positions,
+TrimPositions TrimWhitespace(const std::string& input, TrimPositions positions,
                              std::string* output);
 
 // Searches  for CR or LF characters.  Removes all contiguous whitespace
@@ -213,8 +210,8 @@ std::wstring StringPrintf(const wchar_t* format, ...);
 
 // Store result into a supplied string and return it
 const std::string& SStringPrintf(std::string* dst, const char* format, ...);
-const std::wstring& SStringPrintf(std::wstring* dst,
-                                  const wchar_t* format, ...);
+const std::wstring& SStringPrintf(std::wstring* dst, const wchar_t* format,
+                                  ...);
 
 // Append result to a supplied string
 void StringAppendF(std::string* dst, const char* format, ...);
@@ -227,11 +224,8 @@ void StringAppendF(std::wstring* dst, const wchar_t* format, ...);
 // |str| begins with or ends with |s|, then an empty string is inserted.
 //
 // Every substring is trimmed of any leading or trailing white space.
-void SplitString(const std::wstring& str,
-                 wchar_t s,
+void SplitString(const std::wstring& str, wchar_t s,
                  std::vector<std::wstring>* r);
-void SplitString(const std::string& str,
-                 char s,
-                 std::vector<std::string>* r);
+void SplitString(const std::string& str, char s, std::vector<std::string>* r);
 
 #endif  // BASE_STRING_UTIL_H_

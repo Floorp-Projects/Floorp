@@ -14,9 +14,8 @@ namespace a11y {
 /**
  * Generic class used for text nodes.
  */
-class TextLeafAccessible : public LinkableAccessible
-{
-public:
+class TextLeafAccessible : public LinkableAccessible {
+ public:
   TextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~TextLeafAccessible();
 
@@ -30,22 +29,18 @@ public:
   void SetText(const nsAString& aText) { mText = aText; }
   const nsString& Text() const { return mText; }
 
-protected:
+ protected:
   nsString mText;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcast method
 
-inline TextLeafAccessible*
-Accessible::AsTextLeaf()
-{
+inline TextLeafAccessible* Accessible::AsTextLeaf() {
   return IsTextLeaf() ? static_cast<TextLeafAccessible*>(this) : nullptr;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

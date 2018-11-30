@@ -11,17 +11,12 @@
 namespace mozilla {
 namespace dom {
 
-SDBResult::SDBResult(const nsACString& aData)
-  : mData(aData)
-{
-}
+SDBResult::SDBResult(const nsACString& aData) : mData(aData) {}
 
-NS_IMPL_ISUPPORTS(SDBResult,
-                  nsISDBResult)
+NS_IMPL_ISUPPORTS(SDBResult, nsISDBResult)
 
 NS_IMETHODIMP
-SDBResult::GetAsArray(uint32_t* aDataLen, uint8_t** aData)
-{
+SDBResult::GetAsArray(uint32_t* aDataLen, uint8_t** aData) {
   MOZ_ASSERT(aDataLen);
   MOZ_ASSERT(aData);
 
@@ -43,11 +38,10 @@ SDBResult::GetAsArray(uint32_t* aDataLen, uint8_t** aData)
 }
 
 NS_IMETHODIMP
-SDBResult::GetAsArrayBuffer(JSContext* aCx, JS::MutableHandleValue _retval)
-{
+SDBResult::GetAsArrayBuffer(JSContext* aCx, JS::MutableHandleValue _retval) {
   JS::Rooted<JSObject*> arrayBuffer(aCx);
   nsresult rv =
-    nsContentUtils::CreateArrayBuffer(aCx, mData, arrayBuffer.address());
+      nsContentUtils::CreateArrayBuffer(aCx, mData, arrayBuffer.address());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -56,5 +50,5 @@ SDBResult::GetAsArrayBuffer(JSContext* aCx, JS::MutableHandleValue _retval)
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

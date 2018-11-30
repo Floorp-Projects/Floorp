@@ -17,11 +17,11 @@ namespace mozilla {
 namespace dom {
 class nsIContentChild;
 class nsIContentParent;
-} // dom namespace
+}  // namespace dom
 
 namespace wr {
 struct ByteBuffer;
-} // wr namespace
+}  // namespace wr
 
 namespace ipc {
 
@@ -55,52 +55,47 @@ class PParentToChildStreamParent;
 //
 // In general you should probably use the AutoIPCStreamSource RAII class
 // defined in InputStreamUtils.h instead of using IPCStreamSource directly.
-class IPCStreamSource
-{
-public:
+class IPCStreamSource {
+ public:
   // Create a IPCStreamSource using a PContent IPC manager on the
   // main thread.  This can return nullptr if the provided stream is
   // blocking.
-  static PChildToParentStreamChild*
-  Create(nsIAsyncInputStream* aInputStream, dom::nsIContentChild* aManager);
+  static PChildToParentStreamChild* Create(nsIAsyncInputStream* aInputStream,
+                                           dom::nsIContentChild* aManager);
 
   // Create a IPCStreamSource using a PBackground IPC manager on the
   // main thread or a Worker thread.  This can return nullptr if the provided
   // stream is blocking or if the Worker thread is already shutting down.
-  static PChildToParentStreamChild*
-  Create(nsIAsyncInputStream* aInputStream, PBackgroundChild* aManager);
+  static PChildToParentStreamChild* Create(nsIAsyncInputStream* aInputStream,
+                                           PBackgroundChild* aManager);
 
   // Create a IPCStreamSource using a PContent IPC manager on the
   // main thread.  This can return nullptr if the provided stream is
   // blocking.
-  static PParentToChildStreamParent*
-  Create(nsIAsyncInputStream* aInputStream, dom::nsIContentParent* aManager);
+  static PParentToChildStreamParent* Create(nsIAsyncInputStream* aInputStream,
+                                            dom::nsIContentParent* aManager);
 
   // Create a IPCStreamSource using a PBackground IPC manager on the
   // main thread or a Worker thread.  This can return nullptr if the provided
   // stream is blocking or if the Worker thread is already shutting down.
-  static PParentToChildStreamParent*
-  Create(nsIAsyncInputStream* aInputStream, PBackgroundParent* aManager);
+  static PParentToChildStreamParent* Create(nsIAsyncInputStream* aInputStream,
+                                            PBackgroundParent* aManager);
 
-  static IPCStreamSource*
-  Cast(PChildToParentStreamChild* aActor);
+  static IPCStreamSource* Cast(PChildToParentStreamChild* aActor);
 
-  static IPCStreamSource*
-  Cast(PParentToChildStreamParent* aActor);
+  static IPCStreamSource* Cast(PParentToChildStreamParent* aActor);
 
   // Start reading data from the nsIAsyncInputStream used to create the actor.
   // This must be called after the actor is passed to the parent.  If you
   // use AutoIPCStream this is handled automatically.
-  void
-  Start();
+  void Start();
 
   // Start cleaning up the actor.  This must be called if the actor is never
   // sent to the other side.  If you use AutoIPCStream this is handled
   // automatically.
-  void
-  StartDestroy();
+  void StartDestroy();
 
-protected:
+ protected:
   IPCStreamSource(nsIAsyncInputStream* aInputStream);
   virtual ~IPCStreamSource();
 
@@ -110,16 +105,13 @@ protected:
 
   void OnEnd(nsresult aRv);
 
-  virtual void
-  Close(nsresult aRv) = 0;
+  virtual void Close(nsresult aRv) = 0;
 
-  virtual void
-  SendData(const wr::ByteBuffer& aBuffer) = 0;
+  virtual void SendData(const wr::ByteBuffer& aBuffer) = 0;
 
-  void
-  ActorConstructed();
+  void ActorConstructed();
 
-private:
+ private:
   class Callback;
 
   void DoRead();
@@ -134,20 +126,16 @@ private:
   RefPtr<dom::StrongWorkerRef> mWorkerRef;
 
 #ifdef DEBUG
-protected:
+ protected:
 #endif
 
-  enum {
-   ePending,
-   eActorConstructed,
-   eClosed
-  } mState;
+  enum { ePending, eActorConstructed, eClosed } mState;
 
-private:
+ private:
   NS_DECL_OWNINGTHREAD
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
-#endif // mozilla_ipc_IPCStreamSource_h
+#endif  // mozilla_ipc_IPCStreamSource_h

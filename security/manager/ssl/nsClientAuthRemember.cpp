@@ -27,23 +27,17 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-NS_IMPL_ISUPPORTS(nsClientAuthRememberService,
-                  nsIObserver,
+NS_IMPL_ISUPPORTS(nsClientAuthRememberService, nsIObserver,
                   nsISupportsWeakReference)
 
 nsClientAuthRememberService::nsClientAuthRememberService()
-  : monitor("nsClientAuthRememberService.monitor")
-{
-}
+    : monitor("nsClientAuthRememberService.monitor") {}
 
-nsClientAuthRememberService::~nsClientAuthRememberService()
-{
+nsClientAuthRememberService::~nsClientAuthRememberService() {
   RemoveAllFromMemory();
 }
 
-nsresult
-nsClientAuthRememberService::Init()
-{
+nsresult nsClientAuthRememberService::Init() {
   if (!NS_IsMainThread()) {
     NS_ERROR("nsClientAuthRememberService::Init called off the main thread");
     return NS_ERROR_NOT_SAME_THREAD;
@@ -59,10 +53,8 @@ nsClientAuthRememberService::Init()
 }
 
 NS_IMETHODIMP
-nsClientAuthRememberService::Observe(nsISupports* aSubject,
-                                     const char* aTopic,
-                                     const char16_t* aData)
-{
+nsClientAuthRememberService::Observe(nsISupports* aSubject, const char* aTopic,
+                                     const char16_t* aData) {
   // check the topic
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
@@ -75,16 +67,14 @@ nsClientAuthRememberService::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void nsClientAuthRememberService::ClearRememberedDecisions()
-{
+void nsClientAuthRememberService::ClearRememberedDecisions() {
   ReentrantMonitorAutoEnter lock(monitor);
   RemoveAllFromMemory();
 }
 
-void nsClientAuthRememberService::ClearAllRememberedDecisions()
-{
+void nsClientAuthRememberService::ClearAllRememberedDecisions() {
   RefPtr<nsClientAuthRememberService> svc =
-    PublicSSLState()->GetClientAuthRememberService();
+      PublicSSLState()->GetClientAuthRememberService();
   MOZ_ASSERT(svc);
   if (svc) {
     svc->ClearRememberedDecisions();
@@ -97,18 +87,15 @@ void nsClientAuthRememberService::ClearAllRememberedDecisions()
   }
 }
 
-void
-nsClientAuthRememberService::RemoveAllFromMemory()
-{
+void nsClientAuthRememberService::RemoveAllFromMemory() {
   mSettingsTable.Clear();
 }
 
-nsresult
-nsClientAuthRememberService::RememberDecision(
-  const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
-  CERTCertificate* aServerCert, CERTCertificate* aClientCert)
-{
-  // aClientCert == nullptr means: remember that user does not want to use a cert
+nsresult nsClientAuthRememberService::RememberDecision(
+    const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
+    CERTCertificate* aServerCert, CERTCertificate* aClientCert) {
+  // aClientCert == nullptr means: remember that user does not want to use a
+  // cert
   NS_ENSURE_ARG_POINTER(aServerCert);
   if (aHostName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
@@ -138,13 +125,10 @@ nsClientAuthRememberService::RememberDecision(
   return NS_OK;
 }
 
-nsresult
-nsClientAuthRememberService::HasRememberedDecision(
-  const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
-  CERTCertificate* aCert, nsACString& aCertDBKey, bool* aRetVal)
-{
-  if (aHostName.IsEmpty())
-    return NS_ERROR_INVALID_ARG;
+nsresult nsClientAuthRememberService::HasRememberedDecision(
+    const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
+    CERTCertificate* aCert, nsACString& aCertDBKey, bool* aRetVal) {
+  if (aHostName.IsEmpty()) return NS_ERROR_INVALID_ARG;
 
   NS_ENSURE_ARG_POINTER(aCert);
   NS_ENSURE_ARG_POINTER(aRetVal);
@@ -153,8 +137,7 @@ nsClientAuthRememberService::HasRememberedDecision(
   nsresult rv;
   nsAutoCString fpStr;
   rv = GetCertFingerprintByOidTag(aCert, SEC_OID_SHA256, fpStr);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsAutoCString entryKey;
   GetEntryKey(aHostName, aOriginAttributes, fpStr, entryKey);
@@ -163,9 +146,8 @@ nsClientAuthRememberService::HasRememberedDecision(
   {
     ReentrantMonitorAutoEnter lock(monitor);
     nsClientAuthRememberEntry* entry = mSettingsTable.GetEntry(entryKey.get());
-    if (!entry)
-      return NS_OK;
-    settings = entry->mSettings; // copy
+    if (!entry) return NS_OK;
+    settings = entry->mSettings;  // copy
   }
 
   aCertDBKey = settings.mDBKey;
@@ -173,11 +155,9 @@ nsClientAuthRememberService::HasRememberedDecision(
   return NS_OK;
 }
 
-nsresult
-nsClientAuthRememberService::AddEntryToList(
-  const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
-  const nsACString& aFingerprint, const nsACString& aDBKey)
-{
+nsresult nsClientAuthRememberService::AddEntryToList(
+    const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
+    const nsACString& aFingerprint, const nsACString& aDBKey) {
   nsAutoCString entryKey;
   GetEntryKey(aHostName, aOriginAttributes, aFingerprint, entryKey);
 
@@ -201,13 +181,9 @@ nsClientAuthRememberService::AddEntryToList(
   return NS_OK;
 }
 
-void
-nsClientAuthRememberService::GetEntryKey(
-  const nsACString& aHostName,
-  const OriginAttributes& aOriginAttributes,
-  const nsACString& aFingerprint,
-  nsACString& aEntryKey)
-{
+void nsClientAuthRememberService::GetEntryKey(
+    const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
+    const nsACString& aFingerprint, nsACString& aEntryKey) {
   nsAutoCString hostCert(aHostName);
   nsAutoCString suffix;
   aOriginAttributes.CreateSuffix(suffix);

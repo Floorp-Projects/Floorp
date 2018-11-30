@@ -11,8 +11,7 @@ namespace widget {
 /*static*/ uint32_t nsAutoRollup::sCount = 0;
 /*static*/ StaticRefPtr<nsIContent> nsAutoRollup::sLastRollup;
 
-nsAutoRollup::nsAutoRollup()
-{
+nsAutoRollup::nsAutoRollup() {
   // remember if sLastRollup was null, and only clear it upon destruction
   // if so. This prevents recursive usage of nsAutoRollup from clearing
   // sLastRollup when it shouldn't.
@@ -20,36 +19,30 @@ nsAutoRollup::nsAutoRollup()
   sCount++;
 }
 
-nsAutoRollup::nsAutoRollup(nsIContent* aRollup)
-{
+nsAutoRollup::nsAutoRollup(nsIContent* aRollup) {
   MOZ_ASSERT(!sLastRollup);
   mWasClear = true;
   sCount++;
   SetLastRollup(aRollup);
 }
 
-nsAutoRollup::~nsAutoRollup()
-{
+nsAutoRollup::~nsAutoRollup() {
   if (sLastRollup && mWasClear) {
     sLastRollup = nullptr;
   }
   sCount--;
 }
 
-/*static*/ void
-nsAutoRollup::SetLastRollup(nsIContent* aLastRollup)
-{
+/*static*/ void nsAutoRollup::SetLastRollup(nsIContent* aLastRollup) {
   // There must be at least one nsAutoRollup on the stack.
   MOZ_ASSERT(sCount);
 
   sLastRollup = aLastRollup;
 }
 
-/*static*/ nsIContent*
-nsAutoRollup::GetLastRollup()
-{
+/*static*/ nsIContent* nsAutoRollup::GetLastRollup() {
   return sLastRollup.get();
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

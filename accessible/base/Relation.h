@@ -18,38 +18,35 @@ namespace a11y {
  * A collection of relation targets of a certain type.  Targets are computed
  * lazily while enumerating.
  */
-class Relation
-{
-public:
-  Relation() : mFirstIter(nullptr), mLastIter(nullptr) { }
+class Relation {
+ public:
+  Relation() : mFirstIter(nullptr), mLastIter(nullptr) {}
 
-  explicit Relation(AccIterable* aIter) :
-    mFirstIter(aIter), mLastIter(aIter) { }
+  explicit Relation(AccIterable* aIter) : mFirstIter(aIter), mLastIter(aIter) {}
 
-  explicit Relation(Accessible* aAcc) :
-    mFirstIter(nullptr), mLastIter(nullptr)
-    { AppendTarget(aAcc); }
+  explicit Relation(Accessible* aAcc)
+      : mFirstIter(nullptr), mLastIter(nullptr) {
+    AppendTarget(aAcc);
+  }
 
-  Relation(DocAccessible* aDocument, nsIContent* aContent) :
-    mFirstIter(nullptr), mLastIter(nullptr)
-    { AppendTarget(aDocument, aContent); }
+  Relation(DocAccessible* aDocument, nsIContent* aContent)
+      : mFirstIter(nullptr), mLastIter(nullptr) {
+    AppendTarget(aDocument, aContent);
+  }
 
-  Relation(Relation&& aOther) :
-    mFirstIter(std::move(aOther.mFirstIter)), mLastIter(aOther.mLastIter)
-  {
+  Relation(Relation&& aOther)
+      : mFirstIter(std::move(aOther.mFirstIter)), mLastIter(aOther.mLastIter) {
     aOther.mLastIter = nullptr;
   }
 
-  Relation& operator = (Relation&& aRH)
-  {
+  Relation& operator=(Relation&& aRH) {
     mFirstIter = std::move(aRH.mFirstIter);
     mLastIter = aRH.mLastIter;
     aRH.mLastIter = nullptr;
     return *this;
   }
 
-  inline void AppendIter(AccIterable* aIter)
-  {
+  inline void AppendIter(AccIterable* aIter) {
     if (mLastIter)
       mLastIter->mNextIter.reset(aIter);
     else
@@ -61,48 +58,41 @@ public:
   /**
    * Append the given accessible to the set of related accessibles.
    */
-  inline void AppendTarget(Accessible* aAcc)
-  {
-    if (aAcc)
-      AppendIter(new SingleAccIterator(aAcc));
+  inline void AppendTarget(Accessible* aAcc) {
+    if (aAcc) AppendIter(new SingleAccIterator(aAcc));
   }
 
   /**
    * Append the one accessible for this content node to the set of related
    * accessibles.
    */
-  void AppendTarget(DocAccessible* aDocument, nsIContent* aContent)
-  {
-    if (aContent)
-      AppendTarget(aDocument->GetAccessible(aContent));
+  void AppendTarget(DocAccessible* aDocument, nsIContent* aContent) {
+    if (aContent) AppendTarget(aDocument->GetAccessible(aContent));
   }
 
   /**
    * compute and return the next related accessible.
    */
-  inline Accessible* Next()
-  {
+  inline Accessible* Next() {
     Accessible* target = nullptr;
 
     while (mFirstIter && !(target = mFirstIter->Next()))
       mFirstIter = std::move(mFirstIter->mNextIter);
 
-    if (!mFirstIter)
-      mLastIter = nullptr;
+    if (!mFirstIter) mLastIter = nullptr;
 
     return target;
   }
 
-private:
-  Relation& operator = (const Relation&) = delete;
+ private:
+  Relation& operator=(const Relation&) = delete;
   Relation(const Relation&) = delete;
 
   std::unique_ptr<AccIterable> mFirstIter;
   AccIterable* mLastIter;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

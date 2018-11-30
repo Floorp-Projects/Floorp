@@ -24,29 +24,27 @@
 
 using namespace mozilla;
 
-extern "C" NS_EXPORT void
-GeckoStart(JNIEnv* env, char** argv, int argc, const StaticXREAppData& aAppData)
-{
-    mozilla::jni::SetGeckoThreadEnv(env);
+extern "C" NS_EXPORT void GeckoStart(JNIEnv* env, char** argv, int argc,
+                                     const StaticXREAppData& aAppData) {
+  mozilla::jni::SetGeckoThreadEnv(env);
 
-    const struct mapping_info *info = getLibraryMapping();
-    while (info->name) {
-      CrashReporter::AddLibraryMapping(info->name, info->base,
-                                       info->len, info->offset);
-      info++;
-    }
+  const struct mapping_info* info = getLibraryMapping();
+  while (info->name) {
+    CrashReporter::AddLibraryMapping(info->name, info->base, info->len,
+                                     info->offset);
+    info++;
+  }
 
-    if (!argv) {
-        LOG("Failed to get arguments for GeckoStart\n");
-        return;
-    }
+  if (!argv) {
+    LOG("Failed to get arguments for GeckoStart\n");
+    return;
+  }
 
-    BootstrapConfig config;
-    config.appData = &aAppData;
-    config.appDataPath = nullptr;
+  BootstrapConfig config;
+  config.appData = &aAppData;
+  config.appDataPath = nullptr;
 
-    int result = XRE_main(argc, argv, config);
+  int result = XRE_main(argc, argv, config);
 
-    if (result)
-        LOG("XRE_main returned %d", result);
+  if (result) LOG("XRE_main returned %d", result);
 }

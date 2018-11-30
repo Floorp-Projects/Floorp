@@ -33,17 +33,15 @@ using workerinternals::ChannelFromScriptURLMainThread;
 
 namespace {
 
-nsresult
-PopulateContentSecurityPolicy(nsIContentSecurityPolicy* aCSP,
-                              const nsTArray<ContentSecurityPolicy>& aPolicies)
-{
+nsresult PopulateContentSecurityPolicy(
+    nsIContentSecurityPolicy* aCSP,
+    const nsTArray<ContentSecurityPolicy>& aPolicies) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCSP);
   MOZ_ASSERT(!aPolicies.IsEmpty());
 
   for (const ContentSecurityPolicy& policy : aPolicies) {
-    nsresult rv = aCSP->AppendPolicy(policy.policy(),
-                                     policy.reportOnlyFlag(),
+    nsresult rv = aCSP->AppendPolicy(policy.policy(), policy.reportOnlyFlag(),
                                      policy.deliveredViaMetaTagFlag());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -53,11 +51,9 @@ PopulateContentSecurityPolicy(nsIContentSecurityPolicy* aCSP,
   return NS_OK;
 }
 
-nsresult
-PopulatePrincipalContentSecurityPolicy(nsIPrincipal* aPrincipal,
-                                       const nsTArray<ContentSecurityPolicy>& aPolicies,
-                                       const nsTArray<ContentSecurityPolicy>& aPreloadPolicies)
-{
+nsresult PopulatePrincipalContentSecurityPolicy(
+    nsIPrincipal* aPrincipal, const nsTArray<ContentSecurityPolicy>& aPolicies,
+    const nsTArray<ContentSecurityPolicy>& aPreloadPolicies) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
@@ -82,13 +78,11 @@ PopulatePrincipalContentSecurityPolicy(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-class SharedWorkerInterfaceRequestor final : public nsIInterfaceRequestor
-{
-public:
+class SharedWorkerInterfaceRequestor final : public nsIInterfaceRequestor {
+ public:
   NS_DECL_ISUPPORTS
 
-  SharedWorkerInterfaceRequestor()
-  {
+  SharedWorkerInterfaceRequestor() {
     // This check must match the code nsDocShell::Create.
     if (!ServiceWorkerParentInterceptEnabled() || XRE_IsParentProcess()) {
       mSWController = new ServiceWorkerInterceptController();
@@ -96,11 +90,11 @@ public:
   }
 
   NS_IMETHOD
-  GetInterface(const nsIID& aIID, void** aSink) override
-  {
+  GetInterface(const nsIID& aIID, void** aSink) override {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mSWController && aIID.Equals(NS_GET_IID(nsINetworkInterceptController))) {
+    if (mSWController &&
+        aIID.Equals(NS_GET_IID(nsINetworkInterceptController))) {
       // If asked for the network intercept controller, ask the outer requestor,
       // which could be the docshell.
       RefPtr<ServiceWorkerInterceptController> swController = mSWController;
@@ -111,7 +105,7 @@ public:
     return NS_NOINTERFACE;
   }
 
-private:
+ private:
   ~SharedWorkerInterfaceRequestor() = default;
 
   RefPtr<ServiceWorkerInterceptController> mSWController;
@@ -122,87 +116,69 @@ NS_IMPL_RELEASE(SharedWorkerInterfaceRequestor)
 NS_IMPL_QUERY_INTERFACE(SharedWorkerInterfaceRequestor, nsIInterfaceRequestor)
 
 // Normal runnable because AddPortIdentifier() is going to exec JS code.
-class MessagePortIdentifierRunnable final : public WorkerRunnable
-{
-public:
+class MessagePortIdentifierRunnable final : public WorkerRunnable {
+ public:
   MessagePortIdentifierRunnable(WorkerPrivate* aWorkerPrivate,
                                 RemoteWorkerChild* aActor,
                                 const MessagePortIdentifier& aPortIdentifier)
-    : WorkerRunnable(aWorkerPrivate)
-    , mActor(aActor)
-    , mPortIdentifier(aPortIdentifier)
-  {}
+      : WorkerRunnable(aWorkerPrivate),
+        mActor(aActor),
+        mPortIdentifier(aPortIdentifier) {}
 
-private:
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
+ private:
+  virtual bool WorkerRun(JSContext* aCx,
+                         WorkerPrivate* aWorkerPrivate) override {
     mActor->AddPortIdentifier(aCx, aWorkerPrivate, mPortIdentifier);
     return true;
   }
 
-  nsresult
-  Cancel() override
-  {
+  nsresult Cancel() override {
     MessagePort::ForceClose(mPortIdentifier);
     return WorkerRunnable::Cancel();
   }
 
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
+  virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
     // Silence bad assertions.
     return true;
   }
 
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
+  virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
+                            bool aDispatchResult) override {
     // Silence bad assertions.
   }
 
-  bool
-  PreRun(WorkerPrivate* aWorkerPrivate) override
-  {
+  bool PreRun(WorkerPrivate* aWorkerPrivate) override {
     // Silence bad assertions.
     return true;
   }
 
-  void
-  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-          bool aRunResult) override
-  {
+  void PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+               bool aRunResult) override {
     // Silence bad assertions.
     return;
   }
-
 
   RefPtr<RemoteWorkerChild> mActor;
   MessagePortIdentifier mPortIdentifier;
 };
 
-} // anonymous
+}  // namespace
 
-class RemoteWorkerChild::InitializeWorkerRunnable final : public WorkerRunnable
-{
-public:
+class RemoteWorkerChild::InitializeWorkerRunnable final
+    : public WorkerRunnable {
+ public:
   InitializeWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                            RemoteWorkerChild* aActor)
-    : WorkerRunnable(aWorkerPrivate)
-    , mActor(aActor)
-  {}
+      : WorkerRunnable(aWorkerPrivate), mActor(aActor) {}
 
-private:
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
+ private:
+  virtual bool WorkerRun(JSContext* aCx,
+                         WorkerPrivate* aWorkerPrivate) override {
     mActor->InitializeOnWorker(aWorkerPrivate);
     return true;
   }
 
-  nsresult
-  Cancel() override
-  {
+  nsresult Cancel() override {
     mActor->CreationFailedOnAnyThread();
     mActor->ShutdownOnWorker();
     return WorkerRunnable::Cancel();
@@ -212,52 +188,43 @@ private:
 };
 
 RemoteWorkerChild::RemoteWorkerChild()
-  : mIPCActive(true)
-  , mWorkerState(ePending)
-{
+    : mIPCActive(true), mWorkerState(ePending) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 }
 
-RemoteWorkerChild::~RemoteWorkerChild()
-{
+RemoteWorkerChild::~RemoteWorkerChild() {
   nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
+      SystemGroup::EventTargetFor(TaskCategory::Other);
 
-  NS_ProxyRelease("RemoteWorkerChild::mWorkerPrivate",
-                  target, mWorkerPrivate.forget());
+  NS_ProxyRelease("RemoteWorkerChild::mWorkerPrivate", target,
+                  mWorkerPrivate.forget());
 }
 
-void
-RemoteWorkerChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void RemoteWorkerChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCActive = false;
   mPendingOps.Clear();
 }
 
-void
-RemoteWorkerChild::ExecWorker(const RemoteWorkerData& aData)
-{
+void RemoteWorkerChild::ExecWorker(const RemoteWorkerData& aData) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
   MOZ_ASSERT(mIPCActive);
 
   RefPtr<RemoteWorkerChild> self = this;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("RemoteWorkerChild::ExecWorker",
-                           [self, aData]() {
-      nsresult rv = self->ExecWorkerOnMainThread(aData);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        self->CreationFailedOnAnyThread();
-      }
-  });
+      NS_NewRunnableFunction("RemoteWorkerChild::ExecWorker", [self, aData]() {
+        nsresult rv = self->ExecWorkerOnMainThread(aData);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          self->CreationFailedOnAnyThread();
+        }
+      });
 
   nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
+      SystemGroup::EventTargetFor(TaskCategory::Other);
   target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-nsresult
-RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
-{
+nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
+    const RemoteWorkerData& aData) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Ensure that the IndexedDatabaseManager is initialized
@@ -266,27 +233,26 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(aData.principalInfo(), &rv);
+      PrincipalInfoToPrincipal(aData.principalInfo(), &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = PopulatePrincipalContentSecurityPolicy(principal,
-                                              aData.principalCsp(),
+  rv = PopulatePrincipalContentSecurityPolicy(principal, aData.principalCsp(),
                                               aData.principalPreloadCsp());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsCOMPtr<nsIPrincipal> loadingPrincipal =
-    PrincipalInfoToPrincipal(aData.loadingPrincipalInfo(), &rv);
+      PrincipalInfoToPrincipal(aData.loadingPrincipalInfo(), &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = PopulatePrincipalContentSecurityPolicy(loadingPrincipal,
-                                              aData.loadingPrincipalCsp(),
-                                              aData.loadingPrincipalPreloadCsp());
+  rv = PopulatePrincipalContentSecurityPolicy(
+      loadingPrincipal, aData.loadingPrincipalCsp(),
+      aData.loadingPrincipalPreloadCsp());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -302,23 +268,24 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
   info.mLoadingPrincipal = loadingPrincipal;
 
   nsContentUtils::StorageAccess access =
-    nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);
+      nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);
   info.mStorageAllowed =
-    access > nsContentUtils::StorageAccess::ePrivateBrowsing;
+      access > nsContentUtils::StorageAccess::ePrivateBrowsing;
   info.mOriginAttributes =
-    BasePrincipal::Cast(principal)->OriginAttributesRef();
+      BasePrincipal::Cast(principal)->OriginAttributesRef();
 
   // Default CSP permissions for now.  These will be overrided if necessary
   // based on the script CSP headers during load in ScriptLoader.
   info.mEvalAllowed = true;
   info.mReportCSPViolations = false;
   info.mSecureContext = aData.isSecureContext()
-    ? WorkerLoadInfo::eSecureContext : WorkerLoadInfo::eInsecureContext;
+                            ? WorkerLoadInfo::eSecureContext
+                            : WorkerLoadInfo::eInsecureContext;
 
   WorkerPrivate::OverrideLoadInfoLoadGroup(info, info.mLoadingPrincipal);
 
   RefPtr<SharedWorkerInterfaceRequestor> requestor =
-    new SharedWorkerInterfaceRequestor();
+      new SharedWorkerInterfaceRequestor();
   info.mInterfaceRequestor->SetOuterRequestor(requestor);
 
   rv = info.SetPrincipalOnMainThread(info.mPrincipal, info.mLoadGroup);
@@ -333,15 +300,12 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
 
   // Top level workers' main script use the document charset for the script
   // uri encoding.
-  rv = ChannelFromScriptURLMainThread(info.mLoadingPrincipal,
-                                      nullptr /* parent document */,
-                                      info.mLoadGroup,
-                                      info.mResolvedScriptURI,
-                                      clientInfo,
-                                      aData.isSharedWorker()
-                                        ? nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER
-                                        : nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
-                                      getter_AddRefs(info.mChannel));
+  rv = ChannelFromScriptURLMainThread(
+      info.mLoadingPrincipal, nullptr /* parent document */, info.mLoadGroup,
+      info.mResolvedScriptURI, clientInfo,
+      aData.isSharedWorker() ? nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER
+                             : nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
+      getter_AddRefs(info.mChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -350,21 +314,16 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
   jsapi.Init();
 
   ErrorResult error;
-  mWorkerPrivate = WorkerPrivate::Constructor(jsapi.cx(),
-                                              aData.originalScriptURL(),
-                                              false,
-                                              aData.isSharedWorker()
-                                                ? WorkerTypeShared
-                                                : WorkerTypeService,
-                                              aData.name(),
-                                              VoidCString(),
-                                              &info, error);
+  mWorkerPrivate = WorkerPrivate::Constructor(
+      jsapi.cx(), aData.originalScriptURL(), false,
+      aData.isSharedWorker() ? WorkerTypeShared : WorkerTypeService,
+      aData.name(), VoidCString(), &info, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
 
   RefPtr<InitializeWorkerRunnable> runnable =
-    new InitializeWorkerRunnable(mWorkerPrivate, this);
+      new InitializeWorkerRunnable(mWorkerPrivate, this);
   if (NS_WARN_IF(!runnable->Dispatch())) {
     return NS_ERROR_FAILURE;
   }
@@ -373,16 +332,13 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
   return NS_OK;
 }
 
-void
-RemoteWorkerChild::InitializeOnWorker(WorkerPrivate* aWorkerPrivate)
-{
+void RemoteWorkerChild::InitializeOnWorker(WorkerPrivate* aWorkerPrivate) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<RemoteWorkerChild> self = this;
-  mWorkerRef = WeakWorkerRef::Create(mWorkerPrivate, [self]() {
-      self->ShutdownOnWorker();
-    });
+  mWorkerRef = WeakWorkerRef::Create(mWorkerPrivate,
+                                     [self]() { self->ShutdownOnWorker(); });
 
   if (NS_WARN_IF(!mWorkerRef)) {
     CreationFailedOnAnyThread();
@@ -393,9 +349,7 @@ RemoteWorkerChild::InitializeOnWorker(WorkerPrivate* aWorkerPrivate)
   CreationSucceededOnAnyThread();
 }
 
-void
-RemoteWorkerChild::ShutdownOnWorker()
-{
+void RemoteWorkerChild::ShutdownOnWorker() {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -403,24 +357,20 @@ RemoteWorkerChild::ShutdownOnWorker()
   mWorkerRef = nullptr;
 
   nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
+      SystemGroup::EventTargetFor(TaskCategory::Other);
 
-  NS_ProxyRelease("RemoteWorkerChild::mWorkerPrivate",
-                  target, mWorkerPrivate.forget());
+  NS_ProxyRelease("RemoteWorkerChild::mWorkerPrivate", target,
+                  mWorkerPrivate.forget());
 
   RefPtr<RemoteWorkerChild> self = this;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("RemoteWorkerChild::ShutdownOnWorker",
-                           [self]() {
-      self->WorkerTerminated();
-  });
+      NS_NewRunnableFunction("RemoteWorkerChild::ShutdownOnWorker",
+                             [self]() { self->WorkerTerminated(); });
 
   RemoteWorkerService::Thread()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-void
-RemoteWorkerChild::WorkerTerminated()
-{
+void RemoteWorkerChild::WorkerTerminated() {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
   mWorkerState = eTerminated;
@@ -434,25 +384,19 @@ RemoteWorkerChild::WorkerTerminated()
   mIPCActive = false;
 }
 
-void
-RemoteWorkerChild::ErrorPropagationDispatch(nsresult aError)
-{
+void RemoteWorkerChild::ErrorPropagationDispatch(nsresult aError) {
   MOZ_ASSERT(NS_FAILED(aError));
 
   RefPtr<RemoteWorkerChild> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("RemoteWorkerChild::ErrorPropagationDispatch",
-                           [self, aError]() {
-      self->ErrorPropagation(aError);
-  });
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "RemoteWorkerChild::ErrorPropagationDispatch",
+      [self, aError]() { self->ErrorPropagation(aError); });
 
   RemoteWorkerService::Thread()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-void
-RemoteWorkerChild::ErrorPropagationOnMainThread(const WorkerErrorReport* aReport,
-                                                bool aIsErrorEvent)
-{
+void RemoteWorkerChild::ErrorPropagationOnMainThread(
+    const WorkerErrorReport* aReport, bool aIsErrorEvent) {
   MOZ_ASSERT(NS_IsMainThread());
 
   ErrorValue value;
@@ -464,31 +408,23 @@ RemoteWorkerChild::ErrorPropagationOnMainThread(const WorkerErrorReport* aReport
                                         note.mMessage, note.mFilename));
     }
 
-    ErrorData data(aReport->mLineNumber,
-                   aReport->mColumnNumber,
-                   aReport->mFlags,
-                   aReport->mMessage,
-                   aReport->mFilename,
-                   aReport->mLine,
-                   notes);
+    ErrorData data(aReport->mLineNumber, aReport->mColumnNumber,
+                   aReport->mFlags, aReport->mMessage, aReport->mFilename,
+                   aReport->mLine, notes);
     value = data;
   } else {
     value = void_t();
   }
 
   RefPtr<RemoteWorkerChild> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("RemoteWorkerChild::ErrorPropagationOnMainThread",
-                           [self, value]() {
-    self->ErrorPropagation(value);
-  });
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "RemoteWorkerChild::ErrorPropagationOnMainThread",
+      [self, value]() { self->ErrorPropagation(value); });
 
   RemoteWorkerService::Thread()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-void
-RemoteWorkerChild::ErrorPropagation(const ErrorValue& aValue)
-{
+void RemoteWorkerChild::ErrorPropagation(const ErrorValue& aValue) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
   if (!mIPCActive) {
@@ -498,9 +434,7 @@ RemoteWorkerChild::ErrorPropagation(const ErrorValue& aValue)
   Unused << SendError(aValue);
 }
 
-void
-RemoteWorkerChild::CloseWorkerOnMainThread()
-{
+void RemoteWorkerChild::CloseWorkerOnMainThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mWorkerState == ePending) {
@@ -516,17 +450,16 @@ RemoteWorkerChild::CloseWorkerOnMainThread()
   }
 }
 
-void
-RemoteWorkerChild::FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter)
-{
+void RemoteWorkerChild::FlushReportsOnMainThread(
+    nsIConsoleReportCollector* aReporter) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool reportErrorToBrowserConsole = true;
 
   // Flush the reports.
   for (uint32_t i = 0, len = mWindowIDs.Length(); i < len; ++i) {
-    aReporter->FlushReportsToConsole(mWindowIDs[i],
-      nsIConsoleReportCollector::ReportAction::Save);
+    aReporter->FlushReportsToConsole(
+        mWindowIDs[i], nsIConsoleReportCollector::ReportAction::Save);
     reportErrorToBrowserConsole = false;
   }
 
@@ -539,9 +472,7 @@ RemoteWorkerChild::FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter
   aReporter->ClearConsoleReports();
 }
 
-IPCResult
-RemoteWorkerChild::RecvExecOp(const RemoteWorkerOp& aOp)
-{
+IPCResult RemoteWorkerChild::RecvExecOp(const RemoteWorkerOp& aOp) {
   if (!mIPCActive) {
     return IPC_OK();
   }
@@ -568,24 +499,22 @@ RemoteWorkerChild::RecvExecOp(const RemoteWorkerOp& aOp)
       aOp.type() == RemoteWorkerOp::TRemoteWorkerAddWindowIDOp ||
       aOp.type() == RemoteWorkerOp::TRemoteWorkerRemoveWindowIDOp) {
     RefPtr<RemoteWorkerChild> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("RemoteWorkerChild::RecvExecOp",
-                             [self, aOp]() {
-        self->RecvExecOpOnMainThread(aOp);
-    });
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        "RemoteWorkerChild::RecvExecOp",
+        [self, aOp]() { self->RecvExecOpOnMainThread(aOp); });
 
     nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
+        SystemGroup::EventTargetFor(TaskCategory::Other);
     target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
     return IPC_OK();
   }
 
   if (aOp.type() == RemoteWorkerOp::TRemoteWorkerPortIdentifierOp) {
     const RemoteWorkerPortIdentifierOp& op =
-      aOp.get_RemoteWorkerPortIdentifierOp();
+        aOp.get_RemoteWorkerPortIdentifierOp();
     RefPtr<MessagePortIdentifierRunnable> runnable =
-      new MessagePortIdentifierRunnable(mWorkerPrivate, this,
-                                        op.portIdentifier());
+        new MessagePortIdentifierRunnable(mWorkerPrivate, this,
+                                          op.portIdentifier());
     if (NS_WARN_IF(!runnable->Dispatch())) {
       ErrorPropagation(NS_ERROR_FAILURE);
     }
@@ -597,9 +526,7 @@ RemoteWorkerChild::RecvExecOp(const RemoteWorkerOp& aOp)
   return IPC_OK();
 }
 
-void
-RemoteWorkerChild::RecvExecOpOnMainThread(const RemoteWorkerOp& aOp)
-{
+void RemoteWorkerChild::RecvExecOpOnMainThread(const RemoteWorkerOp& aOp) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aOp.type() == RemoteWorkerOp::TRemoteWorkerSuspendOp) {
@@ -648,45 +575,35 @@ RemoteWorkerChild::RecvExecOpOnMainThread(const RemoteWorkerOp& aOp)
   MOZ_CRASH("No other operations should be scheduled on main-thread.");
 }
 
-void
-RemoteWorkerChild::AddPortIdentifier(JSContext* aCx,
-                                     WorkerPrivate* aWorkerPrivate,
-                                     const MessagePortIdentifier& aPortIdentifier)
-{
+void RemoteWorkerChild::AddPortIdentifier(
+    JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+    const MessagePortIdentifier& aPortIdentifier) {
   if (NS_WARN_IF(!aWorkerPrivate->ConnectMessagePort(aCx, aPortIdentifier))) {
     ErrorPropagationDispatch(NS_ERROR_FAILURE);
   }
 }
 
-void
-RemoteWorkerChild::CreationSucceededOnAnyThread()
-{
+void RemoteWorkerChild::CreationSucceededOnAnyThread() {
   RefPtr<RemoteWorkerChild> self = this;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("RemoteWorkerChild::CreationSucceededOnAnyThread",
-                           [self]() {
-    self->CreationSucceeded();
-  });
+      NS_NewRunnableFunction("RemoteWorkerChild::CreationSucceededOnAnyThread",
+                             [self]() { self->CreationSucceeded(); });
 
   RemoteWorkerService::Thread()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-void
-RemoteWorkerChild::CreationSucceeded()
-{
+void RemoteWorkerChild::CreationSucceeded() {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
   // The worker is created but we need to terminate it already.
   if (mWorkerState == ePendingTerminated) {
     RefPtr<RemoteWorkerChild> self = this;
     nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("RemoteWorkerChild::CreationSucceeded",
-                             [self]() {
-        self->CloseWorkerOnMainThread();
-    });
+        NS_NewRunnableFunction("RemoteWorkerChild::CreationSucceeded",
+                               [self]() { self->CloseWorkerOnMainThread(); });
 
     nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
+        SystemGroup::EventTargetFor(TaskCategory::Other);
     target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
     return;
   }
@@ -706,22 +623,16 @@ RemoteWorkerChild::CreationSucceeded()
   Unused << SendCreated(true);
 }
 
-void
-RemoteWorkerChild::CreationFailedOnAnyThread()
-{
+void RemoteWorkerChild::CreationFailedOnAnyThread() {
   RefPtr<RemoteWorkerChild> self = this;
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("RemoteWorkerChild::CreationFailedOnAnyThread",
-                           [self]() {
-    self->CreationFailed();
-  });
+      NS_NewRunnableFunction("RemoteWorkerChild::CreationFailedOnAnyThread",
+                             [self]() { self->CreationFailed(); });
 
   RemoteWorkerService::Thread()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-void
-RemoteWorkerChild::CreationFailed()
-{
+void RemoteWorkerChild::CreationFailed() {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
   mWorkerState = eTerminated;
@@ -734,5 +645,5 @@ RemoteWorkerChild::CreationFailed()
   Unused << SendCreated(false);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

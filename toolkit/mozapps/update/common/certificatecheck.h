@@ -7,8 +7,7 @@
 
 #include <wincrypt.h>
 
-struct CertificateCheckInfo
-{
+struct CertificateCheckInfo {
   LPCWSTR name;
   LPCWSTR issuer;
 };

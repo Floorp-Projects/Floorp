@@ -24,15 +24,14 @@ enum nsSMILTargetAttrType {
   eSMILTargetAttrType_XML
 };
 
-class SVGAnimationElement : public SVGAnimationElementBase,
-                            public SVGTests
-{
-protected:
-  explicit SVGAnimationElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
+ protected:
+  explicit SVGAnimationElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   nsresult Init();
   virtual ~SVGAnimationElement();
 
-public:
+ public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -49,11 +48,10 @@ public:
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   // Element specializations
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                nsAttrValue& aResult) override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
@@ -100,11 +98,11 @@ public:
    * is not used.)
    */
   class HrefTargetTracker final : public IDTracker {
-  public:
+   public:
     explicit HrefTargetTracker(SVGAnimationElement* aAnimationElement)
-      : mAnimationElement(aAnimationElement)
-    {}
-  protected:
+        : mAnimationElement(aAnimationElement) {}
+
+   protected:
     // We need to be notified when target changes, in order to request a
     // sample (which will clear animation effects from old target and apply
     // them to the new target) and update any event registrations.
@@ -116,15 +114,16 @@ public:
     // We need to override IsPersistent to get persistent tracking (beyond the
     // first time the target changes)
     virtual bool IsPersistent() override { return true; }
-  private:
+
+   private:
     SVGAnimationElement* const mAnimationElement;
   };
 
-  HrefTargetTracker    mHrefTarget;
-  nsSMILTimedElement   mTimedElement;
+  HrefTargetTracker mHrefTarget;
+  nsSMILTimedElement mTimedElement;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGAnimationElement_h
+#endif  // mozilla_dom_SVGAnimationElement_h

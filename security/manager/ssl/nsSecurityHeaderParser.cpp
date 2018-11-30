@@ -15,13 +15,11 @@
 // A separator is one of ()<>@,;:\"/[]?={} as well as space and
 // horizontal-tab (32 and 9, respectively).
 // So, this returns true if chr is any octet 33-126 except ()<>@,;:\"/[]?={}
-bool
-IsTokenSymbol(signed char chr) {
-  if (chr < 33 || chr == 127 ||
-      chr == '(' || chr == ')' || chr == '<' || chr == '>' ||
-      chr == '@' || chr == ',' || chr == ';' || chr == ':' ||
-      chr == '"' || chr == '/' || chr == '[' || chr == ']' ||
-      chr == '?' || chr == '=' || chr == '{' || chr == '}' || chr == '\\') {
+bool IsTokenSymbol(signed char chr) {
+  if (chr < 33 || chr == 127 || chr == '(' || chr == ')' || chr == '<' ||
+      chr == '>' || chr == '@' || chr == ',' || chr == ';' || chr == ':' ||
+      chr == '"' || chr == '/' || chr == '[' || chr == ']' || chr == '?' ||
+      chr == '=' || chr == '{' || chr == '}' || chr == '\\') {
     return false;
   }
   return true;
@@ -34,43 +32,34 @@ IsTokenSymbol(signed char chr) {
 // quoted-pair is a backslash (\) followed by a CHAR.
 // So, it turns out, \ can't really be a qdtext symbol for our purposes.
 // This returns true if chr is any octet 9,10,13,32-126 except <"> or "\"
-bool
-IsQuotedTextSymbol(signed char chr) {
+bool IsQuotedTextSymbol(signed char chr) {
   return ((chr >= 32 && chr != '"' && chr != '\\' && chr != 127) ||
           chr == 0x9 || chr == 0xa || chr == 0xd);
 }
 
 // The octet following the "\" in a quoted pair can be anything 0-127.
-bool
-IsQuotedPairSymbol(signed char chr) {
-  return (chr >= 0);
-}
+bool IsQuotedPairSymbol(signed char chr) { return (chr >= 0); }
 
 static mozilla::LazyLogModule sSHParserLog("nsSecurityHeaderParser");
 
 #define SHPARSERLOG(args) MOZ_LOG(sSHParserLog, mozilla::LogLevel::Debug, args)
 
 nsSecurityHeaderParser::nsSecurityHeaderParser(const nsCString& aHeader)
-  : mCursor(aHeader.get())
-  , mDirective(nullptr)
-  , mError(false)
-{
-}
+    : mCursor(aHeader.get()), mDirective(nullptr), mError(false) {}
 
 nsSecurityHeaderParser::~nsSecurityHeaderParser() {
-  nsSecurityHeaderDirective *directive;
+  nsSecurityHeaderDirective* directive;
   while ((directive = mDirectives.popFirst())) {
     delete directive;
   }
 }
 
-mozilla::LinkedList<nsSecurityHeaderDirective> *
+mozilla::LinkedList<nsSecurityHeaderDirective>*
 nsSecurityHeaderParser::GetDirectives() {
   return &mDirectives;
 }
 
-nsresult
-nsSecurityHeaderParser::Parse() {
+nsresult nsSecurityHeaderParser::Parse() {
   MOZ_ASSERT(mDirectives.isEmpty());
   SHPARSERLOG(("trying to parse '%s'", mCursor));
 
@@ -84,9 +73,7 @@ nsSecurityHeaderParser::Parse() {
   }
 }
 
-bool
-nsSecurityHeaderParser::Accept(char aChr)
-{
+bool nsSecurityHeaderParser::Accept(char aChr) {
   if (*mCursor == aChr) {
     Advance();
     return true;
@@ -95,9 +82,7 @@ nsSecurityHeaderParser::Accept(char aChr)
   return false;
 }
 
-bool
-nsSecurityHeaderParser::Accept(bool (*aClassifier) (signed char))
-{
+bool nsSecurityHeaderParser::Accept(bool (*aClassifier)(signed char)) {
   if (aClassifier(*mCursor)) {
     Advance();
     return true;
@@ -106,9 +91,7 @@ nsSecurityHeaderParser::Accept(bool (*aClassifier) (signed char))
   return false;
 }
 
-void
-nsSecurityHeaderParser::Expect(char aChr)
-{
+void nsSecurityHeaderParser::Expect(char aChr) {
   if (*mCursor != aChr) {
     mError = true;
   } else {
@@ -116,9 +99,7 @@ nsSecurityHeaderParser::Expect(char aChr)
   }
 }
 
-void
-nsSecurityHeaderParser::Advance()
-{
+void nsSecurityHeaderParser::Advance() {
   // Technically, 0 is valid in quoted-pair, but we were handed a
   // null-terminated const char *, so this doesn't handle that.
   if (*mCursor) {
@@ -129,18 +110,14 @@ nsSecurityHeaderParser::Advance()
   }
 }
 
-void
-nsSecurityHeaderParser::Header()
-{
+void nsSecurityHeaderParser::Header() {
   Directive();
   while (Accept(';')) {
     Directive();
   }
 }
 
-void
-nsSecurityHeaderParser::Directive()
-{
+void nsSecurityHeaderParser::Directive() {
   mDirective = new nsSecurityHeaderDirective();
   LWSMultiple();
   DirectiveName();
@@ -151,21 +128,17 @@ nsSecurityHeaderParser::Directive()
     LWSMultiple();
   }
   mDirectives.insertBack(mDirective);
-  SHPARSERLOG(("read directive name '%s', value '%s'",
-               mDirective->mName.Data(), mDirective->mValue.Data()));
+  SHPARSERLOG(("read directive name '%s', value '%s'", mDirective->mName.Data(),
+               mDirective->mValue.Data()));
 }
 
-void
-nsSecurityHeaderParser::DirectiveName()
-{
+void nsSecurityHeaderParser::DirectiveName() {
   mOutput.Truncate(0);
   Token();
   mDirective->mName.Assign(mOutput);
 }
 
-void
-nsSecurityHeaderParser::DirectiveValue()
-{
+void nsSecurityHeaderParser::DirectiveValue() {
   mOutput.Truncate(0);
   if (Accept(IsTokenSymbol)) {
     Token();
@@ -181,15 +154,12 @@ nsSecurityHeaderParser::DirectiveValue()
   }
 }
 
-void
-nsSecurityHeaderParser::Token()
-{
-  while (Accept(IsTokenSymbol));
+void nsSecurityHeaderParser::Token() {
+  while (Accept(IsTokenSymbol))
+    ;
 }
 
-void
-nsSecurityHeaderParser::QuotedString()
-{
+void nsSecurityHeaderParser::QuotedString() {
   while (true) {
     if (Accept(IsQuotedTextSymbol)) {
       QuotedText();
@@ -201,21 +171,14 @@ nsSecurityHeaderParser::QuotedString()
   }
 }
 
-void
-nsSecurityHeaderParser::QuotedText()
-{
-  while (Accept(IsQuotedTextSymbol));
+void nsSecurityHeaderParser::QuotedText() {
+  while (Accept(IsQuotedTextSymbol))
+    ;
 }
 
-void
-nsSecurityHeaderParser::QuotedPair()
-{
-  Accept(IsQuotedPairSymbol);
-}
+void nsSecurityHeaderParser::QuotedPair() { Accept(IsQuotedPairSymbol); }
 
-void
-nsSecurityHeaderParser::LWSMultiple()
-{
+void nsSecurityHeaderParser::LWSMultiple() {
   while (true) {
     if (Accept('\r')) {
       LWSCRLF();
@@ -227,8 +190,7 @@ nsSecurityHeaderParser::LWSMultiple()
   }
 }
 
-void
-nsSecurityHeaderParser::LWSCRLF() {
+void nsSecurityHeaderParser::LWSCRLF() {
   Expect('\n');
   if (!(Accept(' ') || Accept('\t'))) {
     mError = true;
@@ -236,10 +198,9 @@ nsSecurityHeaderParser::LWSCRLF() {
   LWS();
 }
 
-void
-nsSecurityHeaderParser::LWS()
-{
+void nsSecurityHeaderParser::LWS() {
   // Note that becaue of how we're called, we don't have to check for
   // the mandatory presense of at least one of SP or HT.
-  while (Accept(' ') || Accept('\t'));
+  while (Accept(' ') || Accept('\t'))
+    ;
 }

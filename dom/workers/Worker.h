@@ -23,40 +23,34 @@ struct PostMessageOptions;
 struct WorkerOptions;
 class WorkerPrivate;
 
-class Worker : public DOMEventTargetHelper
-             , public SupportsWeakPtr<Worker>
-{
-public:
+class Worker : public DOMEventTargetHelper, public SupportsWeakPtr<Worker> {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Worker,
                                                          DOMEventTargetHelper)
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Worker)
 
-  static already_AddRefed<Worker>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              const WorkerOptions& aOptions, ErrorResult& aRv);
+  static already_AddRefed<Worker> Constructor(const GlobalObject& aGlobal,
+                                              const nsAString& aScriptURL,
+                                              const WorkerOptions& aOptions,
+                                              ErrorResult& aRv);
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Sequence<JSObject*>& aTransferable,
-              ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
-  void
-  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const PostMessageOptions& aOptions,
-              ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   const PostMessageOptions& aOptions, ErrorResult& aRv);
 
-  void
-  Terminate();
+  void Terminate();
 
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(message)
   IMPL_EVENT_HANDLER(messageerror)
 
-protected:
+ protected:
   Worker(nsIGlobalObject* aGlobalObject,
          already_AddRefed<WorkerPrivate> aWorkerPrivate);
   ~Worker();
@@ -64,7 +58,7 @@ protected:
   RefPtr<WorkerPrivate> mWorkerPrivate;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_Worker_h */

@@ -27,63 +27,52 @@ extern "C" {
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 
-nsShmImage::nsShmImage(Display* aDisplay,
-                       Drawable aWindow,
-                       Visual* aVisual,
+nsShmImage::nsShmImage(Display* aDisplay, Drawable aWindow, Visual* aVisual,
                        unsigned int aDepth)
-  : mDisplay(aDisplay)
-  , mConnection(XGetXCBConnection(aDisplay))
-  , mWindow(aWindow)
-  , mVisual(aVisual)
-  , mDepth(aDepth)
-  , mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN)
-  , mSize(0, 0)
-  , mStride(0)
-  , mPixmap(XCB_NONE)
-  , mGC(XCB_NONE)
-  , mRequestPending(false)
-  , mShmSeg(XCB_NONE)
-  , mShmId(-1)
-  , mShmAddr(nullptr)
-{
+    : mDisplay(aDisplay),
+      mConnection(XGetXCBConnection(aDisplay)),
+      mWindow(aWindow),
+      mVisual(aVisual),
+      mDepth(aDepth),
+      mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN),
+      mSize(0, 0),
+      mStride(0),
+      mPixmap(XCB_NONE),
+      mGC(XCB_NONE),
+      mRequestPending(false),
+      mShmSeg(XCB_NONE),
+      mShmId(-1),
+      mShmAddr(nullptr) {
   mozilla::PodZero(&mSyncRequest);
 }
 
-nsShmImage::~nsShmImage()
-{
-  DestroyImage();
-}
+nsShmImage::~nsShmImage() { DestroyImage(); }
 
 // If XShm isn't available to our client, we'll try XShm once, fail,
 // set this to false and then never try again.
 static bool gShmAvailable = true;
-bool nsShmImage::UseShm()
-{
-  return gShmAvailable;
-}
+bool nsShmImage::UseShm() { return gShmAvailable; }
 
-bool
-nsShmImage::CreateShmSegment()
-{
+bool nsShmImage::CreateShmSegment() {
   size_t size = SharedMemory::PageAlignedSize(mStride * mSize.height);
 
 #if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
   static mozilla::LazyLogModule sPledgeLog("SandboxPledge");
   MOZ_LOG(sPledgeLog, mozilla::LogLevel::Debug,
-         ("%s called when pledged, returning false\n", __func__));
+          ("%s called when pledged, returning false\n", __func__));
   return false;
 #endif
   mShmId = shmget(IPC_PRIVATE, size, IPC_CREAT | 0600);
   if (mShmId == -1) {
     return false;
   }
-  mShmAddr = (uint8_t*) shmat(mShmId, nullptr, 0);
+  mShmAddr = (uint8_t*)shmat(mShmId, nullptr, 0);
   mShmSeg = xcb_generate_id(mConnection);
 
   // Mark the handle removed so that it will destroy the segment when unmapped.
   shmctl(mShmId, IPC_RMID, nullptr);
 
-  if (mShmAddr == (void *)-1) {
+  if (mShmAddr == (void*)-1) {
     // Since mapping failed, the segment is already destroyed.
     mShmId = -1;
 
@@ -98,16 +87,13 @@ nsShmImage::CreateShmSegment()
     return false;
   }
 
-  MOZ_ASSERT(size <= info.shm_segsz,
-             "Segment doesn't have enough space!");
+  MOZ_ASSERT(size <= info.shm_segsz, "Segment doesn't have enough space!");
 #endif
 
   return true;
 }
 
-void
-nsShmImage::DestroyShmSegment()
-{
+void nsShmImage::DestroyShmSegment() {
   if (mShmId != -1) {
     shmdt(mShmAddr);
     mShmId = -1;
@@ -117,9 +103,7 @@ nsShmImage::DestroyShmSegment()
 static bool gShmInitialized = false;
 static bool gUseShmPixmaps = false;
 
-bool
-nsShmImage::InitExtension()
-{
+bool nsShmImage::InitExtension() {
   if (gShmInitialized) {
     return gShmAvailable;
   }
@@ -145,9 +129,7 @@ nsShmImage::InitExtension()
   }
 
   xcb_shm_query_version_reply_t* shmReply = xcb_shm_query_version_reply(
-      mConnection,
-      xcb_shm_query_version(mConnection),
-      nullptr);
+      mConnection, xcb_shm_query_version(mConnection), nullptr);
 
   if (!shmReply) {
     gShmAvailable = false;
@@ -162,9 +144,7 @@ nsShmImage::InitExtension()
   return true;
 }
 
-bool
-nsShmImage::CreateImage(const IntSize& aSize)
-{
+bool nsShmImage::CreateImage(const IntSize& aSize) {
   MOZ_ASSERT(mConnection && mVisual);
 
   if (!InitExtension()) {
@@ -177,31 +157,29 @@ nsShmImage::CreateImage(const IntSize& aSize)
 
   mFormat = SurfaceFormat::UNKNOWN;
   switch (mDepth) {
-  case 32:
-    if (mVisual->red_mask == 0xff0000 &&
-        mVisual->green_mask == 0xff00 &&
-        mVisual->blue_mask == 0xff) {
-      mFormat = SurfaceFormat::B8G8R8A8;
-    }
-    break;
-  case 24:
-    // Only support the BGRX layout, and report it as BGRA to the compositor.
-    // The alpha channel will be discarded when we put the image.
-    // Cairo/pixman lacks some fast paths for compositing BGRX onto BGRA, so
-    // just report it as BGRX directly in that case.
-    if (mVisual->red_mask == 0xff0000 &&
-        mVisual->green_mask == 0xff00 &&
-        mVisual->blue_mask == 0xff) {
-      mFormat = backend == BackendType::CAIRO ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
-    }
-    break;
-  case 16:
-    if (mVisual->red_mask == 0xf800 &&
-        mVisual->green_mask == 0x07e0 &&
-        mVisual->blue_mask == 0x1f) {
-      mFormat = SurfaceFormat::R5G6B5_UINT16;
-    }
-    break;
+    case 32:
+      if (mVisual->red_mask == 0xff0000 && mVisual->green_mask == 0xff00 &&
+          mVisual->blue_mask == 0xff) {
+        mFormat = SurfaceFormat::B8G8R8A8;
+      }
+      break;
+    case 24:
+      // Only support the BGRX layout, and report it as BGRA to the compositor.
+      // The alpha channel will be discarded when we put the image.
+      // Cairo/pixman lacks some fast paths for compositing BGRX onto BGRA, so
+      // just report it as BGRX directly in that case.
+      if (mVisual->red_mask == 0xff0000 && mVisual->green_mask == 0xff00 &&
+          mVisual->blue_mask == 0xff) {
+        mFormat = backend == BackendType::CAIRO ? SurfaceFormat::B8G8R8X8
+                                                : SurfaceFormat::B8G8R8A8;
+      }
+      break;
+    case 16:
+      if (mVisual->red_mask == 0xf800 && mVisual->green_mask == 0x07e0 &&
+          mVisual->blue_mask == 0x1f) {
+        mFormat = SurfaceFormat::R5G6B5_UINT16;
+      }
+      break;
   }
 
   if (mFormat == SurfaceFormat::UNKNOWN) {
@@ -213,8 +191,9 @@ nsShmImage::CreateImage(const IntSize& aSize)
   // Round up stride to the display's scanline pad (in bits) as XShm expects.
   int scanlinePad = _XGetScanlinePad(mDisplay, mDepth);
   int bitsPerPixel = _XGetBitsPerPixel(mDisplay, mDepth);
-  int bitsPerLine = ((bitsPerPixel * aSize.width + scanlinePad - 1)
-                     / scanlinePad) * scanlinePad;
+  int bitsPerLine =
+      ((bitsPerPixel * aSize.width + scanlinePad - 1) / scanlinePad) *
+      scanlinePad;
   mStride = bitsPerLine / 8;
 
   if (!CreateShmSegment()) {
@@ -252,9 +231,7 @@ nsShmImage::CreateImage(const IntSize& aSize)
   return true;
 }
 
-void
-nsShmImage::DestroyImage()
-{
+void nsShmImage::DestroyImage() {
   if (mGC) {
     xcb_free_gc(mConnection, mGC);
     mGC = XCB_NONE;
@@ -276,26 +253,25 @@ nsShmImage::DestroyImage()
 // Wait for any in-flight shm-affected requests to complete.
 // Typically X clients would wait for a XShmCompletionEvent to be received,
 // but this works as it's sent immediately after the request is sent.
-void
-nsShmImage::WaitIfPendingReply()
-{
+void nsShmImage::WaitIfPendingReply() {
   if (mRequestPending) {
     xcb_get_input_focus_reply_t* reply =
-      xcb_get_input_focus_reply(mConnection, mSyncRequest, nullptr);
+        xcb_get_input_focus_reply(mConnection, mSyncRequest, nullptr);
     free(reply);
     mRequestPending = false;
   }
 }
 
-already_AddRefed<DrawTarget>
-nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
-{
+already_AddRefed<DrawTarget> nsShmImage::CreateDrawTarget(
+    const mozilla::LayoutDeviceIntRegion& aRegion) {
   WaitIfPendingReply();
 
-  // Due to bug 1205045, we must avoid making GTK calls off the main thread to query window size.
-  // Instead we just track the largest offset within the image we are drawing to and grow the image
-  // to accomodate it. Since usually the entire window is invalidated on the first paint to it,
-  // this should grow the image to the necessary size quickly without many intermediate reallocations.
+  // Due to bug 1205045, we must avoid making GTK calls off the main thread to
+  // query window size. Instead we just track the largest offset within the
+  // image we are drawing to and grow the image to accomodate it. Since usually
+  // the entire window is invalidated on the first paint to it, this should grow
+  // the image to the necessary size quickly without many intermediate
+  // reallocations.
   IntRect bounds = aRegion.GetBounds().ToUnknownRect();
   IntSize size(bounds.XMost(), bounds.YMost());
   if (size.width > mSize.width || size.height > mSize.height) {
@@ -306,22 +282,19 @@ nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
   }
 
   return gfxPlatform::CreateDrawTargetForData(
-    reinterpret_cast<unsigned char*>(mShmAddr)
-      + bounds.y * mStride + bounds.x * BytesPerPixel(mFormat),
-    bounds.Size(),
-    mStride,
-    mFormat);
+      reinterpret_cast<unsigned char*>(mShmAddr) + bounds.y * mStride +
+          bounds.x * BytesPerPixel(mFormat),
+      bounds.Size(), mStride, mFormat);
 }
 
-void
-nsShmImage::Put(const mozilla::LayoutDeviceIntRegion& aRegion)
-{
+void nsShmImage::Put(const mozilla::LayoutDeviceIntRegion& aRegion) {
   AutoTArray<xcb_rectangle_t, 32> xrects;
   xrects.SetCapacity(aRegion.GetNumRects());
 
   for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-    const mozilla::LayoutDeviceIntRect &r = iter.Get();
-    xcb_rectangle_t xrect = { (short)r.x, (short)r.y, (unsigned short)r.width, (unsigned short)r.height };
+    const mozilla::LayoutDeviceIntRect& r = iter.Get();
+    xcb_rectangle_t xrect = {(short)r.x, (short)r.y, (unsigned short)r.width,
+                             (unsigned short)r.height};
     xrects.AppendElement(xrect);
   }
 
@@ -334,15 +307,12 @@ nsShmImage::Put(const mozilla::LayoutDeviceIntRegion& aRegion)
                           xrects.Length(), xrects.Elements());
 
   if (mPixmap != XCB_NONE) {
-    xcb_copy_area(mConnection, mPixmap, mWindow, mGC,
-                  0, 0, 0, 0, mSize.width, mSize.height);
+    xcb_copy_area(mConnection, mPixmap, mWindow, mGC, 0, 0, 0, 0, mSize.width,
+                  mSize.height);
   } else {
-    xcb_shm_put_image(mConnection, mWindow, mGC,
-                      mSize.width, mSize.height,
-                      0, 0, mSize.width, mSize.height,
-                      0, 0, mDepth,
-                      XCB_IMAGE_FORMAT_Z_PIXMAP, 0,
-                      mShmSeg, 0);
+    xcb_shm_put_image(mConnection, mWindow, mGC, mSize.width, mSize.height, 0,
+                      0, mSize.width, mSize.height, 0, 0, mDepth,
+                      XCB_IMAGE_FORMAT_Z_PIXMAP, 0, mShmSeg, 0);
   }
 
   // Send a request that returns a response so that we don't have to start a

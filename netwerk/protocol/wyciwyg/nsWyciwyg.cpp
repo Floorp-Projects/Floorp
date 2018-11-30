@@ -6,5 +6,3 @@
 #include "nscore.h"
 
 mozilla::LazyLogModule gWyciwygLog("nsWyciwygChannel");
-
-

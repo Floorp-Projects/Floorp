@@ -7,7 +7,11 @@
 #define nsParserCIID_h__
 
 // {2ce606b0-bee6-11d1-aad9-00805f8a3e14}
-#define NS_PARSER_CID      \
-{ 0x2ce606b0, 0xbee6, 0x11d1, { 0xaa, 0xd9, 0x0, 0x80, 0x5f, 0x8a, 0x3e, 0x14 } }
+#define NS_PARSER_CID                               \
+  {                                                 \
+    0x2ce606b0, 0xbee6, 0x11d1, {                   \
+      0xaa, 0xd9, 0x0, 0x80, 0x5f, 0x8a, 0x3e, 0x14 \
+    }                                               \
+  }
 
 #endif

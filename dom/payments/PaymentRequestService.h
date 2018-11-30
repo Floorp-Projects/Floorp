@@ -19,9 +19,8 @@ namespace dom {
 
 // The implmentation of nsIPaymentRequestService
 
-class PaymentRequestService final : public nsIPaymentRequestService
-{
-public:
+class PaymentRequestService final : public nsIPaymentRequestService {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPAYMENTREQUESTSERVICE
 
@@ -29,31 +28,28 @@ public:
 
   static already_AddRefed<PaymentRequestService> GetSingleton();
 
-  already_AddRefed<payments::PaymentRequest>
-  GetPaymentRequestByIndex(const uint32_t index);
+  already_AddRefed<payments::PaymentRequest> GetPaymentRequestByIndex(
+      const uint32_t index);
 
   uint32_t NumPayments() const;
 
   nsresult RequestPayment(const nsAString& aRequestId,
                           const IPCPaymentActionRequest& aAction,
                           PaymentRequestParent* aCallback);
-private:
+
+ private:
   ~PaymentRequestService() = default;
 
   nsresult GetPaymentRequestById(const nsAString& aRequestId,
                                  payments::PaymentRequest** aRequest);
 
-  nsresult
-  LaunchUIAction(const nsAString& aRequestId, uint32_t aActionType);
+  nsresult LaunchUIAction(const nsAString& aRequestId, uint32_t aActionType);
 
-  bool
-  CanMakePayment(const nsAString& aRequestId);
+  bool CanMakePayment(const nsAString& aRequestId);
 
-  nsresult
-  ShowPayment(const nsAString& aRequestId, bool aIsUpdating);
+  nsresult ShowPayment(const nsAString& aRequestId, bool aIsUpdating);
 
-  bool
-  IsBasicCardPayment(const nsAString& aRequestId);
+  bool IsBasicCardPayment(const nsAString& aRequestId);
 
   FallibleTArray<RefPtr<payments::PaymentRequest>> mRequestQueue;
 
@@ -62,7 +58,7 @@ private:
   RefPtr<payments::PaymentRequest> mShowingRequest;
 };
 
-} // end of namespace dom
-} // end of namespace mozilla
+}  // end of namespace dom
+}  // end of namespace mozilla
 
 #endif

@@ -13,52 +13,45 @@ namespace mozilla {
 namespace dom {
 
 /**
- * Implementation for the WebIDL ChromeMessageBroadcaster interface. Used for window and
- * group message managers.
+ * Implementation for the WebIDL ChromeMessageBroadcaster interface. Used for
+ * window and group message managers.
  */
-class ChromeMessageBroadcaster final : public MessageBroadcaster
-{
-public:
+class ChromeMessageBroadcaster final : public MessageBroadcaster {
+ public:
   explicit ChromeMessageBroadcaster(MessageManagerFlags aFlags)
-    : ChromeMessageBroadcaster(nullptr, aFlags)
-  {
+      : ChromeMessageBroadcaster(nullptr, aFlags) {
     MOZ_ASSERT(!(aFlags & ~(MessageManagerFlags::MM_GLOBAL |
                             MessageManagerFlags::MM_OWNSCALLBACK)));
   }
   explicit ChromeMessageBroadcaster(MessageBroadcaster* aParentManager)
-    : ChromeMessageBroadcaster(aParentManager, MessageManagerFlags::MM_NONE)
-  {}
+      : ChromeMessageBroadcaster(aParentManager, MessageManagerFlags::MM_NONE) {
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   // FrameScriptLoader
   void LoadFrameScript(const nsAString& aUrl, bool aAllowDelayedLoad,
-                       bool aRunInGlobalScope, mozilla::ErrorResult& aError)
-  {
+                       bool aRunInGlobalScope, mozilla::ErrorResult& aError) {
     LoadScript(aUrl, aAllowDelayedLoad, aRunInGlobalScope, aError);
   }
-  void RemoveDelayedFrameScript(const nsAString& aURL)
-  {
+  void RemoveDelayedFrameScript(const nsAString& aURL) {
     RemoveDelayedScript(aURL);
   }
   void GetDelayedFrameScripts(JSContext* aCx,
                               nsTArray<nsTArray<JS::Value>>& aScripts,
-                              mozilla::ErrorResult& aError)
-  {
+                              mozilla::ErrorResult& aError) {
     GetDelayedScripts(aCx, aScripts, aError);
   }
 
-private:
+ private:
   ChromeMessageBroadcaster(MessageBroadcaster* aParentManager,
                            MessageManagerFlags aFlags)
-    : MessageBroadcaster(aParentManager,
-                         aFlags |
-                         MessageManagerFlags::MM_CHROME)
-  {}
+      : MessageBroadcaster(aParentManager,
+                           aFlags | MessageManagerFlags::MM_CHROME) {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ChromeMessageBroadcaster_h
+#endif  // mozilla_dom_ChromeMessageBroadcaster_h

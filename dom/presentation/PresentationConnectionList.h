@@ -16,29 +16,30 @@ namespace dom {
 class PresentationConnection;
 class Promise;
 
-class PresentationConnectionList final : public DOMEventTargetHelper
-{
-public:
+class PresentationConnectionList final : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationConnectionList,
                                            DOMEventTargetHelper)
 
-  PresentationConnectionList(nsPIDOMWindowInner* aWindow,
-                             Promise* aPromise);
+  PresentationConnectionList(nsPIDOMWindowInner* aWindow, Promise* aPromise);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  void GetConnections(nsTArray<RefPtr<PresentationConnection>>& aConnections) const;
+  void GetConnections(
+      nsTArray<RefPtr<PresentationConnection>>& aConnections) const;
 
-  void NotifyStateChange(const nsAString& aSessionId, PresentationConnection* aConnection);
+  void NotifyStateChange(const nsAString& aSessionId,
+                         PresentationConnection* aConnection);
 
   IMPL_EVENT_HANDLER(connectionavailable);
 
-private:
+ private:
   virtual ~PresentationConnectionList() = default;
 
-  nsresult DispatchConnectionAvailableEvent(PresentationConnection* aConnection);
+  nsresult DispatchConnectionAvailableEvent(
+      PresentationConnection* aConnection);
 
   typedef nsTArray<RefPtr<PresentationConnection>> ConnectionArray;
   typedef ConnectionArray::index_type ConnectionArrayIndex;
@@ -51,7 +52,7 @@ private:
   ConnectionArray mConnections;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationConnectionList_h
+#endif  // mozilla_dom_PresentationConnectionList_h

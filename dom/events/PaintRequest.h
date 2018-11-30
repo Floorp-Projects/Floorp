@@ -18,74 +18,47 @@ namespace dom {
 
 class DOMRect;
 
-class PaintRequest final : public nsISupports
-                         , public nsWrapperCache
-{
-public:
-  explicit PaintRequest(Event* aParent)
-    : mParent(aParent)
-  {
-  }
+class PaintRequest final : public nsISupports, public nsWrapperCache {
+ public:
+  explicit PaintRequest(Event* aParent) : mParent(aParent) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaintRequest)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  Event* GetParentObject() const
-  {
-    return mParent;
-  }
+  Event* GetParentObject() const { return mParent; }
 
   already_AddRefed<DOMRect> ClientRect();
-  void GetReason(nsAString& aResult) const
-  {
-    aResult.AssignLiteral("repaint");
-  }
+  void GetReason(nsAString& aResult) const { aResult.AssignLiteral("repaint"); }
 
-  void SetRequest(const nsRect& aRequest)
-  { mRequest = aRequest; }
+  void SetRequest(const nsRect& aRequest) { mRequest = aRequest; }
 
-private:
+ private:
   ~PaintRequest() {}
 
   RefPtr<Event> mParent;
   nsRect mRequest;
 };
 
-class PaintRequestList final : public nsISupports,
-                               public nsWrapperCache
-{
-public:
-  explicit PaintRequestList(Event *aParent) : mParent(aParent)
-  {
-  }
+class PaintRequestList final : public nsISupports, public nsWrapperCache {
+ public:
+  explicit PaintRequestList(Event* aParent) : mParent(aParent) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaintRequestList)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  nsISupports* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  nsISupports* GetParentObject() { return mParent; }
 
-  void Append(PaintRequest* aElement)
-  {
-    mArray.AppendElement(aElement);
-  }
+  void Append(PaintRequest* aElement) { mArray.AppendElement(aElement); }
 
-  uint32_t Length()
-  {
-    return mArray.Length();
-  }
+  uint32_t Length() { return mArray.Length(); }
 
-  PaintRequest* Item(uint32_t aIndex)
-  {
-    return mArray.SafeElementAt(aIndex);
-  }
-  PaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
-  {
+  PaintRequest* Item(uint32_t aIndex) { return mArray.SafeElementAt(aIndex); }
+  PaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound) {
     aFound = aIndex < mArray.Length();
     if (!aFound) {
       return nullptr;
@@ -93,14 +66,14 @@ public:
     return mArray.ElementAt(aIndex);
   }
 
-private:
+ private:
   ~PaintRequestList() {}
 
-  nsTArray< RefPtr<PaintRequest> > mArray;
+  nsTArray<RefPtr<PaintRequest> > mArray;
   RefPtr<Event> mParent;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PaintRequest_h_
+#endif  // mozilla_dom_PaintRequest_h_

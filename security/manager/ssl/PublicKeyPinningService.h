@@ -22,9 +22,8 @@ using mozilla::OriginAttributes;
 namespace mozilla {
 namespace psm {
 
-class PublicKeyPinningService
-{
-public:
+class PublicKeyPinningService {
+ public:
   /**
    * Sets chainHasValidPins to true if the given (host, certList) passes pinning
    * checks, or to false otherwise. If the host is pinned, returns true via
@@ -34,13 +33,12 @@ public:
    * Note: if an alt name is a wildcard, it won't necessarily find a pinset
    * that would otherwise be valid for it
    */
-  static nsresult ChainHasValidPins(const RefPtr<nsNSSCertList>& certList,
-                                    const char* hostname,
-                                    mozilla::pkix::Time time,
-                                    bool enforceTestMode,
-                                    const OriginAttributes& originAttributes,
-                            /*out*/ bool& chainHasValidPins,
-                   /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo);
+  static nsresult ChainHasValidPins(
+      const RefPtr<nsNSSCertList>& certList, const char* hostname,
+      mozilla::pkix::Time time, bool enforceTestMode,
+      const OriginAttributes& originAttributes,
+      /*out*/ bool& chainHasValidPins,
+      /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo);
   /**
    * Sets chainMatchesPinset to true if there is any intersection between the
    * certificate list and the pins specified in the aSHA256keys array.
@@ -48,18 +46,17 @@ public:
    */
   static nsresult ChainMatchesPinset(const RefPtr<nsNSSCertList>& certList,
                                      const nsTArray<nsCString>& aSHA256keys,
-                             /*out*/ bool& chainMatchesPinset);
+                                     /*out*/ bool& chainMatchesPinset);
 
   /**
    * Returns true via the output parameter hostHasPins if there is pinning
    * information for the given host that is valid at the given time, and false
    * otherwise.
    */
-  static nsresult HostHasPins(const char* hostname,
-                              mozilla::pkix::Time time,
+  static nsresult HostHasPins(const char* hostname, mozilla::pkix::Time time,
                               bool enforceTestMode,
                               const OriginAttributes& originAttributes,
-                      /*out*/ bool& hostHasPins);
+                              /*out*/ bool& hostHasPins);
 
   /**
    * Given a hostname of potentially mixed case with potentially multiple
@@ -69,6 +66,7 @@ public:
   static nsAutoCString CanonicalizeHostname(const char* hostname);
 };
 
-}} // namespace mozilla::psm
+}  // namespace psm
+}  // namespace mozilla
 
-#endif // PublicKeyPinningService_h
+#endif  // PublicKeyPinningService_h

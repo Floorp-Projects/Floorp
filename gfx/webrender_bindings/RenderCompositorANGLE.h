@@ -27,10 +27,10 @@ namespace mozilla {
 
 namespace wr {
 
-class RenderCompositorANGLE : public RenderCompositor
-{
-public:
-  static UniquePtr<RenderCompositor> Create(RefPtr<widget::CompositorWidget>&& aWidget);
+class RenderCompositorANGLE : public RenderCompositor {
+ public:
+  static UniquePtr<RenderCompositor> Create(
+      RefPtr<widget::CompositorWidget>&& aWidget);
 
   explicit RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositorANGLE();
@@ -54,7 +54,7 @@ public:
 
   LayoutDeviceIntSize GetBufferSize() override;
 
-protected:
+ protected:
   void InsertPresentWaitQuery();
   void WaitForPreviousPresentQuery();
   bool ResizeBufferIfNeeded();
@@ -83,7 +83,7 @@ protected:
   Maybe<LayoutDeviceIntSize> mBufferSize;
 };
 
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla
 
 #endif

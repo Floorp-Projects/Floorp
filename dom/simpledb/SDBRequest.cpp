@@ -14,22 +14,16 @@ namespace mozilla {
 namespace dom {
 
 SDBRequest::SDBRequest(SDBConnection* aConnection)
-  : mConnection(aConnection)
-  , mResultCode(NS_OK)
-  , mHaveResultOrErrorCode(false)
-{
+    : mConnection(aConnection),
+      mResultCode(NS_OK),
+      mHaveResultOrErrorCode(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aConnection);
 }
 
-SDBRequest::~SDBRequest()
-{
-  AssertIsOnOwningThread();
-}
+SDBRequest::~SDBRequest() { AssertIsOnOwningThread(); }
 
-void
-SDBRequest::SetResult(nsIVariant* aResult)
-{
+void SDBRequest::SetResult(nsIVariant* aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(mConnection);
@@ -41,9 +35,7 @@ SDBRequest::SetResult(nsIVariant* aResult)
   FireCallback();
 }
 
-void
-SDBRequest::SetError(nsresult aRv)
-{
+void SDBRequest::SetError(nsresult aRv) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(mResultCode == NS_OK);
@@ -55,21 +47,17 @@ SDBRequest::SetError(nsresult aRv)
   FireCallback();
 }
 
-void
-SDBRequest::FireCallback()
-{
+void SDBRequest::FireCallback() {
   AssertIsOnOwningThread();
 
   if (mCallback) {
     nsCOMPtr<nsISDBCallback> callback;
     callback.swap(mCallback);
 
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(
-      NewRunnableMethod<RefPtr<SDBRequest>>(
-        "nsISDBCallback::OnComplete",
-        callback,
-        &nsISDBCallback::OnComplete,
-        this)));
+    MOZ_ALWAYS_SUCCEEDS(
+        NS_DispatchToCurrentThread(NewRunnableMethod<RefPtr<SDBRequest>>(
+            "nsISDBCallback::OnComplete", callback, &nsISDBCallback::OnComplete,
+            this)));
   }
 }
 
@@ -84,8 +72,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION(SDBRequest, mCallback, mResult)
 
 NS_IMETHODIMP
-SDBRequest::GetResult(nsIVariant** aResult)
-{
+SDBRequest::GetResult(nsIVariant** aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult);
 
@@ -98,8 +85,7 @@ SDBRequest::GetResult(nsIVariant** aResult)
 }
 
 NS_IMETHODIMP
-SDBRequest::GetResultCode(nsresult* aResultCode)
-{
+SDBRequest::GetResultCode(nsresult* aResultCode) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResultCode);
 
@@ -112,8 +98,7 @@ SDBRequest::GetResultCode(nsresult* aResultCode)
 }
 
 NS_IMETHODIMP
-SDBRequest::GetCallback(nsISDBCallback** aCallback)
-{
+SDBRequest::GetCallback(nsISDBCallback** aCallback) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
 
@@ -122,13 +107,12 @@ SDBRequest::GetCallback(nsISDBCallback** aCallback)
 }
 
 NS_IMETHODIMP
-SDBRequest::SetCallback(nsISDBCallback* aCallback)
-{
+SDBRequest::SetCallback(nsISDBCallback* aCallback) {
   AssertIsOnOwningThread();
 
   mCallback = aCallback;
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

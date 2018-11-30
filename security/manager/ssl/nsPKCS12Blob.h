@@ -17,9 +17,8 @@ class nsIFile;
 class nsIX509Cert;
 
 // Class for importing/exporting PKCS#12 blobs
-class nsPKCS12Blob
-{
-public:
+class nsPKCS12Blob {
+ public:
   nsPKCS12Blob();
   ~nsPKCS12Blob() {}
 
@@ -31,13 +30,12 @@ public:
   nsresult ExportToFile(nsIFile* file, nsIX509Cert** certs, int numCerts,
                         const nsAString& password, uint32_t& error);
 
-private:
+ private:
   nsCOMPtr<nsIInterfaceRequestor> mUIContext;
 
   // local helper functions
   nsresult inputToDecoder(mozilla::UniqueSEC_PKCS12DecoderContext& dcx,
-                          nsIFile* file,
-                          PRErrorCode& nssError);
+                          nsIFile* file, PRErrorCode& nssError);
   mozilla::UniquePtr<uint8_t[]> stringToBigEndianBytes(const nsAString& uni,
                                                        uint32_t& bytesLength);
   uint32_t handlePRErrorCode(PRErrorCode prerr);
@@ -47,4 +45,4 @@ private:
   static void writeExportFile(void* arg, const char* buf, unsigned long len);
 };
 
-#endif // nsPKCS12Blob_h
+#endif  // nsPKCS12Blob_h

@@ -38,10 +38,7 @@ class VideoFrame;
 
 namespace mozilla {
 
-enum class MediaSessionConduitLocalDirection : int {
-  kSend,
-  kRecv
-};
+enum class MediaSessionConduitLocalDirection : int { kSend, kRecv };
 
 using RtpExtList = std::vector<webrtc::RtpExtension>;
 
@@ -50,14 +47,14 @@ using RtpExtList = std::vector<webrtc::RtpExtension>;
  * The consumers of this interface are responsible for passing in
  * the RTPfied media packets
  */
-class TransportInterface
-{
-protected:
+class TransportInterface {
+ protected:
   virtual ~TransportInterface() {}
 
-public:
+ public:
   /**
-   * RTP Transport Function to be implemented by concrete transport implementation
+   * RTP Transport Function to be implemented by concrete transport
+   * implementation
    * @param data : RTP Packet (audio/video) to be transported
    * @param len  : Length of the media packet
    * @result     : NS_OK on success, NS_ERROR_FAILURE otherwise
@@ -65,7 +62,8 @@ public:
   virtual nsresult SendRtpPacket(const uint8_t* data, size_t len) = 0;
 
   /**
-   * RTCP Transport Function to be implemented by concrete transport implementation
+   * RTCP Transport Function to be implemented by concrete transport
+   * implementation
    * @param data : RTCP Packet to be transported
    * @param len  : Length of the RTCP packet
    * @result     : NS_OK on success, NS_ERROR_FAILURE otherwise
@@ -82,19 +80,17 @@ public:
  *    processing and/or rendering the obtained raw video frame to appropriate
  *    output , say, <video>
  */
-class VideoRenderer
-{
-protected:
+class VideoRenderer {
+ protected:
   virtual ~VideoRenderer() {}
 
-public:
+ public:
   /**
    * Callback Function reportng any change in the video-frame dimensions
    * @param width:  current width of the video @ decoder
    * @param height: current height of the video @ decoder
    */
-  virtual void FrameSizeChange(unsigned int width,
-                               unsigned int height) = 0;
+  virtual void FrameSizeChange(unsigned int width, unsigned int height) = 0;
 
   /**
    * Callback Function reporting decoded frame for processing.
@@ -110,12 +106,10 @@ public:
    * immediately.
    */
   virtual void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
-                                uint32_t time_stamp,
-                                int64_t render_time) = 0;
+                                uint32_t time_stamp, int64_t render_time) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoRenderer)
 };
-
 
 /**
  * Generic Interface for representing Audio/Video Session
@@ -126,18 +120,17 @@ public:
  * of this interface.
  * Also provides codec configuration API for the media sent and recevied
  */
-class MediaSessionConduit
-{
-protected:
+class MediaSessionConduit {
+ protected:
   virtual ~MediaSessionConduit() {}
 
-public:
-  enum Type { AUDIO, VIDEO } ;
+ public:
+  enum Type { AUDIO, VIDEO };
 
-  static std::string
-  LocalDirectionToString(const MediaSessionConduitLocalDirection aDirection) {
-    return aDirection == MediaSessionConduitLocalDirection::kSend ?
-                            "send" : "receive";
+  static std::string LocalDirectionToString(
+      const MediaSessionConduitLocalDirection aDirection) {
+    return aDirection == MediaSessionConduitLocalDirection::kSend ? "send"
+                                                                  : "receive";
   }
 
   virtual Type type() const = 0;
@@ -150,7 +143,8 @@ public:
    * Obtained packets are passed to the Media-Engine for further
    * processing , say, decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len, uint32_t ssrc) = 0;
+  virtual MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len,
+                                                  uint32_t ssrc) = 0;
 
   /**
    * Function triggered on Incoming RTCP packet from the remote
@@ -160,13 +154,13 @@ public:
    * Obtained packets are passed to the Media-Engine for further
    * processing , say, decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void *data, int len) = 0;
+  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void* data,
+                                                   int len) = 0;
 
   virtual MediaConduitErrorCode StopTransmitting() = 0;
   virtual MediaConduitErrorCode StartTransmitting() = 0;
   virtual MediaConduitErrorCode StopReceiving() = 0;
   virtual MediaConduitErrorCode StartReceiving() = 0;
-
 
   /**
    * Function to attach transmitter transport end-point of the Media conduit.
@@ -178,7 +172,8 @@ public:
    * set. In the future, we should ensure that RTCP sender reports use this
    * regardless of whether the receiver transport is set.
    */
-  virtual MediaConduitErrorCode SetTransmitterTransport(RefPtr<TransportInterface> aTransport) = 0;
+  virtual MediaConduitErrorCode SetTransmitterTransport(
+      RefPtr<TransportInterface> aTransport) = 0;
 
   /**
    * Function to attach receiver transport end-point of the Media conduit.
@@ -189,7 +184,8 @@ public:
    * Note: This transport is used for RTCP.
    * Note: In the future, we should avoid using this for RTCP sender reports.
    */
-  virtual MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) = 0;
+  virtual MediaConduitErrorCode SetReceiverTransport(
+      RefPtr<TransportInterface> aTransport) = 0;
 
   /* Sets the local SSRCs
    * @return true iff the local ssrcs == aSSRCs upon return
@@ -199,18 +195,18 @@ public:
   virtual std::vector<unsigned int> GetLocalSSRCs() = 0;
 
   /**
-  * Adds negotiated RTP header extensions to the the conduit. Unknown extensions
-  * are ignored.
-  * @param aDirection the local direction to set the RTP header extensions for
-  * @param aExtensions the RTP header extensions to set
-  * @return if all extensions were set it returns a success code,
-  *         if an extension fails to set it may immediately return an error
-  *         code
-  * TODO webrtc.org 64 update: make return type void again
-  */
-  virtual MediaConduitErrorCode
-  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
-                        const RtpExtList& aExtensions) = 0;
+   * Adds negotiated RTP header extensions to the the conduit. Unknown
+   * extensions are ignored.
+   * @param aDirection the local direction to set the RTP header extensions for
+   * @param aExtensions the RTP header extensions to set
+   * @return if all extensions were set it returns a success code,
+   *         if an extension fails to set it may immediately return an error
+   *         code
+   * TODO webrtc.org 64 update: make return type void again
+   */
+  virtual MediaConduitErrorCode SetLocalRTPExtensions(
+      MediaSessionConduitLocalDirection aDirection,
+      const RtpExtList& aExtensions) = 0;
 
   virtual bool GetRemoteSSRC(unsigned int* ssrc) = 0;
   virtual bool SetRemoteSSRC(unsigned int ssrc) = 0;
@@ -225,22 +221,20 @@ public:
    * Functions returning stats needed by w3c stats model.
    */
 
-  virtual bool
-  GetSendPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
+  virtual bool GetSendPacketTypeStats(
+      webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
 
-  virtual bool
-  GetRecvPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
+  virtual bool GetRecvPacketTypeStats(
+      webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
 
   virtual bool GetVideoEncoderStats(double* framerateMean,
                                     double* framerateStdDev,
-                                    double* bitrateMean,
-                                    double* bitrateStdDev,
+                                    double* bitrateMean, double* bitrateStdDev,
                                     uint32_t* droppedFrames,
                                     uint32_t* framesEncoded) = 0;
   virtual bool GetVideoDecoderStats(double* framerateMean,
                                     double* framerateStdDev,
-                                    double* bitrateMean,
-                                    double* bitrateStdDev,
+                                    double* bitrateMean, double* bitrateStdDev,
                                     uint32_t* discardedPackets,
                                     uint32_t* framesDecoded) = 0;
   virtual bool GetAVStats(int32_t* jitterBufferDelayMs,
@@ -262,27 +256,21 @@ public:
 
   virtual void SetPCHandle(const std::string& aPCHandle) = 0;
 
-  virtual MediaConduitErrorCode DeliverPacket(const void *data, int len) = 0;
+  virtual MediaConduitErrorCode DeliverPacket(const void* data, int len) = 0;
 
   virtual void DeleteStreams() = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
-
 };
 
 // Wrap the webrtc.org Call class adding mozilla add/ref support.
-class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper>
-{
-public:
+class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
+ public:
   typedef webrtc::Call::Config Config;
 
-  static RefPtr<WebRtcCallWrapper> Create()
-  {
-    return new WebRtcCallWrapper();
-  }
+  static RefPtr<WebRtcCallWrapper> Create() { return new WebRtcCallWrapper(); }
 
-  static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call>&& aCall)
-  {
+  static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call>&& aCall) {
     return new WebRtcCallWrapper(std::move(aCall));
   }
 
@@ -290,16 +278,12 @@ public:
   WebRtcCallWrapper(const WebRtcCallWrapper&) = delete;
   void operator=(const WebRtcCallWrapper&) = delete;
 
-  webrtc::Call* Call() const
-  {
-    return mCall.get();
-  }
+  webrtc::Call* Call() const { return mCall.get(); }
 
-  virtual ~WebRtcCallWrapper()
-  {
+  virtual ~WebRtcCallWrapper() {
     if (mCall->voice_engine()) {
       webrtc::VoiceEngine* voice_engine = mCall->voice_engine();
-      mCall.reset(nullptr); // Force it to release the voice engine reference
+      mCall.reset(nullptr);  // Force it to release the voice engine reference
       // Delete() must be after all refs are released
       webrtc::VoiceEngine::Delete(voice_engine);
     } else {
@@ -308,8 +292,7 @@ public:
     }
   }
 
-  bool UnsetRemoteSSRC(uint32_t ssrc)
-  {
+  bool UnsetRemoteSSRC(uint32_t ssrc) {
     for (auto conduit : mConduits) {
       if (!conduit->UnsetRemoteSSRC(ssrc)) {
         return false;
@@ -319,13 +302,11 @@ public:
     return true;
   }
 
-  void RegisterConduit(MediaSessionConduit* conduit)
-  {
+  void RegisterConduit(MediaSessionConduit* conduit) {
     mConduits.insert(conduit);
   }
 
-  void UnregisterConduit(MediaSessionConduit* conduit)
-  {
+  void UnregisterConduit(MediaSessionConduit* conduit) {
     mConduits.erase(conduit);
   }
 
@@ -333,9 +314,8 @@ public:
 
   rtc::scoped_refptr<webrtc::AudioDecoderFactory> mDecoderFactory;
 
-private:
-  WebRtcCallWrapper()
-  {
+ private:
+  WebRtcCallWrapper() {
     auto voice_engine = webrtc::VoiceEngine::Create();
     mDecoderFactory = webrtc::CreateBuiltinAudioDecoderFactory();
 
@@ -346,8 +326,7 @@ private:
     mFakeAudioDeviceModule.reset(new webrtc::FakeAudioDeviceModule());
     auto voe_base = webrtc::VoEBase::GetInterface(voice_engine);
     voe_base->Init(mFakeAudioDeviceModule.get(),
-                   audio_state_config.audio_processing.get(),
-                   mDecoderFactory);
+                   audio_state_config.audio_processing.get(), mDecoderFactory);
     voe_base->Release();
     auto audio_state = webrtc::AudioState::Create(audio_state_config);
     webrtc::Call::Config config(&mEventLog);
@@ -355,8 +334,7 @@ private:
     mCall.reset(webrtc::Call::Create(config));
   }
 
-  explicit WebRtcCallWrapper(UniquePtr<webrtc::Call>&& aCall)
-  {
+  explicit WebRtcCallWrapper(UniquePtr<webrtc::Call>&& aCall) {
     MOZ_ASSERT(aCall);
     mCall = std::move(aCall);
   }
@@ -370,23 +348,20 @@ private:
 };
 
 // Abstract base classes for external encoder/decoder.
-class CodecPluginID
-{
-public:
+class CodecPluginID {
+ public:
   virtual ~CodecPluginID() {}
 
   virtual uint64_t PluginID() const = 0;
 };
 
-class VideoEncoder : public CodecPluginID
-{
-public:
+class VideoEncoder : public CodecPluginID {
+ public:
   virtual ~VideoEncoder() {}
 };
 
-class VideoDecoder : public CodecPluginID
-{
-public:
+class VideoDecoder : public CodecPluginID {
+ public:
   virtual ~VideoDecoder() {}
 };
 
@@ -395,9 +370,8 @@ public:
  * Refer to the comments on MediaSessionConduit above for overall
  * information
  */
-class VideoSessionConduit : public MediaSessionConduit
-{
-public:
+class VideoSessionConduit : public MediaSessionConduit {
+ public:
   /**
    * Factory function to create and initialize a Video Conduit Session
    * @param  webrtc::Call instance shared by paired audio and video
@@ -406,35 +380,36 @@ public:
    *         of failure
    */
   static RefPtr<VideoSessionConduit> Create(
-    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
+      RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
 
-  enum FrameRequestType
-  {
+  enum FrameRequestType {
     FrameRequestNone,
     FrameRequestFir,
     FrameRequestPli,
     FrameRequestUnknown
   };
 
-  VideoSessionConduit() : mFrameRequestMethod(FrameRequestNone),
-                          mUsingNackBasic(false),
-                          mUsingTmmbr(false),
-                          mUsingFEC(false) {}
+  VideoSessionConduit()
+      : mFrameRequestMethod(FrameRequestNone),
+        mUsingNackBasic(false),
+        mUsingTmmbr(false),
+        mUsingFEC(false) {}
 
   virtual ~VideoSessionConduit() {}
 
   Type type() const override { return VIDEO; }
 
-  MediaConduitErrorCode
-  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
-                        const RtpExtList& extensions) override = 0;
+  MediaConduitErrorCode SetLocalRTPExtensions(
+      MediaSessionConduitLocalDirection aDirection,
+      const RtpExtList& extensions) override = 0;
   /**
    * Function to attach Renderer end-point of the Media-Video conduit.
    * @param aRenderer : Reference to the concrete Video renderer implementation
    * Note: Multiple invocations of this API shall remove an existing renderer
    * and attaches the new to the Conduit.
    */
-  virtual MediaConduitErrorCode AttachRenderer(RefPtr<mozilla::VideoRenderer> aRenderer) = 0;
+  virtual MediaConduitErrorCode AttachRenderer(
+      RefPtr<mozilla::VideoRenderer> aRenderer) = 0;
   virtual void DetachRenderer() = 0;
 
   virtual void DisableSsrcChanges() = 0;
@@ -451,7 +426,7 @@ public:
    *       transmitted by the conduit.
    */
   virtual MediaConduitErrorCode SendVideoFrame(
-    const webrtc::VideoFrame& frame) = 0;
+      const webrtc::VideoFrame& frame) = 0;
 
   virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) = 0;
 
@@ -465,7 +440,8 @@ public:
    *       restarting transmission sub-system on the engine
    *
    */
-  virtual MediaConduitErrorCode ConfigureSendMediaCodec(const VideoCodecConfig* sendSessionConfig) = 0;
+  virtual MediaConduitErrorCode ConfigureSendMediaCodec(
+      const VideoCodecConfig* sendSessionConfig) = 0;
 
   /**
    * Function to configurelist of receive codecs for the video session
@@ -478,31 +454,23 @@ public:
       const std::vector<UniquePtr<VideoCodecConfig>>& recvCodecConfigList) = 0;
 
   /**
-    * These methods allow unit tests to double-check that the
-    * rtcp-fb settings are as expected.
-    */
-    FrameRequestType FrameRequestMethod() const {
-      return mFrameRequestMethod;
-    }
+   * These methods allow unit tests to double-check that the
+   * rtcp-fb settings are as expected.
+   */
+  FrameRequestType FrameRequestMethod() const { return mFrameRequestMethod; }
 
-    bool UsingNackBasic() const {
-      return mUsingNackBasic;
-    }
+  bool UsingNackBasic() const { return mUsingNackBasic; }
 
-    bool UsingTmmbr() const {
-      return mUsingTmmbr;
-    }
+  bool UsingTmmbr() const { return mUsingTmmbr; }
 
-    bool UsingFEC() const {
-      return mUsingFEC;
-    }
+  bool UsingFEC() const { return mUsingFEC; }
 
-   protected:
-     /* RTCP feedback settings, for unit testing purposes */
-     FrameRequestType mFrameRequestMethod;
-     bool mUsingNackBasic;
-     bool mUsingTmmbr;
-     bool mUsingFEC;
+ protected:
+  /* RTCP feedback settings, for unit testing purposes */
+  FrameRequestType mFrameRequestMethod;
+  bool mUsingNackBasic;
+  bool mUsingTmmbr;
+  bool mUsingFEC;
 };
 
 /**
@@ -510,11 +478,9 @@ public:
  * Refer to the comments on MediaSessionConduit above for overall
  * information
  */
-class AudioSessionConduit : public MediaSessionConduit
-{
-public:
-
- /**
+class AudioSessionConduit : public MediaSessionConduit {
+ public:
+  /**
    * Factory function to create and initialize an Audio Conduit Session
    * @param  webrtc::Call instance shared by paired audio and video
    *         media conduits
@@ -522,15 +488,15 @@ public:
    *         of failure
    */
   static RefPtr<AudioSessionConduit> Create(
-    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
+      RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
 
   virtual ~AudioSessionConduit() {}
 
   Type type() const override { return AUDIO; }
 
-  MediaConduitErrorCode
-  SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
-                        const RtpExtList& extensions) override = 0;
+  MediaConduitErrorCode SetLocalRTPExtensions(
+      MediaSessionConduitLocalDirection aDirection,
+      const RtpExtList& extensions) override = 0;
   /**
    * Function to deliver externally captured audio sample for encoding and
    * transport
@@ -589,18 +555,19 @@ public:
    */
   virtual bool IsSamplingFreqSupported(int freq) const = 0;
 
-   /**
+  /**
    * Function to configure send codec for the audio session
    * @param sendSessionConfig: CodecConfiguration
    * NOTE: See VideoConduit for more information
    */
-  virtual MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* sendCodecConfig) = 0;
+  virtual MediaConduitErrorCode ConfigureSendMediaCodec(
+      const AudioCodecConfig* sendCodecConfig) = 0;
 
-   /**
-    * Function to configure list of receive codecs for the audio session
-    * @param sendSessionConfig: CodecConfiguration
-    * NOTE: See VideoConduit for more information
-    */
+  /**
+   * Function to configure list of receive codecs for the audio session
+   * @param sendSessionConfig: CodecConfiguration
+   * NOTE: See VideoConduit for more information
+   */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
       const std::vector<UniquePtr<AudioCodecConfig>>& recvCodecConfigList) = 0;
 
@@ -611,7 +578,6 @@ public:
 
   virtual void GetRtpSources(const int64_t aTimeNow,
                              nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
-
 };
-}
+}  // namespace mozilla
 #endif

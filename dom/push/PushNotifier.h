@@ -25,9 +25,8 @@ class ContentParent;
  * `PushDispatcher` is a base class used to forward observer notifications and
  * service worker events to the correct process.
  */
-class MOZ_STACK_CLASS PushDispatcher
-{
-public:
+class MOZ_STACK_CLASS PushDispatcher {
+ public:
   // Fires an XPCOM observer notification. This method may be called from both
   // processes.
   virtual nsresult NotifyObservers() = 0;
@@ -53,18 +52,15 @@ public:
   // are no active content processes. The default behavior is a no-op.
   virtual nsresult HandleNoChildProcesses();
 
-  nsIPrincipal* GetPrincipal() {
-    return mPrincipal;
-  }
+  nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
-protected:
-  PushDispatcher(const nsACString& aScope,
-                 nsIPrincipal* aPrincipal);
+ protected:
+  PushDispatcher(const nsACString& aScope, nsIPrincipal* aPrincipal);
 
   virtual ~PushDispatcher();
 
   bool ShouldNotifyWorkers();
-  nsresult DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
+  nsresult DoNotifyObservers(nsISupports* aSubject, const char* aTopic,
                              const nsACString& aScope);
 
   const nsCString mScope;
@@ -79,16 +75,15 @@ protected:
  * All scriptable methods on this interface may be called from the parent or
  * content process. Observer notifications are broadcasted to both processes.
  */
-class PushNotifier final : public nsIPushNotifier
-{
-public:
+class PushNotifier final : public nsIPushNotifier {
+ public:
   PushNotifier();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushNotifier, nsIPushNotifier)
   NS_DECL_NSIPUSHNOTIFIER
 
-private:
+ private:
   ~PushNotifier();
 
   nsresult Dispatch(PushDispatcher& aDispatcher);
@@ -98,16 +93,15 @@ private:
  * `PushData` provides methods for retrieving push message data in different
  * formats. This class is similar to the `PushMessageData` WebIDL interface.
  */
-class PushData final : public nsIPushData
-{
-public:
+class PushData final : public nsIPushData {
+ public:
   explicit PushData(const nsTArray<uint8_t>& aData);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushData, nsIPushData)
   NS_DECL_NSIPUSHDATA
 
-private:
+ private:
   ~PushData();
 
   nsresult EnsureDecodedText();
@@ -121,29 +115,26 @@ private:
  * message. Each `push-message` observer receives an instance of this class
  * as the subject.
  */
-class PushMessage final : public nsIPushMessage
-{
-public:
+class PushMessage final : public nsIPushMessage {
+ public:
   PushMessage(nsIPrincipal* aPrincipal, nsIPushData* aData);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushMessage, nsIPushMessage)
   NS_DECL_NSIPUSHMESSAGE
 
-private:
+ private:
   ~PushMessage();
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIPushData> mData;
 };
 
-class PushMessageDispatcher final : public PushDispatcher
-{
-public:
-  PushMessageDispatcher(const nsACString& aScope,
-               nsIPrincipal* aPrincipal,
-               const nsAString& aMessageId,
-               const Maybe<nsTArray<uint8_t>>& aData);
+class PushMessageDispatcher final : public PushDispatcher {
+ public:
+  PushMessageDispatcher(const nsACString& aScope, nsIPrincipal* aPrincipal,
+                        const nsAString& aMessageId,
+                        const Maybe<nsTArray<uint8_t>>& aData);
   ~PushMessageDispatcher();
 
   nsresult NotifyObservers() override;
@@ -151,16 +142,15 @@ public:
   bool SendToParent(ContentChild* aParentActor) override;
   bool SendToChild(ContentParent* aContentActor) override;
 
-private:
+ private:
   const nsString mMessageId;
   const Maybe<nsTArray<uint8_t>> mData;
 };
 
-class PushSubscriptionChangeDispatcher final : public PushDispatcher
-{
-public:
+class PushSubscriptionChangeDispatcher final : public PushDispatcher {
+ public:
   PushSubscriptionChangeDispatcher(const nsACString& aScope,
-                                 nsIPrincipal* aPrincipal);
+                                   nsIPrincipal* aPrincipal);
   ~PushSubscriptionChangeDispatcher();
 
   nsresult NotifyObservers() override;
@@ -169,9 +159,8 @@ public:
   bool SendToChild(ContentParent* aContentActor) override;
 };
 
-class PushSubscriptionModifiedDispatcher : public PushDispatcher
-{
-public:
+class PushSubscriptionModifiedDispatcher : public PushDispatcher {
+ public:
   PushSubscriptionModifiedDispatcher(const nsACString& aScope,
                                      nsIPrincipal* aPrincipal);
   ~PushSubscriptionModifiedDispatcher();
@@ -182,13 +171,10 @@ public:
   bool SendToChild(ContentParent* aContentActor) override;
 };
 
-class PushErrorDispatcher final : public PushDispatcher
-{
-public:
-  PushErrorDispatcher(const nsACString& aScope,
-                      nsIPrincipal* aPrincipal,
-                      const nsAString& aMessage,
-                      uint32_t aFlags);
+class PushErrorDispatcher final : public PushDispatcher {
+ public:
+  PushErrorDispatcher(const nsACString& aScope, nsIPrincipal* aPrincipal,
+                      const nsAString& aMessage, uint32_t aFlags);
   ~PushErrorDispatcher();
 
   nsresult NotifyObservers() override;
@@ -196,14 +182,14 @@ public:
   bool SendToParent(ContentChild* aParentActor) override;
   bool SendToChild(ContentParent* aContentActor) override;
 
-private:
+ private:
   nsresult HandleNoChildProcesses() override;
 
   const nsString mMessage;
   uint32_t mFlags;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PushNotifier_h
+#endif  // mozilla_dom_PushNotifier_h

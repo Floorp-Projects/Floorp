@@ -179,8 +179,7 @@ ret
 // Approximately 49 instruction slots used
 #endif
 
-const BYTE SampleRadialGradientPS[] =
-{
+const BYTE SampleRadialGradientPS[] = {
     // clang-format off
      68,  88,  66,  67,  20, 173, 
     189, 124, 239,   6,  22,  67, 
@@ -926,8 +925,7 @@ ret
 // Approximately 36 instruction slots used
 #endif
 
-const BYTE SampleRadialGradientA0PS[] =
-{
+const BYTE SampleRadialGradientA0PS[] = {
     // clang-format off
      68,  88,  66,  67,  47, 105, 
     118, 126,   8, 122, 228, 233, 

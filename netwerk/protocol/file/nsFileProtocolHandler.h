@@ -11,19 +11,18 @@
 
 class nsIURIMutator;
 
-class nsFileProtocolHandler : public nsIFileProtocolHandler
-                            , public nsSupportsWeakReference
-{
-    virtual ~nsFileProtocolHandler() = default;
+class nsFileProtocolHandler : public nsIFileProtocolHandler,
+                              public nsSupportsWeakReference {
+  virtual ~nsFileProtocolHandler() = default;
 
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIPROTOCOLHANDLER
-    NS_DECL_NSIFILEPROTOCOLHANDLER
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIPROTOCOLHANDLER
+  NS_DECL_NSIFILEPROTOCOLHANDLER
 
-    nsFileProtocolHandler() = default;
+  nsFileProtocolHandler() = default;
 
-    MOZ_MUST_USE nsresult Init();
+  MOZ_MUST_USE nsresult Init();
 };
 
-#endif // !nsFileProtocolHandler_h__
+#endif  // !nsFileProtocolHandler_h__

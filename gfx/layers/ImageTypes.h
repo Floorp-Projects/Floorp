@@ -106,6 +106,6 @@ enum class YUVColorSpace {
   UNKNOWN,
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

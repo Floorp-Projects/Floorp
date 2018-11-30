@@ -19,9 +19,8 @@ uint64_t RandUint64() {
 
   int urandom_fd = open("/dev/urandom", O_RDONLY);
   CHECK(urandom_fd >= 0);
-  bool success = file_util::ReadFromFD(urandom_fd,
-                                       reinterpret_cast<char*>(&number),
-                                       sizeof(number));
+  bool success = file_util::ReadFromFD(
+      urandom_fd, reinterpret_cast<char*>(&number), sizeof(number));
   CHECK(success);
   close(urandom_fd);
 

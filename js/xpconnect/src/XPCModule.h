@@ -13,9 +13,12 @@
 #define XPCVARIANT_CONTRACTID "@mozilla.org/xpcvariant;1"
 
 // {FE4F7592-C1FC-4662-AC83-538841318803}
-#define SCRIPTABLE_INTERFACES_CID                                             \
-    {0xfe4f7592, 0xc1fc, 0x4662,                                              \
-      { 0xac, 0x83, 0x53, 0x88, 0x41, 0x31, 0x88, 0x3 } }
+#define SCRIPTABLE_INTERFACES_CID                   \
+  {                                                 \
+    0xfe4f7592, 0xc1fc, 0x4662, {                   \
+      0xac, 0x83, 0x53, 0x88, 0x41, 0x31, 0x88, 0x3 \
+    }                                               \
+  }
 
 #define MOZJSSUBSCRIPTLOADER_CONTRACTID "@mozilla.org/moz/jssubscript-loader;1"
 
@@ -23,11 +26,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
 
 NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
 
-#define XPCONNECT_CIDENTRIES                                                  \
-  { &kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, mozJSSubScriptLoaderConstructor },
+#define XPCONNECT_CIDENTRIES                    \
+  {&kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, \
+   mozJSSubScriptLoaderConstructor},
 
-#define XPCONNECT_CONTRACTS                                                   \
-  { MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID },
+#define XPCONNECT_CONTRACTS \
+  {MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID},
 
 nsresult xpcModuleCtor();
 void xpcModuleDtor();

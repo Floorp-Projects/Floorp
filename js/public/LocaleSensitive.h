@@ -11,16 +11,18 @@
 #ifndef js_LocaleSensitive_h
 #define js_LocaleSensitive_h
 
-#include "jstypes.h" // JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/RootingAPI.h" // JS::Handle, JS::MutableHandle
-#include "js/Utility.h" // JS::UniqueChars
+#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
+#include "js/Utility.h"     // JS::UniqueChars
 
 struct JSContext;
 struct JSRuntime;
 class JSString;
 
-namespace JS { union Value; }
+namespace JS {
+union Value;
+}
 
 /**
  * Set the default locale for the ECMAScript Internationalization API
@@ -32,8 +34,8 @@ namespace JS { union Value; }
  *
  * The locale string remains owned by the caller.
  */
-extern JS_PUBLIC_API bool
-JS_SetDefaultLocale(JSRuntime* rt, const char* locale);
+extern JS_PUBLIC_API bool JS_SetDefaultLocale(JSRuntime* rt,
+                                              const char* locale);
 
 /**
  * Return a copy of the default locale for the ECMAScript Internationalization
@@ -43,25 +45,23 @@ JS_SetDefaultLocale(JSRuntime* rt, const char* locale);
  * XXX Bug 1483961 means it's difficult to interpret the meaning of a null
  *     return value for the time being, and we should fix this!
  */
-extern JS_PUBLIC_API JS::UniqueChars
-JS_GetDefaultLocale(JSContext* cx);
+extern JS_PUBLIC_API JS::UniqueChars JS_GetDefaultLocale(JSContext* cx);
 
 /** Reset the default locale to OS defaults. */
-extern JS_PUBLIC_API void
-JS_ResetDefaultLocale(JSRuntime* rt);
+extern JS_PUBLIC_API void JS_ResetDefaultLocale(JSRuntime* rt);
 
-using JSLocaleToUpperCase =
-    bool (*)(JSContext* cx, JS::Handle<JSString*> src, JS::MutableHandle<JS::Value> rval);
+using JSLocaleToUpperCase = bool (*)(JSContext* cx, JS::Handle<JSString*> src,
+                                     JS::MutableHandle<JS::Value> rval);
 
-using JSLocaleToLowerCase =
-    bool (*)(JSContext* cx, JS::Handle<JSString*> src, JS::MutableHandle<JS::Value> rval);
+using JSLocaleToLowerCase = bool (*)(JSContext* cx, JS::Handle<JSString*> src,
+                                     JS::MutableHandle<JS::Value> rval);
 
-using JSLocaleCompare =
-    bool (*)(JSContext* cx, JS::Handle<JSString*> src1, JS::Handle<JSString*> src2,
-             JS::MutableHandle<JS::Value> rval);
+using JSLocaleCompare = bool (*)(JSContext* cx, JS::Handle<JSString*> src1,
+                                 JS::Handle<JSString*> src2,
+                                 JS::MutableHandle<JS::Value> rval);
 
-using JSLocaleToUnicode =
-    bool (*)(JSContext* cx, const char* src, JS::MutableHandle<JS::Value> rval);
+using JSLocaleToUnicode = bool (*)(JSContext* cx, const char* src,
+                                   JS::MutableHandle<JS::Value> rval);
 
 /**
  * A suite of locale-specific string conversion and error message callbacks
@@ -74,12 +74,11 @@ using JSLocaleToUnicode =
  * (You'll still be able to call the get/set-callbacks functions; they just
  * won't affect JavaScript semantics.)
  */
-struct JSLocaleCallbacks
-{
-    JSLocaleToUpperCase localeToUpperCase;
-    JSLocaleToLowerCase localeToLowerCase;
-    JSLocaleCompare localeCompare;
-    JSLocaleToUnicode localeToUnicode;
+struct JSLocaleCallbacks {
+  JSLocaleToUpperCase localeToUpperCase;
+  JSLocaleToLowerCase localeToLowerCase;
+  JSLocaleCompare localeCompare;
+  JSLocaleToUnicode localeToUnicode;
 };
 
 /**
@@ -87,13 +86,13 @@ struct JSLocaleCallbacks
  * |callbacks| must persist as long as the |JSRuntime|.  Pass |nullptr| to
  * restore default behavior.
  */
-extern JS_PUBLIC_API void
-JS_SetLocaleCallbacks(JSRuntime* rt, const JSLocaleCallbacks* callbacks);
+extern JS_PUBLIC_API void JS_SetLocaleCallbacks(
+    JSRuntime* rt, const JSLocaleCallbacks* callbacks);
 
 /**
  * Return the current locale callbacks, which may be nullptr.
  */
-extern JS_PUBLIC_API const JSLocaleCallbacks*
-JS_GetLocaleCallbacks(JSRuntime* rt);
+extern JS_PUBLIC_API const JSLocaleCallbacks* JS_GetLocaleCallbacks(
+    JSRuntime* rt);
 
 #endif /* js_LocaleSensitive_h */

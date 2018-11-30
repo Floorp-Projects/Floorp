@@ -28,28 +28,24 @@ namespace dom {
 ScriptLoadHandler::ScriptLoadHandler(ScriptLoader* aScriptLoader,
                                      ScriptLoadRequest* aRequest,
                                      SRICheckDataVerifier* aSRIDataVerifier)
-  : mScriptLoader(aScriptLoader),
-    mRequest(aRequest),
-    mSRIDataVerifier(aSRIDataVerifier),
-    mSRIStatus(NS_OK),
-    mDecoder()
-{
+    : mScriptLoader(aScriptLoader),
+      mRequest(aRequest),
+      mSRIDataVerifier(aSRIDataVerifier),
+      mSRIStatus(NS_OK),
+      mDecoder() {
   MOZ_ASSERT(mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());
 }
 
-ScriptLoadHandler::~ScriptLoadHandler()
-{}
+ScriptLoadHandler::~ScriptLoadHandler() {}
 
 NS_IMPL_ISUPPORTS(ScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
 
 NS_IMETHODIMP
 ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
                                      nsISupports* aContext,
-                                     uint32_t aDataLength,
-                                     const uint8_t* aData,
-                                     uint32_t* aConsumedLength)
-{
+                                     uint32_t aDataLength, const uint8_t* aData,
+                                     uint32_t* aConsumedLength) {
   if (mRequest->IsCanceled()) {
     // If request cancelled, ignore any incoming data.
     *aConsumedLength = aDataLength;
@@ -71,7 +67,8 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
     // Below we will/shall consume entire data chunk.
     *aConsumedLength = aDataLength;
 
-    // Decoder has already been initialized. -- trying to decode all loaded bytes.
+    // Decoder has already been initialized. -- trying to decode all loaded
+    // bytes.
     rv = DecodeRawData(aData, aDataLength, /* aEndOfStream = */ false);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -109,11 +106,9 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
   return rv;
 }
 
-nsresult
-ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
-                                 uint32_t aDataLength,
-                                 bool aEndOfStream)
-{
+nsresult ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
+                                          uint32_t aDataLength,
+                                          bool aEndOfStream) {
   CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(aDataLength);
   if (!needed.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -136,28 +131,25 @@ ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
   size_t written;
   bool hadErrors;
   Tie(result, read, written, hadErrors) = mDecoder->DecodeToUTF16(
-    MakeSpan(aData, aDataLength),
-    MakeSpan(scriptText.begin() + haveRead, needed.value()),
-    aEndOfStream);
+      MakeSpan(aData, aDataLength),
+      MakeSpan(scriptText.begin() + haveRead, needed.value()), aEndOfStream);
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == aDataLength);
   MOZ_ASSERT(written <= needed.value());
   Unused << hadErrors;
 
   haveRead += written;
-  MOZ_ASSERT(haveRead <= capacity.value(), "mDecoder produced more data than expected");
+  MOZ_ASSERT(haveRead <= capacity.value(),
+             "mDecoder produced more data than expected");
   MOZ_ALWAYS_TRUE(scriptText.resize(haveRead));
   mRequest->mScriptTextLength = scriptText.length();
 
   return NS_OK;
 }
 
-bool
-ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
-                                 const uint8_t* aData,
-                                 uint32_t aDataLength,
-                                 bool aEndOfStream)
-{
+bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
+                                      const uint8_t* aData,
+                                      uint32_t aDataLength, bool aEndOfStream) {
   // Check if decoder has already been created.
   if (mDecoder) {
     return true;
@@ -170,13 +162,10 @@ ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   return true;
 }
 
-bool
-ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
-                                 const uint8_t* aData,
-                                 uint32_t aDataLength,
-                                 bool aEndOfStream,
-                                 nsCString& oCharset)
-{
+bool ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
+                                      const uint8_t* aData,
+                                      uint32_t aDataLength, bool aEndOfStream,
+                                      nsCString& oCharset) {
   // JavaScript modules are always UTF-8.
   if (mRequest->IsModuleRequest()) {
     oCharset = "UTF-8";
@@ -226,8 +215,8 @@ ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
     mRequest->Element()->GetScriptCharset(hintCharset);
   } else {
     nsTArray<ScriptLoader::PreloadInfo>::index_type i =
-      mScriptLoader->mPreloads.IndexOf(mRequest, 0,
-            ScriptLoader::PreloadRequestComparator());
+        mScriptLoader->mPreloads.IndexOf(
+            mRequest, 0, ScriptLoader::PreloadRequestComparator());
 
     NS_ASSERTION(i != mScriptLoader->mPreloads.NoIndex,
                  "Incorrect preload bookkeeping");
@@ -256,25 +245,27 @@ ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   return true;
 }
 
-nsresult
-ScriptLoadHandler::MaybeDecodeSRI()
-{
-  if (!mSRIDataVerifier || mSRIDataVerifier->IsComplete() || NS_FAILED(mSRIStatus)) {
+nsresult ScriptLoadHandler::MaybeDecodeSRI() {
+  if (!mSRIDataVerifier || mSRIDataVerifier->IsComplete() ||
+      NS_FAILED(mSRIStatus)) {
     return NS_OK;
   }
 
   // Skip until the content is large enough to be decoded.
-  if (mRequest->mScriptBytecode.length() <= mSRIDataVerifier->DataSummaryLength()) {
+  if (mRequest->mScriptBytecode.length() <=
+      mSRIDataVerifier->DataSummaryLength()) {
     return NS_OK;
   }
 
   mSRIStatus = mSRIDataVerifier->ImportDataSummary(
-    mRequest->mScriptBytecode.length(), mRequest->mScriptBytecode.begin());
+      mRequest->mScriptBytecode.length(), mRequest->mScriptBytecode.begin());
 
   if (NS_FAILED(mSRIStatus)) {
     // We are unable to decode the hash contained in the alternate data which
     // contains the bytecode, or it does not use the same algorithm.
-    LOG(("ScriptLoadHandler::MaybeDecodeSRI, failed to decode SRI, restart request"));
+    LOG(
+        ("ScriptLoadHandler::MaybeDecodeSRI, failed to decode SRI, restart "
+         "request"));
     return mSRIStatus;
   }
 
@@ -282,9 +273,8 @@ ScriptLoadHandler::MaybeDecodeSRI()
   return NS_OK;
 }
 
-nsresult
-ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
-{
+nsresult ScriptLoadHandler::EnsureKnownDataType(
+    nsIIncrementalStreamLoader* aLoader) {
   MOZ_ASSERT(mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());
 
@@ -337,17 +327,15 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
 
 NS_IMETHODIMP
 ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
-                                    nsISupports* aContext,
-                                    nsresult aStatus,
+                                    nsISupports* aContext, nsresult aStatus,
                                     uint32_t aDataLength,
-                                    const uint8_t* aData)
-{
+                                    const uint8_t* aData) {
   nsresult rv = NS_OK;
   if (LOG_ENABLED()) {
     nsAutoCString url;
     mRequest->mURI->GetAsciiSpec(url);
-    LOG(("ScriptLoadRequest (%p): Stream complete (url = %s)",
-         mRequest.get(), url.get()));
+    LOG(("ScriptLoadRequest (%p): Stream complete (url = %s)", mRequest.get(),
+         url.get()));
   }
 
   nsCOMPtr<nsIRequest> channelRequest;
@@ -361,13 +349,13 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
     if (mRequest->IsTextSource()) {
       DebugOnly<bool> encoderSet =
-        EnsureDecoder(aLoader, aData, aDataLength, /* aEndOfStream = */ true);
+          EnsureDecoder(aLoader, aData, aDataLength, /* aEndOfStream = */ true);
       MOZ_ASSERT(encoderSet);
       rv = DecodeRawData(aData, aDataLength, /* aEndOfStream = */ true);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      LOG(("ScriptLoadRequest (%p): Source length = %u",
-           mRequest.get(), unsigned(mRequest->ScriptText().length())));
+      LOG(("ScriptLoadRequest (%p): Source length = %u", mRequest.get(),
+           unsigned(mRequest->ScriptText().length())));
 
       // If SRI is required for this load, appending new bytes to the hash.
       if (mSRIDataVerifier && NS_SUCCEEDED(mSRIStatus)) {
@@ -388,8 +376,8 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      LOG(("ScriptLoadRequest (%p): Bytecode length = %u",
-           mRequest.get(), unsigned(mRequest->mScriptBytecode.length())));
+      LOG(("ScriptLoadRequest (%p): Bytecode length = %u", mRequest.get(),
+           unsigned(mRequest->mScriptBytecode.length())));
 
       // If we abort while decoding the SRI, we fallback on explictly requesting
       // the source. Thus, we should not continue in
@@ -402,9 +390,9 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
       // The bytecode cache always starts with the SRI hash, thus even if there
       // is no SRI data verifier instance, we still want to skip the hash.
-      rv = SRICheckDataVerifier::DataSummaryLength(mRequest->mScriptBytecode.length(),
-                                                   mRequest->mScriptBytecode.begin(),
-                                                   &mRequest->mBytecodeOffset);
+      rv = SRICheckDataVerifier::DataSummaryLength(
+          mRequest->mScriptBytecode.length(), mRequest->mScriptBytecode.begin(),
+          &mRequest->mBytecodeOffset);
       if (NS_FAILED(rv)) {
         return channelRequest->Cancel(mScriptLoader->RestartLoad(mRequest));
       }
@@ -416,8 +404,8 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   if (NS_SUCCEEDED(rv) && mRequest->IsSource() &&
       nsContentUtils::IsBytecodeCacheEnabled()) {
     mRequest->mCacheInfo = do_QueryInterface(channelRequest);
-    LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p",
-         mRequest.get(), mRequest->mCacheInfo.get()));
+    LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", mRequest.get(),
+         mRequest->mCacheInfo.get()));
   }
 
   // we have to mediate and use mRequest.
@@ -435,5 +423,5 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 #undef LOG_ENABLED
 #undef LOG
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

@@ -10,14 +10,15 @@
 
 #include "nsISupports.h"
 
-#define NS_IKEYEVENTINPLUGINCALLBACK_IID \
-{ 0x543c5a8a, 0xc50e, 0x4cf9, \
-  { 0xa6, 0xba, 0x29, 0xa1, 0xc5, 0xa5, 0x47, 0x07 } }
+#define NS_IKEYEVENTINPLUGINCALLBACK_IID             \
+  {                                                  \
+    0x543c5a8a, 0xc50e, 0x4cf9, {                    \
+      0xa6, 0xba, 0x29, 0xa1, 0xc5, 0xa5, 0x47, 0x07 \
+    }                                                \
+  }
 
-
-class nsIKeyEventInPluginCallback : public nsISupports
-{
-public:
+class nsIKeyEventInPluginCallback : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IKEYEVENTINPLUGINCALLBACK_IID)
 
   /**
@@ -32,11 +33,10 @@ public:
    *                           parent process.  Otherwise, false.
    */
   virtual void HandledWindowedPluginKeyEvent(
-                 const mozilla::NativeEventData& aKeyEventData,
-                 bool aIsConsumed) = 0;
+      const mozilla::NativeEventData& aKeyEventData, bool aIsConsumed) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIKeyEventInPluginCallback,
                               NS_IKEYEVENTINPLUGINCALLBACK_IID)
 
-#endif // #ifndef nsIKeyEventInPluginCallback_h_
+#endif  // #ifndef nsIKeyEventInPluginCallback_h_

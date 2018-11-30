@@ -11,7 +11,7 @@
 
 // Unit Test class
 namespace test {
-  class RtpSourcesTest;
+class RtpSourcesTest;
 }
 
 namespace mozilla {
@@ -21,16 +21,14 @@ namespace mozilla {
  *  * csrc-audio-level RTP header extension
  *  * ssrc-audio-level RTP header extension
  */
-class RtpSourceObserver: public webrtc::RtpPacketObserver {
-public:
-
+class RtpSourceObserver : public webrtc::RtpPacketObserver {
+ public:
   RtpSourceObserver();
 
-  virtual ~RtpSourceObserver() {};
+  virtual ~RtpSourceObserver(){};
 
   void OnRtpPacket(const webrtc::WebRtcRTPHeader* aRtpHeader,
-                   const int64_t aTimestamp,
-                   const uint32_t aJitter) override;
+                   const int64_t aTimestamp, const uint32_t aJitter) override;
 
   /* Get the local time in MS from the same clock source that is used
    * to generate the capture timestamps. Use for computing the age of
@@ -46,16 +44,14 @@ public:
    * Note: this takes jitter into account when calculating the window so
    * the window is actually [time - jitter - 10 sec .. time - jitter]
    */
-  void
-  GetRtpSources(const int64_t aTimeNow,
-                nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
+  void GetRtpSources(const int64_t aTimeNow,
+                     nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
 
-private:
+ private:
   // Note: these are pool allocated
   struct RtpSourceEntry {
     RtpSourceEntry() = default;
-    void Update(const int64_t aTimestamp,
-                const bool aHasAudioLevel,
+    void Update(const int64_t aTimestamp, const bool aHasAudioLevel,
                 const uint8_t aAudioLevel) {
       jitterAdjustedTimestamp = aTimestamp;
       // Audio level range is 0 - 127 inclusive
@@ -93,25 +89,24 @@ private:
    *  Q4: I
    */
   class RtpSourceHistory {
-  public:
+   public:
     RtpSourceHistory() = default;
     // Finds the closest entry to a time, and passes that value to a closure
     // Note: the pointer is invalidated by any operation on the history
     // Note: the pointer is owned by the RtpSourceHistory
     const RtpSourceEntry* FindClosestNotAfter(int64_t aTime) const;
     // Inserts data into the history, may silently drop data if it is too old
-    void Insert(const int64_t aTimeNow,
-                const int64_t aTimestamp,
-                const bool aHasAudioLevel,
-                const uint8_t aAudioLevel);
+    void Insert(const int64_t aTimeNow, const int64_t aTimestamp,
+                const bool aHasAudioLevel, const uint8_t aAudioLevel);
     // Removes aged out from the jitter window
     void Prune(const int64_t aTimeNow);
     // Set Source
     void SetSource(uint32_t aSource, dom::RTCRtpSourceEntryType aType);
-  private:
+
+   private:
     // Finds a place to insert data and returns a reference to it
-    RtpSourceObserver::RtpSourceEntry&
-    Insert(const int64_t aTimeNow, const int64_t aTimestamp);
+    RtpSourceObserver::RtpSourceEntry& Insert(const int64_t aTimeNow,
+                                              const int64_t aTimestamp);
     // Is the history buffer empty?
     bool Empty() const { return !mDetailedHistory.size(); }
     // Is there an evicted entry
@@ -138,11 +133,12 @@ private:
   RtpSourceObserver(const RtpSourceObserver&) = delete;
   RtpSourceObserver& operator=(RtpSourceObserver const&) = delete;
   // Returns a key for a source and a type
-  static uint64_t
-  GetKey(const uint32_t id, const dom::RTCRtpSourceEntryType aType) {
-    return (aType == dom::RTCRtpSourceEntryType::Synchronization) ?
-      (static_cast<uint64_t>(id) | (static_cast<uint64_t>(0x1) << 32)) :
-      (static_cast<uint64_t>(id));
+  static uint64_t GetKey(const uint32_t id,
+                         const dom::RTCRtpSourceEntryType aType) {
+    return (aType == dom::RTCRtpSourceEntryType::Synchronization)
+               ? (static_cast<uint64_t>(id) |
+                  (static_cast<uint64_t>(0x1) << 32))
+               : (static_cast<uint64_t>(id));
   }
   // Returns the source from a key
   static uint32_t GetSourceFromKey(const uint64_t aKey) {
@@ -151,8 +147,8 @@ private:
   // Returns the type from a key
   static dom::RTCRtpSourceEntryType GetTypeFromKey(const uint64_t aKey) {
     return (aKey & (static_cast<uint64_t>(0x1) << 32))
-        ? dom::RTCRtpSourceEntryType::Synchronization
-        : dom::RTCRtpSourceEntryType::Contributing;
+               ? dom::RTCRtpSourceEntryType::Synchronization
+               : dom::RTCRtpSourceEntryType::Contributing;
   }
   // Map CSRC to RtpSourceEntry
   std::map<uint64_t, RtpSourceHistory> mRtpSources;
@@ -166,13 +162,12 @@ private:
 
   // Testing only
   // Inserts additional csrc audio levels for mochitests
-  friend void InsertAudioLevelForContributingSource(
-      RtpSourceObserver& observer,
-      uint32_t aCsrcSource,
-      int64_t aTimestamp,
-      bool aHasAudioLevel,
-      uint8_t aAudioLevel);
+  friend void InsertAudioLevelForContributingSource(RtpSourceObserver& observer,
+                                                    uint32_t aCsrcSource,
+                                                    int64_t aTimestamp,
+                                                    bool aHasAudioLevel,
+                                                    uint8_t aAudioLevel);
 };
-}
+}  // namespace mozilla
 #undef NG
-#endif // AUDIOLEVELOBSERVER_H
+#endif  // AUDIOLEVELOBSERVER_H

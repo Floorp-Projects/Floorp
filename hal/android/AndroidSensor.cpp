@@ -11,15 +11,13 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
 
-void
-EnableSensorNotifications(SensorType aSensor) {
+void EnableSensorNotifications(SensorType aSensor) {
   java::GeckoAppShell::EnableSensor(aSensor);
 }
 
-void
-DisableSensorNotifications(SensorType aSensor) {
+void DisableSensorNotifications(SensorType aSensor) {
   java::GeckoAppShell::DisableSensor(aSensor);
 }
 
-} // hal_impl
-} // mozilla
+}  // namespace hal_impl
+}  // namespace mozilla

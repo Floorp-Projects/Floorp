@@ -9,43 +9,42 @@ namespace mozilla {
 
 namespace widget {
 
-int32_t WidgetUtilsGTK::IsTouchDeviceSupportPresent()
-{
-#if GTK_CHECK_VERSION(3,4,0)
-    int32_t result = 0;
-    GdkDisplay* display = gdk_display_get_default();
-    if (!display) {
-        return 0;
+int32_t WidgetUtilsGTK::IsTouchDeviceSupportPresent() {
+#if GTK_CHECK_VERSION(3, 4, 0)
+  int32_t result = 0;
+  GdkDisplay* display = gdk_display_get_default();
+  if (!display) {
+    return 0;
+  }
+
+  GdkDeviceManager* manager = gdk_display_get_device_manager(display);
+  if (!manager) {
+    return 0;
+  }
+
+  GList* devices =
+      gdk_device_manager_list_devices(manager, GDK_DEVICE_TYPE_SLAVE);
+  GList* list = devices;
+
+  while (devices) {
+    GdkDevice* device = static_cast<GdkDevice*>(devices->data);
+    if (gdk_device_get_source(device) == GDK_SOURCE_TOUCHSCREEN) {
+      result = 1;
+      break;
     }
+    devices = devices->next;
+  }
 
-    GdkDeviceManager* manager = gdk_display_get_device_manager(display);
-    if (!manager) {
-        return 0;
-    }
+  if (list) {
+    g_list_free(list);
+  }
 
-    GList* devices =
-        gdk_device_manager_list_devices(manager, GDK_DEVICE_TYPE_SLAVE);
-    GList* list = devices;
-
-    while (devices) {
-        GdkDevice* device = static_cast<GdkDevice*>(devices->data);
-        if (gdk_device_get_source(device) == GDK_SOURCE_TOUCHSCREEN) {
-            result = 1;
-            break;
-        }
-        devices = devices->next;
-   }
-
-   if (list) {
-       g_list_free(list);
-   }
-
-   return result;
+  return result;
 #else
-   return 0;
+  return 0;
 #endif
 }
 
 }  // namespace widget
 
-} // namespace mozilla
+}  // namespace mozilla

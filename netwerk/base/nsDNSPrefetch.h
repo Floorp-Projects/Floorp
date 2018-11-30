@@ -17,41 +17,40 @@
 class nsIURI;
 class nsIDNSService;
 
-class nsDNSPrefetch final : public nsIDNSListener
-{
-    ~nsDNSPrefetch() = default;
+class nsDNSPrefetch final : public nsIDNSListener {
+  ~nsDNSPrefetch() = default;
 
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIDNSLISTENER
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIDNSLISTENER
 
-    nsDNSPrefetch(nsIURI *aURI, mozilla::OriginAttributes& aOriginAttributes,
-                  nsIDNSListener *aListener, bool storeTiming);
-    bool TimingsValid() const {
-        return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
-    }
-    // Only use the two timings if TimingsValid() returns true
-    const mozilla::TimeStamp& StartTimestamp() const { return mStartTimestamp; }
-    const mozilla::TimeStamp& EndTimestamp() const { return mEndTimestamp; }
+  nsDNSPrefetch(nsIURI* aURI, mozilla::OriginAttributes& aOriginAttributes,
+                nsIDNSListener* aListener, bool storeTiming);
+  bool TimingsValid() const {
+    return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
+  }
+  // Only use the two timings if TimingsValid() returns true
+  const mozilla::TimeStamp& StartTimestamp() const { return mStartTimestamp; }
+  const mozilla::TimeStamp& EndTimestamp() const { return mEndTimestamp; }
 
-    static nsresult Initialize(nsIDNSService *aDNSService);
-    static nsresult Shutdown();
+  static nsresult Initialize(nsIDNSService* aDNSService);
+  static nsresult Shutdown();
 
-    // Call one of the following methods to start the Prefetch.
-    nsresult PrefetchHigh(bool refreshDNS = false);
-    nsresult PrefetchMedium(bool refreshDNS = false);
-    nsresult PrefetchLow(bool refreshDNS = false);
+  // Call one of the following methods to start the Prefetch.
+  nsresult PrefetchHigh(bool refreshDNS = false);
+  nsresult PrefetchMedium(bool refreshDNS = false);
+  nsresult PrefetchLow(bool refreshDNS = false);
 
-private:
-    nsCString mHostname;
-    bool mIsHttps;
-    mozilla::OriginAttributes mOriginAttributes;
-    bool mStoreTiming;
-    mozilla::TimeStamp mStartTimestamp;
-    mozilla::TimeStamp mEndTimestamp;
-    nsWeakPtr mListener;
+ private:
+  nsCString mHostname;
+  bool mIsHttps;
+  mozilla::OriginAttributes mOriginAttributes;
+  bool mStoreTiming;
+  mozilla::TimeStamp mStartTimestamp;
+  mozilla::TimeStamp mEndTimestamp;
+  nsWeakPtr mListener;
 
-    nsresult Prefetch(uint16_t flags);
+  nsresult Prefetch(uint16_t flags);
 };
 
 #endif

@@ -6,10 +6,10 @@
 
 #include "TextureDIB.h"
 #include "gfx2DGlue.h"
-#include "mozilla/gfx/DataSurfaceHelpers.h" // For BufferSizeFromDimensions
+#include "mozilla/gfx/DataSurfaceHelpers.h"  // For BufferSizeFromDimensions
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/TextureForwarder.h" // For LayersIPCChannel
+#include "mozilla/layers/TextureForwarder.h"  // For LayersIPCChannel
 
 namespace mozilla {
 
@@ -18,66 +18,54 @@ using namespace gfx;
 namespace layers {
 
 /**
-  * Can only be drawn into through Cairo.
-  * The coresponding TextureHost depends on the compositor
-  */
-class MemoryDIBTextureData : public DIBTextureData
-{
-public:
+ * Can only be drawn into through Cairo.
+ * The coresponding TextureHost depends on the compositor
+ */
+class MemoryDIBTextureData : public DIBTextureData {
+ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual TextureData*
-  CreateSimilar(LayersIPCChannel* aAllocator,
-                LayersBackend aLayersBackend,
-                TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
+  virtual TextureData* CreateSimilar(
+      LayersIPCChannel* aAllocator, LayersBackend aLayersBackend,
+      TextureFlags aFlags = TextureFlags::DEFAULT,
+      TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
-  static
-  DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
+  static DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
-  virtual void Deallocate(LayersIPCChannel* aAllocator) override
-  {
+  virtual void Deallocate(LayersIPCChannel* aAllocator) override {
     mSurface = nullptr;
   }
 
   MemoryDIBTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                        gfxWindowsSurface* aSurface)
-  : DIBTextureData(aSize, aFormat, aSurface)
-  {
+      : DIBTextureData(aSize, aFormat, aSurface) {
     MOZ_COUNT_CTOR(MemoryDIBTextureData);
   }
 
-  virtual ~MemoryDIBTextureData()
-  {
-    MOZ_COUNT_DTOR(MemoryDIBTextureData);
-  }
+  virtual ~MemoryDIBTextureData() { MOZ_COUNT_DTOR(MemoryDIBTextureData); }
 };
 
 /**
-  * Can only be drawn into through Cairo.
-  * The coresponding TextureHost depends on the compositor
-  */
-class ShmemDIBTextureData : public DIBTextureData
-{
-public:
+ * Can only be drawn into through Cairo.
+ * The coresponding TextureHost depends on the compositor
+ */
+class ShmemDIBTextureData : public DIBTextureData {
+ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual TextureData*
-  CreateSimilar(LayersIPCChannel* aAllocator,
-                LayersBackend aLayersBackend,
-                TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
+  virtual TextureData* CreateSimilar(
+      LayersIPCChannel* aAllocator, LayersBackend aLayersBackend,
+      TextureFlags aFlags = TextureFlags::DEFAULT,
+      TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
-  static
-  DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                         LayersIPCChannel* aAllocator);
+  static DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                                LayersIPCChannel* aAllocator);
 
-  void DeallocateData()
-  {
+  void DeallocateData() {
     if (mSurface) {
       ::DeleteObject(mBitmap);
       ::DeleteDC(mDC);
@@ -89,26 +77,22 @@ public:
     }
   }
 
-  virtual void Deallocate(LayersIPCChannel* aAllocator) override
-  {
+  virtual void Deallocate(LayersIPCChannel* aAllocator) override {
     DeallocateData();
   }
 
   ShmemDIBTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                      gfxWindowsSurface* aSurface,
-                      HANDLE aFileMapping, HANDLE aHostHandle,
-                      HDC aDC, HBITMAP aBitmap)
-  : DIBTextureData(aSize, aFormat, aSurface)
-  , mFileMapping(aFileMapping)
-  , mHostHandle(aHostHandle)
-  , mDC(aDC)
-  , mBitmap(aBitmap)
-  {
+                      gfxWindowsSurface* aSurface, HANDLE aFileMapping,
+                      HANDLE aHostHandle, HDC aDC, HBITMAP aBitmap)
+      : DIBTextureData(aSize, aFormat, aSurface),
+        mFileMapping(aFileMapping),
+        mHostHandle(aHostHandle),
+        mDC(aDC),
+        mBitmap(aBitmap) {
     MOZ_COUNT_CTOR(ShmemDIBTextureData);
   }
 
-  virtual ~ShmemDIBTextureData() 
-  {
+  virtual ~ShmemDIBTextureData() {
     MOZ_COUNT_DTOR(ShmemDIBTextureData);
 
     // The host side has its own references and handles to this data, we can
@@ -122,9 +106,7 @@ public:
   HBITMAP mBitmap;
 };
 
-void
-DIBTextureData::FillInfo(TextureData::Info& aInfo) const
-{
+void DIBTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
   aInfo.hasIntermediateBuffer = true;
@@ -133,16 +115,14 @@ DIBTextureData::FillInfo(TextureData::Info& aInfo) const
   aInfo.canExposeMappedData = false;
 }
 
-already_AddRefed<gfx::DrawTarget>
-DIBTextureData::BorrowDrawTarget()
-{
-  return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mSurface, mSize);
+already_AddRefed<gfx::DrawTarget> DIBTextureData::BorrowDrawTarget() {
+  return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mSurface,
+                                                                mSize);
 }
 
-DIBTextureData*
-DIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                       LayersIPCChannel* aAllocator)
-{
+DIBTextureData* DIBTextureData::Create(gfx::IntSize aSize,
+                                       gfx::SurfaceFormat aFormat,
+                                       LayersIPCChannel* aAllocator) {
   if (!aAllocator) {
     return nullptr;
   }
@@ -156,34 +136,29 @@ DIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 }
 
-TextureData*
-MemoryDIBTextureData::CreateSimilar(LayersIPCChannel* aAllocator,
-                                    LayersBackend aLayersBackend,
-                                    TextureFlags aFlags,
-                                    TextureAllocationFlags aAllocFlags) const
-{
+TextureData* MemoryDIBTextureData::CreateSimilar(
+    LayersIPCChannel* aAllocator, LayersBackend aLayersBackend,
+    TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const {
   if (!aAllocator) {
     return nullptr;
   }
   return MemoryDIBTextureData::Create(mSize, mFormat);
 }
 
-bool
-MemoryDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
-{
+bool MemoryDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   MOZ_ASSERT(mSurface);
   // The host will release this ref when it receives the surface descriptor.
   // We AddRef in case we die before the host receives the pointer.
-  aOutDescriptor = SurfaceDescriptorDIB(reinterpret_cast<uintptr_t>(mSurface.get()));
+  aOutDescriptor =
+      SurfaceDescriptorDIB(reinterpret_cast<uintptr_t>(mSurface.get()));
   mSurface.get()->AddRef();
   return true;
 }
 
-DIBTextureData*
-MemoryDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
-{
-  RefPtr<gfxWindowsSurface> surface
-    = new gfxWindowsSurface(aSize, SurfaceFormatToImageFormat(aFormat));
+DIBTextureData* MemoryDIBTextureData::Create(gfx::IntSize aSize,
+                                             gfx::SurfaceFormat aFormat) {
+  RefPtr<gfxWindowsSurface> surface =
+      new gfxWindowsSurface(aSize, SurfaceFormatToImageFormat(aFormat));
   if (!surface || surface->CairoStatus()) {
     NS_WARNING("Could not create DIB surface");
     return nullptr;
@@ -192,15 +167,14 @@ MemoryDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
   return new MemoryDIBTextureData(aSize, aFormat, surface);
 }
 
-bool
-MemoryDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
-{
+bool MemoryDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
   RefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
 
   RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (DIB).";
+    gfxCriticalError()
+        << "Failed to GetDataSurface in UpdateFromSurface (DIB).";
     return false;
   }
 
@@ -220,26 +194,21 @@ MemoryDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   return true;
 }
 
-TextureData*
-ShmemDIBTextureData::CreateSimilar(LayersIPCChannel* aAllocator,
-                                   LayersBackend aLayersBackend,
-                                   TextureFlags aFlags,
-                                   TextureAllocationFlags aAllocFlags) const
-{
+TextureData* ShmemDIBTextureData::CreateSimilar(
+    LayersIPCChannel* aAllocator, LayersBackend aLayersBackend,
+    TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const {
   if (!aAllocator) {
     return nullptr;
   }
   return ShmemDIBTextureData::Create(mSize, mFormat, aAllocator);
 }
 
-bool
-ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
-{
-
+bool ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
   RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (DTD).";
+    gfxCriticalError()
+        << "Failed to GetDataSurface in UpdateFromSurface (DTD).";
     return false;
   }
 
@@ -252,7 +221,8 @@ ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   GdiFlush();
 
   uint32_t stride = mSize.width * BytesPerPixel(mFormat);
-  uint8_t* data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_WRITE, 0, 0, stride * mSize.height);
+  uint8_t* data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_WRITE, 0, 0,
+                                            stride * mSize.height);
 
   if (!data) {
     gfxCriticalError() << "Failed to map view of file for UpdateFromSurface.";
@@ -261,8 +231,7 @@ ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   }
 
   for (int y = 0; y < srcSurf->GetSize().height; y++) {
-    memcpy(data + stride * y,
-           sourceMap.mData + sourceMap.mStride * y,
+    memcpy(data + stride * y, sourceMap.mData + sourceMap.mStride * y,
            srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
   }
 
@@ -272,43 +241,43 @@ ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   return true;
 }
 
-bool
-ShmemDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
-{
+bool ShmemDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
     return false;
   }
 
   ::GdiFlush();
-  aOutDescriptor = SurfaceDescriptorFileMapping((WindowsHandle)mHostHandle, mFormat, mSize);
+  aOutDescriptor =
+      SurfaceDescriptorFileMapping((WindowsHandle)mHostHandle, mFormat, mSize);
   return true;
 }
 
-DIBTextureData*
-ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                            LayersIPCChannel* aAllocator)
-{
+DIBTextureData* ShmemDIBTextureData::Create(gfx::IntSize aSize,
+                                            gfx::SurfaceFormat aFormat,
+                                            LayersIPCChannel* aAllocator) {
   MOZ_ASSERT(aAllocator->GetParentPid() != base::ProcessId());
 
   DWORD mapSize = aSize.width * aSize.height * BytesPerPixel(aFormat);
-  HANDLE fileMapping = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, mapSize, NULL);
+  HANDLE fileMapping = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
+                                           PAGE_READWRITE, 0, mapSize, NULL);
 
   if (!fileMapping) {
-    gfxCriticalError() << "Failed to create memory file mapping for " << mapSize << " bytes.";
+    gfxCriticalError() << "Failed to create memory file mapping for " << mapSize
+                       << " bytes.";
     return nullptr;
   }
 
   BITMAPV4HEADER header;
   memset(&header, 0, sizeof(BITMAPV4HEADER));
-  header.bV4Size          = sizeof(BITMAPV4HEADER);
-  header.bV4Width         = aSize.width;
-  header.bV4Height        = -LONG(aSize.height); // top-to-buttom DIB
-  header.bV4Planes        = 1;
-  header.bV4BitCount      = 32;
+  header.bV4Size = sizeof(BITMAPV4HEADER);
+  header.bV4Width = aSize.width;
+  header.bV4Height = -LONG(aSize.height);  // top-to-buttom DIB
+  header.bV4Planes = 1;
+  header.bV4BitCount = 32;
   header.bV4V4Compression = BI_BITFIELDS;
-  header.bV4RedMask       = 0x00FF0000;
-  header.bV4GreenMask     = 0x0000FF00;
-  header.bV4BlueMask      = 0x000000FF;
+  header.bV4RedMask = 0x00FF0000;
+  header.bV4GreenMask = 0x0000FF00;
+  header.bV4BlueMask = 0x000000FF;
 
   HDC nulldc = ::GetDC(NULL);
 
@@ -323,9 +292,8 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   void* bits;
-  HBITMAP bitmap = ::CreateDIBSection(dc, (BITMAPINFO*)&header,
-                                      DIB_RGB_COLORS, &bits,
-                                      fileMapping, 0);
+  HBITMAP bitmap = ::CreateDIBSection(dc, (BITMAPINFO*)&header, DIB_RGB_COLORS,
+                                      &bits, fileMapping, 0);
 
   if (!bitmap) {
     gfxCriticalError() << "Failed to create DIB section for a bitmap of size "
@@ -338,8 +306,7 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   ::SelectObject(dc, bitmap);
 
   RefPtr<gfxWindowsSurface> surface = new gfxWindowsSurface(dc, 0);
-  if (surface->CairoStatus())
-  {
+  if (surface->CairoStatus()) {
     ::DeleteObject(bitmap);
     ::DeleteDC(dc);
     ::CloseHandle(fileMapping);
@@ -352,57 +319,47 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 
   if (!ipc::DuplicateHandle(fileMapping, aAllocator->GetParentPid(),
                             &hostHandle, 0, DUPLICATE_SAME_ACCESS)) {
-    gfxCriticalError() << "Failed to duplicate handle to parent process for surface.";
+    gfxCriticalError()
+        << "Failed to duplicate handle to parent process for surface.";
     ::DeleteObject(bitmap);
     ::DeleteDC(dc);
     ::CloseHandle(fileMapping);
     return nullptr;
   }
 
-  return new ShmemDIBTextureData(aSize, aFormat, surface,
-                                 fileMapping, hostHandle,
-                                 dc, bitmap);
+  return new ShmemDIBTextureData(aSize, aFormat, surface, fileMapping,
+                                 hostHandle, dc, bitmap);
 }
 
-
-bool
-TextureHostDirectUpload::Lock()
-{
+bool TextureHostDirectUpload::Lock() {
   MOZ_ASSERT(!mIsLocked);
   mIsLocked = true;
   return true;
 }
 
-void
-TextureHostDirectUpload::Unlock()
-{
+void TextureHostDirectUpload::Unlock() {
   MOZ_ASSERT(mIsLocked);
   mIsLocked = false;
 }
 
-void
-TextureHostDirectUpload::SetTextureSourceProvider(TextureSourceProvider* aProvider)
-{
+void TextureHostDirectUpload::SetTextureSourceProvider(
+    TextureSourceProvider* aProvider) {
   mProvider = aProvider;
 }
 
-void
-TextureHostDirectUpload::DeallocateDeviceData()
-{
+void TextureHostDirectUpload::DeallocateDeviceData() {
   if (mTextureSource) {
     mTextureSource->DeallocateDeviceData();
   }
 }
 
-bool
-TextureHostDirectUpload::BindTextureSource(CompositableTextureSourceRef& aTexture)
-{
+bool TextureHostDirectUpload::BindTextureSource(
+    CompositableTextureSourceRef& aTexture) {
   return AcquireTextureSource(aTexture);
 }
 
-bool
-TextureHostDirectUpload::AcquireTextureSource(CompositableTextureSourceRef& aTexture)
-{
+bool TextureHostDirectUpload::AcquireTextureSource(
+    CompositableTextureSourceRef& aTexture) {
   if (!mTextureSource) {
     Updated();
   }
@@ -413,20 +370,17 @@ TextureHostDirectUpload::AcquireTextureSource(CompositableTextureSourceRef& aTex
 
 DIBTextureHost::DIBTextureHost(TextureFlags aFlags,
                                const SurfaceDescriptorDIB& aDescriptor)
-  : TextureHostDirectUpload(aFlags, SurfaceFormat::B8G8R8X8, IntSize())
-{
+    : TextureHostDirectUpload(aFlags, SurfaceFormat::B8G8R8X8, IntSize()) {
   // We added an extra ref for transport, so we shouldn't AddRef now.
   mSurface =
-    dont_AddRef(reinterpret_cast<gfxWindowsSurface*>(aDescriptor.surface()));
+      dont_AddRef(reinterpret_cast<gfxWindowsSurface*>(aDescriptor.surface()));
   MOZ_ASSERT(mSurface);
 
   mSize = mSurface->GetSize();
   mFormat = mSurface->GetSurfaceFormat();
 }
 
-void
-DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion)
-{
+void DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion) {
   if (!mProvider) {
     // This can happen if we send textures to a compositable that isn't yet
     // attached to a layer.
@@ -438,44 +392,41 @@ DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion)
   }
 
   if (mSurface->CairoStatus()) {
-      gfxWarning() << "Bad Cairo surface internal update " << mSurface->CairoStatus();
-      mTextureSource = nullptr;
-      return;
+    gfxWarning() << "Bad Cairo surface internal update "
+                 << mSurface->CairoStatus();
+    mTextureSource = nullptr;
+    return;
   }
   RefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
 
-  RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(imgSurf->Data(), imgSurf->Stride(), mSize, mFormat);
+  RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(
+      imgSurf->Data(), imgSurf->Stride(), mSize, mFormat);
 
-  if (!surf || !mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
+  if (!surf ||
+      !mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
     mTextureSource = nullptr;
   }
 
   ReadUnlock();
 }
 
-TextureHostFileMapping::TextureHostFileMapping(TextureFlags aFlags,
-                                               const SurfaceDescriptorFileMapping& aDescriptor)
-  : TextureHostDirectUpload(aFlags, aDescriptor.format(), aDescriptor.size())
-  , mFileMapping((HANDLE)aDescriptor.handle())
-{
-}
+TextureHostFileMapping::TextureHostFileMapping(
+    TextureFlags aFlags, const SurfaceDescriptorFileMapping& aDescriptor)
+    : TextureHostDirectUpload(aFlags, aDescriptor.format(), aDescriptor.size()),
+      mFileMapping((HANDLE)aDescriptor.handle()) {}
 
-TextureHostFileMapping::~TextureHostFileMapping()
-{
+TextureHostFileMapping::~TextureHostFileMapping() {
   ::CloseHandle(mFileMapping);
 }
 
 UserDataKey kFileMappingKey;
 
-static void UnmapFileData(void* aData)
-{
+static void UnmapFileData(void* aData) {
   MOZ_ASSERT(aData);
   ::UnmapViewOfFile(aData);
 }
 
-void
-TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
-{
+void TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion) {
   if (!mProvider) {
     // This can happen if we send textures to a compositable that isn't yet
     // attached to a layer.
@@ -487,18 +438,21 @@ TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
   }
 
   uint8_t* data = nullptr;
-  int32_t totalBytes = BufferSizeFromDimensions(mSize.width, mSize.height, BytesPerPixel(mFormat));
+  int32_t totalBytes = BufferSizeFromDimensions(mSize.width, mSize.height,
+                                                BytesPerPixel(mFormat));
   if (totalBytes > 0) {
-    data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_READ, 0, 0, totalBytes);
+    data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_READ, 0, 0,
+                                     totalBytes);
   }
 
   if (data) {
-    RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(data, mSize.width * BytesPerPixel(mFormat), mSize, mFormat);
+    RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(
+        data, mSize.width * BytesPerPixel(mFormat), mSize, mFormat);
     if (surf) {
-        surf->AddUserData(&kFileMappingKey, data, UnmapFileData);
-        if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
-          mTextureSource = nullptr;
-        }
+      surf->AddUserData(&kFileMappingKey, data, UnmapFileData);
+      if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
+        mTextureSource = nullptr;
+      }
     } else {
       mTextureSource = nullptr;
     }
@@ -509,5 +463,5 @@ TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
   ReadUnlock();
 }
 
-}
-}
+}  // namespace layers
+}  // namespace mozilla

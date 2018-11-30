@@ -14,128 +14,91 @@
 
 BEGIN_QUOTA_NAMESPACE
 
-class OriginScope
-{
-  class Origin
-  {
+class OriginScope {
+  class Origin {
     nsCString mOrigin;
     nsCString mOriginNoSuffix;
     UniquePtr<OriginAttributes> mAttributes;
 
-  public:
-    explicit Origin(const nsACString& aOrigin)
-      : mOrigin(aOrigin)
-    {
+   public:
+    explicit Origin(const nsACString& aOrigin) : mOrigin(aOrigin) {
       InitMembers();
     }
 
     Origin(const Origin& aOther)
-      : mOrigin(aOther.mOrigin)
-      , mOriginNoSuffix(aOther.mOriginNoSuffix)
-      , mAttributes(MakeUnique<OriginAttributes>(*aOther.mAttributes))
-    { }
+        : mOrigin(aOther.mOrigin),
+          mOriginNoSuffix(aOther.mOriginNoSuffix),
+          mAttributes(MakeUnique<OriginAttributes>(*aOther.mAttributes)) {}
 
     Origin(Origin&& aOther) = default;
 
-    const nsACString&
-    GetOrigin() const
-    {
-      return mOrigin;
-    }
+    const nsACString& GetOrigin() const { return mOrigin; }
 
-    void
-    SetOrigin(const nsACString& aOrigin)
-    {
+    void SetOrigin(const nsACString& aOrigin) {
       mOrigin = aOrigin;
 
       InitMembers();
     }
 
-    const nsACString&
-    GetOriginNoSuffix() const
-    {
-      return mOriginNoSuffix;
-    }
+    const nsACString& GetOriginNoSuffix() const { return mOriginNoSuffix; }
 
-    const OriginAttributes&
-    GetAttributes() const
-    {
+    const OriginAttributes& GetAttributes() const {
       MOZ_ASSERT(mAttributes);
 
       return *mAttributes;
     }
 
-  private:
-    void
-    InitMembers()
-    {
+   private:
+    void InitMembers() {
       mAttributes = MakeUnique<OriginAttributes>();
 
-      MOZ_ALWAYS_TRUE(mAttributes->PopulateFromOrigin(mOrigin,
-                                                      mOriginNoSuffix));
+      MOZ_ALWAYS_TRUE(
+          mAttributes->PopulateFromOrigin(mOrigin, mOriginNoSuffix));
     }
   };
 
-  class Prefix
-  {
+  class Prefix {
     nsCString mOriginNoSuffix;
 
-  public:
+   public:
     explicit Prefix(const nsACString& aOriginNoSuffix)
-      : mOriginNoSuffix(aOriginNoSuffix)
-    { }
+        : mOriginNoSuffix(aOriginNoSuffix) {}
 
-    const nsCString&
-    GetOriginNoSuffix() const
-    {
-      return mOriginNoSuffix;
-    }
+    const nsCString& GetOriginNoSuffix() const { return mOriginNoSuffix; }
 
-    void
-    SetOriginNoSuffix(const nsACString& aOriginNoSuffix)
-    {
+    void SetOriginNoSuffix(const nsACString& aOriginNoSuffix) {
       mOriginNoSuffix = aOriginNoSuffix;
     }
   };
 
-  class Pattern
-  {
+  class Pattern {
     UniquePtr<OriginAttributesPattern> mPattern;
 
-  public:
+   public:
     explicit Pattern(const OriginAttributesPattern& aPattern)
-      : mPattern(MakeUnique<OriginAttributesPattern>(aPattern))
-    { }
+        : mPattern(MakeUnique<OriginAttributesPattern>(aPattern)) {}
 
     explicit Pattern(const nsAString& aJSONPattern)
-      : mPattern(MakeUnique<OriginAttributesPattern>())
-    {
+        : mPattern(MakeUnique<OriginAttributesPattern>()) {
       MOZ_ALWAYS_TRUE(mPattern->Init(aJSONPattern));
     }
 
     Pattern(const Pattern& aOther)
-      : mPattern(MakeUnique<OriginAttributesPattern>(*aOther.mPattern))
-    { }
+        : mPattern(MakeUnique<OriginAttributesPattern>(*aOther.mPattern)) {}
 
     Pattern(Pattern&& aOther) = default;
 
-    const OriginAttributesPattern&
-    GetPattern() const
-    {
+    const OriginAttributesPattern& GetPattern() const {
       MOZ_ASSERT(mPattern);
 
       return *mPattern;
     }
 
-    void
-    SetPattern(const OriginAttributesPattern& aPattern)
-    {
+    void SetPattern(const OriginAttributesPattern& aPattern) {
       mPattern = MakeUnique<OriginAttributesPattern>(aPattern);
     }
 
-    nsString
-    GetJSONPattern() const
-    {
+    nsString GetJSONPattern() const {
       MOZ_ASSERT(mPattern);
 
       nsString result;
@@ -145,121 +108,72 @@ class OriginScope
     }
   };
 
-  struct Null
-  { };
+  struct Null {};
 
   using DataType = Variant<Origin, Prefix, Pattern, Null>;
 
   DataType mData;
 
-public:
-  OriginScope()
-    : mData(Null())
-  { }
+ public:
+  OriginScope() : mData(Null()) {}
 
-  static OriginScope
-  FromOrigin(const nsACString& aOrigin)
-  {
+  static OriginScope FromOrigin(const nsACString& aOrigin) {
     return OriginScope(std::move(Origin(aOrigin)));
   }
 
-  static OriginScope
-  FromPrefix(const nsACString& aPrefix)
-  {
+  static OriginScope FromPrefix(const nsACString& aPrefix) {
     return OriginScope(std::move(Prefix(aPrefix)));
   }
 
-  static OriginScope
-  FromPattern(const OriginAttributesPattern& aPattern)
-  {
+  static OriginScope FromPattern(const OriginAttributesPattern& aPattern) {
     return OriginScope(std::move(Pattern(aPattern)));
   }
 
-  static OriginScope
-  FromJSONPattern(const nsAString& aJSONPattern)
-  {
+  static OriginScope FromJSONPattern(const nsAString& aJSONPattern) {
     return OriginScope(std::move(Pattern(aJSONPattern)));
   }
 
-  static OriginScope
-  FromNull()
-  {
-    return OriginScope(std::move(Null()));
-  }
+  static OriginScope FromNull() { return OriginScope(std::move(Null())); }
 
-  bool
-  IsOrigin() const
-  {
-    return mData.is<Origin>();
-  }
+  bool IsOrigin() const { return mData.is<Origin>(); }
 
-  bool
-  IsPrefix() const
-  {
-    return mData.is<Prefix>();
-  }
+  bool IsPrefix() const { return mData.is<Prefix>(); }
 
-  bool
-  IsPattern() const
-  {
-    return mData.is<Pattern>();
-  }
+  bool IsPattern() const { return mData.is<Pattern>(); }
 
-  bool
-  IsNull() const
-  {
-    return mData.is<Null>();
-  }
+  bool IsNull() const { return mData.is<Null>(); }
 
-  void
-  SetFromOrigin(const nsACString& aOrigin)
-  {
+  void SetFromOrigin(const nsACString& aOrigin) {
     mData = AsVariant(Origin(aOrigin));
   }
 
-  void
-  SetFromPrefix(const nsACString& aPrefix)
-  {
+  void SetFromPrefix(const nsACString& aPrefix) {
     mData = AsVariant(Prefix(aPrefix));
   }
 
-  void
-  SetFromPattern(const OriginAttributesPattern& aPattern)
-  {
+  void SetFromPattern(const OriginAttributesPattern& aPattern) {
     mData = AsVariant(Pattern(aPattern));
   }
 
-  void
-  SetFromJSONPattern(const nsAString& aJSONPattern)
-  {
+  void SetFromJSONPattern(const nsAString& aJSONPattern) {
     mData = AsVariant(Pattern(aJSONPattern));
   }
 
-  void
-  SetFromNull()
-  {
-    mData = AsVariant(Null());
-  }
+  void SetFromNull() { mData = AsVariant(Null()); }
 
-  const nsACString&
-  GetOrigin() const
-  {
+  const nsACString& GetOrigin() const {
     MOZ_ASSERT(IsOrigin());
 
     return mData.as<Origin>().GetOrigin();
   }
 
-  void
-  SetOrigin(const nsACString& aOrigin)
-  {
+  void SetOrigin(const nsACString& aOrigin) {
     MOZ_ASSERT(IsOrigin());
 
     mData.as<Origin>().SetOrigin(aOrigin);
   }
 
-  const nsACString&
-  GetOriginNoSuffix() const
-  {
+  const nsACString& GetOriginNoSuffix() const {
     MOZ_ASSERT(IsOrigin() || IsPrefix());
 
     if (IsOrigin()) {
@@ -268,130 +182,82 @@ public:
     return mData.as<Prefix>().GetOriginNoSuffix();
   }
 
-  void
-  SetOriginNoSuffix(const nsACString& aOriginNoSuffix)
-  {
+  void SetOriginNoSuffix(const nsACString& aOriginNoSuffix) {
     MOZ_ASSERT(IsPrefix());
 
     mData.as<Prefix>().SetOriginNoSuffix(aOriginNoSuffix);
   }
 
-  const OriginAttributesPattern&
-  GetPattern() const
-  {
+  const OriginAttributesPattern& GetPattern() const {
     MOZ_ASSERT(IsPattern());
 
     return mData.as<Pattern>().GetPattern();
   }
 
-  nsString
-  GetJSONPattern() const
-  {
+  nsString GetJSONPattern() const {
     MOZ_ASSERT(IsPattern());
 
     return mData.as<Pattern>().GetJSONPattern();
   }
 
-  void
-  SetPattern(const OriginAttributesPattern& aPattern)
-  {
+  void SetPattern(const OriginAttributesPattern& aPattern) {
     MOZ_ASSERT(IsPattern());
 
     mData.as<Pattern>().SetPattern(aPattern);
   }
 
-  bool
-  Matches(const OriginScope& aOther) const
-  {
-    struct Matcher
-    {
+  bool Matches(const OriginScope& aOther) const {
+    struct Matcher {
       const OriginScope& mThis;
 
-      explicit Matcher(const OriginScope& aThis)
-        : mThis(aThis)
-      { }
+      explicit Matcher(const OriginScope& aThis) : mThis(aThis) {}
 
-      bool
-      match(const Origin& aOther) {
-        return mThis.MatchesOrigin(aOther);
-      }
+      bool match(const Origin& aOther) { return mThis.MatchesOrigin(aOther); }
 
-      bool
-      match(const Prefix& aOther) {
-        return mThis.MatchesPrefix(aOther);
-      }
+      bool match(const Prefix& aOther) { return mThis.MatchesPrefix(aOther); }
 
-      bool
-      match(const Pattern& aOther) {
-        return mThis.MatchesPattern(aOther);
-      }
+      bool match(const Pattern& aOther) { return mThis.MatchesPattern(aOther); }
 
-      bool
-      match(const Null& aOther) {
-        return true;
-      }
+      bool match(const Null& aOther) { return true; }
     };
 
     return aOther.mData.match(Matcher(*this));
   }
 
-  OriginScope
-  Clone()
-  {
-    return OriginScope(mData);
-  }
+  OriginScope Clone() { return OriginScope(mData); }
 
-private:
+ private:
   // Move constructors
-  explicit OriginScope(const Origin&& aOrigin)
-    : mData(aOrigin)
-  { }
+  explicit OriginScope(const Origin&& aOrigin) : mData(aOrigin) {}
 
-  explicit OriginScope(const Prefix&& aPrefix)
-    : mData(aPrefix)
-  { }
+  explicit OriginScope(const Prefix&& aPrefix) : mData(aPrefix) {}
 
-  explicit OriginScope(const Pattern&& aPattern)
-    : mData(aPattern)
-  { }
+  explicit OriginScope(const Pattern&& aPattern) : mData(aPattern) {}
 
-  explicit OriginScope(const Null&& aNull)
-    : mData(aNull)
-  { }
+  explicit OriginScope(const Null&& aNull) : mData(aNull) {}
 
   // Copy constructor
-  explicit OriginScope(const DataType& aOther)
-    : mData(aOther)
-  { }
+  explicit OriginScope(const DataType& aOther) : mData(aOther) {}
 
-  bool
-  MatchesOrigin(const Origin& aOther) const
-  {
-    struct OriginMatcher
-    {
+  bool MatchesOrigin(const Origin& aOther) const {
+    struct OriginMatcher {
       const Origin& mOther;
 
-      explicit OriginMatcher(const Origin& aOther)
-        : mOther(aOther)
-      { }
+      explicit OriginMatcher(const Origin& aOther) : mOther(aOther) {}
 
-      bool
-      match(const Origin& aThis) {
+      bool match(const Origin& aThis) {
         return aThis.GetOrigin().Equals(mOther.GetOrigin());
       }
 
-      bool
-      match(const Prefix& aThis) {
+      bool match(const Prefix& aThis) {
         return aThis.GetOriginNoSuffix().Equals(mOther.GetOriginNoSuffix());
       }
 
-      bool
-      match(const Pattern& aThis) {
+      bool match(const Pattern& aThis) {
         return aThis.GetPattern().Matches(mOther.GetAttributes());
       }
 
-      bool
-      match(const Null& aThis) {
+      bool match(const Null& aThis) {
         // Null covers everything.
         return true;
       }
@@ -400,37 +266,28 @@ private:
     return mData.match(OriginMatcher(aOther));
   }
 
-  bool
-  MatchesPrefix(const Prefix& aOther) const
-  {
-    struct PrefixMatcher
-    {
+  bool MatchesPrefix(const Prefix& aOther) const {
+    struct PrefixMatcher {
       const Prefix& mOther;
 
-      explicit PrefixMatcher(const Prefix& aOther)
-        : mOther(aOther)
-      { }
+      explicit PrefixMatcher(const Prefix& aOther) : mOther(aOther) {}
 
-      bool
-      match(const Origin& aThis) {
+      bool match(const Origin& aThis) {
         return aThis.GetOriginNoSuffix().Equals(mOther.GetOriginNoSuffix());
       }
 
-      bool
-      match(const Prefix& aThis) {
+      bool match(const Prefix& aThis) {
         return aThis.GetOriginNoSuffix().Equals(mOther.GetOriginNoSuffix());
       }
 
-      bool
-      match(const Pattern& aThis) {
+      bool match(const Pattern& aThis) {
         // The match will be always true here because any origin attributes
         // pattern overlaps any origin prefix (an origin prefix targets all
         // origin attributes).
         return true;
       }
 
-      bool
-      match(const Null& aThis) {
+      bool match(const Null& aThis) {
         // Null covers everything.
         return true;
       }
@@ -439,37 +296,28 @@ private:
     return mData.match(PrefixMatcher(aOther));
   }
 
-  bool
-  MatchesPattern(const Pattern& aOther) const
-  {
-    struct PatternMatcher
-    {
+  bool MatchesPattern(const Pattern& aOther) const {
+    struct PatternMatcher {
       const Pattern& mOther;
 
-      explicit PatternMatcher(const Pattern& aOther)
-        : mOther(aOther)
-      { }
+      explicit PatternMatcher(const Pattern& aOther) : mOther(aOther) {}
 
-      bool
-      match(const Origin& aThis) {
+      bool match(const Origin& aThis) {
         return mOther.GetPattern().Matches(aThis.GetAttributes());
       }
 
-      bool
-      match(const Prefix& aThis) {
+      bool match(const Prefix& aThis) {
         // The match will be always true here because any origin attributes
         // pattern overlaps any origin prefix (an origin prefix targets all
         // origin attributes).
         return true;
       }
 
-      bool
-      match(const Pattern& aThis) {
+      bool match(const Pattern& aThis) {
         return aThis.GetPattern().Overlaps(mOther.GetPattern());
       }
 
-      bool
-      match(const Null& aThis) {
+      bool match(const Null& aThis) {
         // Null covers everything.
         return true;
       }
@@ -479,10 +327,9 @@ private:
     return mData.match(PatternMatcher(aOther));
   }
 
-  bool
-  operator==(const OriginScope& aOther) = delete;
+  bool operator==(const OriginScope& aOther) = delete;
 };
 
 END_QUOTA_NAMESPACE
 
-#endif // mozilla_dom_quota_originorpatternstring_h__
+#endif  // mozilla_dom_quota_originorpatternstring_h__

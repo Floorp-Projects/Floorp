@@ -9,13 +9,10 @@
 
 using namespace mozilla;
 
-nsMathMLSelectedFrame::~nsMathMLSelectedFrame()
-{
-}
+nsMathMLSelectedFrame::~nsMathMLSelectedFrame() {}
 
 NS_IMETHODIMP
-nsMathMLSelectedFrame::TransmitAutomaticData()
-{
+nsMathMLSelectedFrame::TransmitAutomaticData() {
   // Note that to determine space-like and embellished op properties:
   //   - <semantics> behaves the same as <maction>
   //   - <annotation-xml> behaves the same as <mrow>
@@ -39,17 +36,13 @@ nsMathMLSelectedFrame::TransmitAutomaticData()
   return NS_OK;
 }
 
-nsresult
-nsMathMLSelectedFrame::ChildListChanged(int32_t aModType)
-{
+nsresult nsMathMLSelectedFrame::ChildListChanged(int32_t aModType) {
   GetSelectedFrame();
   return nsMathMLContainerFrame::ChildListChanged(aModType);
 }
 
-void
-nsMathMLSelectedFrame::SetInitialChildList(ChildListID     aListID,
-                                           nsFrameList&    aChildList)
-{
+void nsMathMLSelectedFrame::SetInitialChildList(ChildListID aListID,
+                                                nsFrameList& aChildList) {
   nsMathMLContainerFrame::SetInitialChildList(aListID, aChildList);
   // This very first call to GetSelectedFrame() will cause us to be marked as an
   // embellished operator if the selected child is an embellished operator
@@ -57,10 +50,8 @@ nsMathMLSelectedFrame::SetInitialChildList(ChildListID     aListID,
 }
 
 //  Only paint the selected child...
-void
-nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                        const nsDisplayListSet& aLists)
-{
+void nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                             const nsDisplayListSet& aLists) {
   // Report an error if something wrong was found in this frame.
   // We can't call nsDisplayMathMLError from here,
   // so ask nsMathMLContainerFrame to do the work for us.
@@ -86,45 +77,37 @@ nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 /* virtual */
-LogicalSize
-nsMathMLSelectedFrame::ComputeSize(gfxContext *aRenderingContext,
-                                   WritingMode aWM,
-                                   const LogicalSize& aCBSize,
-                                   nscoord aAvailableISize,
-                                   const LogicalSize& aMargin,
-                                   const LogicalSize& aBorder,
-                                   const LogicalSize& aPadding,
-                                   ComputeSizeFlags aFlags)
-{
+LogicalSize nsMathMLSelectedFrame::ComputeSize(
+    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
+    nscoord aAvailableISize, const LogicalSize& aMargin,
+    const LogicalSize& aBorder, const LogicalSize& aPadding,
+    ComputeSizeFlags aFlags) {
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     // Delegate size computation to the child frame.
     // Try to account for border/padding/margin on this frame and the child,
     // though we don't really support them during reflow anyway...
     nscoord availableISize = aAvailableISize - aBorder.ISize(aWM) -
-        aPadding.ISize(aWM) - aMargin.ISize(aWM);
+                             aPadding.ISize(aWM) - aMargin.ISize(aWM);
     LogicalSize cbSize = aCBSize - aBorder - aPadding - aMargin;
     SizeComputationInput offsetState(childFrame, aRenderingContext, aWM,
-                                 availableISize);
-    LogicalSize size =
-        childFrame->ComputeSize(aRenderingContext, aWM, cbSize,
-            availableISize, offsetState.ComputedLogicalMargin().Size(aWM),
-            offsetState.ComputedLogicalBorderPadding().Size(aWM) -
+                                     availableISize);
+    LogicalSize size = childFrame->ComputeSize(
+        aRenderingContext, aWM, cbSize, availableISize,
+        offsetState.ComputedLogicalMargin().Size(aWM),
+        offsetState.ComputedLogicalBorderPadding().Size(aWM) -
             offsetState.ComputedLogicalPadding().Size(aWM),
-            offsetState.ComputedLogicalPadding().Size(aWM),
-            aFlags);
+        offsetState.ComputedLogicalPadding().Size(aWM), aFlags);
     return size + offsetState.ComputedLogicalBorderPadding().Size(aWM);
   }
   return LogicalSize(aWM);
 }
 
 // Only reflow the selected child ...
-void
-nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
-                              ReflowOutput&     aDesiredSize,
-                              const ReflowInput& aReflowInput,
-                              nsReflowStatus&          aStatus)
-{
+void nsMathMLSelectedFrame::Reflow(nsPresContext* aPresContext,
+                                   ReflowOutput& aDesiredSize,
+                                   const ReflowInput& aReflowInput,
+                                   nsReflowStatus& aStatus) {
   MarkInReflow();
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
@@ -137,10 +120,10 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
     WritingMode wm = childFrame->GetWritingMode();
     LogicalSize availSize = aReflowInput.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    ReflowInput childReflowInput(aPresContext, aReflowInput,
-                                       childFrame, availSize);
-    ReflowChild(childFrame, aPresContext, aDesiredSize,
-                childReflowInput, aStatus);
+    ReflowInput childReflowInput(aPresContext, aReflowInput, childFrame,
+                                 availSize);
+    ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowInput,
+                aStatus);
     SaveReflowAndBoundingMetricsFor(childFrame, aDesiredSize,
                                     aDesiredSize.mBoundingMetrics);
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
@@ -150,11 +133,8 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 // Only place the selected child ...
-/* virtual */ nsresult
-nsMathMLSelectedFrame::Place(DrawTarget*          aDrawTarget,
-                             bool                 aPlaceOrigin,
-                             ReflowOutput& aDesiredSize)
-{
+/* virtual */ nsresult nsMathMLSelectedFrame::Place(
+    DrawTarget* aDrawTarget, bool aPlaceOrigin, ReflowOutput& aDesiredSize) {
   nsIFrame* childFrame = GetSelectedFrame();
 
   if (mInvalidMarkup) {
@@ -167,7 +147,8 @@ nsMathMLSelectedFrame::Place(DrawTarget*          aDrawTarget,
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
     if (aPlaceOrigin) {
-      FinishReflowChild(childFrame, PresContext(), aDesiredSize, nullptr, 0, 0, 0);
+      FinishReflowChild(childFrame, PresContext(), aDesiredSize, nullptr, 0, 0,
+                        0);
     }
     mReference.x = 0;
     mReference.y = aDesiredSize.BlockStartAscent();

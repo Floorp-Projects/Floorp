@@ -16,15 +16,11 @@ namespace mozilla {
 namespace dom {
 
 CSSSupportsRule::CSSSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
-                                 StyleSheet* aSheet,
-                                 css::Rule* aParentRule,
-                                 uint32_t aLine,
-                                 uint32_t aColumn)
-  : css::ConditionRule(Servo_SupportsRule_GetRules(aRawRule).Consume(),
-                       aSheet, aParentRule, aLine, aColumn)
-  , mRawRule(std::move(aRawRule))
-{
-}
+                                 StyleSheet* aSheet, css::Rule* aParentRule,
+                                 uint32_t aLine, uint32_t aColumn)
+    : css::ConditionRule(Servo_SupportsRule_GetRules(aRawRule).Consume(),
+                         aSheet, aParentRule, aLine, aColumn),
+      mRawRule(std::move(aRawRule)) {}
 
 NS_IMPL_ADDREF_INHERITED(CSSSupportsRule, ConditionRule)
 NS_IMPL_RELEASE_INHERITED(CSSSupportsRule, ConditionRule)
@@ -34,9 +30,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSSupportsRule)
 NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
 
 #ifdef DEBUG
-/* virtual */ void
-CSSSupportsRule::List(FILE* out, int32_t aIndent) const
-{
+/* virtual */ void CSSSupportsRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -46,38 +40,29 @@ CSSSupportsRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-void
-CSSSupportsRule::GetConditionText(nsAString& aConditionText)
-{
+void CSSSupportsRule::GetConditionText(nsAString& aConditionText) {
   Servo_SupportsRule_GetConditionText(mRawRule, &aConditionText);
 }
 
-void
-CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
-                                  ErrorResult& aRv)
-{
+void CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
+                                       ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-/* virtual */ void
-CSSSupportsRule::GetCssText(nsAString& aCssText) const
-{
+/* virtual */ void CSSSupportsRule::GetCssText(nsAString& aCssText) const {
   Servo_SupportsRule_GetCssText(mRawRule, &aCssText);
 }
 
-/* virtual */ size_t
-CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+/* virtual */ size_t CSSSupportsRule::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
   return aMallocSizeOf(this);
 }
 
-/* virtual */ JSObject*
-CSSSupportsRule::WrapObject(JSContext* aCx,
-                            JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* CSSSupportsRule::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSSupportsRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

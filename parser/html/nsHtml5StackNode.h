@@ -56,9 +56,8 @@ class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
 
-class nsHtml5StackNode
-{
-public:
+class nsHtml5StackNode {
+ public:
   int32_t idxInTreeBuilder;
   int32_t flags;
   RefPtr<nsAtom> name;
@@ -66,10 +65,12 @@ public:
   int32_t ns;
   nsIContentHandle* node;
   nsHtml5HtmlAttributes* attributes;
-private:
+
+ private:
   int32_t refcount;
   mozilla::dom::HTMLContentCreatorFunction htmlCreator;
-public:
+
+ public:
   inline int32_t getFlags() { return flags; }
 
   int32_t getGroup();
@@ -79,32 +80,25 @@ public:
   bool isHtmlIntegrationPoint();
   explicit nsHtml5StackNode(int32_t idxInTreeBuilder);
   mozilla::dom::HTMLContentCreatorFunction getHtmlCreator();
-  void setValues(int32_t flags,
-                 int32_t ns,
-                 nsAtom* name,
-                 nsIContentHandle* node,
-                 nsAtom* popName,
+  void setValues(int32_t flags, int32_t ns, nsAtom* name,
+                 nsIContentHandle* node, nsAtom* popName,
                  nsHtml5HtmlAttributes* attributes,
                  mozilla::dom::HTMLContentCreatorFunction htmlCreator);
   void setValues(nsHtml5ElementName* elementName, nsIContentHandle* node);
-  void setValues(nsHtml5ElementName* elementName,
-                 nsIContentHandle* node,
+  void setValues(nsHtml5ElementName* elementName, nsIContentHandle* node,
                  nsHtml5HtmlAttributes* attributes);
-  void setValues(nsHtml5ElementName* elementName,
-                 nsIContentHandle* node,
+  void setValues(nsHtml5ElementName* elementName, nsIContentHandle* node,
                  nsAtom* popName);
-  void setValues(nsHtml5ElementName* elementName,
-                 nsAtom* popName,
+  void setValues(nsHtml5ElementName* elementName, nsAtom* popName,
                  nsIContentHandle* node);
-  void setValues(nsHtml5ElementName* elementName,
-                 nsIContentHandle* node,
-                 nsAtom* popName,
-                 bool markAsIntegrationPoint);
+  void setValues(nsHtml5ElementName* elementName, nsIContentHandle* node,
+                 nsAtom* popName, bool markAsIntegrationPoint);
 
-private:
+ private:
   static int32_t prepareSvgFlags(int32_t flags);
   static int32_t prepareMathFlags(int32_t flags, bool markAsIntegrationPoint);
-public:
+
+ public:
   ~nsHtml5StackNode();
   void dropAttributes();
   void retain();

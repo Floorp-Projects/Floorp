@@ -7,7 +7,7 @@
 #include "SourceSurfaceSharedData.h"
 
 #include "mozilla/Likely.h"
-#include "mozilla/Types.h" // for decltype
+#include "mozilla/Types.h"  // for decltype
 #include "mozilla/layers/SharedSurfacesChild.h"
 
 #include "base/process_util.h"
@@ -25,13 +25,9 @@
 namespace mozilla {
 namespace gfx {
 
-bool
-SourceSurfaceSharedDataWrapper::Init(const IntSize& aSize,
-                                     int32_t aStride,
-                                     SurfaceFormat aFormat,
-                                     const SharedMemoryBasic::Handle& aHandle,
-                                     base::ProcessId aCreatorPid)
-{
+bool SourceSurfaceSharedDataWrapper::Init(
+    const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
+    const SharedMemoryBasic::Handle& aHandle, base::ProcessId aCreatorPid) {
   MOZ_ASSERT(!mBuf);
   mSize = aSize;
   mStride = aStride;
@@ -40,7 +36,8 @@ SourceSurfaceSharedDataWrapper::Init(const IntSize& aSize,
 
   size_t len = GetAlignedDataLength();
   mBuf = MakeAndAddRef<SharedMemoryBasic>();
-  if (NS_WARN_IF(!mBuf->SetHandle(aHandle, ipc::SharedMemory::RightsReadOnly)) ||
+  if (NS_WARN_IF(
+          !mBuf->SetHandle(aHandle, ipc::SharedMemory::RightsReadOnly)) ||
       NS_WARN_IF(!mBuf->Map(len))) {
     mBuf = nullptr;
     return false;
@@ -50,9 +47,7 @@ SourceSurfaceSharedDataWrapper::Init(const IntSize& aSize,
   return true;
 }
 
-void
-SourceSurfaceSharedDataWrapper::Init(SourceSurfaceSharedData* aSurface)
-{
+void SourceSurfaceSharedDataWrapper::Init(SourceSurfaceSharedData* aSurface) {
   MOZ_ASSERT(!mBuf);
   MOZ_ASSERT(aSurface);
   mSize = aSurface->mSize;
@@ -62,20 +57,16 @@ SourceSurfaceSharedDataWrapper::Init(SourceSurfaceSharedData* aSurface)
   mBuf = aSurface->mBuf;
 }
 
-bool
-SourceSurfaceSharedData::Init(const IntSize &aSize,
-                              int32_t aStride,
-                              SurfaceFormat aFormat,
-                              bool aShare /* = true */)
-{
+bool SourceSurfaceSharedData::Init(const IntSize& aSize, int32_t aStride,
+                                   SurfaceFormat aFormat,
+                                   bool aShare /* = true */) {
   mSize = aSize;
   mStride = aStride;
   mFormat = aFormat;
 
   size_t len = GetAlignedDataLength();
   mBuf = new SharedMemoryBasic();
-  if (NS_WARN_IF(!mBuf->Create(len)) ||
-      NS_WARN_IF(!mBuf->Map(len))) {
+  if (NS_WARN_IF(!mBuf->Create(len)) || NS_WARN_IF(!mBuf->Map(len))) {
     mBuf = nullptr;
     return false;
   }
@@ -87,19 +78,13 @@ SourceSurfaceSharedData::Init(const IntSize &aSize,
   return true;
 }
 
-void
-SourceSurfaceSharedData::GuaranteePersistance()
-{
+void SourceSurfaceSharedData::GuaranteePersistance() {
   // Shared memory is not unmapped until we release SourceSurfaceSharedData.
 }
 
-void
-SourceSurfaceSharedData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                                                size_t& aHeapSizeOut,
-                                                size_t& aNonHeapSizeOut,
-                                                size_t& aExtHandlesOut,
-                                                uint64_t& aExtIdOut) const
-{
+void SourceSurfaceSharedData::AddSizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut, size_t& aNonHeapSizeOut,
+    size_t& aExtHandlesOut, uint64_t& aExtIdOut) const {
   MutexAutoLock lock(mMutex);
   if (mBuf) {
     aNonHeapSizeOut += GetAlignedDataLength();
@@ -113,9 +98,7 @@ SourceSurfaceSharedData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   }
 }
 
-uint8_t*
-SourceSurfaceSharedData::GetDataInternal() const
-{
+uint8_t* SourceSurfaceSharedData::GetDataInternal() const {
   mMutex.AssertCurrentThreadOwns();
 
   // If we have an old buffer lingering, it is because we get reallocated to
@@ -128,10 +111,8 @@ SourceSurfaceSharedData::GetDataInternal() const
   return static_cast<uint8_t*>(mBuf->memory());
 }
 
-nsresult
-SourceSurfaceSharedData::ShareToProcess(base::ProcessId aPid,
-                                        SharedMemoryBasic::Handle& aHandle)
-{
+nsresult SourceSurfaceSharedData::ShareToProcess(
+    base::ProcessId aPid, SharedMemoryBasic::Handle& aHandle) {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mHandleCount > 0);
 
@@ -147,9 +128,7 @@ SourceSurfaceSharedData::ShareToProcess(base::ProcessId aPid,
   return NS_OK;
 }
 
-void
-SourceSurfaceSharedData::CloseHandleInternal()
-{
+void SourceSurfaceSharedData::CloseHandleInternal() {
   mMutex.AssertCurrentThreadOwns();
 
   if (mClosed) {
@@ -164,9 +143,7 @@ SourceSurfaceSharedData::CloseHandleInternal()
   }
 }
 
-bool
-SourceSurfaceSharedData::ReallocHandle()
-{
+bool SourceSurfaceSharedData::ReallocHandle() {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mHandleCount > 0);
   MOZ_ASSERT(mClosed);
@@ -181,8 +158,7 @@ SourceSurfaceSharedData::ReallocHandle()
 
   size_t len = GetAlignedDataLength();
   RefPtr<SharedMemoryBasic> buf = new SharedMemoryBasic();
-  if (NS_WARN_IF(!buf->Create(len)) ||
-      NS_WARN_IF(!buf->Map(len))) {
+  if (NS_WARN_IF(!buf->Create(len)) || NS_WARN_IF(!buf->Map(len))) {
     return false;
   }
 
@@ -201,9 +177,7 @@ SourceSurfaceSharedData::ReallocHandle()
   return true;
 }
 
-void
-SourceSurfaceSharedData::Finalize()
-{
+void SourceSurfaceSharedData::Finalize() {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(!mFinalized);
 
@@ -215,5 +189,5 @@ SourceSurfaceSharedData::Finalize()
   mFinalized = true;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

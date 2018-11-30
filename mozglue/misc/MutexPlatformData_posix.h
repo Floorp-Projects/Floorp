@@ -11,9 +11,8 @@
 
 #include "mozilla/PlatformMutex.h"
 
-struct mozilla::detail::MutexImpl::PlatformData
-{
+struct mozilla::detail::MutexImpl::PlatformData {
   pthread_mutex_t ptMutex;
 };
 
-#endif // MutexPlatformData_posix_h
+#endif  // MutexPlatformData_posix_h

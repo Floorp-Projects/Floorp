@@ -13,34 +13,35 @@ namespace mozilla {
 namespace gfx {
 class SourceSurface;
 }
-}
+}  // namespace mozilla
 
 class nsImageToPixbuf final : public nsIImageToPixbuf {
-    typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
 
-    public:
-        NS_DECL_ISUPPORTS
-        NS_IMETHOD_(GdkPixbuf*) ConvertImageToPixbuf(imgIContainer* aImage) override;
+ public:
+  NS_DECL_ISUPPORTS
+  NS_IMETHOD_(GdkPixbuf*) ConvertImageToPixbuf(imgIContainer* aImage) override;
 
-        // Friendlier version of ConvertImageToPixbuf for callers inside of
-        // widget
-        /**
-         * The return value of all these, if not null, should be
-         * released as needed by the caller using g_object_unref.
-         */
-        static GdkPixbuf* ImageToPixbuf(imgIContainer * aImage);
-        static GdkPixbuf* SourceSurfaceToPixbuf(SourceSurface* aSurface,
-                                                int32_t aWidth,
-                                                int32_t aHeight);
+  // Friendlier version of ConvertImageToPixbuf for callers inside of
+  // widget
+  /**
+   * The return value of all these, if not null, should be
+   * released as needed by the caller using g_object_unref.
+   */
+  static GdkPixbuf* ImageToPixbuf(imgIContainer* aImage);
+  static GdkPixbuf* SourceSurfaceToPixbuf(SourceSurface* aSurface,
+                                          int32_t aWidth, int32_t aHeight);
 
-    private:
-        ~nsImageToPixbuf() {}
+ private:
+  ~nsImageToPixbuf() {}
 };
 
-
 // fc2389b8-c650-4093-9e42-b05e5f0685b7
-#define NS_IMAGE_TO_PIXBUF_CID \
-{ 0xfc2389b8, 0xc650, 0x4093, \
-  { 0x9e, 0x42, 0xb0, 0x5e, 0x5f, 0x06, 0x85, 0xb7 } }
+#define NS_IMAGE_TO_PIXBUF_CID                       \
+  {                                                  \
+    0xfc2389b8, 0xc650, 0x4093, {                    \
+      0x9e, 0x42, 0xb0, 0x5e, 0x5f, 0x06, 0x85, 0xb7 \
+    }                                                \
+  }
 
 #endif

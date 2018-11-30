@@ -16,13 +16,13 @@
 #include "mozpkix/Time.h"
 #include "SignedCertificateTimestamp.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 // A Certificate Transparency verifier that can verify Signed Certificate
 // Timestamps from multiple logs.
-class MultiLogCTVerifier
-{
-public:
+class MultiLogCTVerifier {
+ public:
   // Adds a new log to the list of known logs to verify against.
   void AddLog(CTLogVerifier&& log);
 
@@ -53,36 +53,33 @@ public:
   // |time|  the current time. Used to make sure SCTs are not in the future.
   // |result|  will be filled with the SCTs present, divided into categories
   //           based on the verification result.
-  pkix::Result Verify(pkix::Input cert,
-                      pkix::Input issuerSubjectPublicKeyInfo,
+  pkix::Result Verify(pkix::Input cert, pkix::Input issuerSubjectPublicKeyInfo,
                       pkix::Input sctListFromCert,
                       pkix::Input sctListFromOCSPResponse,
-                      pkix::Input sctListFromTLSExtension,
-                      pkix::Time time,
+                      pkix::Input sctListFromTLSExtension, pkix::Time time,
                       CTVerifyResult& result);
 
-private:
+ private:
   // Verifies a list of SCTs from |encodedSctList| over |expectedEntry|,
   // placing the verification results in |result|. The SCTs in the list
   // come from |origin| (as will be reflected in the origin field of each SCT).
   pkix::Result VerifySCTs(pkix::Input encodedSctList,
                           const LogEntry& expectedEntry,
-                          VerifiedSCT::Origin origin,
-                          pkix::Time time,
+                          VerifiedSCT::Origin origin, pkix::Time time,
                           CTVerifyResult& result);
 
   // Verifies a single, parsed SCT against all known logs.
   // Note: moves |sct| to the target list in |result|, invalidating |sct|.
   pkix::Result VerifySingleSCT(SignedCertificateTimestamp&& sct,
                                const ct::LogEntry& expectedEntry,
-                               VerifiedSCT::Origin origin,
-                               pkix::Time time,
+                               VerifiedSCT::Origin origin, pkix::Time time,
                                CTVerifyResult& result);
 
   // The list of known logs.
   std::vector<CTLogVerifier> mLogs;
 };
 
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla
 
 #endif  // MultiLogCTVerifier_h

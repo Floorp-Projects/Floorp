@@ -15,25 +15,31 @@
 namespace mozilla {
 namespace dom {
 
-class VRMockDisplay final : public DOMEventTargetHelper
-{
-public:
+class VRMockDisplay final : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VRMockDisplay, DOMEventTargetHelper)
 
   VRMockDisplay(const nsCString& aID, uint32_t aDeviceID);
-  void SetEyeParameter(VREye aEye, double aOffsetX, double aOffsetY, double aOffsetZ,
-                       double aUpDegree, double aRightDegree,
+  void SetEyeParameter(VREye aEye, double aOffsetX, double aOffsetY,
+                       double aOffsetZ, double aUpDegree, double aRightDegree,
                        double aDownDegree, double aLeftDegree);
-  void SetEyeResolution(unsigned long aRenderWidth, unsigned long aRenderHeight);
-  void SetPose(const Nullable<Float32Array>& aPosition, const Nullable<Float32Array>& aLinearVelocity,
-               const Nullable<Float32Array>& aLinearAcceleration, const Nullable<Float32Array>& aOrientation,
-               const Nullable<Float32Array>& aAngularVelocity, const Nullable<Float32Array>& aAngularAcceleration);
-  void SetMountState(bool aIsMounted) { mDisplayInfo.mDisplayState.mIsMounted = aIsMounted; }
+  void SetEyeResolution(unsigned long aRenderWidth,
+                        unsigned long aRenderHeight);
+  void SetPose(const Nullable<Float32Array>& aPosition,
+               const Nullable<Float32Array>& aLinearVelocity,
+               const Nullable<Float32Array>& aLinearAcceleration,
+               const Nullable<Float32Array>& aOrientation,
+               const Nullable<Float32Array>& aAngularVelocity,
+               const Nullable<Float32Array>& aAngularAcceleration);
+  void SetMountState(bool aIsMounted) {
+    mDisplayInfo.mDisplayState.mIsMounted = aIsMounted;
+  }
   void Update();
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   ~VRMockDisplay() = default;
 
   uint32_t mDeviceID;
@@ -42,41 +48,48 @@ private:
   TimeStamp mTimestamp;
 };
 
-class VRMockController : public DOMEventTargetHelper
-{
-public:
+class VRMockController : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VRMockController, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VRMockController,
+                                           DOMEventTargetHelper)
 
   VRMockController(const nsCString& aID, uint32_t aDeviceID);
   void NewButtonEvent(unsigned long aButton, bool aPressed);
   void NewAxisMoveEvent(unsigned long aAxis, double aValue);
-  void NewPoseMove(const Nullable<Float32Array>& aPosition, const Nullable<Float32Array>& aLinearVelocity,
-                   const Nullable<Float32Array>& aLinearAcceleration, const Nullable<Float32Array>& aOrientation,
-                   const Nullable<Float32Array>& aAngularVelocity, const Nullable<Float32Array>& aAngularAcceleration);
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  void NewPoseMove(const Nullable<Float32Array>& aPosition,
+                   const Nullable<Float32Array>& aLinearVelocity,
+                   const Nullable<Float32Array>& aLinearAcceleration,
+                   const Nullable<Float32Array>& aOrientation,
+                   const Nullable<Float32Array>& aAngularVelocity,
+                   const Nullable<Float32Array>& aAngularAcceleration);
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   ~VRMockController() = default;
 
   nsCString mID;
   uint32_t mDeviceID;
 };
 
-class VRServiceTest final : public DOMEventTargetHelper
-{
-public:
+class VRServiceTest final : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VRServiceTest, DOMEventTargetHelper)
 
-  already_AddRefed<Promise> AttachVRDisplay(const nsAString& aID, ErrorResult& aRv);
-  already_AddRefed<Promise> AttachVRController(const nsAString& aID, ErrorResult& aRv);
+  already_AddRefed<Promise> AttachVRDisplay(const nsAString& aID,
+                                            ErrorResult& aRv);
+  already_AddRefed<Promise> AttachVRController(const nsAString& aID,
+                                               ErrorResult& aRv);
   void Shutdown();
 
-  static already_AddRefed<VRServiceTest> CreateTestService(nsPIDOMWindowInner* aWindow);
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  static already_AddRefed<VRServiceTest> CreateTestService(
+      nsPIDOMWindowInner* aWindow);
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   explicit VRServiceTest(nsPIDOMWindowInner* aWindow);
   ~VRServiceTest() = default;
 
@@ -84,7 +97,7 @@ private:
   bool mShuttingDown;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_VRServiceTest_h_
+#endif  // mozilla_dom_VRServiceTest_h_

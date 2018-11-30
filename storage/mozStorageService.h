@@ -24,11 +24,10 @@ namespace mozilla {
 namespace storage {
 
 class Connection;
-class Service : public mozIStorageService
-              , public nsIObserver
-              , public nsIMemoryReporter
-{
-public:
+class Service : public mozIStorageService,
+                public nsIObserver,
+                public nsIMemoryReporter {
+ public:
   /**
    * Initializes the service.  This must be called before any other function!
    */
@@ -47,8 +46,7 @@ public:
    *         number.  If aStr1 > aStr2, returns a positive number.  If
    *         aStr1 == aStr2, returns 0.
    */
-  int localeCompareStrings(const nsAString &aStr1,
-                           const nsAString &aStr2,
+  int localeCompareStrings(const nsAString &aStr1, const nsAString &aStr2,
                            int32_t aComparisonStrength);
 
   static already_AddRefed<Service> getSingleton();
@@ -68,17 +66,13 @@ public:
    * specified in the SQLite makefile (SQLITE_DEFAULT_PAGE_SIZE) but it may be
    * overriden with the PREF_TS_PAGESIZE hidden preference.
    */
-  static int32_t getDefaultPageSize()
-  {
-    return sDefaultPageSize;
-  }
+  static int32_t getDefaultPageSize() { return sDefaultPageSize; }
 
   /**
    * Returns a boolean value indicating whether or not the given page size is
    * valid (currently understood as a power of 2 between 512 and 65536).
    */
-  static bool pageSizeIsValid(int32_t aPageSize)
-  {
+  static bool pageSizeIsValid(int32_t aPageSize) {
     return aPageSize == 512 || aPageSize == 1024 || aPageSize == 2048 ||
            aPageSize == 4096 || aPageSize == 8192 || aPageSize == 16384 ||
            aPageSize == 32768 || aPageSize == 65536;
@@ -117,9 +111,9 @@ public:
    *         it.
    * @return The open connections.
    */
-  void getConnections(nsTArray<RefPtr<Connection> >& aConnections);
+  void getConnections(nsTArray<RefPtr<Connection> > &aConnections);
 
-private:
+ private:
   Service();
   virtual ~Service();
 
@@ -177,7 +171,7 @@ private:
   static int32_t sDefaultPageSize;
 };
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla
 
 #endif /* MOZSTORAGESERVICE_H */

@@ -20,24 +20,18 @@ namespace dom {
 // CSSKeyframeList
 //
 
-class CSSKeyframeList : public dom::CSSRuleList
-{
-public:
+class CSSKeyframeList : public dom::CSSRuleList {
+ public:
   CSSKeyframeList(already_AddRefed<RawServoKeyframesRule> aRawRule,
-                  StyleSheet* aSheet,
-                  CSSKeyframesRule* aParentRule)
-    : mStyleSheet(aSheet)
-    , mParentRule(aParentRule)
-    , mRawRule(aRawRule)
-  {
+                  StyleSheet* aSheet, CSSKeyframesRule* aParentRule)
+      : mStyleSheet(aSheet), mParentRule(aParentRule), mRawRule(aRawRule) {
     mRules.SetCount(Servo_KeyframesRule_GetCount(mRawRule));
   }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeList, dom::CSSRuleList)
 
-  void DropSheetReference()
-  {
+  void DropSheetReference() {
     if (!mStyleSheet) {
       return;
     }
@@ -55,18 +49,16 @@ public:
     if (!mRules[aIndex]) {
       uint32_t line = 0, column = 0;
       RefPtr<RawServoKeyframe> rule =
-        Servo_KeyframesRule_GetKeyframeAt(mRawRule, aIndex,
-                                          &line, &column).Consume();
-      CSSKeyframeRule* ruleObj =
-        new CSSKeyframeRule(rule.forget(), mStyleSheet, mParentRule,
-                            line, column);
+          Servo_KeyframesRule_GetKeyframeAt(mRawRule, aIndex, &line, &column)
+              .Consume();
+      CSSKeyframeRule* ruleObj = new CSSKeyframeRule(rule.forget(), mStyleSheet,
+                                                     mParentRule, line, column);
       mRules.ReplaceObjectAt(ruleObj, aIndex);
     }
     return static_cast<CSSKeyframeRule*>(mRules[aIndex]);
   }
 
-  CSSKeyframeRule* IndexedGetter(uint32_t aIndex, bool& aFound) final
-  {
+  CSSKeyframeRule* IndexedGetter(uint32_t aIndex, bool& aFound) final {
     if (aIndex >= mRules.Length()) {
       aFound = false;
       return nullptr;
@@ -75,18 +67,13 @@ public:
     return GetRule(aIndex);
   }
 
-  void AppendRule() {
-    mRules.AppendObject(nullptr);
-  }
+  void AppendRule() { mRules.AppendObject(nullptr); }
 
-  void RemoveRule(uint32_t aIndex) {
-    mRules.RemoveObjectAt(aIndex);
-  }
+  void RemoveRule(uint32_t aIndex) { mRules.RemoveObjectAt(aIndex); }
 
   uint32_t Length() final { return mRules.Length(); }
 
-  void DropReferences()
-  {
+  void DropReferences() {
     if (!mStyleSheet && !mParentRule) {
       return;
     }
@@ -100,8 +87,7 @@ public:
     }
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t n = aMallocSizeOf(this);
     for (const css::Rule* rule : mRules) {
       n += rule ? rule->SizeOfIncludingThis(aMallocSizeOf) : 0;
@@ -109,15 +95,14 @@ public:
     return n;
   }
 
-private:
+ private:
   virtual ~CSSKeyframeList() {
     MOZ_ASSERT(!mParentRule, "Backpointer should have been cleared");
     MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
     DropAllRules();
   }
 
-  void DropAllRules()
-  {
+  void DropAllRules() {
     DropReferences();
     mRules.Clear();
     mRawRule = nullptr;
@@ -157,17 +142,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 //
 
 CSSKeyframesRule::CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
-                                   StyleSheet* aSheet,
-                                   css::Rule* aParentRule,
-                                   uint32_t aLine,
-                                   uint32_t aColumn)
-  : css::Rule(aSheet, aParentRule, aLine, aColumn)
-  , mRawRule(std::move(aRawRule))
-{
-}
+                                   StyleSheet* aSheet, css::Rule* aParentRule,
+                                   uint32_t aLine, uint32_t aColumn)
+    : css::Rule(aSheet, aParentRule, aLine, aColumn),
+      mRawRule(std::move(aRawRule)) {}
 
-CSSKeyframesRule::~CSSKeyframesRule()
-{
+CSSKeyframesRule::~CSSKeyframesRule() {
   if (mKeyframeList) {
     mKeyframeList->DropReferences();
   }
@@ -181,8 +161,7 @@ NS_INTERFACE_MAP_END_INHERITING(css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CSSKeyframesRule)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSKeyframesRule,
-                                                css::Rule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSKeyframesRule, css::Rule)
   if (tmp->mKeyframeList) {
     tmp->mKeyframeList->DropReferences();
     tmp->mKeyframeList = nullptr;
@@ -190,20 +169,16 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSKeyframesRule,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSKeyframesRule, Rule)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mKeyframeList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mKeyframeList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-/* virtual */ bool
-CSSKeyframesRule::IsCCLeaf() const
-{
+/* virtual */ bool CSSKeyframesRule::IsCCLeaf() const {
   // If we don't have rule list constructed, we are a leaf.
   return Rule::IsCCLeaf() && !mKeyframeList;
 }
 
 #ifdef DEBUG
-/* virtual */ void
-CSSKeyframesRule::List(FILE* out, int32_t aIndent) const
-{
+/* virtual */ void CSSKeyframesRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -213,9 +188,7 @@ CSSKeyframesRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ void
-CSSKeyframesRule::DropSheetReference()
-{
+/* virtual */ void CSSKeyframesRule::DropSheetReference() {
   if (mKeyframeList) {
     mKeyframeList->DropSheetReference();
   }
@@ -224,33 +197,25 @@ CSSKeyframesRule::DropSheetReference()
 
 static const uint32_t kRuleNotFound = std::numeric_limits<uint32_t>::max();
 
-uint32_t
-CSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey)
-{
+uint32_t CSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey) {
   NS_ConvertUTF16toUTF8 key(aKey);
   return Servo_KeyframesRule_FindRule(mRawRule, &key);
 }
 
-template<typename Func>
-void
-CSSKeyframesRule::UpdateRule(Func aCallback)
-{
+template <typename Func>
+void CSSKeyframesRule::UpdateRule(Func aCallback) {
   aCallback();
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }
 }
 
-void
-CSSKeyframesRule::GetName(nsAString& aName) const
-{
+void CSSKeyframesRule::GetName(nsAString& aName) const {
   nsAtom* name = Servo_KeyframesRule_GetName(mRawRule);
   aName = nsDependentAtomString(name);
 }
 
-void
-CSSKeyframesRule::SetName(const nsAString& aName)
-{
+void CSSKeyframesRule::SetName(const nsAString& aName) {
   RefPtr<nsAtom> name = NS_Atomize(aName);
   nsAtom* oldName = Servo_KeyframesRule_GetName(mRawRule);
   if (name == oldName) {
@@ -262,9 +227,7 @@ CSSKeyframesRule::SetName(const nsAString& aName)
   });
 }
 
-void
-CSSKeyframesRule::AppendRule(const nsAString& aRule)
-{
+void CSSKeyframesRule::AppendRule(const nsAString& aRule) {
   StyleSheet* sheet = GetStyleSheet();
   if (!sheet) {
     // We cannot parse the rule if we don't have a stylesheet.
@@ -273,17 +236,15 @@ CSSKeyframesRule::AppendRule(const nsAString& aRule)
 
   NS_ConvertUTF16toUTF8 rule(aRule);
   UpdateRule([this, sheet, &rule]() {
-    bool parsedOk = Servo_KeyframesRule_AppendRule(
-      mRawRule, sheet->RawContents(), &rule);
+    bool parsedOk =
+        Servo_KeyframesRule_AppendRule(mRawRule, sheet->RawContents(), &rule);
     if (parsedOk && mKeyframeList) {
       mKeyframeList->AppendRule();
     }
   });
 }
 
-void
-CSSKeyframesRule::DeleteRule(const nsAString& aKey)
-{
+void CSSKeyframesRule::DeleteRule(const nsAString& aKey) {
   auto index = FindRuleIndexForKey(aKey);
   if (index == kRuleNotFound) {
     return;
@@ -297,24 +258,19 @@ CSSKeyframesRule::DeleteRule(const nsAString& aKey)
   });
 }
 
-/* virtual */ void
-CSSKeyframesRule::GetCssText(nsAString& aCssText) const
-{
+/* virtual */ void CSSKeyframesRule::GetCssText(nsAString& aCssText) const {
   Servo_KeyframesRule_GetCssText(mRawRule, &aCssText);
 }
 
-/* virtual */ dom::CSSRuleList*
-CSSKeyframesRule::CssRules()
-{
+/* virtual */ dom::CSSRuleList* CSSKeyframesRule::CssRules() {
   if (!mKeyframeList) {
     mKeyframeList = new CSSKeyframeList(do_AddRef(mRawRule), mSheet, this);
   }
   return mKeyframeList;
 }
 
-/* virtual */ dom::CSSKeyframeRule*
-CSSKeyframesRule::FindRule(const nsAString& aKey)
-{
+/* virtual */ dom::CSSKeyframeRule* CSSKeyframesRule::FindRule(
+    const nsAString& aKey) {
   auto index = FindRuleIndexForKey(aKey);
   if (index != kRuleNotFound) {
     // Construct mKeyframeList but ignore the result.
@@ -324,9 +280,8 @@ CSSKeyframesRule::FindRule(const nsAString& aKey)
   return nullptr;
 }
 
-/* virtual */ size_t
-CSSKeyframesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+/* virtual */ size_t CSSKeyframesRule::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
   if (mKeyframeList) {
     n += mKeyframeList->SizeOfIncludingThis(aMallocSizeOf);
@@ -334,11 +289,10 @@ CSSKeyframesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-/* virtual */ JSObject*
-CSSKeyframesRule::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* CSSKeyframesRule::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSKeyframesRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

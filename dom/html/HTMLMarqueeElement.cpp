@@ -20,128 +20,99 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Marquee)
 namespace mozilla {
 namespace dom {
 
-HTMLMarqueeElement::~HTMLMarqueeElement()
-{
-}
+HTMLMarqueeElement::~HTMLMarqueeElement() {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLMarqueeElement, nsGenericHTMLElement,
                                    mStartStopCallback)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLMarqueeElement, nsGenericHTMLElement)
-
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLMarqueeElement,
+                                               nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLMarqueeElement)
 
 static const nsAttrValue::EnumTable kBehaviorTable[] = {
-  { "scroll", 1 },
-  { "slide", 2 },
-  { "alternate", 3 },
-  { nullptr, 0 }
-};
+    {"scroll", 1}, {"slide", 2}, {"alternate", 3}, {nullptr, 0}};
 
 // Default behavior value is "scroll".
 static const nsAttrValue::EnumTable* kDefaultBehavior = &kBehaviorTable[0];
 
 static const nsAttrValue::EnumTable kDirectionTable[] = {
-  { "left", 1 },
-  { "right", 2 },
-  { "up", 3 },
-  { "down", 4 },
-  { nullptr, 0 }
-};
+    {"left", 1}, {"right", 2}, {"up", 3}, {"down", 4}, {nullptr, 0}};
 
 // Default direction value is "left".
 static const nsAttrValue::EnumTable* kDefaultDirection = &kDirectionTable[0];
 
-bool
-HTMLMarqueeElement::IsEventAttributeNameInternal(nsAtom *aName)
-{
-  return nsContentUtils::IsEventAttributeName(aName,
-                                              EventNameType_HTML |
-                                              EventNameType_HTMLMarqueeOnly);
+bool HTMLMarqueeElement::IsEventAttributeNameInternal(nsAtom* aName) {
+  return nsContentUtils::IsEventAttributeName(
+      aName, EventNameType_HTML | EventNameType_HTMLMarqueeOnly);
 }
 
-JSObject*
-HTMLMarqueeElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLMarqueeElement::WrapNode(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return dom::HTMLMarqueeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult
-HTMLMarqueeElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent)
-{
-
-  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent);
+nsresult HTMLMarqueeElement::BindToTree(nsIDocument* aDocument,
+                                        nsIContent* aParent,
+                                        nsIContent* aBindingParent) {
+  nsresult rv =
+      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
     AttachAndSetUAShadowRoot();
     AsyncEventDispatcher* dispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("UAWidgetBindToTree"),
-                               CanBubble::eYes,
-                               ChromeOnlyDispatch::eYes);
+        new AsyncEventDispatcher(this, NS_LITERAL_STRING("UAWidgetBindToTree"),
+                                 CanBubble::eYes, ChromeOnlyDispatch::eYes);
     dispatcher->RunDOMEventWhenSafe();
   }
 
   return rv;
 }
 
-void
-HTMLMarqueeElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
+void HTMLMarqueeElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   if (GetShadowRoot() && IsInComposedDoc()) {
-    AsyncEventDispatcher* dispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("UAWidgetUnbindFromTree"),
-                               CanBubble::eYes,
-                               ChromeOnlyDispatch::eYes);
+    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
+        this, NS_LITERAL_STRING("UAWidgetUnbindFromTree"), CanBubble::eYes,
+        ChromeOnlyDispatch::eYes);
     dispatcher->RunDOMEventWhenSafe();
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-void
-HTMLMarqueeElement::SetStartStopCallback(FunctionStringCallback* aCallback)
-{
+void HTMLMarqueeElement::SetStartStopCallback(
+    FunctionStringCallback* aCallback) {
   mStartStopCallback = aCallback;
 }
 
-void
-HTMLMarqueeElement::GetBehavior(nsAString& aValue)
-{
+void HTMLMarqueeElement::GetBehavior(nsAString& aValue) {
   GetEnumAttr(nsGkAtoms::behavior, kDefaultBehavior->tag, aValue);
 }
 
-void
-HTMLMarqueeElement::GetDirection(nsAString& aValue)
-{
+void HTMLMarqueeElement::GetDirection(nsAString& aValue) {
   GetEnumAttr(nsGkAtoms::direction, kDefaultDirection->tag, aValue);
 }
 
-bool
-HTMLMarqueeElement::ParseAttribute(int32_t aNamespaceID,
-                               nsAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsIPrincipal* aMaybeScriptedPrincipal,
-                               nsAttrValue& aResult)
-{
+bool HTMLMarqueeElement::ParseAttribute(int32_t aNamespaceID,
+                                        nsAtom* aAttribute,
+                                        const nsAString& aValue,
+                                        nsIPrincipal* aMaybeScriptedPrincipal,
+                                        nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
-    if ((aAttribute == nsGkAtoms::width) ||
-        (aAttribute == nsGkAtoms::height)) {
+    if ((aAttribute == nsGkAtoms::width) || (aAttribute == nsGkAtoms::height)) {
       return aResult.ParseSpecialIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::bgcolor) {
       return aResult.ParseColor(aValue);
     }
     if (aAttribute == nsGkAtoms::behavior) {
-      return aResult.ParseEnumValue(aValue, kBehaviorTable, false, kDefaultBehavior);
+      return aResult.ParseEnumValue(aValue, kBehaviorTable, false,
+                                    kDefaultBehavior);
     }
     if (aAttribute == nsGkAtoms::direction) {
-      return aResult.ParseEnumValue(aValue, kDirectionTable, false, kDefaultDirection);
+      return aResult.ParseEnumValue(aValue, kDirectionTable, false,
+                                    kDefaultDirection);
     }
     if ((aAttribute == nsGkAtoms::hspace) ||
         (aAttribute == nsGkAtoms::vspace)) {
@@ -162,32 +133,24 @@ HTMLMarqueeElement::ParseAttribute(int32_t aNamespaceID,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-nsresult
-HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                 const nsAttrValue* aValue,
-                                 const nsAttrValue* aOldValue,
-                                 nsIPrincipal* aMaybeScriptedPrincipal,
-                                 bool aNotify)
-{
-  if (nsContentUtils::IsUAWidgetEnabled() &&
-      IsInComposedDoc() &&
-      aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::direction) {
-    AsyncEventDispatcher* dispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("UAWidgetAttributeChanged"),
-                               CanBubble::eYes,
-                               ChromeOnlyDispatch::eYes);
+nsresult HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                          const nsAttrValue* aValue,
+                                          const nsAttrValue* aOldValue,
+                                          nsIPrincipal* aMaybeScriptedPrincipal,
+                                          bool aNotify) {
+  if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc() &&
+      aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::direction) {
+    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
+        this, NS_LITERAL_STRING("UAWidgetAttributeChanged"), CanBubble::eYes,
+        ChromeOnlyDispatch::eYes);
     dispatcher->RunDOMEventWhenSafe();
   }
   return nsGenericHTMLElement::AfterSetAttr(
-    aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
+      aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
 }
 
-
-void
-HTMLMarqueeElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls)
-{
+void HTMLMarqueeElement::MapAttributesIntoRule(
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aDecls);
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
@@ -195,26 +158,22 @@ HTMLMarqueeElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(bool)
-HTMLMarqueeElement::IsAttributeMapped(const nsAtom* aAttribute) const
-{
+HTMLMarqueeElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   static const MappedAttributeEntry* const map[] = {
-    sImageMarginSizeAttributeMap,
-    sBackgroundColorAttributeMap,
-    sCommonAttributeMap
-  };
+      sImageMarginSizeAttributeMap, sBackgroundColorAttributeMap,
+      sCommonAttributeMap};
   return FindAttributeDependence(aAttribute, map);
 }
 
-nsMapRuleToAttributesFunc
-HTMLMarqueeElement::GetAttributeMappingFunction() const
-{
+nsMapRuleToAttributesFunc HTMLMarqueeElement::GetAttributeMappingFunction()
+    const {
   return &MapAttributesIntoRule;
 }
 
-void
-HTMLMarqueeElement::DispatchEventToShadowRoot(const nsAString& aEventTypeArg)
-{
-  // Dispatch the event to the UA Widget Shadow Root, make it inaccessible to document.
+void HTMLMarqueeElement::DispatchEventToShadowRoot(
+    const nsAString& aEventTypeArg) {
+  // Dispatch the event to the UA Widget Shadow Root, make it inaccessible to
+  // document.
   RefPtr<nsINode> shadow = GetShadowRoot();
   MOZ_ASSERT(shadow);
   RefPtr<Event> event = new Event(shadow, nullptr, nullptr);
@@ -223,9 +182,7 @@ HTMLMarqueeElement::DispatchEventToShadowRoot(const nsAString& aEventTypeArg)
   shadow->DispatchEvent(*event, IgnoreErrors());
 }
 
-void
-HTMLMarqueeElement::Start()
-{
+void HTMLMarqueeElement::Start() {
   if (GetShadowRoot()) {
     DispatchEventToShadowRoot(NS_LITERAL_STRING("marquee-start"));
   } else if (mStartStopCallback) {
@@ -233,9 +190,7 @@ HTMLMarqueeElement::Start()
   }
 }
 
-void
-HTMLMarqueeElement::Stop()
-{
+void HTMLMarqueeElement::Stop() {
   if (GetShadowRoot()) {
     DispatchEventToShadowRoot(NS_LITERAL_STRING("marquee-stop"));
   } else if (mStartStopCallback) {
@@ -243,5 +198,5 @@ HTMLMarqueeElement::Stop()
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

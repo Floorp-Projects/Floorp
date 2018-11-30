@@ -17,33 +17,30 @@
 
 namespace mozilla {
 
-class JavascriptTimelineMarker : public TimelineMarker
-{
-public:
+class JavascriptTimelineMarker : public TimelineMarker {
+ public:
   // The caller owns |aAsyncCause| here, so we must copy it into a separate
   // string for use later on.
-  JavascriptTimelineMarker(const char* aReason,
-                           const char16_t* aFunctionName,
-                           const char16_t* aFileName,
-                           uint32_t aLineNumber,
+  JavascriptTimelineMarker(const char* aReason, const char16_t* aFunctionName,
+                           const char16_t* aFileName, uint32_t aLineNumber,
                            MarkerTracingType aTracingType,
                            JS::Handle<JS::Value> aAsyncStack,
                            const char* aAsyncCause)
-    : TimelineMarker("Javascript", aTracingType, MarkerStackRequest::NO_STACK)
-    , mCause(NS_ConvertUTF8toUTF16(aReason))
-    , mFunctionName(aFunctionName)
-    , mFileName(aFileName)
-    , mLineNumber(aLineNumber)
-    , mAsyncCause(aAsyncCause)
-  {
+      : TimelineMarker("Javascript", aTracingType,
+                       MarkerStackRequest::NO_STACK),
+        mCause(NS_ConvertUTF8toUTF16(aReason)),
+        mFunctionName(aFunctionName),
+        mFileName(aFileName),
+        mLineNumber(aLineNumber),
+        mAsyncCause(aAsyncCause) {
     JSContext* ctx = nsContentUtils::GetCurrentJSContext();
     if (ctx) {
       mAsyncStack.init(ctx, aAsyncStack);
     }
   }
 
-  virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
-  {
+  virtual void AddDetails(JSContext* aCx,
+                          dom::ProfileTimelineMarker& aMarker) override {
     TimelineMarker::AddDetails(aCx, aMarker);
 
     aMarker.mCauseName.Construct(mCause);
@@ -57,15 +54,17 @@ public:
       if (mAsyncStack.isObject() && !mAsyncCause.IsEmpty()) {
         JS::Rooted<JSObject*> asyncStack(aCx, &mAsyncStack.toObject());
         JS::Rooted<JSObject*> parentFrame(aCx);
-        JS::Rooted<JSString*> asyncCause(aCx, JS_NewUCStringCopyN(aCx, mAsyncCause.BeginReading(),
-                                                                  mAsyncCause.Length()));
+        JS::Rooted<JSString*> asyncCause(
+            aCx, JS_NewUCStringCopyN(aCx, mAsyncCause.BeginReading(),
+                                     mAsyncCause.Length()));
         if (!asyncCause) {
           JS_ClearPendingException(aCx);
           return;
         }
 
         if (JS::IsMaybeWrappedSavedFrame(asyncStack) &&
-            !JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, mozilla::Nothing())) {
+            !JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame,
+                                mozilla::Nothing())) {
           JS_ClearPendingException(aCx);
         } else {
           stackFrame.mAsyncParent = parentFrame;
@@ -83,7 +82,7 @@ public:
     }
   }
 
-private:
+ private:
   nsString mCause;
   nsString mFunctionName;
   nsString mFileName;
@@ -92,6 +91,6 @@ private:
   NS_ConvertUTF8toUTF16 mAsyncCause;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_JavascriptTimelineMarker_h_
+#endif  // mozilla_JavascriptTimelineMarker_h_

@@ -17,25 +17,19 @@ namespace gfx {
 using namespace ipc;
 
 GPUProcessHost::GPUProcessHost(Listener* aListener)
- : GeckoChildProcessHost(GeckoProcessType_GPU),
-   mListener(aListener),
-   mTaskFactory(this),
-   mLaunchPhase(LaunchPhase::Unlaunched),
-   mProcessToken(0),
-   mShutdownRequested(false),
-   mChannelClosed(false)
-{
+    : GeckoChildProcessHost(GeckoProcessType_GPU),
+      mListener(aListener),
+      mTaskFactory(this),
+      mLaunchPhase(LaunchPhase::Unlaunched),
+      mProcessToken(0),
+      mShutdownRequested(false),
+      mChannelClosed(false) {
   MOZ_COUNT_CTOR(GPUProcessHost);
 }
 
-GPUProcessHost::~GPUProcessHost()
-{
-  MOZ_COUNT_DTOR(GPUProcessHost);
-}
+GPUProcessHost::~GPUProcessHost() { MOZ_COUNT_DTOR(GPUProcessHost); }
 
-bool
-GPUProcessHost::Launch(StringVector aExtraOpts)
-{
+bool GPUProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
   MOZ_ASSERT(!mGPUChild);
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
@@ -54,9 +48,7 @@ GPUProcessHost::Launch(StringVector aExtraOpts)
   return true;
 }
 
-bool
-GPUProcessHost::WaitForLaunch()
-{
+bool GPUProcessHost::WaitForLaunch() {
   if (mLaunchPhase == LaunchPhase::Complete) {
     return !!mGPUChild;
   }
@@ -64,8 +56,10 @@ GPUProcessHost::WaitForLaunch()
   int32_t timeoutMs = gfxPrefs::GPUProcessTimeoutMs();
 
   // If one of the following environment variables are set we can effectively
-  // ignore the timeout - as we can guarantee the compositor process will be terminated
-  if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS") || PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
+  // ignore the timeout - as we can guarantee the compositor process will be
+  // terminated
+  if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS") ||
+      PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
     timeoutMs = 0;
   }
 
@@ -77,9 +71,7 @@ GPUProcessHost::WaitForLaunch()
   return result;
 }
 
-void
-GPUProcessHost::OnChannelConnected(int32_t peer_pid)
-{
+void GPUProcessHost::OnChannelConnected(int32_t peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
@@ -89,14 +81,13 @@ GPUProcessHost::OnChannelConnected(int32_t peer_pid)
   RefPtr<Runnable> runnable;
   {
     MonitorAutoLock lock(mMonitor);
-    runnable = mTaskFactory.NewRunnableMethod(&GPUProcessHost::OnChannelConnectedTask);
+    runnable =
+        mTaskFactory.NewRunnableMethod(&GPUProcessHost::OnChannelConnectedTask);
   }
   NS_DispatchToMainThread(runnable);
 }
 
-void
-GPUProcessHost::OnChannelError()
-{
+void GPUProcessHost::OnChannelError() {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelError();
@@ -106,22 +97,19 @@ GPUProcessHost::OnChannelError()
   RefPtr<Runnable> runnable;
   {
     MonitorAutoLock lock(mMonitor);
-    runnable = mTaskFactory.NewRunnableMethod(&GPUProcessHost::OnChannelErrorTask);
+    runnable =
+        mTaskFactory.NewRunnableMethod(&GPUProcessHost::OnChannelErrorTask);
   }
   NS_DispatchToMainThread(runnable);
 }
 
-void
-GPUProcessHost::OnChannelConnectedTask()
-{
+void GPUProcessHost::OnChannelConnectedTask() {
   if (mLaunchPhase == LaunchPhase::Waiting) {
     InitAfterConnect(true);
   }
 }
 
-void
-GPUProcessHost::OnChannelErrorTask()
-{
+void GPUProcessHost::OnChannelErrorTask() {
   if (mLaunchPhase == LaunchPhase::Waiting) {
     InitAfterConnect(false);
   }
@@ -129,9 +117,7 @@ GPUProcessHost::OnChannelErrorTask()
 
 static uint64_t sProcessTokenCounter = 0;
 
-void
-GPUProcessHost::InitAfterConnect(bool aSucceeded)
-{
+void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Waiting);
   MOZ_ASSERT(!mGPUChild);
 
@@ -141,7 +127,7 @@ GPUProcessHost::InitAfterConnect(bool aSucceeded)
     mProcessToken = ++sProcessTokenCounter;
     mGPUChild = MakeUnique<GPUChild>(this);
     DebugOnly<bool> rv =
-      mGPUChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
+        mGPUChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
     mGPUChild->Init();
@@ -152,9 +138,7 @@ GPUProcessHost::InitAfterConnect(bool aSucceeded)
   }
 }
 
-void
-GPUProcessHost::Shutdown()
-{
+void GPUProcessHost::Shutdown() {
   MOZ_ASSERT(!mShutdownRequested);
 
   mListener = nullptr;
@@ -188,9 +172,7 @@ GPUProcessHost::Shutdown()
   DestroyProcess();
 }
 
-void
-GPUProcessHost::OnChannelClosed()
-{
+void GPUProcessHost::OnChannelClosed() {
   mChannelClosed = true;
 
   if (!mShutdownRequested && mListener) {
@@ -205,9 +187,7 @@ GPUProcessHost::OnChannelClosed()
   MOZ_ASSERT(!mGPUChild);
 }
 
-void
-GPUProcessHost::KillHard(const char* aReason)
-{
+void GPUProcessHost::KillHard(const char* aReason) {
   ProcessHandle handle = GetChildProcessHandle();
   if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER, false)) {
     NS_WARNING("failed to kill subprocess!");
@@ -216,28 +196,16 @@ GPUProcessHost::KillHard(const char* aReason)
   SetAlreadyDead();
 }
 
-uint64_t
-GPUProcessHost::GetProcessToken() const
-{
-  return mProcessToken;
+uint64_t GPUProcessHost::GetProcessToken() const { return mProcessToken; }
+
+static void DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
+  XRE_GetIOMessageLoop()->PostTask(
+      mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
 }
 
-static void
-DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
-{
-  XRE_GetIOMessageLoop()->
-    PostTask(mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
-}
+void GPUProcessHost::KillProcess() { KillHard("DiagnosticKill"); }
 
-void
-GPUProcessHost::KillProcess()
-{
-  KillHard("DiagnosticKill");
-}
-
-void
-GPUProcessHost::DestroyProcess()
-{
+void GPUProcessHost::DestroyProcess() {
   // Cancel all tasks. We don't want anything triggering after our caller
   // expects this to go away.
   {
@@ -245,9 +213,9 @@ GPUProcessHost::DestroyProcess()
     mTaskFactory.RevokeAll();
   }
 
-  MessageLoop::current()->
-    PostTask(NewRunnableFunction("DestroyProcessRunnable", DelayedDeleteSubprocess, this));
+  MessageLoop::current()->PostTask(NewRunnableFunction(
+      "DestroyProcessRunnable", DelayedDeleteSubprocess, this));
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

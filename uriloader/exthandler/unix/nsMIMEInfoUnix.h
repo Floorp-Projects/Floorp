@@ -9,16 +9,17 @@
 
 #include "nsMIMEInfoImpl.h"
 
-class nsMIMEInfoUnix : public nsMIMEInfoImpl
-{
-public:
-  explicit nsMIMEInfoUnix(const char *aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
-  explicit nsMIMEInfoUnix(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
-  nsMIMEInfoUnix(const nsACString& aType, HandlerClass aClass) :
-    nsMIMEInfoImpl(aType, aClass) {}
+class nsMIMEInfoUnix : public nsMIMEInfoImpl {
+ public:
+  explicit nsMIMEInfoUnix(const char *aMIMEType = "")
+      : nsMIMEInfoImpl(aMIMEType) {}
+  explicit nsMIMEInfoUnix(const nsACString &aMIMEType)
+      : nsMIMEInfoImpl(aMIMEType) {}
+  nsMIMEInfoUnix(const nsACString &aType, HandlerClass aClass)
+      : nsMIMEInfoImpl(aType, aClass) {}
   static bool HandlerExists(const char *aProtocolScheme);
 
-protected:
+ protected:
   NS_IMETHOD GetHasDefaultHandler(bool *_retval) override;
 
   virtual nsresult LoadUriInternal(nsIURI *aURI) override;
@@ -26,4 +27,4 @@ protected:
   virtual nsresult LaunchDefaultWithFile(nsIFile *aFile) override;
 };
 
-#endif // nsMIMEInfoUnix_h_
+#endif  // nsMIMEInfoUnix_h_

@@ -27,26 +27,18 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PlacesEvent, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PlacesEvent, Release)
 
-already_AddRefed<PlacesEvent>
-PlacesEvent::Constructor(const GlobalObject& aGlobal,
-                         PlacesEventType aType,
-                         ErrorResult& rv)
-{
+already_AddRefed<PlacesEvent> PlacesEvent::Constructor(
+    const GlobalObject& aGlobal, PlacesEventType aType, ErrorResult& rv) {
   RefPtr<PlacesEvent> event = new PlacesEvent(aType);
   return event.forget();
 }
 
-nsISupports*
-PlacesEvent::GetParentObject() const
-{
-  return nullptr;
-}
+nsISupports* PlacesEvent::GetParentObject() const { return nullptr; }
 
-JSObject*
-PlacesEvent::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PlacesEvent::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return PlacesEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

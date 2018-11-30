@@ -17,27 +17,30 @@
 #include "nsISupports.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
 
-#define NS_ICONTENTPARENT_IID                                   \
-  { 0xeeec9ebf, 0x8ecf, 0x4e38,                                 \
-    { 0x81, 0xda, 0xb7, 0x34, 0x13, 0x7e, 0xac, 0xf3 } }
+#define NS_ICONTENTPARENT_IID                        \
+  {                                                  \
+    0xeeec9ebf, 0x8ecf, 0x4e38, {                    \
+      0x81, 0xda, 0xb7, 0x34, 0x13, 0x7e, 0xac, 0xf3 \
+    }                                                \
+  }
 
 namespace IPC {
 class Principal;
-} // namespace IPC
+}  // namespace IPC
 
 namespace mozilla {
 
 namespace jsipc {
 class PJavaScriptParent;
 class CpowEntry;
-} // namespace jsipc
+}  // namespace jsipc
 
 namespace ipc {
 class PFileDescriptorSetParent;
 class PChildToParentStreamParent;
 class PParentToChildStreamParent;
 class PIPCBlobInputStreamParent;
-}
+}  // namespace ipc
 
 namespace dom {
 
@@ -50,12 +53,11 @@ class ContentBridgeParent;
 class IPCTabContext;
 class PBrowserParent;
 
-class nsIContentParent : public nsISupports
-                       , public mozilla::dom::ipc::MessageManagerCallback
-                       , public CPOWManagerGetter
-                       , public mozilla::ipc::IShmemAllocator
-{
-public:
+class nsIContentParent : public nsISupports,
+                         public mozilla::dom::ipc::MessageManagerCallback,
+                         public CPOWManagerGetter,
+                         public mozilla::ipc::IShmemAllocator {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTPARENT_IID)
 
   nsIContentParent();
@@ -65,18 +67,14 @@ public:
   virtual bool IsForJSPlugin() const = 0;
 
   virtual mozilla::ipc::PIPCBlobInputStreamParent*
-  SendPIPCBlobInputStreamConstructor(mozilla::ipc::PIPCBlobInputStreamParent* aActor,
-                                     const nsID& aID,
-                                     const uint64_t& aSize) = 0;
+  SendPIPCBlobInputStreamConstructor(
+      mozilla::ipc::PIPCBlobInputStreamParent* aActor, const nsID& aID,
+      const uint64_t& aSize) = 0;
 
-  MOZ_MUST_USE virtual PBrowserParent*
-  SendPBrowserConstructor(PBrowserParent* actor,
-                          const TabId& aTabId,
-                          const TabId& aSameTabGroupAs,
-                          const IPCTabContext& context,
-                          const uint32_t& chromeFlags,
-                          const ContentParentId& aCpId,
-                          const bool& aIsForBrowser) = 0;
+  MOZ_MUST_USE virtual PBrowserParent* SendPBrowserConstructor(
+      PBrowserParent* actor, const TabId& aTabId, const TabId& aSameTabGroupAs,
+      const IPCTabContext& context, const uint32_t& chromeFlags,
+      const ContentParentId& aCpId, const bool& aIsForBrowser) = 0;
 
   virtual mozilla::ipc::PFileDescriptorSetParent*
   SendPFileDescriptorSetConstructor(const mozilla::ipc::FileDescriptor&) = 0;
@@ -89,7 +87,9 @@ public:
 
   ContentBridgeParent* AsContentBridgeParent();
 
-  mozilla::dom::ProcessMessageManager* GetMessageManager() const { return mMessageManager; }
+  mozilla::dom::ProcessMessageManager* GetMessageManager() const {
+    return mMessageManager;
+  }
 
   virtual bool SendActivate(PBrowserParent* aTab) = 0;
 
@@ -98,12 +98,13 @@ public:
   virtual int32_t Pid() const = 0;
 
   virtual mozilla::ipc::PParentToChildStreamParent*
-  SendPParentToChildStreamConstructor(mozilla::ipc::PParentToChildStreamParent*) = 0;
+  SendPParentToChildStreamConstructor(
+      mozilla::ipc::PParentToChildStreamParent*) = 0;
 
-protected: // methods
+ protected:  // methods
   bool CanOpenBrowser(const IPCTabContext& aContext);
 
-protected: // IPDL methods
+ protected:  // IPDL methods
   virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScriptParent();
   virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
 
@@ -115,59 +116,56 @@ protected: // IPDL methods
                                               const bool& aIsForBrowser);
   virtual bool DeallocPBrowserParent(PBrowserParent* frame);
 
-  virtual mozilla::ipc::IPCResult
-  RecvPBrowserConstructor(PBrowserParent* actor,
-                          const TabId& tabId,
-                          const TabId& sameTabGroupAs,
-                          const IPCTabContext& context,
-                          const uint32_t& chromeFlags,
-                          const ContentParentId& cpId,
-                          const bool& isForBrowser);
+  virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
+      PBrowserParent* actor, const TabId& tabId, const TabId& sameTabGroupAs,
+      const IPCTabContext& context, const uint32_t& chromeFlags,
+      const ContentParentId& cpId, const bool& isForBrowser);
 
   virtual mozilla::ipc::PIPCBlobInputStreamParent*
   AllocPIPCBlobInputStreamParent(const nsID& aID, const uint64_t& aSize);
 
-  virtual bool
-  DeallocPIPCBlobInputStreamParent(mozilla::ipc::PIPCBlobInputStreamParent* aActor);
+  virtual bool DeallocPIPCBlobInputStreamParent(
+      mozilla::ipc::PIPCBlobInputStreamParent* aActor);
 
-  virtual mozilla::ipc::PFileDescriptorSetParent*
-  AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor& aFD);
+  virtual mozilla::ipc::PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
+      const mozilla::ipc::FileDescriptor& aFD);
 
-  virtual bool
-  DeallocPFileDescriptorSetParent(mozilla::ipc::PFileDescriptorSetParent* aActor);
+  virtual bool DeallocPFileDescriptorSetParent(
+      mozilla::ipc::PFileDescriptorSetParent* aActor);
 
-  virtual mozilla::ipc::PChildToParentStreamParent* AllocPChildToParentStreamParent();
+  virtual mozilla::ipc::PChildToParentStreamParent*
+  AllocPChildToParentStreamParent();
 
-  virtual bool
-  DeallocPChildToParentStreamParent(mozilla::ipc::PChildToParentStreamParent* aActor);
+  virtual bool DeallocPChildToParentStreamParent(
+      mozilla::ipc::PChildToParentStreamParent* aActor);
 
-  virtual mozilla::ipc::PParentToChildStreamParent* AllocPParentToChildStreamParent();
+  virtual mozilla::ipc::PParentToChildStreamParent*
+  AllocPParentToChildStreamParent();
 
-  virtual bool
-  DeallocPParentToChildStreamParent(mozilla::ipc::PParentToChildStreamParent* aActor);
+  virtual bool DeallocPParentToChildStreamParent(
+      mozilla::ipc::PParentToChildStreamParent* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvSyncMessage(const nsString& aMsg,
-                                                  const ClonedMessageData& aData,
-                                                  InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                                  const IPC::Principal& aPrincipal,
-                                                  nsTArray<ipc::StructuredCloneData>* aRetvals);
-  virtual mozilla::ipc::IPCResult RecvRpcMessage(const nsString& aMsg,
-                                                 const ClonedMessageData& aData,
-                                                 InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                                 const IPC::Principal& aPrincipal,
-                                                 nsTArray<ipc::StructuredCloneData>* aRetvals);
-  virtual mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
-                                                   InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                                   const IPC::Principal& aPrincipal,
-                                                   const ClonedMessageData& aData);
+  virtual mozilla::ipc::IPCResult RecvSyncMessage(
+      const nsString& aMsg, const ClonedMessageData& aData,
+      InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+      const IPC::Principal& aPrincipal,
+      nsTArray<ipc::StructuredCloneData>* aRetvals);
+  virtual mozilla::ipc::IPCResult RecvRpcMessage(
+      const nsString& aMsg, const ClonedMessageData& aData,
+      InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+      const IPC::Principal& aPrincipal,
+      nsTArray<ipc::StructuredCloneData>* aRetvals);
+  virtual mozilla::ipc::IPCResult RecvAsyncMessage(
+      const nsString& aMsg, InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+      const IPC::Principal& aPrincipal, const ClonedMessageData& aData);
 
-protected: // members
+ protected:  // members
   RefPtr<mozilla::dom::ProcessMessageManager> mMessageManager;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentParent, NS_ICONTENTPARENT_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_nsIContentParent_h */

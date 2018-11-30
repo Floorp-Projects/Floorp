@@ -17,7 +17,7 @@ namespace mozilla {
 namespace layers {
 class ImageContainer;
 class KnowsCompositor;
-} // namespace layers
+}  // namespace layers
 
 /**
  * Keeps a record of image containers for mask layers, containers are mapped
@@ -32,12 +32,11 @@ class KnowsCompositor;
  * When the key's layer count is zero, the cache
  * may remove the entry, which deletes the key object.
  */
-class MaskLayerImageCache
-{
+class MaskLayerImageCache {
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::KnowsCompositor KnowsCompositor;
 
-public:
+ public:
   MaskLayerImageCache();
   ~MaskLayerImageCache();
 
@@ -47,28 +46,23 @@ public:
    * In particular, our internal representation uses a gfxRect, rather than
    * an nsRect, so this class is easier to use with transforms.
    */
-  struct PixelRoundedRect
-  {
+  struct PixelRoundedRect {
     PixelRoundedRect() = delete;
 
     PixelRoundedRect(const DisplayItemClip::RoundedRect& aRRect,
                      nsPresContext* aPresContext)
-      : mRect(aPresContext->AppUnitsToGfxUnits(aRRect.mRect.x),
-              aPresContext->AppUnitsToGfxUnits(aRRect.mRect.y),
-              aPresContext->AppUnitsToGfxUnits(aRRect.mRect.width),
-              aPresContext->AppUnitsToGfxUnits(aRRect.mRect.height))
-    {
+        : mRect(aPresContext->AppUnitsToGfxUnits(aRRect.mRect.x),
+                aPresContext->AppUnitsToGfxUnits(aRRect.mRect.y),
+                aPresContext->AppUnitsToGfxUnits(aRRect.mRect.width),
+                aPresContext->AppUnitsToGfxUnits(aRRect.mRect.height)) {
       MOZ_COUNT_CTOR(PixelRoundedRect);
-      NS_FOR_CSS_HALF_CORNERS(corner)
-      {
+      NS_FOR_CSS_HALF_CORNERS(corner) {
         mRadii[corner] =
-          aPresContext->AppUnitsToGfxUnits(aRRect.mRadii[corner]);
+            aPresContext->AppUnitsToGfxUnits(aRRect.mRadii[corner]);
       }
     }
 
-    PixelRoundedRect(const PixelRoundedRect& aPRR)
-      : mRect(aPRR.mRect)
-    {
+    PixelRoundedRect(const PixelRoundedRect& aPRR) : mRect(aPRR.mRect) {
       MOZ_COUNT_CTOR(PixelRoundedRect);
       NS_FOR_CSS_HALF_CORNERS(corner) { mRadii[corner] = aPRR.mRadii[corner]; }
     }
@@ -78,8 +72,7 @@ public:
     // Applies the scale and translate components of aTransform.
     // It is an error to pass a matrix which does more than just scale
     // and translate.
-    void ScaleAndTranslate(const gfx::Matrix& aTransform)
-    {
+    void ScaleAndTranslate(const gfx::Matrix& aTransform) {
       NS_ASSERTION(aTransform._12 == 0 && aTransform._21 == 0,
                    "Transform has a component other than scale and translate");
 
@@ -91,28 +84,24 @@ public:
       }
     }
 
-    bool operator==(const PixelRoundedRect& aOther) const
-    {
+    bool operator==(const PixelRoundedRect& aOther) const {
       if (!mRect.IsEqualInterior(aOther.mRect)) {
         return false;
       }
 
-      NS_FOR_CSS_HALF_CORNERS(corner)
-      {
+      NS_FOR_CSS_HALF_CORNERS(corner) {
         if (mRadii[corner] != aOther.mRadii[corner]) {
           return false;
         }
       }
       return true;
     }
-    bool operator!=(const PixelRoundedRect& aOther) const
-    {
+    bool operator!=(const PixelRoundedRect& aOther) const {
       return !(*this == aOther);
     }
 
     // Create a hash for this object.
-    PLDHashNumber Hash() const
-    {
+    PLDHashNumber Hash() const {
       PLDHashNumber hash = HashBytes(&mRect.x, 4 * sizeof(gfxFloat));
       hash = AddToHash(hash, HashBytes(mRadii, 8 * sizeof(gfxFloat)));
 
@@ -136,8 +125,7 @@ public:
    * pointers to a key object (the +1 being from the hashtable entry), but this
    * invariant may be temporarily broken.
    */
-  struct MaskLayerImageKey
-  {
+  struct MaskLayerImageKey {
     friend struct MaskLayerImageKeyRef;
 
     MaskLayerImageKey();
@@ -147,8 +135,7 @@ public:
 
     bool HasZeroLayerCount() const { return mLayerCount == 0; }
 
-    PLDHashNumber Hash() const
-    {
+    PLDHashNumber Hash() const {
       PLDHashNumber hash = 0;
 
       for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
@@ -159,8 +146,7 @@ public:
       return hash;
     }
 
-    bool operator==(const MaskLayerImageKey& aOther) const
-    {
+    bool operator==(const MaskLayerImageKey& aOther) const {
       return mKnowsCompositor == aOther.mKnowsCompositor &&
              mRoundedClipRects == aOther.mRoundedClipRects;
     }
@@ -168,10 +154,9 @@ public:
     nsTArray<PixelRoundedRect> mRoundedClipRects;
     RefPtr<KnowsCompositor> mKnowsCompositor;
 
-  private:
+   private:
     void IncLayerCount() const { ++mLayerCount; }
-    void DecLayerCount() const
-    {
+    void DecLayerCount() const {
       NS_ASSERTION(mLayerCount > 0, "Inconsistent layer count");
       --mLayerCount;
     }
@@ -188,26 +173,20 @@ public:
    * *not* delete the tracked MaskLayerImageKey -- instead, deletion happens
    * in MaskLayerImageCache::Sweep(), for any keys whose mLayerCount is 0.
    */
-  struct MaskLayerImageKeyRef
-  {
-    ~MaskLayerImageKeyRef()
-    {
+  struct MaskLayerImageKeyRef {
+    ~MaskLayerImageKeyRef() {
       if (mRawPtr) {
         mRawPtr->DecLayerCount();
       }
     }
 
-    MaskLayerImageKeyRef()
-      : mRawPtr(nullptr)
-    {
-    }
+    MaskLayerImageKeyRef() : mRawPtr(nullptr) {}
     MaskLayerImageKeyRef(const MaskLayerImageKeyRef&) = delete;
     void operator=(const MaskLayerImageKeyRef&) = delete;
 
-    void Reset(const MaskLayerImageKey* aPtr)
-    {
+    void Reset(const MaskLayerImageKey* aPtr) {
       MOZ_ASSERT(
-        aPtr, "Cannot initialize a MaskLayerImageKeyRef with a null pointer");
+          aPtr, "Cannot initialize a MaskLayerImageKeyRef with a null pointer");
       aPtr->IncLayerCount();
       if (mRawPtr) {
         mRawPtr->DecLayerCount();
@@ -215,7 +194,7 @@ public:
       mRawPtr = aPtr;
     }
 
-  private:
+   private:
     const MaskLayerImageKey* mRawPtr;
   };
 
@@ -232,21 +211,17 @@ public:
   // Sweep the cache for old image containers that can be deleted
   void Sweep();
 
-protected:
-  class MaskLayerImageEntry : public PLDHashEntryHdr
-  {
-  public:
+ protected:
+  class MaskLayerImageEntry : public PLDHashEntryHdr {
+   public:
     typedef const MaskLayerImageKey& KeyType;
     typedef const MaskLayerImageKey* KeyTypePointer;
 
-    explicit MaskLayerImageEntry(KeyTypePointer aKey)
-      : mKey(aKey)
-    {
+    explicit MaskLayerImageEntry(KeyTypePointer aKey) : mKey(aKey) {
       MOZ_COUNT_CTOR(MaskLayerImageEntry);
     }
     MaskLayerImageEntry(const MaskLayerImageEntry& aOther)
-      : mKey(aOther.mKey.get())
-    {
+        : mKey(aOther.mKey.get()) {
       NS_ERROR("ALLOW_MEMMOVE == true, should never be called");
     }
     ~MaskLayerImageEntry() { MOZ_COUNT_DTOR(MaskLayerImageEntry); }
@@ -262,13 +237,9 @@ protected:
 
     // ALLOW_MEMMOVE can we move this class with memmove(), or do we have
     // to use the copy constructor?
-    enum
-    {
-      ALLOW_MEMMOVE = true
-    };
+    enum { ALLOW_MEMMOVE = true };
 
-    bool operator==(const MaskLayerImageEntry& aOther) const
-    {
+    bool operator==(const MaskLayerImageEntry& aOther) const {
       return KeyEquals(aOther.mKey);
     }
 
@@ -279,6 +250,6 @@ protected:
   nsTHashtable<MaskLayerImageEntry> mMaskImageContainers;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

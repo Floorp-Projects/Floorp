@@ -22,8 +22,7 @@ MOZ_MTLOG_MODULE("mtransport")
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
-TransportLayerSrtp::TransportLayerSrtp(TransportLayerDtls& dtls)
-{
+TransportLayerSrtp::TransportLayerSrtp(TransportLayerDtls& dtls) {
   // We need to connect to the dtls layer, not the ice layer, because even
   // though the packets that DTLS decrypts don't flow through us, we do base our
   // keying information on the keying information established by the DTLS layer.
@@ -32,18 +31,14 @@ TransportLayerSrtp::TransportLayerSrtp(TransportLayerDtls& dtls)
   TL_SET_STATE(dtls.state());
 }
 
-void
-TransportLayerSrtp::WasInserted()
-{
+void TransportLayerSrtp::WasInserted() {
   // Connect to the lower layers
   if (!Setup()) {
     TL_SET_STATE(TS_ERROR);
   }
 }
 
-bool
-TransportLayerSrtp::Setup()
-{
+bool TransportLayerSrtp::Setup() {
   CheckThread();
   if (!downward_) {
     MOZ_MTLOG(ML_ERROR, "SRTP layer with nothing below. This is useless");
@@ -51,14 +46,13 @@ TransportLayerSrtp::Setup()
   }
 
   // downward_ is the TransportLayerIce
-  downward_->SignalPacketReceived.connect(this, &TransportLayerSrtp::PacketReceived);
+  downward_->SignalPacketReceived.connect(this,
+                                          &TransportLayerSrtp::PacketReceived);
 
   return true;
 }
 
-TransportResult
-TransportLayerSrtp::SendPacket(MediaPacket& packet)
-{
+TransportResult TransportLayerSrtp::SendPacket(MediaPacket& packet) {
   if (packet.len() < 4) {
     MOZ_ASSERT(false);
     return TE_ERROR;
@@ -70,11 +64,13 @@ TransportLayerSrtp::SendPacket(MediaPacket& packet)
   nsresult res;
   switch (packet.type()) {
     case MediaPacket::RTP:
-      res = mSendSrtp->ProtectRtp(packet.data(), packet.len(), packet.capacity(), &out_len);
+      res = mSendSrtp->ProtectRtp(packet.data(), packet.len(),
+                                  packet.capacity(), &out_len);
       packet.SetType(MediaPacket::SRTP);
       break;
     case MediaPacket::RTCP:
-      res = mSendSrtp->ProtectRtcp(packet.data(), packet.len(), packet.capacity(), &out_len);
+      res = mSendSrtp->ProtectRtcp(packet.data(), packet.len(),
+                                   packet.capacity(), &out_len);
       packet.SetType(MediaPacket::SRTCP);
       break;
     default:
@@ -83,15 +79,11 @@ TransportLayerSrtp::SendPacket(MediaPacket& packet)
 
   if (NS_FAILED(res)) {
     MOZ_MTLOG(ML_ERROR,
-                "Error protecting "
-                << (packet.type() == MediaPacket::RTP ? "RTP" : "RTCP")
-                << " len=" << packet.len()
-                << "[" << std::hex
-                << packet.data()[0] << " "
-                << packet.data()[1] << " "
-                << packet.data()[2] << " "
-                << packet.data()[3]
-                << "]");
+              "Error protecting "
+                  << (packet.type() == MediaPacket::RTP ? "RTP" : "RTCP")
+                  << " len=" << packet.len() << "[" << std::hex
+                  << packet.data()[0] << " " << packet.data()[1] << " "
+                  << packet.data()[2] << " " << packet.data()[3] << "]");
     return TE_ERROR;
   }
 
@@ -112,12 +104,10 @@ TransportLayerSrtp::SendPacket(MediaPacket& packet)
   return TE_ERROR;
 }
 
-void
-TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
-{
+void TransportLayerSrtp::StateChange(TransportLayer* layer, State state) {
   if (state == TS_OPEN) {
     TransportLayerDtls* dtls = static_cast<TransportLayerDtls*>(layer);
-    MOZ_ASSERT(dtls); // DTLS is mandatory
+    MOZ_ASSERT(dtls);  // DTLS is mandatory
 
     uint16_t cipher_suite;
     nsresult res = dtls->GetSrtpCipher(&cipher_suite);
@@ -134,8 +124,8 @@ TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
 
     // SRTP Key Exporter as per RFC 5764 S 4.2
     unsigned char srtp_block[SRTP_MAX_KEY_LENGTH * 2];
-    res = dtls->ExportKeyingMaterial(
-      kDTLSExporterLabel, false, "", srtp_block, sizeof(srtp_block));
+    res = dtls->ExportKeyingMaterial(kDTLSExporterLabel, false, "", srtp_block,
+                                     sizeof(srtp_block));
     if (NS_FAILED(res)) {
       MOZ_MTLOG(ML_ERROR, "Failed to compute DTLS-SRTP keys. This is an error");
       TL_SET_STATE(TS_ERROR);
@@ -168,9 +158,8 @@ TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
 
     MOZ_ASSERT(!mSendSrtp && !mRecvSrtp);
     mSendSrtp =
-      SrtpFlow::Create(cipher_suite, false, write_key, master_key_size);
-    mRecvSrtp =
-      SrtpFlow::Create(cipher_suite, true, read_key, master_key_size);
+        SrtpFlow::Create(cipher_suite, false, write_key, master_key_size);
+    mRecvSrtp = SrtpFlow::Create(cipher_suite, true, read_key, master_key_size);
     if (!mSendSrtp || !mRecvSrtp) {
       MOZ_MTLOG(ML_ERROR, "Couldn't create SRTP flow.");
       TL_SET_STATE(TS_ERROR);
@@ -183,9 +172,8 @@ TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
   TL_SET_STATE(state);
 }
 
-void
-TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
-{
+void TransportLayerSrtp::PacketReceived(TransportLayer* layer,
+                                        MediaPacket& packet) {
   if (state() != TS_OPEN) {
     return;
   }
@@ -207,10 +195,12 @@ TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
 
   if (packet.type() == MediaPacket::SRTP) {
     packet.SetType(MediaPacket::RTP);
-    res = mRecvSrtp->UnprotectRtp(packet.data(), packet.len(), packet.len(), &outLen);
+    res = mRecvSrtp->UnprotectRtp(packet.data(), packet.len(), packet.len(),
+                                  &outLen);
   } else {
     packet.SetType(MediaPacket::RTCP);
-    res = mRecvSrtp->UnprotectRtcp(packet.data(), packet.len(), packet.len(), &outLen);
+    res = mRecvSrtp->UnprotectRtcp(packet.data(), packet.len(), packet.len(),
+                                   &outLen);
   }
 
   if (NS_SUCCEEDED(res)) {
@@ -220,18 +210,12 @@ TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
     // TODO: What do we do wrt packet dumping here? Maybe signal an empty
     // packet? Signal the still-encrypted packet?
     MOZ_MTLOG(ML_ERROR,
-                "Error unprotecting "
-                << (packet.type() == MediaPacket::RTP ? "RTP" : "RTCP")
-                << " len=" << packet.len()
-                << "[" << std::hex
-                << packet.data()[0] << " "
-                << packet.data()[1] << " "
-                << packet.data()[2] << " "
-                << packet.data()[3]
-                << "]");
+              "Error unprotecting "
+                  << (packet.type() == MediaPacket::RTP ? "RTP" : "RTCP")
+                  << " len=" << packet.len() << "[" << std::hex
+                  << packet.data()[0] << " " << packet.data()[1] << " "
+                  << packet.data()[2] << " " << packet.data()[3] << "]");
   }
 }
 
-} // namespace mozilla
-
-
+}  // namespace mozilla

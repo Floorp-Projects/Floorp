@@ -13,9 +13,8 @@ namespace dom {
 namespace quota {
 
 // static
-already_AddRefed<MemoryOutputStream>
-MemoryOutputStream::Create(uint64_t aSize)
-{
+already_AddRefed<MemoryOutputStream> MemoryOutputStream::Create(
+    uint64_t aSize) {
   MOZ_ASSERT(aSize, "Passed zero size!");
 
   if (NS_WARN_IF(aSize > UINT32_MAX)) {
@@ -34,35 +33,29 @@ MemoryOutputStream::Create(uint64_t aSize)
 NS_IMPL_ISUPPORTS(MemoryOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
-MemoryOutputStream::Close()
-{
+MemoryOutputStream::Close() {
   mData.Truncate(mOffset);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MemoryOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* _retval)
-{
+MemoryOutputStream::Write(const char* aBuf, uint32_t aCount,
+                          uint32_t* _retval) {
   return WriteSegments(NS_CopySegmentToBuffer, (char*)aBuf, aCount, _retval);
 }
 
 NS_IMETHODIMP
-MemoryOutputStream::Flush()
-{
-  return NS_OK;
-}
+MemoryOutputStream::Flush() { return NS_OK; }
 
 NS_IMETHODIMP
 MemoryOutputStream::WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
-                              uint32_t* _retval)
-{
+                              uint32_t* _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 MemoryOutputStream::WriteSegments(nsReadSegmentFun aReader, void* aClosure,
-                                  uint32_t aCount, uint32_t* _retval)
-{
+                                  uint32_t aCount, uint32_t* _retval) {
   MOZ_ASSERT(mData.Length() >= mOffset, "Bad stream state!");
 
   uint32_t maxCount = mData.Length() - mOffset;
@@ -87,12 +80,11 @@ MemoryOutputStream::WriteSegments(nsReadSegmentFun aReader, void* aClosure,
 }
 
 NS_IMETHODIMP
-MemoryOutputStream::IsNonBlocking(bool* _retval)
-{
+MemoryOutputStream::IsNonBlocking(bool* _retval) {
   *_retval = false;
   return NS_OK;
 }
 
-} // namespace quota
-} // namespace dom
-} // namespace mozilla
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

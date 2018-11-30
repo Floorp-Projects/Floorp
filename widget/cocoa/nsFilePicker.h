@@ -17,10 +17,9 @@
 class nsILocalFileMac;
 @class NSArray;
 
-class nsFilePicker : public nsBaseFilePicker
-{
-public:
-  nsFilePicker(); 
+class nsFilePicker : public nsBaseFilePicker {
+ public:
+  nsFilePicker();
 
   NS_DECL_ISUPPORTS
 
@@ -28,12 +27,12 @@ public:
   NS_IMETHOD GetDefaultString(nsAString& aDefaultString) override;
   NS_IMETHOD SetDefaultString(const nsAString& aDefaultString) override;
   NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension) override;
-  NS_IMETHOD GetFilterIndex(int32_t *aFilterIndex) override;
+  NS_IMETHOD GetFilterIndex(int32_t* aFilterIndex) override;
   NS_IMETHOD SetFilterIndex(int32_t aFilterIndex) override;
   NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension) override;
-  NS_IMETHOD GetFile(nsIFile * *aFile) override;
-  NS_IMETHOD GetFileURL(nsIURI * *aFileURL) override;
-  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles) override;
+  NS_IMETHOD GetFile(nsIFile** aFile) override;
+  NS_IMETHOD GetFileURL(nsIURI** aFileURL) override;
+  NS_IMETHOD GetFiles(nsISimpleEnumerator** aFiles) override;
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter) override;
 
   /**
@@ -43,32 +42,33 @@ public:
    */
   NSArray* GetFilterList();
 
-protected:
+ protected:
   virtual ~nsFilePicker();
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle) override;
-  nsresult Show(int16_t *_retval) override;
+  virtual void InitNative(nsIWidget* aParent, const nsAString& aTitle) override;
+  nsresult Show(int16_t* _retval) override;
 
   // actual implementations of get/put dialogs using NSOpenPanel & NSSavePanel
   // aFile is an existing but unspecified file. These functions must specify it.
   //
   // will return |returnCancel| or |returnOK| as result.
-  int16_t GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOMArray<nsIFile>& outFiles);
+  int16_t GetLocalFiles(const nsString& inTitle, bool inAllowMultiple,
+                        nsCOMArray<nsIFile>& outFiles);
   int16_t GetLocalFolder(const nsString& inTitle, nsIFile** outFile);
   int16_t PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsIFile** outFile);
 
-  void     SetDialogTitle(const nsString& inTitle, id aDialog);
-  NSString *PanelDefaultDirectory();
+  void SetDialogTitle(const nsString& inTitle, id aDialog);
+  NSString* PanelDefaultDirectory();
   NSView* GetAccessoryView();
-                                                
-  nsString               mTitle;
-  nsCOMArray<nsIFile>    mFiles;
-  nsString               mDefault;
 
-  nsTArray<nsString>     mFilters; 
-  nsTArray<nsString>     mTitles;
+  nsString mTitle;
+  nsCOMArray<nsIFile> mFiles;
+  nsString mDefault;
 
-  int32_t                mSelectedTypeIndex;
+  nsTArray<nsString> mFilters;
+  nsTArray<nsString> mTitles;
+
+  int32_t mSelectedTypeIndex;
 };
 
-#endif // nsFilePicker_h_
+#endif  // nsFilePicker_h_

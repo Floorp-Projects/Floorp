@@ -12,14 +12,14 @@
  *  for the detailed definition of the following categories
  */
 enum class nsUGenCategory {
-  kUndefined    = 0,
-  kMark         = 1, // Mn, Mc, and Me
-  kNumber       = 2, // Nd, Nl, and No
-  kSeparator    = 3, // Zs, Zl, and Zp
-  kOther        = 4, // Cc, Cf, Cs, Co, and Cn
-  kLetter       = 5, // Lu, Ll, Lt, Lm, and Lo
-  kPunctuation  = 6, // Pc, Pd, Ps, Pe, Pi, Pf, and Po
-  kSymbol       = 7  // Sm, Sc, Sk, and So
+  kUndefined = 0,
+  kMark = 1,         // Mn, Mc, and Me
+  kNumber = 2,       // Nd, Nl, and No
+  kSeparator = 3,    // Zs, Zl, and Zp
+  kOther = 4,        // Cc, Cf, Cs, Co, and Cn
+  kLetter = 5,       // Lu, Ll, Lt, Lm, and Lo
+  kPunctuation = 6,  // Pc, Pd, Ps, Pe, Pi, Pf, and Po
+  kSymbol = 7        // Sm, Sc, Sk, and So
 };
 
-#endif // nsUGenCategory_h
+#endif  // nsUGenCategory_h

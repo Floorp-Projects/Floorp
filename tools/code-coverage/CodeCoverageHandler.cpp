@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <unistd.h>
 #endif
-#include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
+#include "mozilla/dom/ScriptSettings.h"  // for AutoJSAPI
 #include "mozilla/CodeCoverageHandler.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
@@ -23,12 +23,16 @@
 
 using namespace mozilla;
 
-// The __gcov_flush function writes the coverage counters to gcda files and then resets them to zero.
-// It is defined at https://github.com/gcc-mirror/gcc/blob/aad93da1a579b9ae23ede6b9cf8523360f0a08b4/libgcc/libgcov-interface.c.
-// __gcov_flush is protected by a mutex in GCC, but not in LLVM, so we are using a CrossProcessMutex to protect it.
+// The __gcov_flush function writes the coverage counters to gcda files and then
+// resets them to zero. It is defined at
+// https://github.com/gcc-mirror/gcc/blob/aad93da1a579b9ae23ede6b9cf8523360f0a08b4/libgcc/libgcov-interface.c.
+// __gcov_flush is protected by a mutex in GCC, but not in LLVM, so we are using
+// a CrossProcessMutex to protect it.
 
-// We rename __gcov_flush to __custom_llvm_gcov_flush in our build of LLVM for Linux, to avoid naming clashes in builds which mix GCC and LLVM.
-// So, when we are building with LLVM exclusively, we need to use __custom_llvm_gcov_flush instead.
+// We rename __gcov_flush to __custom_llvm_gcov_flush in our build of LLVM for
+// Linux, to avoid naming clashes in builds which mix GCC and LLVM. So, when we
+// are building with LLVM exclusively, we need to use __custom_llvm_gcov_flush
+// instead.
 #if defined(XP_LINUX) && defined(__clang__)
 #define __gcov_flush __custom_llvm_gcov_flush
 #endif
@@ -37,8 +41,7 @@ extern "C" void __gcov_flush();
 
 StaticAutoPtr<CodeCoverageHandler> CodeCoverageHandler::instance;
 
-void CodeCoverageHandler::FlushCounters()
-{
+void CodeCoverageHandler::FlushCounters() {
   printf_stderr("[CodeCoverage] Requested flush for %d.\n", getpid());
 
   CrossProcessMutexAutoLock lock(*CodeCoverageHandler::Get()->GetMutex());
@@ -62,10 +65,12 @@ void CodeCoverageHandler::FlushCounters()
 
   nsCOMPtr<nsIFile> file;
 
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(outDir), false, getter_AddRefs(file));
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(outDir), false,
+                                      getter_AddRefs(file));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  rv = file->AppendNative(nsPrintfCString("%lu-%d.info", PR_Now() / PR_USEC_PER_MSEC, getpid()));
+  rv = file->AppendNative(
+      nsPrintfCString("%lu-%d.info", PR_Now() / PR_USEC_PER_MSEC, getpid()));
 
   rv = file->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0666);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -91,13 +96,9 @@ void CodeCoverageHandler::FlushCounters()
   printf_stderr("[CodeCoverage] JS flush completed.\n");
 }
 
-void CodeCoverageHandler::FlushCountersSignalHandler(int)
-{
-  FlushCounters();
-}
+void CodeCoverageHandler::FlushCountersSignalHandler(int) { FlushCounters(); }
 
-void CodeCoverageHandler::SetSignalHandlers()
-{
+void CodeCoverageHandler::SetSignalHandlers() {
 #ifndef XP_WIN
   printf_stderr("[CodeCoverage] Setting handlers for process %d.\n", getpid());
 
@@ -110,46 +111,36 @@ void CodeCoverageHandler::SetSignalHandlers()
 #endif
 }
 
-CodeCoverageHandler::CodeCoverageHandler()
-  : mGcovLock("GcovLock")
-{
+CodeCoverageHandler::CodeCoverageHandler() : mGcovLock("GcovLock") {
   SetSignalHandlers();
 }
 
 CodeCoverageHandler::CodeCoverageHandler(const CrossProcessMutexHandle& aHandle)
-  : mGcovLock(aHandle)
-{
+    : mGcovLock(aHandle) {
   SetSignalHandlers();
 }
 
-void CodeCoverageHandler::Init()
-{
+void CodeCoverageHandler::Init() {
   MOZ_ASSERT(!instance);
   MOZ_ASSERT(XRE_IsParentProcess());
   instance = new CodeCoverageHandler();
   ClearOnShutdown(&instance);
 }
 
-void CodeCoverageHandler::Init(const CrossProcessMutexHandle& aHandle)
-{
+void CodeCoverageHandler::Init(const CrossProcessMutexHandle& aHandle) {
   MOZ_ASSERT(!instance);
   MOZ_ASSERT(!XRE_IsParentProcess());
   instance = new CodeCoverageHandler(aHandle);
   ClearOnShutdown(&instance);
 }
 
-CodeCoverageHandler* CodeCoverageHandler::Get()
-{
+CodeCoverageHandler* CodeCoverageHandler::Get() {
   MOZ_ASSERT(instance);
   return instance;
 }
 
-CrossProcessMutex* CodeCoverageHandler::GetMutex()
-{
-  return &mGcovLock;
-}
+CrossProcessMutex* CodeCoverageHandler::GetMutex() { return &mGcovLock; }
 
-CrossProcessMutexHandle CodeCoverageHandler::GetMutexHandle(int aProcId)
-{
+CrossProcessMutexHandle CodeCoverageHandler::GetMutexHandle(int aProcId) {
   return mGcovLock.ShareToProcess(aProcId);
 }

@@ -11,20 +11,16 @@
 #include "nsString.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
-#include "nsContentUtils.h" // For NS_CONTENT_DELETE_LIST_MEMBER.
+#include "nsContentUtils.h"  // For NS_CONTENT_DELETE_LIST_MEMBER.
 #include "nsCycleCollectionParticipant.h"
 
 class nsIObjectOutputStream;
 
-struct nsXBLTextWithLineNumber
-{
+struct nsXBLTextWithLineNumber {
   char16_t* mText;
   uint32_t mLineNumber;
 
-  nsXBLTextWithLineNumber() :
-    mText(nullptr),
-    mLineNumber(0)
-  {
+  nsXBLTextWithLineNumber() : mText(nullptr), mLineNumber(0) {
     MOZ_COUNT_CTOR(nsXBLTextWithLineNumber);
   }
 
@@ -45,26 +41,17 @@ struct nsXBLTextWithLineNumber
     }
   }
 
-  char16_t* GetText() {
-    return mText;
-  }
+  char16_t* GetText() { return mText; }
 
-  void SetLineNumber(uint32_t aLineNumber) {
-    mLineNumber = aLineNumber;
-  }
+  void SetLineNumber(uint32_t aLineNumber) { mLineNumber = aLineNumber; }
 
-  uint32_t GetLineNumber() {
-    return mLineNumber;
-  }
+  uint32_t GetLineNumber() { return mLineNumber; }
 };
 
-class nsXBLProtoImplMember
-{
-public:
+class nsXBLProtoImplMember {
+ public:
   explicit nsXBLProtoImplMember(const char16_t* aName)
-    : mNext(nullptr)
-    , mExposeToUntrustedContent(false)
-  {
+      : mNext(nullptr), mExposeToUntrustedContent(false) {
     mName = ToNewUnicode(nsDependentString(aName));
   }
   virtual ~nsXBLProtoImplMember() {
@@ -75,29 +62,29 @@ public:
   nsXBLProtoImplMember* GetNext() { return mNext; }
   void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; }
   bool ShouldExposeToUntrustedContent() { return mExposeToUntrustedContent; }
-  void SetExposeToUntrustedContent(bool aExpose) { mExposeToUntrustedContent = aExpose; }
+  void SetExposeToUntrustedContent(bool aExpose) {
+    mExposeToUntrustedContent = aExpose;
+  }
   const char16_t* GetName() { return mName; }
 
   virtual nsresult InstallMember(JSContext* aCx,
                                  JS::Handle<JSObject*> aTargetClassObject) = 0;
-  virtual nsresult CompileMember(mozilla::dom::AutoJSAPI& jsapi, const nsString& aClassStr,
+  virtual nsresult CompileMember(mozilla::dom::AutoJSAPI& jsapi,
+                                 const nsString& aClassStr,
                                  JS::Handle<JSObject*> aClassObject) = 0;
 
-  virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure) = 0;
+  virtual void Trace(const TraceCallbacks& aCallbacks, void* aClosure) = 0;
 
-  virtual nsresult Write(nsIObjectOutputStream* aStream)
-  {
-    return NS_OK;
-  }
+  virtual nsresult Write(nsIObjectOutputStream* aStream) { return NS_OK; }
 
-protected:
+ protected:
   nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.
-  char16_t* mName;               // The name of the field, method, or property.
+  char16_t* mName;              // The name of the field, method, or property.
 
-  bool mExposeToUntrustedContent; // If this binding is installed on an element
-                                  // in an untrusted scope, should this
-                                  // implementation member be accessible to the
-                                  // content?
+  bool mExposeToUntrustedContent;  // If this binding is installed on an element
+                                   // in an untrusted scope, should this
+                                   // implementation member be accessible to the
+                                   // content?
 };
 
-#endif // nsXBLProtoImplMember_h__
+#endif  // nsXBLProtoImplMember_h__

@@ -23,15 +23,14 @@
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentPermissionHelper.h"
-#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
+#include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "IPCMessageUtils.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MIDIAccess)
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MIDIAccess,
-                                               DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MIDIAccess, DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MIDIAccess,
@@ -57,26 +56,20 @@ NS_IMPL_ADDREF_INHERITED(MIDIAccess, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MIDIAccess, DOMEventTargetHelper)
 
 MIDIAccess::MIDIAccess(nsPIDOMWindowInner* aWindow, bool aSysexEnabled,
-                       Promise* aPromise) :
-  DOMEventTargetHelper(aWindow),
-  mInputMap(new MIDIInputMap(aWindow)),
-  mOutputMap(new MIDIOutputMap(aWindow)),
-  mSysexEnabled(aSysexEnabled),
-  mAccessPromise(aPromise),
-  mHasShutdown(false)
-{
+                       Promise* aPromise)
+    : DOMEventTargetHelper(aWindow),
+      mInputMap(new MIDIInputMap(aWindow)),
+      mOutputMap(new MIDIOutputMap(aWindow)),
+      mSysexEnabled(aSysexEnabled),
+      mAccessPromise(aPromise),
+      mHasShutdown(false) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aPromise);
 }
 
-MIDIAccess::~MIDIAccess()
-{
-  Shutdown();
-}
+MIDIAccess::~MIDIAccess() { Shutdown(); }
 
-void
-MIDIAccess::Shutdown()
-{
+void MIDIAccess::Shutdown() {
   if (mHasShutdown) {
     return;
   }
@@ -87,9 +80,7 @@ MIDIAccess::Shutdown()
   mHasShutdown = true;
 }
 
-void
-MIDIAccess::FireConnectionEvent(MIDIPort* aPort)
-{
+void MIDIAccess::FireConnectionEvent(MIDIPort* aPort) {
   MOZ_ASSERT(aPort);
   MIDIConnectionEventInit init;
   init.mPort = aPort;
@@ -105,53 +96,50 @@ MIDIAccess::FireConnectionEvent(MIDIPort* aPort)
       MIDIOutputMap_Binding::MaplikeHelpers::Delete(mOutputMap, id, rv);
     }
     // Check to make sure Has()/Delete() calls haven't failed.
-    if(NS_WARN_IF(rv.Failed())) {
+    if (NS_WARN_IF(rv.Failed())) {
       return;
     }
   } else {
     // If we receive an event from a port that is not in one of our port maps,
-    // this means a port that was disconnected has been reconnected, with the port
-    // owner holding the object during that time, and we should add that port
-    // object to our maps again.
+    // this means a port that was disconnected has been reconnected, with the
+    // port owner holding the object during that time, and we should add that
+    // port object to our maps again.
     if (aPort->Type() == MIDIPortType::Input &&
         !MIDIInputMap_Binding::MaplikeHelpers::Has(mInputMap, id, rv)) {
-      if(NS_WARN_IF(rv.Failed())) {
+      if (NS_WARN_IF(rv.Failed())) {
         return;
       }
-      MIDIInputMap_Binding::MaplikeHelpers::Set(mInputMap,
-                                               id,
-                                               *(static_cast<MIDIInput*>(aPort)),
-                                               rv);
-      if(NS_WARN_IF(rv.Failed())) {
+      MIDIInputMap_Binding::MaplikeHelpers::Set(
+          mInputMap, id, *(static_cast<MIDIInput*>(aPort)), rv);
+      if (NS_WARN_IF(rv.Failed())) {
         return;
       }
     } else if (aPort->Type() == MIDIPortType::Output &&
-               !MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id, rv)) {
-      if(NS_WARN_IF(rv.Failed())) {
+               !MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id,
+                                                           rv)) {
+      if (NS_WARN_IF(rv.Failed())) {
         return;
       }
-      MIDIOutputMap_Binding::MaplikeHelpers::Set(mOutputMap,
-                                                id,
-                                                *(static_cast<MIDIOutput*>(aPort)),
-                                                rv);
-      if(NS_WARN_IF(rv.Failed())) {
+      MIDIOutputMap_Binding::MaplikeHelpers::Set(
+          mOutputMap, id, *(static_cast<MIDIOutput*>(aPort)), rv);
+      if (NS_WARN_IF(rv.Failed())) {
         return;
       }
     }
   }
-  RefPtr<MIDIConnectionEvent> event =
-    MIDIConnectionEvent::Constructor(this, NS_LITERAL_STRING("statechange"), init);
+  RefPtr<MIDIConnectionEvent> event = MIDIConnectionEvent::Constructor(
+      this, NS_LITERAL_STRING("statechange"), init);
   DispatchTrustedEvent(event);
 }
 
-void
-MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo, ErrorResult& aRv)
-{
+void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
+                                     ErrorResult& aRv) {
   nsAutoString id(aInfo.id());
   MIDIPortType type = static_cast<MIDIPortType>(aInfo.type());
   RefPtr<MIDIPort> port;
   if (type == MIDIPortType::Input) {
-    bool hasPort = MIDIInputMap_Binding::MaplikeHelpers::Has(mInputMap, id, aRv);
+    bool hasPort =
+        MIDIInputMap_Binding::MaplikeHelpers::Has(mInputMap, id, aRv);
     if (hasPort || NS_WARN_IF(aRv.Failed())) {
       // We already have the port in our map.
       return;
@@ -161,15 +149,14 @@ MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo, ErrorResult& aRv)
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
-    MIDIInputMap_Binding::MaplikeHelpers::Set(mInputMap,
-                                             id,
-                                             *(static_cast<MIDIInput*>(port.get())),
-                                             aRv);
+    MIDIInputMap_Binding::MaplikeHelpers::Set(
+        mInputMap, id, *(static_cast<MIDIInput*>(port.get())), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
   } else if (type == MIDIPortType::Output) {
-    bool hasPort = MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id, aRv);
+    bool hasPort =
+        MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id, aRv);
     if (hasPort || NS_WARN_IF(aRv.Failed())) {
       // We already have the port in our map.
       return;
@@ -179,10 +166,8 @@ MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo, ErrorResult& aRv)
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
-    MIDIOutputMap_Binding::MaplikeHelpers::Set(mOutputMap,
-                                              id,
-                                              *(static_cast<MIDIOutput*>(port.get())),
-                                              aRv);
+    MIDIOutputMap_Binding::MaplikeHelpers::Set(
+        mOutputMap, id, *(static_cast<MIDIOutput*>(port.get())), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -206,9 +191,7 @@ MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo, ErrorResult& aRv)
 // MIDIPort objects. When a port is removed and the MIDIPortRemove event is
 // received, that will be handled by the MIDIPort object itself, and it will
 // request removal from MIDIAccess's maps.
-void
-MIDIAccess::Notify(const MIDIPortList& aEvent)
-{
+void MIDIAccess::Notify(const MIDIPortList& aEvent) {
   ErrorResult rv;
   for (auto& port : aEvent.ports()) {
     // Something went very wrong. Warn and return.
@@ -228,17 +211,14 @@ MIDIAccess::Notify(const MIDIPortList& aEvent)
   mAccessPromise = nullptr;
 }
 
-JSObject*
-MIDIAccess::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MIDIAccess::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return MIDIAccess_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-MIDIAccess::RemovePortListener(MIDIAccessDestructionObserver* aObs)
-{
+void MIDIAccess::RemovePortListener(MIDIAccessDestructionObserver* aObs) {
   mDestructionObservers.RemoveObserver(aObs);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

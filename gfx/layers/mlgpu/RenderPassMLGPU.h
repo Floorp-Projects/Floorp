@@ -29,8 +29,7 @@ enum class RenderPassType {
   Unknown
 };
 
-enum class RenderOrder
-{
+enum class RenderOrder {
   // Used for all items when not using a depth buffer. Otherwise, used for
   // items that may draw transparent pixels.
   BackToFront,
@@ -43,10 +42,8 @@ enum class RenderOrder
 static const uint32_t kInvalidResourceIndex = uint32_t(-1);
 
 struct ItemInfo {
-  explicit ItemInfo(FrameBuilder* aBuilder,
-                    RenderViewMLGPU* aView,
-                    LayerMLGPU* aLayer,
-                    int32_t aSortOrder,
+  explicit ItemInfo(FrameBuilder* aBuilder, RenderViewMLGPU* aView,
+                    LayerMLGPU* aLayer, int32_t aSortOrder,
                     const gfx::IntRect& aBounds,
                     Maybe<gfx::Polygon>&& aGeometry);
 
@@ -77,11 +74,10 @@ struct ItemInfo {
 };
 
 // Base class for anything that can render in a batch to the GPU.
-class RenderPassMLGPU
-{
+class RenderPassMLGPU {
   NS_INLINE_DECL_REFCOUNTING(RenderPassMLGPU)
 
-public:
+ public:
   static RenderPassType GetPreferredPassType(FrameBuilder* aBuilder,
                                              const ItemInfo& aInfo);
 
@@ -105,17 +101,13 @@ public:
   // Execute this render pass to the currently selected surface.
   virtual void ExecuteRendering() = 0;
 
-  virtual Maybe<MLGBlendState> GetBlendState() const {
-    return Nothing();
-  }
+  virtual Maybe<MLGBlendState> GetBlendState() const { return Nothing(); }
 
-  size_t GetLayerBufferIndex() const {
-    return mLayerBufferIndex;
-  }
+  size_t GetLayerBufferIndex() const { return mLayerBufferIndex; }
   Maybe<uint32_t> GetMaskRectBufferIndex() const {
     return mMaskRectBufferIndex == kInvalidResourceIndex
-           ? Nothing()
-           : Some(mMaskRectBufferIndex);
+               ? Nothing()
+               : Some(mMaskRectBufferIndex);
   }
 
   // Returns true if this pass overlaps the affected region of an item. This
@@ -124,25 +116,19 @@ public:
   bool Intersects(const ItemInfo& aItem);
 
   // Returns true if pass has been successfully prepared.
-  bool IsPrepared() const {
-    return mPrepared;
-  }
+  bool IsPrepared() const { return mPrepared; }
 
-protected:
+ protected:
   RenderPassMLGPU(FrameBuilder* aBuilder, const ItemInfo& aItem);
   virtual ~RenderPassMLGPU();
 
   // Return true if the item was consumed, false otherwise.
   virtual bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) = 0;
 
-protected:
-  enum class GeometryMode {
-    Unknown,
-    UnitQuad,
-    Polygon
-  };
+ protected:
+  enum class GeometryMode { Unknown, UnitQuad, Polygon };
 
-protected:
+ protected:
   FrameBuilder* mBuilder;
   RefPtr<MLGDevice> mDevice;
   size_t mLayerBufferIndex;
@@ -153,25 +139,22 @@ protected:
 
 // Shader-based render passes execute a draw call, vs. non-shader passes that
 // use non-shader APIs (like ClearView).
-class ShaderRenderPass : public RenderPassMLGPU
-{
-public:
+class ShaderRenderPass : public RenderPassMLGPU {
+ public:
   ShaderRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
   // Used by ShaderDefinitions for writing traits.
-  VertexStagingBuffer* GetInstances() {
-    return &mInstances;
-  }
+  VertexStagingBuffer* GetInstances() { return &mInstances; }
 
   bool IsCompatible(const ItemInfo& aItem) override;
   void PrepareForRendering() override;
   void ExecuteRendering() override;
 
-  virtual Maybe<MLGBlendState> GetBlendState() const override{
+  virtual Maybe<MLGBlendState> GetBlendState() const override {
     return Some(MLGBlendState::Over);
   }
 
-protected:
+ protected:
   // If this batch has a uniform opacity, return it here. Otherwise this should
   // return 1.0.
   virtual float GetOpacity() const = 0;
@@ -181,7 +164,7 @@ protected:
   // are issued.
   virtual void SetupPipeline() = 0;
 
-protected:
+ protected:
   // Set the geometry this pass will use. This must be called by every
   // derived constructor. Use GeometryMode::Unknown to pick the default
   // behavior: UnitQuads for rectilinear transform+clips, and polygons
@@ -194,21 +177,15 @@ protected:
 
   // Called after PrepareForRendering() has finished. If this returns false,
   // PrepareForRendering() will return false.
-  virtual bool OnPrepareBuffers() {
-    return true;
-  }
+  virtual bool OnPrepareBuffers() { return true; }
 
   // Prepare the mask/opacity buffer bound in most pixel shaders.
   bool SetupPSBuffer0(float aOpacity);
 
-  bool HasMask() const {
-    return !!mMask;
-  }
-  MaskOperation* GetMask() const {
-    return mMask;
-  }
+  bool HasMask() const { return !!mMask; }
+  MaskOperation* GetMask() const { return mMask; }
 
-protected:
+ protected:
   GeometryMode mGeometry;
   RefPtr<MaskOperation> mMask;
   bool mHasRectTransformAndClip;
@@ -222,14 +199,12 @@ protected:
 // This contains various helper functions for building vertices and shader
 // inputs for layers.
 template <typename Traits>
-class BatchRenderPass : public ShaderRenderPass
-{
-public:
+class BatchRenderPass : public ShaderRenderPass {
+ public:
   BatchRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem)
-   : ShaderRenderPass(aBuilder, aItem)
-  {}
+      : ShaderRenderPass(aBuilder, aItem) {}
 
-protected:
+ protected:
   // It is tricky to determine ahead of time whether or not we'll have enough
   // room in our buffers to hold all draw commands for a layer, especially
   // since layers can have multiple draw rects. We don't want to draw one rect,
@@ -237,11 +212,9 @@ protected:
   // To deal with this we use a transaction approach and reject the transaction
   // if we couldn't add everything.
   class Txn {
-  public:
+   public:
     explicit Txn(BatchRenderPass* aPass)
-     : mPass(aPass),
-       mPrevInstancePos(aPass->mInstances.GetPosition())
-    {}
+        : mPass(aPass), mPrevInstancePos(aPass->mInstances.GetPosition()) {}
 
     bool Add(const Traits& aTraits) {
       if (!AddImpl(aTraits)) {
@@ -276,7 +249,7 @@ protected:
       }
     }
 
-  private:
+   private:
     BatchRenderPass* mPass;
     VertexStagingBuffer::Position mPrevVertexPos;
     VertexStagingBuffer::Position mPrevItemPos;
@@ -286,12 +259,11 @@ protected:
 };
 
 // Shaders which sample from a texture should inherit from this.
-class TexturedRenderPass : public BatchRenderPass<TexturedTraits>
-{
-public:
+class TexturedRenderPass : public BatchRenderPass<TexturedTraits> {
+ public:
   explicit TexturedRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
-protected:
+ protected:
   struct Info {
     Info(const ItemInfo& aItem, PaintedLayerMLGPU* aLayer);
     Info(const ItemInfo& aItem, TexturedLayerMLGPU* aLayer);
@@ -315,10 +287,7 @@ protected:
   // layer. In all cases the visible region may be partially occluded, so
   // knowing the true origin is important.
   template <typename RegionType>
-  bool AddItems(Txn& aTxn,
-                const Info& aInfo,
-                const RegionType& aDrawRegion)
-  {
+  bool AddItems(Txn& aTxn, const Info& aInfo, const RegionType& aDrawRegion) {
     for (auto iter = aDrawRegion.RectIter(); !iter.Done(); iter.Next()) {
       gfx::Rect drawRect = gfx::Rect(iter.Get().ToUnknownRect());
       if (!AddItem(aTxn, aInfo, drawRect)) {
@@ -328,7 +297,7 @@ protected:
     return true;
   }
 
-private:
+ private:
   // Add a draw instance to the given destination rect. Texture coordinates
   // are built from the given texture size, optional scaling factor, and
   // texture origin relative to the draw rect. This will ultimately call
@@ -339,27 +308,24 @@ private:
   // is the final destination for handling textured items.
   bool AddClippedItem(Txn& aTxn, const Info& aInfo, const gfx::Rect& aDrawRect);
 
-protected:
+ protected:
   TextureFlags mTextureFlags;
 };
 
 // This is only available when MLGDevice::CanUseClearView returns true.
-class ClearViewPass final : public RenderPassMLGPU
-{
-public:
+class ClearViewPass final : public RenderPassMLGPU {
+ public:
   ClearViewPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
   bool IsCompatible(const ItemInfo& aItem) override;
   void ExecuteRendering() override;
 
-  RenderPassType GetType() const override {
-    return RenderPassType::ClearView;
-  }
+  RenderPassType GetType() const override { return RenderPassType::ClearView; }
 
-private:
+ private:
   bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) override;
 
-private:
+ private:
   // Note: Not a RefPtr since this would create a cycle.
   RenderViewMLGPU* mView;
   gfx::Color mColor;
@@ -368,54 +334,47 @@ private:
 
 // SolidColorPass is used when ClearViewPass is not available, or when
 // the layer has masks, or subpixel or complex transforms.
-class SolidColorPass final : public BatchRenderPass<ColorTraits>
-{
-public:
+class SolidColorPass final : public BatchRenderPass<ColorTraits> {
+ public:
   explicit SolidColorPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
-  RenderPassType GetType() const override {
-    return RenderPassType::SolidColor;
-  }
+  RenderPassType GetType() const override { return RenderPassType::SolidColor; }
 
-private:
+ private:
   bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) override;
   void SetupPipeline() override;
   float GetOpacity() const override;
 };
 
-class SingleTexturePass final : public TexturedRenderPass
-{
-public:
+class SingleTexturePass final : public TexturedRenderPass {
+ public:
   explicit SingleTexturePass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
   RenderPassType GetType() const override {
     return RenderPassType::SingleTexture;
   }
 
-private:
+ private:
   bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) override;
   void SetupPipeline() override;
-  float GetOpacity() const override {
-    return mOpacity;
-  }
+  float GetOpacity() const override { return mOpacity; }
   Maybe<MLGBlendState> GetBlendState() const override;
 
-private:
+ private:
   RefPtr<TextureSource> mTexture;
   SamplerMode mSamplerMode;
   float mOpacity;
 };
 
-class ComponentAlphaPass final : public TexturedRenderPass
-{
-public:
+class ComponentAlphaPass final : public TexturedRenderPass {
+ public:
   explicit ComponentAlphaPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
   RenderPassType GetType() const override {
     return RenderPassType::ComponentAlpha;
   }
 
-private:
+ private:
   bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) override;
   void SetupPipeline() override;
   float GetOpacity() const override;
@@ -423,46 +382,38 @@ private:
     return Some(MLGBlendState::ComponentAlpha);
   }
 
-private:
+ private:
   float mOpacity;
   SamplerMode mSamplerMode;
   RefPtr<TextureSource> mTextureOnBlack;
   RefPtr<TextureSource> mTextureOnWhite;
 };
 
-class VideoRenderPass final : public TexturedRenderPass
-{
-public:
+class VideoRenderPass final : public TexturedRenderPass {
+ public:
   explicit VideoRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
-  RenderPassType GetType() const override {
-    return RenderPassType::Video;
-  }
+  RenderPassType GetType() const override { return RenderPassType::Video; }
 
-private:
+ private:
   bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) override;
   void SetupPipeline() override;
-  float GetOpacity() const override {
-    return mOpacity;
-  }
+  float GetOpacity() const override { return mOpacity; }
 
-private:
+ private:
   RefPtr<TextureHost> mHost;
   RefPtr<TextureSource> mTexture;
   SamplerMode mSamplerMode;
   float mOpacity;
 };
 
-class RenderViewPass final : public TexturedRenderPass
-{
-public:
+class RenderViewPass final : public TexturedRenderPass {
+ public:
   RenderViewPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
-  RenderPassType GetType() const override {
-    return RenderPassType::RenderView;
-  }
+  RenderPassType GetType() const override { return RenderPassType::RenderView; }
 
-private:
+ private:
   bool AddToPass(LayerMLGPU* aItem, ItemInfo& aInfo) override;
   void SetupPipeline() override;
   bool OnPrepareBuffers() override;
@@ -471,7 +422,7 @@ private:
   bool PrepareBlendState();
   void RenderWithBackdropCopy();
 
-private:
+ private:
   ConstantBufferSection mBlendConstants;
   ContainerLayerMLGPU* mAssignedLayer;
   RefPtr<MLGRenderTarget> mSource;
@@ -482,7 +433,7 @@ private:
   Maybe<gfx::CompositionOp> mBlendMode;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

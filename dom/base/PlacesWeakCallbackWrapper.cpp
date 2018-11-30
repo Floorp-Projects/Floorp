@@ -12,44 +12,36 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PlacesWeakCallbackWrapper, mParent, mCallback)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PlacesWeakCallbackWrapper, mParent,
+                                      mCallback)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PlacesWeakCallbackWrapper, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PlacesWeakCallbackWrapper, Release)
 
-PlacesWeakCallbackWrapper::PlacesWeakCallbackWrapper(nsISupports* aParent,
-                                                     PlacesEventCallback& aCallback)
-  : mParent(do_GetWeakReference(aParent))
-  , mCallback(&aCallback)
-{
-}
+PlacesWeakCallbackWrapper::PlacesWeakCallbackWrapper(
+    nsISupports* aParent, PlacesEventCallback& aCallback)
+    : mParent(do_GetWeakReference(aParent)), mCallback(&aCallback) {}
 
 already_AddRefed<PlacesWeakCallbackWrapper>
 PlacesWeakCallbackWrapper::Constructor(const GlobalObject& aGlobal,
                                        PlacesEventCallback& aCallback,
-                                       ErrorResult& rv)
-{
+                                       ErrorResult& rv) {
   nsCOMPtr<nsISupports> parent = aGlobal.GetAsSupports();
   RefPtr<PlacesWeakCallbackWrapper> wrapper =
-    new PlacesWeakCallbackWrapper(parent, aCallback);
+      new PlacesWeakCallbackWrapper(parent, aCallback);
   return wrapper.forget();
 }
 
-PlacesWeakCallbackWrapper::~PlacesWeakCallbackWrapper()
-{
-}
+PlacesWeakCallbackWrapper::~PlacesWeakCallbackWrapper() {}
 
-nsISupports*
-PlacesWeakCallbackWrapper::GetParentObject() const
-{
+nsISupports* PlacesWeakCallbackWrapper::GetParentObject() const {
   nsCOMPtr<nsISupports> parent = do_QueryReferent(mParent);
   return parent;
 }
 
-JSObject*
-PlacesWeakCallbackWrapper::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PlacesWeakCallbackWrapper::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return PlacesWeakCallbackWrapper_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

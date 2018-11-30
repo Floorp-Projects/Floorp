@@ -26,8 +26,7 @@ struct udev_monitor;
 
 class udev_lib {
  public:
-  udev_lib() : lib(nullptr),
-               udev(nullptr) {
+  udev_lib() : lib(nullptr), udev(nullptr) {
     // Be careful about ABI compat! 0 -> 1 didn't change any
     // symbols this code relies on, per:
     // https://lists.fedoraproject.org/pipermail/devel/2012-June/168227.html
@@ -65,16 +64,14 @@ class udev_lib {
     }
   }
 
-  explicit operator bool() {
-    return udev;
-  }
+  explicit operator bool() { return udev; }
 
  private:
   bool LoadSymbols() {
-#define DLSYM(s) \
-  do { \
+#define DLSYM(s)                   \
+  do {                             \
     s = (typeof(s))dlsym(lib, #s); \
-    if (!s) return false; \
+    if (!s) return false;          \
   } while (0)
 
     DLSYM(udev_new);
@@ -116,8 +113,8 @@ class udev_lib {
   struct udev_device* (*udev_device_new_from_syspath)(struct udev*,
                                                       const char*);
   const char* (*udev_device_get_devnode)(struct udev_device*);
-  struct udev_device* (*udev_device_get_parent_with_subsystem_devtype)
-    (struct udev_device*, const char*, const char*);
+  struct udev_device* (*udev_device_get_parent_with_subsystem_devtype)(
+      struct udev_device*, const char*, const char*);
   const char* (*udev_device_get_property_value)(struct udev_device*,
                                                 const char*);
   const char* (*udev_device_get_action)(struct udev_device*);
@@ -129,22 +126,23 @@ class udev_lib {
   int (*udev_enumerate_add_match_subsystem)(struct udev_enumerate*,
                                             const char*);
   int (*udev_enumerate_scan_devices)(struct udev_enumerate*);
-  struct udev_list_entry* (*udev_enumerate_get_list_entry)
-    (struct udev_enumerate*);
+  struct udev_list_entry* (*udev_enumerate_get_list_entry)(
+      struct udev_enumerate*);
 
-  struct udev_list_entry* (*udev_list_entry_get_next)(struct udev_list_entry *);
+  struct udev_list_entry* (*udev_list_entry_get_next)(struct udev_list_entry*);
   const char* (*udev_list_entry_get_name)(struct udev_list_entry*);
 
   struct udev_monitor* (*udev_monitor_new_from_netlink)(struct udev*,
                                                         const char*);
-  int (*udev_monitor_filter_add_match_subsystem_devtype)
-    (struct udev_monitor*, const char*, const char*);
+  int (*udev_monitor_filter_add_match_subsystem_devtype)(struct udev_monitor*,
+                                                         const char*,
+                                                         const char*);
   int (*udev_monitor_enable_receiving)(struct udev_monitor*);
   int (*udev_monitor_get_fd)(struct udev_monitor*);
   struct udev_device* (*udev_monitor_receive_device)(struct udev_monitor*);
   void (*udev_monitor_unref)(struct udev_monitor*);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // HAL_LINUX_UDEV_H_
+#endif  // HAL_LINUX_UDEV_H_

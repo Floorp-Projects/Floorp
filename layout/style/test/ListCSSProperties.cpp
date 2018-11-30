@@ -15,16 +15,16 @@
 #define STRINGIFY_METHOD(method_) #method_
 
 struct PropertyInfo {
-    const char *propName;
-    const char *domName;
-    const char *pref;
+  const char *propName;
+  const char *domName;
+  const char *pref;
 };
 
 const PropertyInfo gLonghandProperties[] = {
 
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, pref_, ...) \
-    { #name_, STRINGIFY_METHOD(method_), pref_ },
+  {#name_, STRINGIFY_METHOD(method_), pref_},
 
 #include "mozilla/ServoCSSPropList.h"
 
@@ -38,7 +38,7 @@ const PropertyInfo gLonghandProperties[] = {
  * be used.  They're in the same order as the above list, with some
  * items skipped.
  */
-const char* gLonghandPropertiesWithDOMProp[] = {
+const char *gLonghandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_LONGHAND(name_, ...) #name_,
@@ -53,10 +53,10 @@ const char* gLonghandPropertiesWithDOMProp[] = {
 const PropertyInfo gShorthandProperties[] = {
 
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)	\
-    { #name_, STRINGIFY_METHOD(method_), pref_ },
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+  {#name_, STRINGIFY_METHOD(method_), pref_},
 #define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
-    { #name_, #method_, pref_ },
+  {#name_, #method_, pref_},
 
 #include "mozilla/ServoCSSPropList.h"
 
@@ -67,13 +67,11 @@ const PropertyInfo gShorthandProperties[] = {
 };
 
 /* see gLonghandPropertiesWithDOMProp */
-const char* gShorthandPropertiesWithDOMProp[] = {
+const char *gShorthandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)	\
-    #name_,
-#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
-    #name_,
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) #name_,
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) #name_,
 
 #include "mozilla/ServoCSSPropList.h"
 
@@ -94,91 +92,82 @@ const char *gInaccessibleProperties[] = {
     "-x-text-zoom",
     "-moz-context-properties",
     "-moz-control-character-visibility",
-    "-moz-script-level", // parsed by UA sheets only
+    "-moz-script-level",  // parsed by UA sheets only
     "-moz-script-size-multiplier",
     "-moz-script-min-size",
     "-moz-math-variant",
-    "-moz-math-display", // parsed by UA sheets only
-    "-moz-top-layer", // parsed by UA sheets only
-    "-moz-min-font-size-ratio", // parsed by UA sheets only
-    "-moz-font-smoothing-background-color", // chrome-only internal properties
-    "-moz-window-opacity", // chrome-only internal properties
-    "-moz-window-transform", // chrome-only internal properties
-    "-moz-window-transform-origin", // chrome-only internal properties
-    "-moz-window-shadow", // chrome-only internal properties
+    "-moz-math-display",                     // parsed by UA sheets only
+    "-moz-top-layer",                        // parsed by UA sheets only
+    "-moz-min-font-size-ratio",              // parsed by UA sheets only
+    "-moz-font-smoothing-background-color",  // chrome-only internal properties
+    "-moz-window-opacity",                   // chrome-only internal properties
+    "-moz-window-transform",                 // chrome-only internal properties
+    "-moz-window-transform-origin",          // chrome-only internal properties
+    "-moz-window-shadow",                    // chrome-only internal properties
 };
 
-inline int
-is_inaccessible(const char* aPropName)
-{
-    for (unsigned j = 0; j < MOZ_ARRAY_LENGTH(gInaccessibleProperties); ++j) {
-        if (strcmp(aPropName, gInaccessibleProperties[j]) == 0)
-            return 1;
-    }
-    return 0;
+inline int is_inaccessible(const char *aPropName) {
+  for (unsigned j = 0; j < MOZ_ARRAY_LENGTH(gInaccessibleProperties); ++j) {
+    if (strcmp(aPropName, gInaccessibleProperties[j]) == 0) return 1;
+  }
+  return 0;
 }
 
-void
-print_array(const char *aName,
-            const PropertyInfo *aProps, unsigned aPropsLength,
-            const char * const * aDOMProps, unsigned aDOMPropsLength)
-{
-    printf("var %s = [\n", aName);
+void print_array(const char *aName, const PropertyInfo *aProps,
+                 unsigned aPropsLength, const char *const *aDOMProps,
+                 unsigned aDOMPropsLength) {
+  printf("var %s = [\n", aName);
 
-    int first = 1;
-    unsigned j = 0; // index into DOM prop list
-    for (unsigned i = 0; i < aPropsLength; ++i) {
-        const PropertyInfo *p = aProps + i;
+  int first = 1;
+  unsigned j = 0;  // index into DOM prop list
+  for (unsigned i = 0; i < aPropsLength; ++i) {
+    const PropertyInfo *p = aProps + i;
 
-        if (is_inaccessible(p->propName))
-            // inaccessible properties never have DOM props, so don't
-            // worry about incrementing j.  The assertion below will
-            // catch if they do.
-            continue;
+    if (is_inaccessible(p->propName))
+      // inaccessible properties never have DOM props, so don't
+      // worry about incrementing j.  The assertion below will
+      // catch if they do.
+      continue;
 
-        if (first)
-            first = 0;
-        else
-            printf(",\n");
+    if (first)
+      first = 0;
+    else
+      printf(",\n");
 
-        printf("\t{ name: \"%s\", prop: ", p->propName);
-        if (j >= aDOMPropsLength || strcmp(p->propName, aDOMProps[j]) != 0)
-            printf("null");
-        else {
-            ++j;
-            if (strncmp(p->domName, "Moz", 3) == 0)
-                printf("\"%s\"", p->domName);
-            else
-                // lowercase the first letter
-                printf("\"%c%s\"", p->domName[0] + 32, p->domName + 1);
-        }
-        if (p->pref[0]) {
-            printf(", pref: \"%s\"", p->pref);
-        }
-        printf(" }");
+    printf("\t{ name: \"%s\", prop: ", p->propName);
+    if (j >= aDOMPropsLength || strcmp(p->propName, aDOMProps[j]) != 0)
+      printf("null");
+    else {
+      ++j;
+      if (strncmp(p->domName, "Moz", 3) == 0)
+        printf("\"%s\"", p->domName);
+      else
+        // lowercase the first letter
+        printf("\"%c%s\"", p->domName[0] + 32, p->domName + 1);
     }
-
-    if (j != aDOMPropsLength) {
-        fprintf(stderr, "Assertion failure %s:%d\n", __FILE__, __LINE__);
-        fprintf(stderr, "j==%d, aDOMPropsLength == %d\n", j, aDOMPropsLength);
-        exit(1);
+    if (p->pref[0]) {
+      printf(", pref: \"%s\"", p->pref);
     }
+    printf(" }");
+  }
 
-    printf("\n];\n\n");
+  if (j != aDOMPropsLength) {
+    fprintf(stderr, "Assertion failure %s:%d\n", __FILE__, __LINE__);
+    fprintf(stderr, "j==%d, aDOMPropsLength == %d\n", j, aDOMPropsLength);
+    exit(1);
+  }
+
+  printf("\n];\n\n");
 }
 
-int
-main()
-{
-    print_array("gLonghandProperties",
-                gLonghandProperties,
-                MOZ_ARRAY_LENGTH(gLonghandProperties),
-                gLonghandPropertiesWithDOMProp,
-                MOZ_ARRAY_LENGTH(gLonghandPropertiesWithDOMProp));
-    print_array("gShorthandProperties",
-                gShorthandProperties,
-                MOZ_ARRAY_LENGTH(gShorthandProperties),
-                gShorthandPropertiesWithDOMProp,
-                MOZ_ARRAY_LENGTH(gShorthandPropertiesWithDOMProp));
-    return 0;
+int main() {
+  print_array("gLonghandProperties", gLonghandProperties,
+              MOZ_ARRAY_LENGTH(gLonghandProperties),
+              gLonghandPropertiesWithDOMProp,
+              MOZ_ARRAY_LENGTH(gLonghandPropertiesWithDOMProp));
+  print_array("gShorthandProperties", gShorthandProperties,
+              MOZ_ARRAY_LENGTH(gShorthandProperties),
+              gShorthandPropertiesWithDOMProp,
+              MOZ_ARRAY_LENGTH(gShorthandPropertiesWithDOMProp));
+  return 0;
 }

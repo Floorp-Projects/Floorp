@@ -10,9 +10,8 @@
 namespace mozilla {
 namespace dom {
 
-bool
-ServiceWorkerUpdaterParent::Proceed(ServiceWorkerManagerService* aService)
-{
+bool ServiceWorkerUpdaterParent::Proceed(
+    ServiceWorkerManagerService* aService) {
   if (!SendProceed(true)) {
     return false;
   }
@@ -21,13 +20,11 @@ ServiceWorkerUpdaterParent::Proceed(ServiceWorkerManagerService* aService)
   return true;
 }
 
-void
-ServiceWorkerUpdaterParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void ServiceWorkerUpdaterParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mService) {
     mService->UpdaterActorDestroyed(this);
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -12,10 +12,8 @@ namespace mozilla {
 // -------------------------------------------------------------------------
 // Vertex Array Object
 
-WebGLVertexArray*
-WebGL2Context::CreateVertexArrayImpl()
-{
-    return dom::WebGLVertexArrayObject::Create(this);
+WebGLVertexArray* WebGL2Context::CreateVertexArrayImpl() {
+  return dom::WebGLVertexArrayObject::Create(this);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

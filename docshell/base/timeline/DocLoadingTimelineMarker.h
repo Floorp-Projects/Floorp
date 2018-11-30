@@ -12,21 +12,19 @@
 
 namespace mozilla {
 
-class DocLoadingTimelineMarker : public TimelineMarker
-{
-public:
+class DocLoadingTimelineMarker : public TimelineMarker {
+ public:
   explicit DocLoadingTimelineMarker(const char* aName)
-    : TimelineMarker(aName, MarkerTracingType::TIMESTAMP)
-    , mUnixTime(PR_Now())
-  {}
+      : TimelineMarker(aName, MarkerTracingType::TIMESTAMP),
+        mUnixTime(PR_Now()) {}
 
-  virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
-  {
+  virtual void AddDetails(JSContext* aCx,
+                          dom::ProfileTimelineMarker& aMarker) override {
     TimelineMarker::AddDetails(aCx, aMarker);
     aMarker.mUnixTime.Construct(mUnixTime);
   }
 
-private:
+ private:
   // Certain consumers might use Date.now() or similar for tracing time.
   // However, TimelineMarkers use process creation as an epoch, which provides
   // more precision. To allow syncing, attach an additional unix timestamp.
@@ -35,6 +33,6 @@ private:
   PRTime mUnixTime;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_DocLoadingTimelineMarker_h_
+#endif  // mozilla_DocLoadingTimelineMarker_h_

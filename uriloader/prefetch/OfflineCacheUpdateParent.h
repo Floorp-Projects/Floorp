@@ -20,46 +20,40 @@ namespace mozilla {
 
 namespace ipc {
 class URIParams;
-} // namespace ipc
+}  // namespace ipc
 
 namespace docshell {
 
-class OfflineCacheUpdateParent : public POfflineCacheUpdateParent
-                               , public nsIOfflineCacheUpdateObserver
-                               , public nsILoadContext
-{
-    typedef mozilla::ipc::URIParams URIParams;
-    typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+class OfflineCacheUpdateParent : public POfflineCacheUpdateParent,
+                                 public nsIOfflineCacheUpdateObserver,
+                                 public nsILoadContext {
+  typedef mozilla::ipc::URIParams URIParams;
+  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
-    NS_DECL_NSILOADCONTEXT
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
+  NS_DECL_NSILOADCONTEXT
 
-    nsresult
-    Schedule(const URIParams& manifestURI,
-             const URIParams& documentURI,
-             const PrincipalInfo& loadingPrincipalInfo,
-             const bool& stickDocument);
+  nsresult Schedule(const URIParams& manifestURI, const URIParams& documentURI,
+                    const PrincipalInfo& loadingPrincipalInfo,
+                    const bool& stickDocument);
 
-    void
-    StopSendingMessagesToChild()
-    {
-      mIPCClosed = true;
-    }
+  void StopSendingMessagesToChild() { mIPCClosed = true; }
 
-    explicit OfflineCacheUpdateParent();
+  explicit OfflineCacheUpdateParent();
 
-    virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-private:
-    ~OfflineCacheUpdateParent();
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    bool mIPCClosed;
+ private:
+  ~OfflineCacheUpdateParent();
 
-    nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
+  bool mIPCClosed;
+
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 };
 
-} // namespace docshell
-} // namespace mozilla
+}  // namespace docshell
+}  // namespace mozilla
 
 #endif

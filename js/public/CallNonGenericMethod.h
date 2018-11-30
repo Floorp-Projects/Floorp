@@ -23,10 +23,12 @@ typedef bool (*NativeImpl)(JSContext* cx, const CallArgs& args);
 namespace detail {
 
 // DON'T CALL THIS DIRECTLY.  It's for use only by CallNonGenericMethod!
-extern JS_PUBLIC_API bool
-CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, const CallArgs& args);
+extern JS_PUBLIC_API bool CallMethodIfWrapped(JSContext* cx,
+                                              IsAcceptableThis test,
+                                              NativeImpl impl,
+                                              const CallArgs& args);
 
-} // namespace detail
+}  // namespace detail
 
 // Methods usually act upon |this| objects only from a single global object and
 // compartment.  Sometimes, however, a method must act upon |this| values from
@@ -93,29 +95,29 @@ CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, const
 // Note: JS::CallNonGenericMethod will only work correctly if it's called in
 //       tail position in a JSNative.  Do not call it from any other place.
 //
-template<IsAcceptableThis Test, NativeImpl Impl>
-MOZ_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext* cx, const CallArgs& args)
-{
-    HandleValue thisv = args.thisv();
-    if (Test(thisv)) {
-        return Impl(cx, args);
-    }
+template <IsAcceptableThis Test, NativeImpl Impl>
+MOZ_ALWAYS_INLINE bool CallNonGenericMethod(JSContext* cx,
+                                            const CallArgs& args) {
+  HandleValue thisv = args.thisv();
+  if (Test(thisv)) {
+    return Impl(cx, args);
+  }
 
-    return detail::CallMethodIfWrapped(cx, Test, Impl, args);
+  return detail::CallMethodIfWrapped(cx, Test, Impl, args);
 }
 
-MOZ_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext* cx, IsAcceptableThis Test, NativeImpl Impl, const CallArgs& args)
-{
-    HandleValue thisv = args.thisv();
-    if (Test(thisv)) {
-        return Impl(cx, args);
-    }
+MOZ_ALWAYS_INLINE bool CallNonGenericMethod(JSContext* cx,
+                                            IsAcceptableThis Test,
+                                            NativeImpl Impl,
+                                            const CallArgs& args) {
+  HandleValue thisv = args.thisv();
+  if (Test(thisv)) {
+    return Impl(cx, args);
+  }
 
-    return detail::CallMethodIfWrapped(cx, Test, Impl, args);
+  return detail::CallMethodIfWrapped(cx, Test, Impl, args);
 }
 
-} // namespace JS
+}  // namespace JS
 
 #endif /* js_CallNonGenericMethod_h */

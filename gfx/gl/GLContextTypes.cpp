@@ -8,7 +8,4 @@
 
 using namespace mozilla::gl;
 
-GLFormats::GLFormats()
-{
-    std::memset(this, 0, sizeof(GLFormats));
-}
+GLFormats::GLFormats() { std::memset(this, 0, sizeof(GLFormats)); }

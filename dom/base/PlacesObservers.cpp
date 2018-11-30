@@ -14,15 +14,11 @@ namespace mozilla {
 namespace dom {
 
 template <class T>
-struct Flagged
-{
+struct Flagged {
   Flagged(uint32_t aFlags, T&& aValue)
-    : flags(aFlags)
-    , value(std::forward<T>(aValue))
-  {}
+      : flags(aFlags), value(std::forward<T>(aValue)) {}
   Flagged(Flagged&& aOther)
-    : Flagged(std::move(aOther.flags), std::move(aOther.value))
-  {}
+      : Flagged(std::move(aOther.flags), std::move(aOther.value)) {}
   Flagged(const Flagged& aOther) = default;
   ~Flagged() = default;
 
@@ -34,8 +30,7 @@ template <class T>
 using FlaggedArray = nsTArray<Flagged<T>>;
 
 template <class T>
-struct ListenerCollection
-{
+struct ListenerCollection {
   static StaticAutoPtr<FlaggedArray<T>> gListeners;
   static StaticAutoPtr<FlaggedArray<T>> gListenersToRemove;
 
@@ -65,22 +60,19 @@ StaticAutoPtr<FlaggedArray<T>> ListenerCollection<T>::gListenersToRemove;
 
 typedef ListenerCollection<RefPtr<PlacesEventCallback>> JSListeners;
 typedef ListenerCollection<WeakPtr<PlacesWeakCallbackWrapper>> WeakJSListeners;
-typedef ListenerCollection<WeakPtr<places::INativePlacesEventCallback>> WeakNativeListeners;
+typedef ListenerCollection<WeakPtr<places::INativePlacesEventCallback>>
+    WeakNativeListeners;
 
 static bool gCallingListeners = false;
 
-uint32_t
-GetEventTypeFlag(PlacesEventType aEventType)
-{
+uint32_t GetEventTypeFlag(PlacesEventType aEventType) {
   if (aEventType == PlacesEventType::None) {
     return 0;
   }
   return 1 << ((uint32_t)aEventType - 1);
 }
 
-uint32_t
-GetFlagsForEventTypes(const nsTArray<PlacesEventType>& aEventTypes)
-{
+uint32_t GetFlagsForEventTypes(const nsTArray<PlacesEventType>& aEventTypes) {
   uint32_t flags = 0;
   for (PlacesEventType eventType : aEventTypes) {
     flags |= GetEventTypeFlag(eventType);
@@ -88,9 +80,8 @@ GetFlagsForEventTypes(const nsTArray<PlacesEventType>& aEventTypes)
   return flags;
 }
 
-uint32_t
-GetFlagsForEvents(const nsTArray<OwningNonNull<PlacesEvent>>& aEvents)
-{
+uint32_t GetFlagsForEvents(
+    const nsTArray<OwningNonNull<PlacesEvent>>& aEvents) {
   uint32_t flags = 0;
   for (const PlacesEvent& event : aEvents) {
     flags |= GetEventTypeFlag(event.Type());
@@ -99,12 +90,13 @@ GetFlagsForEvents(const nsTArray<OwningNonNull<PlacesEvent>>& aEvents)
 }
 
 template <class TWrapped, class TUnwrapped>
-void CallListeners(uint32_t aEventFlags,
-                   FlaggedArray<TWrapped>& aListeners,
-                   const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
-                   const std::function<TUnwrapped(TWrapped&)>& aUnwrapListener,
-                   const std::function<void(TUnwrapped&, const Sequence<OwningNonNull<PlacesEvent>>&)>& aCallListener)
-{
+void CallListeners(
+    uint32_t aEventFlags, FlaggedArray<TWrapped>& aListeners,
+    const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
+    const std::function<TUnwrapped(TWrapped&)>& aUnwrapListener,
+    const std::function<void(TUnwrapped&,
+                             const Sequence<OwningNonNull<PlacesEvent>>&)>&
+        aCallListener) {
   for (uint32_t i = 0; i < aListeners.Length(); i++) {
     Flagged<TWrapped>& l = aListeners[i];
     TUnwrapped unwrapped = aUnwrapListener(l.value);
@@ -129,58 +121,50 @@ void CallListeners(uint32_t aEventFlags,
   }
 }
 
-void
-PlacesObservers::AddListener(GlobalObject& aGlobal,
-                             const nsTArray<PlacesEventType>& aEventTypes,
-                             PlacesEventCallback& aCallback,
-                             ErrorResult& rv)
-{
+void PlacesObservers::AddListener(GlobalObject& aGlobal,
+                                  const nsTArray<PlacesEventType>& aEventTypes,
+                                  PlacesEventCallback& aCallback,
+                                  ErrorResult& rv) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
 
   FlaggedArray<RefPtr<PlacesEventCallback>>* listeners =
-    JSListeners::GetListeners();
+      JSListeners::GetListeners();
   Flagged<RefPtr<PlacesEventCallback>> pair(flags, &aCallback);
   listeners->AppendElement(pair);
 }
 
-void
-PlacesObservers::AddListener(GlobalObject& aGlobal,
-                             const nsTArray<PlacesEventType>& aEventTypes,
-                             PlacesWeakCallbackWrapper& aCallback,
-                             ErrorResult& rv)
-{
+void PlacesObservers::AddListener(GlobalObject& aGlobal,
+                                  const nsTArray<PlacesEventType>& aEventTypes,
+                                  PlacesWeakCallbackWrapper& aCallback,
+                                  ErrorResult& rv) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
 
   FlaggedArray<WeakPtr<PlacesWeakCallbackWrapper>>* listeners =
-    WeakJSListeners::GetListeners();
+      WeakJSListeners::GetListeners();
   WeakPtr<PlacesWeakCallbackWrapper> weakCb(&aCallback);
   MOZ_ASSERT(weakCb.get());
   Flagged<WeakPtr<PlacesWeakCallbackWrapper>> flagged(flags, std::move(weakCb));
   listeners->AppendElement(flagged);
 }
 
-void
-PlacesObservers::AddListener(const nsTArray<PlacesEventType>& aEventTypes,
-                             places::INativePlacesEventCallback* aCallback)
-{
+void PlacesObservers::AddListener(
+    const nsTArray<PlacesEventType>& aEventTypes,
+    places::INativePlacesEventCallback* aCallback) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
 
   FlaggedArray<WeakPtr<places::INativePlacesEventCallback>>* listeners =
-    WeakNativeListeners::GetListeners();
+      WeakNativeListeners::GetListeners();
   Flagged<WeakPtr<places::INativePlacesEventCallback>> pair(flags, aCallback);
   listeners->AppendElement(pair);
 }
 
-void
-PlacesObservers::RemoveListener(GlobalObject& aGlobal,
-                                const nsTArray<PlacesEventType>& aEventTypes,
-                                PlacesEventCallback& aCallback,
-                                ErrorResult& rv)
-{
+void PlacesObservers::RemoveListener(
+    GlobalObject& aGlobal, const nsTArray<PlacesEventType>& aEventTypes,
+    PlacesEventCallback& aCallback, ErrorResult& rv) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
   if (gCallingListeners) {
     FlaggedArray<RefPtr<PlacesEventCallback>>* listeners =
-      JSListeners::GetListenersToRemove();
+        JSListeners::GetListenersToRemove();
     Flagged<RefPtr<PlacesEventCallback>> pair(flags, &aCallback);
     listeners->AppendElement(pair);
   } else {
@@ -188,33 +172,30 @@ PlacesObservers::RemoveListener(GlobalObject& aGlobal,
   }
 }
 
-void
-PlacesObservers::RemoveListener(GlobalObject& aGlobal,
-                                const nsTArray<PlacesEventType>& aEventTypes,
-                                PlacesWeakCallbackWrapper& aCallback,
-                                ErrorResult& rv)
-{
+void PlacesObservers::RemoveListener(
+    GlobalObject& aGlobal, const nsTArray<PlacesEventType>& aEventTypes,
+    PlacesWeakCallbackWrapper& aCallback, ErrorResult& rv) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
   if (gCallingListeners) {
     FlaggedArray<WeakPtr<PlacesWeakCallbackWrapper>>* listeners =
-      WeakJSListeners::GetListenersToRemove();
+        WeakJSListeners::GetListenersToRemove();
     WeakPtr<PlacesWeakCallbackWrapper> weakCb(&aCallback);
     MOZ_ASSERT(weakCb.get());
-    Flagged<WeakPtr<PlacesWeakCallbackWrapper>> flagged(flags, std::move(weakCb));
+    Flagged<WeakPtr<PlacesWeakCallbackWrapper>> flagged(flags,
+                                                        std::move(weakCb));
     listeners->AppendElement(flagged);
   } else {
     RemoveListener(flags, aCallback);
   }
 }
 
-void
-PlacesObservers::RemoveListener(const nsTArray<PlacesEventType>& aEventTypes,
-                                places::INativePlacesEventCallback* aCallback)
-{
+void PlacesObservers::RemoveListener(
+    const nsTArray<PlacesEventType>& aEventTypes,
+    places::INativePlacesEventCallback* aCallback) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
   if (gCallingListeners) {
     FlaggedArray<WeakPtr<places::INativePlacesEventCallback>>* listeners =
-      WeakNativeListeners::GetListenersToRemove();
+        WeakNativeListeners::GetListenersToRemove();
     Flagged<WeakPtr<places::INativePlacesEventCallback>> pair(flags, aCallback);
     listeners->AppendElement(pair);
   } else {
@@ -222,12 +203,10 @@ PlacesObservers::RemoveListener(const nsTArray<PlacesEventType>& aEventTypes,
   }
 }
 
-void
-PlacesObservers::RemoveListener(uint32_t aFlags,
-                                PlacesEventCallback& aCallback)
-{
+void PlacesObservers::RemoveListener(uint32_t aFlags,
+                                     PlacesEventCallback& aCallback) {
   FlaggedArray<RefPtr<PlacesEventCallback>>* listeners =
-    JSListeners::GetListeners(/* aDoNotInit: */ true);
+      JSListeners::GetListeners(/* aDoNotInit: */ true);
   if (!listeners) {
     return;
   }
@@ -245,12 +224,10 @@ PlacesObservers::RemoveListener(uint32_t aFlags,
   }
 }
 
-void
-PlacesObservers::RemoveListener(uint32_t aFlags,
-                                PlacesWeakCallbackWrapper& aCallback)
-{
+void PlacesObservers::RemoveListener(uint32_t aFlags,
+                                     PlacesWeakCallbackWrapper& aCallback) {
   FlaggedArray<WeakPtr<PlacesWeakCallbackWrapper>>* listeners =
-    WeakJSListeners::GetListeners(/* aDoNotInit: */ true);
+      WeakJSListeners::GetListeners(/* aDoNotInit: */ true);
   if (!listeners) {
     return;
   }
@@ -269,17 +246,16 @@ PlacesObservers::RemoveListener(uint32_t aFlags,
   }
 }
 
-void
-PlacesObservers::RemoveListener(uint32_t aFlags,
-                                places::INativePlacesEventCallback* aCallback)
-{
+void PlacesObservers::RemoveListener(
+    uint32_t aFlags, places::INativePlacesEventCallback* aCallback) {
   FlaggedArray<WeakPtr<places::INativePlacesEventCallback>>* listeners =
-    WeakNativeListeners::GetListeners(/* aDoNotInit: */ true);
+      WeakNativeListeners::GetListeners(/* aDoNotInit: */ true);
   if (!listeners) {
     return;
   }
   for (uint32_t i = 0; i < listeners->Length(); i++) {
-    Flagged<WeakPtr<places::INativePlacesEventCallback>>& l = listeners->ElementAt(i);
+    Flagged<WeakPtr<places::INativePlacesEventCallback>>& l =
+        listeners->ElementAt(i);
     RefPtr<places::INativePlacesEventCallback> unwrapped = l.value.get();
     if (unwrapped != aCallback) {
       continue;
@@ -293,43 +269,35 @@ PlacesObservers::RemoveListener(uint32_t aFlags,
   }
 }
 
-void
-PlacesObservers::NotifyListeners(GlobalObject& aGlobal,
-                                 const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
-                                 ErrorResult& rv)
-{
+void PlacesObservers::NotifyListeners(
+    GlobalObject& aGlobal, const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
+    ErrorResult& rv) {
   NotifyListeners(aEvents);
 }
 
-void
-PlacesObservers::NotifyListeners(const Sequence<OwningNonNull<PlacesEvent>>& aEvents)
-{
+void PlacesObservers::NotifyListeners(
+    const Sequence<OwningNonNull<PlacesEvent>>& aEvents) {
   MOZ_RELEASE_ASSERT(!gCallingListeners);
   gCallingListeners = true;
   uint32_t flags = GetFlagsForEvents(aEvents);
 
   CallListeners<RefPtr<PlacesEventCallback>, RefPtr<PlacesEventCallback>>(
-    flags, *JSListeners::GetListeners(), aEvents,
-    [](auto& cb) { return cb; },
-    [&](auto& cb, const auto& events) {
-      cb->Call(aEvents);
-    });
+      flags, *JSListeners::GetListeners(), aEvents, [](auto& cb) { return cb; },
+      [&](auto& cb, const auto& events) { cb->Call(aEvents); });
 
   CallListeners<WeakPtr<places::INativePlacesEventCallback>,
                 RefPtr<places::INativePlacesEventCallback>>(
-    flags, *WeakNativeListeners::GetListeners(), aEvents,
-    [](auto& cb) { return cb.get(); },
-    [&](auto& cb, const Sequence<OwningNonNull<PlacesEvent>>& events) {
-      cb->HandlePlacesEvent(events);
-    });
+      flags, *WeakNativeListeners::GetListeners(), aEvents,
+      [](auto& cb) { return cb.get(); },
+      [&](auto& cb, const Sequence<OwningNonNull<PlacesEvent>>& events) {
+        cb->HandlePlacesEvent(events);
+      });
 
   CallListeners<WeakPtr<PlacesWeakCallbackWrapper>,
                 RefPtr<PlacesWeakCallbackWrapper>>(
-    flags, *WeakJSListeners::GetListeners(), aEvents,
-    [](auto& cb) { return cb.get(); },
-    [&](auto& cb, const auto& events) {
-      cb->mCallback->Call(aEvents);
-    });
+      flags, *WeakJSListeners::GetListeners(), aEvents,
+      [](auto& cb) { return cb.get(); },
+      [&](auto& cb, const auto& events) { cb->mCallback->Call(aEvents); });
 
   auto& listenersToRemove = *JSListeners::GetListenersToRemove();
   if (listenersToRemove.Length() > 0) {
@@ -358,5 +326,5 @@ PlacesObservers::NotifyListeners(const Sequence<OwningNonNull<PlacesEvent>>& aEv
   gCallingListeners = false;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

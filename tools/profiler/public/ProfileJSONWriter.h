@@ -20,9 +20,8 @@ class SpliceableChunkedJSONWriter;
 // profile are not accessed until the profile is entirely written. For these
 // reasons we use a chunked writer that keeps an array of chunks, which is
 // concatenated together after writing is finished.
-class ChunkedJSONWriteFunc : public mozilla::JSONWriteFunc
-{
-public:
+class ChunkedJSONWriteFunc : public mozilla::JSONWriteFunc {
+ public:
   friend class SpliceableJSONWriter;
 
   ChunkedJSONWriteFunc() : mChunkPtr{nullptr}, mChunkEnd{nullptr} {
@@ -30,22 +29,21 @@ public:
   }
 
   bool IsEmpty() const {
-    MOZ_ASSERT_IF(!mChunkPtr, !mChunkEnd &&
-                              mChunkList.length() == 0 &&
-                              mChunkLengths.length() == 0);
+    MOZ_ASSERT_IF(!mChunkPtr, !mChunkEnd && mChunkList.length() == 0 &&
+                                  mChunkLengths.length() == 0);
     return !mChunkPtr;
   }
 
   void Write(const char* aStr) override;
   void CopyDataIntoLazilyAllocatedBuffer(
-    const std::function<char*(size_t)>& aAllocator) const;
+      const std::function<char*(size_t)>& aAllocator) const;
   mozilla::UniquePtr<char[]> CopyData() const;
   void Take(ChunkedJSONWriteFunc&& aOther);
   // Returns the byte length of the complete combined string, including the
   // null terminator byte.
   size_t GetTotalLength() const;
 
-private:
+ private:
   void AllocChunk(size_t aChunkSize);
 
   static const size_t kChunkSize = 4096 * 512;
@@ -70,33 +68,25 @@ private:
   mozilla::Vector<size_t> mChunkLengths;
 };
 
-struct OStreamJSONWriteFunc : public mozilla::JSONWriteFunc
-{
-  explicit OStreamJSONWriteFunc(std::ostream& aStream)
-    : mStream(aStream)
-  { }
+struct OStreamJSONWriteFunc : public mozilla::JSONWriteFunc {
+  explicit OStreamJSONWriteFunc(std::ostream& aStream) : mStream(aStream) {}
 
-  void Write(const char* aStr) override {
-    mStream << aStr;
-  }
+  void Write(const char* aStr) override { mStream << aStr; }
 
   std::ostream& mStream;
 };
 
-class SpliceableJSONWriter : public mozilla::JSONWriter
-{
-public:
-  explicit SpliceableJSONWriter(mozilla::UniquePtr<mozilla::JSONWriteFunc> aWriter)
-    : JSONWriter(std::move(aWriter))
-  { }
+class SpliceableJSONWriter : public mozilla::JSONWriter {
+ public:
+  explicit SpliceableJSONWriter(
+      mozilla::UniquePtr<mozilla::JSONWriteFunc> aWriter)
+      : JSONWriter(std::move(aWriter)) {}
 
   void StartBareList(CollectionStyle aStyle = MultiLineStyle) {
     StartCollection(nullptr, "", aStyle);
   }
 
-  void EndBareList() {
-    EndCollection("");
-  }
+  void EndBareList() { EndCollection(""); }
 
   void NullElements(uint32_t aCount) {
     for (uint32_t i = 0; i < aCount; i++) {
@@ -109,8 +99,7 @@ public:
 
   // Splice the given JSON directly in, without quoting.
   void SplicedJSONProperty(const char* aMaybePropertyName,
-                           const char* aJsonValue)
-  {
+                           const char* aJsonValue) {
     Scalar(aMaybePropertyName, aJsonValue);
   }
 
@@ -120,12 +109,10 @@ public:
   virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc);
 };
 
-class SpliceableChunkedJSONWriter : public SpliceableJSONWriter
-{
-public:
+class SpliceableChunkedJSONWriter : public SpliceableJSONWriter {
+ public:
   explicit SpliceableChunkedJSONWriter()
-    : SpliceableJSONWriter(mozilla::MakeUnique<ChunkedJSONWriteFunc>())
-  { }
+      : SpliceableJSONWriter(mozilla::MakeUnique<ChunkedJSONWriteFunc>()) {}
 
   ChunkedJSONWriteFunc* WriteFunc() const {
     return static_cast<ChunkedJSONWriteFunc*>(JSONWriter::WriteFunc());
@@ -135,4 +122,4 @@ public:
   virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override;
 };
 
-#endif // PROFILEJSONWRITER_H
+#endif  // PROFILEJSONWRITER_H

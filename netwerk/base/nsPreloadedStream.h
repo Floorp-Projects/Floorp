@@ -15,7 +15,7 @@
  * a different protocol via the HTTP Upgrade mechanism. That over-buffered
  * data is preloaded together with the input socket to form the new input socket
  * given to the new protocol handler.
-*/
+ */
 
 #ifndef nsPreloadedStream_h__
 #define nsPreloadedStream_h__
@@ -27,26 +27,26 @@
 namespace mozilla {
 namespace net {
 
-class nsPreloadedStream final : public nsIAsyncInputStream
-{
+class nsPreloadedStream final : public nsIAsyncInputStream {
  public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIINPUTSTREAM
-    NS_DECL_NSIASYNCINPUTSTREAM
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINPUTSTREAM
+  NS_DECL_NSIASYNCINPUTSTREAM
 
-    nsPreloadedStream(nsIAsyncInputStream *aStream,
-                      const char *data, uint32_t datalen);
-private:
-    ~nsPreloadedStream();
+  nsPreloadedStream(nsIAsyncInputStream *aStream, const char *data,
+                    uint32_t datalen);
 
-    nsCOMPtr<nsIAsyncInputStream> mStream;
+ private:
+  ~nsPreloadedStream();
 
-    char *mBuf;
-    uint32_t mOffset;
-    uint32_t mLen;
+  nsCOMPtr<nsIAsyncInputStream> mStream;
+
+  char *mBuf;
+  uint32_t mOffset;
+  uint32_t mLen;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

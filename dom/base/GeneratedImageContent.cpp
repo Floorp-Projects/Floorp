@@ -18,28 +18,21 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE(GeneratedImageContent);
 
-already_AddRefed<GeneratedImageContent>
-GeneratedImageContent::Create(nsIDocument& aDocument, uint32_t aContentIndex)
-{
-  RefPtr<dom::NodeInfo> nodeInfo =
-    aDocument.NodeInfoManager()->
-      GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage,
-                  nullptr,
-                  kNameSpaceID_XHTML,
-                  nsINode::ELEMENT_NODE);
+already_AddRefed<GeneratedImageContent> GeneratedImageContent::Create(
+    nsIDocument& aDocument, uint32_t aContentIndex) {
+  RefPtr<dom::NodeInfo> nodeInfo = aDocument.NodeInfoManager()->GetNodeInfo(
+      nsGkAtoms::mozgeneratedcontentimage, nullptr, kNameSpaceID_XHTML,
+      nsINode::ELEMENT_NODE);
 
   auto image = MakeRefPtr<GeneratedImageContent>(nodeInfo.forget());
   image->mIndex = aContentIndex;
   return image.forget();
 }
 
-JSObject*
-GeneratedImageContent::WrapNode(JSContext* aCx,
-                                JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* GeneratedImageContent::WrapNode(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return dom::HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

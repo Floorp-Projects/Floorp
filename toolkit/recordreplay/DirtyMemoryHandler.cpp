@@ -46,38 +46,37 @@ typedef struct {
   mach_msg_trailer_t trailer;
 } ExceptionRequest;
 
-static void
-DirtyMemoryExceptionHandlerThread(void*)
-{
+static void DirtyMemoryExceptionHandlerThread(void*) {
   kern_return_t kret;
 
   while (true) {
     ExceptionRequest request;
     kret = mach_msg(&request.body.Head, MACH_RCV_MSG, 0, sizeof(request),
-                    gDirtyMemoryExceptionPort, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+                    gDirtyMemoryExceptionPort, MACH_MSG_TIMEOUT_NONE,
+                    MACH_PORT_NULL);
     kern_return_t replyCode = KERN_FAILURE;
-    if (kret == KERN_SUCCESS &&
-        request.body.Head.msgh_id == sExceptionId &&
-        request.body.exception == EXC_BAD_ACCESS &&
-        request.body.codeCnt == 2)
-    {
-      uint8_t* faultingAddress = (uint8_t*) request.body.code[1];
+    if (kret == KERN_SUCCESS && request.body.Head.msgh_id == sExceptionId &&
+        request.body.exception == EXC_BAD_ACCESS && request.body.codeCnt == 2) {
+      uint8_t* faultingAddress = (uint8_t*)request.body.code[1];
       if (HandleDirtyMemoryFault(faultingAddress)) {
         replyCode = KERN_SUCCESS;
       } else {
-        child::MinidumpInfo info(request.body.exception,
-                                 request.body.code[0], request.body.code[1],
+        child::MinidumpInfo info(request.body.exception, request.body.code[0],
+                                 request.body.code[1],
                                  request.body.thread.name);
-        child::ReportFatalError(Some(info), "HandleDirtyMemoryFault failed %p %s",
-                                faultingAddress, gMozCrashReason ? gMozCrashReason : "");
+        child::ReportFatalError(
+            Some(info), "HandleDirtyMemoryFault failed %p %s", faultingAddress,
+            gMozCrashReason ? gMozCrashReason : "");
       }
     } else {
       child::ReportFatalError(Nothing(),
-                              "DirtyMemoryExceptionHandlerThread mach_msg returned unexpected data");
+                              "DirtyMemoryExceptionHandlerThread mach_msg "
+                              "returned unexpected data");
     }
 
     __Reply__exception_raise_t reply;
-    reply.Head.msgh_bits = MACH_MSGH_BITS(MACH_MSGH_BITS_REMOTE(request.body.Head.msgh_bits), 0);
+    reply.Head.msgh_bits =
+        MACH_MSGH_BITS(MACH_MSGH_BITS_REMOTE(request.body.Head.msgh_bits), 0);
     reply.Head.msgh_size = sizeof(reply);
     reply.Head.msgh_remote_port = request.body.Head.msgh_remote_port;
     reply.Head.msgh_local_port = MACH_PORT_NULL;
@@ -89,9 +88,7 @@ DirtyMemoryExceptionHandlerThread(void*)
   }
 }
 
-void
-SetupDirtyMemoryHandler()
-{
+void SetupDirtyMemoryHandler() {
   // Allow repeated calls.
   static bool hasDirtyMemoryHandler = false;
   if (hasDirtyMemoryHandler) {
@@ -103,11 +100,12 @@ SetupDirtyMemoryHandler()
   kern_return_t kret;
 
   // Get a port which can send and receive data.
-  kret = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &gDirtyMemoryExceptionPort);
+  kret = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE,
+                            &gDirtyMemoryExceptionPort);
   MOZ_RELEASE_ASSERT(kret == KERN_SUCCESS);
 
-  kret = mach_port_insert_right(mach_task_self(),
-                                gDirtyMemoryExceptionPort, gDirtyMemoryExceptionPort,
+  kret = mach_port_insert_right(mach_task_self(), gDirtyMemoryExceptionPort,
+                                gDirtyMemoryExceptionPort,
                                 MACH_MSG_TYPE_MAKE_SEND);
   MOZ_RELEASE_ASSERT(kret == KERN_SUCCESS);
 
@@ -117,13 +115,11 @@ SetupDirtyMemoryHandler()
   // Set exception ports on the entire task. Unfortunately, this clobbers any
   // other exception ports for the task, and forwarding to those other ports
   // is not easy to get right.
-  kret = task_set_exception_ports(mach_task_self(),
-                                  EXC_MASK_BAD_ACCESS,
-                                  gDirtyMemoryExceptionPort,
-                                  EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES,
-                                  THREAD_STATE_NONE);
+  kret = task_set_exception_ports(
+      mach_task_self(), EXC_MASK_BAD_ACCESS, gDirtyMemoryExceptionPort,
+      EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES, THREAD_STATE_NONE);
   MOZ_RELEASE_ASSERT(kret == KERN_SUCCESS);
 }
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

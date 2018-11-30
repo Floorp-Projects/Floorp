@@ -27,63 +27,56 @@ class WindowProxyOrMessagePortOrServiceWorker;
  * See http://www.whatwg.org/specs/web-apps/current-work/#messageevent for
  * further details.
  */
-class MessageEvent final : public Event
-{
-public:
-  MessageEvent(EventTarget* aOwner,
-               nsPresContext* aPresContext,
+class MessageEvent final : public Event {
+ public:
+  MessageEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                WidgetEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MessageEvent, Event)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
                ErrorResult& aRv);
   void GetOrigin(nsAString&) const;
   void GetLastEventId(nsAString&) const;
-  void GetSource(Nullable<OwningWindowProxyOrMessagePortOrServiceWorker>& aValue) const;
+  void GetSource(
+      Nullable<OwningWindowProxyOrMessagePortOrServiceWorker>& aValue) const;
 
   void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 
-  static already_AddRefed<MessageEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const MessageEventInit& aEventInit,
-              ErrorResult& aRv);
+  static already_AddRefed<MessageEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const MessageEventInit& aEventInit, ErrorResult& aRv);
 
-  static already_AddRefed<MessageEvent>
-  Constructor(EventTarget* aEventTarget,
-              const nsAString& aType,
-              const MessageEventInit& aEventInit);
+  static already_AddRefed<MessageEvent> Constructor(
+      EventTarget* aEventTarget, const nsAString& aType,
+      const MessageEventInit& aEventInit);
 
-  void InitMessageEvent(JSContext* aCx, const nsAString& aType,
-                        bool aCanBubble, bool aCancelable,
-                        JS::Handle<JS::Value> aData,
-                        const nsAString& aOrigin, const nsAString& aLastEventId,
-                        const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
-                        const Sequence<OwningNonNull<MessagePort>>& aPorts)
-  {
-    InitMessageEvent(aCx, aType,
-                     aCanBubble ? CanBubble::eYes : CanBubble::eNo,
-                     aCancelable ? Cancelable::eYes : Cancelable::eNo,
-                     aData,
-                     aOrigin, aLastEventId,
-                     aSource, aPorts);
+  void InitMessageEvent(
+      JSContext* aCx, const nsAString& aType, bool aCanBubble, bool aCancelable,
+      JS::Handle<JS::Value> aData, const nsAString& aOrigin,
+      const nsAString& aLastEventId,
+      const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
+      const Sequence<OwningNonNull<MessagePort>>& aPorts) {
+    InitMessageEvent(aCx, aType, aCanBubble ? CanBubble::eYes : CanBubble::eNo,
+                     aCancelable ? Cancelable::eYes : Cancelable::eNo, aData,
+                     aOrigin, aLastEventId, aSource, aPorts);
   }
 
-  void InitMessageEvent(JSContext* aCx, const nsAString& aType,
-                        mozilla::CanBubble, mozilla::Cancelable,
-                        JS::Handle<JS::Value> aData,
-                        const nsAString& aOrigin, const nsAString& aLastEventId,
-                        const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
-                        const Sequence<OwningNonNull<MessagePort>>& aPorts);
+  void InitMessageEvent(
+      JSContext* aCx, const nsAString& aType, mozilla::CanBubble,
+      mozilla::Cancelable, JS::Handle<JS::Value> aData,
+      const nsAString& aOrigin, const nsAString& aLastEventId,
+      const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
+      const Sequence<OwningNonNull<MessagePort>>& aPorts);
 
-protected:
+ protected:
   ~MessageEvent();
 
-private:
+ private:
   JS::Heap<JS::Value> mData;
   nsString mOrigin;
   nsString mLastEventId;
@@ -94,7 +87,7 @@ private:
   nsTArray<RefPtr<MessagePort>> mPorts;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MessageEvent_h_
+#endif  // mozilla_dom_MessageEvent_h_

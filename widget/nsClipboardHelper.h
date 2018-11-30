@@ -17,16 +17,14 @@
  * impl class for nsIClipboardHelper, a helper for common uses of nsIClipboard.
  */
 
-class nsClipboardHelper : public nsIClipboardHelper
-{
+class nsClipboardHelper : public nsIClipboardHelper {
   virtual ~nsClipboardHelper();
 
-public:
-
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLIPBOARDHELPER
 
   nsClipboardHelper();
 };
 
-#endif // nsClipboardHelper_h__
+#endif  // nsClipboardHelper_h__

@@ -8,25 +8,24 @@
 #include "js/UbiNodeUtils.h"
 #include "nsWindowSizes.h"
 
-using JS::ubi::SimpleEdgeRange;
 using JS::ubi::EdgeRange;
+using JS::ubi::SimpleEdgeRange;
 
-const char16_t JS::ubi::Concrete<nsIDocument>::concreteTypeName[] = u"nsIDocument";
-const char16_t JS::ubi::Concrete<nsIContent>::concreteTypeName[] = u"nsIContent";
+const char16_t JS::ubi::Concrete<nsIDocument>::concreteTypeName[] =
+    u"nsIDocument";
+const char16_t JS::ubi::Concrete<nsIContent>::concreteTypeName[] =
+    u"nsIContent";
 const char16_t JS::ubi::Concrete<Attr>::concreteTypeName[] = u"Attr";
 
-void
-JS::ubi::Concrete<nsINode>::construct(void* storage, nsINode* ptr)
-{
+void JS::ubi::Concrete<nsINode>::construct(void* storage, nsINode* ptr) {
   // nsINode is abstract, and all of its inherited instances have
   // an overridden function with instructions to construct ubi::Nodes.
   // We actually want to call that function and construct from those instances.
   ptr->ConstructUbiNode(storage);
 }
 
-js::UniquePtr<EdgeRange>
-JS::ubi::Concrete<nsINode>::edges(JSContext* cx, bool wantNames) const
-{
+js::UniquePtr<EdgeRange> JS::ubi::Concrete<nsINode>::edges(
+    JSContext* cx, bool wantNames) const {
   AutoSuppressGCAnalysis suppress;
   auto range = js::MakeUnique<SimpleEdgeRange>();
   if (!range) {
@@ -53,9 +52,8 @@ JS::ubi::Concrete<nsINode>::edges(JSContext* cx, bool wantNames) const
   return js::UniquePtr<EdgeRange>(range.release());
 }
 
-JS::ubi::Node::Size
-JS::ubi::Concrete<nsINode>::size(mozilla::MallocSizeOf mallocSizeOf) const
-{
+JS::ubi::Node::Size JS::ubi::Concrete<nsINode>::size(
+    mozilla::MallocSizeOf mallocSizeOf) const {
   AutoSuppressGCAnalysis suppress;
   mozilla::SizeOfState sz(mallocSizeOf);
   nsWindowSizes wn(sz);
@@ -64,15 +62,12 @@ JS::ubi::Concrete<nsINode>::size(mozilla::MallocSizeOf mallocSizeOf) const
   return n;
 }
 
-const char16_t*
-JS::ubi::Concrete<nsINode>::descriptiveTypeName() const
-{
+const char16_t* JS::ubi::Concrete<nsINode>::descriptiveTypeName() const {
   return get().NodeName().get();
 }
 
-JS::ubi::Node::Size
-JS::ubi::Concrete<nsIDocument>::size(mozilla::MallocSizeOf mallocSizeOf) const
-{
+JS::ubi::Node::Size JS::ubi::Concrete<nsIDocument>::size(
+    mozilla::MallocSizeOf mallocSizeOf) const {
   AutoSuppressGCAnalysis suppress;
   mozilla::SizeOfState sz(mallocSizeOf);
   nsWindowSizes wn(sz);

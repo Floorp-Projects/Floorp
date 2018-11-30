@@ -14,316 +14,188 @@
 #include "mozilla/NullPrincipal.h"
 
 nsDocShellLoadState::nsDocShellLoadState()
-  : mResultPrincipalURIIsSome(false)
-  , mKeepResultPrincipalURIIfSet(false)
-  , mLoadReplace(false)
-  , mInheritPrincipal(false)
-  , mPrincipalIsExplicit(false)
-  , mForceAllowDataURI(false)
-  , mOriginalFrameSrc(false)
-  , mSendReferrer(true)
-  , mReferrerPolicy(mozilla::net::RP_Unset)
-  , mLoadType(LOAD_NORMAL)
-  , mIsSrcdocLoad(false)
-  , mLoadFlags(0)
-  , mFirstParty(false)
-  , mTypeHint(VoidCString())
-  , mFileName(VoidString())
-  , mDocShellInternalLoadFlags(0)
-  , mIsFromProcessingFrameAttributes(false)
-{
-}
+    : mResultPrincipalURIIsSome(false),
+      mKeepResultPrincipalURIIfSet(false),
+      mLoadReplace(false),
+      mInheritPrincipal(false),
+      mPrincipalIsExplicit(false),
+      mForceAllowDataURI(false),
+      mOriginalFrameSrc(false),
+      mSendReferrer(true),
+      mReferrerPolicy(mozilla::net::RP_Unset),
+      mLoadType(LOAD_NORMAL),
+      mIsSrcdocLoad(false),
+      mLoadFlags(0),
+      mFirstParty(false),
+      mTypeHint(VoidCString()),
+      mFileName(VoidString()),
+      mDocShellInternalLoadFlags(0),
+      mIsFromProcessingFrameAttributes(false) {}
 
-nsDocShellLoadState::~nsDocShellLoadState()
-{
-}
+nsDocShellLoadState::~nsDocShellLoadState() {}
 
-nsIURI*
-nsDocShellLoadState::Referrer() const
-{
-  return mReferrer;
-}
+nsIURI* nsDocShellLoadState::Referrer() const { return mReferrer; }
 
-void
-nsDocShellLoadState::SetReferrer(nsIURI* aReferrer)
-{
+void nsDocShellLoadState::SetReferrer(nsIURI* aReferrer) {
   mReferrer = aReferrer;
 }
 
-nsIURI*
-nsDocShellLoadState::URI() const
-{
-  return mURI;
-}
+nsIURI* nsDocShellLoadState::URI() const { return mURI; }
 
-void
-nsDocShellLoadState::SetURI(nsIURI* aURI)
-{
-  mURI = aURI;
-}
+void nsDocShellLoadState::SetURI(nsIURI* aURI) { mURI = aURI; }
 
-nsIURI*
-nsDocShellLoadState::OriginalURI() const
-{
-  return mOriginalURI;
-}
+nsIURI* nsDocShellLoadState::OriginalURI() const { return mOriginalURI; }
 
-void
-nsDocShellLoadState::SetOriginalURI(nsIURI* aOriginalURI)
-{
+void nsDocShellLoadState::SetOriginalURI(nsIURI* aOriginalURI) {
   mOriginalURI = aOriginalURI;
 }
 
-nsIURI*
-nsDocShellLoadState::ResultPrincipalURI() const
-{
+nsIURI* nsDocShellLoadState::ResultPrincipalURI() const {
   return mResultPrincipalURI;
 }
 
-void
-nsDocShellLoadState::SetResultPrincipalURI(nsIURI* aResultPrincipalURI)
-{
+void nsDocShellLoadState::SetResultPrincipalURI(nsIURI* aResultPrincipalURI) {
   mResultPrincipalURI = aResultPrincipalURI;
 }
 
-bool
-nsDocShellLoadState::ResultPrincipalURIIsSome() const
-{
+bool nsDocShellLoadState::ResultPrincipalURIIsSome() const {
   return mResultPrincipalURIIsSome;
 }
 
-void
-nsDocShellLoadState::SetResultPrincipalURIIsSome(bool aIsSome)
-{
+void nsDocShellLoadState::SetResultPrincipalURIIsSome(bool aIsSome) {
   mResultPrincipalURIIsSome = aIsSome;
 }
 
-bool
-nsDocShellLoadState::KeepResultPrincipalURIIfSet() const
-{
+bool nsDocShellLoadState::KeepResultPrincipalURIIfSet() const {
   return mKeepResultPrincipalURIIfSet;
 }
 
-void
-nsDocShellLoadState::SetKeepResultPrincipalURIIfSet(bool aKeep)
-{
+void nsDocShellLoadState::SetKeepResultPrincipalURIIfSet(bool aKeep) {
   mKeepResultPrincipalURIIfSet = aKeep;
 }
 
-bool
-nsDocShellLoadState::LoadReplace() const
-{
-  return mLoadReplace;
-}
+bool nsDocShellLoadState::LoadReplace() const { return mLoadReplace; }
 
-void
-nsDocShellLoadState::SetLoadReplace(bool aLoadReplace)
-{
+void nsDocShellLoadState::SetLoadReplace(bool aLoadReplace) {
   mLoadReplace = aLoadReplace;
 }
 
-nsIPrincipal*
-nsDocShellLoadState::TriggeringPrincipal() const
-{
+nsIPrincipal* nsDocShellLoadState::TriggeringPrincipal() const {
   return mTriggeringPrincipal;
 }
 
-void
-nsDocShellLoadState::SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal)
-{
+void nsDocShellLoadState::SetTriggeringPrincipal(
+    nsIPrincipal* aTriggeringPrincipal) {
   mTriggeringPrincipal = aTriggeringPrincipal;
 }
 
-nsIPrincipal*
-nsDocShellLoadState::PrincipalToInherit() const
-{
+nsIPrincipal* nsDocShellLoadState::PrincipalToInherit() const {
   return mPrincipalToInherit;
 }
 
-void
-nsDocShellLoadState::SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit)
-{
+void nsDocShellLoadState::SetPrincipalToInherit(
+    nsIPrincipal* aPrincipalToInherit) {
   mPrincipalToInherit = aPrincipalToInherit;
 }
 
-bool
-nsDocShellLoadState::InheritPrincipal() const
-{
-  return mInheritPrincipal;
-}
+bool nsDocShellLoadState::InheritPrincipal() const { return mInheritPrincipal; }
 
-void
-nsDocShellLoadState::SetInheritPrincipal(bool aInheritPrincipal)
-{
+void nsDocShellLoadState::SetInheritPrincipal(bool aInheritPrincipal) {
   mInheritPrincipal = aInheritPrincipal;
 }
 
-bool
-nsDocShellLoadState::PrincipalIsExplicit() const
-{
+bool nsDocShellLoadState::PrincipalIsExplicit() const {
   return mPrincipalIsExplicit;
 }
 
-void
-nsDocShellLoadState::SetPrincipalIsExplicit(bool aPrincipalIsExplicit)
-{
+void nsDocShellLoadState::SetPrincipalIsExplicit(bool aPrincipalIsExplicit) {
   mPrincipalIsExplicit = aPrincipalIsExplicit;
 }
 
-bool
-nsDocShellLoadState::ForceAllowDataURI() const
-{
+bool nsDocShellLoadState::ForceAllowDataURI() const {
   return mForceAllowDataURI;
 }
 
-void
-nsDocShellLoadState::SetForceAllowDataURI(bool aForceAllowDataURI)
-{
+void nsDocShellLoadState::SetForceAllowDataURI(bool aForceAllowDataURI) {
   mForceAllowDataURI = aForceAllowDataURI;
 }
 
-bool
-nsDocShellLoadState::OriginalFrameSrc() const
-{
-  return mOriginalFrameSrc;
-}
+bool nsDocShellLoadState::OriginalFrameSrc() const { return mOriginalFrameSrc; }
 
-void
-nsDocShellLoadState::SetOriginalFrameSrc(bool aOriginalFrameSrc)
-{
+void nsDocShellLoadState::SetOriginalFrameSrc(bool aOriginalFrameSrc) {
   mOriginalFrameSrc = aOriginalFrameSrc;
 }
 
-uint32_t
-nsDocShellLoadState::LoadType() const
-{
-  return mLoadType;
-}
+uint32_t nsDocShellLoadState::LoadType() const { return mLoadType; }
 
-void
-nsDocShellLoadState::SetLoadType(uint32_t aLoadType)
-{
+void nsDocShellLoadState::SetLoadType(uint32_t aLoadType) {
   mLoadType = aLoadType;
 }
 
-nsISHEntry*
-nsDocShellLoadState::SHEntry() const
-{
-  return mSHEntry;
-}
+nsISHEntry* nsDocShellLoadState::SHEntry() const { return mSHEntry; }
 
-void
-nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry)
-{
+void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
   mSHEntry = aSHEntry;
 }
 
-const nsString&
-nsDocShellLoadState::Target() const
-{
-  return mTarget;
-}
+const nsString& nsDocShellLoadState::Target() const { return mTarget; }
 
-void
-nsDocShellLoadState::SetTarget(const nsAString& aTarget)
-{
+void nsDocShellLoadState::SetTarget(const nsAString& aTarget) {
   mTarget = aTarget;
 }
 
-nsIInputStream*
-nsDocShellLoadState::PostDataStream() const
-{
+nsIInputStream* nsDocShellLoadState::PostDataStream() const {
   return mPostDataStream;
 }
 
-void
-nsDocShellLoadState::SetPostDataStream(nsIInputStream* aStream)
-{
+void nsDocShellLoadState::SetPostDataStream(nsIInputStream* aStream) {
   mPostDataStream = aStream;
 }
 
-nsIInputStream*
-nsDocShellLoadState::HeadersStream() const
-{
+nsIInputStream* nsDocShellLoadState::HeadersStream() const {
   return mHeadersStream;
 }
 
-void
-nsDocShellLoadState::SetHeadersStream(nsIInputStream* aHeadersStream)
-{
+void nsDocShellLoadState::SetHeadersStream(nsIInputStream* aHeadersStream) {
   mHeadersStream = aHeadersStream;
 }
 
-bool
-nsDocShellLoadState::SendReferrer() const
-{
-  return mSendReferrer;
-}
+bool nsDocShellLoadState::SendReferrer() const { return mSendReferrer; }
 
-void
-nsDocShellLoadState::SetSendReferrer(bool aSendReferrer)
-{
+void nsDocShellLoadState::SetSendReferrer(bool aSendReferrer) {
   mSendReferrer = aSendReferrer;
 }
 
-uint32_t
-nsDocShellLoadState::ReferrerPolicy() const
-{
-  return mReferrerPolicy;
-}
+uint32_t nsDocShellLoadState::ReferrerPolicy() const { return mReferrerPolicy; }
 
-void
-nsDocShellLoadState::SetReferrerPolicy(mozilla::net::ReferrerPolicy aReferrerPolicy)
-{
+void nsDocShellLoadState::SetReferrerPolicy(
+    mozilla::net::ReferrerPolicy aReferrerPolicy) {
   mReferrerPolicy = aReferrerPolicy;
 }
 
-bool
-nsDocShellLoadState::IsSrcdocLoad() const
-{
-  return mIsSrcdocLoad;
-}
+bool nsDocShellLoadState::IsSrcdocLoad() const { return mIsSrcdocLoad; }
 
-const nsString&
-nsDocShellLoadState::SrcdocData() const
-{
-  return mSrcdocData;
-}
+const nsString& nsDocShellLoadState::SrcdocData() const { return mSrcdocData; }
 
-void
-nsDocShellLoadState::SetSrcdocData(const nsAString& aSrcdocData)
-{
+void nsDocShellLoadState::SetSrcdocData(const nsAString& aSrcdocData) {
   mSrcdocData = aSrcdocData;
   mIsSrcdocLoad = true;
 }
 
-nsIDocShell*
-nsDocShellLoadState::SourceDocShell() const
-{
+nsIDocShell* nsDocShellLoadState::SourceDocShell() const {
   return mSourceDocShell;
 }
 
-void
-nsDocShellLoadState::SetSourceDocShell(nsIDocShell* aSourceDocShell)
-{
+void nsDocShellLoadState::SetSourceDocShell(nsIDocShell* aSourceDocShell) {
   mSourceDocShell = aSourceDocShell;
 }
 
-nsIURI*
-nsDocShellLoadState::BaseURI() const
-{
-  return mBaseURI;
-}
+nsIURI* nsDocShellLoadState::BaseURI() const { return mBaseURI; }
 
-void
-nsDocShellLoadState::SetBaseURI(nsIURI* aBaseURI)
-{
-  mBaseURI = aBaseURI;
-}
+void nsDocShellLoadState::SetBaseURI(nsIURI* aBaseURI) { mBaseURI = aBaseURI; }
 
-void
-nsDocShellLoadState::GetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>>& aRPURI) const
-{
+void nsDocShellLoadState::GetMaybeResultPrincipalURI(
+    mozilla::Maybe<nsCOMPtr<nsIURI>>& aRPURI) const {
   bool isSome = ResultPrincipalURIIsSome();
   aRPURI.reset();
 
@@ -335,78 +207,46 @@ nsDocShellLoadState::GetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>>
   aRPURI.emplace(std::move(uri));
 }
 
-void
-nsDocShellLoadState::SetMaybeResultPrincipalURI(mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI)
-{
+void nsDocShellLoadState::SetMaybeResultPrincipalURI(
+    mozilla::Maybe<nsCOMPtr<nsIURI>> const& aRPURI) {
   SetResultPrincipalURI(aRPURI.refOr(nullptr));
   SetResultPrincipalURIIsSome(aRPURI.isSome());
 }
 
-uint32_t
-nsDocShellLoadState::LoadFlags() const
-{
-  return mLoadFlags;
-}
+uint32_t nsDocShellLoadState::LoadFlags() const { return mLoadFlags; }
 
-void
-nsDocShellLoadState::SetLoadFlags(uint32_t aLoadFlags)
-{
+void nsDocShellLoadState::SetLoadFlags(uint32_t aLoadFlags) {
   mLoadFlags = aLoadFlags;
 }
 
-bool
-nsDocShellLoadState::FirstParty() const
-{
-  return mFirstParty;
-}
+bool nsDocShellLoadState::FirstParty() const { return mFirstParty; }
 
-void
-nsDocShellLoadState::SetFirstParty(bool aFirstParty)
-{
+void nsDocShellLoadState::SetFirstParty(bool aFirstParty) {
   mFirstParty = aFirstParty;
 }
 
-const nsCString&
-nsDocShellLoadState::TypeHint() const
-{
-  return mTypeHint;
-}
+const nsCString& nsDocShellLoadState::TypeHint() const { return mTypeHint; }
 
-void
-nsDocShellLoadState::SetTypeHint(const nsCString& aTypeHint)
-{
+void nsDocShellLoadState::SetTypeHint(const nsCString& aTypeHint) {
   mTypeHint = aTypeHint;
 }
 
-const nsString&
-nsDocShellLoadState::FileName() const
-{
-  return mFileName;
-}
+const nsString& nsDocShellLoadState::FileName() const { return mFileName; }
 
-void
-nsDocShellLoadState::SetFileName(const nsAString& aFileName)
-{
+void nsDocShellLoadState::SetFileName(const nsAString& aFileName) {
   mFileName = aFileName;
 }
 
-uint32_t
-nsDocShellLoadState::DocShellInternalLoadFlags() const
-{
+uint32_t nsDocShellLoadState::DocShellInternalLoadFlags() const {
   return mDocShellInternalLoadFlags;
 }
 
-void
-nsDocShellLoadState::SetDocShellInternalLoadFlags(uint32_t aFlags)
-{
+void nsDocShellLoadState::SetDocShellInternalLoadFlags(uint32_t aFlags) {
   mDocShellInternalLoadFlags = aFlags;
 }
 
-
-nsresult
-nsDocShellLoadState::SetupInheritingPrincipal(uint32_t aItemType,
-                                              const mozilla::OriginAttributes& aOriginAttributes)
-{
+nsresult nsDocShellLoadState::SetupInheritingPrincipal(
+    uint32_t aItemType, const mozilla::OriginAttributes& aOriginAttributes) {
   // We need a principalToInherit.
   //
   // If principalIsExplicit is not set there are 4 possibilities:
@@ -451,9 +291,8 @@ nsDocShellLoadState::SetupInheritingPrincipal(uint32_t aItemType,
       //
       // We didn't inherit OriginAttributes here as ExpandedPrincipal doesn't
       // have origin attributes.
-      mPrincipalToInherit =
-        NullPrincipal::CreateWithInheritedAttributes(aOriginAttributes,
-                                                     false);
+      mPrincipalToInherit = NullPrincipal::CreateWithInheritedAttributes(
+          aOriginAttributes, false);
       mInheritPrincipal = false;
     }
   }
@@ -467,17 +306,15 @@ nsDocShellLoadState::SetupInheritingPrincipal(uint32_t aItemType,
     mInheritPrincipal = false;
     // If mFirstParty is true and the pref 'privacy.firstparty.isolate' is
     // enabled, we will set firstPartyDomain on the origin attributes.
-    mPrincipalToInherit =
-      NullPrincipal::CreateWithInheritedAttributes(aOriginAttributes,
-                                                   mFirstParty);
+    mPrincipalToInherit = NullPrincipal::CreateWithInheritedAttributes(
+        aOriginAttributes, mFirstParty);
   }
 
   return NS_OK;
 }
 
-nsresult
-nsDocShellLoadState::SetupTriggeringPrincipal(const mozilla::OriginAttributes& aOriginAttributes)
-{
+nsresult nsDocShellLoadState::SetupTriggeringPrincipal(
+    const mozilla::OriginAttributes& aOriginAttributes) {
   // If the triggeringPrincipal is not set, we first try to create a principal
   // from the referrer, since the referrer URI reflects the web origin that
   // triggered the load. If there is no referrer URI, we fall back to using the
@@ -490,7 +327,7 @@ nsDocShellLoadState::SetupTriggeringPrincipal(const mozilla::OriginAttributes& a
   if (!mTriggeringPrincipal) {
     if (mReferrer) {
       mTriggeringPrincipal =
-        BasePrincipal::CreateCodebasePrincipal(mReferrer, aOriginAttributes);
+          BasePrincipal::CreateCodebasePrincipal(mReferrer, aOriginAttributes);
 
       if (!mTriggeringPrincipal) {
         return NS_ERROR_FAILURE;
@@ -505,9 +342,7 @@ nsDocShellLoadState::SetupTriggeringPrincipal(const mozilla::OriginAttributes& a
   return NS_OK;
 }
 
-void
-nsDocShellLoadState::CalculateDocShellInternalLoadFlags()
-{
+void nsDocShellLoadState::CalculateDocShellInternalLoadFlags() {
   MOZ_ASSERT(mDocShellInternalLoadFlags == 0,
              "Shouldn't have any load flags set at this point.");
 
@@ -515,17 +350,17 @@ nsDocShellLoadState::CalculateDocShellInternalLoadFlags()
     MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mPrincipalToInherit),
                "Should not inherit SystemPrincipal");
     mDocShellInternalLoadFlags |=
-      nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
+        nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
   }
 
   if (!mSendReferrer) {
     mDocShellInternalLoadFlags |=
-      nsDocShell::INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
+        nsDocShell::INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
   }
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
     mDocShellInternalLoadFlags |=
-      nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+        nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
   }
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD) {
@@ -534,12 +369,12 @@ nsDocShellLoadState::CalculateDocShellInternalLoadFlags()
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CLASSIFIER) {
     mDocShellInternalLoadFlags |=
-      nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
+        nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
   }
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_FORCE_ALLOW_COOKIES) {
     mDocShellInternalLoadFlags |=
-      nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
+        nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
   }
 
   if (mIsSrcdocLoad) {
@@ -548,11 +383,11 @@ nsDocShellLoadState::CalculateDocShellInternalLoadFlags()
 
   if (mForceAllowDataURI) {
     mDocShellInternalLoadFlags |=
-      nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+        nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
   }
 
   if (mOriginalFrameSrc) {
     mDocShellInternalLoadFlags |=
-      nsDocShell::INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
+        nsDocShell::INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
   }
 }

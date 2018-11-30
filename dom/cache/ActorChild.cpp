@@ -13,9 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-void
-ActorChild::SetWorkerHolder(CacheWorkerHolder* aWorkerHolder)
-{
+void ActorChild::SetWorkerHolder(CacheWorkerHolder* aWorkerHolder) {
   // Some of the Cache actors can have multiple DOM objects associated with
   // them.  In this case the workerHolder will be added multiple times.  This is
   // permitted, but the workerHolder should be the same each time.
@@ -30,9 +28,7 @@ ActorChild::SetWorkerHolder(CacheWorkerHolder* aWorkerHolder)
   }
 }
 
-void
-ActorChild::RemoveWorkerHolder()
-{
+void ActorChild::RemoveWorkerHolder() {
   MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerHolder);
   if (mWorkerHolder) {
     mWorkerHolder->RemoveActor(this);
@@ -40,27 +36,16 @@ ActorChild::RemoveWorkerHolder()
   }
 }
 
-CacheWorkerHolder*
-ActorChild::GetWorkerHolder() const
-{
-  return mWorkerHolder;
-}
+CacheWorkerHolder* ActorChild::GetWorkerHolder() const { return mWorkerHolder; }
 
-bool
-ActorChild::WorkerHolderNotified() const
-{
+bool ActorChild::WorkerHolderNotified() const {
   return mWorkerHolder && mWorkerHolder->Notified();
 }
 
-ActorChild::ActorChild()
-{
-}
+ActorChild::ActorChild() {}
 
-ActorChild::~ActorChild()
-{
-  MOZ_DIAGNOSTIC_ASSERT(!mWorkerHolder);
-}
+ActorChild::~ActorChild() { MOZ_DIAGNOSTIC_ASSERT(!mWorkerHolder); }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

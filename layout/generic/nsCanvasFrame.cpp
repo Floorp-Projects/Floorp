@@ -43,41 +43,35 @@ using namespace mozilla::layout;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-nsCanvasFrame*
-NS_NewCanvasFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsCanvasFrame* NS_NewCanvasFrame(nsIPresShell* aPresShell,
+                                 ComputedStyle* aStyle) {
   return new (aPresShell) nsCanvasFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
 NS_QUERYFRAME_HEAD(nsCanvasFrame)
-  NS_QUERYFRAME_ENTRY(nsCanvasFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-  NS_QUERYFRAME_ENTRY(nsIPopupContainer)
+NS_QUERYFRAME_ENTRY(nsCanvasFrame)
+NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+NS_QUERYFRAME_ENTRY(nsIPopupContainer)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-void
-nsCanvasFrame::ShowCustomContentContainer()
-{
+void nsCanvasFrame::ShowCustomContentContainer() {
   if (mCustomContentContainer) {
-    mCustomContentContainer->UnsetAttr(kNameSpaceID_None, nsGkAtoms::hidden, true);
+    mCustomContentContainer->UnsetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
+                                       true);
   }
 }
 
-void
-nsCanvasFrame::HideCustomContentContainer()
-{
+void nsCanvasFrame::HideCustomContentContainer() {
   if (mCustomContentContainer) {
     mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
-                                     NS_LITERAL_STRING("true"),
-                                     true);
+                                     NS_LITERAL_STRING("true"), true);
   }
 }
 
-nsresult
-nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
-{
+nsresult nsCanvasFrame::CreateAnonymousContent(
+    nsTArray<ContentInfo>& aElements) {
   MOZ_ASSERT(!mCustomContentContainer);
 
   if (!mContent) {
@@ -87,7 +81,7 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsCOMPtr<nsIDocument> doc = mContent->OwnerDoc();
 
   RefPtr<AccessibleCaretEventHub> eventHub =
-    PresShell()->GetAccessibleCaretEventHub();
+      PresShell()->GetAccessibleCaretEventHub();
 
   // This will go through InsertAnonymousContent and such, and we don't really
   // want it to end up inserting into our content container.
@@ -107,10 +101,10 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   // particular case, so it's OK.
   mCustomContentContainer->SetProperty(nsGkAtoms::restylableAnonymousNode,
                                        reinterpret_cast<void*>(true));
-#endif // DEBUG
+#endif  // DEBUG
 
-  mCustomContentContainer->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
-                                       reinterpret_cast<void*>(true));
+  mCustomContentContainer->SetProperty(
+      nsGkAtoms::docLevelNativeAnonymousContent, reinterpret_cast<void*>(true));
 
   // This will usually be done by the caller, but in this case we do it here,
   // since we reuse the document's AnoymousContent list, and those survive
@@ -125,9 +119,9 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
                                    NS_LITERAL_STRING("presentation"), false);
 
-  mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                   NS_LITERAL_STRING("moz-custom-content-container"),
-                                   false);
+  mCustomContentContainer->SetAttr(
+      kNameSpaceID_None, nsGkAtoms::_class,
+      NS_LITERAL_STRING("moz-custom-content-container"), false);
 
   // Only create a frame for mCustomContentContainer if it has some children.
   if (doc->GetAnonymousContents().IsEmpty()) {
@@ -160,20 +154,17 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
       doc->AllowXULXBL() && !doc->IsXULDocument()) {
     nsNodeInfoManager* nodeInfoManager = doc->NodeInfoManager();
     RefPtr<NodeInfo> nodeInfo =
-      nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup,
-                                   nullptr, kNameSpaceID_XUL,
-                                   nsINode::ELEMENT_NODE);
+        nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup, nullptr,
+                                     kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
 
     nsresult rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent),
-                                   nodeInfo.forget(),
-                                   dom::NOT_FROM_PARSER);
+                                   nodeInfo.forget(), dom::NOT_FROM_PARSER);
     NS_ENSURE_SUCCESS(rv, rv);
 
     aElements.AppendElement(mPopupgroupContent);
 
-    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::tooltip, nullptr,
-                                          kNameSpaceID_XUL,
-                                          nsINode::ELEMENT_NODE);
+    nodeInfo = nodeInfoManager->GetNodeInfo(
+        nsGkAtoms::tooltip, nullptr, kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
 
     rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo.forget(),
                           dom::NOT_FROM_PARSER);
@@ -192,9 +183,8 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   return NS_OK;
 }
 
-void
-nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter)
-{
+void nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                             uint32_t aFilter) {
   if (mCustomContentContainer) {
     aElements.AppendElement(mCustomContentContainer);
   }
@@ -206,11 +196,10 @@ nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32
   }
 }
 
-void
-nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
-{
+void nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                PostDestroyData& aPostDestroyData) {
   nsIScrollableFrame* sf =
-    PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+      PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
     sf->RemoveScrollPositionListener(this);
   }
@@ -224,14 +213,12 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestro
   }
 
   MOZ_ASSERT(!mPopupSetFrame ||
-             nsLayoutUtils::IsProperAncestorFrame(this, mPopupSetFrame),
+                 nsLayoutUtils::IsProperAncestorFrame(this, mPopupSetFrame),
              "Someone forgot to clear popup set frame");
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-void
-nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY)
-{
+void nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY) {
   if (mDoPaintFocus) {
     mDoPaintFocus = false;
     PresShell()->GetRootFrame()->InvalidateFrameSubtree();
@@ -239,15 +226,14 @@ nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY)
 }
 
 NS_IMETHODIMP
-nsCanvasFrame::SetHasFocus(bool aHasFocus)
-{
+nsCanvasFrame::SetHasFocus(bool aHasFocus) {
   if (mDoPaintFocus != aHasFocus) {
     mDoPaintFocus = aHasFocus;
     PresShell()->GetRootFrame()->InvalidateFrameSubtree();
 
     if (!mAddedScrollPositionListener) {
       nsIScrollableFrame* sf =
-        PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+          PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
       if (sf) {
         sf->AddScrollPositionListener(this);
         mAddedScrollPositionListener = true;
@@ -257,21 +243,16 @@ nsCanvasFrame::SetHasFocus(bool aHasFocus)
   return NS_OK;
 }
 
-void
-nsCanvasFrame::SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList)
-{
-  NS_ASSERTION(aListID != kPrincipalList ||
-               aChildList.IsEmpty() || aChildList.OnlyChild(),
+void nsCanvasFrame::SetInitialChildList(ChildListID aListID,
+                                        nsFrameList& aChildList) {
+  NS_ASSERTION(aListID != kPrincipalList || aChildList.IsEmpty() ||
+                   aChildList.OnlyChild(),
                "Primary child list can have at most one frame in it");
   nsContainerFrame::SetInitialChildList(aListID, aChildList);
   MaybePropagateRootElementWritingMode();
 }
 
-void
-nsCanvasFrame::AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList)
-{
+void nsCanvasFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
 #ifdef DEBUG
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
   if (!mFrames.IsEmpty()) {
@@ -288,11 +269,8 @@ nsCanvasFrame::AppendFrames(ChildListID     aListID,
   MaybePropagateRootElementWritingMode();
 }
 
-void
-nsCanvasFrame::InsertFrames(ChildListID     aListID,
-                            nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList)
-{
+void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                                 nsFrameList& aFrameList) {
   // Because we only support a single child frame inserting is the same
   // as appending
   MOZ_ASSERT(!aPrevFrame, "unexpected previous sibling frame");
@@ -301,22 +279,18 @@ nsCanvasFrame::InsertFrames(ChildListID     aListID,
 }
 
 #ifdef DEBUG
-void
-nsCanvasFrame::RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame)
-{
+void nsCanvasFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
 #endif
 
-nsRect nsCanvasFrame::CanvasArea() const
-{
+nsRect nsCanvasFrame::CanvasArea() const {
   // Not clear which overflow rect we want here, but it probably doesn't
   // matter.
   nsRect result(GetVisualOverflowRect());
 
-  nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
     nsRect portRect = scrollableFrame->GetScrollPortRect();
     result.UnionRect(result, nsRect(nsPoint(0, 0), portRect.Size()));
@@ -324,38 +298,24 @@ nsRect nsCanvasFrame::CanvasArea() const
   return result;
 }
 
-nsPopupSetFrame*
-nsCanvasFrame::GetPopupSetFrame()
-{
-  return mPopupSetFrame;
-}
+nsPopupSetFrame* nsCanvasFrame::GetPopupSetFrame() { return mPopupSetFrame; }
 
-void
-nsCanvasFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
-{
+void nsCanvasFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet) {
   MOZ_ASSERT(!aPopupSet || !mPopupSetFrame,
              "Popup set is already defined! Only 1 allowed.");
   mPopupSetFrame = aPopupSet;
 }
 
-Element*
-nsCanvasFrame::GetDefaultTooltip()
-{
-  return mTooltipContent;
-}
+Element* nsCanvasFrame::GetDefaultTooltip() { return mTooltipContent; }
 
-void
-nsCanvasFrame::SetDefaultTooltip(Element* aTooltip)
-{
+void nsCanvasFrame::SetDefaultTooltip(Element* aTooltip) {
   MOZ_ASSERT(!aTooltip || aTooltip == mTooltipContent,
              "Default tooltip should be anonymous content tooltip.");
   mTooltipContent = aTooltip;
 }
 
-void
-nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
-                                      gfxContext* aCtx)
-{
+void nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
+                                           gfxContext* aCtx) {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
@@ -363,22 +323,20 @@ nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     DrawTarget* drawTarget = aCtx->GetDrawTarget();
     int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
     Rect devPxRect =
-      NSRectToSnappedRect(bgClipRect, appUnitsPerDevPixel, *drawTarget);
+        NSRectToSnappedRect(bgClipRect, appUnitsPerDevPixel, *drawTarget);
     drawTarget->FillRect(devPxRect, ColorPattern(ToDeviceColor(mColor)));
   }
 }
 
-already_AddRefed<Layer>
-nsDisplayCanvasBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                           LayerManager* aManager,
-                                           const ContainerLayerParameters& aContainerParameters)
-{
+already_AddRefed<Layer> nsDisplayCanvasBackgroundColor::BuildLayer(
+    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+    const ContainerLayerParameters& aContainerParameters) {
   if (NS_GET_A(mColor) == 0) {
     return nullptr;
   }
 
-  RefPtr<ColorLayer> layer = static_cast<ColorLayer*>
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  RefPtr<ColorLayer> layer = static_cast<ColorLayer*>(
+      aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
   if (!layer) {
     layer = aManager->CreateColorLayer();
     if (!layer) {
@@ -394,53 +352,44 @@ nsDisplayCanvasBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
   layer->SetBounds(bgClipRect.ToNearestPixels(appUnitsPerDevPixel));
-  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
-                                                      aContainerParameters.mOffset.y, 0));
+  layer->SetBaseTransform(gfx::Matrix4x4::Translation(
+      aContainerParameters.mOffset.x, aContainerParameters.mOffset.y, 0));
 
   return layer.forget();
 }
 
-bool
-nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                                        const StackingContextHelper& aSc,
-                                                        WebRenderLayerManager* aManager,
-                                                        nsDisplayListBuilder* aDisplayListBuilder)
-{
+bool nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc, WebRenderLayerManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
   ContainerLayerParameters parameter;
 
-  nsCanvasFrame *frame = static_cast<nsCanvasFrame *>(mFrame);
+  nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
-  LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(
-          bgClipRect, appUnitsPerDevPixel);
+  LayoutDeviceRect rect =
+      LayoutDeviceRect::FromAppUnits(bgClipRect, appUnitsPerDevPixel);
 
   wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(rect);
-  aBuilder.PushRect(roundedRect,
-                    roundedRect,
-                    !BackfaceIsHidden(),
+  aBuilder.PushRect(roundedRect, roundedRect, !BackfaceIsHidden(),
                     wr::ToColorF(ToDeviceColor(mColor)));
   return true;
 }
 
 #ifdef MOZ_DUMP_PAINTING
-void
-nsDisplayCanvasBackgroundColor::WriteDebugInfo(std::stringstream& aStream)
-{
-  aStream << " (rgba "
-          << (int)NS_GET_R(mColor) << ","
-          << (int)NS_GET_G(mColor) << ","
-          << (int)NS_GET_B(mColor) << ","
-          << (int)NS_GET_A(mColor) << ")";
+void nsDisplayCanvasBackgroundColor::WriteDebugInfo(
+    std::stringstream& aStream) {
+  aStream << " (rgba " << (int)NS_GET_R(mColor) << "," << (int)NS_GET_G(mColor)
+          << "," << (int)NS_GET_B(mColor) << "," << (int)NS_GET_A(mColor)
+          << ")";
 }
 #endif
 
-void
-nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
-                                      gfxContext* aCtx)
-{
+void nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
+                                           gfxContext* aCtx) {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
@@ -448,46 +397,37 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   PaintInternal(aBuilder, aCtx, GetPaintRect(), &bgClipRect);
 }
 
-bool
-nsDisplayCanvasBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
-                                                           const nsRect& aClipRect,
-                                                           gfxRect* aDestRect)
-{
-  if (!mBackgroundStyle)
-    return false;
+bool nsDisplayCanvasBackgroundImage::IsSingleFixedPositionImage(
+    nsDisplayListBuilder* aBuilder, const nsRect& aClipRect,
+    gfxRect* aDestRect) {
+  if (!mBackgroundStyle) return false;
 
   if (mBackgroundStyle->StyleBackground()->mImage.mLayers.Length() != 1)
     return false;
 
-
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
+  const nsStyleImageLayers::Layer& layer =
+      mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
 
-  if (layer.mAttachment != StyleImageLayerAttachment::Fixed)
-    return false;
+  if (layer.mAttachment != StyleImageLayerAttachment::Fixed) return false;
 
-   nsBackgroundLayerState state =
-     nsCSSRendering::PrepareImageLayer(presContext, mFrame, flags,
-                                       borderArea, aClipRect, layer);
-
+  nsBackgroundLayerState state = nsCSSRendering::PrepareImageLayer(
+      presContext, mFrame, flags, borderArea, aClipRect, layer);
 
   // We only care about images here, not gradients.
-  if (!mIsRasterImage)
-    return false;
+  if (!mIsRasterImage) return false;
 
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-  *aDestRect = nsLayoutUtils::RectToGfxRect(state.mFillArea, appUnitsPerDevPixel);
+  *aDestRect =
+      nsLayoutUtils::RectToGfxRect(state.mFillArea, appUnitsPerDevPixel);
 
   return true;
 }
 
-
-void
-nsDisplayCanvasThemedBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                       gfxContext* aCtx)
-{
+void nsDisplayCanvasThemedBackground::Paint(nsDisplayListBuilder* aBuilder,
+                                            gfxContext* aCtx) {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
@@ -501,19 +441,15 @@ nsDisplayCanvasThemedBackground::Paint(nsDisplayListBuilder* aBuilder,
  * The only reason this can't use nsDisplayGeneric is overriding GetBounds.
  */
 class nsDisplayCanvasFocus : public nsDisplayItem {
-public:
-  nsDisplayCanvasFocus(nsDisplayListBuilder* aBuilder, nsCanvasFrame *aFrame)
-    : nsDisplayItem(aBuilder, aFrame)
-  {
+ public:
+  nsDisplayCanvasFocus(nsDisplayListBuilder* aBuilder, nsCanvasFrame* aFrame)
+      : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayCanvasFocus);
   }
-  virtual ~nsDisplayCanvasFocus() {
-    MOZ_COUNT_DTOR(nsDisplayCanvasFocus);
-  }
+  virtual ~nsDisplayCanvasFocus() { MOZ_COUNT_DTOR(nsDisplayCanvasFocus); }
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override
-  {
+                           bool* aSnap) const override {
     *aSnap = false;
     // This is an overestimate, but that's not a problem.
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
@@ -521,8 +457,7 @@ public:
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override
-  {
+                     gfxContext* aCtx) override {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     frame->PaintFocus(aCtx->GetDrawTarget(), ToReferenceFrame());
   }
@@ -530,10 +465,8 @@ public:
   NS_DISPLAY_DECL_NAME("CanvasFocus", TYPE_CANVAS_FOCUS)
 };
 
-void
-nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsDisplayListSet& aLists)
-{
+void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                     const nsDisplayListSet& aLists) {
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aLists);
   }
@@ -549,7 +482,8 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     ComputedStyle* bg = nullptr;
     nsIFrame* dependentFrame = nullptr;
     bool isThemed = IsThemed();
-    if (!isThemed && nsCSSRendering::FindBackgroundFrame(this, &dependentFrame)) {
+    if (!isThemed &&
+        nsCSSRendering::FindBackgroundFrame(this, &dependentFrame)) {
       bg = dependentFrame->Style();
       if (dependentFrame == this) {
         dependentFrame = nullptr;
@@ -560,7 +494,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (isThemed) {
       aLists.BorderBackground()->AppendToTop(
-        MakeDisplayItem<nsDisplayCanvasThemedBackground>(aBuilder, this));
+          MakeDisplayItem<nsDisplayCanvasThemedBackground>(aBuilder, this));
       return;
     }
 
@@ -568,8 +502,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       return;
     }
 
-    const ActiveScrolledRoot* asr =
-      aBuilder->CurrentActiveScrolledRoot();
+    const ActiveScrolledRoot* asr = aBuilder->CurrentActiveScrolledRoot();
 
     bool needBlendContainer = false;
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
@@ -584,54 +517,59 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         needBlendContainer = true;
       }
 
-      nsRect bgRect = GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+      nsRect bgRect =
+          GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
 
       const ActiveScrolledRoot* thisItemASR = asr;
       nsDisplayList thisItemList;
       nsDisplayBackgroundImage::InitData bgData =
-        nsDisplayBackgroundImage::GetInitData(aBuilder, this, i, bgRect, bg);
+          nsDisplayBackgroundImage::GetInitData(aBuilder, this, i, bgRect, bg);
 
       if (bgData.shouldFixToViewport) {
-
         auto* displayData = aBuilder->GetCurrentFixedBackgroundDisplayData();
-        nsDisplayListBuilder::AutoBuildingDisplayList
-          buildingDisplayList(aBuilder, this, aBuilder->GetVisibleRect(), aBuilder->GetDirtyRect(), false);
+        nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
+            aBuilder, this, aBuilder->GetVisibleRect(),
+            aBuilder->GetDirtyRect(), false);
 
         DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-        nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
+        nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(
+            aBuilder);
         if (displayData) {
-          nsPoint offset = GetOffsetTo(PresContext()->GetPresShell()->GetRootFrame());
+          nsPoint offset =
+              GetOffsetTo(PresContext()->GetPresShell()->GetRootFrame());
           aBuilder->SetVisibleRect(displayData->mVisibleRect + offset);
           aBuilder->SetDirtyRect(displayData->mDirtyRect + offset);
 
           clipState.SetClipChainForContainingBlockDescendants(
-            displayData->mContainingBlockClipChain);
+              displayData->mContainingBlockClipChain);
           asrSetter.SetCurrentActiveScrolledRoot(
-            displayData->mContainingBlockActiveScrolledRoot);
+              displayData->mContainingBlockActiveScrolledRoot);
           thisItemASR = displayData->mContainingBlockActiveScrolledRoot;
         }
         nsDisplayCanvasBackgroundImage* bgItem = nullptr;
         {
           DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
           bgImageClip.Clear();
-          bgItem = MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
+          bgItem =
+              MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
           bgItem->SetDependentFrame(aBuilder, dependentFrame);
         }
         thisItemList.AppendToTop(
-          nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
+            nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this,
+                                                             bgItem, i));
 
       } else {
-        nsDisplayCanvasBackgroundImage* bgItem = MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
+        nsDisplayCanvasBackgroundImage* bgItem =
+            MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
         bgItem->SetDependentFrame(aBuilder, dependentFrame);
         thisItemList.AppendToTop(bgItem);
       }
 
       if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
         DisplayListClipState::AutoSaveRestore blendClip(aBuilder);
-        thisItemList.AppendToTop(
-          MakeDisplayItem<nsDisplayBlendMode>(aBuilder, this, &thisItemList,
-                                              layers.mLayers[i].mBlendMode,
-                                              thisItemASR, i + 1));
+        thisItemList.AppendToTop(MakeDisplayItem<nsDisplayBlendMode>(
+            aBuilder, this, &thisItemList, layers.mLayers[i].mBlendMode,
+            thisItemASR, i + 1));
       }
       aLists.BorderBackground()->AppendToTop(&thisItemList);
     }
@@ -640,9 +578,8 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       const ActiveScrolledRoot* containerASR = contASRTracker.GetContainerASR();
       DisplayListClipState::AutoSaveRestore blendContainerClip(aBuilder);
       aLists.BorderBackground()->AppendToTop(
-        nsDisplayBlendContainer::CreateForBackgroundBlendMode(aBuilder, this,
-                                                              aLists.BorderBackground(),
-                                                              containerASR));
+          nsDisplayBlendContainer::CreateForBackgroundBlendMode(
+              aBuilder, this, aLists.BorderBackground(), containerASR));
     }
   }
 
@@ -653,8 +590,8 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 #ifdef DEBUG_CANVAS_FOCUS
   nsCOMPtr<nsIContent> focusContent;
-  aPresContext->EventStateManager()->
-    GetFocusedContent(getter_AddRefs(focusContent));
+  aPresContext->EventStateManager()->GetFocusedContent(
+      getter_AddRefs(focusContent));
 
   bool hasFocus = false;
   nsCOMPtr<nsISupports> container;
@@ -664,29 +601,25 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     docShell->GetHasFocus(&hasFocus);
     nsRect dirty = aBuilder->GetDirtyRect();
     printf("%p - nsCanvasFrame::Paint R:%d,%d,%d,%d  DR: %d,%d,%d,%d\n", this,
-            mRect.x, mRect.y, mRect.width, mRect.height,
-            dirty.x, dirty.y, dirty.width, dirty.height);
+           mRect.x, mRect.y, mRect.width, mRect.height, dirty.x, dirty.y,
+           dirty.width, dirty.height);
   }
-  printf("%p - Focus: %s   c: %p  DoPaint:%s\n", docShell.get(), hasFocus?"Y":"N",
-         focusContent.get(), mDoPaintFocus?"Y":"N");
+  printf("%p - Focus: %s   c: %p  DoPaint:%s\n", docShell.get(),
+         hasFocus ? "Y" : "N", focusContent.get(), mDoPaintFocus ? "Y" : "N");
 #endif
 
-  if (!mDoPaintFocus)
-    return;
+  if (!mDoPaintFocus) return;
   // Only paint the focus if we're visible
-  if (!StyleVisibility()->IsVisible())
-    return;
+  if (!StyleVisibility()->IsVisible()) return;
 
   aLists.Outlines()->AppendToTop(
-    MakeDisplayItem<nsDisplayCanvasFocus>(aBuilder, this));
+      MakeDisplayItem<nsDisplayCanvasFocus>(aBuilder, this));
 }
 
-void
-nsCanvasFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt)
-{
+void nsCanvasFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
   nsRect focusRect(aPt, GetSize());
 
-  nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
     nsRect portRect = scrollableFrame->GetScrollPortRect();
     focusRect.width = portRect.width;
@@ -694,8 +627,8 @@ nsCanvasFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt)
     focusRect.MoveBy(scrollableFrame->GetScrollPosition());
   }
 
- // XXX use the root frame foreground color, but should we find BODY frame
- // for HTML documents?
+  // XXX use the root frame foreground color, but should we find BODY frame
+  // for HTML documents?
   nsIFrame* root = mFrames.FirstChild();
   const nsStyleColor* color = root ? root->StyleColor() : StyleColor();
   if (!color) {
@@ -703,13 +636,12 @@ nsCanvasFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt)
     return;
   }
 
-  nsCSSRendering::PaintFocus(PresContext(), aDrawTarget,
-                             focusRect, color->mColor);
+  nsCSSRendering::PaintFocus(PresContext(), aDrawTarget, focusRect,
+                             color->mColor);
 }
 
-/* virtual */ nscoord
-nsCanvasFrame::GetMinISize(gfxContext *aRenderingContext)
-{
+/* virtual */ nscoord nsCanvasFrame::GetMinISize(
+    gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
   if (mFrames.IsEmpty())
@@ -719,9 +651,8 @@ nsCanvasFrame::GetMinISize(gfxContext *aRenderingContext)
   return result;
 }
 
-/* virtual */ nscoord
-nsCanvasFrame::GetPrefISize(gfxContext *aRenderingContext)
-{
+/* virtual */ nscoord nsCanvasFrame::GetPrefISize(
+    gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
   if (mFrames.IsEmpty())
@@ -731,20 +662,17 @@ nsCanvasFrame::GetPrefISize(gfxContext *aRenderingContext)
   return result;
 }
 
-void
-nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus)
-{
+void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
+                           ReflowOutput& aDesiredSize,
+                           const ReflowInput& aReflowInput,
+                           nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsCanvasFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE_REFLOW_IN("nsCanvasFrame::Reflow");
 
-  nsCanvasFrame* prevCanvasFrame = static_cast<nsCanvasFrame*>
-                                               (GetPrevInFlow());
+  nsCanvasFrame* prevCanvasFrame = static_cast<nsCanvasFrame*>(GetPrevInFlow());
   if (prevCanvasFrame) {
     AutoFrameListPtr overflow(aPresContext,
                               prevCanvasFrame->StealOverflowFrames());
@@ -779,9 +707,9 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     nsIFrame* kidFrame = mFrames.FirstChild();
     bool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
 
-    ReflowInput
-      kidReflowInput(aPresContext, aReflowInput, kidFrame,
-                     aReflowInput.AvailableSize(kidFrame->GetWritingMode()));
+    ReflowInput kidReflowInput(
+        aPresContext, aReflowInput, kidFrame,
+        aReflowInput.AvailableSize(kidFrame->GetWritingMode()));
 
     if (aReflowInput.IsBResizeForWM(kidReflowInput.GetWritingMode()) &&
         (kidFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
@@ -800,8 +728,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     kidReflowInput.ApplyRelativePositioning(&kidPt, containerSize);
 
     // Reflow the frame
-    ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowInput,
-                kidWM, kidPt, containerSize, 0, aStatus);
+    ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowInput, kidWM,
+                kidPt, containerSize, 0, aStatus);
 
     // Complete the reflow and position and size the child frame
     FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, &kidReflowInput,
@@ -809,11 +737,13 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
     if (!aStatus.IsFullyComplete()) {
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
-      NS_ASSERTION(nextFrame || aStatus.NextInFlowNeedsReflow(),
-        "If it's incomplete and has no nif yet, it must flag a nif reflow.");
+      NS_ASSERTION(
+          nextFrame || aStatus.NextInFlowNeedsReflow(),
+          "If it's incomplete and has no nif yet, it must flag a nif reflow.");
       if (!nextFrame) {
-        nextFrame = aPresContext->PresShell()->FrameConstructor()->
-          CreateContinuingFrame(aPresContext, kidFrame, this);
+        nextFrame = aPresContext->PresShell()
+                        ->FrameConstructor()
+                        ->CreateContinuingFrame(aPresContext, kidFrame, this);
         SetOverflowFrames(nsFrameList(nextFrame, nextFrame));
         // Root overflow containers will be normal children of
         // the canvas frame, but that's ok because there
@@ -825,8 +755,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       }
     }
 
-    // If the child frame was just inserted, then we're responsible for making sure
-    // it repaints
+    // If the child frame was just inserted, then we're responsible for making
+    // sure it repaints
     if (kidDirty) {
       // But we have a new child, which will affect our background, so
       // invalidate our whole rect.
@@ -846,64 +776,62 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     LogicalSize finalSize(wm);
     finalSize.ISize(wm) = aReflowInput.ComputedISize();
     if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
-      finalSize.BSize(wm) = kidFrame->GetLogicalSize(wm).BSize(wm) +
-        kidReflowInput.ComputedLogicalMargin().BStartEnd(wm);
+      finalSize.BSize(wm) =
+          kidFrame->GetLogicalSize(wm).BSize(wm) +
+          kidReflowInput.ComputedLogicalMargin().BStartEnd(wm);
     } else {
       finalSize.BSize(wm) = aReflowInput.ComputedBSize();
     }
 
     aDesiredSize.SetSize(wm, finalSize);
     aDesiredSize.SetOverflowAreasToDesiredBounds();
-    aDesiredSize.mOverflowAreas.UnionWith(
-      kidDesiredSize.mOverflowAreas + kidFrame->GetPosition());
+    aDesiredSize.mOverflowAreas.UnionWith(kidDesiredSize.mOverflowAreas +
+                                          kidFrame->GetPosition());
   }
 
   if (prevCanvasFrame) {
     ReflowOverflowContainerChildren(aPresContext, aReflowInput,
-                                    aDesiredSize.mOverflowAreas, 0,
-                                    aStatus);
+                                    aDesiredSize.mOverflowAreas, 0, aStatus);
   }
 
   if (mPopupSetFrame) {
-    MOZ_ASSERT(mFrames.ContainsFrame(mPopupSetFrame), "Only normal flow supported.");
+    MOZ_ASSERT(mFrames.ContainsFrame(mPopupSetFrame),
+               "Only normal flow supported.");
     nsReflowStatus popupStatus;
     ReflowOutput popupDesiredSize(aReflowInput.GetWritingMode());
     WritingMode wm = mPopupSetFrame->GetWritingMode();
     LogicalSize availSize = aReflowInput.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    ReflowInput popupReflowInput(aPresContext, aReflowInput,
-                                 mPopupSetFrame, availSize);
+    ReflowInput popupReflowInput(aPresContext, aReflowInput, mPopupSetFrame,
+                                 availSize);
     ReflowChild(mPopupSetFrame, aPresContext, popupDesiredSize,
                 popupReflowInput, 0, 0, NS_FRAME_NO_MOVE_FRAME, popupStatus);
     FinishReflowChild(mPopupSetFrame, aPresContext, popupDesiredSize,
                       &popupReflowInput, 0, 0, NS_FRAME_NO_MOVE_FRAME);
   }
 
-  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
+  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput,
+                                 aStatus);
 
   NS_FRAME_TRACE_REFLOW_OUT("nsCanvasFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-nsresult
-nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent, nsIContent** aContent)
-{
+nsresult nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent,
+                                           nsIContent** aContent) {
   NS_ENSURE_ARG_POINTER(aContent);
   nsresult rv = nsFrame::GetContentForEvent(aEvent, aContent);
   if (NS_FAILED(rv) || !*aContent) {
     nsIFrame* kid = mFrames.FirstChild();
     if (kid) {
-      rv = kid->GetContentForEvent(aEvent,
-                                   aContent);
+      rv = kid->GetContentForEvent(aEvent, aContent);
     }
   }
 
   return rv;
 }
 
-void
-nsCanvasFrame::MaybePropagateRootElementWritingMode()
-{
+void nsCanvasFrame::MaybePropagateRootElementWritingMode() {
   nsIFrame* child = PrincipalChildList().FirstChild();
   if (child && child->GetContent() &&
       child->GetContent() == PresContext()->Document()->GetRootElement()) {
@@ -913,9 +841,7 @@ nsCanvasFrame::MaybePropagateRootElementWritingMode()
 }
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsCanvasFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsCanvasFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("Canvas"), aResult);
 }
 #endif

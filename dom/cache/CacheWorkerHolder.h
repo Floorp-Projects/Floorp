@@ -20,15 +20,13 @@ namespace cache {
 
 class ActorChild;
 
-class CacheWorkerHolder final : public WorkerHolder
-{
-public:
-  static already_AddRefed<CacheWorkerHolder>
-  Create(WorkerPrivate* aWorkerPrivate,
-         Behavior aBehavior);
+class CacheWorkerHolder final : public WorkerHolder {
+ public:
+  static already_AddRefed<CacheWorkerHolder> Create(
+      WorkerPrivate* aWorkerPrivate, Behavior aBehavior);
 
-  static already_AddRefed<CacheWorkerHolder>
-  PreferBehavior(CacheWorkerHolder* aCurrentHolder, Behavior aBehavior);
+  static already_AddRefed<CacheWorkerHolder> PreferBehavior(
+      CacheWorkerHolder* aCurrentHolder, Behavior aBehavior);
 
   void AddActor(ActorChild* aActor);
   void RemoveActor(ActorChild* aActor);
@@ -38,19 +36,19 @@ public:
   // WorkerHolder methods
   virtual bool Notify(WorkerStatus aStatus) override;
 
-private:
+ private:
   explicit CacheWorkerHolder(Behavior aBehavior);
   ~CacheWorkerHolder();
 
   nsTArray<ActorChild*> mActorList;
   bool mNotified;
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::cache::CacheWorkerHolder)
 };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_CacheWorkerHolder_h
+#endif  // mozilla_dom_cache_CacheWorkerHolder_h

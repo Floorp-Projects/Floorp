@@ -25,19 +25,11 @@ class EventStateManager;
  * useful for arguments and results of some methods.
  */
 
-struct DeltaValues
-{
-  DeltaValues()
-    : deltaX(0.0)
-    , deltaY(0.0)
-  {
-  }
+struct DeltaValues {
+  DeltaValues() : deltaX(0.0), deltaY(0.0) {}
 
   DeltaValues(double aDeltaX, double aDeltaY)
-    : deltaX(aDeltaX)
-    , deltaY(aDeltaY)
-  {
-  }
+      : deltaX(aDeltaX), deltaY(aDeltaY) {}
 
   explicit DeltaValues(WidgetWheelEvent* aEvent);
 
@@ -50,31 +42,30 @@ struct DeltaValues
  * wheel events.
  */
 
-class WheelHandlingUtils
-{
-public:
+class WheelHandlingUtils {
+ public:
   /**
    * Returns true if aFrame is a scrollable frame and it can be scrolled to
    * either aDirectionX or aDirectionY along each axis.  Or if aFrame is a
    * plugin frame (in this case, aDirectionX and aDirectionY are ignored).
    * Otherwise, false.
    */
-  static bool CanScrollOn(nsIFrame* aFrame,
-                          double aDirectionX, double aDirectionY);
+  static bool CanScrollOn(nsIFrame* aFrame, double aDirectionX,
+                          double aDirectionY);
   /**
    * Returns true if the scrollable frame can be scrolled to either aDirectionX
    * or aDirectionY along each axis.  Otherwise, false.
    */
-  static bool CanScrollOn(nsIScrollableFrame* aScrollFrame,
-                          double aDirectionX, double aDirectionY);
+  static bool CanScrollOn(nsIScrollableFrame* aScrollFrame, double aDirectionX,
+                          double aDirectionY);
 
   // For more details about the concept of a disregarded direction, refer to the
   // code in struct mozilla::layers::ScrollMetadata which defines
   // mDisregardedDirection.
-  static Maybe<layers::ScrollDirection>
-  GetDisregardedWheelScrollDirection(const nsIFrame* aFrame);
+  static Maybe<layers::ScrollDirection> GetDisregardedWheelScrollDirection(
+      const nsIFrame* aFrame);
 
-private:
+ private:
   static bool CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax,
                                double aDirection);
 };
@@ -86,9 +77,8 @@ private:
  * operation of wheel at the point should show temporarily.
  */
 
-class ScrollbarsForWheel
-{
-public:
+class ScrollbarsForWheel {
+ public:
   static void PrepareToScrollText(EventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
                                   WidgetWheelEvent* aEvent);
@@ -99,7 +89,7 @@ public:
   static bool IsActive();
   static void OwnWheelTransaction(bool aOwn);
 
-protected:
+ protected:
   static const size_t kNumberOfTargets = 4;
   static const DeltaValues directions[kNumberOfTargets];
   static AutoWeakFrame sActiveOwner;
@@ -107,15 +97,13 @@ protected:
   static bool sHadWheelStart;
   static bool sOwnWheelTransaction;
 
-
   /**
    * These two methods are called upon eWheelOperationStart/eWheelOperationEnd
    * events to show/hide the right scrollbars.
    */
   static void TemporarilyActivateAllPossibleScrollTargets(
-                EventStateManager* aESM,
-                nsIFrame* aTargetFrame,
-                WidgetWheelEvent* aEvent);
+      EventStateManager* aESM, nsIFrame* aTargetFrame,
+      WidgetWheelEvent* aEvent);
   static void DeactivateAllTemporarilyActivatedScrollTargets();
 };
 
@@ -127,9 +115,8 @@ protected:
  * Additionally, this class also manages wheel scroll speed acceleration.
  */
 
-class WheelTransaction
-{
-public:
+class WheelTransaction {
+ public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
   static void EndTransaction();
   /**
@@ -142,15 +129,13 @@ public:
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
                                       AutoWeakFrame& aTargetWeakFrame);
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
-                                      nsIFrame* aTargetFrame)
-  {
+                                      nsIFrame* aTargetFrame) {
     AutoWeakFrame targetWeakFrame(aTargetFrame);
     return WillHandleDefaultAction(aWheelEvent, targetWeakFrame);
   }
   static void OnEvent(WidgetEvent* aEvent);
   static void Shutdown();
-  static uint32_t GetTimeoutTime()
-  {
+  static uint32_t GetTimeoutTime() {
     return Prefs::sMouseWheelTransactionTimeout;
   }
 
@@ -158,12 +143,9 @@ public:
 
   static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent,
                                           bool aAllowScrollSpeedOverride);
-  static void InitializeStatics()
-  {
-    Prefs::InitializeStatics();
-  }
+  static void InitializeStatics() { Prefs::InitializeStatics(); }
 
-protected:
+ protected:
   static void BeginTransaction(nsIFrame* aTargetFrame,
                                const WidgetWheelEvent* aEvent);
   // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
@@ -175,16 +157,13 @@ protected:
   static void OnFailToScrollTarget();
   static void OnTimeout(nsITimer* aTimer, void* aClosure);
   static void SetTimeout();
-  static uint32_t GetIgnoreMoveDelayTime()
-  {
+  static uint32_t GetIgnoreMoveDelayTime() {
     return Prefs::sMouseWheelTransactionIgnoreMoveDelay;
   }
-  static int32_t GetAccelerationStart()
-  {
+  static int32_t GetAccelerationStart() {
     return Prefs::sMouseWheelAccelerationStart;
   }
-  static int32_t GetAccelerationFactor()
-  {
+  static int32_t GetAccelerationFactor() {
     return Prefs::sMouseWheelAccelerationFactor;
   }
   static DeltaValues OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent);
@@ -192,15 +171,14 @@ protected:
   static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
 
   static AutoWeakFrame sTargetFrame;
-  static uint32_t sTime; // in milliseconds
-  static uint32_t sMouseMoved; // in milliseconds
+  static uint32_t sTime;        // in milliseconds
+  static uint32_t sMouseMoved;  // in milliseconds
   static nsITimer* sTimer;
   static int32_t sScrollSeriesCounter;
   static bool sOwnScrollbars;
 
-  class Prefs
-  {
-  public:
+  class Prefs {
+   public:
     static void InitializeStatics();
     static int32_t sMouseWheelAccelerationStart;
     static int32_t sMouseWheelAccelerationFactor;
@@ -216,8 +194,7 @@ protected:
 // vertical scrolling.
 // The values in this enumeration list all kinds of scrollings whose delta
 // values are possible to be adjusted.
-enum class WheelDeltaAdjustmentStrategy : uint8_t
-{
+enum class WheelDeltaAdjustmentStrategy : uint8_t {
   // There is no strategy, don't adjust delta values in any cases.
   eNone,
   // This strategy means we're receiving a horizontalized scroll, so we should
@@ -271,22 +248,19 @@ enum class WheelDeltaAdjustmentStrategy : uint8_t
  * automatically when the instance of this class is being destructed. Or you can
  * restore them in advance by calling CancelHorizontalization().
  */
-class MOZ_STACK_CLASS WheelDeltaHorizontalizer final
-{
-public:
+class MOZ_STACK_CLASS WheelDeltaHorizontalizer final {
+ public:
   /**
    * @param aWheelEvent        A wheel event whose delta values will be adjusted
    *                           upon calling Horizontalize().
    */
   explicit WheelDeltaHorizontalizer(WidgetWheelEvent& aWheelEvent)
-    : mWheelEvent(aWheelEvent)
-    , mOldDeltaX(0.0)
-    , mOldDeltaZ(0.0)
-    , mOldOverflowDeltaX(0.0)
-    , mOldLineOrPageDeltaX(0)
-    , mHorizontalized(false)
-  {
-  }
+      : mWheelEvent(aWheelEvent),
+        mOldDeltaX(0.0),
+        mOldDeltaZ(0.0),
+        mOldOverflowDeltaX(0.0),
+        mOldLineOrPageDeltaX(0),
+        mHorizontalized(false) {}
   /**
    * Converts vertical scrolling into horizontal scrolling by adjusting the
    * its delta values.
@@ -295,7 +269,7 @@ public:
   ~WheelDeltaHorizontalizer();
   void CancelHorizontalization();
 
-private:
+ private:
   WidgetWheelEvent& mWheelEvent;
   double mOldDeltaX;
   double mOldDeltaZ;
@@ -314,25 +288,21 @@ private:
  * only one direction. For detailed information on auto-dir scrolling,
  * @see mozilla::WheelDeltaAdjustmentStrategy.
  */
-class MOZ_STACK_CLASS AutoDirWheelDeltaAdjuster
-{
-protected:
+class MOZ_STACK_CLASS AutoDirWheelDeltaAdjuster {
+ protected:
   /**
    * @param aDeltaX            DeltaX for a wheel event whose delta values will
    *                           be adjusted upon calling Adjust() when
    *                           ShouldBeAdjusted() returns true.
    * @param aDeltaY            DeltaY for a wheel event, like DeltaX.
    */
-  AutoDirWheelDeltaAdjuster(double& aDeltaX,
-                            double& aDeltaY)
-    : mDeltaX(aDeltaX)
-    , mDeltaY(aDeltaY)
-    , mCheckedIfShouldBeAdjusted(false)
-    , mShouldBeAdjusted(false)
-  {
-  }
+  AutoDirWheelDeltaAdjuster(double& aDeltaX, double& aDeltaY)
+      : mDeltaX(aDeltaX),
+        mDeltaY(aDeltaY),
+        mCheckedIfShouldBeAdjusted(false),
+        mShouldBeAdjusted(false) {}
 
-public:
+ public:
   /**
    * Gets whether the values of the delta should be adjusted for auto-dir
    * scrolling. Note that if Adjust() has been called, this function simply
@@ -348,13 +318,11 @@ public:
    */
   void Adjust();
 
-private:
+ private:
   /**
    * Called by Adjust() if Adjust() successfully adjusted the delta values.
    */
-  virtual void OnAdjusted()
-  {
-  }
+  virtual void OnAdjusted() {}
 
   virtual bool CanScrollAlongXAxis() const = 0;
   virtual bool CanScrollAlongYAxis() const = 0;
@@ -377,11 +345,11 @@ private:
    */
   virtual bool IsHorizontalContentRightToLeft() const = 0;
 
-protected:
+ protected:
   double& mDeltaX;
   double& mDeltaY;
 
-private:
+ private:
   bool mCheckedIfShouldBeAdjusted;
   bool mShouldBeAdjusted;
 };
@@ -393,9 +361,8 @@ private:
  * AutoDirWheelDeltaAdjuster.
  */
 class MOZ_STACK_CLASS ESMAutoDirWheelDeltaAdjuster final
-                        : public AutoDirWheelDeltaAdjuster
-{
-public:
+    : public AutoDirWheelDeltaAdjuster {
+ public:
   /**
    * @param aEvent             The auto-dir wheel scroll event.
    * @param aScrollFrame       The scroll target for the event.
@@ -405,11 +372,10 @@ public:
    *                           target. For the concept of an honoured target,
    *                           @see mozilla::WheelDeltaAdjustmentStrategy
    */
-  ESMAutoDirWheelDeltaAdjuster(WidgetWheelEvent& aEvent,
-                               nsIFrame& aScrollFrame,
+  ESMAutoDirWheelDeltaAdjuster(WidgetWheelEvent& aEvent, nsIFrame& aScrollFrame,
                                bool aHonoursRoot);
 
-private:
+ private:
   virtual void OnAdjusted() override;
   virtual bool CanScrollAlongXAxis() const override;
   virtual bool CanScrollAlongYAxis() const override;
@@ -435,16 +401,15 @@ private:
  * during its lifetime. If the delta values is adjusted during its lifetime, the
  * instance will restore the adjusted delta when it's being destrcuted.
  */
-class MOZ_STACK_CLASS ESMAutoDirWheelDeltaRestorer final
-{
-public:
+class MOZ_STACK_CLASS ESMAutoDirWheelDeltaRestorer final {
+ public:
   /**
    * @param aEvent             The wheel scroll event to be monitored.
    */
   explicit ESMAutoDirWheelDeltaRestorer(WidgetWheelEvent& aEvent);
   ~ESMAutoDirWheelDeltaRestorer();
 
-private:
+ private:
   WidgetWheelEvent& mEvent;
   double mOldDeltaX;
   double mOldDeltaY;
@@ -454,6 +419,6 @@ private:
   double mOldOverflowDeltaY;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_WheelHandlingHelper_h_
+#endif  // mozilla_WheelHandlingHelper_h_

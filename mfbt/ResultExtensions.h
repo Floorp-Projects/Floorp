@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Extensions to the Result type to enable simpler handling of XPCOM/NSPR results. */
+/* Extensions to the Result type to enable simpler handling of XPCOM/NSPR
+ * results. */
 
 #ifndef mozilla_ResultExtensions_h
 #define mozilla_ResultExtensions_h
@@ -18,15 +19,14 @@ namespace mozilla {
 // Allow nsresult errors to automatically convert to nsresult values, so MOZ_TRY
 // can be used in XPCOM methods with Result<T, nserror> results.
 template <>
-class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult>
-{
+class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult> {
   nsresult mErrorValue;
 
-  template<typename V, typename E2> friend class Result;
+  template <typename V, typename E2>
+  friend class Result;
 
-public:
-  explicit GenericErrorResult(nsresult aErrorValue) : mErrorValue(aErrorValue)
-  {
+ public:
+  explicit GenericErrorResult(nsresult aErrorValue) : mErrorValue(aErrorValue) {
     MOZ_ASSERT(NS_FAILED(aErrorValue));
   }
 
@@ -36,30 +36,26 @@ public:
 // Allow MOZ_TRY to handle `PRStatus` values.
 inline Result<Ok, nsresult> ToResult(PRStatus aValue);
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #include "mozilla/Result.h"
 
 namespace mozilla {
 
-inline Result<Ok, nsresult>
-ToResult(nsresult aValue)
-{
+inline Result<Ok, nsresult> ToResult(nsresult aValue) {
   if (NS_FAILED(aValue)) {
     return Err(aValue);
   }
   return Ok();
 }
 
-inline Result<Ok, nsresult>
-ToResult(PRStatus aValue)
-{
+inline Result<Ok, nsresult> ToResult(PRStatus aValue) {
   if (aValue == PR_SUCCESS) {
     return Ok();
   }
   return Err(NS_ERROR_FAILURE);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ResultExtensions_h
+#endif  // mozilla_ResultExtensions_h

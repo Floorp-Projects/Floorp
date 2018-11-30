@@ -13,6 +13,6 @@ namespace mozilla {
 
 nr_interface_prioritizer* CreateInterfacePrioritizer();
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

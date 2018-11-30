@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* A handy class that will allocate data for size*T objects on the stack and
- * otherwise allocate them on the heap. It is similar in purpose to AutoTArray */
+ * otherwise allocate them on the heap. It is similar in purpose to AutoTArray
+ */
 
 template <class T, size_t size>
-class StackArray
-{
-public:
+class StackArray {
+ public:
   explicit StackArray(size_t count) {
     if (count > size) {
       mData = new T[count];
@@ -26,7 +26,8 @@ public:
   T& operator[](size_t n) { return mData[n]; }
   const T& operator[](size_t n) const { return mData[n]; }
   T* data() { return mData; };
-private:
+
+ private:
   T mStackData[size];
   T* mData;
 };

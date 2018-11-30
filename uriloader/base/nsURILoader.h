@@ -20,23 +20,21 @@
 
 class nsDocumentOpenInfo;
 
-class nsURILoader final : public nsIURILoader
-{
-public:
+class nsURILoader final : public nsIURILoader {
+ public:
   NS_DECL_NSIURILOADER
   NS_DECL_ISUPPORTS
 
   nsURILoader();
 
-protected:
+ protected:
   ~nsURILoader();
 
   /**
    * Equivalent to nsIURILoader::openChannel, but allows specifying whether the
    * channel is opened already.
    */
-  MOZ_MUST_USE nsresult OpenChannel(nsIChannel* channel,
-                                    uint32_t aFlags,
+  MOZ_MUST_USE nsresult OpenChannel(nsIChannel* channel, uint32_t aFlags,
                                     nsIInterfaceRequestor* aWindowContext,
                                     bool aChannelOpen,
                                     nsIStreamListener** aListener);
@@ -52,7 +50,7 @@ protected:
    * Logging.  The module is called "URILoader"
    */
   static mozilla::LazyLogModule mLog;
-  
+
   friend class nsDocumentOpenInfo;
 };
 

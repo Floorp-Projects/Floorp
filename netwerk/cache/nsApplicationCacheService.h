@@ -10,19 +10,18 @@
 
 class nsCacheService;
 
-class nsApplicationCacheService final : public nsIApplicationCacheService
-{
-public:
-    nsApplicationCacheService();
+class nsApplicationCacheService final : public nsIApplicationCacheService {
+ public:
+  nsApplicationCacheService();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIAPPLICATIONCACHESERVICE
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAPPLICATIONCACHESERVICE
 
-    static void AppClearDataObserverInit();
+  static void AppClearDataObserverInit();
 
-private:
-    ~nsApplicationCacheService() = default;
-    RefPtr<nsCacheService> mCacheService;
+ private:
+  ~nsApplicationCacheService() = default;
+  RefPtr<nsCacheService> mCacheService;
 };
 
-#endif // _nsApplicationCacheService_h_
+#endif  // _nsApplicationCacheService_h_
