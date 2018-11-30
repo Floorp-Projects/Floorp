@@ -60,8 +60,9 @@ for (var idx in gShorthandProperties) {
      "'" + prop.name + "' listed in gCSSProperties");
   if (present) {
     ok(gCSSProperties[prop.name].type == CSS_TYPE_TRUE_SHORTHAND ||
+       gCSSProperties[prop.name].type == CSS_TYPE_LEGACY_SHORTHAND ||
        gCSSProperties[prop.name].type == CSS_TYPE_SHORTHAND_AND_LONGHAND,
-       "'" + prop.name + "' listed as CSS_TYPE_TRUE_SHORTHAND or CSS_TYPE_SHORTHAND_AND_LONGHAND");
+       "'" + prop.name + "' listed as CSS_TYPE_TRUE_SHORTHAND, CSS_TYPE_LEGACY_SHORTHAND, or CSS_TYPE_SHORTHAND_AND_LONGHAND");
     ok(gCSSProperties[prop.name].domProp == prop.prop,
        "'" + prop.name + "' listed with correct DOM property name");
   }

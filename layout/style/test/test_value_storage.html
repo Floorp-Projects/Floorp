@@ -182,7 +182,8 @@ function test_property(property)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         if (value_has_variable_reference &&
-            (!info.alias_for || info.type == CSS_TYPE_TRUE_SHORTHAND)) {
+            (!info.alias_for || info.type == CSS_TYPE_TRUE_SHORTHAND ||
+            info.type == CSS_TYPE_LEGACY_SHORTHAND)) {
           is(gDeclaration.getPropertyValue(subprop), "",
              "setting '" + value + "' on '" + property + "' (for '" + subprop + "')");
           test_other_shorthands_empty(value, subprop);
@@ -197,7 +198,13 @@ function test_property(property)
     var expected_serialization = "";
     if (step1val != "") {
       if ("alias_for" in info) {
-        expected_serialization = info.alias_for + colon + step1val + ";";
+        let value = info.legacy_mapping && info.legacy_mapping[step1val]
+          ? info.legacy_mapping[step1val] : step1val;
+        // FIXME(emilio): This is a bit unfortunate:
+        // https://github.com/w3c/csswg-drafts/issues/3332
+        if (info.type == CSS_TYPE_LEGACY_SHORTHAND && value_has_variable_reference)
+          value = "";
+        expected_serialization = info.alias_for + colon + value + ";";
       } else {
         expected_serialization = property + colon + step1val + ";";
       }
@@ -221,8 +228,6 @@ function test_property(property)
         // Using setProperty over subproperties is not sufficient for
         // system fonts, since the shorthand does more than its parts.
         !is_system_font &&
-        // Likewise for special compatibility values of transform
-        (property != "-moz-transform" || !value.match(/^matrix.*(px|em|%)/)) &&
         !value_has_variable_reference) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
@@ -244,8 +249,9 @@ function test_property(property)
          property + colon + value + "'");
     }
 
+    // FIXME(emilio): Why is mask special?
     if (info.type != CSS_TYPE_TRUE_SHORTHAND &&
-          property != "mask") {
+        property != "mask") {
       gDeclaration.removeProperty(property);
       gDeclaration.setProperty(property, step1comp, "");
       var func = xfail_compute(property, value) ? todo_is : is;
