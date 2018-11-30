@@ -74,20 +74,27 @@
 
           <vbox id="identity-popup-content-blocking-category-list">
             <toolbarbutton id="identity-popup-content-blocking-category-tracking-protection"
-                           onclick="ContentBlocking.showTrackersSubview()"
-                           class="identity-popup-content-blocking-category" align="center">
+                  onclick="ContentBlocking.showTrackersSubview()"
+                  class="identity-popup-content-blocking-category" align="center">
               <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection3.label;</label>
-              <label flex="1" id="identity-popup-content-blocking-tracking-protection-state-label" class="identity-popup-content-blocking-category-state-label"/>
+              <label flex="1" id="identity-popup-content-blocking-tracking-protection-label-allowed"
+                     class="identity-popup-content-blocking-category-state-label">&contentBlocking.trackingProtection.allowed.label;</label>
+              <label flex="1" id="identity-popup-content-blocking-tracking-protection-label-blocked"
+                     class="identity-popup-content-blocking-category-state-label">&contentBlocking.trackingProtection.blocked.label;</label>
             </toolbarbutton>
-            <toolbarbutton id="identity-popup-content-blocking-category-cookies"
-                           onclick="ContentBlocking.showCookiesSubview()"
-                           class="identity-popup-content-blocking-category" align="center">
+            <hbox id="identity-popup-content-blocking-category-3rdpartycookies"
+                  class="identity-popup-content-blocking-category" align="center" role="group">
               <image class="identity-popup-content-blocking-category-icon thirdpartycookies-icon"/>
               <label flex="1" id="identity-popup-content-blocking-category-label-default"
-                     class="identity-popup-content-blocking-category-label">&contentBlocking.cookies.label;</label>
-              <label flex="1" id="identity-popup-content-blocking-cookies-state-label" class="identity-popup-content-blocking-category-state-label"/>
-            </toolbarbutton>
+                     class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.label;</label>
+              <label flex="1" id="identity-popup-content-blocking-category-label-trackers"
+                     hidden="true" class="identity-popup-content-blocking-category-label">&contentBlocking.3rdPartyCookies.trackers.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-state-label">&contentBlocking.3rdPartyCookies.blocking.label;</label>
+              <label flex="1" class="identity-popup-content-blocking-category-add-blocking text-link"
+                     id="identity-popup-3rdpartycookies-add-blocking"
+                     onclick="ContentBlocking.openPreferences('identityPopup-CB-3rdpartycookies'); gIdentityHandler.recordClick('cookies_add_blocking');">&contentBlocking.3rdPartyCookies.add.label;</label>
+            </hbox>
           </vbox>
 
           <button id="tracking-action-unblock"
@@ -239,7 +246,7 @@
                role="document"
                title="&contentBlocking.trackersView.label;"
                descriptionheightworkaround="true">
-        <vbox id="identity-popup-trackersView-list" class="identity-popup-content-blocking-list">
+        <vbox id="identity-popup-trackersView-list">
         </vbox>
         <hbox id="identity-popup-trackersView-strict-info">
           <image/>
@@ -247,21 +254,6 @@
         </hbox>
         <vbox class="identity-popup-footer">
           <button id="identity-popup-trackersView-settings-button"
-                  label="&contentBlocking.manageSettings.label;"
-                  accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="ContentBlocking.openPreferences();"/>
-        </vbox>
-    </panelview>
-
-    <!-- Cookies SubView -->
-    <panelview id="identity-popup-cookiesView"
-               role="document"
-               title="&contentBlocking.cookiesView.label;"
-               descriptionheightworkaround="true">
-        <vbox id="identity-popup-cookiesView-list" class="identity-popup-content-blocking-list">
-        </vbox>
-        <vbox class="identity-popup-footer">
-          <button id="identity-popup-cookiesView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="ContentBlocking.openPreferences();"/>
