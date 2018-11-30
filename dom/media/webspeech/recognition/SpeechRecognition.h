@@ -161,34 +161,6 @@ class SpeechRecognition final : public DOMEventTargetHelper,
   bool SetRecognitionService(ErrorResult& aRv);
   bool ValidateAndSetGrammarList(ErrorResult& aRv);
 
-  class GetUserMediaSuccessCallback : public nsIDOMGetUserMediaSuccessCallback {
-   public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMGETUSERMEDIASUCCESSCALLBACK
-
-    explicit GetUserMediaSuccessCallback(SpeechRecognition* aRecognition)
-        : mRecognition(aRecognition) {}
-
-   private:
-    virtual ~GetUserMediaSuccessCallback() {}
-
-    RefPtr<SpeechRecognition> mRecognition;
-  };
-
-  class GetUserMediaErrorCallback : public nsIDOMGetUserMediaErrorCallback {
-   public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMGETUSERMEDIAERRORCALLBACK
-
-    explicit GetUserMediaErrorCallback(SpeechRecognition* aRecognition)
-        : mRecognition(aRecognition) {}
-
-   private:
-    virtual ~GetUserMediaErrorCallback() {}
-
-    RefPtr<SpeechRecognition> mRecognition;
-  };
-
   NS_IMETHOD StartRecording(RefPtr<AudioStreamTrack>& aDOMStream);
   NS_IMETHOD StopRecording();
 

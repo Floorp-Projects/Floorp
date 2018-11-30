@@ -1205,6 +1205,8 @@ Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
                            CallerType aCallerType,
                            ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mWindow || !mWindow->GetOuterWindow() ||
       mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -1214,9 +1216,27 @@ Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
   MediaManager::GetUserMediaSuccessCallback onsuccess(&aOnSuccess);
   MediaManager::GetUserMediaErrorCallback onerror(&aOnError);
 
-  MediaManager* manager = MediaManager::Get();
-  aRv = manager->GetUserMedia(mWindow, aConstraints, std::move(onsuccess),
-                              std::move(onerror), aCallerType);
+  nsWeakPtr weakWindow = nsWeakPtr(do_GetWeakReference(mWindow));
+
+  MediaManager::Get()->GetUserMedia(mWindow, aConstraints, aCallerType)->Then(
+    GetMainThreadSerialEventTarget(), __func__,
+    [weakWindow, onsuccess = std::move(onsuccess)](const RefPtr<DOMMediaStream>& aStream) {
+      nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
+      if (!window || !window->GetOuterWindow() ||
+          window->GetOuterWindow()->GetCurrentInnerWindow() != window) {
+        return; // Leave Promise pending after navigation by design.
+      }
+      MediaManager::CallOnSuccess(&onsuccess, *aStream);
+    },
+    [weakWindow, onerror = std::move(onerror)](const RefPtr<dom::MediaStreamError>& aError) {
+      nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
+      if (!window || !window->GetOuterWindow() ||
+          window->GetOuterWindow()->GetCurrentInnerWindow() != window) {
+        return; // Leave Promise pending after navigation by design.
+      }
+      MediaManager::CallOnError(&onerror, *aError);
+    }
+  );
 }
 
 void
