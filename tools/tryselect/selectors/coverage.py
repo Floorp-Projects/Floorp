@@ -74,7 +74,7 @@ def read_test_manifests():
     tests = set()
 
     for test in test_resolver.resolve_tests(build.topsrcdir):
-        tests.add(test['file_relpath'])
+        tests.add(test['srcdir_relpath'])
         if 'support-files' not in test:
             continue
 
@@ -91,11 +91,11 @@ def read_test_manifests():
             # If it doesn't have a glob, then it's a single file.
             if '*' not in support_file_pattern:
                 # Simple case: single support file, just add it here.
-                support_files_map[support_file_pattern].append(test['file_relpath'])
+                support_files_map[support_file_pattern].append(test['srcdir_relpath'])
                 continue
 
             for support_file, _ in file_finder.find(support_file_pattern):
-                support_files_map[support_file].append(test['file_relpath'])
+                support_files_map[support_file].append(test['srcdir_relpath'])
 
     return tests, support_files_map
 
@@ -330,8 +330,8 @@ def filter_tasks_by_chunks(tasks, chunks):
 
         if selected_task is None:
             print('Warning: no task found for chunk', platform, chunk)
-
-        selected_tasks.add(selected_task)
+        else:
+            selected_tasks.add(selected_task)
 
     return list(selected_tasks)
 

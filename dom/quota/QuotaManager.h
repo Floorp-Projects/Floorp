@@ -32,6 +32,12 @@ class nsIURI;
 class nsPIDOMWindowOuter;
 class nsIRunnable;
 
+namespace mozilla {
+
+class OriginAttributes;
+
+} // namespace mozilla
+
 BEGIN_QUOTA_NAMESPACE
 
 class DirectoryLockImpl;
@@ -117,7 +123,8 @@ public:
   static const char kReplaceChars[];
 
   static void
-  GetOrCreate(nsIRunnable* aCallback);
+  GetOrCreate(nsIRunnable* aCallback,
+              nsIEventTarget* aMainEventTarget = nullptr);
 
   // Returns a non-owning reference.
   static QuotaManager*
@@ -178,6 +185,7 @@ public:
                  const nsACString& aGroup,
                  const nsACString& aOrigin,
                  nsIFile* aFile,
+                 int64_t aFileSize = -1,
                  int64_t* aFileSizeOut = nullptr);
 
   already_AddRefed<QuotaObject>
@@ -185,6 +193,7 @@ public:
                  const nsACString& aGroup,
                  const nsACString& aOrigin,
                  const nsAString& aPath,
+                 int64_t aFileSize = -1,
                  int64_t* aFileSizeOut = nullptr);
 
   Nullable<bool>
@@ -288,6 +297,7 @@ public:
                             const nsACString& aSuffix,
                             const nsACString& aGroup,
                             const nsACString& aOrigin,
+                            bool aCreateIfNotExists,
                             nsIFile** aDirectory);
 
   nsresult
@@ -295,6 +305,7 @@ public:
                                     const nsACString& aSuffix,
                                     const nsACString& aGroup,
                                     const nsACString& aOrigin,
+                                    bool aCreateIfNotExists,
                                     nsIFile** aDirectory,
                                     bool* aCreated);
 
@@ -303,11 +314,18 @@ public:
 
   nsresult
   EnsureOriginDirectory(nsIFile* aDirectory,
+                        bool aCreateIfNotExists,
                         bool* aCreated);
+
+  nsresult
+  AboutToClearOrigins(const Nullable<PersistenceType>& aPersistenceType,
+                      const OriginScope& aOriginScope,
+                      const Nullable<Client::Type>& aClientType);
 
   void
   OriginClearCompleted(PersistenceType aPersistenceType,
-                       const nsACString& aOrigin);
+                       const nsACString& aOrigin,
+                       const Nullable<Client::Type>& aClientType);
 
   void
   ResetOrClearCompleted();
@@ -419,6 +437,11 @@ public:
   AreOriginsEqualOnDisk(nsACString& aOrigin1,
                         nsACString& aOrigin2);
 
+  static bool
+  ParseOrigin(const nsACString& aOrigin,
+              nsCString& aSpec,
+              OriginAttributes* aAttrs);
+
 private:
   QuotaManager();
 
@@ -499,6 +522,9 @@ private:
   MaybeRemoveLocalStorageDirectories();
 
   nsresult
+  MaybeCreateLocalStorageArchive();
+
+  nsresult
   InitializeRepository(PersistenceType aPersistenceType);
 
   nsresult
@@ -524,7 +550,7 @@ private:
   {
     AssertIsOnIOThread();
 
-    for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
+    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
       mClients[index]->ReleaseIOThreadObjects();
     }
   }

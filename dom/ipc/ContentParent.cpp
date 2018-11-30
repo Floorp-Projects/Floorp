@@ -49,6 +49,7 @@
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/GeolocationBinding.h"
+#include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/PContentBridgeParent.h"
@@ -141,6 +142,7 @@
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsILocalStorageManager.h"
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
@@ -5705,6 +5707,24 @@ ContentParent::AboutToLoadHttpFtpWyciwygDocumentForChild(nsIChannel* aChannel)
   aChannel->GetLoadFlags(&newLoadFlags);
   if (newLoadFlags & nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE) {
     UpdateCookieStatus(aChannel);
+  }
+
+  if (!NextGenLocalStorageEnabled()) {
+    return NS_OK;
+  }
+
+  if (principal->GetIsCodebasePrincipal()) {
+    nsCOMPtr<nsILocalStorageManager> lsm =
+      do_GetService("@mozilla.org/dom/localStorage-manager;1");
+    if (NS_WARN_IF(!lsm)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsISupports> dummy;
+    rv = lsm->Preload(principal, nullptr, getter_AddRefs(dummy));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;

@@ -163,6 +163,11 @@ public:
     return mImpl == aOther.mImpl;
   }
 
+  bool operator!=(const Optional_base<T, InternalType>& aOther) const
+  {
+    return mImpl != aOther.mImpl;
+  }
+
   template<typename T1, typename T2>
   explicit Optional_base(const T1& aValue1, const T2& aValue2)
   {

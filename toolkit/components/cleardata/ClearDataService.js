@@ -291,20 +291,25 @@ const AppCacheCleaner = {
 
 const QuotaCleaner = {
   deleteByPrincipal(aPrincipal) {
-    // localStorage
-    Services.obs.notifyObservers(null, "browser:purge-domain-data",
-                                 aPrincipal.URI.host);
+    if (!Services.lsm.nextGenLocalStorageEnabled) {
+      // localStorage: The legacy LocalStorage implementation that will
+      // eventually be removed depends on this observer notification to clear by
+      // principal.  Only generate it if we're using the legacy implementation.
+      Services.obs.notifyObservers(null, "browser:purge-domain-data",
+                                   aPrincipal.URI.host);
+    }
 
     // ServiceWorkers: they must be removed before cleaning QuotaManager.
     return ServiceWorkerCleanUp.removeFromPrincipal(aPrincipal)
       .then(_ => /* exceptionThrown = */ false, _ => /* exceptionThrown = */ true)
       .then(exceptionThrown => {
-        // QuotaManager
+        // QuotaManager: In the event of a failure, we call reject to propagate
+        // the error upwards.
         return new Promise((aResolve, aReject) => {
-          let req = Services.qms.clearStoragesForPrincipal(aPrincipal, null, false);
+          let req = Services.qms.clearStoragesForPrincipal(aPrincipal);
           req.callback = () => {
-            if (exceptionThrown) {
-              aReject();
+            if (exceptionThrown || req.resultCode != Cr.NS_OK) {
+              aReject({message: "Delete by principal failed"});
             } else {
               aResolve();
             }
@@ -314,8 +319,12 @@ const QuotaCleaner = {
   },
 
   deleteByHost(aHost, aOriginAttributes) {
-    // localStorage
-    Services.obs.notifyObservers(null, "browser:purge-domain-data", aHost);
+    if (!Services.lsm.nextGenLocalStorageEnabled) {
+      // localStorage: The legacy LocalStorage implementation that will
+      // eventually be removed depends on this observer notification to clear by
+      // principal.  Only generate it if we're using the legacy implementation.
+      Services.obs.notifyObservers(null, "browser:purge-domain-data", aHost);
+    }
 
     let exceptionThrown = false;
 
@@ -324,7 +333,9 @@ const QuotaCleaner = {
       ServiceWorkerCleanUp.removeFromHost("http://" + aHost).catch(_ => { exceptionThrown = true; }),
       ServiceWorkerCleanUp.removeFromHost("https://" + aHost).catch(_ => { exceptionThrown = true; }),
     ]).then(() => {
-        // QuotaManager
+        // QuotaManager: In the event of a failure, we call reject to propagate
+        // the error upwards.
+
         // delete data from both HTTP and HTTPS sites
         let httpURI = Services.io.newURI("http://" + aHost);
         let httpsURI = Services.io.newURI("https://" + aHost);
@@ -332,16 +343,62 @@ const QuotaCleaner = {
                                      .createCodebasePrincipal(httpURI, aOriginAttributes);
         let httpsPrincipal = Services.scriptSecurityManager
                                      .createCodebasePrincipal(httpsURI, aOriginAttributes);
-        return Promise.all([
-          new Promise(aResolve => {
-            let req = Services.qms.clearStoragesForPrincipal(httpPrincipal, null, true);
-            req.callback = () => { aResolve(); };
-          }),
-          new Promise(aResolve => {
-            let req = Services.qms.clearStoragesForPrincipal(httpsPrincipal, null, true);
-            req.callback = () => { aResolve(); };
-          }),
-        ]).then(() => {
+        let promises = [];
+        promises.push(new Promise((aResolve, aReject) => {
+          let req = Services.qms.clearStoragesForPrincipal(httpPrincipal, null, null, true);
+          req.callback = () => {
+            if (req.resultCode == Cr.NS_OK) {
+              aResolve();
+            } else {
+              aReject({message: "Delete by host failed"});
+            }
+          };
+        }));
+        promises.push(new Promise((aResolve, aReject) => {
+          let req = Services.qms.clearStoragesForPrincipal(httpsPrincipal, null, null, true);
+          req.callback = () => {
+            if (req.resultCode == Cr.NS_OK) {
+              aResolve();
+            } else {
+              aReject({message: "Delete by host failed"});
+            }
+          };
+        }));
+        if (Services.lsm.nextGenLocalStorageEnabled) {
+          // deleteByHost has the semantics that "foo.example.com" should be
+          // wiped if we are provided an aHost of "example.com".  QuotaManager
+          // doesn't have a way to directly do this, so we use getUsage() to
+          // get a list of all of the origins known to QuotaManager and then
+          // check whether the domain is a sub-domain of aHost.
+          promises.push(new Promise((aResolve, aReject) => {
+            Services.qms.getUsage(aRequest => {
+              if (aRequest.resultCode != Cr.NS_OK) {
+                aReject({message: "Delete by host failed"});
+                return;
+              }
+
+              let promises = [];
+              for (let item of aRequest.result) {
+                let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+                if (eTLDService.hasRootDomain(principal.URI.host, aHost)) {
+                  promises.push(new Promise((aResolve, aReject) => {
+                    let clearRequest = Services.qms.clearStoragesForPrincipal(principal, null, "ls");
+                    clearRequest.callback = () => {
+                      if (clearRequest.resultCode == Cr.NS_OK) {
+                        aResolve();
+                      } else {
+                        aReject({message: "Delete by host failed"});
+                      }
+                    };
+                  }));
+                }
+              }
+
+              Promise.all(promises).then(aResolve);
+            });
+          }));
+        }
+        return Promise.all(promises).then(() => {
           return exceptionThrown ? Promise.reject() : Promise.resolve();
         });
       });
@@ -375,16 +432,12 @@ const QuotaCleaner = {
     return ServiceWorkerCleanUp.removeAll()
       .then(_ => /* exceptionThrown = */ false, _ => /* exceptionThrown = */ true)
       .then(exceptionThrown => {
-        // QuotaManager
+        // QuotaManager: In the event of a failure, we call reject to propagate
+        // the error upwards.
         return new Promise((aResolve, aReject) => {
           Services.qms.getUsage(aRequest => {
             if (aRequest.resultCode != Cr.NS_OK) {
-              // We are probably shutting down.
-              if (exceptionThrown) {
-                aReject();
-              } else {
-                aResolve();
-              }
+              aReject({message: "Delete all failed"});
               return;
             }
 
@@ -394,9 +447,15 @@ const QuotaCleaner = {
               if (principal.URI.scheme == "http" ||
                   principal.URI.scheme == "https" ||
                   principal.URI.scheme == "file") {
-                promises.push(new Promise(aResolve => {
-                  let req = Services.qms.clearStoragesForPrincipal(principal, null, false);
-                  req.callback = () => { aResolve(); };
+                promises.push(new Promise((aResolve, aReject) => {
+                  let req = Services.qms.clearStoragesForPrincipal(principal);
+                  req.callback = () => {
+                    if (req.resultCode == Cr.NS_OK) {
+                      aResolve();
+                    } else {
+                      aReject({message: "Delete all failed"});
+                    }
+                  };
                 }));
               }
             }

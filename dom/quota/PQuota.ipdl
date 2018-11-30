@@ -13,6 +13,9 @@ include "mozilla/dom/quota/SerializationHelpers.h";
 using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
 
+using mozilla::dom::quota::Client::Type
+  from "mozilla/dom/quota/Client.h";
+
 namespace mozilla {
 namespace dom {
 namespace quota {
@@ -48,12 +51,24 @@ union UsageRequestParams
   OriginUsageParams;
 };
 
-struct ClearOriginParams
+struct ClearResetOriginParams
 {
   PrincipalInfo principalInfo;
   PersistenceType persistenceType;
   bool persistenceTypeIsExplicit;
-  bool clearAll;
+  Type clientType;
+  bool clientTypeIsExplicit;
+  bool matchAll;
+};
+
+struct ClearOriginParams
+{
+  ClearResetOriginParams commonParams;
+};
+
+struct ResetOriginParams
+{
+  ClearResetOriginParams commonParams;
 };
 
 struct ClearDataParams
@@ -85,6 +100,7 @@ union RequestParams
   InitTemporaryStorageParams;
   InitOriginParams;
   ClearOriginParams;
+  ResetOriginParams;
   ClearDataParams;
   ClearAllParams;
   ResetAllParams;

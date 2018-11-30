@@ -96,6 +96,12 @@ function doStep()
 SimpleTest.waitForExplicitFinish();
 
 function startTest() {
+  if (SpecialPowers.Services.lsm.nextGenLocalStorageEnabled) {
+    ok(true, "Test ignored when the next gen local storage is enabled.");
+    SimpleTest.finish();
+    return;
+  }
+
   SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], function() {
     // Initialy setup the quota to testing value of 1024B and
     // set a 500 bytes key with name length 1 (allocate 501 bytes)

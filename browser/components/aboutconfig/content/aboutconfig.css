@@ -14,6 +14,7 @@
   background-position: 9px center;
   background-size: 12px 12px;
   padding-left: 30px;
+  z-index: 1;
 }
 
 #prefs {
@@ -39,9 +40,21 @@
   font-weight: bold;
 }
 
+#prefs > tr.locked {
+  opacity: 0.4;
+  background-image: url("chrome://browser/skin/preferences/in-content/privacy-security.svg");
+  background-repeat: no-repeat;
+  background-position: 9px center;
+  background-size: 16px 16px;
+}
+
 #prefs > tr > td {
   padding: 4px;
   width: 50%;
+}
+
+#prefs > tr > td.cell-name {
+  padding-inline-start: 30px;
 }
 
 .cell-value {
