@@ -11,6 +11,8 @@
 
 namespace mozilla {
 
+class AudioNodeStream;
+
 namespace dom {
 class AudioContext;
 }
@@ -30,8 +32,11 @@ class AudioWorkletImpl final : public WorkletImpl {
   already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() override;
 
  private:
-  AudioWorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
+  AudioWorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+                   AudioNodeStream* aDestinationStream);
   ~AudioWorkletImpl();
+
+  const RefPtr<AudioNodeStream> mDestinationStream;
 };
 
 }  // namespace mozilla
