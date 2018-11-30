@@ -354,6 +354,53 @@ function* iterDirectory(aDir) {
 }
 
 /**
+ * Migrate data about an addon to match the change made in bug 857456
+ * in which "webextension-foo" types were converted to "foo" and the
+ * "loader" property was added to distinguish different addon types.
+ *
+ * @param {Object} addon  The addon info to migrate.
+ * @returns {boolean} True if the addon data was converted, false if not.
+ */
+function migrateAddonLoader(addon) {
+  if (addon.hasOwnProperty("loader")) {
+    return false;
+  }
+
+  switch (addon.type) {
+    case "extension":
+    case "dictionary":
+    case "locale":
+    case "theme":
+      addon.loader = "bootstrap";
+      break;
+
+    case "webextension":
+      addon.type = "extension";
+      addon.loader = null;
+      break;
+
+    case "webextension-dictionary":
+      addon.type = "dictionary";
+      addon.loader = null;
+      break;
+
+    case "webextension-langpack":
+      addon.type = "locale";
+      addon.loader = null;
+      break;
+
+    case "webextension-theme":
+      addon.type = "theme";
+      addon.loader = null;
+      break;
+
+    default:
+      logger.warn(`Not converting unknown addon type ${addon.type}`);
+  }
+  return true;
+}
+
+/**
  * The on-disk state of an individual XPI, created from an Object
  * as stored in the addonStartup.json file.
  */
@@ -1200,6 +1247,21 @@ var XPIStates = {
     } catch (e) {
       logger.warn("Error parsing extensions state: ${error}",
                   {error: e});
+    }
+
+    // When upgrading from a build prior to bug 857456, convert startup
+    // metadata.
+    let done = false;
+    for (let location of Object.values(state)) {
+      for (let data of Object.values(location.addons)) {
+        if (!migrateAddonLoader(data)) {
+          done = true;
+          break;
+        }
+      }
+      if (done) {
+        break;
+      }
     }
 
     logger.debug("Loaded add-on state: ${}", state);
@@ -2729,6 +2791,7 @@ var XPIInternal = {
   getURIForResourceInFile,
   isXPI,
   iterDirectory,
+  migrateAddonLoader,
 };
 
 var addonTypes = [
