@@ -242,8 +242,9 @@ ZoomToResolution(CSSToScreenScale aZoom,
 void
 MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
                                         const ScreenIntSize& aDisplaySize,
-                                        const CSSSize& aViewport,
-                                        const Maybe<float>& aDisplayWidthChangeRatio)
+                                        const CSSSize& aViewportOrContentSize,
+                                        const Maybe<float>& aDisplayWidthChangeRatio,
+                                        UpdateType aType)
 {
   CSSToLayoutDeviceScale cssToDev =
       mPresShell->GetPresContext()->CSSToDevPixelScale();
@@ -251,70 +252,80 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
   CSSToScreenScale zoom = ResolutionToZoom(res, cssToDev);
   Maybe<CSSToScreenScale> newZoom;
 
-  if (mIsFirstPaint) {
-    ScreenIntSize compositionSize = GetCompositionSize(aDisplaySize);
+  ScreenIntSize compositionSize = GetCompositionSize(aDisplaySize);
+  CSSToScreenScale intrinsicScale = ComputeIntrinsicScale(aViewportInfo,
+                                                          compositionSize,
+                                                          aViewportOrContentSize);
 
-    CSSToScreenScale defaultZoom;
-    if (mRestoreResolution) {
-      LayoutDeviceToLayerScale restoreResolution(mRestoreResolution.value());
-      CSSToScreenScale restoreZoom = ResolutionToZoom(restoreResolution, cssToDev);
-      if (mRestoreDisplaySize) {
-        CSSSize prevViewport = mDocument->GetViewportInfo(mRestoreDisplaySize.value()).GetSize();
-        float restoreDisplayWidthChangeRatio = (mRestoreDisplaySize.value().width > 0)
-          ? (float)compositionSize.width / (float)mRestoreDisplaySize.value().width : 1.0f;
+  if (aType == UpdateType::ViewportSize) {
+    const CSSSize& viewportSize = aViewportOrContentSize;
+    if (mIsFirstPaint) {
+      CSSToScreenScale defaultZoom;
+      if (mRestoreResolution) {
+        LayoutDeviceToLayerScale restoreResolution(mRestoreResolution.value());
+        CSSToScreenScale restoreZoom = ResolutionToZoom(restoreResolution, cssToDev);
+        if (mRestoreDisplaySize) {
+          CSSSize prevViewport = mDocument->GetViewportInfo(mRestoreDisplaySize.value()).GetSize();
+          float restoreDisplayWidthChangeRatio = (mRestoreDisplaySize.value().width > 0)
+            ? (float)compositionSize.width / (float)mRestoreDisplaySize.value().width : 1.0f;
 
-        restoreZoom =
-          ScaleZoomWithDisplayWidth(restoreZoom,
-                                    restoreDisplayWidthChangeRatio,
-                                    aViewport,
-                                    prevViewport);
+          restoreZoom =
+            ScaleZoomWithDisplayWidth(restoreZoom,
+                                      restoreDisplayWidthChangeRatio,
+                                      viewportSize,
+                                      prevViewport);
+        }
+        defaultZoom = restoreZoom;
+        MVM_LOG("%p: restored zoom is %f\n", this, defaultZoom.scale);
+        defaultZoom = ClampZoom(defaultZoom, aViewportInfo);
+      } else {
+        defaultZoom = aViewportInfo.GetDefaultZoom();
+        MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
+        if (!aViewportInfo.IsDefaultZoomValid()) {
+          defaultZoom = intrinsicScale;
+        }
       }
-      defaultZoom = restoreZoom;
-      MVM_LOG("%p: restored zoom is %f\n", this, defaultZoom.scale);
-      defaultZoom = ClampZoom(defaultZoom, aViewportInfo);
+      MOZ_ASSERT(aViewportInfo.GetMinZoom() <= defaultZoom &&
+        defaultZoom <= aViewportInfo.GetMaxZoom());
+
+      // On first paint, we always consider the zoom to have changed.
+      newZoom = Some(defaultZoom);
     } else {
-      defaultZoom = aViewportInfo.GetDefaultZoom();
-      MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
-      if (!aViewportInfo.IsDefaultZoomValid()) {
-        defaultZoom = ComputeIntrinsicScale(aViewportInfo,
-                                            compositionSize,
-                                            aViewport);
+      // If this is not a first paint, then in some cases we want to update the pre-
+      // existing resolution so as to maintain how much actual content is visible
+      // within the display width. Note that "actual content" may be different with
+      // respect to CSS pixels because of the CSS viewport size changing.
+      //
+      // aDisplayWidthChangeRatio is non-empty if:
+      // (a) The meta-viewport tag information changes, and so the CSS viewport
+      //     might change as a result. If this happens after the content has been
+      //     painted, we want to adjust the zoom to compensate. OR
+      // (b) The display size changed from a nonzero value to another nonzero value.
+      //     This covers the case where e.g. the device was rotated, and again we
+      //     want to adjust the zoom to compensate.
+      // Note in particular that aDisplayWidthChangeRatio will be None if all that
+      // happened was a change in the full-zoom. In this case, we still want to
+      // compute a new CSS viewport, but we don't want to update the resolution.
+      //
+      // Given the above, the algorithm below accounts for all types of changes I
+      // can conceive of:
+      // 1. screen size changes, CSS viewport does not (pages with no meta viewport
+      //    or a fixed size viewport)
+      // 2. screen size changes, CSS viewport also does (pages with a device-width
+      //    viewport)
+      // 3. screen size remains constant, but CSS viewport changes (meta viewport
+      //    tag is added or removed)
+      // 4. neither screen size nor CSS viewport changes
+      if (aDisplayWidthChangeRatio) {
+        newZoom = Some(ScaleZoomWithDisplayWidth(zoom, aDisplayWidthChangeRatio.value(),
+          viewportSize, mMobileViewportSize));
       }
     }
-    MOZ_ASSERT(aViewportInfo.GetMinZoom() <= defaultZoom &&
-      defaultZoom <= aViewportInfo.GetMaxZoom());
-
-    // On first paint, we always consider the zoom to have changed.
-    newZoom = Some(defaultZoom);
-  } else {
-    // If this is not a first paint, then in some cases we want to update the pre-
-    // existing resolution so as to maintain how much actual content is visible
-    // within the display width. Note that "actual content" may be different with
-    // respect to CSS pixels because of the CSS viewport size changing.
-    //
-    // aDisplayWidthChangeRatio is non-empty if:
-    // (a) The meta-viewport tag information changes, and so the CSS viewport
-    //     might change as a result. If this happens after the content has been
-    //     painted, we want to adjust the zoom to compensate. OR
-    // (b) The display size changed from a nonzero value to another nonzero value.
-    //     This covers the case where e.g. the device was rotated, and again we
-    //     want to adjust the zoom to compensate.
-    // Note in particular that aDisplayWidthChangeRatio will be None if all that
-    // happened was a change in the full-zoom. In this case, we still want to
-    // compute a new CSS viewport, but we don't want to update the resolution.
-    //
-    // Given the above, the algorithm below accounts for all types of changes I
-    // can conceive of:
-    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
-    //    or a fixed size viewport)
-    // 2. screen size changes, CSS viewport also does (pages with a device-width
-    //    viewport)
-    // 3. screen size remains constant, but CSS viewport changes (meta viewport
-    //    tag is added or removed)
-    // 4. neither screen size nor CSS viewport changes
-    if (aDisplayWidthChangeRatio) {
-      newZoom = Some(ScaleZoomWithDisplayWidth(zoom, aDisplayWidthChangeRatio.value(),
-        aViewport, mMobileViewportSize));
+  } else {  // aType == UpdateType::ContentSize
+    MOZ_ASSERT(aType == UpdateType::ContentSize);
+    MOZ_ASSERT(aDisplayWidthChangeRatio.isNothing());
+    if (zoom != intrinsicScale) {
+      newZoom = Some(intrinsicScale);
     }
   }
 
@@ -467,7 +478,8 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
     mIsFirstPaint, mMobileViewportSize != viewport);
 
   if (gfxPrefs::APZAllowZooming()) {
-    UpdateResolution(viewportInfo, displaySize, viewport, displayWidthChangeRatio);
+    UpdateResolution(viewportInfo, displaySize, viewport,
+        displayWidthChangeRatio, UpdateType::ViewportSize);
   }
   if (gfxPlatform::AsyncPanZoomEnabled()) {
     UpdateDisplayPortMargins();
@@ -518,6 +530,7 @@ MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
       nsLayoutUtils::CalculateScrollableRectForFrame(rootScrollableFrame,
                                                      nullptr);
     CSSSize contentSize = CSSSize::FromAppUnits(scrollableRect.Size());
-    UpdateResolution(aViewportInfo, aDisplaySize, contentSize, Nothing());
+    UpdateResolution(aViewportInfo, aDisplaySize, contentSize, Nothing(),
+        UpdateType::ContentSize);
   }
 }
