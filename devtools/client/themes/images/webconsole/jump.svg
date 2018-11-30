@@ -1,7 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-  <circle fill="none" stroke="#0274E8" cx="9" cy="9" r="8"/>
-  <path fill="#0274E8" d="M13 9l-6 4V5z"/>
-</svg>
