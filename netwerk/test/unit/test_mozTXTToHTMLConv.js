@@ -152,6 +152,42 @@ function run_test() {
     },
   ];
 
+  const scanTXTstrings = [
+    "underline",                                  // ASCII
+    "äöüßáéíóúî",                                 // Latin-1
+    "\u016B\u00F1\u0257\u0119\u0211\u0142\u00ED\u00F1\u0119",
+                                                  // Pseudo-ese ūñɗęȑłíñę
+    "\u01DDu\u0131\u0283\u0279\u01DDpun",         // Upside down ǝuıʃɹǝpun
+    "\u03C5\u03C0\u03BF\u03B3\u03C1\u03AC\u03BC\u03BC\u03B9\u03C3\u03B7",
+                                                  // Greek υπογράμμιση
+    "\u0441\u0438\u043B\u044C\u043D\u0443\u044E", // Russian сильную
+    "\u0C2C\u0C32\u0C2E\u0C46\u0C56\u0C28",       // Telugu బలమైన
+    "\u508D\u7DDA\u3059\u308B"                    // Japanese 傍線する
+  ];
+
+  const scanTXTstructs = [
+      {
+        delimiter: "/",
+        tag: "i",
+        class: "moz-txt-slash"
+      },
+      {
+        delimiter: "*",
+        tag: "b",
+        class: "moz-txt-star"
+      },
+      {
+        delimiter: "_",
+        tag: "span",
+        class: "moz-txt-underscore"
+      },
+      {
+        delimiter: "|",
+        tag: "code",
+        class: "moz-txt-verticalline"
+      }
+    ];
+
   const scanHTMLtests = [
     {
       input: "http://foo.example.com",
@@ -227,6 +263,24 @@ function run_test() {
       if (!output.includes(t.results[j]))
         do_throw("Unexpected conversion by scanTXT: input=" + t.input +
                  ", output=" + output + ", expected=" + t.results[j]);
+  }
+
+  for (let i = 0; i < scanTXTstrings.length; ++i) {
+    for (let j = 0; j < scanTXTstructs.length; ++j) {
+      let input = scanTXTstructs[j].delimiter + scanTXTstrings[i] + scanTXTstructs[j].delimiter;
+      let expected = "<" + scanTXTstructs[j].tag +
+                     " class=\"" + scanTXTstructs[j].class + "\">" +
+                     "<span class=\"moz-txt-tag\">" +
+                     scanTXTstructs[j].delimiter +
+                     "</span>" +
+                     scanTXTstrings[i] +
+                     "<span class=\"moz-txt-tag\">" +
+                     scanTXTstructs[j].delimiter +
+                     "</span>" +
+                     "</" + scanTXTstructs[j].tag + ">";
+      let actual = converter.scanTXT(input, Ci.mozITXTToHTMLConv.kStructPhrase);
+      Assert.equal(encodeURIComponent(actual), encodeURIComponent(expected));
+    }
   }
 
   for (let i = 0; i < scanHTMLtests.length; i++) {
