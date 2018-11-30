@@ -12,16 +12,14 @@ namespace mozilla {
 namespace dom {
 
 // static
-already_AddRefed<WorkerHolderToken>
-WorkerHolderToken::Create(WorkerPrivate* aWorkerPrivate,
-                          WorkerStatus aShutdownStatus,
-                          Behavior aBehavior)
-{
+already_AddRefed<WorkerHolderToken> WorkerHolderToken::Create(
+    WorkerPrivate* aWorkerPrivate, WorkerStatus aShutdownStatus,
+    Behavior aBehavior) {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<WorkerHolderToken> workerHolder =
-    new WorkerHolderToken(aShutdownStatus, aBehavior);
+      new WorkerHolderToken(aShutdownStatus, aBehavior);
 
   if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate, aShutdownStatus))) {
     return nullptr;
@@ -30,9 +28,7 @@ WorkerHolderToken::Create(WorkerPrivate* aWorkerPrivate,
   return workerHolder.forget();
 }
 
-void
-WorkerHolderToken::AddListener(Listener* aListener)
-{
+void WorkerHolderToken::AddListener(Listener* aListener) {
   NS_ASSERT_OWNINGTHREAD(WorkerHolderToken);
   MOZ_ASSERT(aListener);
   MOZ_ASSERT(!mListenerList.Contains(aListener));
@@ -48,9 +44,7 @@ WorkerHolderToken::AddListener(Listener* aListener)
   }
 }
 
-void
-WorkerHolderToken::RemoveListener(Listener* aListener)
-{
+void WorkerHolderToken::RemoveListener(Listener* aListener) {
   NS_ASSERT_OWNINGTHREAD(WorkerHolderToken);
   MOZ_ASSERT(aListener);
 
@@ -60,36 +54,25 @@ WorkerHolderToken::RemoveListener(Listener* aListener)
   MOZ_ASSERT(!mListenerList.Contains(aListener));
 }
 
-bool
-WorkerHolderToken::IsShuttingDown() const
-{
-  return mShuttingDown;
-}
+bool WorkerHolderToken::IsShuttingDown() const { return mShuttingDown; }
 
-WorkerPrivate*
-WorkerHolderToken::GetWorkerPrivate() const
-{
+WorkerPrivate* WorkerHolderToken::GetWorkerPrivate() const {
   NS_ASSERT_OWNINGTHREAD(WorkerHolderToken);
   return mWorkerPrivate;
 }
 
 WorkerHolderToken::WorkerHolderToken(WorkerStatus aShutdownStatus,
                                      Behavior aBehavior)
-  : WorkerHolder("WorkerHolderToken", aBehavior)
-  , mShutdownStatus(aShutdownStatus)
-  , mShuttingDown(false)
-{
-}
+    : WorkerHolder("WorkerHolderToken", aBehavior),
+      mShutdownStatus(aShutdownStatus),
+      mShuttingDown(false) {}
 
-WorkerHolderToken::~WorkerHolderToken()
-{
+WorkerHolderToken::~WorkerHolderToken() {
   NS_ASSERT_OWNINGTHREAD(WorkerHolderToken);
   MOZ_ASSERT(mListenerList.IsEmpty());
 }
 
-bool
-WorkerHolderToken::Notify(WorkerStatus aStatus)
-{
+bool WorkerHolderToken::Notify(WorkerStatus aStatus) {
   NS_ASSERT_OWNINGTHREAD(WorkerHolderToken);
 
   // When the service worker thread is stopped we will get Canceling,
@@ -112,5 +95,5 @@ WorkerHolderToken::Notify(WorkerStatus aStatus)
   return true;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

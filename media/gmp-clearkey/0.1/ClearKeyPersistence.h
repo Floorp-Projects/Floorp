@@ -28,19 +28,13 @@
 #include <string>
 #include <vector>
 
-
 class ClearKeySessionManager;
 
 // Whether we've loaded the persistent session ids yet.
-enum PersistentKeyState {
-  UNINITIALIZED,
-  LOADING,
-  LOADED
-};
+enum PersistentKeyState { UNINITIALIZED, LOADING, LOADED };
 
-class ClearKeyPersistence : public RefCounted
-{
-public:
+class ClearKeyPersistence : public RefCounted {
+ public:
   explicit ClearKeyPersistence(cdm::Host_9* aHost);
 
   void EnsureInitialized(bool aPersistentStateAllowed,
@@ -53,7 +47,8 @@ public:
   bool IsPersistentSessionId(const std::string& aSid);
 
   void PersistentSessionRemoved(std::string& aSid);
-private:
+
+ private:
   cdm::Host_9* mHost = nullptr;
 
   PersistentKeyState mPersistentKeyState = PersistentKeyState::UNINITIALIZED;
@@ -64,4 +59,4 @@ private:
   void WriteIndex();
 };
 
-#endif // __ClearKeyPersistence_h__
+#endif  // __ClearKeyPersistence_h__

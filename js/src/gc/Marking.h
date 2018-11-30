@@ -30,16 +30,14 @@ class WeakMapBase;
 
 namespace jit {
 class JitCode;
-} // namespace jit
+}  // namespace jit
 
 #ifdef DEBUG
 // Return true if this trace is happening on behalf of gray buffering during
 // the marking phase of incremental GC.
-bool
-IsBufferGrayRootsTracer(JSTracer* trc);
+bool IsBufferGrayRootsTracer(JSTracer* trc);
 
-bool
-IsUnmarkGrayTracer(JSTracer* trc);
+bool IsUnmarkGrayTracer(JSTracer* trc);
 #endif
 
 namespace gc {
@@ -50,8 +48,7 @@ class TenuredCell;
 
 /*** Special Cases ***/
 
-void
-PushArena(GCMarker* gcmarker, Arena* arena);
+void PushArena(GCMarker* gcmarker, Arena* arena);
 
 /*** Liveness ***/
 
@@ -79,69 +76,56 @@ bool IsAboutToBeFinalizedInternal(T** thingp);
 // not currently being collected or are owned by another runtime are always
 // reported as being marked.
 template <typename T>
-inline bool
-IsMarkedUnbarriered(JSRuntime* rt, T* thingp)
-{
-    return IsMarkedInternal(rt, ConvertToBase(thingp));
+inline bool IsMarkedUnbarriered(JSRuntime* rt, T* thingp) {
+  return IsMarkedInternal(rt, ConvertToBase(thingp));
 }
 
 // Report whether a thing has been marked.  Things which are in zones that are
 // not currently being collected or are owned by another runtime are always
 // reported as being marked.
 template <typename T>
-inline bool
-IsMarked(JSRuntime* rt, WriteBarrieredBase<T>* thingp)
-{
-    return IsMarkedInternal(rt, ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+inline bool IsMarked(JSRuntime* rt, WriteBarrieredBase<T>* thingp) {
+  return IsMarkedInternal(rt,
+                          ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 template <typename T>
-inline bool
-IsAboutToBeFinalizedUnbarriered(T* thingp)
-{
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
+inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
+  return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
 }
 
 template <typename T>
-inline bool
-IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp)
-{
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+inline bool IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp) {
+  return IsAboutToBeFinalizedInternal(
+      ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 template <typename T>
-inline bool
-IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp)
-{
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+inline bool IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp) {
+  return IsAboutToBeFinalizedInternal(
+      ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
-bool
-IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured);
+bool IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured);
 
-inline Cell*
-ToMarkable(const Value& v)
-{
-    if (v.isGCThing()) {
-        return (Cell*)v.toGCThing();
-    }
-    return nullptr;
+inline Cell* ToMarkable(const Value& v) {
+  if (v.isGCThing()) {
+    return (Cell*)v.toGCThing();
+  }
+  return nullptr;
 }
 
-inline Cell*
-ToMarkable(Cell* cell)
-{
-    return cell;
-}
+inline Cell* ToMarkable(Cell* cell) { return cell; }
 
 // Wrap a GC thing pointer into a new Value or jsid. The type system enforces
 // that the thing pointer is a wrappable type.
 template <typename S, typename T>
-struct RewrapTaggedPointer{};
-#define DECLARE_REWRAP(S, T, method, prefix) \
-    template <> struct RewrapTaggedPointer<S, T> { \
-        static S wrap(T* thing) { return method ( prefix thing ); } \
-    }
+struct RewrapTaggedPointer {};
+#define DECLARE_REWRAP(S, T, method, prefix)                 \
+  template <>                                                \
+  struct RewrapTaggedPointer<S, T> {                         \
+    static S wrap(T* thing) { return method(prefix thing); } \
+  }
 DECLARE_REWRAP(JS::Value, JSObject, JS::ObjectOrNullValue, );
 DECLARE_REWRAP(JS::Value, JSString, JS::StringValue, );
 DECLARE_REWRAP(JS::Value, JS::Symbol, JS::SymbolValue, );
@@ -155,40 +139,37 @@ DECLARE_REWRAP(js::TaggedProto, JSObject, js::TaggedProto, );
 
 template <typename T>
 struct IsPrivateGCThingInValue
-  : public mozilla::EnableIf<mozilla::IsBaseOf<Cell, T>::value &&
-                             !mozilla::IsBaseOf<JSObject, T>::value &&
-                             !mozilla::IsBaseOf<JSString, T>::value &&
-                             !mozilla::IsBaseOf<JS::Symbol, T>::value
+    : public mozilla::EnableIf<mozilla::IsBaseOf<Cell, T>::value &&
+                                   !mozilla::IsBaseOf<JSObject, T>::value &&
+                                   !mozilla::IsBaseOf<JSString, T>::value &&
+                                   !mozilla::IsBaseOf<JS::Symbol, T>::value
 #ifdef ENABLE_BIGINT
-                             && !mozilla::IsBaseOf<JS::BigInt, T>::value
+                                   && !mozilla::IsBaseOf<JS::BigInt, T>::value
 #endif
-                             , T>
-{
-    static_assert(!mozilla::IsSame<Cell, T>::value && !mozilla::IsSame<TenuredCell, T>::value,
-                  "T must not be Cell or TenuredCell");
+                               ,
+                               T> {
+  static_assert(!mozilla::IsSame<Cell, T>::value &&
+                    !mozilla::IsSame<TenuredCell, T>::value,
+                "T must not be Cell or TenuredCell");
 };
 
 template <typename T>
-struct RewrapTaggedPointer<Value, T>
-{
-    static Value wrap(typename IsPrivateGCThingInValue<T>::Type* thing) {
-        return JS::PrivateGCThingValue(thing);
-    }
+struct RewrapTaggedPointer<Value, T> {
+  static Value wrap(typename IsPrivateGCThingInValue<T>::Type* thing) {
+    return JS::PrivateGCThingValue(thing);
+  }
 };
 
 } /* namespace gc */
 
 // The return value indicates if anything was unmarked.
-bool
-UnmarkGrayShapeRecursively(Shape* shape);
+bool UnmarkGrayShapeRecursively(Shape* shape);
 
-template<typename T>
-void
-CheckTracedThing(JSTracer* trc, T* thing);
+template <typename T>
+void CheckTracedThing(JSTracer* trc, T* thing);
 
-template<typename T>
-void
-CheckTracedThing(JSTracer* trc, T thing);
+template <typename T>
+void CheckTracedThing(JSTracer* trc, T thing);
 
 namespace gc {
 
@@ -231,7 +212,7 @@ inline void CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t);
 
 inline void CheckValueAfterMovingGC(const JS::Value& value);
 
-#endif // JSGC_HASH_TABLE_CHECKS
+#endif  // JSGC_HASH_TABLE_CHECKS
 
 } /* namespace gc */
 } /* namespace js */

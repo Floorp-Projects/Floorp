@@ -15,19 +15,11 @@ namespace dom {
 // AbortSignalImpl
 // ----------------------------------------------------------------------------
 
-AbortSignalImpl::AbortSignalImpl(bool aAborted)
-  : mAborted(aAborted)
-{}
+AbortSignalImpl::AbortSignalImpl(bool aAborted) : mAborted(aAborted) {}
 
-bool
-AbortSignalImpl::Aborted() const
-{
-  return mAborted;
-}
+bool AbortSignalImpl::Aborted() const { return mAborted; }
 
-void
-AbortSignalImpl::Abort()
-{
+void AbortSignalImpl::Abort() {
   if (mAborted) {
     return;
   }
@@ -41,18 +33,14 @@ AbortSignalImpl::Abort()
   }
 }
 
-void
-AbortSignalImpl::AddFollower(AbortFollower* aFollower)
-{
+void AbortSignalImpl::AddFollower(AbortFollower* aFollower) {
   MOZ_DIAGNOSTIC_ASSERT(aFollower);
   if (!mFollowers.Contains(aFollower)) {
     mFollowers.AppendElement(aFollower);
   }
 }
 
-void
-AbortSignalImpl::RemoveFollower(AbortFollower* aFollower)
-{
+void AbortSignalImpl::RemoveFollower(AbortFollower* aFollower) {
   MOZ_DIAGNOSTIC_ASSERT(aFollower);
   mFollowers.RemoveElement(aFollower);
 }
@@ -78,21 +66,15 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(AbortSignal, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(AbortSignal, DOMEventTargetHelper)
 
-AbortSignal::AbortSignal(nsIGlobalObject* aGlobalObject,
-                         bool aAborted)
-  : DOMEventTargetHelper(aGlobalObject)
-  , AbortSignalImpl(aAborted)
-{}
+AbortSignal::AbortSignal(nsIGlobalObject* aGlobalObject, bool aAborted)
+    : DOMEventTargetHelper(aGlobalObject), AbortSignalImpl(aAborted) {}
 
-JSObject*
-AbortSignal::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AbortSignal::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return AbortSignal_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AbortSignal::Abort()
-{
+void AbortSignal::Abort() {
   AbortSignalImpl::Abort();
 
   EventInit init;
@@ -100,7 +82,7 @@ AbortSignal::Abort()
   init.mCancelable = false;
 
   RefPtr<Event> event =
-    Event::Constructor(this, NS_LITERAL_STRING("abort"), init);
+      Event::Constructor(this, NS_LITERAL_STRING("abort"), init);
   event->SetTrusted(true);
 
   DispatchEvent(*event);
@@ -109,14 +91,9 @@ AbortSignal::Abort()
 // AbortFollower
 // ----------------------------------------------------------------------------
 
-AbortFollower::~AbortFollower()
-{
-  Unfollow();
-}
+AbortFollower::~AbortFollower() { Unfollow(); }
 
-void
-AbortFollower::Follow(AbortSignalImpl* aSignal)
-{
+void AbortFollower::Follow(AbortSignalImpl* aSignal) {
   MOZ_DIAGNOSTIC_ASSERT(aSignal);
 
   Unfollow();
@@ -125,20 +102,14 @@ AbortFollower::Follow(AbortSignalImpl* aSignal)
   aSignal->AddFollower(this);
 }
 
-void
-AbortFollower::Unfollow()
-{
+void AbortFollower::Unfollow() {
   if (mFollowingSignal) {
     mFollowingSignal->RemoveFollower(this);
     mFollowingSignal = nullptr;
   }
 }
 
-bool
-AbortFollower::IsFollowing() const
-{
-  return !!mFollowingSignal;
-}
+bool AbortFollower::IsFollowing() const { return !!mFollowingSignal; }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

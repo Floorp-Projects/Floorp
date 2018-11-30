@@ -22,70 +22,50 @@ namespace mozilla {
 namespace dom {
 
 namespace binding_detail {
-template<typename KeyType, typename ValueType>
-class RecordEntry
-{
-public:
-  RecordEntry()
-  {
-  }
+template <typename KeyType, typename ValueType>
+class RecordEntry {
+ public:
+  RecordEntry() {}
 
   // Move constructor so we can do Records of Records.
   RecordEntry(RecordEntry<KeyType, ValueType>&& aOther)
-    : mKey(std::move(aOther.mKey)),
-      mValue(std::move(aOther.mValue))
-  {
-  }
+      : mKey(std::move(aOther.mKey)), mValue(std::move(aOther.mValue)) {}
 
   KeyType mKey;
   ValueType mValue;
 };
 
-} // namespace binding_detail
+}  // namespace binding_detail
 
-template<typename KeyType, typename ValueType>
-class Record
-{
-public:
+template <typename KeyType, typename ValueType>
+class Record {
+ public:
   typedef typename binding_detail::RecordEntry<KeyType, ValueType> EntryType;
   typedef Record<KeyType, ValueType> SelfType;
 
-  Record()
-  {
-  }
+  Record() {}
 
   // Move constructor so we can do Record of Record.
-  Record(SelfType&& aOther) :
-    mEntries(std::move(aOther.mEntries))
-  {
-  }
+  Record(SelfType&& aOther) : mEntries(std::move(aOther.mEntries)) {}
 
-  const nsTArray<EntryType>& Entries() const
-  {
-    return mEntries;
-  }
+  const nsTArray<EntryType>& Entries() const { return mEntries; }
 
-  nsTArray<EntryType>& Entries()
-  {
-    return mEntries;
-  }
+  nsTArray<EntryType>& Entries() { return mEntries; }
 
-private:
+ private:
   nsTArray<EntryType> mEntries;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-template<typename K, typename V>
-class nsDefaultComparator<mozilla::dom::binding_detail::RecordEntry<K, V>, K>
-{
-public:
+template <typename K, typename V>
+class nsDefaultComparator<mozilla::dom::binding_detail::RecordEntry<K, V>, K> {
+ public:
   bool Equals(const mozilla::dom::binding_detail::RecordEntry<K, V>& aEntry,
-              const K& aKey) const
-  {
+              const K& aKey) const {
     return aEntry.mKey == aKey;
   }
 };
 
-#endif // mozilla_dom_Record_h
+#endif  // mozilla_dom_Record_h

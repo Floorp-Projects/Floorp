@@ -17,18 +17,17 @@ namespace layers {
 
 // TouchCounter simply tracks the number of active touch points. Feed it
 // your input events to update the internal state.
-class TouchCounter
-{
-public:
+class TouchCounter {
+ public:
   TouchCounter();
   void Update(const MultiTouchInput& aInput);
   uint32_t GetActiveTouchCount() const;
 
-private:
+ private:
   uint32_t mActiveTouchCount;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* mozilla_layers_TouchCounter_h */

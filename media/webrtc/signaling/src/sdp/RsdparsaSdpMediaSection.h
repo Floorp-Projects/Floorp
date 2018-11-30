@@ -16,24 +16,18 @@
 
 #include <map>
 
-namespace mozilla
-{
+namespace mozilla {
 
 class RsdparsaSdp;
 class SdpErrorHolder;
 
-class RsdparsaSdpMediaSection final : public SdpMediaSection
-{
+class RsdparsaSdpMediaSection final : public SdpMediaSection {
   friend class RsdparsaSdp;
 
-public:
+ public:
   ~RsdparsaSdpMediaSection() {}
 
-  MediaType
-  GetMediaType() const override
-  {
-    return mMediaType;
-  }
+  MediaType GetMediaType() const override { return mMediaType; }
 
   unsigned int GetPort() const override;
   void SetPort(unsigned int port) override;
@@ -52,14 +46,13 @@ public:
                 uint32_t clockrate, uint16_t channels) override;
   void ClearCodecs() override;
 
-  void AddDataChannel(const std::string& name, uint16_t port,
-                      uint16_t streams, uint32_t message_size) override;
+  void AddDataChannel(const std::string& name, uint16_t port, uint16_t streams,
+                      uint32_t message_size) override;
 
   void Serialize(std::ostream&) const override;
 
-private:
-  RsdparsaSdpMediaSection(size_t level,
-                          RsdparsaSessionHandle session,
+ private:
+  RsdparsaSdpMediaSection(size_t level, RsdparsaSessionHandle session,
                           const RustMediaSection* const section,
                           const RsdparsaSdpAttributeList* sessionLevel);
 
@@ -76,6 +69,6 @@ private:
 
   UniquePtr<RsdparsaSdpAttributeList> mAttributeList;
 };
-}
+}  // namespace mozilla
 
 #endif

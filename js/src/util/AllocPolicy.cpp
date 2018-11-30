@@ -10,14 +10,11 @@
 
 using namespace js;
 
-void*
-TempAllocPolicy::onOutOfMemory(AllocFunction allocFunc, size_t nbytes, void* reallocPtr)
-{
-    return cx_->onOutOfMemory(allocFunc, nbytes, reallocPtr);
+void* TempAllocPolicy::onOutOfMemory(AllocFunction allocFunc, size_t nbytes,
+                                     void* reallocPtr) {
+  return cx_->onOutOfMemory(allocFunc, nbytes, reallocPtr);
 }
 
-void
-TempAllocPolicy::reportAllocOverflow() const
-{
-    ReportAllocationOverflow(cx_);
+void TempAllocPolicy::reportAllocOverflow() const {
+  ReportAllocationOverflow(cx_);
 }

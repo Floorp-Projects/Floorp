@@ -23,14 +23,13 @@ class nsIMutableArray;
 namespace mozilla {
 namespace dom {
 class EventTarget;
-} // namespace dom
+}  // namespace dom
 
-template<typename T>
+template <typename T>
 class Maybe;
 
-class EventListenerChange final : public nsIEventListenerChange
-{
-public:
+class EventListenerChange final : public nsIEventListenerChange {
+ public:
   explicit EventListenerChange(dom::EventTarget* aTarget);
 
   void AddChangedListenerName(nsAtom* aEventName);
@@ -38,31 +37,28 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEVENTLISTENERCHANGE
 
-protected:
+ protected:
   virtual ~EventListenerChange();
   nsCOMPtr<dom::EventTarget> mTarget;
   nsTArray<RefPtr<nsAtom>> mChangedListenerNames;
 };
 
-class EventListenerInfo final : public nsIEventListenerInfo
-{
-public:
+class EventListenerInfo final : public nsIEventListenerInfo {
+ public:
   EventListenerInfo(const nsAString& aType,
                     JS::Handle<JSObject*> aScriptedListener,
                     JS::Handle<JSObject*> aScriptedListenerGlobal,
-                    bool aCapturing,
-                    bool aAllowsUntrusted,
+                    bool aCapturing, bool aAllowsUntrusted,
                     bool aInSystemEventGroup);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(EventListenerInfo)
   NS_DECL_NSIEVENTLISTENERINFO
 
-protected:
- virtual ~EventListenerInfo();
+ protected:
+  virtual ~EventListenerInfo();
 
-  bool GetJSVal(JSContext* aCx,
-                Maybe<JSAutoRealm>& aAr,
+  bool GetJSVal(JSContext* aCx, Maybe<JSAutoRealm>& aAr,
                 JS::MutableHandle<JS::Value> aJSVal);
 
   nsString mType;
@@ -77,33 +73,34 @@ protected:
   bool mInSystemEventGroup;
 };
 
-class EventListenerService final : public nsIEventListenerService
-{
+class EventListenerService final : public nsIEventListenerService {
   ~EventListenerService();
-public:
+
+ public:
   EventListenerService();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEVENTLISTENERSERVICE
 
   static void NotifyAboutMainThreadListenerChange(dom::EventTarget* aTarget,
-                                                  nsAtom* aName)
-  {
+                                                  nsAtom* aName) {
     if (sInstance) {
       sInstance->NotifyAboutMainThreadListenerChangeInternal(aTarget, aName);
     }
   }
 
   void NotifyPendingChanges();
-private:
+
+ private:
   void NotifyAboutMainThreadListenerChangeInternal(dom::EventTarget* aTarget,
                                                    nsAtom* aName);
   nsTObserverArray<nsCOMPtr<nsIListenerChangeListener>> mChangeListeners;
   nsCOMPtr<nsIMutableArray> mPendingListenerChanges;
-  nsDataHashtable<nsISupportsHashKey, RefPtr<EventListenerChange>> mPendingListenerChangesSet;
+  nsDataHashtable<nsISupportsHashKey, RefPtr<EventListenerChange>>
+      mPendingListenerChangesSet;
 
   static EventListenerService* sInstance;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_EventListenerService_h_
+#endif  // mozilla_EventListenerService_h_

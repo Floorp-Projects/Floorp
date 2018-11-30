@@ -11,8 +11,8 @@ namespace mozilla {
 namespace net {
 
 namespace NeckoCommonInternal {
-  bool gSecurityDisabled = true;
-} // namespace NeckoCommonInternal
+bool gSecurityDisabled = true;
+}  // namespace NeckoCommonInternal
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

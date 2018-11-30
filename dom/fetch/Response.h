@@ -19,94 +19,64 @@
 namespace mozilla {
 namespace ipc {
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
 class Headers;
 
-class Response final : public nsISupports
-                     , public FetchBody<Response>
-                     , public nsWrapperCache
-{
+class Response final : public nsISupports,
+                       public FetchBody<Response>,
+                       public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Response)
 
-public:
+ public:
   Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse,
            AbortSignalImpl* aSignalImpl);
 
   Response(const Response& aOther) = delete;
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
     return Response_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  ResponseType
-  Type() const
-  {
-    return mInternalResponse->Type();
-  }
-  void
-  GetUrl(nsAString& aUrl) const
-  {
+  ResponseType Type() const { return mInternalResponse->Type(); }
+  void GetUrl(nsAString& aUrl) const {
     CopyUTF8toUTF16(mInternalResponse->GetURL(), aUrl);
   }
-  bool
-  Redirected() const
-  {
-    return mInternalResponse->IsRedirected();
-  }
-  uint16_t
-  Status() const
-  {
-    return mInternalResponse->GetStatus();
-  }
+  bool Redirected() const { return mInternalResponse->IsRedirected(); }
+  uint16_t Status() const { return mInternalResponse->GetStatus(); }
 
-  bool
-  Ok() const
-  {
+  bool Ok() const {
     return mInternalResponse->GetStatus() >= 200 &&
            mInternalResponse->GetStatus() <= 299;
   }
 
-  void
-  GetStatusText(nsCString& aStatusText) const
-  {
+  void GetStatusText(nsCString& aStatusText) const {
     aStatusText = mInternalResponse->GetStatusText();
   }
 
-  InternalHeaders*
-  GetInternalHeaders() const
-  {
+  InternalHeaders* GetInternalHeaders() const {
     return mInternalResponse->Headers();
   }
 
-  void
-  InitChannelInfo(nsIChannel* aChannel)
-  {
+  void InitChannelInfo(nsIChannel* aChannel) {
     mInternalResponse->InitChannelInfo(aChannel);
   }
 
-  const ChannelInfo&
-  GetChannelInfo() const
-  {
+  const ChannelInfo& GetChannelInfo() const {
     return mInternalResponse->GetChannelInfo();
   }
 
-  const UniquePtr<mozilla::ipc::PrincipalInfo>&
-  GetPrincipalInfo() const
-  {
+  const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mInternalResponse->GetPrincipalInfo();
   }
 
   Headers* Headers_();
 
-  void
-  GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr)
-  {
+  void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr) {
     mInternalResponse->GetBody(aStream, aBodyLength);
   }
 
@@ -114,55 +84,41 @@ public:
 
   using FetchBody::BodyBlobURISpec;
 
-  const nsACString&
-  BodyBlobURISpec() const
-  {
+  const nsACString& BodyBlobURISpec() const {
     return mInternalResponse->BodyBlobURISpec();
   }
 
   using FetchBody::BodyLocalPath;
 
-  const nsAString&
-  BodyLocalPath() const
-  {
+  const nsAString& BodyLocalPath() const {
     return mInternalResponse->BodyLocalPath();
   }
 
-  static already_AddRefed<Response>
-  Error(const GlobalObject& aGlobal);
+  static already_AddRefed<Response> Error(const GlobalObject& aGlobal);
 
-  static already_AddRefed<Response>
-  Redirect(const GlobalObject& aGlobal, const nsAString& aUrl, uint16_t aStatus, ErrorResult& aRv);
+  static already_AddRefed<Response> Redirect(const GlobalObject& aGlobal,
+                                             const nsAString& aUrl,
+                                             uint16_t aStatus,
+                                             ErrorResult& aRv);
 
-  static already_AddRefed<Response>
-  Constructor(const GlobalObject& aGlobal,
-              const Optional<Nullable<fetch::ResponseBodyInit>>& aBody,
-              const ResponseInit& aInit, ErrorResult& rv);
+  static already_AddRefed<Response> Constructor(
+      const GlobalObject& aGlobal,
+      const Optional<Nullable<fetch::ResponseBodyInit>>& aBody,
+      const ResponseInit& aInit, ErrorResult& rv);
 
-  nsIGlobalObject* GetParentObject() const
-  {
-    return mOwner;
-  }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
 
-  already_AddRefed<Response>
-  Clone(JSContext* aCx, ErrorResult& aRv);
+  already_AddRefed<Response> Clone(JSContext* aCx, ErrorResult& aRv);
 
-  already_AddRefed<Response>
-  CloneUnfiltered(JSContext* aCx, ErrorResult& aRv);
+  already_AddRefed<Response> CloneUnfiltered(JSContext* aCx, ErrorResult& aRv);
 
-  void
-  SetBody(nsIInputStream* aBody, int64_t aBodySize);
+  void SetBody(nsIInputStream* aBody, int64_t aBodySize);
 
-  already_AddRefed<InternalResponse>
-  GetInternalResponse() const;
+  already_AddRefed<InternalResponse> GetInternalResponse() const;
 
-  AbortSignalImpl*
-  GetSignalImpl() const override
-  {
-    return mSignalImpl;
-  }
+  AbortSignalImpl* GetSignalImpl() const override { return mSignalImpl; }
 
-private:
+ private:
   ~Response();
 
   RefPtr<InternalResponse> mInternalResponse;
@@ -171,7 +127,7 @@ private:
   RefPtr<AbortSignalImpl> mSignalImpl;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Response_h
+#endif  // mozilla_dom_Response_h

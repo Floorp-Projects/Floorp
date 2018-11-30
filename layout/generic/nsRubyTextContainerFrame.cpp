@@ -22,18 +22,15 @@ using namespace mozilla;
 // =======================
 
 NS_QUERYFRAME_HEAD(nsRubyTextContainerFrame)
-  NS_QUERYFRAME_ENTRY(nsRubyTextContainerFrame)
+NS_QUERYFRAME_ENTRY(nsRubyTextContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyTextContainerFrame)
 
-nsContainerFrame*
-NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
-                             ComputedStyle* aStyle)
-{
+nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
+                                               ComputedStyle* aStyle) {
   return new (aPresShell) nsRubyTextContainerFrame(aStyle);
 }
-
 
 //----------------------------------------------------------------------
 
@@ -41,60 +38,46 @@ NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
 // ===============================================
 
 #ifdef DEBUG_FRAME_DUMP
-nsresult
-nsRubyTextContainerFrame::GetFrameName(nsAString& aResult) const
-{
+nsresult nsRubyTextContainerFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("RubyTextContainer"), aResult);
 }
 #endif
 
-/* virtual */ bool
-nsRubyTextContainerFrame::IsFrameOfType(uint32_t aFlags) const
-{
+/* virtual */ bool nsRubyTextContainerFrame::IsFrameOfType(
+    uint32_t aFlags) const {
   if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint)) {
     return false;
   }
   return nsContainerFrame::IsFrameOfType(aFlags);
 }
 
-/* virtual */ void
-nsRubyTextContainerFrame::SetInitialChildList(ChildListID aListID,
-                                              nsFrameList& aChildList)
-{
+/* virtual */ void nsRubyTextContainerFrame::SetInitialChildList(
+    ChildListID aListID, nsFrameList& aChildList) {
   nsContainerFrame::SetInitialChildList(aListID, aChildList);
   if (aListID == kPrincipalList) {
     UpdateSpanFlag();
   }
 }
 
-/* virtual */ void
-nsRubyTextContainerFrame::AppendFrames(ChildListID aListID,
-                                       nsFrameList& aFrameList)
-{
+/* virtual */ void nsRubyTextContainerFrame::AppendFrames(
+    ChildListID aListID, nsFrameList& aFrameList) {
   nsContainerFrame::AppendFrames(aListID, aFrameList);
   UpdateSpanFlag();
 }
 
-/* virtual */ void
-nsRubyTextContainerFrame::InsertFrames(ChildListID aListID,
-                                       nsIFrame* aPrevFrame,
-                                       nsFrameList& aFrameList)
-{
+/* virtual */ void nsRubyTextContainerFrame::InsertFrames(
+    ChildListID aListID, nsIFrame* aPrevFrame, nsFrameList& aFrameList) {
   nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
   UpdateSpanFlag();
 }
 
-/* virtual */ void
-nsRubyTextContainerFrame::RemoveFrame(ChildListID aListID,
-                                      nsIFrame* aOldFrame)
-{
+/* virtual */ void nsRubyTextContainerFrame::RemoveFrame(ChildListID aListID,
+                                                         nsIFrame* aOldFrame) {
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
   UpdateSpanFlag();
 }
 
-void
-nsRubyTextContainerFrame::UpdateSpanFlag()
-{
+void nsRubyTextContainerFrame::UpdateSpanFlag() {
   bool isSpan = false;
   // The continuation checks are safe here because spans never break.
   if (!GetPrevContinuation() && !GetNextContinuation()) {
@@ -113,12 +96,9 @@ nsRubyTextContainerFrame::UpdateSpanFlag()
   }
 }
 
-/* virtual */ void
-nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
-                                 ReflowOutput& aDesiredSize,
-                                 const ReflowInput& aReflowInput,
-                                 nsReflowStatus& aStatus)
-{
+/* virtual */ void nsRubyTextContainerFrame::Reflow(
+    nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+    const ReflowInput& aReflowInput, nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsRubyTextContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);

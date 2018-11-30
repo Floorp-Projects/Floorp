@@ -15,14 +15,13 @@
  * required for Mozillas remote service to work, because
  * it is initialized after MApplication.
  */
-class MozMeegoAppService: public MApplicationService
-{
+class MozMeegoAppService : public MApplicationService {
   Q_OBJECT
-public:
-  MozMeegoAppService(): MApplicationService(QString()) {}
-public Q_SLOTS:
+ public:
+  MozMeegoAppService() : MApplicationService(QString()) {}
+ public Q_SLOTS:
   virtual QString registeredName() { return QString(); }
   virtual bool isRegistered() { return false; }
   virtual bool registerService() { return true; }
 };
-#endif // MOZMEEGOAPPSERVICE_H
+#endif  // MOZMEEGOAPPSERVICE_H

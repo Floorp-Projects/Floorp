@@ -17,41 +17,35 @@
 namespace mozilla {
 namespace dom {
 
-inline void
-Element::RegisterActivityObserver()
-{
+inline void Element::RegisterActivityObserver() {
   OwnerDoc()->RegisterActivityObserver(this);
 }
 
-inline void
-Element::UnregisterActivityObserver()
-{
+inline void Element::UnregisterActivityObserver() {
   OwnerDoc()->UnregisterActivityObserver(this);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-inline Element*
-nsINode::GetFlattenedTreeParentElement() const
-{
+inline Element* nsINode::GetFlattenedTreeParentElement() const {
   nsINode* parentNode = GetFlattenedTreeParentNode();
-  if MOZ_LIKELY(parentNode && parentNode->IsElement()) {
-    return parentNode->AsElement();
-  }
+  if
+    MOZ_LIKELY(parentNode && parentNode->IsElement()) {
+      return parentNode->AsElement();
+    }
 
   return nullptr;
 }
 
-inline Element*
-nsINode::GetFlattenedTreeParentElementForStyle() const
-{
+inline Element* nsINode::GetFlattenedTreeParentElementForStyle() const {
   nsINode* parentNode = GetFlattenedTreeParentNodeForStyle();
-  if MOZ_LIKELY(parentNode && parentNode->IsElement()) {
-    return parentNode->AsElement();
-  }
+  if
+    MOZ_LIKELY(parentNode && parentNode->IsElement()) {
+      return parentNode->AsElement();
+    }
 
   return nullptr;
 }
 
-#endif // mozilla_dom_ElementInlines_h
+#endif  // mozilla_dom_ElementInlines_h

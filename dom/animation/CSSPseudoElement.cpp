@@ -20,40 +20,32 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CSSPseudoElement, Release)
 
 CSSPseudoElement::CSSPseudoElement(Element* aElement,
                                    CSSPseudoElementType aType)
-  : mParentElement(aElement)
-  , mPseudoType(aType)
-{
+    : mParentElement(aElement), mPseudoType(aType) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aType == CSSPseudoElementType::after ||
-             aType == CSSPseudoElementType::before,
+                 aType == CSSPseudoElementType::before,
              "Unexpected Pseudo Type");
 }
 
-CSSPseudoElement::~CSSPseudoElement()
-{
+CSSPseudoElement::~CSSPseudoElement() {
   // Element might have been unlinked already, so we have to do null check.
   if (mParentElement) {
     mParentElement->DeleteProperty(
-      GetCSSPseudoElementPropertyAtom(mPseudoType));
+        GetCSSPseudoElementPropertyAtom(mPseudoType));
   }
 }
 
-ParentObject
-CSSPseudoElement::GetParentObject() const
-{
+ParentObject CSSPseudoElement::GetParentObject() const {
   return mParentElement->GetParentObject();
 }
 
-JSObject*
-CSSPseudoElement::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* CSSPseudoElement::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return CSSPseudoElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
-                                nsTArray<RefPtr<Animation>>& aRetVal)
-{
+void CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
+                                     nsTArray<RefPtr<Animation>>& aRetVal) {
   nsIDocument* doc = mParentElement->GetComposedDoc();
   if (doc) {
     // We don't need to explicitly flush throttled animations here, since
@@ -61,20 +53,17 @@ CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
     // set of running animations and it's only the set of running animations
     // that is important here.
     doc->FlushPendingNotifications(
-      ChangesToFlush(FlushType::Style, false /* flush animations */));
+        ChangesToFlush(FlushType::Style, false /* flush animations */));
   }
 
   Element::GetAnimationsUnsorted(mParentElement, mPseudoType, aRetVal);
   aRetVal.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
-already_AddRefed<Animation>
-CSSPseudoElement::Animate(
-    JSContext* aContext,
-    JS::Handle<JSObject*> aKeyframes,
+already_AddRefed<Animation> CSSPseudoElement::Animate(
+    JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-    ErrorResult& aError)
-{
+    ErrorResult& aError) {
   Nullable<ElementOrCSSPseudoElement> target;
   target.SetValue().SetAsCSSPseudoElement() = this;
   return Element::Animate(target, aContext, aKeyframes, aOptions, aError);
@@ -82,15 +71,14 @@ CSSPseudoElement::Animate(
 
 /* static */ already_AddRefed<CSSPseudoElement>
 CSSPseudoElement::GetCSSPseudoElement(Element* aElement,
-                                      CSSPseudoElementType aType)
-{
+                                      CSSPseudoElementType aType) {
   if (!aElement) {
     return nullptr;
   }
 
   nsAtom* propName = CSSPseudoElement::GetCSSPseudoElementPropertyAtom(aType);
   RefPtr<CSSPseudoElement> pseudo =
-    static_cast<CSSPseudoElement*>(aElement->GetProperty(propName));
+      static_cast<CSSPseudoElement*>(aElement->GetProperty(propName));
   if (pseudo) {
     return pseudo.forget();
   }
@@ -108,9 +96,8 @@ CSSPseudoElement::GetCSSPseudoElement(Element* aElement,
   return pseudo.forget();
 }
 
-/* static */ nsAtom*
-CSSPseudoElement::GetCSSPseudoElementPropertyAtom(CSSPseudoElementType aType)
-{
+/* static */ nsAtom* CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
+    CSSPseudoElementType aType) {
   switch (aType) {
     case CSSPseudoElementType::before:
       return nsGkAtoms::cssPseudoElementBeforeProperty;
@@ -119,11 +106,12 @@ CSSPseudoElement::GetCSSPseudoElementPropertyAtom(CSSPseudoElementType aType)
       return nsGkAtoms::cssPseudoElementAfterProperty;
 
     default:
-      MOZ_ASSERT_UNREACHABLE("Should not try to get CSSPseudoElement "
-                             "other than ::before or ::after");
+      MOZ_ASSERT_UNREACHABLE(
+          "Should not try to get CSSPseudoElement "
+          "other than ::before or ::after");
       return nullptr;
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

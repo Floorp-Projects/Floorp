@@ -20,18 +20,15 @@ using namespace mozilla::dom;
 
 namespace {
 
-class DynamicFrameEventFilter final : public nsIDOMEventListener
-{
-public:
+class DynamicFrameEventFilter final : public nsIDOMEventListener {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(DynamicFrameEventFilter)
 
   explicit DynamicFrameEventFilter(EventListener* aListener)
-    : mListener(aListener)
-  { }
+      : mListener(aListener) {}
 
-  NS_IMETHODIMP HandleEvent(Event* aEvent) override
-  {
+  NS_IMETHODIMP HandleEvent(Event* aEvent) override {
     if (mListener && TargetInNonDynamicDocShell(aEvent)) {
       mListener->HandleEvent(*aEvent);
     }
@@ -39,11 +36,10 @@ public:
     return NS_OK;
   }
 
-private:
-  ~DynamicFrameEventFilter() { }
+ private:
+  ~DynamicFrameEventFilter() {}
 
-  bool TargetInNonDynamicDocShell(Event* aEvent)
-  {
+  bool TargetInNonDynamicDocShell(Event* aEvent) {
     EventTarget* target = aEvent->GetTarget();
     if (!target) {
       return false;
@@ -77,14 +73,13 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DynamicFrameEventFilter)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DynamicFrameEventFilter)
 
-} // anonymous namespace
+}  // anonymous namespace
 
 NS_IMPL_ISUPPORTS(nsSessionStoreUtils, nsISessionStoreUtils)
 
 NS_IMETHODIMP
-nsSessionStoreUtils::ForEachNonDynamicChildFrame(mozIDOMWindowProxy* aWindow,
-                                                 nsISessionStoreUtilsFrameCallback* aCallback)
-{
+nsSessionStoreUtils::ForEachNonDynamicChildFrame(
+    mozIDOMWindowProxy* aWindow, nsISessionStoreUtilsFrameCallback* aCallback) {
   NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
 
   nsCOMPtr<nsPIDOMWindowOuter> outer = nsPIDOMWindowOuter::From(aWindow);
@@ -119,13 +114,10 @@ nsSessionStoreUtils::ForEachNonDynamicChildFrame(mozIDOMWindowProxy* aWindow,
 }
 
 NS_IMETHODIMP
-nsSessionStoreUtils::AddDynamicFrameFilteredListener(EventTarget* aTarget,
-                                                     const nsAString& aType,
-                                                     JS::Handle<JS::Value> aListener,
-                                                     bool aUseCapture,
-                                                     JSContext* aCx,
-                                                     nsISupports** aResult)
-{
+nsSessionStoreUtils::AddDynamicFrameFilteredListener(
+    EventTarget* aTarget, const nsAString& aType,
+    JS::Handle<JS::Value> aListener, bool aUseCapture, JSContext* aCx,
+    nsISupports** aResult) {
   if (NS_WARN_IF(!aListener.isObject())) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -135,7 +127,7 @@ nsSessionStoreUtils::AddDynamicFrameFilteredListener(EventTarget* aTarget,
   JS::Rooted<JSObject*> obj(aCx, &aListener.toObject());
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   RefPtr<EventListener> listener =
-    new EventListener(aCx, obj, global, GetIncumbentGlobal());
+      new EventListener(aCx, obj, global, GetIncumbentGlobal());
 
   nsCOMPtr<nsIDOMEventListener> filter(new DynamicFrameEventFilter(listener));
 
@@ -150,8 +142,7 @@ NS_IMETHODIMP
 nsSessionStoreUtils::RemoveDynamicFrameFilteredListener(EventTarget* aTarget,
                                                         const nsAString& aType,
                                                         nsISupports* aListener,
-                                                        bool aUseCapture)
-{
+                                                        bool aUseCapture) {
   NS_ENSURE_TRUE(aTarget, NS_ERROR_NO_INTERFACE);
 
   nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(aListener);
@@ -162,20 +153,19 @@ nsSessionStoreUtils::RemoveDynamicFrameFilteredListener(EventTarget* aTarget,
 }
 
 NS_IMETHODIMP
-nsSessionStoreUtils::CollectDocShellCapabilities(nsIDocShell* aDocShell,
-                                                 nsACString& aDisallowCapabilities)
-{
+nsSessionStoreUtils::CollectDocShellCapabilities(
+    nsIDocShell* aDocShell, nsACString& aDisallowCapabilities) {
   bool allow;
 
-#define TRY_ALLOWPROP(y)                          \
-  PR_BEGIN_MACRO                                  \
-    aDocShell->GetAllow##y(&allow);               \
-    if (!allow) {                                 \
-      if (!aDisallowCapabilities.IsEmpty()) {     \
-        aDisallowCapabilities.Append(',');        \
-      }                                           \
-      aDisallowCapabilities.Append(#y);           \
-    }                                             \
+#define TRY_ALLOWPROP(y)                    \
+  PR_BEGIN_MACRO                            \
+  aDocShell->GetAllow##y(&allow);           \
+  if (!allow) {                             \
+    if (!aDisallowCapabilities.IsEmpty()) { \
+      aDisallowCapabilities.Append(',');    \
+    }                                       \
+    aDisallowCapabilities.Append(#y);       \
+  }                                         \
   PR_END_MACRO
 
   TRY_ALLOWPROP(Plugins);
@@ -193,14 +183,12 @@ nsSessionStoreUtils::CollectDocShellCapabilities(nsIDocShell* aDocShell,
 
 #undef TRY_ALLOWPROP
 
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSessionStoreUtils::RestoreDocShellCapabilities(nsIDocShell* aDocShell,
-                                                 const nsACString& aDisallowCapabilities)
-{
+nsSessionStoreUtils::RestoreDocShellCapabilities(
+    nsIDocShell* aDocShell, const nsACString& aDisallowCapabilities) {
   aDocShell->SetAllowPlugins(true);
   aDocShell->SetAllowJavascript(true);
   aDocShell->SetAllowMetaRedirects(true);
@@ -234,8 +222,10 @@ nsSessionStoreUtils::RestoreDocShellCapabilities(nsIDocShell* aDocShell,
     } else if (token.EqualsLiteral("ContentRetargeting")) {
       bool allow;
       aDocShell->GetAllowContentRetargetingOnChildren(&allow);
-      aDocShell->SetAllowContentRetargeting(false); //will also set AllowContentRetargetingOnChildren
-      aDocShell->SetAllowContentRetargetingOnChildren(allow); // restore the allowProp to original
+      aDocShell->SetAllowContentRetargeting(
+          false);  // will also set AllowContentRetargetingOnChildren
+      aDocShell->SetAllowContentRetargetingOnChildren(
+          allow);  // restore the allowProp to original
     } else if (token.EqualsLiteral("ContentRetargetingOnChildren")) {
       aDocShell->SetAllowContentRetargetingOnChildren(false);
     }
@@ -246,8 +236,7 @@ nsSessionStoreUtils::RestoreDocShellCapabilities(nsIDocShell* aDocShell,
 
 NS_IMETHODIMP
 nsSessionStoreUtils::CollectScrollPosition(nsIDocument* aDocument,
-                                           nsACString& aRet)
-{
+                                           nsACString& aRet) {
   aRet.Truncate();
 
   nsIPresShell* presShell = aDocument->GetShell();
@@ -274,8 +263,7 @@ nsSessionStoreUtils::CollectScrollPosition(nsIDocument* aDocument,
 
 NS_IMETHODIMP
 nsSessionStoreUtils::RestoreScrollPosition(mozIDOMWindow* aWindow,
-                                           const nsACString& aPos)
-{
+                                           const nsACString& aPos) {
   nsCCharSeparatedTokenizer tokenizer(aPos, ',');
   nsAutoCString token(tokenizer.nextToken());
   int pos_X = atoi(token.get());

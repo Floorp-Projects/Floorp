@@ -14,11 +14,11 @@
  * Library Handle class for ELF libraries we don't let the system linker
  * handle.
  */
-class CustomElf: public BaseElf, private ElfLoader::link_map
-{
+class CustomElf : public BaseElf, private ElfLoader::link_map {
   friend class ElfLoader;
   friend class SEGVHandler;
-public:
+
+ public:
   /**
    * Returns a new CustomElf using the given file descriptor to map ELF
    * content. The file descriptor ownership is stolen, and it will be closed
@@ -28,25 +28,25 @@ public:
    * currently, none are supported and the behaviour is more or less that of
    * RTLD_GLOBAL | RTLD_BIND_NOW.
    */
-  static already_AddRefed<LibHandle> Load(Mappable *mappable,
-                                               const char *path, int flags);
+  static already_AddRefed<LibHandle> Load(Mappable *mappable, const char *path,
+                                          int flags);
 
   /**
    * Inherited from LibHandle/BaseElf
    */
   virtual ~CustomElf();
 
-protected:
+ protected:
   virtual Mappable *GetMappable() const;
 
-public:
+ public:
   /**
    * Returns the instance, casted as BaseElf. (short of a better way to do
    * this without RTTI)
    */
   virtual BaseElf *AsBaseElf() { return this; }
 
-private:
+ private:
   /**
    * Scan dependent libraries to find the address corresponding to the
    * given symbol name. This is used to find symbols that are undefined
@@ -58,13 +58,12 @@ private:
    * Private constructor
    */
   CustomElf(Mappable *mappable, const char *path)
-  : BaseElf(path, mappable)
-  , link_map()
-  , init(0)
-  , fini(0)
-  , initialized(false)
-  , has_text_relocs(false)
-  { }
+      : BaseElf(path, mappable),
+        link_map(),
+        init(0),
+        fini(0),
+        initialized(false),
+        has_text_relocs(false) {}
 
   /**
    * Loads an Elf segment defined by the given PT_LOAD header.
@@ -106,8 +105,7 @@ private:
   /**
    * Call a function given a pointer to its location.
    */
-  void CallFunction(void *ptr) const
-  {
+  void CallFunction(void *ptr) const {
     /* C++ doesn't allow direct conversion between pointer-to-object
      * and pointer-to-function. */
     union {
@@ -122,10 +120,7 @@ private:
   /**
    * Call a function given a an address relative to the library base
    */
-  void CallFunction(Elf::Addr addr) const
-  {
-    return CallFunction(GetPtr(addr));
-  }
+  void CallFunction(Elf::Addr addr) const { return CallFunction(GetPtr(addr)); }
 
   /* List of dependent libraries */
   std::vector<RefPtr<LibHandle> > dependencies;

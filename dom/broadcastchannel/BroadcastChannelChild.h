@@ -13,32 +13,26 @@ namespace mozilla {
 
 namespace ipc {
 class BackgroundChildImpl;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
 class BroadcastChannel;
 
-class BroadcastChannelChild final : public PBroadcastChannelChild
-{
+class BroadcastChannelChild final : public PBroadcastChannelChild {
   friend class mozilla::ipc::BackgroundChildImpl;
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(BroadcastChannelChild)
 
-  void SetParent(BroadcastChannel* aBC)
-  {
-    mBC = aBC;
-  }
+  void SetParent(BroadcastChannel* aBC) { mBC = aBC; }
 
-  virtual mozilla::ipc::IPCResult RecvNotify(const ClonedMessageData& aData) override;
+  virtual mozilla::ipc::IPCResult RecvNotify(
+      const ClonedMessageData& aData) override;
 
-  bool IsActorDestroyed() const
-  {
-    return mActorDestroyed;
-  }
+  bool IsActorDestroyed() const { return mActorDestroyed; }
 
-private:
+ private:
   explicit BroadcastChannelChild(const nsACString& aOrigin);
   ~BroadcastChannelChild();
 
@@ -55,7 +49,7 @@ private:
   bool mActorDestroyed;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_BroadcastChannelChild_h
+#endif  // mozilla_dom_BroadcastChannelChild_h

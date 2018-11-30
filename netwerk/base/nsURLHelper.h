@@ -11,8 +11,7 @@
 class nsIFile;
 class nsIURLParser;
 
-enum netCoalesceFlags
-{
+enum netCoalesceFlags {
   NET_COALESCE_NORMAL = 0,
 
   /**
@@ -20,13 +19,13 @@ enum netCoalesceFlags
    * servers in which the root of the FTP URL is not necessarily
    * the root of the FTP filesystem).
    */
-  NET_COALESCE_ALLOW_RELATIVE_ROOT = 1<<0,
+  NET_COALESCE_ALLOW_RELATIVE_ROOT = 1 << 0,
 
   /**
    * recognizes /%2F and // as markers for the root directory
    * and handles them properly.
    */
-  NET_COALESCE_DOUBLE_SLASH_IS_ROOT = 1<<1
+  NET_COALESCE_DOUBLE_SLASH_IS_ROOT = 1 << 1
 };
 
 //----------------------------------------------------------------------------
@@ -40,9 +39,9 @@ void net_ShutdownURLHelperOSX();
 #endif
 
 /* access URL parsers */
-nsIURLParser * net_GetAuthURLParser();
-nsIURLParser * net_GetNoAuthURLParser();
-nsIURLParser * net_GetStdURLParser();
+nsIURLParser *net_GetAuthURLParser();
+nsIURLParser *net_GetNoAuthURLParser();
+nsIURLParser *net_GetStdURLParser();
 
 /* convert between nsIFile and file:// URL spec
  * net_GetURLSpecFromFile does an extra stat, so callers should
@@ -54,13 +53,12 @@ nsresult net_GetURLSpecFromActualFile(nsIFile *, nsACString &);
 nsresult net_GetFileFromURLSpec(const nsACString &, nsIFile **);
 
 /* extract file path components from file:// URL */
-nsresult net_ParseFileURL(const nsACString &inURL,
-                                      nsACString &outDirectory,
-                                      nsACString &outFileBaseName,
-                                      nsACString &outFileExtension);
+nsresult net_ParseFileURL(const nsACString &inURL, nsACString &outDirectory,
+                          nsACString &outFileBaseName,
+                          nsACString &outFileExtension);
 
 /* handle .. in dirs while resolving URLs (path is UTF-8) */
-void net_CoalesceDirs(netCoalesceFlags flags, char* path);
+void net_CoalesceDirs(netCoalesceFlags flags, char *path);
 
 /**
  * Resolves a relative path string containing "." and ".."
@@ -76,8 +74,8 @@ void net_CoalesceDirs(netCoalesceFlags flags, char* path);
  * @return a new string, representing canonical uri
  */
 nsresult net_ResolveRelativePath(const nsACString &relativePath,
-                                             const nsACString &basePath,
-                                             nsACString &result);
+                                 const nsACString &basePath,
+                                 nsACString &result);
 
 /**
  * Check if a URL is absolute
@@ -85,7 +83,7 @@ nsresult net_ResolveRelativePath(const nsACString &relativePath,
  * @param inURL     URL spec
  * @return true if the given spec represents an absolute URL
  */
-bool net_IsAbsoluteURL(const nsACString& inURL);
+bool net_IsAbsoluteURL(const nsACString &inURL);
 
 /**
  * Extract URI-Scheme if possible
@@ -93,15 +91,13 @@ bool net_IsAbsoluteURL(const nsACString& inURL);
  * @param inURI     URI spec
  * @param scheme    scheme copied to this buffer on return. Is lowercase.
  */
-nsresult net_ExtractURLScheme(const nsACString &inURI,
-                              nsACString &scheme);
+nsresult net_ExtractURLScheme(const nsACString &inURI, nsACString &scheme);
 
 /* check that the given scheme conforms to RFC 2396 */
 bool net_IsValidScheme(const char *scheme, uint32_t schemeLen);
 
-inline bool net_IsValidScheme(const nsCString& scheme)
-{
-    return net_IsValidScheme(scheme.get(), scheme.Length());
+inline bool net_IsValidScheme(const nsCString &scheme) {
+  return net_IsValidScheme(scheme.get(), scheme.Length());
 }
 
 /**
@@ -113,7 +109,7 @@ inline bool net_IsValidScheme(const nsCString& scheme)
  * @param input the URL spec we want to filter
  * @param result the out param to write to if filtering happens
  */
-void net_FilterURIString(const nsACString& input, nsACString& result);
+void net_FilterURIString(const nsACString &input, nsACString &result);
 
 /**
  * This function performs character stripping just like net_FilterURIString,
@@ -125,7 +121,8 @@ void net_FilterURIString(const nsACString& input, nsACString& result);
  * @param aFlags the flags which control which characters we escape
  * @param aResult the out param to write to if filtering happens
  */
-nsresult net_FilterAndEscapeURI(const nsACString& aInput, uint32_t aFlags, nsACString& aResult);
+nsresult net_FilterAndEscapeURI(const nsACString &aInput, uint32_t aFlags,
+                                nsACString &aResult);
 
 #if defined(XP_WIN)
 /**
@@ -141,8 +138,7 @@ nsresult net_FilterAndEscapeURI(const nsACString& aInput, uint32_t aFlags, nsACS
  *
  * @returns false if aURL is already normalized.  Otherwise, returns true.
  */
-bool net_NormalizeFileURL(const nsACString &aURL,
-                                        nsCString &aResultBuf);
+bool net_NormalizeFileURL(const nsACString &aURL, nsCString &aResultBuf);
 #endif
 
 /*****************************************************************************
@@ -150,15 +146,15 @@ bool net_NormalizeFileURL(const nsACString &aURL,
  */
 
 /* convert to lower case */
-void net_ToLowerCase(char* str, uint32_t length);
-void net_ToLowerCase(char* str);
+void net_ToLowerCase(char *str, uint32_t length);
+void net_ToLowerCase(char *str);
 
 /**
  * returns pointer to first character of |str| in the given set.  if not found,
  * then |end| is returned.  stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-char * net_FindCharInSet(const char *str, const char *end, const char *set);
+char *net_FindCharInSet(const char *str, const char *end, const char *set);
 
 /**
  * returns pointer to first character of |str| NOT in the given set.  if all
@@ -166,13 +162,13 @@ char * net_FindCharInSet(const char *str, const char *end, const char *set);
  * included in |set|, then stops prematurely if a null byte is encountered,
  * and returns the address of the null byte.
  */
-char * net_FindCharNotInSet(const char *str, const char *end, const char *set);
+char *net_FindCharNotInSet(const char *str, const char *end, const char *set);
 
 /**
  * returns pointer to last character of |str| NOT in the given set.  if all
  * characters are in the given set, then |str - 1| is returned.
  */
-char * net_RFindCharNotInSet(const char *str, const char *end, const char *set);
+char *net_RFindCharNotInSet(const char *str, const char *end, const char *set);
 
 /**
  * Parses a content-type header and returns the content type and
@@ -186,9 +182,9 @@ char * net_RFindCharNotInSet(const char *str, const char *end, const char *set);
  * for parsing this header in HTTP responses.
  */
 void net_ParseRequestContentType(const nsACString &aHeaderStr,
-                                 nsACString       &aContentType,
-                                 nsACString       &aContentCharset,
-                                 bool*          aHadCharset);
+                                 nsACString &aContentType,
+                                 nsACString &aContentCharset,
+                                 bool *aHadCharset);
 
 /**
  * Parses a content-type header and returns the content type and
@@ -199,9 +195,8 @@ void net_ParseRequestContentType(const nsACString &aHeaderStr,
  * is true.
  */
 void net_ParseContentType(const nsACString &aHeaderStr,
-                          nsACString       &aContentType,
-                          nsACString       &aContentCharset,
-                          bool*          aHadCharset);
+                          nsACString &aContentType, nsACString &aContentCharset,
+                          bool *aHadCharset);
 /**
  * As above, but also returns the start and end indexes for the charset
  * parameter in aHeaderStr.  These are indices for the entire parameter, NOT
@@ -212,35 +207,30 @@ void net_ParseContentType(const nsACString &aHeaderStr,
  * *aCharsetStart is nonnegative; this corresponds to charset="".
  */
 void net_ParseContentType(const nsACString &aHeaderStr,
-                          nsACString       &aContentType,
-                          nsACString       &aContentCharset,
-                          bool             *aHadCharset,
-                          int32_t          *aCharsetStart,
-                          int32_t          *aCharsetEnd);
+                          nsACString &aContentType, nsACString &aContentCharset,
+                          bool *aHadCharset, int32_t *aCharsetStart,
+                          int32_t *aCharsetEnd);
 
 /* inline versions */
 
 /* remember the 64-bit platforms ;-) */
-#define NET_MAX_ADDRESS ((char*)UINTPTR_MAX)
+#define NET_MAX_ADDRESS ((char *)UINTPTR_MAX)
 
-inline char *net_FindCharInSet(const char *str, const char *set)
-{
-    return net_FindCharInSet(str, NET_MAX_ADDRESS, set);
+inline char *net_FindCharInSet(const char *str, const char *set) {
+  return net_FindCharInSet(str, NET_MAX_ADDRESS, set);
 }
-inline char *net_FindCharNotInSet(const char *str, const char *set)
-{
-    return net_FindCharNotInSet(str, NET_MAX_ADDRESS, set);
+inline char *net_FindCharNotInSet(const char *str, const char *set) {
+  return net_FindCharNotInSet(str, NET_MAX_ADDRESS, set);
 }
-inline char *net_RFindCharNotInSet(const char *str, const char *set)
-{
-    return net_RFindCharNotInSet(str, str + strlen(str), set);
+inline char *net_RFindCharNotInSet(const char *str, const char *set) {
+  return net_RFindCharNotInSet(str, str + strlen(str), set);
 }
 
 /**
  * This function returns true if the given hostname does not include any
  * restricted characters.  Otherwise, false is returned.
  */
-bool net_IsValidHostName(const nsACString& host);
+bool net_IsValidHostName(const nsACString &host);
 
 /**
  * Checks whether the IPv4 address is valid according to RFC 3986 section 3.2.2.
@@ -252,11 +242,10 @@ bool net_IsValidIPv4Addr(const char *addr, int32_t addrLen);
  */
 bool net_IsValidIPv6Addr(const char *addr, int32_t addrLen);
 
-
 /**
  * Returns the max length of a URL. The default is 1048576 (1 MB).
  * Can be changed by pref "network.standard-url.max-length"
  */
 int32_t net_GetURLMaxLength();
 
-#endif // !nsURLHelper_h__
+#endif  // !nsURLHelper_h__

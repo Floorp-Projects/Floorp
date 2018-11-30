@@ -6,7 +6,7 @@
 /*
  * This code is based on original Mozilla gnome-vfs extension. It implements
  * input stream provided by GVFS/GIO.
-*/
+ */
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsIPrefService.h"
@@ -32,7 +32,7 @@
 #include <gio/gio.h>
 #include <algorithm>
 
-#define MOZ_GIO_SCHEME              "moz-gio"
+#define MOZ_GIO_SCHEME "moz-gio"
 #define MOZ_GIO_SUPPORTED_PROTOCOLS "network.gio.supported-protocols"
 
 //-----------------------------------------------------------------------------
@@ -41,58 +41,71 @@
 static mozilla::LazyLogModule sGIOLog("gio");
 #define LOG(args) MOZ_LOG(sGIOLog, mozilla::LogLevel::Debug, args)
 
-
 //-----------------------------------------------------------------------------
-static nsresult
-MapGIOResult(gint code)
-{
-  switch (code)
-  {
-     case G_IO_ERROR_NOT_FOUND:                  return NS_ERROR_FILE_NOT_FOUND; // shows error
-     case G_IO_ERROR_INVALID_ARGUMENT:           return NS_ERROR_INVALID_ARG;
-     case G_IO_ERROR_NOT_SUPPORTED:              return NS_ERROR_NOT_AVAILABLE;
-     case G_IO_ERROR_NO_SPACE:                   return NS_ERROR_FILE_NO_DEVICE_SPACE;
-     case G_IO_ERROR_READ_ONLY:                  return NS_ERROR_FILE_READ_ONLY;
-     case G_IO_ERROR_PERMISSION_DENIED:          return NS_ERROR_FILE_ACCESS_DENIED; // wrong password/login
-     case G_IO_ERROR_CLOSED:                     return NS_BASE_STREAM_CLOSED; // was EOF
-     case G_IO_ERROR_NOT_DIRECTORY:              return NS_ERROR_FILE_NOT_DIRECTORY;
-     case G_IO_ERROR_PENDING:                    return NS_ERROR_IN_PROGRESS;
-     case G_IO_ERROR_EXISTS:                     return NS_ERROR_FILE_ALREADY_EXISTS;
-     case G_IO_ERROR_IS_DIRECTORY:               return NS_ERROR_FILE_IS_DIRECTORY;
-     case G_IO_ERROR_NOT_MOUNTED:                return NS_ERROR_NOT_CONNECTED; // shows error
-     case G_IO_ERROR_HOST_NOT_FOUND:             return NS_ERROR_UNKNOWN_HOST; // shows error
-     case G_IO_ERROR_CANCELLED:                  return NS_ERROR_ABORT;
-     case G_IO_ERROR_NOT_EMPTY:                  return NS_ERROR_FILE_DIR_NOT_EMPTY;
-     case G_IO_ERROR_FILENAME_TOO_LONG:          return NS_ERROR_FILE_NAME_TOO_LONG;
-     case G_IO_ERROR_INVALID_FILENAME:           return NS_ERROR_FILE_INVALID_PATH;
-     case G_IO_ERROR_TIMED_OUT:                  return NS_ERROR_NET_TIMEOUT; // shows error
-     case G_IO_ERROR_WOULD_BLOCK:                return NS_BASE_STREAM_WOULD_BLOCK;
-     case G_IO_ERROR_FAILED_HANDLED:             return NS_ERROR_ABORT; // Cancel on login dialog
+static nsresult MapGIOResult(gint code) {
+  switch (code) {
+    case G_IO_ERROR_NOT_FOUND:
+      return NS_ERROR_FILE_NOT_FOUND;  // shows error
+    case G_IO_ERROR_INVALID_ARGUMENT:
+      return NS_ERROR_INVALID_ARG;
+    case G_IO_ERROR_NOT_SUPPORTED:
+      return NS_ERROR_NOT_AVAILABLE;
+    case G_IO_ERROR_NO_SPACE:
+      return NS_ERROR_FILE_NO_DEVICE_SPACE;
+    case G_IO_ERROR_READ_ONLY:
+      return NS_ERROR_FILE_READ_ONLY;
+    case G_IO_ERROR_PERMISSION_DENIED:
+      return NS_ERROR_FILE_ACCESS_DENIED;  // wrong password/login
+    case G_IO_ERROR_CLOSED:
+      return NS_BASE_STREAM_CLOSED;  // was EOF
+    case G_IO_ERROR_NOT_DIRECTORY:
+      return NS_ERROR_FILE_NOT_DIRECTORY;
+    case G_IO_ERROR_PENDING:
+      return NS_ERROR_IN_PROGRESS;
+    case G_IO_ERROR_EXISTS:
+      return NS_ERROR_FILE_ALREADY_EXISTS;
+    case G_IO_ERROR_IS_DIRECTORY:
+      return NS_ERROR_FILE_IS_DIRECTORY;
+    case G_IO_ERROR_NOT_MOUNTED:
+      return NS_ERROR_NOT_CONNECTED;  // shows error
+    case G_IO_ERROR_HOST_NOT_FOUND:
+      return NS_ERROR_UNKNOWN_HOST;  // shows error
+    case G_IO_ERROR_CANCELLED:
+      return NS_ERROR_ABORT;
+    case G_IO_ERROR_NOT_EMPTY:
+      return NS_ERROR_FILE_DIR_NOT_EMPTY;
+    case G_IO_ERROR_FILENAME_TOO_LONG:
+      return NS_ERROR_FILE_NAME_TOO_LONG;
+    case G_IO_ERROR_INVALID_FILENAME:
+      return NS_ERROR_FILE_INVALID_PATH;
+    case G_IO_ERROR_TIMED_OUT:
+      return NS_ERROR_NET_TIMEOUT;  // shows error
+    case G_IO_ERROR_WOULD_BLOCK:
+      return NS_BASE_STREAM_WOULD_BLOCK;
+    case G_IO_ERROR_FAILED_HANDLED:
+      return NS_ERROR_ABORT;  // Cancel on login dialog
 
-/* unhandled:
-  G_IO_ERROR_NOT_REGULAR_FILE,
-  G_IO_ERROR_NOT_SYMBOLIC_LINK,
-  G_IO_ERROR_NOT_MOUNTABLE_FILE,
-  G_IO_ERROR_TOO_MANY_LINKS,
-  G_IO_ERROR_ALREADY_MOUNTED,
-  G_IO_ERROR_CANT_CREATE_BACKUP,
-  G_IO_ERROR_WRONG_ETAG,
-  G_IO_ERROR_WOULD_RECURSE,
-  G_IO_ERROR_BUSY,
-  G_IO_ERROR_WOULD_MERGE,
-  G_IO_ERROR_TOO_MANY_OPEN_FILES
-*/
+      /* unhandled:
+        G_IO_ERROR_NOT_REGULAR_FILE,
+        G_IO_ERROR_NOT_SYMBOLIC_LINK,
+        G_IO_ERROR_NOT_MOUNTABLE_FILE,
+        G_IO_ERROR_TOO_MANY_LINKS,
+        G_IO_ERROR_ALREADY_MOUNTED,
+        G_IO_ERROR_CANT_CREATE_BACKUP,
+        G_IO_ERROR_WRONG_ETAG,
+        G_IO_ERROR_WOULD_RECURSE,
+        G_IO_ERROR_BUSY,
+        G_IO_ERROR_WOULD_MERGE,
+        G_IO_ERROR_TOO_MANY_OPEN_FILES
+      */
     // Make GCC happy
     default:
       return NS_ERROR_FAILURE;
   }
 }
 
-static nsresult
-MapGIOResult(GError *result)
-{
-  if (!result)
-    return NS_OK;
+static nsresult MapGIOResult(GError *result) {
+  if (!result) return NS_OK;
   return MapGIOResult(result->code);
 }
 /** Return values for mount operation.
@@ -112,93 +125,87 @@ typedef enum {
  * @return -1 when first object should be before the second, 0 when equal,
  * +1 when second object should be before the first
  */
-static gint
-FileInfoComparator(gconstpointer a, gconstpointer b)
-{
-  GFileInfo *ia = ( GFileInfo *) a;
-  GFileInfo *ib = ( GFileInfo *) b;
-  if (g_file_info_get_file_type(ia) == G_FILE_TYPE_DIRECTORY
-      && g_file_info_get_file_type(ib) != G_FILE_TYPE_DIRECTORY)
+static gint FileInfoComparator(gconstpointer a, gconstpointer b) {
+  GFileInfo *ia = (GFileInfo *)a;
+  GFileInfo *ib = (GFileInfo *)b;
+  if (g_file_info_get_file_type(ia) == G_FILE_TYPE_DIRECTORY &&
+      g_file_info_get_file_type(ib) != G_FILE_TYPE_DIRECTORY)
     return -1;
-  if (g_file_info_get_file_type(ib) == G_FILE_TYPE_DIRECTORY
-      && g_file_info_get_file_type(ia) != G_FILE_TYPE_DIRECTORY)
+  if (g_file_info_get_file_type(ib) == G_FILE_TYPE_DIRECTORY &&
+      g_file_info_get_file_type(ia) != G_FILE_TYPE_DIRECTORY)
     return 1;
 
   return strcasecmp(g_file_info_get_name(ia), g_file_info_get_name(ib));
 }
 
 /* Declaration of mount callback functions */
-static void mount_enclosing_volume_finished (GObject *source_object,
-                                             GAsyncResult *res,
-                                             gpointer user_data);
-static void mount_operation_ask_password (GMountOperation   *mount_op,
-                                          const char        *message,
-                                          const char        *default_user,
-                                          const char        *default_domain,
-                                          GAskPasswordFlags flags,
-                                          gpointer          user_data);
+static void mount_enclosing_volume_finished(GObject *source_object,
+                                            GAsyncResult *res,
+                                            gpointer user_data);
+static void mount_operation_ask_password(
+    GMountOperation *mount_op, const char *message, const char *default_user,
+    const char *default_domain, GAskPasswordFlags flags, gpointer user_data);
 //-----------------------------------------------------------------------------
 
-class nsGIOInputStream final : public nsIInputStream
-{
-   ~nsGIOInputStream() { Close(); }
+class nsGIOInputStream final : public nsIInputStream {
+  ~nsGIOInputStream() { Close(); }
 
-  public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIINPUTSTREAM
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINPUTSTREAM
 
-    explicit nsGIOInputStream(const nsCString &uriSpec)
-      : mSpec(uriSpec)
-      , mChannel(nullptr)
-      , mHandle(nullptr)
-      , mStream(nullptr)
-      , mBytesRemaining(UINT64_MAX)
-      , mStatus(NS_OK)
-      , mDirList(nullptr)
-      , mDirListPtr(nullptr)
-      , mDirBufCursor(0)
-      , mDirOpen(false)
-      , mMonitorMountInProgress("GIOInputStream::MountFinished") { }
+  explicit nsGIOInputStream(const nsCString &uriSpec)
+      : mSpec(uriSpec),
+        mChannel(nullptr),
+        mHandle(nullptr),
+        mStream(nullptr),
+        mBytesRemaining(UINT64_MAX),
+        mStatus(NS_OK),
+        mDirList(nullptr),
+        mDirListPtr(nullptr),
+        mDirBufCursor(0),
+        mDirOpen(false),
+        mMonitorMountInProgress("GIOInputStream::MountFinished") {}
 
-    void SetChannel(nsIChannel *channel)
-    {
-      // We need to hold an owning reference to our channel.  This is done
-      // so we can access the channel's notification callbacks to acquire
-      // a reference to a nsIAuthPrompt if we need to handle an interactive
-      // mount operation.
-      //
-      // However, the channel can only be accessed on the main thread, so
-      // we have to be very careful with ownership.  Moreover, it doesn't
-      // support threadsafe addref/release, so proxying is the answer.
-      //
-      // Also, it's important to note that this likely creates a reference
-      // cycle since the channel likely owns this stream.  This reference
-      // cycle is broken in our Close method.
+  void SetChannel(nsIChannel *channel) {
+    // We need to hold an owning reference to our channel.  This is done
+    // so we can access the channel's notification callbacks to acquire
+    // a reference to a nsIAuthPrompt if we need to handle an interactive
+    // mount operation.
+    //
+    // However, the channel can only be accessed on the main thread, so
+    // we have to be very careful with ownership.  Moreover, it doesn't
+    // support threadsafe addref/release, so proxying is the answer.
+    //
+    // Also, it's important to note that this likely creates a reference
+    // cycle since the channel likely owns this stream.  This reference
+    // cycle is broken in our Close method.
 
-      NS_ADDREF(mChannel = channel);
-    }
-    void           SetMountResult(MountOperationResult result, gint error_code);
-  private:
-    nsresult       DoOpen();
-    nsresult       DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead);
-    nsresult       SetContentTypeOfChannel(const char *contentType);
-    nsresult       MountVolume();
-    nsresult       DoOpenDirectory();
-    nsresult       DoOpenFile(GFileInfo *info);
-    nsCString             mSpec;
-    nsIChannel           *mChannel; // manually refcounted
-    GFile                *mHandle;
-    GFileInputStream     *mStream;
-    uint64_t              mBytesRemaining;
-    nsresult              mStatus;
-    GList                *mDirList;
-    GList                *mDirListPtr;
-    nsCString             mDirBuf;
-    uint32_t              mDirBufCursor;
-    bool                  mDirOpen;
-    MountOperationResult  mMountRes;
-    mozilla::Monitor      mMonitorMountInProgress;
-    gint                  mMountErrorCode;
+    NS_ADDREF(mChannel = channel);
+  }
+  void SetMountResult(MountOperationResult result, gint error_code);
+
+ private:
+  nsresult DoOpen();
+  nsresult DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead);
+  nsresult SetContentTypeOfChannel(const char *contentType);
+  nsresult MountVolume();
+  nsresult DoOpenDirectory();
+  nsresult DoOpenFile(GFileInfo *info);
+  nsCString mSpec;
+  nsIChannel *mChannel;  // manually refcounted
+  GFile *mHandle;
+  GFileInputStream *mStream;
+  uint64_t mBytesRemaining;
+  nsresult mStatus;
+  GList *mDirList;
+  GList *mDirListPtr;
+  nsCString mDirBuf;
+  uint32_t mDirBufCursor;
+  bool mDirOpen;
+  MountOperationResult mMountRes;
+  mozilla::Monitor mMonitorMountInProgress;
+  gint mMountErrorCode;
 };
 /**
  * Set result of mount operation and notify monitor waiting for results.
@@ -206,9 +213,8 @@ class nsGIOInputStream final : public nsIInputStream
  * in mount_enclosing_volume_finished function.
  * @param result Result of mount operation
  */
-void
-nsGIOInputStream::SetMountResult(MountOperationResult result, gint error_code)
-{
+void nsGIOInputStream::SetMountResult(MountOperationResult result,
+                                      gint error_code) {
   mozilla::MonitorAutoLock mon(mMonitorMountInProgress);
   mMountRes = result;
   mMountErrorCode = error_code;
@@ -219,25 +225,19 @@ nsGIOInputStream::SetMountResult(MountOperationResult result, gint error_code)
  * Start mount operation and wait in loop until it is finished. This method is
  * called from thread which is trying to read from location.
  */
-nsresult
-nsGIOInputStream::MountVolume() {
-  GMountOperation* mount_op = g_mount_operation_new();
-  g_signal_connect (mount_op, "ask-password",
-                    G_CALLBACK (mount_operation_ask_password), mChannel);
+nsresult nsGIOInputStream::MountVolume() {
+  GMountOperation *mount_op = g_mount_operation_new();
+  g_signal_connect(mount_op, "ask-password",
+                   G_CALLBACK(mount_operation_ask_password), mChannel);
   mMountRes = MOUNT_OPERATION_IN_PROGRESS;
   /* g_file_mount_enclosing_volume uses a dbus request to mount the volume.
      Callback mount_enclosing_volume_finished is called in main thread
      (not this thread on which this method is called). */
-  g_file_mount_enclosing_volume(mHandle,
-                                G_MOUNT_MOUNT_NONE,
-                                mount_op,
-                                nullptr,
-                                mount_enclosing_volume_finished,
-                                this);
+  g_file_mount_enclosing_volume(mHandle, G_MOUNT_MOUNT_NONE, mount_op, nullptr,
+                                mount_enclosing_volume_finished, this);
   mozilla::MonitorAutoLock mon(mMonitorMountInProgress);
   /* Waiting for finish of mount operation thread */
-  while (mMountRes == MOUNT_OPERATION_IN_PROGRESS)
-    mon.Wait();
+  while (mMountRes == MOUNT_OPERATION_IN_PROGRESS) mon.Wait();
 
   g_object_unref(mount_op);
 
@@ -252,16 +252,11 @@ nsGIOInputStream::MountVolume() {
  * Return: NS_OK when list obtained, otherwise error code according
  * to failed operation.
  */
-nsresult
-nsGIOInputStream::DoOpenDirectory()
-{
+nsresult nsGIOInputStream::DoOpenDirectory() {
   GError *error = nullptr;
 
-  GFileEnumerator *f_enum = g_file_enumerate_children(mHandle,
-                                                      "standard::*,time::*",
-                                                      G_FILE_QUERY_INFO_NONE,
-                                                      nullptr,
-                                                      &error);
+  GFileEnumerator *f_enum = g_file_enumerate_children(
+      mHandle, "standard::*,time::*", G_FILE_QUERY_INFO_NONE, nullptr, &error);
   if (!f_enum) {
     nsresult rv = MapGIOResult(error);
     g_warning("Cannot read from directory: %s", error->message);
@@ -290,12 +285,12 @@ nsGIOInputStream::DoOpenDirectory()
   // Write base URL (make sure it ends with a '/')
   mDirBuf.AppendLiteral("300: ");
   mDirBuf.Append(mSpec);
-  if (mSpec.get()[mSpec.Length() - 1] != '/')
-    mDirBuf.Append('/');
+  if (mSpec.get()[mSpec.Length() - 1] != '/') mDirBuf.Append('/');
   mDirBuf.Append('\n');
 
   // Write column names
-  mDirBuf.AppendLiteral("200: filename content-length last-modified file-type\n");
+  mDirBuf.AppendLiteral(
+      "200: filename content-length last-modified file-type\n");
 
   // Write charset (assume UTF-8)
   // XXX is this correct?
@@ -309,9 +304,7 @@ nsGIOInputStream::DoOpenDirectory()
  * @param info file info used to determine mime type
  * @return NS_OK when file stream created successfuly, error code otherwise
  */
-nsresult
-nsGIOInputStream::DoOpenFile(GFileInfo *info)
-{
+nsresult nsGIOInputStream::DoOpenFile(GFileInfo *info) {
   GError *error = nullptr;
 
   mStream = g_file_read(mHandle, nullptr, &error);
@@ -322,7 +315,7 @@ nsGIOInputStream::DoOpenFile(GFileInfo *info)
     return rv;
   }
 
-  const char * content_type = g_file_info_get_content_type(info);
+  const char *content_type = g_file_info_get_content_type(info);
   if (content_type) {
     char *mime_type = g_content_type_get_mime_type(content_type);
     if (mime_type) {
@@ -344,43 +337,35 @@ nsGIOInputStream::DoOpenFile(GFileInfo *info)
 }
 
 /**
- * Start file open operation, mount volume when needed and according to file type
- * create file output stream or read directory content.
- * @return NS_OK when file or directory opened successfully, error code otherwise
+ * Start file open operation, mount volume when needed and according to file
+ * type create file output stream or read directory content.
+ * @return NS_OK when file or directory opened successfully, error code
+ * otherwise
  */
-nsresult
-nsGIOInputStream::DoOpen()
-{
+nsresult nsGIOInputStream::DoOpen() {
   nsresult rv;
   GError *error = nullptr;
 
   NS_ASSERTION(mHandle == nullptr, "already open");
 
-  mHandle = g_file_new_for_uri( mSpec.get() );
+  mHandle = g_file_new_for_uri(mSpec.get());
 
-  GFileInfo *info = g_file_query_info(mHandle,
-                                      "standard::*",
-                                      G_FILE_QUERY_INFO_NONE,
-                                      nullptr,
-                                      &error);
+  GFileInfo *info = g_file_query_info(mHandle, "standard::*",
+                                      G_FILE_QUERY_INFO_NONE, nullptr, &error);
 
   if (error) {
     if (error->domain == G_IO_ERROR && error->code == G_IO_ERROR_NOT_MOUNTED) {
       // location is not yet mounted, try to mount
       g_error_free(error);
-      if (NS_IsMainThread())
-        return NS_ERROR_NOT_CONNECTED;
+      if (NS_IsMainThread()) return NS_ERROR_NOT_CONNECTED;
       error = nullptr;
       rv = MountVolume();
       if (rv != NS_OK) {
         return rv;
       }
       // get info again
-      info = g_file_query_info(mHandle,
-                               "standard::*",
-                               G_FILE_QUERY_INFO_NONE,
-                               nullptr,
-                               &error);
+      info = g_file_query_info(mHandle, "standard::*", G_FILE_QUERY_INFO_NONE,
+                               nullptr, &error);
       // second try to get file info from remote files after media mount
       if (!info) {
         g_warning("Unable to get file info: %s", error->message);
@@ -407,8 +392,7 @@ nsGIOInputStream::DoOpen()
     g_warning("Unable to get file type.");
     rv = NS_ERROR_FILE_NOT_FOUND;
   }
-  if (info)
-    g_object_unref(info);
+  if (info) g_object_unref(info);
   return rv;
 }
 
@@ -420,18 +404,14 @@ nsGIOInputStream::DoOpen()
  * @return NS_OK when read successfully, NS_BASE_STREAM_CLOSED when end of file,
  *         error code otherwise
  */
-nsresult
-nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
-{
+nsresult nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount,
+                                  uint32_t *aCountRead) {
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
   if (mStream) {
     // file read
     GError *error = nullptr;
-    uint32_t bytes_read = g_input_stream_read(G_INPUT_STREAM(mStream),
-                                              aBuf,
-                                              aCount,
-                                              nullptr,
-                                              &error);
+    uint32_t bytes_read = g_input_stream_read(G_INPUT_STREAM(mStream), aBuf,
+                                              aCount, nullptr, &error);
     if (error) {
       rv = MapGIOResult(error);
       *aCountRead = 0;
@@ -445,12 +425,10 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
   }
   if (mDirOpen) {
     // directory read
-    while (aCount && rv != NS_BASE_STREAM_CLOSED)
-    {
+    while (aCount && rv != NS_BASE_STREAM_CLOSED) {
       // Copy data out of our buffer
       uint32_t bufLen = mDirBuf.Length() - mDirBufCursor;
-      if (bufLen)
-      {
+      if (bufLen) {
         uint32_t n = std::min(bufLen, aCount);
         memcpy(aBuf, mDirBuf.get() + mDirBufCursor, n);
         *aCountRead += n;
@@ -459,19 +437,17 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
         mDirBufCursor += n;
       }
 
-      if (!mDirListPtr)    // Are we at the end of the directory list?
+      if (!mDirListPtr)  // Are we at the end of the directory list?
       {
         rv = NS_BASE_STREAM_CLOSED;
-      }
-      else if (aCount)     // Do we need more data?
+      } else if (aCount)  // Do we need more data?
       {
-        GFileInfo *info = (GFileInfo *) mDirListPtr->data;
+        GFileInfo *info = (GFileInfo *)mDirListPtr->data;
 
         // Prune '.' and '..' from directory listing.
-        const char * fname = g_file_info_get_name(info);
+        const char *fname = g_file_info_get_name(info);
         if (fname && fname[0] == '.' &&
-            (fname[1] == '\0' || (fname[1] == '.' && fname[2] == '\0')))
-        {
+            (fname[1] == '\0' || (fname[1] == '.' && fname[2] == '\0'))) {
           mDirListPtr = mDirListPtr->next;
           continue;
         }
@@ -502,18 +478,18 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
         g_file_info_get_modification_time(info, &gtime);
 
         PRExplodedTime tm;
-        PRTime pt = ((PRTime) gtime.tv_sec) * 1000000;
+        PRTime pt = ((PRTime)gtime.tv_sec) * 1000000;
         PR_ExplodeTime(pt, PR_GMTParameters, &tm);
         {
           char buf[64];
           PR_FormatTimeUSEnglish(buf, sizeof(buf),
-              "%a,%%20%d%%20%b%%20%Y%%20%H:%M:%S%%20GMT ", &tm);
+                                 "%a,%%20%d%%20%b%%20%Y%%20%H:%M:%S%%20GMT ",
+                                 &tm);
           mDirBuf.Append(buf);
         }
 
         // The "file-type" field
-        switch (g_file_info_get_file_type(info))
-        {
+        switch (g_file_info_get_file_type(info)) {
           case G_FILE_TYPE_REGULAR:
             mDirBuf.AppendLiteral("FILE ");
             break;
@@ -539,32 +515,27 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
 /**
  * This class is used to implement SetContentTypeOfChannel.
  */
-class nsGIOSetContentTypeEvent : public mozilla::Runnable
-{
-  public:
-    nsGIOSetContentTypeEvent(nsIChannel* channel, const char* contentType)
-      : mozilla::Runnable("nsGIOSetContentTypeEvent")
-      , mChannel(channel)
-      , mContentType(contentType)
-    {
-      // stash channel reference in mChannel.  no AddRef here!  see note
-      // in SetContentTypeOfchannel.
-    }
+class nsGIOSetContentTypeEvent : public mozilla::Runnable {
+ public:
+  nsGIOSetContentTypeEvent(nsIChannel *channel, const char *contentType)
+      : mozilla::Runnable("nsGIOSetContentTypeEvent"),
+        mChannel(channel),
+        mContentType(contentType) {
+    // stash channel reference in mChannel.  no AddRef here!  see note
+    // in SetContentTypeOfchannel.
+  }
 
-    NS_IMETHOD Run() override
-    {
-      mChannel->SetContentType(mContentType);
-      return NS_OK;
-    }
+  NS_IMETHOD Run() override {
+    mChannel->SetContentType(mContentType);
+    return NS_OK;
+  }
 
-  private:
-    nsIChannel *mChannel;
-    nsCString   mContentType;
+ private:
+  nsIChannel *mChannel;
+  nsCString mContentType;
 };
 
-nsresult
-nsGIOInputStream::SetContentTypeOfChannel(const char *contentType)
-{
+nsresult nsGIOInputStream::SetContentTypeOfChannel(const char *contentType) {
   // We need to proxy this call over to the main thread.  We post an
   // asynchronous event in this case so that we don't delay reading data, and
   // we know that this is safe to do since the channel's reference will be
@@ -574,12 +545,9 @@ nsGIOInputStream::SetContentTypeOfChannel(const char *contentType)
   nsresult rv;
   nsCOMPtr<nsIRunnable> ev =
       new nsGIOSetContentTypeEvent(mChannel, contentType);
-  if (!ev)
-  {
+  if (!ev) {
     rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else
-  {
+  } else {
     rv = NS_DispatchToMainThread(ev);
   }
   return rv;
@@ -591,41 +559,36 @@ NS_IMPL_ISUPPORTS(nsGIOInputStream, nsIInputStream)
  * Free all used memory and close stream.
  */
 NS_IMETHODIMP
-nsGIOInputStream::Close()
-{
-  if (mStream)
-  {
+nsGIOInputStream::Close() {
+  if (mStream) {
     g_object_unref(mStream);
     mStream = nullptr;
   }
 
-  if (mHandle)
-  {
+  if (mHandle) {
     g_object_unref(mHandle);
     mHandle = nullptr;
   }
 
-  if (mDirList)
-  {
+  if (mDirList) {
     // Destroy the list of GIOFileInfo objects...
-    g_list_foreach(mDirList, (GFunc) g_object_unref, nullptr);
+    g_list_foreach(mDirList, (GFunc)g_object_unref, nullptr);
     g_list_free(mDirList);
     mDirList = nullptr;
     mDirListPtr = nullptr;
   }
 
   if (mChannel) {
-    NS_ReleaseOnMainThreadSystemGroup(
-      "nsGIOInputStream::mChannel", dont_AddRef(mChannel));
+    NS_ReleaseOnMainThreadSystemGroup("nsGIOInputStream::mChannel",
+                                      dont_AddRef(mChannel));
 
     mChannel = nullptr;
   }
 
-  mSpec.Truncate(); // free memory
+  mSpec.Truncate();  // free memory
 
   // Prevent future reads from re-opening the handle.
-  if (NS_SUCCEEDED(mStatus))
-    mStatus = NS_BASE_STREAM_CLOSED;
+  if (NS_SUCCEEDED(mStatus)) mStatus = NS_BASE_STREAM_CLOSED;
 
   return NS_OK;
 }
@@ -635,10 +598,8 @@ nsGIOInputStream::Close()
  * @param aResult remaining bytes
  */
 NS_IMETHODIMP
-nsGIOInputStream::Available(uint64_t *aResult)
-{
-  if (NS_FAILED(mStatus))
-    return mStatus;
+nsGIOInputStream::Available(uint64_t *aResult) {
+  if (NS_FAILED(mStatus)) return mStatus;
 
   *aResult = mBytesRemaining;
 
@@ -646,16 +607,14 @@ nsGIOInputStream::Available(uint64_t *aResult)
 }
 
 /**
- * Trying to read from stream. When location is not available it tries to mount it.
+ * Trying to read from stream. When location is not available it tries to mount
+ * it.
  * @param aBuf buffer to put read data
  * @param aCount length of aBuf
  * @param aCountRead number of bytes actually read
  */
 NS_IMETHODIMP
-nsGIOInputStream::Read(char     *aBuf,
-                       uint32_t  aCount,
-                       uint32_t *aCountRead)
-{
+nsGIOInputStream::Read(char *aBuf, uint32_t aCount, uint32_t *aCountRead) {
   *aCountRead = 0;
   // Check if file is already opened, otherwise open it
   if (!mStream && !mDirOpen && mStatus == NS_OK) {
@@ -667,19 +626,15 @@ nsGIOInputStream::Read(char     *aBuf,
 
   mStatus = DoRead(aBuf, aCount, aCountRead);
   // Check if all data has been read
-  if (mStatus == NS_BASE_STREAM_CLOSED)
-    return NS_OK;
+  if (mStatus == NS_BASE_STREAM_CLOSED) return NS_OK;
 
   // Check whenever any error appears while reading
   return mStatus;
 }
 
 NS_IMETHODIMP
-nsGIOInputStream::ReadSegments(nsWriteSegmentFun aWriter,
-                               void             *aClosure,
-                               uint32_t          aCount,
-                               uint32_t         *aResult)
-{
+nsGIOInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
+                               uint32_t aCount, uint32_t *aResult) {
   // There is no way to implement this using GnomeVFS, but fortunately
   // that doesn't matter.  Because we are a blocking input stream, Necko
   // isn't going to call our ReadSegments method.
@@ -688,8 +643,7 @@ nsGIOInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsGIOInputStream::IsNonBlocking(bool *aResult)
-{
+nsGIOInputStream::IsNonBlocking(bool *aResult) {
   *aResult = false;
   return NS_OK;
 }
@@ -704,16 +658,14 @@ nsGIOInputStream::IsNonBlocking(bool *aResult)
  * @param res result object
  * @param user_data pointer to nsGIOInputStream
  */
-static void
-mount_enclosing_volume_finished (GObject *source_object,
-                                 GAsyncResult *res,
-                                 gpointer user_data)
-{
+static void mount_enclosing_volume_finished(GObject *source_object,
+                                            GAsyncResult *res,
+                                            gpointer user_data) {
   GError *error = nullptr;
 
-  nsGIOInputStream* istream = static_cast<nsGIOInputStream*>(user_data);
+  nsGIOInputStream *istream = static_cast<nsGIOInputStream *>(user_data);
 
-  g_file_mount_enclosing_volume_finish(G_FILE (source_object), res, &error);
+  g_file_mount_enclosing_volume_finish(G_FILE(source_object), res, &error);
 
   if (error) {
     g_warning("Mount failed: %s %d", error->message, error->code);
@@ -734,15 +686,10 @@ mount_enclosing_volume_finished (GObject *source_object,
  * @param flags what type of information is required
  * @param user_data nsIChannel
  */
-static void
-mount_operation_ask_password (GMountOperation   *mount_op,
-                              const char        *message,
-                              const char        *default_user,
-                              const char        *default_domain,
-                              GAskPasswordFlags flags,
-                              gpointer          user_data)
-{
-  nsIChannel *channel = (nsIChannel *) user_data;
+static void mount_operation_ask_password(
+    GMountOperation *mount_op, const char *message, const char *default_user,
+    const char *default_domain, GAskPasswordFlags flags, gpointer user_data) {
+  nsIChannel *channel = (nsIChannel *)user_data;
   if (!channel) {
     g_mount_operation_reply(mount_op, G_MOUNT_OPERATION_ABORTED);
     return;
@@ -791,8 +738,7 @@ mount_operation_ask_password (GMountOperation   *mount_op,
   dispHost.Append(NS_ConvertUTF8toUTF16(hostPort));
 
   key = dispHost;
-  if (*default_domain != '\0')
-  {
+  if (*default_domain != '\0') {
     // We assume the realm string is ASCII.  That might be a bogus assumption,
     // but we have no idea what encoding GnomeVFS is using, so for now we'll
     // limit ourselves to ISO-Latin-1.  XXX What is a better solution?
@@ -825,19 +771,18 @@ mount_operation_ask_password (GMountOperation   *mount_op,
   if (flags & G_ASK_PASSWORD_NEED_PASSWORD) {
     if (flags & G_ASK_PASSWORD_NEED_USERNAME) {
       if (!realm.IsEmpty()) {
-        const char16_t *strings[] = { realm.get(), dispHost.get() };
-        bundle->FormatStringFromName("EnterLoginForRealm3",
-                                     strings, 2, nsmessage);
+        const char16_t *strings[] = {realm.get(), dispHost.get()};
+        bundle->FormatStringFromName("EnterLoginForRealm3", strings, 2,
+                                     nsmessage);
       } else {
-        const char16_t *strings[] = { dispHost.get() };
-        bundle->FormatStringFromName("EnterUserPasswordFor2",
-                                     strings, 1, nsmessage);
+        const char16_t *strings[] = {dispHost.get()};
+        bundle->FormatStringFromName("EnterUserPasswordFor2", strings, 1,
+                                     nsmessage);
       }
     } else {
       NS_ConvertUTF8toUTF16 userName(default_user);
-      const char16_t *strings[] = { userName.get(), dispHost.get() };
-      bundle->FormatStringFromName("EnterPasswordFor",
-                                   strings, 2, nsmessage);
+      const char16_t *strings[] = {userName.get(), dispHost.get()};
+      bundle->FormatStringFromName("EnterPasswordFor", strings, 2, nsmessage);
     }
   } else {
     g_warning("Unknown mount operation request (flags: %x)", flags);
@@ -856,15 +801,13 @@ mount_operation_ask_password (GMountOperation   *mount_op,
     user = ToNewUnicode(NS_ConvertUTF8toUTF16(default_user));
   }
   if (flags & G_ASK_PASSWORD_NEED_USERNAME) {
-    rv = prompt->PromptUsernameAndPassword(nullptr, nsmessage.get(),
-                                           key.get(),
-                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                           &user, &pass, &retval);
+    rv = prompt->PromptUsernameAndPassword(
+        nullptr, nsmessage.get(), key.get(),
+        nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, &user, &pass, &retval);
   } else {
-    rv = prompt->PromptPassword(nullptr, nsmessage.get(),
-                                key.get(),
-                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                &pass, &retval);
+    rv = prompt->PromptPassword(nullptr, nsmessage.get(), key.get(),
+                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, &pass,
+                                &retval);
   }
   if (NS_FAILED(rv) || !retval) {  //  was || user == '\0' || pass == '\0'
     g_mount_operation_reply(mount_op, G_MOUNT_OPERATION_ABORTED);
@@ -882,33 +825,29 @@ mount_operation_ask_password (GMountOperation   *mount_op,
 
 //-----------------------------------------------------------------------------
 
-class nsGIOProtocolHandler final : public nsIProtocolHandler
-                                 , public nsIObserver
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROTOCOLHANDLER
-    NS_DECL_NSIOBSERVER
+class nsGIOProtocolHandler final : public nsIProtocolHandler,
+                                   public nsIObserver {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROTOCOLHANDLER
+  NS_DECL_NSIOBSERVER
 
-    nsresult Init();
+  nsresult Init();
 
-  private:
-    ~nsGIOProtocolHandler() {}
+ private:
+  ~nsGIOProtocolHandler() {}
 
-    void InitSupportedProtocolsPref(nsIPrefBranch *prefs);
-    bool IsSupportedProtocol(const nsCString &spec);
+  void InitSupportedProtocolsPref(nsIPrefBranch *prefs);
+  bool IsSupportedProtocol(const nsCString &spec);
 
-    nsCString mSupportedProtocols;
+  nsCString mSupportedProtocols;
 };
 
 NS_IMPL_ISUPPORTS(nsGIOProtocolHandler, nsIProtocolHandler, nsIObserver)
 
-nsresult
-nsGIOProtocolHandler::Init()
-{
+nsresult nsGIOProtocolHandler::Init() {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs)
-  {
+  if (prefs) {
     InitSupportedProtocolsPref(prefs);
     prefs->AddObserver(MOZ_GIO_SUPPORTED_PROTOCOLS, this, false);
   }
@@ -916,38 +855,33 @@ nsGIOProtocolHandler::Init()
   return NS_OK;
 }
 
-void
-nsGIOProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
-{
+void nsGIOProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs) {
   // Get user preferences to determine which protocol is supported.
   // Gvfs/GIO has a set of supported protocols like obex, network, archive,
   // computer, dav, cdda, gphoto2, trash, etc. Some of these seems to be
   // irrelevant to process by browser. By default accept only smb and sftp
   // protocols so far.
-  nsresult rv = prefs->GetCharPref(MOZ_GIO_SUPPORTED_PROTOCOLS,
-                                   mSupportedProtocols);
+  nsresult rv =
+      prefs->GetCharPref(MOZ_GIO_SUPPORTED_PROTOCOLS, mSupportedProtocols);
   if (NS_SUCCEEDED(rv)) {
     mSupportedProtocols.StripWhitespace();
     ToLowerCase(mSupportedProtocols);
   } else {
     mSupportedProtocols.AssignLiteral(
 #ifdef MOZ_PROXY_BYPASS_PROTECTION
-      ""           // use none
+        ""  // use none
 #else
-      "smb:,sftp:" // use defaults
+        "smb:,sftp:"  // use defaults
 #endif
     );
   }
   LOG(("gio: supported protocols \"%s\"\n", mSupportedProtocols.get()));
 }
 
-bool
-nsGIOProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
-{
+bool nsGIOProtocolHandler::IsSupportedProtocol(const nsCString &aSpec) {
   const char *specString = aSpec.get();
   const char *colon = strchr(specString, ':');
-  if (!colon)
-    return false;
+  if (!colon) return false;
 
   uint32_t length = colon - specString + 1;
 
@@ -955,32 +889,27 @@ nsGIOProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
   nsCString scheme(specString, length);
 
   char *found = PL_strcasestr(mSupportedProtocols.get(), scheme.get());
-  if (!found)
-    return false;
+  if (!found) return false;
 
-  if (found[length] != ',' && found[length] != '\0')
-    return false;
+  if (found[length] != ',' && found[length] != '\0') return false;
 
   return true;
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::GetScheme(nsACString &aScheme)
-{
+nsGIOProtocolHandler::GetScheme(nsACString &aScheme) {
   aScheme.AssignLiteral(MOZ_GIO_SCHEME);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::GetDefaultPort(int32_t *aDefaultPort)
-{
+nsGIOProtocolHandler::GetDefaultPort(int32_t *aDefaultPort) {
   *aDefaultPort = -1;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::GetProtocolFlags(uint32_t *aProtocolFlags)
-{
+nsGIOProtocolHandler::GetProtocolFlags(uint32_t *aProtocolFlags) {
   // Is URI_STD true of all GnomeVFS URI types?
   *aProtocolFlags = URI_STD | URI_DANGEROUS_TO_LOAD;
   return NS_OK;
@@ -988,22 +917,17 @@ nsGIOProtocolHandler::GetProtocolFlags(uint32_t *aProtocolFlags)
 
 NS_IMETHODIMP
 nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
-                             const char *aOriginCharset,
-                             nsIURI *aBaseURI,
-                             nsIURI **aResult)
-{
+                             const char *aOriginCharset, nsIURI *aBaseURI,
+                             nsIURI **aResult) {
   const nsCString flatSpec(aSpec);
   LOG(("gio: NewURI [spec=%s]\n", flatSpec.get()));
 
-  if (!aBaseURI)
-  {
+  if (!aBaseURI) {
     // XXX Is it good to support all GIO protocols?
-    if (!IsSupportedProtocol(flatSpec))
-      return NS_ERROR_UNKNOWN_PROTOCOL;
+    if (!IsSupportedProtocol(flatSpec)) return NS_ERROR_UNKNOWN_PROTOCOL;
 
     int32_t colon_location = flatSpec.FindChar(':');
-    if (colon_location <= 0)
-      return NS_ERROR_UNKNOWN_PROTOCOL;
+    if (colon_location <= 0) return NS_ERROR_UNKNOWN_PROTOCOL;
 
     // Verify that GIO supports this URI scheme.
     bool uri_scheme_supported = false;
@@ -1015,7 +939,7 @@ nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
       return NS_ERROR_UNKNOWN_PROTOCOL;
     }
 
-    const gchar* const * uri_schemes = g_vfs_get_supported_uri_schemes(gvfs);
+    const gchar *const *uri_schemes = g_vfs_get_supported_uri_schemes(gvfs);
 
     while (*uri_schemes != nullptr) {
       // While flatSpec ends with ':' the uri_scheme does not. Therefore do not
@@ -1034,24 +958,21 @@ nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
 
   nsCOMPtr<nsIURI> base(aBaseURI);
   return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-    .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                            nsIStandardURL::URLTYPE_STANDARD,
-                            -1, flatSpec, aOriginCharset, base, nullptr))
-    .Finalize(aResult);
+      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                              nsIStandardURL::URLTYPE_STANDARD, -1, flatSpec,
+                              aOriginCharset, base, nullptr))
+      .Finalize(aResult);
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::NewChannel2(nsIURI* aURI,
-                                  nsILoadInfo* aLoadInfo,
-                                  nsIChannel** aResult)
-{
+nsGIOProtocolHandler::NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadInfo,
+                                  nsIChannel **aResult) {
   NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv;
 
   nsAutoCString spec;
   rv = aURI->GetSpec(spec);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   RefPtr<nsGIOInputStream> stream = new nsGIOInputStream(spec);
   if (!stream) {
@@ -1059,12 +980,11 @@ nsGIOProtocolHandler::NewChannel2(nsIURI* aURI,
   }
 
   RefPtr<nsGIOInputStream> tmpStream = stream;
-  rv = NS_NewInputStreamChannelInternal(aResult,
-                                        aURI,
-                                        tmpStream.forget(),
-                                        NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE),
-                                        EmptyCString(), // aContentCharset
-                                        aLoadInfo);
+  rv =
+      NS_NewInputStreamChannelInternal(aResult, aURI, tmpStream.forget(),
+                                       NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE),
+                                       EmptyCString(),  // aContentCharset
+                                       aLoadInfo);
   if (NS_SUCCEEDED(rv)) {
     stream->SetChannel(*aResult);
   }
@@ -1072,26 +992,21 @@ nsGIOProtocolHandler::NewChannel2(nsIURI* aURI,
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult)
-{
-    return NewChannel2(aURI, nullptr, aResult);
+nsGIOProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult) {
+  return NewChannel2(aURI, nullptr, aResult);
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::AllowPort(int32_t aPort,
-                                const char *aScheme,
-                                bool *aResult)
-{
+nsGIOProtocolHandler::AllowPort(int32_t aPort, const char *aScheme,
+                                bool *aResult) {
   // Don't override anything.
   *aResult = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::Observe(nsISupports *aSubject,
-                              const char *aTopic,
-                              const char16_t *aData)
-{
+nsGIOProtocolHandler::Observe(nsISupports *aSubject, const char *aTopic,
+                              const char16_t *aData) {
   if (strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
     InitSupportedProtocolsPref(prefs);
@@ -1102,30 +1017,26 @@ nsGIOProtocolHandler::Observe(nsISupports *aSubject,
 //-----------------------------------------------------------------------------
 
 #define NS_GIOPROTOCOLHANDLER_CID                    \
-{ /* ee706783-3af8-4d19-9e84-e2ebfe213480 */         \
-    0xee706783,                                      \
-    0x3af8,                                          \
-    0x4d19,                                          \
-    {0x9e, 0x84, 0xe2, 0xeb, 0xfe, 0x21, 0x34, 0x80} \
-}
+  { /* ee706783-3af8-4d19-9e84-e2ebfe213480 */       \
+    0xee706783, 0x3af8, 0x4d19, {                    \
+      0x9e, 0x84, 0xe2, 0xeb, 0xfe, 0x21, 0x34, 0x80 \
+    }                                                \
+  }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGIOProtocolHandler, Init)
 NS_DEFINE_NAMED_CID(NS_GIOPROTOCOLHANDLER_CID);
 
 static const mozilla::Module::CIDEntry kVFSCIDs[] = {
-  { &kNS_GIOPROTOCOLHANDLER_CID, false, nullptr, nsGIOProtocolHandlerConstructor },
-  { nullptr }
-};
+    {&kNS_GIOPROTOCOLHANDLER_CID, false, nullptr,
+     nsGIOProtocolHandlerConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kVFSContracts[] = {
-  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX MOZ_GIO_SCHEME, &kNS_GIOPROTOCOLHANDLER_CID },
-  { nullptr }
-};
+    {NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX MOZ_GIO_SCHEME,
+     &kNS_GIOPROTOCOLHANDLER_CID},
+    {nullptr}};
 
-static const mozilla::Module kVFSModule = {
-  mozilla::Module::kVersion,
-  kVFSCIDs,
-  kVFSContracts
-};
+static const mozilla::Module kVFSModule = {mozilla::Module::kVersion, kVFSCIDs,
+                                           kVFSContracts};
 
 NSMODULE_DEFN(nsGIOModule) = &kVFSModule;

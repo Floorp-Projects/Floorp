@@ -10,10 +10,9 @@
 namespace mozilla {
 namespace dom {
 
-RemoteWorkerServiceChild::RemoteWorkerServiceChild()
-{}
+RemoteWorkerServiceChild::RemoteWorkerServiceChild() {}
 
 RemoteWorkerServiceChild::~RemoteWorkerServiceChild() = default;
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

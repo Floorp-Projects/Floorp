@@ -54,13 +54,13 @@ void RtpLogger::LogPacket(const MediaPacket& packet, bool input,
 #endif
     ss << " 000000";
     ss << std::hex << std::setfill('0');
-    for (size_t i=0; i < packet.len(); ++i) {
+    for (size_t i = 0; i < packet.len(); ++i) {
       ss << " " << std::setw(2) << (int)packet.data()[i];
     }
     MOZ_LOG(gRtpLoggerLog, LogLevel::Debug,
-            ("%s%s%s", desc.c_str(),
-             (isRtp ? " RTP_PACKET " : " RTCP_PACKET "), ss.str().c_str()));
+            ("%s%s%s", desc.c_str(), (isRtp ? " RTP_PACKET " : " RTCP_PACKET "),
+             ss.str().c_str()));
   }
 }
 
-}  // end of namespace
+}  // namespace mozilla

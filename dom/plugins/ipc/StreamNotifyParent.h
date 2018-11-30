@@ -12,37 +12,30 @@
 namespace mozilla {
 namespace plugins {
 
-class StreamNotifyParent : public PStreamNotifyParent
-{
+class StreamNotifyParent : public PStreamNotifyParent {
   friend class PluginInstanceParent;
 
-  StreamNotifyParent()
-    : mDestructionFlag(nullptr)
-  { }
+  StreamNotifyParent() : mDestructionFlag(nullptr) {}
   ~StreamNotifyParent() {
-    if (mDestructionFlag)
-      *mDestructionFlag = true;
+    if (mDestructionFlag) *mDestructionFlag = true;
   }
 
-public:
+ public:
   // If we are destroyed within the call to NPN_GetURLNotify, notify the caller
   // so that we aren't destroyed again. see bug 536437.
-  void SetDestructionFlag(bool* flag) {
-    mDestructionFlag = flag;
-  }
-  void ClearDestructionFlag() {
-    mDestructionFlag = nullptr;
-  }
+  void SetDestructionFlag(bool* flag) { mDestructionFlag = flag; }
+  void ClearDestructionFlag() { mDestructionFlag = nullptr; }
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
-  mozilla::ipc::IPCResult RecvRedirectNotifyResponse(const bool& allow) override;
+ private:
+  mozilla::ipc::IPCResult RecvRedirectNotifyResponse(
+      const bool& allow) override;
 
   bool* mDestructionFlag;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
 #endif

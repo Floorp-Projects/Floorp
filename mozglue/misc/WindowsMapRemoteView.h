@@ -13,14 +13,13 @@
 
 namespace mozilla {
 
-MFBT_API PVOID
-MapRemoteViewOfFile(HANDLE aFileMapping, HANDLE aProcess, ULONG64 aOffset,
-                    PVOID aBaseAddress, SIZE_T aViewSize, ULONG aAllocationType,
-                    ULONG aProtectionFlags);
+MFBT_API PVOID MapRemoteViewOfFile(HANDLE aFileMapping, HANDLE aProcess,
+                                   ULONG64 aOffset, PVOID aBaseAddress,
+                                   SIZE_T aViewSize, ULONG aAllocationType,
+                                   ULONG aProtectionFlags);
 
-MFBT_API bool
-UnmapRemoteViewOfFile(HANDLE aProcess, PVOID aBaseAddress);
+MFBT_API bool UnmapRemoteViewOfFile(HANDLE aProcess, PVOID aBaseAddress);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_WindowsMapRemoteView_h
+#endif  // mozilla_WindowsMapRemoteView_h

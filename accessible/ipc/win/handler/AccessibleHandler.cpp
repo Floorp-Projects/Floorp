@@ -6,7 +6,7 @@
 
 #if defined(MOZILLA_INTERNAL_API)
 #error This code is NOT for internal Gecko use!
-#endif // defined(MOZILLA_INTERNAL_API)
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 #define INITGUID
 
@@ -46,8 +46,7 @@ namespace a11y {
 static mscom::Factory<AccessibleHandler> sHandlerFactory;
 
 HRESULT
-AccessibleHandler::Create(IUnknown* aOuter, REFIID aIid, void** aOutInterface)
-{
+AccessibleHandler::Create(IUnknown* aOuter, REFIID aIid, void** aOutInterface) {
   if (!aOutInterface || !aOuter || aIid != IID_IUnknown) {
     return E_INVALIDARG;
   }
@@ -67,22 +66,21 @@ AccessibleHandler::Create(IUnknown* aOuter, REFIID aIid, void** aOutInterface)
 }
 
 AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
-  : mscom::Handler(aOuter, aResult)
-  , mDispatch(nullptr)
-  , mIA2PassThru(nullptr)
-  , mServProvPassThru(nullptr)
-  , mIAHyperlinkPassThru(nullptr)
-  , mIATableCellPassThru(nullptr)
-  , mIAHypertextPassThru(nullptr)
-  , mCachedData()
-  , mCacheGen(0)
-  , mCachedHyperlinks(nullptr)
-  , mCachedNHyperlinks(-1)
-  , mCachedTextAttribRuns(nullptr)
-  , mCachedNTextAttribRuns(-1)
-  , mCachedRelations(nullptr)
-  , mCachedNRelations(-1)
-{
+    : mscom::Handler(aOuter, aResult),
+      mDispatch(nullptr),
+      mIA2PassThru(nullptr),
+      mServProvPassThru(nullptr),
+      mIAHyperlinkPassThru(nullptr),
+      mIATableCellPassThru(nullptr),
+      mIAHypertextPassThru(nullptr),
+      mCachedData(),
+      mCacheGen(0),
+      mCachedHyperlinks(nullptr),
+      mCachedNHyperlinks(-1),
+      mCachedTextAttribRuns(nullptr),
+      mCachedNTextAttribRuns(-1),
+      mCachedRelations(nullptr),
+      mCachedNRelations(-1) {
   RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetOrCreateSingleton());
   MOZ_ASSERT(ctl);
   if (!ctl) {
@@ -95,8 +93,7 @@ AccessibleHandler::AccessibleHandler(IUnknown* aOuter, HRESULT* aResult)
   mCacheGen = ctl->GetCacheGen();
 }
 
-AccessibleHandler::~AccessibleHandler()
-{
+AccessibleHandler::~AccessibleHandler() {
   // No need to zero memory, since we're being destroyed anyway.
   CleanupDynamicIA2Data(mCachedData.mDynamicData, false);
   if (mCachedData.mGeckoBackChannel) {
@@ -107,8 +104,7 @@ AccessibleHandler::~AccessibleHandler()
 }
 
 HRESULT
-AccessibleHandler::ResolveIA2()
-{
+AccessibleHandler::ResolveIA2() {
   if (mIA2PassThru) {
     return S_OK;
   }
@@ -129,8 +125,7 @@ AccessibleHandler::ResolveIA2()
 }
 
 HRESULT
-AccessibleHandler::ResolveIAHyperlink()
-{
+AccessibleHandler::ResolveIAHyperlink() {
   if (mIAHyperlinkPassThru) {
     return S_OK;
   }
@@ -140,8 +135,9 @@ AccessibleHandler::ResolveIAHyperlink()
     return E_UNEXPECTED;
   }
 
-  HRESULT hr = proxy->QueryInterface(IID_IAccessibleHyperlink,
-                                     reinterpret_cast<void**>(&mIAHyperlinkPassThru));
+  HRESULT hr =
+      proxy->QueryInterface(IID_IAccessibleHyperlink,
+                            reinterpret_cast<void**>(&mIAHyperlinkPassThru));
   if (SUCCEEDED(hr)) {
     // mIAHyperlinkPassThru is a weak reference
     // (see comments in AccesssibleHandler.h)
@@ -152,8 +148,7 @@ AccessibleHandler::ResolveIAHyperlink()
 }
 
 HRESULT
-AccessibleHandler::ResolveIATableCell()
-{
+AccessibleHandler::ResolveIATableCell() {
   if (mIATableCellPassThru) {
     return S_OK;
   }
@@ -163,8 +158,9 @@ AccessibleHandler::ResolveIATableCell()
     return E_UNEXPECTED;
   }
 
-  HRESULT hr = proxy->QueryInterface(IID_IAccessibleTableCell,
-    reinterpret_cast<void**>(&mIATableCellPassThru));
+  HRESULT hr =
+      proxy->QueryInterface(IID_IAccessibleTableCell,
+                            reinterpret_cast<void**>(&mIATableCellPassThru));
   if (SUCCEEDED(hr)) {
     // mIATableCellPassThru is a weak reference
     // (see comments in AccesssibleHandler.h)
@@ -175,8 +171,7 @@ AccessibleHandler::ResolveIATableCell()
 }
 
 HRESULT
-AccessibleHandler::ResolveIAHypertext()
-{
+AccessibleHandler::ResolveIAHypertext() {
   if (mIAHypertextPassThru) {
     return S_OK;
   }
@@ -186,8 +181,9 @@ AccessibleHandler::ResolveIAHypertext()
     return E_UNEXPECTED;
   }
 
-  HRESULT hr = proxy->QueryInterface(IID_IAccessibleHypertext2,
-    reinterpret_cast<void**>(&mIAHypertextPassThru));
+  HRESULT hr =
+      proxy->QueryInterface(IID_IAccessibleHypertext2,
+                            reinterpret_cast<void**>(&mIAHypertextPassThru));
   if (SUCCEEDED(hr)) {
     // mIAHypertextPassThru is a weak reference
     // (see comments in AccessibleHandler.h)
@@ -198,8 +194,7 @@ AccessibleHandler::ResolveIAHypertext()
 }
 
 HRESULT
-AccessibleHandler::MaybeUpdateCachedData()
-{
+AccessibleHandler::MaybeUpdateCachedData() {
   RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetOrCreateSingleton());
   if (!ctl) {
     return E_OUTOFMEMORY;
@@ -215,7 +210,8 @@ AccessibleHandler::MaybeUpdateCachedData()
     return E_POINTER;
   }
 
-  HRESULT hr =  mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mDynamicData);
+  HRESULT hr =
+      mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mDynamicData);
   if (SUCCEEDED(hr)) {
     // We just updated the cache, so update this object's cache generation
     // so we only update the cache again after the next change.
@@ -225,20 +221,17 @@ AccessibleHandler::MaybeUpdateCachedData()
 }
 
 HRESULT
-AccessibleHandler::GetAllTextInfo(BSTR* aText)
-{
+AccessibleHandler::GetAllTextInfo(BSTR* aText) {
   MOZ_ASSERT(mCachedData.mGeckoBackChannel);
 
   ClearTextCache();
 
-  return mCachedData.mGeckoBackChannel->get_AllTextInfo(aText,
-    &mCachedHyperlinks, &mCachedNHyperlinks,
-    &mCachedTextAttribRuns, &mCachedNTextAttribRuns);
+  return mCachedData.mGeckoBackChannel->get_AllTextInfo(
+      aText, &mCachedHyperlinks, &mCachedNHyperlinks, &mCachedTextAttribRuns,
+      &mCachedNTextAttribRuns);
 }
 
-void
-AccessibleHandler::ClearTextCache()
-{
+void AccessibleHandler::ClearTextCache() {
   if (mCachedNHyperlinks >= 0) {
     // We cached hyperlinks, but the caller never retrieved them.
     for (long index = 0; index < mCachedNHyperlinks; ++index) {
@@ -267,19 +260,16 @@ AccessibleHandler::ClearTextCache()
 }
 
 HRESULT
-AccessibleHandler::GetRelationsInfo()
-{
+AccessibleHandler::GetRelationsInfo() {
   MOZ_ASSERT(mCachedData.mGeckoBackChannel);
 
   ClearRelationCache();
 
   return mCachedData.mGeckoBackChannel->get_RelationsInfo(&mCachedRelations,
-    &mCachedNRelations);
+                                                          &mCachedNRelations);
 }
 
-void
-AccessibleHandler::ClearRelationCache()
-{
+void AccessibleHandler::ClearRelationCache() {
   if (mCachedNRelations == -1) {
     // No cache; nothing to do.
     return;
@@ -301,8 +291,7 @@ AccessibleHandler::ClearRelationCache()
 }
 
 HRESULT
-AccessibleHandler::ResolveIDispatch()
-{
+AccessibleHandler::ResolveIDispatch() {
   if (mDispatch) {
     return S_OK;
   }
@@ -310,7 +299,8 @@ AccessibleHandler::ResolveIDispatch()
   HRESULT hr;
 
   if (!mDispatchUnk) {
-    RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetOrCreateSingleton());
+    RefPtr<AccessibleHandlerControl> ctl(
+        gControlFactory.GetOrCreateSingleton());
     if (!ctl) {
       return E_OUTOFMEMORY;
     }
@@ -321,8 +311,9 @@ AccessibleHandler::ResolveIDispatch()
       return hr;
     }
 
-    hr = ::CreateStdDispatch(GetOuter(), static_cast<NEWEST_IA2_INTERFACE*>(this),
-                             typeinfo, getter_AddRefs(mDispatchUnk));
+    hr = ::CreateStdDispatch(GetOuter(),
+                             static_cast<NEWEST_IA2_INTERFACE*>(this), typeinfo,
+                             getter_AddRefs(mDispatchUnk));
     if (FAILED(hr)) {
       return hr;
     }
@@ -340,8 +331,7 @@ AccessibleHandler::ResolveIDispatch()
 
 HRESULT
 AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
-                                         void** aOutInterface)
-{
+                                         void** aOutInterface) {
   MOZ_ASSERT(aProxyUnknown);
 
   static_assert(&NEWEST_IA2_IID == &IID_IAccessible2_3,
@@ -370,10 +360,8 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
          !mCachedData.mStaticData.mIAHypertext) ||
         ((aIid == IID_IAccessibleAction || aIid == IID_IAccessibleHyperlink) &&
          !mCachedData.mStaticData.mIAHyperlink) ||
-        (aIid == IID_IAccessibleTable &&
-         !mCachedData.mStaticData.mIATable) ||
-        (aIid == IID_IAccessibleTable2 &&
-         !mCachedData.mStaticData.mIATable2) ||
+        (aIid == IID_IAccessibleTable && !mCachedData.mStaticData.mIATable) ||
+        (aIid == IID_IAccessibleTable2 && !mCachedData.mStaticData.mIATable2) ||
         (aIid == IID_IAccessibleTableCell &&
          !mCachedData.mStaticData.mIATableCell)) {
       // We already know this interface is not available, so don't query
@@ -386,14 +374,14 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
 
   if (aIid == IID_IAccessibleAction || aIid == IID_IAccessibleHyperlink) {
     RefPtr<IAccessibleHyperlink> iaLink(
-      static_cast<IAccessibleHyperlink*>(this));
+        static_cast<IAccessibleHyperlink*>(this));
     iaLink.forget(aOutInterface);
     return S_OK;
   }
 
   if (aIid == IID_IAccessibleTableCell) {
     RefPtr<IAccessibleTableCell> iaCell(
-      static_cast<IAccessibleTableCell*>(this));
+        static_cast<IAccessibleTableCell*>(this));
     iaCell.forget(aOutInterface);
     return S_OK;
   }
@@ -401,7 +389,7 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
   if (aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
       aIid == IID_IAccessibleHypertext2) {
     RefPtr<IAccessibleHypertext2> iaHt(
-      static_cast<IAccessibleHypertext2*>(this));
+        static_cast<IAccessibleHypertext2*>(this));
     iaHt.forget(aOutInterface);
     return S_OK;
   }
@@ -417,7 +405,7 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
       return E_NOINTERFACE;
     }
     RefPtr<IEnumVARIANT> childEnum(
-      new HandlerChildEnumerator(this, mCachedData.mGeckoBackChannel));
+        new HandlerChildEnumerator(this, mCachedData.mGeckoBackChannel));
     childEnum.forget(aOutInterface);
     return S_OK;
   }
@@ -426,8 +414,7 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
 }
 
 HRESULT
-AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
-{
+AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid) {
   if (!aStream) {
     return E_INVALIDARG;
   }
@@ -479,8 +466,7 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
 }
 
 REFIID
-AccessibleHandler::MarshalAs(REFIID aIid)
-{
+AccessibleHandler::MarshalAs(REFIID aIid) {
   static_assert(&NEWEST_IA2_IID == &IID_IAccessible2_3,
                 "You have modified NEWEST_IA2_IID. This code needs updating.");
   if (aIid == IID_IAccessible2_3 || aIid == IID_IAccessible2_2 ||
@@ -496,21 +482,20 @@ HRESULT
 AccessibleHandler::GetMarshalInterface(REFIID aMarshalAsIid,
                                        NotNull<IUnknown*> aProxy,
                                        NotNull<IID*> aOutIid,
-                                       NotNull<IUnknown**> aOutUnk)
-{
+                                       NotNull<IUnknown**> aOutUnk) {
   if (aMarshalAsIid == NEWEST_IA2_IID) {
     *aOutIid = IID_IAccessible;
   } else {
     *aOutIid = aMarshalAsIid;
   }
 
-  return aProxy->QueryInterface(aMarshalAsIid,
+  return aProxy->QueryInterface(
+      aMarshalAsIid,
       reinterpret_cast<void**>(static_cast<IUnknown**>(aOutUnk)));
 }
 
 HRESULT
-AccessibleHandler::GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize)
-{
+AccessibleHandler::GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize) {
   if (!aOutPayloadSize) {
     return E_INVALIDARG;
   }
@@ -523,7 +508,8 @@ AccessibleHandler::GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize)
     return S_OK;
   }
 
-  mSerializer = MakeUnique<mscom::StructToStream>(mCachedData, &IA2Payload_Encode);
+  mSerializer =
+      MakeUnique<mscom::StructToStream>(mCachedData, &IA2Payload_Encode);
   if (!mSerializer) {
     return E_FAIL;
   }
@@ -533,8 +519,7 @@ AccessibleHandler::GetHandlerPayloadSize(REFIID aIid, DWORD* aOutPayloadSize)
 }
 
 HRESULT
-AccessibleHandler::WriteHandlerPayload(IStream* aStream, REFIID aIid)
-{
+AccessibleHandler::WriteHandlerPayload(IStream* aStream, REFIID aIid) {
   if (!aStream) {
     return E_INVALIDARG;
   }
@@ -549,26 +534,18 @@ AccessibleHandler::WriteHandlerPayload(IStream* aStream, REFIID aIid)
 }
 
 HRESULT
-AccessibleHandler::QueryInterface(REFIID riid, void** ppv)
-{
+AccessibleHandler::QueryInterface(REFIID riid, void** ppv) {
   return Handler::QueryInterface(riid, ppv);
 }
 
 ULONG
-AccessibleHandler::AddRef()
-{
-  return Handler::AddRef();
-}
+AccessibleHandler::AddRef() { return Handler::AddRef(); }
 
 ULONG
-AccessibleHandler::Release()
-{
-  return Handler::Release();
-}
+AccessibleHandler::Release() { return Handler::Release(); }
 
 HRESULT
-AccessibleHandler::GetTypeInfoCount(UINT *pctinfo)
-{
+AccessibleHandler::GetTypeInfoCount(UINT* pctinfo) {
   HRESULT hr = ResolveIDispatch();
   if (FAILED(hr)) {
     return hr;
@@ -578,8 +555,7 @@ AccessibleHandler::GetTypeInfoCount(UINT *pctinfo)
 }
 
 HRESULT
-AccessibleHandler::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
+AccessibleHandler::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) {
   HRESULT hr = ResolveIDispatch();
   if (FAILED(hr)) {
     return hr;
@@ -588,11 +564,9 @@ AccessibleHandler::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
   return mDispatch->GetTypeInfo(iTInfo, lcid, ppTInfo);
 }
 
-
 HRESULT
-AccessibleHandler::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames,
-                                 LCID lcid, DISPID *rgDispId)
-{
+AccessibleHandler::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames,
+                                 LCID lcid, DISPID* rgDispId) {
   HRESULT hr = ResolveIDispatch();
   if (FAILED(hr)) {
     return hr;
@@ -603,10 +577,9 @@ AccessibleHandler::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames,
 
 HRESULT
 AccessibleHandler::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
-                          WORD wFlags, DISPPARAMS *pDispParams,
-                          VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
-                          UINT *puArgErr)
-{
+                          WORD wFlags, DISPPARAMS* pDispParams,
+                          VARIANT* pVarResult, EXCEPINFO* pExcepInfo,
+                          UINT* puArgErr) {
   HRESULT hr = ResolveIDispatch();
   if (FAILED(hr)) {
     return hr;
@@ -616,29 +589,24 @@ AccessibleHandler::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                            pVarResult, pExcepInfo, puArgErr);
 }
 
-#define BEGIN_CACHE_ACCESS \
-  { \
-    HRESULT hr; \
+#define BEGIN_CACHE_ACCESS                      \
+  {                                             \
+    HRESULT hr;                                 \
     if (FAILED(hr = MaybeUpdateCachedData())) { \
-      return hr; \
-    } \
+      return hr;                                \
+    }                                           \
   }
 
 #define GET_FIELD(member, assignTo) \
-  { \
-    assignTo = mCachedData.mDynamicData.member; \
-  }
+  { assignTo = mCachedData.mDynamicData.member; }
 
 #define GET_BSTR(member, assignTo) \
-  { \
-    assignTo = CopyBSTR(mCachedData.mDynamicData.member); \
-  }
+  { assignTo = CopyBSTR(mCachedData.mDynamicData.member); }
 
 /*** IAccessible ***/
 
 HRESULT
-AccessibleHandler::get_accParent(IDispatch **ppdispParent)
-{
+AccessibleHandler::get_accParent(IDispatch** ppdispParent) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -647,8 +615,7 @@ AccessibleHandler::get_accParent(IDispatch **ppdispParent)
 }
 
 HRESULT
-AccessibleHandler::get_accChildCount(long *pcountChildren)
-{
+AccessibleHandler::get_accChildCount(long* pcountChildren) {
   if (!pcountChildren) {
     return E_INVALIDARG;
   }
@@ -667,8 +634,7 @@ AccessibleHandler::get_accChildCount(long *pcountChildren)
 }
 
 HRESULT
-AccessibleHandler::get_accChild(VARIANT varChild, IDispatch **ppdispChild)
-{
+AccessibleHandler::get_accChild(VARIANT varChild, IDispatch** ppdispChild) {
   if (!ppdispChild) {
     return E_INVALIDARG;
   }
@@ -686,8 +652,7 @@ AccessibleHandler::get_accChild(VARIANT varChild, IDispatch **ppdispChild)
 }
 
 HRESULT
-AccessibleHandler::get_accName(VARIANT varChild, BSTR *pszName)
-{
+AccessibleHandler::get_accName(VARIANT varChild, BSTR* pszName) {
   if (!pszName) {
     return E_INVALIDARG;
   }
@@ -706,8 +671,7 @@ AccessibleHandler::get_accName(VARIANT varChild, BSTR *pszName)
 }
 
 HRESULT
-AccessibleHandler::get_accValue(VARIANT varChild, BSTR *pszValue)
-{
+AccessibleHandler::get_accValue(VARIANT varChild, BSTR* pszValue) {
   if (!pszValue) {
     return E_INVALIDARG;
   }
@@ -726,8 +690,7 @@ AccessibleHandler::get_accValue(VARIANT varChild, BSTR *pszValue)
 }
 
 HRESULT
-AccessibleHandler::get_accDescription(VARIANT varChild, BSTR *pszDescription)
-{
+AccessibleHandler::get_accDescription(VARIANT varChild, BSTR* pszDescription) {
   if (!pszDescription) {
     return E_INVALIDARG;
   }
@@ -745,10 +708,8 @@ AccessibleHandler::get_accDescription(VARIANT varChild, BSTR *pszDescription)
   return S_OK;
 }
 
-
 HRESULT
-AccessibleHandler::get_accRole(VARIANT varChild, VARIANT *pvarRole)
-{
+AccessibleHandler::get_accRole(VARIANT varChild, VARIANT* pvarRole) {
   if (!pvarRole) {
     return E_INVALIDARG;
   }
@@ -765,10 +726,8 @@ AccessibleHandler::get_accRole(VARIANT varChild, VARIANT *pvarRole)
   return ::VariantCopy(pvarRole, &mCachedData.mDynamicData.mRole);
 }
 
-
 HRESULT
-AccessibleHandler::get_accState(VARIANT varChild, VARIANT *pvarState)
-{
+AccessibleHandler::get_accState(VARIANT varChild, VARIANT* pvarState) {
   if (!pvarState) {
     return E_INVALIDARG;
   }
@@ -788,8 +747,7 @@ AccessibleHandler::get_accState(VARIANT varChild, VARIANT *pvarState)
 }
 
 HRESULT
-AccessibleHandler::get_accHelp(VARIANT varChild, BSTR *pszHelp)
-{
+AccessibleHandler::get_accHelp(VARIANT varChild, BSTR* pszHelp) {
   // This matches what AccessibleWrap does
   if (!pszHelp) {
     return E_INVALIDARG;
@@ -799,9 +757,8 @@ AccessibleHandler::get_accHelp(VARIANT varChild, BSTR *pszHelp)
 }
 
 HRESULT
-AccessibleHandler::get_accHelpTopic(BSTR *pszHelpFile, VARIANT varChild,
-                                    long *pidTopic)
-{
+AccessibleHandler::get_accHelpTopic(BSTR* pszHelpFile, VARIANT varChild,
+                                    long* pidTopic) {
   // This matches what AccessibleWrap does
   if (!pszHelpFile || !pidTopic) {
     return E_INVALIDARG;
@@ -813,8 +770,7 @@ AccessibleHandler::get_accHelpTopic(BSTR *pszHelpFile, VARIANT varChild,
 
 HRESULT
 AccessibleHandler::get_accKeyboardShortcut(VARIANT varChild,
-                                           BSTR *pszKeyboardShortcut)
-{
+                                           BSTR* pszKeyboardShortcut) {
   if (!pszKeyboardShortcut) {
     return E_INVALIDARG;
   }
@@ -833,8 +789,7 @@ AccessibleHandler::get_accKeyboardShortcut(VARIANT varChild,
 }
 
 HRESULT
-AccessibleHandler::get_accFocus(VARIANT *pvarChild)
-{
+AccessibleHandler::get_accFocus(VARIANT* pvarChild) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -843,8 +798,7 @@ AccessibleHandler::get_accFocus(VARIANT *pvarChild)
 }
 
 HRESULT
-AccessibleHandler::get_accSelection(VARIANT *pvarChildren)
-{
+AccessibleHandler::get_accSelection(VARIANT* pvarChildren) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -854,8 +808,7 @@ AccessibleHandler::get_accSelection(VARIANT *pvarChildren)
 
 HRESULT
 AccessibleHandler::get_accDefaultAction(VARIANT varChild,
-                                        BSTR *pszDefaultAction)
-{
+                                        BSTR* pszDefaultAction) {
   if (!pszDefaultAction) {
     return E_INVALIDARG;
   }
@@ -874,8 +827,7 @@ AccessibleHandler::get_accDefaultAction(VARIANT varChild,
 }
 
 HRESULT
-AccessibleHandler::accSelect(long flagsSelect, VARIANT varChild)
-{
+AccessibleHandler::accSelect(long flagsSelect, VARIANT varChild) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -884,9 +836,8 @@ AccessibleHandler::accSelect(long flagsSelect, VARIANT varChild)
 }
 
 HRESULT
-AccessibleHandler::accLocation(long *pxLeft, long *pyTop, long *pcxWidth,
-                               long *pcyHeight, VARIANT varChild)
-{
+AccessibleHandler::accLocation(long* pxLeft, long* pyTop, long* pcxWidth,
+                               long* pcyHeight, VARIANT varChild) {
   if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
     HRESULT hr = ResolveIA2();
     if (FAILED(hr)) {
@@ -910,8 +861,7 @@ AccessibleHandler::accLocation(long *pxLeft, long *pyTop, long *pcxWidth,
 
 HRESULT
 AccessibleHandler::accNavigate(long navDir, VARIANT varStart,
-                               VARIANT *pvarEndUpAt)
-{
+                               VARIANT* pvarEndUpAt) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -920,8 +870,7 @@ AccessibleHandler::accNavigate(long navDir, VARIANT varStart,
 }
 
 HRESULT
-AccessibleHandler::accHitTest(long xLeft, long yTop, VARIANT *pvarChild)
-{
+AccessibleHandler::accHitTest(long xLeft, long yTop, VARIANT* pvarChild) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -930,8 +879,7 @@ AccessibleHandler::accHitTest(long xLeft, long yTop, VARIANT *pvarChild)
 }
 
 HRESULT
-AccessibleHandler::accDoDefaultAction(VARIANT varChild)
-{
+AccessibleHandler::accDoDefaultAction(VARIANT varChild) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -940,15 +888,13 @@ AccessibleHandler::accDoDefaultAction(VARIANT varChild)
 }
 
 HRESULT
-AccessibleHandler::put_accName(VARIANT varChild, BSTR szName)
-{
+AccessibleHandler::put_accName(VARIANT varChild, BSTR szName) {
   // This matches AccessibleWrap
   return E_NOTIMPL;
 }
 
 HRESULT
-AccessibleHandler::put_accValue(VARIANT varChild, BSTR szValue)
-{
+AccessibleHandler::put_accValue(VARIANT varChild, BSTR szValue) {
   // This matches AccessibleWrap
   return E_NOTIMPL;
 }
@@ -956,8 +902,7 @@ AccessibleHandler::put_accValue(VARIANT varChild, BSTR szValue)
 /*** IAccessible2 ***/
 
 HRESULT
-AccessibleHandler::get_nRelations(long* nRelations)
-{
+AccessibleHandler::get_nRelations(long* nRelations) {
   if (!nRelations) {
     return E_INVALIDARG;
   }
@@ -983,8 +928,7 @@ AccessibleHandler::get_nRelations(long* nRelations)
 
 HRESULT
 AccessibleHandler::get_relation(long relationIndex,
-                                IAccessibleRelation** relation)
-{
+                                IAccessibleRelation** relation) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -995,8 +939,7 @@ AccessibleHandler::get_relation(long relationIndex,
 HRESULT
 AccessibleHandler::get_relations(long maxRelations,
                                  IAccessibleRelation** relations,
-                                 long* nRelations)
-{
+                                 long* nRelations) {
   if (maxRelations == 0 || !relations || !nRelations) {
     return E_INVALIDARG;
   }
@@ -1027,8 +970,7 @@ AccessibleHandler::get_relations(long maxRelations,
 }
 
 HRESULT
-AccessibleHandler::role(long* role)
-{
+AccessibleHandler::role(long* role) {
   if (!role) {
     return E_INVALIDARG;
   }
@@ -1047,8 +989,7 @@ AccessibleHandler::role(long* role)
 }
 
 HRESULT
-AccessibleHandler::scrollTo(IA2ScrollType scrollType)
-{
+AccessibleHandler::scrollTo(IA2ScrollType scrollType) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -1058,8 +999,7 @@ AccessibleHandler::scrollTo(IA2ScrollType scrollType)
 
 HRESULT
 AccessibleHandler::scrollToPoint(IA2CoordinateType coordinateType, long x,
-                                 long y)
-{
+                                 long y) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -1068,9 +1008,9 @@ AccessibleHandler::scrollToPoint(IA2CoordinateType coordinateType, long x,
 }
 
 HRESULT
-AccessibleHandler::get_groupPosition(long* groupLevel, long* similarItemsInGroup,
-                                     long* positionInGroup)
-{
+AccessibleHandler::get_groupPosition(long* groupLevel,
+                                     long* similarItemsInGroup,
+                                     long* positionInGroup) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -1080,8 +1020,7 @@ AccessibleHandler::get_groupPosition(long* groupLevel, long* similarItemsInGroup
 }
 
 HRESULT
-AccessibleHandler::get_states(AccessibleStates* states)
-{
+AccessibleHandler::get_states(AccessibleStates* states) {
   if (!states) {
     return E_INVALIDARG;
   }
@@ -1100,8 +1039,7 @@ AccessibleHandler::get_states(AccessibleStates* states)
 }
 
 HRESULT
-AccessibleHandler::get_extendedRole(BSTR* extendedRole)
-{
+AccessibleHandler::get_extendedRole(BSTR* extendedRole) {
   // This matches ia2Accessible
   if (!extendedRole) {
     return E_INVALIDARG;
@@ -1111,8 +1049,7 @@ AccessibleHandler::get_extendedRole(BSTR* extendedRole)
 }
 
 HRESULT
-AccessibleHandler::get_localizedExtendedRole(BSTR* localizedExtendedRole)
-{
+AccessibleHandler::get_localizedExtendedRole(BSTR* localizedExtendedRole) {
   // This matches ia2Accessible
   if (!localizedExtendedRole) {
     return E_INVALIDARG;
@@ -1122,8 +1059,7 @@ AccessibleHandler::get_localizedExtendedRole(BSTR* localizedExtendedRole)
 }
 
 HRESULT
-AccessibleHandler::get_nExtendedStates(long* nExtendedStates)
-{
+AccessibleHandler::get_nExtendedStates(long* nExtendedStates) {
   // This matches ia2Accessible
   if (!nExtendedStates) {
     return E_INVALIDARG;
@@ -1133,9 +1069,9 @@ AccessibleHandler::get_nExtendedStates(long* nExtendedStates)
 }
 
 HRESULT
-AccessibleHandler::get_extendedStates(long maxExtendedStates, BSTR** extendedStates,
-                                      long* nExtendedStates)
-{
+AccessibleHandler::get_extendedStates(long maxExtendedStates,
+                                      BSTR** extendedStates,
+                                      long* nExtendedStates) {
   // This matches ia2Accessible
   if (!extendedStates || !nExtendedStates) {
     return E_INVALIDARG;
@@ -1148,8 +1084,7 @@ AccessibleHandler::get_extendedStates(long maxExtendedStates, BSTR** extendedSta
 HRESULT
 AccessibleHandler::get_localizedExtendedStates(long maxLocalizedExtendedStates,
                                                BSTR** localizedExtendedStates,
-                                               long* nLocalizedExtendedStates)
-{
+                                               long* nLocalizedExtendedStates) {
   // This matches ia2Accessible
   if (!localizedExtendedStates || !nLocalizedExtendedStates) {
     return E_INVALIDARG;
@@ -1160,8 +1095,7 @@ AccessibleHandler::get_localizedExtendedStates(long maxLocalizedExtendedStates,
 }
 
 HRESULT
-AccessibleHandler::get_uniqueID(long* uniqueID)
-{
+AccessibleHandler::get_uniqueID(long* uniqueID) {
   if (!uniqueID) {
     return E_INVALIDARG;
   }
@@ -1177,8 +1111,7 @@ AccessibleHandler::get_uniqueID(long* uniqueID)
 }
 
 HRESULT
-AccessibleHandler::get_windowHandle(HWND* windowHandle)
-{
+AccessibleHandler::get_windowHandle(HWND* windowHandle) {
   if (!windowHandle) {
     return E_INVALIDARG;
   }
@@ -1199,8 +1132,7 @@ AccessibleHandler::get_windowHandle(HWND* windowHandle)
 }
 
 HRESULT
-AccessibleHandler::get_indexInParent(long* indexInParent)
-{
+AccessibleHandler::get_indexInParent(long* indexInParent) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -1209,8 +1141,7 @@ AccessibleHandler::get_indexInParent(long* indexInParent)
 }
 
 HRESULT
-AccessibleHandler::get_locale(IA2Locale* locale)
-{
+AccessibleHandler::get_locale(IA2Locale* locale) {
   if (!locale) {
     return E_INVALIDARG;
   }
@@ -1231,8 +1162,7 @@ AccessibleHandler::get_locale(IA2Locale* locale)
 }
 
 HRESULT
-AccessibleHandler::get_attributes(BSTR* attributes)
-{
+AccessibleHandler::get_attributes(BSTR* attributes) {
   if (!attributes) {
     return E_INVALIDARG;
   }
@@ -1253,8 +1183,7 @@ AccessibleHandler::get_attributes(BSTR* attributes)
 /*** IAccessible2_2 ***/
 
 HRESULT
-AccessibleHandler::get_attribute(BSTR name, VARIANT* attribute)
-{
+AccessibleHandler::get_attribute(BSTR name, VARIANT* attribute) {
   // Not yet implemented by ia2Accessible.
   // Once ia2Accessible implements this, we could either pass it through
   // or we could extract these individually from cached mAttributes.
@@ -1264,8 +1193,7 @@ AccessibleHandler::get_attribute(BSTR name, VARIANT* attribute)
 
 HRESULT
 AccessibleHandler::get_accessibleWithCaret(IUnknown** accessible,
-                                           long* caretOffset)
-{
+                                           long* caretOffset) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -1276,8 +1204,7 @@ AccessibleHandler::get_accessibleWithCaret(IUnknown** accessible,
 HRESULT
 AccessibleHandler::get_relationTargetsOfType(BSTR type, long maxTargets,
                                              IUnknown*** targets,
-                                             long* nTargets)
-{
+                                             long* nTargets) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -1289,8 +1216,7 @@ AccessibleHandler::get_relationTargetsOfType(BSTR type, long maxTargets,
 /*** IAccessible2_3 ***/
 
 HRESULT
-AccessibleHandler::get_selectionRanges(IA2Range** ranges, long* nRanges)
-{
+AccessibleHandler::get_selectionRanges(IA2Range** ranges, long* nRanges) {
   HRESULT hr = ResolveIA2();
   if (FAILED(hr)) {
     return hr;
@@ -1299,7 +1225,7 @@ AccessibleHandler::get_selectionRanges(IA2Range** ranges, long* nRanges)
 }
 
 static const GUID kUnsupportedServices[] = {
-  // clang-format off
+    // clang-format off
   // Unknown, queried by Windows
   {0x33f139ee, 0xe509, 0x47f7, {0xbf, 0x39, 0x83, 0x76, 0x44, 0xf7, 0x45, 0x76}},
   // Unknown, queried by Windows
@@ -1314,15 +1240,14 @@ static const GUID kUnsupportedServices[] = {
   {0x902697FA, 0x80E4, 0x4560, {0x80, 0x2A, 0xA1, 0x3F, 0x22, 0xA6, 0x47, 0x09}},
   // IID_IHTMLElement, queried by JAWS
   {0x3050F1FF, 0x98B5, 0x11CF, {0xBB, 0x82, 0x00, 0xAA, 0x00, 0xBD, 0xCE, 0x0B}}
-  // clang-format on
+    // clang-format on
 };
 
 /*** IServiceProvider ***/
 
 HRESULT
 AccessibleHandler::QueryService(REFGUID aServiceId, REFIID aIid,
-                                void** aOutInterface)
-{
+                                void** aOutInterface) {
   static_assert(&NEWEST_IA2_IID == &IID_IAccessible2_3,
                 "You have modified NEWEST_IA2_IID. This code needs updating.");
   /* We're taking advantage of the fact that we are implementing IA2 as part
@@ -1353,8 +1278,8 @@ AccessibleHandler::QueryService(REFGUID aServiceId, REFIID aIid,
       return E_UNEXPECTED;
     }
 
-    HRESULT hr = proxy->QueryInterface(IID_IServiceProvider,
-                                       reinterpret_cast<void**>(&mServProvPassThru));
+    HRESULT hr = proxy->QueryInterface(
+        IID_IServiceProvider, reinterpret_cast<void**>(&mServProvPassThru));
     if (FAILED(hr)) {
       return hr;
     }
@@ -1370,8 +1295,7 @@ AccessibleHandler::QueryService(REFGUID aServiceId, REFIID aIid,
 /*** IProvideClassInfo ***/
 
 HRESULT
-AccessibleHandler::GetClassInfo(ITypeInfo** aOutTypeInfo)
-{
+AccessibleHandler::GetClassInfo(ITypeInfo** aOutTypeInfo) {
   RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetOrCreateSingleton());
   if (!ctl) {
     return E_OUTOFMEMORY;
@@ -1383,8 +1307,7 @@ AccessibleHandler::GetClassInfo(ITypeInfo** aOutTypeInfo)
 /*** IAccessibleAction ***/
 
 HRESULT
-AccessibleHandler::nActions(long* nActions)
-{
+AccessibleHandler::nActions(long* nActions) {
   if (!nActions) {
     return E_INVALIDARG;
   }
@@ -1403,8 +1326,7 @@ AccessibleHandler::nActions(long* nActions)
 }
 
 HRESULT
-AccessibleHandler::doAction(long actionIndex)
-{
+AccessibleHandler::doAction(long actionIndex) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1413,8 +1335,7 @@ AccessibleHandler::doAction(long actionIndex)
 }
 
 HRESULT
-AccessibleHandler::get_description(long actionIndex, BSTR* description)
-{
+AccessibleHandler::get_description(long actionIndex, BSTR* description) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1423,22 +1344,18 @@ AccessibleHandler::get_description(long actionIndex, BSTR* description)
 }
 
 HRESULT
-AccessibleHandler::get_keyBinding(long actionIndex,
-                                  long nMaxBindings,
-                                  BSTR** keyBindings,
-                                  long* nBindings)
-{
+AccessibleHandler::get_keyBinding(long actionIndex, long nMaxBindings,
+                                  BSTR** keyBindings, long* nBindings) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
   }
-  return mIAHyperlinkPassThru->get_keyBinding(
-    actionIndex, nMaxBindings, keyBindings, nBindings);
+  return mIAHyperlinkPassThru->get_keyBinding(actionIndex, nMaxBindings,
+                                              keyBindings, nBindings);
 }
 
 HRESULT
-AccessibleHandler::get_name(long actionIndex, BSTR* name)
-{
+AccessibleHandler::get_name(long actionIndex, BSTR* name) {
   if (!name) {
     return E_INVALIDARG;
   }
@@ -1465,8 +1382,7 @@ AccessibleHandler::get_name(long actionIndex, BSTR* name)
 }
 
 HRESULT
-AccessibleHandler::get_localizedName(long actionIndex, BSTR* localizedName)
-{
+AccessibleHandler::get_localizedName(long actionIndex, BSTR* localizedName) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1477,8 +1393,7 @@ AccessibleHandler::get_localizedName(long actionIndex, BSTR* localizedName)
 /*** IAccessibleHyperlink ***/
 
 HRESULT
-AccessibleHandler::get_anchor(long index, VARIANT* anchor)
-{
+AccessibleHandler::get_anchor(long index, VARIANT* anchor) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1487,8 +1402,7 @@ AccessibleHandler::get_anchor(long index, VARIANT* anchor)
 }
 
 HRESULT
-AccessibleHandler::get_anchorTarget(long index, VARIANT* anchorTarget)
-{
+AccessibleHandler::get_anchorTarget(long index, VARIANT* anchorTarget) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1497,8 +1411,7 @@ AccessibleHandler::get_anchorTarget(long index, VARIANT* anchorTarget)
 }
 
 HRESULT
-AccessibleHandler::get_startIndex(long* index)
-{
+AccessibleHandler::get_startIndex(long* index) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1507,8 +1420,7 @@ AccessibleHandler::get_startIndex(long* index)
 }
 
 HRESULT
-AccessibleHandler::get_endIndex(long* index)
-{
+AccessibleHandler::get_endIndex(long* index) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1517,8 +1429,7 @@ AccessibleHandler::get_endIndex(long* index)
 }
 
 HRESULT
-AccessibleHandler::get_valid(boolean* valid)
-{
+AccessibleHandler::get_valid(boolean* valid) {
   HRESULT hr = ResolveIAHyperlink();
   if (FAILED(hr)) {
     return hr;
@@ -1529,8 +1440,7 @@ AccessibleHandler::get_valid(boolean* valid)
 /*** IAccessibleTableCell ***/
 
 HRESULT
-AccessibleHandler::get_columnExtent(long* nColumnsSpanned)
-{
+AccessibleHandler::get_columnExtent(long* nColumnsSpanned) {
   if (!nColumnsSpanned) {
     return E_INVALIDARG;
   }
@@ -1550,20 +1460,18 @@ AccessibleHandler::get_columnExtent(long* nColumnsSpanned)
 
 HRESULT
 AccessibleHandler::get_columnHeaderCells(IUnknown*** cellAccessibles,
-                                     long* nColumnHeaderCells)
-{
+                                         long* nColumnHeaderCells) {
   HRESULT hr = ResolveIATableCell();
   if (FAILED(hr)) {
     return hr;
   }
 
   return mIATableCellPassThru->get_columnHeaderCells(cellAccessibles,
-             nColumnHeaderCells);
+                                                     nColumnHeaderCells);
 }
 
 HRESULT
-AccessibleHandler::get_columnIndex(long* columnIndex)
-{
+AccessibleHandler::get_columnIndex(long* columnIndex) {
   if (!columnIndex) {
     return E_INVALIDARG;
   }
@@ -1582,8 +1490,7 @@ AccessibleHandler::get_columnIndex(long* columnIndex)
 }
 
 HRESULT
-AccessibleHandler::get_rowExtent(long* nRowsSpanned)
-{
+AccessibleHandler::get_rowExtent(long* nRowsSpanned) {
   if (!nRowsSpanned) {
     return E_INVALIDARG;
   }
@@ -1603,20 +1510,18 @@ AccessibleHandler::get_rowExtent(long* nRowsSpanned)
 
 HRESULT
 AccessibleHandler::get_rowHeaderCells(IUnknown*** cellAccessibles,
-                                  long* nRowHeaderCells)
-{
+                                      long* nRowHeaderCells) {
   HRESULT hr = ResolveIATableCell();
   if (FAILED(hr)) {
     return hr;
   }
 
   return mIATableCellPassThru->get_rowHeaderCells(cellAccessibles,
-             nRowHeaderCells);
+                                                  nRowHeaderCells);
 }
 
 HRESULT
-AccessibleHandler::get_rowIndex(long* rowIndex)
-{
+AccessibleHandler::get_rowIndex(long* rowIndex) {
   if (!rowIndex) {
     return E_INVALIDARG;
   }
@@ -1635,8 +1540,7 @@ AccessibleHandler::get_rowIndex(long* rowIndex)
 }
 
 HRESULT
-AccessibleHandler::get_isSelected(boolean* isSelected)
-{
+AccessibleHandler::get_isSelected(boolean* isSelected) {
   if (!isSelected) {
     return E_INVALIDARG;
   }
@@ -1656,9 +1560,8 @@ AccessibleHandler::get_isSelected(boolean* isSelected)
 
 HRESULT
 AccessibleHandler::get_rowColumnExtents(long* row, long* column,
-                                     long* rowExtents, long* columnExtents,
-                                     boolean* isSelected)
-{
+                                        long* rowExtents, long* columnExtents,
+                                        boolean* isSelected) {
   if (!row || !column || !rowExtents || !columnExtents || !isSelected) {
     return E_INVALIDARG;
   }
@@ -1668,8 +1571,8 @@ AccessibleHandler::get_rowColumnExtents(long* row, long* column,
     if (FAILED(hr)) {
       return hr;
     }
-    return mIATableCellPassThru->get_rowColumnExtents(row, column, rowExtents,
-               columnExtents, isSelected);
+    return mIATableCellPassThru->get_rowColumnExtents(
+        row, column, rowExtents, columnExtents, isSelected);
   }
 
   BEGIN_CACHE_ACCESS;
@@ -1682,8 +1585,7 @@ AccessibleHandler::get_rowColumnExtents(long* row, long* column,
 }
 
 HRESULT
-AccessibleHandler::get_table(IUnknown** table)
-{
+AccessibleHandler::get_table(IUnknown** table) {
   HRESULT hr = ResolveIATableCell();
   if (FAILED(hr)) {
     return hr;
@@ -1695,8 +1597,7 @@ AccessibleHandler::get_table(IUnknown** table)
 /*** IAccessibleText ***/
 
 HRESULT
-AccessibleHandler::addSelection(long startOffset, long endOffset)
-{
+AccessibleHandler::addSelection(long startOffset, long endOffset) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1706,9 +1607,8 @@ AccessibleHandler::addSelection(long startOffset, long endOffset)
 }
 
 HRESULT
-AccessibleHandler::get_attributes(long offset, long *startOffset,
-                                  long *endOffset, BSTR *textAttributes)
-{
+AccessibleHandler::get_attributes(long offset, long* startOffset,
+                                  long* endOffset, BSTR* textAttributes) {
   if (!startOffset || !endOffset || !textAttributes) {
     return E_INVALIDARG;
   }
@@ -1741,8 +1641,7 @@ AccessibleHandler::get_attributes(long offset, long *startOffset,
 }
 
 HRESULT
-AccessibleHandler::get_caretOffset(long *offset)
-{
+AccessibleHandler::get_caretOffset(long* offset) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1754,9 +1653,8 @@ AccessibleHandler::get_caretOffset(long *offset)
 HRESULT
 AccessibleHandler::get_characterExtents(long offset,
                                         enum IA2CoordinateType coordType,
-                                        long *x, long *y, long *width,
-                                        long *height)
-{
+                                        long* x, long* y, long* width,
+                                        long* height) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1767,8 +1665,7 @@ AccessibleHandler::get_characterExtents(long offset,
 }
 
 HRESULT
-AccessibleHandler::get_nSelections(long *nSelections)
-{
+AccessibleHandler::get_nSelections(long* nSelections) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1780,8 +1677,7 @@ AccessibleHandler::get_nSelections(long *nSelections)
 HRESULT
 AccessibleHandler::get_offsetAtPoint(long x, long y,
                                      enum IA2CoordinateType coordType,
-                                     long *offset)
-{
+                                     long* offset) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1791,9 +1687,8 @@ AccessibleHandler::get_offsetAtPoint(long x, long y,
 }
 
 HRESULT
-AccessibleHandler::get_selection(long selectionIndex, long *startOffset,
-                                 long *endOffset)
-{
+AccessibleHandler::get_selection(long selectionIndex, long* startOffset,
+                                 long* endOffset) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1804,15 +1699,14 @@ AccessibleHandler::get_selection(long selectionIndex, long *startOffset,
 }
 
 HRESULT
-AccessibleHandler::get_text(long startOffset, long endOffset, BSTR *text)
-{
+AccessibleHandler::get_text(long startOffset, long endOffset, BSTR* text) {
   if (!text) {
     return E_INVALIDARG;
   }
 
   HRESULT hr;
-  if (mCachedData.mGeckoBackChannel &&
-      startOffset == 0 && endOffset == IA2_TEXT_OFFSET_LENGTH) {
+  if (mCachedData.mGeckoBackChannel && startOffset == 0 &&
+      endOffset == IA2_TEXT_OFFSET_LENGTH) {
     // If the caller is retrieving all text, they will probably want all
     // hyperlinks and attributes as well.
     hr = GetAllTextInfo(text);
@@ -1833,53 +1727,47 @@ AccessibleHandler::get_text(long startOffset, long endOffset, BSTR *text)
 HRESULT
 AccessibleHandler::get_textBeforeOffset(long offset,
                                         enum IA2TextBoundaryType boundaryType,
-                                        long *startOffset, long *endOffset,
-                                        BSTR *text)
-{
+                                        long* startOffset, long* endOffset,
+                                        BSTR* text) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
   }
 
-  return mIAHypertextPassThru->get_textBeforeOffset(offset, boundaryType,
-                                                    startOffset, endOffset,
-                                                    text);
+  return mIAHypertextPassThru->get_textBeforeOffset(
+      offset, boundaryType, startOffset, endOffset, text);
 }
 
 HRESULT
 AccessibleHandler::get_textAfterOffset(long offset,
                                        enum IA2TextBoundaryType boundaryType,
-                                       long *startOffset, long *endOffset,
-                                       BSTR *text)
-{
+                                       long* startOffset, long* endOffset,
+                                       BSTR* text) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
   }
 
-  return mIAHypertextPassThru->get_textAfterOffset(offset, boundaryType,
-                                                   startOffset, endOffset,
-                                                   text);
+  return mIAHypertextPassThru->get_textAfterOffset(
+      offset, boundaryType, startOffset, endOffset, text);
 }
 
 HRESULT
 AccessibleHandler::get_textAtOffset(long offset,
                                     enum IA2TextBoundaryType boundaryType,
-                                    long *startOffset, long *endOffset,
-                                    BSTR *text)
-{
+                                    long* startOffset, long* endOffset,
+                                    BSTR* text) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
   }
 
   return mIAHypertextPassThru->get_textAtOffset(offset, boundaryType,
-                                                 startOffset, endOffset, text);
+                                                startOffset, endOffset, text);
 }
 
 HRESULT
-AccessibleHandler::removeSelection(long selectionIndex)
-{
+AccessibleHandler::removeSelection(long selectionIndex) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1889,8 +1777,7 @@ AccessibleHandler::removeSelection(long selectionIndex)
 }
 
 HRESULT
-AccessibleHandler::setCaretOffset(long offset)
-{
+AccessibleHandler::setCaretOffset(long offset) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1901,8 +1788,7 @@ AccessibleHandler::setCaretOffset(long offset)
 
 HRESULT
 AccessibleHandler::setSelection(long selectionIndex, long startOffset,
-                                long endOffset)
-{
+                                long endOffset) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1913,8 +1799,7 @@ AccessibleHandler::setSelection(long selectionIndex, long startOffset,
 }
 
 HRESULT
-AccessibleHandler::get_nCharacters(long *nCharacters)
-{
+AccessibleHandler::get_nCharacters(long* nCharacters) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1925,8 +1810,7 @@ AccessibleHandler::get_nCharacters(long *nCharacters)
 
 HRESULT
 AccessibleHandler::scrollSubstringTo(long startIndex, long endIndex,
-                                     enum IA2ScrollType scrollType)
-{
+                                     enum IA2ScrollType scrollType) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1939,8 +1823,7 @@ AccessibleHandler::scrollSubstringTo(long startIndex, long endIndex,
 HRESULT
 AccessibleHandler::scrollSubstringToPoint(long startIndex, long endIndex,
                                           enum IA2CoordinateType coordinateType,
-                                          long x, long y)
-{
+                                          long x, long y) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -1951,8 +1834,7 @@ AccessibleHandler::scrollSubstringToPoint(long startIndex, long endIndex,
 }
 
 HRESULT
-AccessibleHandler::get_newText(IA2TextSegment *newText)
-{
+AccessibleHandler::get_newText(IA2TextSegment* newText) {
   if (!newText) {
     return E_INVALIDARG;
   }
@@ -1973,8 +1855,7 @@ AccessibleHandler::get_newText(IA2TextSegment *newText)
 }
 
 HRESULT
-AccessibleHandler::get_oldText(IA2TextSegment *oldText)
-{
+AccessibleHandler::get_oldText(IA2TextSegment* oldText) {
   if (!oldText) {
     return E_INVALIDARG;
   }
@@ -1997,8 +1878,7 @@ AccessibleHandler::get_oldText(IA2TextSegment *oldText)
 /*** IAccessibleHypertext ***/
 
 HRESULT
-AccessibleHandler::get_nHyperlinks(long *hyperlinkCount)
-{
+AccessibleHandler::get_nHyperlinks(long* hyperlinkCount) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -2008,9 +1888,7 @@ AccessibleHandler::get_nHyperlinks(long *hyperlinkCount)
 }
 
 HRESULT
-AccessibleHandler::get_hyperlink(long index,
-                                 IAccessibleHyperlink **hyperlink)
-{
+AccessibleHandler::get_hyperlink(long index, IAccessibleHyperlink** hyperlink) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -2020,8 +1898,7 @@ AccessibleHandler::get_hyperlink(long index,
 }
 
 HRESULT
-AccessibleHandler::get_hyperlinkIndex(long charIndex, long *hyperlinkIndex)
-{
+AccessibleHandler::get_hyperlinkIndex(long charIndex, long* hyperlinkIndex) {
   HRESULT hr = ResolveIAHypertext();
   if (FAILED(hr)) {
     return hr;
@@ -2034,8 +1911,7 @@ AccessibleHandler::get_hyperlinkIndex(long charIndex, long *hyperlinkIndex)
 
 HRESULT
 AccessibleHandler::get_hyperlinks(IAccessibleHyperlink*** hyperlinks,
-                                  long* nHyperlinks)
-{
+                                  long* nHyperlinks) {
   if (!hyperlinks || !nHyperlinks) {
     return E_INVALIDARG;
   }
@@ -2058,36 +1934,31 @@ AccessibleHandler::get_hyperlinks(IAccessibleHyperlink*** hyperlinks,
   return mIAHypertextPassThru->get_hyperlinks(hyperlinks, nHyperlinks);
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-extern "C" HRESULT __stdcall
-ProxyDllCanUnloadNow();
+extern "C" HRESULT __stdcall ProxyDllCanUnloadNow();
 
-extern "C" HRESULT __stdcall
-DllCanUnloadNow()
-{
+extern "C" HRESULT __stdcall DllCanUnloadNow() {
   return mozilla::mscom::Module::CanUnload() && ProxyDllCanUnloadNow();
 }
 
-extern "C" HRESULT __stdcall
-ProxyDllGetClassObject(REFCLSID aClsid, REFIID aIid, LPVOID* aOutInterface);
+extern "C" HRESULT __stdcall ProxyDllGetClassObject(REFCLSID aClsid,
+                                                    REFIID aIid,
+                                                    LPVOID* aOutInterface);
 
-extern "C" HRESULT __stdcall
-DllGetClassObject(REFCLSID aClsid, REFIID aIid, LPVOID* aOutInterface)
-{
+extern "C" HRESULT __stdcall DllGetClassObject(REFCLSID aClsid, REFIID aIid,
+                                               LPVOID* aOutInterface) {
   if (aClsid == CLSID_AccessibleHandler) {
     return mozilla::a11y::sHandlerFactory.QueryInterface(aIid, aOutInterface);
   }
   return ProxyDllGetClassObject(aClsid, aIid, aOutInterface);
 }
 
-extern "C" BOOL WINAPI
-ProxyDllMain(HINSTANCE aInstDll, DWORD aReason, LPVOID aReserved);
+extern "C" BOOL WINAPI ProxyDllMain(HINSTANCE aInstDll, DWORD aReason,
+                                    LPVOID aReserved);
 
-BOOL WINAPI
-DllMain(HINSTANCE aInstDll, DWORD aReason, LPVOID aReserved)
-{
+BOOL WINAPI DllMain(HINSTANCE aInstDll, DWORD aReason, LPVOID aReserved) {
   if (aReason == DLL_PROCESS_ATTACH) {
     DisableThreadLibraryCalls((HMODULE)aInstDll);
   }
@@ -2095,12 +1966,9 @@ DllMain(HINSTANCE aInstDll, DWORD aReason, LPVOID aReserved)
   return ProxyDllMain(aInstDll, aReason, aReserved);
 }
 
-extern "C" HRESULT __stdcall
-ProxyDllRegisterServer();
+extern "C" HRESULT __stdcall ProxyDllRegisterServer();
 
-extern "C" HRESULT __stdcall
-DllRegisterServer()
-{
+extern "C" HRESULT __stdcall DllRegisterServer() {
   HRESULT hr = mozilla::mscom::Handler::Register(CLSID_AccessibleHandler);
   if (FAILED(hr)) {
     return hr;
@@ -2109,12 +1977,9 @@ DllRegisterServer()
   return ProxyDllRegisterServer();
 }
 
-extern "C" HRESULT __stdcall
-ProxyDllUnregisterServer();
+extern "C" HRESULT __stdcall ProxyDllUnregisterServer();
 
-extern "C" HRESULT __stdcall
-DllUnregisterServer()
-{
+extern "C" HRESULT __stdcall DllUnregisterServer() {
   HRESULT hr = mozilla::mscom::Handler::Unregister(CLSID_AccessibleHandler);
   if (FAILED(hr)) {
     return hr;

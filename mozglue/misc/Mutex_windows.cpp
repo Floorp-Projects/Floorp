@@ -12,30 +12,22 @@
 
 #include "MutexPlatformData_windows.h"
 
-mozilla::detail::MutexImpl::MutexImpl(recordreplay::Behavior aRecorded)
-{
+mozilla::detail::MutexImpl::MutexImpl(recordreplay::Behavior aRecorded) {
   InitializeSRWLock(&platformData()->lock);
 }
 
-mozilla::detail::MutexImpl::~MutexImpl()
-{
-}
+mozilla::detail::MutexImpl::~MutexImpl() {}
 
-void
-mozilla::detail::MutexImpl::lock()
-{
+void mozilla::detail::MutexImpl::lock() {
   AcquireSRWLockExclusive(&platformData()->lock);
 }
 
-void
-mozilla::detail::MutexImpl::unlock()
-{
+void mozilla::detail::MutexImpl::unlock() {
   ReleaseSRWLockExclusive(&platformData()->lock);
 }
 
 mozilla::detail::MutexImpl::PlatformData*
-mozilla::detail::MutexImpl::platformData()
-{
+mozilla::detail::MutexImpl::platformData() {
   static_assert(sizeof(platformData_) >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<PlatformData*>(platformData_);

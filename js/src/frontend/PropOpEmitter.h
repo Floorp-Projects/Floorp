@@ -100,165 +100,149 @@ struct BytecodeEmitter;
 //     emit_add_op_here();
 //     poe.emitAssignment(nullptr); // nullptr for CompoundAssignment
 //
-class MOZ_STACK_CLASS PropOpEmitter
-{
-  public:
-    enum class Kind {
-        Get,
-        Call,
-        Set,
-        Delete,
-        PostIncrement,
-        PreIncrement,
-        PostDecrement,
-        PreDecrement,
-        SimpleAssignment,
-        CompoundAssignment
-    };
-    enum class ObjKind {
-        Super,
-        Other
-    };
+class MOZ_STACK_CLASS PropOpEmitter {
+ public:
+  enum class Kind {
+    Get,
+    Call,
+    Set,
+    Delete,
+    PostIncrement,
+    PreIncrement,
+    PostDecrement,
+    PreDecrement,
+    SimpleAssignment,
+    CompoundAssignment
+  };
+  enum class ObjKind { Super, Other };
 
-  private:
-    BytecodeEmitter* bce_;
+ private:
+  BytecodeEmitter* bce_;
 
-    Kind kind_;
-    ObjKind objKind_;
+  Kind kind_;
+  ObjKind objKind_;
 
-    // The index for the property name's atom.
-    uint32_t propAtomIndex_ = 0;
+  // The index for the property name's atom.
+  uint32_t propAtomIndex_ = 0;
 
-    // Whether the property name is `length` or not.
-    bool isLength_ = false;
+  // Whether the property name is `length` or not.
+  bool isLength_ = false;
 
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    //             skipObjAndRhs
-    //           +----------------------------+
-    //           |                            |
-    // +-------+ | prepareForObj +-----+      |
-    // | Start |-+-------------->| Obj |-+    |
-    // +-------+                 +-----+ |    |
-    //                                   |    |
-    // +---------------------------------+    |
-    // |                                      |
-    // |                                      |
-    // | [Get]                                |
-    // | [Call]                               |
-    // |   emitGet +-----+                    |
-    // +---------->| Get |                    |
-    // |           +-----+                    |
-    // |                                      |
-    // | [Delete]                             |
-    // |   emitDelete +--------+              |
-    // +------------->| Delete |              |
-    // |              +--------+              |
-    // |                                      |
-    // | [PostIncrement]                      |
-    // | [PreIncrement]                       |
-    // | [PostDecrement]                      |
-    // | [PreDecrement]                       |
-    // |   emitIncDec +--------+              |
-    // +------------->| IncDec |              |
-    // |              +--------+              |
-    // |                                      |
-    // | [SimpleAssignment]                   |
-    // |                        prepareForRhs |  +-----+
-    // +--------------------->+-------------->+->| Rhs |-+
-    // |                      ^                  +-----+ |
-    // |                      |                          |
-    // |                      |                +---------+
-    // | [CompoundAssignment] |                |
-    // |   emitGet +-----+    |                | emitAssignment +------------+
-    // +---------->| Get |----+                + -------------->| Assignment |
-    //             +-----+                                      +------------+
-    enum class State {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  //             skipObjAndRhs
+  //           +----------------------------+
+  //           |                            |
+  // +-------+ | prepareForObj +-----+      |
+  // | Start |-+-------------->| Obj |-+    |
+  // +-------+                 +-----+ |    |
+  //                                   |    |
+  // +---------------------------------+    |
+  // |                                      |
+  // |                                      |
+  // | [Get]                                |
+  // | [Call]                               |
+  // |   emitGet +-----+                    |
+  // +---------->| Get |                    |
+  // |           +-----+                    |
+  // |                                      |
+  // | [Delete]                             |
+  // |   emitDelete +--------+              |
+  // +------------->| Delete |              |
+  // |              +--------+              |
+  // |                                      |
+  // | [PostIncrement]                      |
+  // | [PreIncrement]                       |
+  // | [PostDecrement]                      |
+  // | [PreDecrement]                       |
+  // |   emitIncDec +--------+              |
+  // +------------->| IncDec |              |
+  // |              +--------+              |
+  // |                                      |
+  // | [SimpleAssignment]                   |
+  // |                        prepareForRhs |  +-----+
+  // +--------------------->+-------------->+->| Rhs |-+
+  // |                      ^                  +-----+ |
+  // |                      |                          |
+  // |                      |                +---------+
+  // | [CompoundAssignment] |                |
+  // |   emitGet +-----+    |                | emitAssignment +------------+
+  // +---------->| Get |----+                + -------------->| Assignment |
+  //             +-----+                                      +------------+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling prepareForObj.
-        Obj,
+    // After calling prepareForObj.
+    Obj,
 
-        // After calling emitGet.
-        Get,
+    // After calling emitGet.
+    Get,
 
-        // After calling emitDelete.
-        Delete,
+    // After calling emitDelete.
+    Delete,
 
-        // After calling emitIncDec.
-        IncDec,
+    // After calling emitIncDec.
+    IncDec,
 
-        // After calling prepareForRhs or skipObjAndRhs.
-        Rhs,
+    // After calling prepareForRhs or skipObjAndRhs.
+    Rhs,
 
-        // After calling emitAssignment.
-        Assignment,
-    };
-    State state_ = State::Start;
+    // After calling emitAssignment.
+    Assignment,
+  };
+  State state_ = State::Start;
 #endif
 
-  public:
-    PropOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind);
+ public:
+  PropOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind);
 
-  private:
-    MOZ_MUST_USE bool isCall() const {
-        return kind_ == Kind::Call;
-    }
+ private:
+  MOZ_MUST_USE bool isCall() const { return kind_ == Kind::Call; }
 
-    MOZ_MUST_USE bool isSuper() const {
-        return objKind_ == ObjKind::Super;
-    }
+  MOZ_MUST_USE bool isSuper() const { return objKind_ == ObjKind::Super; }
 
-    MOZ_MUST_USE bool isSimpleAssignment() const {
-        return kind_ == Kind::SimpleAssignment;
-    }
+  MOZ_MUST_USE bool isSimpleAssignment() const {
+    return kind_ == Kind::SimpleAssignment;
+  }
 
-    MOZ_MUST_USE bool isDelete() const {
-        return kind_ == Kind::Delete;
-    }
+  MOZ_MUST_USE bool isDelete() const { return kind_ == Kind::Delete; }
 
-    MOZ_MUST_USE bool isCompoundAssignment() const {
-        return kind_ == Kind::CompoundAssignment;
-    }
+  MOZ_MUST_USE bool isCompoundAssignment() const {
+    return kind_ == Kind::CompoundAssignment;
+  }
 
-    MOZ_MUST_USE bool isIncDec() const {
-        return isPostIncDec() || isPreIncDec();
-    }
+  MOZ_MUST_USE bool isIncDec() const { return isPostIncDec() || isPreIncDec(); }
 
-    MOZ_MUST_USE bool isPostIncDec() const {
-        return kind_ == Kind::PostIncrement ||
-               kind_ == Kind::PostDecrement;
-    }
+  MOZ_MUST_USE bool isPostIncDec() const {
+    return kind_ == Kind::PostIncrement || kind_ == Kind::PostDecrement;
+  }
 
-    MOZ_MUST_USE bool isPreIncDec() const {
-        return kind_ == Kind::PreIncrement ||
-               kind_ == Kind::PreDecrement;
-    }
+  MOZ_MUST_USE bool isPreIncDec() const {
+    return kind_ == Kind::PreIncrement || kind_ == Kind::PreDecrement;
+  }
 
-    MOZ_MUST_USE bool isInc() const {
-        return kind_ == Kind::PostIncrement ||
-               kind_ == Kind::PreIncrement;
-    }
+  MOZ_MUST_USE bool isInc() const {
+    return kind_ == Kind::PostIncrement || kind_ == Kind::PreIncrement;
+  }
 
-    MOZ_MUST_USE bool
-    prepareAtomIndex(JSAtom* prop);
+  MOZ_MUST_USE bool prepareAtomIndex(JSAtom* prop);
 
-  public:
-    MOZ_MUST_USE bool prepareForObj();
+ public:
+  MOZ_MUST_USE bool prepareForObj();
 
-    MOZ_MUST_USE bool emitGet(JSAtom* prop);
+  MOZ_MUST_USE bool emitGet(JSAtom* prop);
 
-    MOZ_MUST_USE bool prepareForRhs();
-    MOZ_MUST_USE bool skipObjAndRhs();
+  MOZ_MUST_USE bool prepareForRhs();
+  MOZ_MUST_USE bool skipObjAndRhs();
 
-    MOZ_MUST_USE bool emitDelete(JSAtom* prop);
+  MOZ_MUST_USE bool emitDelete(JSAtom* prop);
 
-    // `prop` can be nullptr for CompoundAssignment.
-    MOZ_MUST_USE bool emitAssignment(JSAtom* prop);
+  // `prop` can be nullptr for CompoundAssignment.
+  MOZ_MUST_USE bool emitAssignment(JSAtom* prop);
 
-    MOZ_MUST_USE bool emitIncDec(JSAtom* prop);
+  MOZ_MUST_USE bool emitIncDec(JSAtom* prop);
 };
 
 } /* namespace frontend */

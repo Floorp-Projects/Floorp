@@ -21,31 +21,26 @@ class AccessibleOrProxy;
  * XPCOM nsIAccessible interface implementation, used by xpcAccessibleGeneric
  * class.
  */
-class xpcAccessible : public nsIAccessible
-{
-public:
+class xpcAccessible : public nsIAccessible {
+ public:
   // nsIAccessible
   NS_IMETHOD GetParent(nsIAccessible** aParent) final;
   NS_IMETHOD GetNextSibling(nsIAccessible** aNextSibling) final;
-  NS_IMETHOD GetPreviousSibling(nsIAccessible** aPreviousSibling)
-    final;
+  NS_IMETHOD GetPreviousSibling(nsIAccessible** aPreviousSibling) final;
   NS_IMETHOD GetFirstChild(nsIAccessible** aFirstChild) final;
   NS_IMETHOD GetLastChild(nsIAccessible** aLastChild) final;
   NS_IMETHOD GetChildCount(int32_t* aChildCount) final;
-  NS_IMETHOD GetChildAt(int32_t aChildIndex, nsIAccessible** aChild)
-    final;
+  NS_IMETHOD GetChildAt(int32_t aChildIndex, nsIAccessible** aChild) final;
   NS_IMETHOD GetChildren(nsIArray** aChildren) final;
   NS_IMETHOD GetIndexInParent(int32_t* aIndexInParent) final;
 
   NS_IMETHOD GetDOMNode(nsINode** aDOMNode) final;
   NS_IMETHOD GetId(nsAString& aID) final;
   NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument) final;
-  NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument)
-    final;
+  NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument) final;
 
   NS_IMETHOD GetRole(uint32_t* aRole) final;
-  NS_IMETHOD GetState(uint32_t* aState, uint32_t* aExtraState)
-    final;
+  NS_IMETHOD GetState(uint32_t* aState, uint32_t* aExtraState) final;
 
   NS_IMETHOD GetDescription(nsAString& aDescription) final;
   NS_IMETHOD GetName(nsAString& aName) final;
@@ -56,25 +51,22 @@ public:
   NS_IMETHOD GetAccessKey(nsAString& aAccessKey) final;
   NS_IMETHOD GetKeyboardShortcut(nsAString& aKeyBinding) final;
 
-  NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes)
-    final;
-  NS_IMETHOD GetBounds(int32_t* aX, int32_t* aY,
-                       int32_t* aWidth, int32_t* aHeight) final;
-  NS_IMETHOD GetBoundsInCSSPixels(int32_t* aX, int32_t* aY,
-                                  int32_t* aWidth, int32_t* aHeight) final;
+  NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes) final;
+  NS_IMETHOD GetBounds(int32_t* aX, int32_t* aY, int32_t* aWidth,
+                       int32_t* aHeight) final;
+  NS_IMETHOD GetBoundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
+                                  int32_t* aHeight) final;
   NS_IMETHOD GroupPosition(int32_t* aGroupLevel, int32_t* aSimilarItemsInGroup,
                            int32_t* aPositionInGroup) final;
   NS_IMETHOD GetRelationByType(uint32_t aType,
-                               nsIAccessibleRelation** aRelation)
-    final;
+                               nsIAccessibleRelation** aRelation) final;
   NS_IMETHOD GetRelations(nsIArray** aRelations) final;
 
   NS_IMETHOD GetFocusedChild(nsIAccessible** aChild) final;
   NS_IMETHOD GetChildAtPoint(int32_t aX, int32_t aY,
                              nsIAccessible** aAccessible) final;
   NS_IMETHOD GetDeepestChildAtPoint(int32_t aX, int32_t aY,
-                                    nsIAccessible** aAccessible)
-    final;
+                                    nsIAccessible** aAccessible) final;
 
   NS_IMETHOD SetSelected(bool aSelect) final;
   NS_IMETHOD TakeSelection() final;
@@ -82,27 +74,27 @@ public:
 
   NS_IMETHOD GetActionCount(uint8_t* aActionCount) final;
   NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName) final;
-  NS_IMETHOD GetActionDescription(uint8_t aIndex, nsAString& aDescription)
-    final;
+  NS_IMETHOD GetActionDescription(uint8_t aIndex,
+                                  nsAString& aDescription) final;
   NS_IMETHOD DoAction(uint8_t aIndex) final;
 
   NS_IMETHOD ScrollTo(uint32_t aHow) final;
-  NS_IMETHOD ScrollToPoint(uint32_t aCoordinateType,
-                           int32_t aX, int32_t aY) final;
+  NS_IMETHOD ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
+                           int32_t aY) final;
 
-protected:
-  xpcAccessible() { }
+ protected:
+  xpcAccessible() {}
   virtual ~xpcAccessible() {}
 
-private:
+ private:
   Accessible* Intl();
   AccessibleOrProxy IntlGeneric();
 
   xpcAccessible(const xpcAccessible&) = delete;
-  xpcAccessible& operator =(const xpcAccessible&) = delete;
+  xpcAccessible& operator=(const xpcAccessible&) = delete;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

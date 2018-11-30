@@ -14,22 +14,21 @@
 namespace mozilla {
 namespace storage {
 
-class Error final : public mozIStorageError
-{
-public:
+class Error final : public mozIStorageError {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEERROR
 
   Error(int aResult, const char *aMessage);
 
-private:
+ private:
   ~Error() {}
 
   int mResult;
   nsCString mMessage;
 };
 
-} // namespace storage
-} // namespace mozilla
+}  // namespace storage
+}  // namespace mozilla
 
-#endif // mozStorageError_h
+#endif  // mozStorageError_h

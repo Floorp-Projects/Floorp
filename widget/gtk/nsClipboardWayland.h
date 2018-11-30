@@ -18,138 +18,137 @@
 
 struct FastTrackClipboard;
 
-class DataOffer
-{
-public:
-    void AddMIMEType(const char *aMimeType);
+class DataOffer {
+ public:
+  void AddMIMEType(const char* aMimeType);
 
-    GdkAtom* GetTargets(int* aTargetNum);
-    bool  HasTarget(const char *aMimeType);
+  GdkAtom* GetTargets(int* aTargetNum);
+  bool HasTarget(const char* aMimeType);
 
-    char* GetData(wl_display* aDisplay, const char* aMimeType,
-                  uint32_t* aContentLength);
+  char* GetData(wl_display* aDisplay, const char* aMimeType,
+                uint32_t* aContentLength);
 
-    virtual ~DataOffer() {};
-private:
-    virtual bool RequestDataTransfer(const char* aMimeType, int fd) = 0;
+  virtual ~DataOffer(){};
 
-protected:
-    nsTArray<GdkAtom> mTargetMIMETypes;
+ private:
+  virtual bool RequestDataTransfer(const char* aMimeType, int fd) = 0;
+
+ protected:
+  nsTArray<GdkAtom> mTargetMIMETypes;
 };
 
-class WaylandDataOffer : public DataOffer
-{
-public:
-    explicit WaylandDataOffer(wl_data_offer* aWaylandDataOffer);
+class WaylandDataOffer : public DataOffer {
+ public:
+  explicit WaylandDataOffer(wl_data_offer* aWaylandDataOffer);
 
-    void DragOfferAccept(const char* aMimeType, uint32_t aTime);
-    void SetDragStatus(GdkDragAction aAction, uint32_t aTime);
+  void DragOfferAccept(const char* aMimeType, uint32_t aTime);
+  void SetDragStatus(GdkDragAction aAction, uint32_t aTime);
 
-    GdkDragAction GetSelectedDragAction();
-    void SetSelectedDragAction(uint32_t aWaylandAction);
+  GdkDragAction GetSelectedDragAction();
+  void SetSelectedDragAction(uint32_t aWaylandAction);
 
-    void SetAvailableDragActions(uint32_t aWaylandActions);
-    GdkDragAction GetAvailableDragActions();
+  void SetAvailableDragActions(uint32_t aWaylandActions);
+  GdkDragAction GetAvailableDragActions();
 
-    virtual ~WaylandDataOffer();
-private:
-    bool RequestDataTransfer(const char* aMimeType, int fd) override;
+  virtual ~WaylandDataOffer();
 
-    wl_data_offer* mWaylandDataOffer;
-    uint32_t       mSelectedDragAction;
-    uint32_t       mAvailableDragAction;
+ private:
+  bool RequestDataTransfer(const char* aMimeType, int fd) override;
+
+  wl_data_offer* mWaylandDataOffer;
+  uint32_t mSelectedDragAction;
+  uint32_t mAvailableDragAction;
 };
 
-class PrimaryDataOffer : public DataOffer
-{
-public:
-    explicit PrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
-    void SetAvailableDragActions(uint32_t aWaylandActions) {};
+class PrimaryDataOffer : public DataOffer {
+ public:
+  explicit PrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
+  void SetAvailableDragActions(uint32_t aWaylandActions){};
 
-    virtual ~PrimaryDataOffer();
-private:
-    bool RequestDataTransfer(const char* aMimeType, int fd) override;
+  virtual ~PrimaryDataOffer();
 
-    gtk_primary_selection_offer* mPrimaryDataOffer;
+ private:
+  bool RequestDataTransfer(const char* aMimeType, int fd) override;
+
+  gtk_primary_selection_offer* mPrimaryDataOffer;
 };
 
-class nsWaylandDragContext : public nsISupports
-{
-    NS_DECL_ISUPPORTS
+class nsWaylandDragContext : public nsISupports {
+  NS_DECL_ISUPPORTS
 
-public:
-    nsWaylandDragContext(WaylandDataOffer* aWaylandDataOffer,
-                         wl_display *aDisplay);
+ public:
+  nsWaylandDragContext(WaylandDataOffer* aWaylandDataOffer,
+                       wl_display* aDisplay);
 
-    void DropDataEnter(GtkWidget* aGtkWidget, uint32_t aTime,
-                       nscoord aX, nscoord aY);
-    void DropMotion(uint32_t aTime, nscoord aX, nscoord aY);
-    void GetLastDropInfo(uint32_t *aTime, nscoord *aX, nscoord *aY);
+  void DropDataEnter(GtkWidget* aGtkWidget, uint32_t aTime, nscoord aX,
+                     nscoord aY);
+  void DropMotion(uint32_t aTime, nscoord aX, nscoord aY);
+  void GetLastDropInfo(uint32_t* aTime, nscoord* aX, nscoord* aY);
 
-    void SetDragStatus(GdkDragAction action);
-    GdkDragAction GetSelectedDragAction();
+  void SetDragStatus(GdkDragAction action);
+  GdkDragAction GetSelectedDragAction();
 
-    GtkWidget* GetWidget() { return mGtkWidget; }
-    GList* GetTargets();
-    char* GetData(const char* aMimeType, uint32_t* aContentLength);
-private:
-    virtual ~nsWaylandDragContext() {};
+  GtkWidget* GetWidget() { return mGtkWidget; }
+  GList* GetTargets();
+  char* GetData(const char* aMimeType, uint32_t* aContentLength);
 
-    nsAutoPtr<WaylandDataOffer> mDataOffer;
-    wl_display* mDisplay;
-    uint32_t    mTime;
-    GtkWidget*  mGtkWidget;
-    nscoord     mX, mY;
+ private:
+  virtual ~nsWaylandDragContext(){};
+
+  nsAutoPtr<WaylandDataOffer> mDataOffer;
+  wl_display* mDisplay;
+  uint32_t mTime;
+  GtkWidget* mGtkWidget;
+  nscoord mX, mY;
 };
 
-class nsRetrievalContextWayland : public nsRetrievalContext
-{
-public:
-    nsRetrievalContextWayland();
+class nsRetrievalContextWayland : public nsRetrievalContext {
+ public:
+  nsRetrievalContextWayland();
 
-    virtual const char* GetClipboardData(const char* aMimeType,
-                                         int32_t aWhichClipboard,
-                                         uint32_t* aContentLength) override;
-    virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
-    virtual void ReleaseClipboardData(const char* aClipboardData) override;
+  virtual const char* GetClipboardData(const char* aMimeType,
+                                       int32_t aWhichClipboard,
+                                       uint32_t* aContentLength) override;
+  virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
+  virtual void ReleaseClipboardData(const char* aClipboardData) override;
 
-    virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
-                                int* aTargetNum) override;
-    virtual bool HasSelectionSupport(void) override;
+  virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
+                              int* aTargetNum) override;
+  virtual bool HasSelectionSupport(void) override;
 
-    void RegisterNewDataOffer(wl_data_offer *aWaylandDataOffer);
-    void RegisterNewDataOffer(gtk_primary_selection_offer *aPrimaryDataOffer);
+  void RegisterNewDataOffer(wl_data_offer* aWaylandDataOffer);
+  void RegisterNewDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
 
-    void SetClipboardDataOffer(wl_data_offer *aWaylandDataOffer);
-    void SetPrimaryDataOffer(gtk_primary_selection_offer *aPrimaryDataOffer);
-    void AddDragAndDropDataOffer(wl_data_offer *aWaylandDataOffer);
-    nsWaylandDragContext* GetDragContext();
+  void SetClipboardDataOffer(wl_data_offer* aWaylandDataOffer);
+  void SetPrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
+  void AddDragAndDropDataOffer(wl_data_offer* aWaylandDataOffer);
+  nsWaylandDragContext* GetDragContext();
 
-    void ClearDragAndDropDataOffer();
+  void ClearDragAndDropDataOffer();
 
-    void TransferFastTrackClipboard(int aClipboardRequestNumber,
-                                    GtkSelectionData *aSelectionData);
+  void TransferFastTrackClipboard(int aClipboardRequestNumber,
+                                  GtkSelectionData* aSelectionData);
 
-    virtual ~nsRetrievalContextWayland() override;
+  virtual ~nsRetrievalContextWayland() override;
 
-private:
-    bool                        mInitialized;
-    nsWaylandDisplay*           mDisplay;
+ private:
+  bool mInitialized;
+  nsWaylandDisplay* mDisplay;
 
-    // Data offers provided by Wayland data device
-    GHashTable*                 mActiveOffers;
-    nsAutoPtr<DataOffer>        mClipboardOffer;
-    nsAutoPtr<DataOffer>        mPrimaryOffer;
-    RefPtr<nsWaylandDragContext> mDragContext;
+  // Data offers provided by Wayland data device
+  GHashTable* mActiveOffers;
+  nsAutoPtr<DataOffer> mClipboardOffer;
+  nsAutoPtr<DataOffer> mPrimaryOffer;
+  RefPtr<nsWaylandDragContext> mDragContext;
 
-    int                         mClipboardRequestNumber;
-    char*                       mClipboardData;
-    uint32_t                    mClipboardDataLength;
+  int mClipboardRequestNumber;
+  char* mClipboardData;
+  uint32_t mClipboardDataLength;
 
-    // Mime types used for text data at Gtk+, see request_text_received_func()
-    // at gtkclipboard.c.
-    #define TEXT_MIME_TYPES_NUM 3
-    static const char* sTextMimeTypes[TEXT_MIME_TYPES_NUM];
+// Mime types used for text data at Gtk+, see request_text_received_func()
+// at gtkclipboard.c.
+#define TEXT_MIME_TYPES_NUM 3
+  static const char* sTextMimeTypes[TEXT_MIME_TYPES_NUM];
 };
 
 #endif /* __nsClipboardWayland_h_ */

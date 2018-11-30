@@ -30,9 +30,7 @@ nsHTMLTags::TagAtomHash* nsHTMLTags::gTagAtomTable;
 #define NS_HTMLTAG_NAME_MAX_LENGTH 10
 
 // static
-nsresult
-nsHTMLTags::AddRefTable(void)
-{
+nsresult nsHTMLTags::AddRefTable(void) {
   if (gTableRefCount++ == 0) {
     NS_ASSERTION(!gTagTable && !gTagAtomTable, "pre existing hash!");
 
@@ -82,9 +80,7 @@ nsHTMLTags::AddRefTable(void)
 }
 
 // static
-void
-nsHTMLTags::ReleaseTable(void)
-{
+void nsHTMLTags::ReleaseTable(void) {
   if (0 == --gTableRefCount) {
     delete gTagTable;
     delete gTagAtomTable;
@@ -94,9 +90,7 @@ nsHTMLTags::ReleaseTable(void)
 }
 
 // static
-nsHTMLTag
-nsHTMLTags::StringTagToId(const nsAString& aTagName)
-{
+nsHTMLTag nsHTMLTags::StringTagToId(const nsAString& aTagName) {
   uint32_t length = aTagName.Length();
 
   if (length > NS_HTMLTAG_NAME_MAX_LENGTH) {
@@ -118,55 +112,53 @@ nsHTMLTags::StringTagToId(const nsAString& aTagName)
     char16_t c = src[i];
 
     if (c <= 'Z' && c >= 'A') {
-      c |= 0x20; // Lowercase the ASCII character.
+      c |= 0x20;  // Lowercase the ASCII character.
     }
 
-    dst[i] = c; // Copy ASCII character.
+    dst[i] = c;  // Copy ASCII character.
   }
 
   return CaseSensitiveStringTagToId(lowerCase);
 }
 
 #ifdef DEBUG
-void
-nsHTMLTags::TestTagTable()
-{
-     const char16_t *tag;
-     nsHTMLTag id;
-     RefPtr<nsAtom> atom;
+void nsHTMLTags::TestTagTable() {
+  const char16_t* tag;
+  nsHTMLTag id;
+  RefPtr<nsAtom> atom;
 
-     nsHTMLTags::AddRefTable();
-     // Make sure we can find everything we are supposed to
-     for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
-       tag = sTagNames[i];
-       const nsAString& tagString = nsDependentString(tag);
-       id = StringTagToId(tagString);
-       NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
+  nsHTMLTags::AddRefTable();
+  // Make sure we can find everything we are supposed to
+  for (int i = 0; i < NS_HTML_TAG_MAX; ++i) {
+    tag = sTagNames[i];
+    const nsAString& tagString = nsDependentString(tag);
+    id = StringTagToId(tagString);
+    NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
 
-       nsAutoString uname(tagString);
-       ToUpperCase(uname);
-       NS_ASSERTION(id == StringTagToId(uname), "wrong id");
+    nsAutoString uname(tagString);
+    ToUpperCase(uname);
+    NS_ASSERTION(id == StringTagToId(uname), "wrong id");
 
-       NS_ASSERTION(id == CaseSensitiveStringTagToId(tagString), "wrong id");
+    NS_ASSERTION(id == CaseSensitiveStringTagToId(tagString), "wrong id");
 
-       atom = NS_Atomize(tag);
-       NS_ASSERTION(id == CaseSensitiveAtomTagToId(atom), "wrong id");
-     }
+    atom = NS_Atomize(tag);
+    NS_ASSERTION(id == CaseSensitiveAtomTagToId(atom), "wrong id");
+  }
 
-     // Make sure we don't find things that aren't there
-     id = StringTagToId(NS_LITERAL_STRING("@"));
-     NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
-     id = StringTagToId(NS_LITERAL_STRING("zzzzz"));
-     NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
+  // Make sure we don't find things that aren't there
+  id = StringTagToId(NS_LITERAL_STRING("@"));
+  NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
+  id = StringTagToId(NS_LITERAL_STRING("zzzzz"));
+  NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
-     atom = NS_Atomize("@");
-     id = CaseSensitiveAtomTagToId(atom);
-     NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
-     atom = NS_Atomize("zzzzz");
-     id = CaseSensitiveAtomTagToId(atom);
-     NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
+  atom = NS_Atomize("@");
+  id = CaseSensitiveAtomTagToId(atom);
+  NS_ASSERTION(id == eHTMLTag_userdefined, "found @");
+  atom = NS_Atomize("zzzzz");
+  id = CaseSensitiveAtomTagToId(atom);
+  NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
-     ReleaseTable();
+  ReleaseTable();
 }
 
-#endif // DEBUG
+#endif  // DEBUG

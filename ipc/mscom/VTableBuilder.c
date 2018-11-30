@@ -8,58 +8,47 @@
 
 #include <stdlib.h>
 
-static HRESULT STDMETHODCALLTYPE
-QueryInterfaceThunk(IUnknown* aThis, REFIID aIid, void** aOutInterface)
-{
-  void** table = (void**) aThis;
-  IUnknown* real = (IUnknown*) table[1];
+static HRESULT STDMETHODCALLTYPE QueryInterfaceThunk(IUnknown* aThis,
+                                                     REFIID aIid,
+                                                     void** aOutInterface) {
+  void** table = (void**)aThis;
+  IUnknown* real = (IUnknown*)table[1];
   return real->lpVtbl->QueryInterface(real, aIid, aOutInterface);
 }
 
-static ULONG STDMETHODCALLTYPE
-AddRefThunk(IUnknown* aThis)
-{
-  void** table = (void**) aThis;
-  IUnknown* real = (IUnknown*) table[1];
+static ULONG STDMETHODCALLTYPE AddRefThunk(IUnknown* aThis) {
+  void** table = (void**)aThis;
+  IUnknown* real = (IUnknown*)table[1];
   return real->lpVtbl->AddRef(real);
 }
 
-static ULONG STDMETHODCALLTYPE
-ReleaseThunk(IUnknown* aThis)
-{
-  void** table = (void**) aThis;
-  IUnknown* real = (IUnknown*) table[1];
+static ULONG STDMETHODCALLTYPE ReleaseThunk(IUnknown* aThis) {
+  void** table = (void**)aThis;
+  IUnknown* real = (IUnknown*)table[1];
   return real->lpVtbl->Release(real);
 }
 
-IUnknown*
-BuildNullVTable(IUnknown* aUnk, uint32_t aVtblSize)
-{
+IUnknown* BuildNullVTable(IUnknown* aUnk, uint32_t aVtblSize) {
   void** table;
 
   if (aVtblSize < 3) {
     return NULL;
   }
 
-  // We need to allocate slots for two additional pointers: The |lpVtbl| pointer,
-  // as well as |aUnk| which is needed to get |this| right when something calls
-  // through one of the IUnknown thunks.
+  // We need to allocate slots for two additional pointers: The |lpVtbl|
+  // pointer, as well as |aUnk| which is needed to get |this| right when
+  // something calls through one of the IUnknown thunks.
   table = calloc(aVtblSize + 2, sizeof(void*));
 
-  table[0] = &table[2]; // |lpVtbl|, points to the first entry of the vtable
-  table[1] = aUnk;      // |this|
+  table[0] = &table[2];  // |lpVtbl|, points to the first entry of the vtable
+  table[1] = aUnk;       // |this|
   // Now the actual vtable entries for IUnknown
   table[2] = &QueryInterfaceThunk;
   table[3] = &AddRefThunk;
   table[4] = &ReleaseThunk;
   // Remaining entries are NULL thanks to calloc zero-initializing everything.
 
-  return (IUnknown*) table;
+  return (IUnknown*)table;
 }
 
-void
-DeleteNullVTable(IUnknown* aUnk)
-{
-  free(aUnk);
-}
-
+void DeleteNullVTable(IUnknown* aUnk) { free(aUnk); }

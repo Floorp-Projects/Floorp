@@ -18,25 +18,23 @@ class nsImageBoxFrame;
 
 class nsDisplayXULImage;
 
-class nsImageBoxListener final : public imgINotificationObserver
-{
-public:
-  explicit nsImageBoxListener(nsImageBoxFrame *frame);
+class nsImageBoxListener final : public imgINotificationObserver {
+ public:
+  explicit nsImageBoxListener(nsImageBoxFrame* frame);
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
   void ClearFrame() { mFrame = nullptr; }
 
-private:
+ private:
   virtual ~nsImageBoxListener();
 
-  nsImageBoxFrame *mFrame;
+  nsImageBoxFrame* mFrame;
 };
 
-class nsImageBoxFrame final : public nsLeafBoxFrame
-{
-public:
+class nsImageBoxFrame final : public nsLeafBoxFrame {
+ public:
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -49,21 +47,21 @@ public:
   virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
   virtual void MarkIntrinsicISizesDirty() override;
 
-  nsresult Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
+  nsresult Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData);
 
-  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell,
+                                       ComputedStyle* aStyle);
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         asPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* asPrevInFlow) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsAtom* aAttribute,
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -82,45 +80,44 @@ public:
    */
   void UpdateLoadFlags();
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
   virtual ~nsImageBoxFrame();
 
-  already_AddRefed<imgIContainer> GetImageContainerForPainting(const nsPoint& aPt,
-                                                               ImgDrawResult& aDrawResult,
-                                                               Maybe<nsPoint>& aAnchorPoint,
-                                                               nsRect& aDest);
+  already_AddRefed<imgIContainer> GetImageContainerForPainting(
+      const nsPoint& aPt, ImgDrawResult& aDrawResult,
+      Maybe<nsPoint>& aAnchorPoint, nsRect& aDest);
 
   ImgDrawResult PaintImage(gfxContext& aRenderingContext,
-                        const nsRect& aDirtyRect,
-                        nsPoint aPt, uint32_t aFlags);
+                           const nsRect& aDirtyRect, nsPoint aPt,
+                           uint32_t aFlags);
 
-  ImgDrawResult CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                        const mozilla::layers::StackingContextHelper& aSc,
-                                        mozilla::layers::WebRenderLayerManager* aManager,
-                                        nsDisplayItem* aItem,
-                                        nsPoint aPt,
-                                        uint32_t aFlags);
+  ImgDrawResult CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const mozilla::layers::StackingContextHelper& aSc,
+      mozilla::layers::WebRenderLayerManager* aManager, nsDisplayItem* aItem,
+      nsPoint aPt, uint32_t aFlags);
 
   bool CanOptimizeToImageLayer();
 
   nsRect GetDestRect(const nsPoint& aOffset, Maybe<nsPoint>& aAnchorPoint);
 
-protected:
+ protected:
   explicit nsImageBoxFrame(ComputedStyle* aStyle);
 
   virtual void GetImageSize();
 
-private:
+ private:
   nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   nsresult OnDecodeComplete(imgIRequest* aRequest);
   nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   nsresult OnImageIsAnimated(imgIRequest* aRequest);
   nsresult OnFrameUpdate(imgIRequest* aRequest);
 
-  nsRect mSubRect; ///< If set, indicates that only the portion of the image specified by the rect should be used.
+  nsRect mSubRect;  ///< If set, indicates that only the portion of the image
+                    ///< specified by the rect should be used.
   nsSize mIntrinsicSize;
   nsSize mImageSize;
 
@@ -133,52 +130,48 @@ private:
   // registered with the refresh driver.
   bool mRequestRegistered;
 
-  bool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
+  bool mUseSrcAttr;  ///< Whether or not the image src comes from an attribute.
   bool mSuppressStyleCheck;
-}; // class nsImageBoxFrame
+};  // class nsImageBoxFrame
 
-class nsDisplayXULImage final : public nsDisplayImageContainer
-{
-public:
-  nsDisplayXULImage(nsDisplayListBuilder* aBuilder,
-                    nsImageBoxFrame* aFrame) :
-    nsDisplayImageContainer(aBuilder, aFrame) {
+class nsDisplayXULImage final : public nsDisplayImageContainer {
+ public:
+  nsDisplayXULImage(nsDisplayListBuilder* aBuilder, nsImageBoxFrame* aFrame)
+      : nsDisplayImageContainer(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULImage);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayXULImage() {
-    MOZ_COUNT_DTOR(nsDisplayXULImage);
-  }
+  virtual ~nsDisplayXULImage() { MOZ_COUNT_DTOR(nsDisplayXULImage); }
 #endif
 
   virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
                                        nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<imgIContainer> GetImage() override;
   virtual nsRect GetDestRect() const override;
-  virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) override
-  {
+  virtual void UpdateDrawResult(
+      mozilla::image::ImgDrawResult aResult) override {
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, aResult);
   }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override
-  {
+                           bool* aSnap) const override {
     *aSnap = true;
     return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion) const override;
+  virtual nsDisplayItemGeometry* AllocateGeometry(
+      nsDisplayListBuilder* aBuilder) override;
+  virtual void ComputeInvalidationRegion(
+      nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
+      nsRegion* aInvalidRegion) const override;
   // Doesn't handle HitTest because nsLeafBoxFrame already creates an
   // event receiver for us
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
+  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                       mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                       const StackingContextHelper& aSc,
-                                       mozilla::layers::WebRenderLayerManager* aManager,
-                                       nsDisplayListBuilder* aDisplayListBuilder) override;
+  virtual bool CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::WebRenderLayerManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
 
   NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)
 };

@@ -29,69 +29,57 @@ using mozilla::dom::InspectorUtils;
 ////////////////////////////////////////////////////
 
 inDeepTreeWalker::inDeepTreeWalker()
-  : mShowAnonymousContent(false),
-    mShowSubDocuments(false),
-    mShowDocumentsAsNodes(false),
-    mCurrentIndex(-1),
-    mWhatToShow(mozilla::dom::NodeFilter_Binding::SHOW_ALL)
-{
-}
+    : mShowAnonymousContent(false),
+      mShowSubDocuments(false),
+      mShowDocumentsAsNodes(false),
+      mCurrentIndex(-1),
+      mWhatToShow(mozilla::dom::NodeFilter_Binding::SHOW_ALL) {}
 
-inDeepTreeWalker::~inDeepTreeWalker()
-{
-}
+inDeepTreeWalker::~inDeepTreeWalker() {}
 
-NS_IMPL_ISUPPORTS(inDeepTreeWalker,
-                  inIDeepTreeWalker)
+NS_IMPL_ISUPPORTS(inDeepTreeWalker, inIDeepTreeWalker)
 
 ////////////////////////////////////////////////////
 // inIDeepTreeWalker
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetShowAnonymousContent(bool *aShowAnonymousContent)
-{
+inDeepTreeWalker::GetShowAnonymousContent(bool* aShowAnonymousContent) {
   *aShowAnonymousContent = mShowAnonymousContent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::SetShowAnonymousContent(bool aShowAnonymousContent)
-{
+inDeepTreeWalker::SetShowAnonymousContent(bool aShowAnonymousContent) {
   mShowAnonymousContent = aShowAnonymousContent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetShowSubDocuments(bool *aShowSubDocuments)
-{
+inDeepTreeWalker::GetShowSubDocuments(bool* aShowSubDocuments) {
   *aShowSubDocuments = mShowSubDocuments;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::SetShowSubDocuments(bool aShowSubDocuments)
-{
+inDeepTreeWalker::SetShowSubDocuments(bool aShowSubDocuments) {
   mShowSubDocuments = aShowSubDocuments;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetShowDocumentsAsNodes(bool *aShowDocumentsAsNodes)
-{
+inDeepTreeWalker::GetShowDocumentsAsNodes(bool* aShowDocumentsAsNodes) {
   *aShowDocumentsAsNodes = mShowDocumentsAsNodes;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::SetShowDocumentsAsNodes(bool aShowDocumentsAsNodes)
-{
+inDeepTreeWalker::SetShowDocumentsAsNodes(bool aShowDocumentsAsNodes) {
   mShowDocumentsAsNodes = aShowDocumentsAsNodes;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::Init(nsINode* aRoot, uint32_t aWhatToShow)
-{
+inDeepTreeWalker::Init(nsINode* aRoot, uint32_t aWhatToShow) {
   if (!aRoot) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -106,31 +94,26 @@ inDeepTreeWalker::Init(nsINode* aRoot, uint32_t aWhatToShow)
 ////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetRoot(nsINode** aRoot)
-{
+inDeepTreeWalker::GetRoot(nsINode** aRoot) {
   *aRoot = mRoot;
   NS_IF_ADDREF(*aRoot);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetWhatToShow(uint32_t* aWhatToShow)
-{
+inDeepTreeWalker::GetWhatToShow(uint32_t* aWhatToShow) {
   *aWhatToShow = mWhatToShow;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::GetCurrentNode(nsINode** aCurrentNode)
-{
+inDeepTreeWalker::GetCurrentNode(nsINode** aCurrentNode) {
   *aCurrentNode = mCurrentNode;
   NS_IF_ADDREF(*aCurrentNode);
   return NS_OK;
 }
 
-already_AddRefed<nsINode>
-inDeepTreeWalker::GetParent()
-{
+already_AddRefed<nsINode> inDeepTreeWalker::GetParent() {
   MOZ_ASSERT(mCurrentNode);
 
   if (mCurrentNode == mRoot) {
@@ -138,7 +121,7 @@ inDeepTreeWalker::GetParent()
   }
 
   nsINode* parentNode =
-    InspectorUtils::GetParentForNode(*mCurrentNode, mShowAnonymousContent);
+      InspectorUtils::GetParentForNode(*mCurrentNode, mShowAnonymousContent);
 
   uint16_t nodeType = 0;
   if (parentNode) {
@@ -146,21 +129,18 @@ inDeepTreeWalker::GetParent()
   }
   // For compatibility reasons by default we skip the document nodes
   // from the walk.
-  if (!mShowDocumentsAsNodes &&
-      nodeType == nsINode::DOCUMENT_NODE &&
+  if (!mShowDocumentsAsNodes && nodeType == nsINode::DOCUMENT_NODE &&
       parentNode != mRoot) {
     parentNode =
-      InspectorUtils::GetParentForNode(*parentNode, mShowAnonymousContent);
+        InspectorUtils::GetParentForNode(*parentNode, mShowAnonymousContent);
   }
 
   return do_AddRef(parentNode);
 }
 
-static already_AddRefed<nsINodeList>
-GetChildren(nsINode* aParent,
-            bool aShowAnonymousContent,
-            bool aShowSubDocuments)
-{
+static already_AddRefed<nsINodeList> GetChildren(nsINode* aParent,
+                                                 bool aShowAnonymousContent,
+                                                 bool aShowSubDocuments) {
   MOZ_ASSERT(aParent);
 
   nsCOMPtr<nsINodeList> ret;
@@ -173,19 +153,19 @@ GetChildren(nsINode* aParent,
 
   nsCOMPtr<nsIContent> parentAsContent = do_QueryInterface(aParent);
   if (parentAsContent && aShowAnonymousContent) {
-      ret = parentAsContent->GetChildren(nsIContent::eAllChildren);
+    ret = parentAsContent->GetChildren(nsIContent::eAllChildren);
   } else {
-    // If it's not a content, then it's a document (or an attribute but we can ignore that
-    // case here). If aShowAnonymousContent is false we also want to fall back to ChildNodes
-    // so we can skip any native anon content that GetChildren would return.
+    // If it's not a content, then it's a document (or an attribute but we can
+    // ignore that case here). If aShowAnonymousContent is false we also want to
+    // fall back to ChildNodes so we can skip any native anon content that
+    // GetChildren would return.
     ret = aParent->ChildNodes();
   }
   return ret.forget();
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode)
-{
+inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode) {
   // mCurrentNode can only be null if init either failed, or has not been
   // called yet.
   if (!mCurrentNode || !aCurrentNode) {
@@ -203,11 +183,8 @@ inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode)
   return SetCurrentNode(aCurrentNode, nullptr);
 }
 
-
-nsresult
-inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode,
-                                 nsINodeList* aSiblings)
-{
+nsresult inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode,
+                                          nsINodeList* aSiblings) {
   MOZ_ASSERT(aCurrentNode);
 
   // We want to store the original state so in case of error
@@ -227,9 +204,8 @@ inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode,
     if (aCurrentNode->NodeType() != nsINode::DOCUMENT_NODE) {
       nsCOMPtr<nsINode> parent = GetParent();
       if (parent) {
-        mSiblings = GetChildren(parent,
-                                mShowAnonymousContent,
-                                mShowSubDocuments);
+        mSiblings =
+            GetChildren(parent, mShowAnonymousContent, mShowSubDocuments);
       }
     }
   }
@@ -241,9 +217,9 @@ inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode,
     MOZ_ASSERT(currentAsContent);
     int32_t index = mSiblings->IndexOf(currentAsContent);
     if (index < 0) {
-      // If someone tries to set current node to some value that is not reachable
-      // otherwise, let's throw. (For example mShowAnonymousContent is false and some
-      // XBL anon content was passed in)
+      // If someone tries to set current node to some value that is not
+      // reachable otherwise, let's throw. (For example mShowAnonymousContent is
+      // false and some XBL anon content was passed in)
 
       // Restore state first.
       mCurrentNode = tmpCurrent;
@@ -258,8 +234,7 @@ inDeepTreeWalker::SetCurrentNode(nsINode* aCurrentNode,
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::ParentNode(nsINode** _retval)
-{
+inDeepTreeWalker::ParentNode(nsINode** _retval) {
   *_retval = nullptr;
   if (!mCurrentNode || mCurrentNode == mRoot) {
     return NS_OK;
@@ -272,7 +247,7 @@ inDeepTreeWalker::ParentNode(nsINode** _retval)
   }
 
   nsresult rv = SetCurrentNode(parent);
-  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   parent.forget(_retval);
   return NS_OK;
@@ -280,9 +255,7 @@ inDeepTreeWalker::ParentNode(nsINode** _retval)
 
 // FirstChild and LastChild are very similar methods, this is the generic
 // version for internal use. With aReverse = true it returns the LastChild.
-nsresult
-inDeepTreeWalker::EdgeChild(nsINode** _retval, bool aFront)
-{
+nsresult inDeepTreeWalker::EdgeChild(nsINode** _retval, bool aFront) {
   if (!mCurrentNode) {
     return NS_ERROR_FAILURE;
   }
@@ -299,9 +272,8 @@ inDeepTreeWalker::EdgeChild(nsINode** _retval, bool aFront)
 
   nsCOMPtr<nsINodeList> children;
   if (!echild) {
-    children = GetChildren(mCurrentNode,
-                           mShowAnonymousContent,
-                           mShowSubDocuments);
+    children =
+        GetChildren(mCurrentNode, mShowAnonymousContent, mShowSubDocuments);
     if (children && children->Length() > 0) {
       echild = children->Item(aFront ? 0 : children->Length() - 1);
     }
@@ -317,20 +289,17 @@ inDeepTreeWalker::EdgeChild(nsINode** _retval, bool aFront)
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::FirstChild(nsINode** _retval)
-{
+inDeepTreeWalker::FirstChild(nsINode** _retval) {
   return EdgeChild(_retval, /* aFront = */ true);
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::LastChild(nsINode **_retval)
-{
+inDeepTreeWalker::LastChild(nsINode** _retval) {
   return EdgeChild(_retval, /* aFront = */ false);
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::PreviousSibling(nsINode **_retval)
-{
+inDeepTreeWalker::PreviousSibling(nsINode** _retval) {
   *_retval = nullptr;
   if (!mCurrentNode || !mSiblings || mCurrentIndex < 1) {
     return NS_OK;
@@ -343,11 +312,10 @@ inDeepTreeWalker::PreviousSibling(nsINode **_retval)
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::NextSibling(nsINode **_retval)
-{
+inDeepTreeWalker::NextSibling(nsINode** _retval) {
   *_retval = nullptr;
   if (!mCurrentNode || !mSiblings ||
-      mCurrentIndex + 1 >= (int32_t) mSiblings->Length()) {
+      mCurrentIndex + 1 >= (int32_t)mSiblings->Length()) {
     return NS_OK;
   }
 
@@ -358,8 +326,7 @@ inDeepTreeWalker::NextSibling(nsINode **_retval)
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::PreviousNode(nsINode **_retval)
-{
+inDeepTreeWalker::PreviousNode(nsINode** _retval) {
   if (!mCurrentNode || mCurrentNode == mRoot) {
     // Nowhere to go from here
     *_retval = nullptr;
@@ -387,8 +354,7 @@ inDeepTreeWalker::PreviousNode(nsINode **_retval)
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::NextNode(nsINode **_retval)
-{
+inDeepTreeWalker::NextNode(nsINode** _retval) {
   if (!mCurrentNode) {
     return NS_OK;
   }

@@ -19,43 +19,38 @@ using UniquePtr = mozilla::UniquePtr<T, D>;
 
 namespace detail {
 
-template<typename T>
-struct UniqueSelector
-{
+template <typename T>
+struct UniqueSelector {
   typedef UniquePtr<T> SingleObject;
 };
 
-template<typename T>
-struct UniqueSelector<T[]>
-{
+template <typename T>
+struct UniqueSelector<T[]> {
   typedef UniquePtr<T[]> UnknownBound;
 };
 
-template<typename T, decltype(sizeof(int)) N>
-struct UniqueSelector<T[N]>
-{
+template <typename T, decltype(sizeof(int)) N>
+struct UniqueSelector<T[N]> {
   typedef UniquePtr<T[N]> KnownBound;
 };
 
-} // namespace detail
+}  // namespace detail
 
 // Replacement for mozilla::MakeUnique that correctly calls js_new and produces
 // a js::UniquePtr.
-template<typename T, typename... Args>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(Args&&... aArgs)
-{
+template <typename T, typename... Args>
+typename detail::UniqueSelector<T>::SingleObject MakeUnique(Args&&... aArgs) {
   return UniquePtr<T>(js_new<T>(std::forward<Args>(aArgs)...));
 }
 
-template<typename T>
-typename detail::UniqueSelector<T>::UnknownBound
-MakeUnique(decltype(sizeof(int)) aN) = delete;
+template <typename T>
+typename detail::UniqueSelector<T>::UnknownBound MakeUnique(
+    decltype(sizeof(int)) aN) = delete;
 
-template<typename T, typename... Args>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(Args&&... aArgs) = delete;
+template <typename T, typename... Args>
+typename detail::UniqueSelector<T>::KnownBound MakeUnique(Args&&... aArgs) =
+    delete;
 
-} // namespace js
+}  // namespace js
 
 #endif /* js_UniquePtr_h */

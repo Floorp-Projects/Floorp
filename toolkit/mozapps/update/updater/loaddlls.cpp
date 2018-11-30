@@ -8,10 +8,8 @@
 // Delayed load libraries are loaded when the first symbol is used.
 // The following ensures that we load the delayed loaded libraries from the
 // system directory.
-struct AutoLoadSystemDependencies
-{
-  AutoLoadSystemDependencies()
-  {
+struct AutoLoadSystemDependencies {
+  AutoLoadSystemDependencies() {
     // Remove the current directory from the search path for dynamically loaded
     // DLLs as a precaution.  This call has no effect for delay load DLLs.
     SetDllDirectory(L"");
@@ -22,7 +20,8 @@ struct AutoLoadSystemDependencies
       // is also available on Windows Vista, Windows Server 2008, and
       // Windows 7 when MS KB2533623 has been applied.
       decltype(SetDefaultDllDirectories)* setDefaultDllDirectories =
-        (decltype(SetDefaultDllDirectories)*) GetProcAddress(module, "SetDefaultDllDirectories");
+          (decltype(SetDefaultDllDirectories)*)GetProcAddress(
+              module, "SetDefaultDllDirectories");
       if (setDefaultDllDirectories) {
         setDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
         return;
@@ -36,42 +35,24 @@ struct AutoLoadSystemDependencies
     // DLLs for Firefox x64 on Windows 7 (x64).
     // Note: dwmapi.dll is preloaded since a crash will try to load it from the
     // application's directory.
-    static LPCWSTR delayDLLs[] = { L"apphelp.dll",
-                                   L"cryptbase.dll",
-                                   L"cryptsp.dll",
-                                   L"dwmapi.dll",
-                                   L"mpr.dll",
-                                   L"ntmarta.dll",
-                                   L"profapi.dll",
-                                   L"propsys.dll",
-                                   L"sspicli.dll",
-                                   L"wsock32.dll" };
+    static LPCWSTR delayDLLs[] = {
+        L"apphelp.dll", L"cryptbase.dll", L"cryptsp.dll", L"dwmapi.dll",
+        L"mpr.dll",     L"ntmarta.dll",   L"profapi.dll", L"propsys.dll",
+        L"sspicli.dll", L"wsock32.dll"};
 
 #else
     // DLLs for Firefox x86 on Windows XP through Windows 7 (x86 and x64).
     // Note: dwmapi.dll is preloaded since a crash will try to load it from the
     // application's directory.
-    static LPCWSTR delayDLLs[] = { L"apphelp.dll",
-                                   L"crypt32.dll",
-                                   L"cryptbase.dll",
-                                   L"cryptsp.dll",
-                                   L"dwmapi.dll",
-                                   L"mpr.dll",
-                                   L"msasn1.dll",
-                                   L"ntmarta.dll",
-                                   L"profapi.dll",
-                                   L"propsys.dll",
-                                   L"psapi.dll",
-                                   L"secur32.dll",
-                                   L"sspicli.dll",
-                                   L"userenv.dll",
-                                   L"uxtheme.dll",
-                                   L"ws2_32.dll",
-                                   L"ws2help.dll",
-                                   L"wsock32.dll" };
+    static LPCWSTR delayDLLs[] = {
+        L"apphelp.dll", L"crypt32.dll", L"cryptbase.dll", L"cryptsp.dll",
+        L"dwmapi.dll",  L"mpr.dll",     L"msasn1.dll",    L"ntmarta.dll",
+        L"profapi.dll", L"propsys.dll", L"psapi.dll",     L"secur32.dll",
+        L"sspicli.dll", L"userenv.dll", L"uxtheme.dll",   L"ws2_32.dll",
+        L"ws2help.dll", L"wsock32.dll"};
 #endif
 
-    WCHAR systemDirectory[MAX_PATH + 1] = { L'\0' };
+    WCHAR systemDirectory[MAX_PATH + 1] = {L'\0'};
     // If GetSystemDirectory fails we accept that we'll load the DLLs from the
     // normal search path.
     GetSystemDirectoryW(systemDirectory, MAX_PATH + 1);
@@ -94,7 +75,7 @@ struct AutoLoadSystemDependencies
       } else {
         systemDirectory[MAX_PATH] = L'\0';
       }
-      LPCWSTR fullModulePath = systemDirectory; // just for code readability
+      LPCWSTR fullModulePath = systemDirectory;  // just for code readability
       // LOAD_WITH_ALTERED_SEARCH_PATH makes a dll look in its own directory for
       // dependencies and is only available on Win 7 and below.
       LoadLibraryExW(fullModulePath, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);

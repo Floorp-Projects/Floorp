@@ -19,13 +19,12 @@ namespace mozilla {
 //
 // Operations for animating an SVGLengthList.
 //
-class SVGLengthListSMILType : public nsISMILType
-{
-public:
+class SVGLengthListSMILType : public nsISMILType {
+ public:
   // Singleton for nsSMILValue objects to hold onto.
   static SVGLengthListSMILType sSingleton;
 
-protected:
+ protected:
   // nsISMILType Methods
   // -------------------
 
@@ -75,27 +74,27 @@ protected:
    * from each sandwich layer are composited together, we could end up allowing
    * animation between lists of different length when we should not!)
    */
-  virtual void     Init(nsSMILValue& aValue) const override;
+  virtual void Init(nsSMILValue& aValue) const override;
 
-  virtual void     Destroy(nsSMILValue& aValue) const override;
-  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const override;
-  virtual bool     IsEqual(const nsSMILValue& aLeft,
-                           const nsSMILValue& aRight) const override;
+  virtual void Destroy(nsSMILValue& aValue) const override;
+  virtual nsresult Assign(nsSMILValue& aDest,
+                          const nsSMILValue& aSrc) const override;
+  virtual bool IsEqual(const nsSMILValue& aLeft,
+                       const nsSMILValue& aRight) const override;
   virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                        uint32_t aCount) const override;
   virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
                                    const nsSMILValue& aTo,
                                    double& aDistance) const override;
   virtual nsresult Interpolate(const nsSMILValue& aStartVal,
-                               const nsSMILValue& aEndVal,
-                               double aUnitDistance,
+                               const nsSMILValue& aEndVal, double aUnitDistance,
                                nsSMILValue& aResult) const override;
 
-private:
+ private:
   // Private constructor: prevent instances beyond my singleton.
   constexpr SVGLengthListSMILType() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SVGLENGTHLISTSMILTYPE_H_
+#endif  // MOZILLA_SVGLENGTHLISTSMILTYPE_H_

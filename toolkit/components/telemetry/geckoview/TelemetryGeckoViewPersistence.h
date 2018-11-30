@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #ifndef GeckoViewTelemetryPersistence_h__
 #define GeckoViewTelemetryPersistence_h__
 
@@ -32,6 +31,6 @@ void DeInitPersistence();
  */
 void ClearPersistenceData();
 
-} // namespace TelemetryGeckoViewPersistence
+}  // namespace TelemetryGeckoViewPersistence
 
-#endif // GeckoViewTelemetryPersistence_h__
+#endif  // GeckoViewTelemetryPersistence_h__

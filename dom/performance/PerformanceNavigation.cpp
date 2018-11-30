@@ -17,27 +17,20 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PerformanceNavigation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PerformanceNavigation, Release)
 
 PerformanceNavigation::PerformanceNavigation(Performance* aPerformance)
-  : mPerformance(aPerformance)
-{
+    : mPerformance(aPerformance) {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
 }
 
-PerformanceNavigation::~PerformanceNavigation()
-{
-}
+PerformanceNavigation::~PerformanceNavigation() {}
 
-JSObject*
-PerformanceNavigation::WrapObject(JSContext *cx,
-                                  JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PerformanceNavigation::WrapObject(JSContext* cx,
+                                            JS::Handle<JSObject*> aGivenProto) {
   return PerformanceNavigation_Binding::Wrap(cx, this, aGivenProto);
 }
 
-uint16_t
-PerformanceNavigation::RedirectCount() const
-{
+uint16_t PerformanceNavigation::RedirectCount() const {
   return GetPerformanceTiming()->Data()->GetRedirectCount();
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

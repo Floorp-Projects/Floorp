@@ -13,80 +13,66 @@
 
 NS_IMPL_ISUPPORTS(nsNSSVersion, nsINSSVersion)
 
-nsNSSVersion::nsNSSVersion()
-{
-}
+nsNSSVersion::nsNSSVersion() {}
 
-nsNSSVersion::~nsNSSVersion()
-{
+nsNSSVersion::~nsNSSVersion() {}
+
+NS_IMETHODIMP
+nsNSSVersion::GetNSPR_Version(nsAString& v) {
+  v.AssignASCII(PR_GetVersion());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSPR_Version(nsAString & v)
-{
-    v.AssignASCII(PR_GetVersion());
-    return NS_OK;
+nsNSSVersion::GetNSS_Version(nsAString& v) {
+  v.AssignASCII(NSS_GetVersion());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSS_Version(nsAString & v)
-{
-    v.AssignASCII(NSS_GetVersion());
-    return NS_OK;
+nsNSSVersion::GetNSSUTIL_Version(nsAString& v) {
+  v.AssignASCII(NSSUTIL_GetVersion());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSSUTIL_Version(nsAString & v)
-{
-    v.AssignASCII(NSSUTIL_GetVersion());
-    return NS_OK;
+nsNSSVersion::GetNSSSSL_Version(nsAString& v) {
+  v.AssignASCII(NSSSSL_GetVersion());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSSSSL_Version(nsAString & v)
-{
-    v.AssignASCII(NSSSSL_GetVersion());
-    return NS_OK;
+nsNSSVersion::GetNSSSMIME_Version(nsAString& v) {
+  v.AssignASCII(NSSSMIME_GetVersion());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSSSMIME_Version(nsAString & v)
-{
-    v.AssignASCII(NSSSMIME_GetVersion());
-    return NS_OK;
+nsNSSVersion::GetNSPR_MinVersion(nsAString& v) {
+  v.AssignLiteral(PR_VERSION);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSPR_MinVersion(nsAString & v)
-{
-    v.AssignLiteral(PR_VERSION);
-    return NS_OK;
+nsNSSVersion::GetNSS_MinVersion(nsAString& v) {
+  v.AssignLiteral(NSS_VERSION);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSS_MinVersion(nsAString & v)
-{
-    v.AssignLiteral(NSS_VERSION);
-    return NS_OK;
+nsNSSVersion::GetNSSUTIL_MinVersion(nsAString& v) {
+  v.AssignLiteral(NSSUTIL_VERSION);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSSUTIL_MinVersion(nsAString & v)
-{
-    v.AssignLiteral(NSSUTIL_VERSION);
-    return NS_OK;
+nsNSSVersion::GetNSSSSL_MinVersion(nsAString& v) {
+  v.AssignLiteral(NSS_VERSION);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSVersion::GetNSSSSL_MinVersion(nsAString & v)
-{
-    v.AssignLiteral(NSS_VERSION);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSVersion::GetNSSSMIME_MinVersion(nsAString & v)
-{
-    v.AssignLiteral(NSS_VERSION);
-    return NS_OK;
+nsNSSVersion::GetNSSSMIME_MinVersion(nsAString& v) {
+  v.AssignLiteral(NSS_VERSION);
+  return NS_OK;
 }

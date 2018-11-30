@@ -23,24 +23,22 @@ class Animation;
 class Element;
 class UnrestrictedDoubleOrKeyframeAnimationOptions;
 
-class CSSPseudoElement final : public nsWrapperCache
-{
-public:
+class CSSPseudoElement final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CSSPseudoElement)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CSSPseudoElement)
 
-protected:
+ protected:
   virtual ~CSSPseudoElement();
 
-public:
+ public:
   ParentObject GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   CSSPseudoElementType GetType() const { return mPseudoType; }
-  void GetType(nsString& aRetVal) const
-  {
+  void GetType(nsString& aRetVal) const {
     MOZ_ASSERT(nsCSSPseudoElements::GetPseudoAtom(mPseudoType),
                "All pseudo-types allowed by this class should have a"
                " corresponding atom");
@@ -49,30 +47,28 @@ public:
     // non-deprecated two colon syntax.
     aRetVal.Assign(char16_t(':'));
     aRetVal.Append(
-      nsDependentAtomString(nsCSSPseudoElements::GetPseudoAtom(mPseudoType)));
+        nsDependentAtomString(nsCSSPseudoElements::GetPseudoAtom(mPseudoType)));
   }
-  already_AddRefed<Element> ParentElement() const
-  {
+  already_AddRefed<Element> ParentElement() const {
     RefPtr<Element> retVal(mParentElement);
     return retVal.forget();
   }
 
   void GetAnimations(const AnimationFilter& filter,
                      nsTArray<RefPtr<Animation>>& aRetVal);
-  already_AddRefed<Animation>
-    Animate(JSContext* aContext,
-            JS::Handle<JSObject*> aKeyframes,
-            const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-            ErrorResult& aError);
+  already_AddRefed<Animation> Animate(
+      JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
+      const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+      ErrorResult& aError);
 
   // Given an element:pseudoType pair, returns the CSSPseudoElement stored as a
   // property on |aElement|. If there is no CSSPseudoElement for the specified
   // pseudo-type on element, a new CSSPseudoElement will be created and stored
   // on the element.
-  static already_AddRefed<CSSPseudoElement>
-    GetCSSPseudoElement(Element* aElement, CSSPseudoElementType aType);
+  static already_AddRefed<CSSPseudoElement> GetCSSPseudoElement(
+      Element* aElement, CSSPseudoElementType aType);
 
-private:
+ private:
   // Only ::before and ::after are supported.
   CSSPseudoElement(Element* aElement, CSSPseudoElementType aType);
 
@@ -85,7 +81,7 @@ private:
   CSSPseudoElementType mPseudoType;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSPseudoElement_h
+#endif  // mozilla_dom_CSSPseudoElement_h

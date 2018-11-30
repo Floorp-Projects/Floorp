@@ -20,16 +20,14 @@
 
 namespace mozilla {
 
-class JsepUuidGenerator
-{
-public:
+class JsepUuidGenerator {
+ public:
   virtual ~JsepUuidGenerator() {}
   virtual bool Generate(std::string* id) = 0;
 };
 
-class JsepSessionImpl : public JsepSession
-{
-public:
+class JsepSessionImpl : public JsepSession {
+ public:
   JsepSessionImpl(const std::string& name, UniquePtr<JsepUuidGenerator> uuidgen)
       : JsepSession(name),
         mIsOfferer(false),
@@ -45,29 +43,21 @@ public:
         mSdpHelper(&mLastError),
         mRunRustParser(false),
         mRunSdpComparer(false),
-        mEncodeTrackId(true)
-  {
-  }
+        mEncodeTrackId(true) {}
 
   // Implement JsepSession methods.
   virtual nsresult Init() override;
 
   nsresult SetBundlePolicy(JsepBundlePolicy policy) override;
 
-  virtual bool
-  RemoteIsIceLite() const override
-  {
-    return mRemoteIsIceLite;
-  }
+  virtual bool RemoteIsIceLite() const override { return mRemoteIsIceLite; }
 
-  virtual std::vector<std::string>
-  GetIceOptions() const override
-  {
+  virtual std::vector<std::string> GetIceOptions() const override {
     return mIceOptions;
   }
 
-  virtual nsresult AddDtlsFingerprint(const std::string& algorithm,
-                                      const std::vector<uint8_t>& value) override;
+  virtual nsresult AddDtlsFingerprint(
+      const std::string& algorithm, const std::vector<uint8_t>& value) override;
 
   nsresult AddRtpExtension(JsepMediaType mediaType,
                            const std::string& extensionName,
@@ -75,21 +65,19 @@ public:
   virtual nsresult AddAudioRtpExtension(
       const std::string& extensionName,
       SdpDirectionAttribute::Direction direction =
-      SdpDirectionAttribute::Direction::kSendrecv) override;
+          SdpDirectionAttribute::Direction::kSendrecv) override;
 
   virtual nsresult AddVideoRtpExtension(
       const std::string& extensionName,
       SdpDirectionAttribute::Direction direction =
-      SdpDirectionAttribute::Direction::kSendrecv) override;
+          SdpDirectionAttribute::Direction::kSendrecv) override;
 
   virtual nsresult AddAudioVideoRtpExtension(
       const std::string& extensionName,
       SdpDirectionAttribute::Direction direction =
-      SdpDirectionAttribute::Direction::kSendrecv) override;
+          SdpDirectionAttribute::Direction::kSendrecv) override;
 
-  virtual std::vector<UniquePtr<JsepCodecDescription>>&
-  Codecs() override
-  {
+  virtual std::vector<UniquePtr<JsepCodecDescription>>& Codecs() override {
     return mSupportedCodecs;
   }
 
@@ -99,11 +87,11 @@ public:
   virtual nsresult CreateAnswer(const JsepAnswerOptions& options,
                                 std::string* answer) override;
 
-  virtual std::string GetLocalDescription(JsepDescriptionPendingOrCurrent type)
-                                          const override;
+  virtual std::string GetLocalDescription(
+      JsepDescriptionPendingOrCurrent type) const override;
 
-  virtual std::string GetRemoteDescription(JsepDescriptionPendingOrCurrent type)
-                                           const override;
+  virtual std::string GetRemoteDescription(
+      JsepDescriptionPendingOrCurrent type) const override;
 
   virtual nsresult SetLocalDescription(JsepSdpType type,
                                        const std::string& sdp) override;
@@ -118,13 +106,11 @@ public:
 
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
                                         const std::string& transportId,
-                                        uint16_t* level,
-                                        std::string* mid,
+                                        uint16_t* level, std::string* mid,
                                         bool* skipped) override;
 
   virtual nsresult UpdateDefaultCandidate(
-      const std::string& defaultCandidateAddr,
-      uint16_t defaultCandidatePort,
+      const std::string& defaultCandidateAddr, uint16_t defaultCandidatePort,
       const std::string& defaultRtcpCandidateAddr,
       uint16_t defaultRtcpCandidatePort,
       const std::string& transportId) override;
@@ -136,31 +122,20 @@ public:
 
   virtual const std::string GetLastError() const override;
 
-  virtual bool
-  IsIceControlling() const override
-  {
-    return mIceControlling;
-  }
+  virtual bool IsIceControlling() const override { return mIceControlling; }
 
-  virtual bool
-  IsOfferer() const override
-  {
-    return mIsOfferer;
-  }
+  virtual bool IsOfferer() const override { return mIsOfferer; }
 
-  virtual bool
-  IsIceRestarting() const override
-  {
+  virtual bool IsIceRestarting() const override {
     return !mOldIceUfrag.empty();
   }
 
-  virtual const std::vector<RefPtr<JsepTransceiver>>&
-    GetTransceivers() const override {
+  virtual const std::vector<RefPtr<JsepTransceiver>>& GetTransceivers()
+      const override {
     return mTransceivers;
   }
 
-  virtual std::vector<RefPtr<JsepTransceiver>>&
-    GetTransceivers() override {
+  virtual std::vector<RefPtr<JsepTransceiver>>& GetTransceivers() override {
     return mTransceivers;
   }
 
@@ -168,7 +143,7 @@ public:
 
   virtual bool CheckNegotiationNeeded() const override;
 
-private:
+ private:
   struct JsepDtlsFingerprint {
     std::string mAlgorithm;
     std::vector<uint8_t> mValue;
@@ -206,8 +181,8 @@ private:
   JsepTransceiver* GetTransceiverWithTransport(const std::string& transportId);
   // The w3c and IETF specs have a lot of "magical" behavior that happens when
   // addTrack is used. This was a deliberate design choice. Sadface.
-  JsepTransceiver* FindUnassociatedTransceiver(
-      SdpMediaSection::MediaType type, bool magic);
+  JsepTransceiver* FindUnassociatedTransceiver(SdpMediaSection::MediaType type,
+                                               bool magic);
   // Called for rollback of local description
   void RollbackLocalOffer();
   // Called for rollback of remote description
@@ -218,19 +193,16 @@ private:
                                   SdpSetupAttribute::Role dtlsRole);
   nsresult CopyPreviousTransportParams(const Sdp& oldAnswer,
                                        const Sdp& offerersPreviousSdp,
-                                       const Sdp& newOffer,
-                                       Sdp* newLocal);
+                                       const Sdp& newOffer, Sdp* newLocal);
   void CopyPreviousMsid(const Sdp& oldLocal, Sdp* newLocal);
   void EnsureMsid(Sdp* remote);
   void SetupBundle(Sdp* sdp) const;
-  nsresult GetRemoteIds(const Sdp& sdp,
-                        const SdpMediaSection& msection,
+  nsresult GetRemoteIds(const Sdp& sdp, const SdpMediaSection& msection,
                         std::vector<std::string>* streamIds,
                         std::string* trackId);
   nsresult RemoveDuplicateTrackIds(Sdp* sdp);
   nsresult CreateOfferMsection(const JsepOfferOptions& options,
-                               JsepTransceiver& transceiver,
-                               Sdp* local);
+                               JsepTransceiver& transceiver, Sdp* local);
   nsresult CreateAnswerMsection(const JsepAnswerOptions& options,
                                 JsepTransceiver& transceiver,
                                 const SdpMediaSection& remoteMsection,
@@ -251,10 +223,10 @@ private:
 
   nsresult EnableOfferMsection(SdpMediaSection* msection);
 
-  mozilla::Sdp* GetParsedLocalDescription(JsepDescriptionPendingOrCurrent type)
-                                          const;
-  mozilla::Sdp* GetParsedRemoteDescription(JsepDescriptionPendingOrCurrent type)
-                                           const;
+  mozilla::Sdp* GetParsedLocalDescription(
+      JsepDescriptionPendingOrCurrent type) const;
+  mozilla::Sdp* GetParsedRemoteDescription(
+      JsepDescriptionPendingOrCurrent type) const;
   const Sdp* GetAnswer() const;
   void SetIceRestarting(bool restarting);
 
@@ -287,7 +259,7 @@ private:
   // Used to prevent duplicate local SSRCs. Not used to prevent local/remote or
   // remote-only duplication, which will be important for EKT but not now.
   std::set<uint32_t> mSsrcs;
-  UniquePtr<Sdp> mGeneratedLocalDescription; // Created but not set.
+  UniquePtr<Sdp> mGeneratedLocalDescription;  // Created but not set.
   UniquePtr<Sdp> mCurrentLocalDescription;
   UniquePtr<Sdp> mCurrentRemoteDescription;
   UniquePtr<Sdp> mPendingLocalDescription;
@@ -303,6 +275,6 @@ private:
   RsdparsaSdpParser mRsdparsaParser;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

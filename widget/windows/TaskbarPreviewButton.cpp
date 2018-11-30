@@ -16,16 +16,14 @@
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS(TaskbarPreviewButton, nsITaskbarPreviewButton, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(TaskbarPreviewButton, nsITaskbarPreviewButton,
+                  nsISupportsWeakReference)
 
-TaskbarPreviewButton::TaskbarPreviewButton(TaskbarWindowPreview* preview, uint32_t index)
-  : mPreview(preview), mIndex(index)
-{
-}
+TaskbarPreviewButton::TaskbarPreviewButton(TaskbarWindowPreview *preview,
+                                           uint32_t index)
+    : mPreview(preview), mIndex(index) {}
 
-TaskbarPreviewButton::~TaskbarPreviewButton() {
-  SetVisible(false);
-}
+TaskbarPreviewButton::~TaskbarPreviewButton() { SetVisible(false); }
 
 NS_IMETHODIMP
 TaskbarPreviewButton::GetTooltip(nsAString &aTooltip) {
@@ -38,10 +36,7 @@ TaskbarPreviewButton::SetTooltip(const nsAString &aTooltip) {
   mTooltip = aTooltip;
   size_t destLength = sizeof Button().szTip / (sizeof Button().szTip[0]);
   wchar_t *tooltip = &(Button().szTip[0]);
-  StringCchCopyNW(tooltip,
-                  destLength,
-                  mTooltip.get(),
-                  mTooltip.Length());
+  StringCchCopyNW(tooltip, destLength, mTooltip.get(), mTooltip.Length());
   return Update();
 }
 
@@ -101,13 +96,13 @@ TaskbarPreviewButton::GetImage(imgIContainer **img) {
 
 NS_IMETHODIMP
 TaskbarPreviewButton::SetImage(imgIContainer *img) {
-  if (Button().hIcon)
-    ::DestroyIcon(Button().hIcon);
+  if (Button().hIcon) ::DestroyIcon(Button().hIcon);
   if (img) {
     nsresult rv;
-    rv = nsWindowGfx::CreateIcon(img, false, 0, 0,
-                                 nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon),
-                                 &Button().hIcon);
+    rv = nsWindowGfx::CreateIcon(
+        img, false, 0, 0,
+        nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon),
+        &Button().hIcon);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     Button().hIcon = nullptr;
@@ -130,16 +125,13 @@ TaskbarPreviewButton::SetVisible(bool visible) {
   return Update();
 }
 
-THUMBBUTTON&
-TaskbarPreviewButton::Button() {
+THUMBBUTTON &TaskbarPreviewButton::Button() {
   return mPreview->mThumbButtons[mIndex];
 }
 
-nsresult
-TaskbarPreviewButton::Update() {
+nsresult TaskbarPreviewButton::Update() {
   return mPreview->UpdateButton(mIndex);
 }
 
-} // namespace widget
-} // namespace mozilla
-
+}  // namespace widget
+}  // namespace mozilla

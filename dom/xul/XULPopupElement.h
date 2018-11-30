@@ -24,36 +24,29 @@ class Element;
 class Event;
 class StringOrOpenPopupOptions;
 
-nsXULElement*
-NS_NewXULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsXULElement* NS_NewXULPopupElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-class XULPopupElement : public nsXULElement
-{
-private:
+class XULPopupElement : public nsXULElement {
+ private:
   nsIFrame* GetFrame(bool aFlushLayout);
 
-public:
+ public:
   explicit XULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsXULElement(std::move(aNodeInfo))
-  {
+      : nsXULElement(std::move(aNodeInfo)) {}
+
+  void GetLabel(DOMString& aValue) const {
+    GetXULAttr(nsGkAtoms::label, aValue);
+  }
+  void SetLabel(const nsAString& aValue, ErrorResult& rv) {
+    SetXULAttr(nsGkAtoms::label, aValue, rv);
   }
 
-  void GetLabel(DOMString& aValue) const
-  {
-      GetXULAttr(nsGkAtoms::label, aValue);
+  void GetPosition(DOMString& aValue) const {
+    GetXULAttr(nsGkAtoms::position, aValue);
   }
-  void SetLabel(const nsAString& aValue, ErrorResult& rv)
-  {
-      SetXULAttr(nsGkAtoms::label, aValue, rv);
-  }
-
-  void GetPosition(DOMString& aValue) const
-  {
-      GetXULAttr(nsGkAtoms::position, aValue);
-  }
-  void SetPosition(const nsAString& aValue, ErrorResult& rv)
-  {
-      SetXULAttr(nsGkAtoms::position, aValue, rv);
+  void SetPosition(const nsAString& aValue, ErrorResult& rv) {
+    SetXULAttr(nsGkAtoms::position, aValue, rv);
   }
 
   bool AutoPosition();
@@ -61,22 +54,16 @@ public:
   void SetAutoPosition(bool aShouldAutoPosition);
 
   void OpenPopup(Element* aAnchorElement,
-                 const StringOrOpenPopupOptions& aOptions,
-                 int32_t aXPos,
-                 int32_t aYPos,
-                 bool aIsContextMenu, bool aAttributesOverride,
+                 const StringOrOpenPopupOptions& aOptions, int32_t aXPos,
+                 int32_t aYPos, bool aIsContextMenu, bool aAttributesOverride,
                  Event* aTriggerEvent);
 
-  void OpenPopupAtScreen(int32_t aXPos,
-                         int32_t aYPos,
-                         bool aIsContextMenu,
+  void OpenPopupAtScreen(int32_t aXPos, int32_t aYPos, bool aIsContextMenu,
                          Event* aTriggerEvent);
 
-  void OpenPopupAtScreenRect(const nsAString& aPosition,
-                             int32_t aXPos, int32_t aYPos,
-                             int32_t aWidth, int32_t aHeight,
-                             bool aIsContextMenu,
-                             bool aAttributesOverride,
+  void OpenPopupAtScreenRect(const nsAString& aPosition, int32_t aXPos,
+                             int32_t aYPos, int32_t aWidth, int32_t aHeight,
+                             bool aIsContextMenu, bool aAttributesOverride,
                              Event* aTriggerEvent);
 
   void HidePopup(bool aCancel);
@@ -91,11 +78,8 @@ public:
 
   void MoveTo(int32_t aLeft, int32_t aTop);
 
-  void MoveToAnchor(Element* aAnchorElement,
-                    const nsAString& aPosition,
-                    int32_t aXPos,
-                    int32_t aYPos,
-                    bool aAttributesOverride);
+  void MoveToAnchor(Element* aAnchorElement, const nsAString& aPosition,
+                    int32_t aXPos, int32_t aYPos, bool aAttributesOverride);
 
   void SizeTo(int32_t aWidth, int32_t aHeight);
 
@@ -105,15 +89,14 @@ public:
 
   void SetConstraintRect(DOMRectReadOnly& aRect);
 
-protected:
-  virtual ~XULPopupElement()
-  {
-  }
+ protected:
+  virtual ~XULPopupElement() {}
 
-  JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // XULPopupElement_h
+#endif  // XULPopupElement_h

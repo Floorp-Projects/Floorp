@@ -35,9 +35,9 @@ class nsWindowSizes;
 #undef STYLE_STRUCT
 
 extern "C" {
-  void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* aStyle);
-  void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
-  void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
+void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* aStyle);
+void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
+void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
 
 namespace mozilla {
@@ -62,8 +62,7 @@ class ComputedStyle;
  *  4. media_queries::Device, which holds the initial value of every property
  */
 
-enum class ComputedStyleBit : uint8_t
-{
+enum class ComputedStyleBit : uint8_t {
   HasTextDecorationLines = 1 << 0,
   HasPseudoElementData = 1 << 1,
   SuppressLineBreak = 1 << 2,
@@ -73,12 +72,11 @@ enum class ComputedStyleBit : uint8_t
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ComputedStyleBit)
 
-class ComputedStyle
-{
+class ComputedStyle {
   using Bit = ComputedStyleBit;
-public:
-  ComputedStyle(nsPresContext* aPresContext,
-                nsAtom* aPseudoTag,
+
+ public:
+  ComputedStyle(nsPresContext* aPresContext, nsAtom* aPseudoTag,
                 CSSPseudoElementType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
 
@@ -90,8 +88,7 @@ public:
   // These two methods are for use by ArenaRefPtr.
   //
   // FIXME(emilio): Think this can go away.
-  static mozilla::ArenaObjectID ArenaObjectID()
-  {
+  static mozilla::ArenaObjectID ArenaObjectID() {
     return mozilla::eArenaObjectID_GeckoComputedStyle;
   }
   nsIPresShell* Arena();
@@ -113,29 +110,25 @@ public:
   // examining the corresponding struct on |this|.  Doing so will likely
   // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
   // related to the Peek code in ComputedStyle::CalcStyleDifference.
-  ComputedStyle* GetStyleIfVisited() const
-  {
+  ComputedStyle* GetStyleIfVisited() const {
     return ComputedData()->visited_style.mPtr;
   }
 
-  bool IsLazilyCascadedPseudoElement() const
-  {
+  bool IsLazilyCascadedPseudoElement() const {
     return IsPseudoElement() &&
            !nsCSSPseudoElements::IsEagerlyCascadedInServo(GetPseudoType());
   }
 
   nsAtom* GetPseudo() const { return mPseudoTag; }
-  mozilla::CSSPseudoElementType GetPseudoType() const
-  {
-    return mPseudoType;
-  }
+  mozilla::CSSPseudoElementType GetPseudoType() const { return mPseudoType; }
 
   bool IsInheritingAnonBox() const {
     return GetPseudoType() == mozilla::CSSPseudoElementType::InheritingAnonBox;
   }
 
   bool IsNonInheritingAnonBox() const {
-    return GetPseudoType() == mozilla::CSSPseudoElementType::NonInheritingAnonBox;
+    return GetPseudoType() ==
+           mozilla::CSSPseudoElementType::NonInheritingAnonBox;
   }
 
   // This function is rather slow; you probably don't want to use it outside
@@ -156,8 +149,7 @@ public:
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests
   // only the data for a single context.
-  bool HasTextDecorationLines() const
-  {
+  bool HasTextDecorationLines() const {
     return bool(mBits & Bit::HasTextDecorationLines);
   }
 
@@ -168,54 +160,46 @@ public:
   // currently used by ruby to make its content frames unbreakable.
   // NOTE: for nsTextFrame, use nsTextFrame::ShouldSuppressLineBreak()
   // instead of this method.
-  bool ShouldSuppressLineBreak() const
-  {
+  bool ShouldSuppressLineBreak() const {
     return bool(mBits & Bit::SuppressLineBreak);
   }
 
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
   // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText().
-  bool IsTextCombined() const
-  {
-    return bool(mBits & Bit::IsTextCombined);
-  }
+  bool IsTextCombined() const { return bool(mBits & Bit::IsTextCombined); }
 
   // Does this ComputedStyle represent the style for a pseudo-element or
   // inherit data from such a ComputedStyle?  Whether this returns true
   // is equivalent to whether it or any of its ancestors returns
   // non-null for IsPseudoElement().
-  bool HasPseudoElementData() const
-  {
+  bool HasPseudoElementData() const {
     return bool(mBits & Bit::HasPseudoElementData);
   }
 
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this ComputedStyle is for (which is that element
   // or its nearest ancestor that is a link) visited?
-  bool RelevantLinkVisited() const
-  {
+  bool RelevantLinkVisited() const {
     return bool(mBits & Bit::RelevantLinkVisited);
   }
 
-  ComputedStyle* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
-  {
+  ComputedStyle* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const {
     MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
     return mCachedInheritingStyles.Lookup(aAnonBox);
   }
 
-  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox, ComputedStyle* aStyle)
-  {
+  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox, ComputedStyle* aStyle) {
     MOZ_ASSERT(!GetCachedInheritingAnonBoxStyle(aAnonBox));
     mCachedInheritingStyles.Insert(aStyle);
   }
 
   ComputedStyle* GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const;
 
-  void SetCachedLazyPseudoStyle(ComputedStyle* aStyle)
-  {
+  void SetCachedLazyPseudoStyle(ComputedStyle* aStyle) {
     MOZ_ASSERT(aStyle->GetPseudo() && !aStyle->IsAnonBox());
     MOZ_ASSERT(!GetCachedLazyPseudoStyle(aStyle->GetPseudoType()));
-    MOZ_ASSERT(!IsLazilyCascadedPseudoElement(), "lazy pseudos can't inherit lazy pseudos");
+    MOZ_ASSERT(!IsLazilyCascadedPseudoElement(),
+               "lazy pseudos can't inherit lazy pseudos");
     MOZ_ASSERT(aStyle->IsLazilyCascadedPseudoElement());
 
     // Since we're caching lazy pseudo styles on the ComputedValues of the
@@ -227,24 +211,25 @@ public:
     //
     // The one place this optimization breaks is with pseudo-elements that
     // support state (like :hover). So we just avoid sharing in those cases.
-    if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(aStyle->GetPseudoType())) {
+    if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(
+            aStyle->GetPseudoType())) {
       return;
     }
 
     mCachedInheritingStyles.Insert(aStyle);
   }
 
-  /**
-   * Define typesafe getter functions for each style struct by
-   * preprocessing the list of style structs.  These functions are the
-   * preferred way to get style data.  The macro creates functions like:
-   *   const nsStyleBorder* StyleBorder();
-   *   const nsStyleColor* StyleColor();
-   */
-  #define STYLE_STRUCT(name_) \
-    inline const nsStyle##name_ * Style##name_() MOZ_NONNULL_RETURN;
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
+/**
+ * Define typesafe getter functions for each style struct by
+ * preprocessing the list of style structs.  These functions are the
+ * preferred way to get style data.  The macro creates functions like:
+ *   const nsStyleBorder* StyleBorder();
+ *   const nsStyleColor* StyleColor();
+ */
+#define STYLE_STRUCT(name_) \
+  inline const nsStyle##name_* Style##name_() MOZ_NONNULL_RETURN;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
   /**
    * Equivalent to StyleFoo(), except that we skip the cache write during the
@@ -253,23 +238,21 @@ public:
    * this style struct. Use with care.
    */
 
-  #define STYLE_STRUCT(name_) \
-    inline const nsStyle##name_ * ThreadsafeStyle##name_();
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
+#define STYLE_STRUCT(name_) \
+  inline const nsStyle##name_* ThreadsafeStyle##name_();
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
-
-  /**
-   * PeekStyle* is like Style* but doesn't trigger style
-   * computation if the data is not cached on either the ComputedStyle
-   * or the rule node.
-   *
-   * Perhaps this shouldn't be a public ComputedStyle API.
-   */
-  #define STYLE_STRUCT(name_)  \
-    inline const nsStyle##name_ * PeekStyle##name_();
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
+/**
+ * PeekStyle* is like Style* but doesn't trigger style
+ * computation if the data is not cached on either the ComputedStyle
+ * or the rule node.
+ *
+ * Perhaps this shouldn't be a public ComputedStyle API.
+ */
+#define STYLE_STRUCT(name_) inline const nsStyle##name_* PeekStyle##name_();
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
   /**
    * Compute the style changes needed during restyling when this style
@@ -291,7 +274,7 @@ public:
   nsChangeHint CalcStyleDifference(ComputedStyle* aNewContext,
                                    uint32_t* aEqualStructs);
 
-public:
+ public:
   /**
    * Get a color that depends on link-visitedness using this and
    * this->GetStyleIfVisited().
@@ -300,8 +283,8 @@ public:
    *               The member variable and its style struct must have
    *               been listed in nsCSSVisitedDependentPropList.h.
    */
-  template<typename T, typename S>
-  nscolor GetVisitedDependentColor(T S::* aField);
+  template <typename T, typename S>
+  nscolor GetVisitedDependentColor(T S::*aField);
 
   /**
    * aColors should be a two element array of nscolor in which the first
@@ -334,14 +317,12 @@ public:
   // the size should be added to.
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const;
 
-protected:
-  bool HasRequestedStruct(StyleStructID aID) const
-  {
+ protected:
+  bool HasRequestedStruct(StyleStructID aID) const {
     return mRequestedStructs & StyleStructConstants::BitFor(aID);
   }
 
-  void SetRequestedStruct(StyleStructID aID)
-  {
+  void SetRequestedStruct(StyleStructID aID) {
     mRequestedStructs |= StyleStructConstants::BitFor(aID);
   }
 
@@ -358,17 +339,17 @@ protected:
   // A cache of anonymous box and lazy pseudo styles inheriting from this style.
   CachedInheritingStyles mCachedInheritingStyles;
 
-  // Helper functions for GetStyle* and PeekStyle*
-  #define STYLE_STRUCT_INHERITED(name_)         \
-    template<bool aComputeData>                 \
-    const nsStyle##name_ * DoGetStyle##name_();
-  #define STYLE_STRUCT_RESET(name_)             \
-    template<bool aComputeData>                 \
-    const nsStyle##name_ * DoGetStyle##name_();
+// Helper functions for GetStyle* and PeekStyle*
+#define STYLE_STRUCT_INHERITED(name_) \
+  template <bool aComputeData>        \
+  const nsStyle##name_* DoGetStyle##name_();
+#define STYLE_STRUCT_RESET(name_) \
+  template <bool aComputeData>    \
+  const nsStyle##name_* DoGetStyle##name_();
 
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT_RESET
-  #undef STYLE_STRUCT_INHERITED
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT_RESET
+#undef STYLE_STRUCT_INHERITED
 
   // If this ComputedStyle is for a pseudo-element or anonymous box,
   // the relevant atom.
@@ -380,6 +361,6 @@ protected:
   const CSSPseudoElementType mPseudoType;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

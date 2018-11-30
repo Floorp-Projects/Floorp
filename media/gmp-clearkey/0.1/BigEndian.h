@@ -22,32 +22,23 @@
 namespace mozilla {
 
 class BigEndian {
-public:
-
+ public:
   static uint32_t readUint32(const void* aPtr) {
     const uint8_t* p = reinterpret_cast<const uint8_t*>(aPtr);
-    return uint32_t(p[0]) << 24 |
-           uint32_t(p[1]) << 16 |
-           uint32_t(p[2]) << 8 |
+    return uint32_t(p[0]) << 24 | uint32_t(p[1]) << 16 | uint32_t(p[2]) << 8 |
            uint32_t(p[3]);
   }
 
   static uint16_t readUint16(const void* aPtr) {
     const uint8_t* p = reinterpret_cast<const uint8_t*>(aPtr);
-    return uint32_t(p[0]) << 8 |
-           uint32_t(p[1]);
+    return uint32_t(p[0]) << 8 | uint32_t(p[1]);
   }
 
   static uint64_t readUint64(const void* aPtr) {
     const uint8_t* p = reinterpret_cast<const uint8_t*>(aPtr);
-    return uint64_t(p[0]) << 56 |
-           uint64_t(p[1]) << 48 |
-           uint64_t(p[2]) << 40 |
-           uint64_t(p[3]) << 32 |
-           uint64_t(p[4]) << 24 |
-           uint64_t(p[5]) << 16 |
-           uint64_t(p[6]) << 8 |
-           uint64_t(p[7]);
+    return uint64_t(p[0]) << 56 | uint64_t(p[1]) << 48 | uint64_t(p[2]) << 40 |
+           uint64_t(p[3]) << 32 | uint64_t(p[4]) << 24 | uint64_t(p[5]) << 16 |
+           uint64_t(p[6]) << 8 | uint64_t(p[7]);
   }
 
   static void writeUint64(void* aPtr, uint64_t aValue) {
@@ -63,6 +54,6 @@ public:
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // __BigEndian_h__
+#endif  // __BigEndian_h__

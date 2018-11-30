@@ -13,8 +13,7 @@ namespace dom {
 class LSDatabaseChild;
 class LSSnapshot;
 
-class LSDatabase final
-{
+class LSDatabase final {
   LSDatabaseChild* mActor;
 
   LSSnapshot* mSnapshot;
@@ -24,97 +23,64 @@ class LSDatabase final
   bool mAllowedToClose;
   bool mRequestedAllowToClose;
 
-public:
+ public:
   explicit LSDatabase(const nsACString& aOrigin);
 
-  static LSDatabase*
-  Get(const nsACString& aOrigin);
+  static LSDatabase* Get(const nsACString& aOrigin);
 
   NS_INLINE_DECL_REFCOUNTING(LSDatabase)
 
-  void
-  AssertIsOnOwningThread() const
-  {
-    NS_ASSERT_OWNINGTHREAD(LSDatabase);
-  }
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(LSDatabase); }
 
-  void
-  SetActor(LSDatabaseChild* aActor);
+  void SetActor(LSDatabaseChild* aActor);
 
-  void
-  ClearActor()
-  {
+  void ClearActor() {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mActor);
 
     mActor = nullptr;
   }
 
-  bool
-  IsAllowedToClose() const
-  {
+  bool IsAllowedToClose() const {
     AssertIsOnOwningThread();
 
     return mAllowedToClose;
   }
 
-  void
-  RequestAllowToClose();
+  void RequestAllowToClose();
 
-  void
-  NoteFinishedSnapshot(LSSnapshot* aSnapshot);
+  void NoteFinishedSnapshot(LSSnapshot* aSnapshot);
 
-  nsresult
-  GetLength(LSObject* aObject,
-            uint32_t* aResult);
+  nsresult GetLength(LSObject* aObject, uint32_t* aResult);
 
-  nsresult
-  GetKey(LSObject* aObject,
-         uint32_t aIndex,
-         nsAString& aResult);
+  nsresult GetKey(LSObject* aObject, uint32_t aIndex, nsAString& aResult);
 
-  nsresult
-  GetItem(LSObject* aObject,
-          const nsAString& aKey,
-          nsAString& aResult);
+  nsresult GetItem(LSObject* aObject, const nsAString& aKey,
+                   nsAString& aResult);
 
-  nsresult
-  GetKeys(LSObject* aObject,
-          nsTArray<nsString>& aKeys);
+  nsresult GetKeys(LSObject* aObject, nsTArray<nsString>& aKeys);
 
-  nsresult
-  SetItem(LSObject* aObject,
-          const nsAString& aKey,
-          const nsAString& aValue,
-          LSNotifyInfo& aNotifyInfo);
+  nsresult SetItem(LSObject* aObject, const nsAString& aKey,
+                   const nsAString& aValue, LSNotifyInfo& aNotifyInfo);
 
-  nsresult
-  RemoveItem(LSObject* aObject,
-             const nsAString& aKey,
-             LSNotifyInfo& aNotifyInfo);
+  nsresult RemoveItem(LSObject* aObject, const nsAString& aKey,
+                      LSNotifyInfo& aNotifyInfo);
 
-  nsresult
-  Clear(LSObject* aObject,
-        LSNotifyInfo& aNotifyInfo);
+  nsresult Clear(LSObject* aObject, LSNotifyInfo& aNotifyInfo);
 
-  nsresult
-  BeginExplicitSnapshot(LSObject* aObject);
+  nsresult BeginExplicitSnapshot(LSObject* aObject);
 
-  nsresult
-  EndExplicitSnapshot(LSObject* aObject);
+  nsresult EndExplicitSnapshot(LSObject* aObject);
 
-private:
+ private:
   ~LSDatabase();
 
-  nsresult
-  EnsureSnapshot(LSObject* aObject,
-                 bool aExplicit = false);
+  nsresult EnsureSnapshot(LSObject* aObject, bool aExplicit = false);
 
-  void
-  AllowToClose();
+  void AllowToClose();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_localstorage_LSDatabase_h
+#endif  // mozilla_dom_localstorage_LSDatabase_h

@@ -14,10 +14,9 @@
 namespace mozilla {
 namespace gfx {
 
-bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int32_t srcStride,
-           uint8_t* dstData, int32_t dstWidth, int32_t dstHeight, int32_t dstStride,
-           SurfaceFormat format)
-{
+bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight,
+           int32_t srcStride, uint8_t* dstData, int32_t dstWidth,
+           int32_t dstHeight, int32_t dstStride, SurfaceFormat format) {
 #ifdef USE_SKIA
   SkPixmap srcPixmap(MakeSkiaImageInfo(IntSize(srcWidth, srcHeight), format),
                      srcData, srcStride);
@@ -25,19 +24,22 @@ bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int32_t srcStr
   // Rescaler is compatible with N32 only. Convert to N32 if needed.
   SkBitmap tmpBitmap;
   if (srcPixmap.colorType() != kN32_SkColorType) {
-    if (!tmpBitmap.tryAllocPixels(SkImageInfo::MakeN32Premul(srcWidth, srcHeight)) ||
+    if (!tmpBitmap.tryAllocPixels(
+            SkImageInfo::MakeN32Premul(srcWidth, srcHeight)) ||
         !tmpBitmap.writePixels(srcPixmap) ||
         !tmpBitmap.peekPixels(&srcPixmap)) {
       return false;
     }
   }
 
-  SkPixmap dstPixmap(SkImageInfo::MakeN32Premul(dstWidth, dstHeight), dstData, dstStride);
-  return SkBitmapScaler::Resize(dstPixmap, srcPixmap, SkBitmapScaler::RESIZE_LANCZOS3);
+  SkPixmap dstPixmap(SkImageInfo::MakeN32Premul(dstWidth, dstHeight), dstData,
+                     dstStride);
+  return SkBitmapScaler::Resize(dstPixmap, srcPixmap,
+                                SkBitmapScaler::RESIZE_LANCZOS3);
 #else
   return false;
 #endif
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

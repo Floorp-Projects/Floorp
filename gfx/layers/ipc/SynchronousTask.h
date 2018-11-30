@@ -7,22 +7,18 @@
 #ifndef MOZILLA_GFX_SYNCHRONOUSTASK_H
 #define MOZILLA_GFX_SYNCHRONOUSTASK_H
 
-#include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitor, etc
+#include "mozilla/ReentrantMonitor.h"  // for ReentrantMonitor, etc
 
 namespace mozilla {
 namespace layers {
 
 // Helper that creates a monitor and a "done" flag, then enters the monitor.
-class MOZ_STACK_CLASS SynchronousTask
-{
+class MOZ_STACK_CLASS SynchronousTask {
   friend class AutoCompleteTask;
 
-public:
+ public:
   explicit SynchronousTask(const char* name)
-   : mMonitor(name),
-     mAutoEnter(mMonitor),
-     mDone(false)
-  {}
+      : mMonitor(name), mAutoEnter(mMonitor), mDone(false) {}
 
   void Wait() {
     while (!mDone) {
@@ -30,36 +26,30 @@ public:
     }
   }
 
-private:
+ private:
   void Complete() {
     mDone = true;
     mMonitor.NotifyAll();
   }
 
-private:
+ private:
   ReentrantMonitor mMonitor;
   ReentrantMonitorAutoEnter mAutoEnter;
   bool mDone;
 };
 
-class MOZ_STACK_CLASS AutoCompleteTask
-{
-public:
+class MOZ_STACK_CLASS AutoCompleteTask {
+ public:
   explicit AutoCompleteTask(SynchronousTask* aTask)
-   : mTask(aTask),
-     mAutoEnter(aTask->mMonitor)
-  {
-  }
-  ~AutoCompleteTask() {
-    mTask->Complete();
-  }
+      : mTask(aTask), mAutoEnter(aTask->mMonitor) {}
+  ~AutoCompleteTask() { mTask->Complete(); }
 
-private:
+ private:
   SynchronousTask* mTask;
   ReentrantMonitorAutoEnter mAutoEnter;
 };
 
-}
-}
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

@@ -16,15 +16,11 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace xpt::detail;
 
-
 ////////////////////////////////////
 // Constant Lookup Helper Methods //
 ////////////////////////////////////
 
-
-bool
-nsXPTInterfaceInfo::HasAncestor(const nsIID& aIID) const
-{
+bool nsXPTInterfaceInfo::HasAncestor(const nsIID& aIID) const {
   for (const auto* info = this; info; info = info->GetParent()) {
     if (info->IID() == aIID) {
       return true;
@@ -33,9 +29,7 @@ nsXPTInterfaceInfo::HasAncestor(const nsIID& aIID) const
   return false;
 }
 
-const nsXPTConstantInfo&
-nsXPTInterfaceInfo::Constant(uint16_t aIndex) const
-{
+const nsXPTConstantInfo& nsXPTInterfaceInfo::Constant(uint16_t aIndex) const {
   MOZ_ASSERT(aIndex < ConstantCount());
 
   if (const nsXPTInterfaceInfo* pi = GetParent()) {
@@ -48,9 +42,7 @@ nsXPTInterfaceInfo::Constant(uint16_t aIndex) const
   return xpt::detail::GetConstant(mConsts + aIndex);
 }
 
-const nsXPTMethodInfo&
-nsXPTInterfaceInfo::Method(uint16_t aIndex) const
-{
+const nsXPTMethodInfo& nsXPTInterfaceInfo::Method(uint16_t aIndex) const {
   MOZ_ASSERT(aIndex < MethodCount());
 
   if (const nsXPTInterfaceInfo* pi = GetParent()) {
@@ -63,18 +55,15 @@ nsXPTInterfaceInfo::Method(uint16_t aIndex) const
   return xpt::detail::GetMethod(mMethods + aIndex);
 }
 
-nsresult
-nsXPTInterfaceInfo::GetMethodInfo(uint16_t aIndex, const nsXPTMethodInfo** aInfo) const
-{
+nsresult nsXPTInterfaceInfo::GetMethodInfo(
+    uint16_t aIndex, const nsXPTMethodInfo** aInfo) const {
   *aInfo = aIndex < MethodCount() ? &Method(aIndex) : nullptr;
   return *aInfo ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
-                                JS::MutableHandleValue aConstant,
-                                char** aName) const
-{
+nsresult nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
+                                         JS::MutableHandleValue aConstant,
+                                         char** aName) const {
   if (aIndex < ConstantCount()) {
     aConstant.set(Constant(aIndex).JSValue());
     *aName = moz_xstrdup(Constant(aIndex).Name());
@@ -87,17 +76,16 @@ nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
 // nsXPTMethodInfo symbol helpers //
 ////////////////////////////////////
 
-void
-nsXPTMethodInfo::GetSymbolDescription(JSContext* aCx, nsACString& aID) const
-{
+void nsXPTMethodInfo::GetSymbolDescription(JSContext* aCx,
+                                           nsACString& aID) const {
   JS::RootedSymbol symbol(aCx, GetSymbol(aCx));
   JSString* desc = JS::GetSymbolDescription(symbol);
   MOZ_ASSERT(JS_StringHasLatin1Chars(desc));
 
   JS::AutoAssertNoGC nogc(aCx);
   size_t length;
-  const JS::Latin1Char* chars = JS_GetLatin1StringCharsAndLength(
-    aCx, nogc, desc, &length);
+  const JS::Latin1Char* chars =
+      JS_GetLatin1StringCharsAndLength(aCx, nogc, desc, &length);
 
   aID.AssignASCII(reinterpret_cast<const char*>(chars), length);
 }

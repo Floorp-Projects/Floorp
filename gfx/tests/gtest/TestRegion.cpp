@@ -18,7 +18,7 @@ using namespace mozilla::gfx;
 //#define REGION_RANDOM_STRESS_TESTS
 
 class TestLargestRegion {
-public:
+ public:
   static void TestSingleRect(nsRect r) {
     nsRegion region(r);
     EXPECT_TRUE(region.GetLargestRectangle().IsEqualInterior(r));
@@ -31,34 +31,32 @@ public:
     struct {
       nsRect rect;
       int64_t expectedArea;
-    } tests[nTests] = {
-      // Remove a 20x10 chunk from the square
-      { nsRect(0, 0, 20, 10), 600 },
-      { nsRect(10, 0, 20, 10), 600 },
-      { nsRect(10, 20, 20, 10), 600 },
-      { nsRect(0, 20, 20, 10), 600 },
-      // Remove a 10x20 chunk from the square
-      { nsRect(0, 0, 10, 20), 600 },
-      { nsRect(20, 0, 10, 20), 600 },
-      { nsRect(20, 10, 10, 20), 600 },
-      { nsRect(0, 10, 10, 20), 600 },
-      // Remove the center 10x10
-      { nsRect(10, 10, 10, 10), 300 },
-      // Remove the middle column
-      { nsRect(10, 0, 10, 30), 300 },
-      // Remove the middle row
-      { nsRect(0, 10, 30, 10), 300 },
-      // Remove the corners 10x10
-      { nsRect(0, 0, 10, 10), 600 },
-      { nsRect(20, 20, 10, 10), 600 },
-      { nsRect(20, 0, 10, 10), 600 },
-      { nsRect(0, 20, 10, 10), 600 },
-      // Remove the corners 20x20
-      { nsRect(0, 0, 20, 20), 300 },
-      { nsRect(10, 10, 20, 20), 300 },
-      { nsRect(10, 0, 20, 20), 300 },
-      { nsRect(0, 10, 20, 20), 300 }
-    };
+    } tests[nTests] = {// Remove a 20x10 chunk from the square
+                       {nsRect(0, 0, 20, 10), 600},
+                       {nsRect(10, 0, 20, 10), 600},
+                       {nsRect(10, 20, 20, 10), 600},
+                       {nsRect(0, 20, 20, 10), 600},
+                       // Remove a 10x20 chunk from the square
+                       {nsRect(0, 0, 10, 20), 600},
+                       {nsRect(20, 0, 10, 20), 600},
+                       {nsRect(20, 10, 10, 20), 600},
+                       {nsRect(0, 10, 10, 20), 600},
+                       // Remove the center 10x10
+                       {nsRect(10, 10, 10, 10), 300},
+                       // Remove the middle column
+                       {nsRect(10, 0, 10, 30), 300},
+                       // Remove the middle row
+                       {nsRect(0, 10, 30, 10), 300},
+                       // Remove the corners 10x10
+                       {nsRect(0, 0, 10, 10), 600},
+                       {nsRect(20, 20, 10, 10), 600},
+                       {nsRect(20, 0, 10, 10), 600},
+                       {nsRect(0, 20, 10, 10), 600},
+                       // Remove the corners 20x20
+                       {nsRect(0, 0, 20, 20), 300},
+                       {nsRect(10, 10, 20, 20), 300},
+                       {nsRect(10, 0, 20, 20), 300},
+                       {nsRect(0, 10, 20, 20), 300}};
 
     for (int32_t i = 0; i < nTests; i++) {
       nsRegion r2;
@@ -67,10 +65,11 @@ public:
       EXPECT_TRUE(r2.IsComplex()) << "nsRegion code got unexpectedly smarter!";
 
       nsRect largest = r2.GetLargestRectangle();
-      EXPECT_TRUE(largest.Width() * largest.Height() == tests[i].expectedArea) <<
-        "Did not successfully find largest rectangle in non-rectangular region on iteration " << i;
+      EXPECT_TRUE(largest.Width() * largest.Height() == tests[i].expectedArea)
+          << "Did not successfully find largest rectangle in non-rectangular "
+             "region on iteration "
+          << i;
     }
-
   }
   static void TwoRectTest() {
     nsRegion r(nsRect(0, 0, 100, 100));
@@ -79,10 +78,10 @@ public:
       nsRect rect1, rect2;
       int64_t expectedArea;
     } tests[nTests] = {
-      { nsRect(0, 0, 75, 40),  nsRect(0, 60, 75, 40),  2500 },
-      { nsRect(25, 0, 75, 40), nsRect(25, 60, 75, 40), 2500 },
-      { nsRect(25, 0, 75, 40), nsRect(0, 60, 75, 40),  2000 },
-      { nsRect(0, 0, 75, 40),  nsRect(25, 60, 75, 40), 2000 },
+        {nsRect(0, 0, 75, 40), nsRect(0, 60, 75, 40), 2500},
+        {nsRect(25, 0, 75, 40), nsRect(25, 60, 75, 40), 2500},
+        {nsRect(25, 0, 75, 40), nsRect(0, 60, 75, 40), 2000},
+        {nsRect(0, 0, 75, 40), nsRect(25, 60, 75, 40), 2000},
     };
     for (int32_t i = 0; i < nTests; i++) {
       nsRegion r2;
@@ -93,21 +92,25 @@ public:
       EXPECT_TRUE(r2.IsComplex()) << "nsRegion code got unexpectedly smarter!";
 
       nsRect largest = r2.GetLargestRectangle();
-      EXPECT_TRUE(largest.Width() * largest.Height() == tests[i].expectedArea) <<
-        "Did not successfully find largest rectangle in two-rect-subtract region on iteration " << i;
+      EXPECT_TRUE(largest.Width() * largest.Height() == tests[i].expectedArea)
+          << "Did not successfully find largest rectangle in two-rect-subtract "
+             "region on iteration "
+          << i;
     }
   }
   static void TestContainsSpecifiedRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
-    EXPECT_TRUE(r.GetLargestRectangle(nsRect(0, 300, 10, 10)).IsEqualInterior(nsRect(0, 300, 50, 50))) <<
-      "Chose wrong rectangle";
+    EXPECT_TRUE(r.GetLargestRectangle(nsRect(0, 300, 10, 10))
+                    .IsEqualInterior(nsRect(0, 300, 50, 50)))
+        << "Chose wrong rectangle";
   }
   static void TestContainsSpecifiedOverflowingRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
-    EXPECT_TRUE(r.GetLargestRectangle(nsRect(0, 290, 10, 20)).IsEqualInterior(nsRect(0, 300, 50, 50))) <<
-      "Chose wrong rectangle";
+    EXPECT_TRUE(r.GetLargestRectangle(nsRect(0, 290, 10, 20))
+                    .IsEqualInterior(nsRect(0, 300, 50, 50)))
+        << "Chose wrong rectangle";
   }
 };
 
@@ -119,13 +122,9 @@ TEST(Gfx, RegionSingleRect) {
   TestLargestRegion::TestSingleRect(nsRect(-10, -10, 20, 20));
 }
 
-TEST(Gfx, RegionNonRectangular) {
-  TestLargestRegion::TestNonRectangular();
-}
+TEST(Gfx, RegionNonRectangular) { TestLargestRegion::TestNonRectangular(); }
 
-TEST(Gfx, RegionTwoRectTest) {
-  TestLargestRegion::TwoRectTest();
-}
+TEST(Gfx, RegionTwoRectTest) { TestLargestRegion::TwoRectTest(); }
 
 TEST(Gfx, RegionContainsSpecifiedRect) {
   TestLargestRegion::TestContainsSpecifiedRect();
@@ -136,55 +135,48 @@ TEST(Gfx, RegionTestContainsSpecifiedOverflowingRect) {
 }
 
 TEST(Gfx, RegionScaleToInside) {
-  { // no rectangles
+  {  // no rectangles
     nsRegion r;
 
     nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
     nsIntRegion result;
 
-    EXPECT_TRUE(result.IsEqual(scaled)) <<
-      "scaled result incorrect";
+    EXPECT_TRUE(result.IsEqual(scaled)) << "scaled result incorrect";
   }
 
-  { // one rectangle
-    nsRegion r(nsRect(0,44760,19096,264));
+  {  // one rectangle
+    nsRegion r(nsRect(0, 44760, 19096, 264));
 
     nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
-    nsIntRegion result(mozilla::gfx::IntRect(0,746,318,4));
+    nsIntRegion result(mozilla::gfx::IntRect(0, 746, 318, 4));
 
-    EXPECT_TRUE(result.IsEqual(scaled)) <<
-      "scaled result incorrect";
+    EXPECT_TRUE(result.IsEqual(scaled)) << "scaled result incorrect";
   }
 
-
-  { // the first rectangle gets adjusted
-    nsRegion r(nsRect(0,44760,19096,264));
-    r.Or(r, nsRect(0,45024,19360,1056));
+  {  // the first rectangle gets adjusted
+    nsRegion r(nsRect(0, 44760, 19096, 264));
+    r.Or(r, nsRect(0, 45024, 19360, 1056));
 
     nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
-    nsIntRegion result(mozilla::gfx::IntRect(0,746,318,5));
-    result.Or(result, mozilla::gfx::IntRect(0,751,322,17));
+    nsIntRegion result(mozilla::gfx::IntRect(0, 746, 318, 5));
+    result.Or(result, mozilla::gfx::IntRect(0, 751, 322, 17));
 
-    EXPECT_TRUE(result.IsEqual(scaled)) <<
-      "scaled result incorrect";
+    EXPECT_TRUE(result.IsEqual(scaled)) << "scaled result incorrect";
   }
 
-  { // the second rectangle gets adjusted
-    nsRegion r(nsRect(0,44760,19360,264));
-    r.Or(r, nsRect(0,45024,19096,1056));
+  {  // the second rectangle gets adjusted
+    nsRegion r(nsRect(0, 44760, 19360, 264));
+    r.Or(r, nsRect(0, 45024, 19096, 1056));
 
     nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
-    nsIntRegion result(mozilla::gfx::IntRect(0,746,322,4));
-    result.Or(result, mozilla::gfx::IntRect(0,750,318,18));
+    nsIntRegion result(mozilla::gfx::IntRect(0, 746, 322, 4));
+    result.Or(result, mozilla::gfx::IntRect(0, 750, 318, 18));
 
-    EXPECT_TRUE(result.IsEqual(scaled)) <<
-      "scaled result incorrect";
+    EXPECT_TRUE(result.IsEqual(scaled)) << "scaled result incorrect";
   }
-
 }
 
-TEST(Gfx, RegionIsEqual)
-{
+TEST(Gfx, RegionIsEqual) {
   {
     nsRegion r(nsRect(0, 0, 50, 50));
     EXPECT_FALSE(nsRegion().IsEqual(r));
@@ -327,7 +319,8 @@ TEST(Gfx, RegionOrWith) {
   for (uint32_t i = 0; i < TestIterations; i++) {
     nsRegion r;
     for (uint32_t n = 0; n < RectsPerTest; n++) {
-      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                       rand() % 99 + 1);
     }
     r.SetEmpty();
     for (uint32_t n = 0; n < RectsPerTest; n++) {
@@ -497,7 +490,8 @@ TEST(Gfx, RegionSubWith) {
   for (uint32_t i = 0; i < TestIterations; i++) {
     nsRegion r;
     for (uint32_t n = 0; n < RectsPerTest; n++) {
-      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                       rand() % 99 + 1);
     }
     r.SetEmpty();
     for (uint32_t n = 0; n < RectsPerTest; n++) {
@@ -507,7 +501,8 @@ TEST(Gfx, RegionSubWith) {
       EXPECT_TRUE(r.Contains(rects[n]));
     }
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
-      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                          rand() % 99 + 1);
     }
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
       r.SubWith(subRects[n]);
@@ -515,14 +510,16 @@ TEST(Gfx, RegionSubWith) {
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].y));
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].YMost() - 1));
-      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(
+          r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
       EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
     }
   }
   for (uint32_t i = 0; i < TestIterations; i++) {
     nsRegion r;
     for (uint32_t n = 0; n < RectsPerTest; n++) {
-      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                       rand() % 99 + 1);
     }
     r.SetEmpty();
     for (uint32_t n = 0; n < RectsPerTest; n++) {
@@ -532,7 +529,8 @@ TEST(Gfx, RegionSubWith) {
       EXPECT_TRUE(r.Contains(rects[n]));
     }
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
-      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                          rand() % 99 + 1);
     }
     nsRegion r2;
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
@@ -543,20 +541,23 @@ TEST(Gfx, RegionSubWith) {
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].y));
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].YMost() - 1));
-      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(
+          r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
       EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
     }
   }
   for (uint32_t i = 0; i < TestIterations; i++) {
     nsRegion r(nsRect(-1, -1, 202, 202));
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
-      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                          rand() % 99 + 1);
       r.SubWith(subRects[n]);
     }
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].y));
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].YMost() - 1));
-      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(
+          r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
       EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
     }
     EXPECT_TRUE(r.Contains(-1, -1));
@@ -568,14 +569,16 @@ TEST(Gfx, RegionSubWith) {
     nsRegion r(nsRect(-1, -1, 202, 202));
     nsRegion r2;
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
-      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                          rand() % 99 + 1);
       r2.OrWith(subRects[n]);
     }
     r.SubWith(r2);
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].y));
       EXPECT_FALSE(r.Contains(subRects[n].x, subRects[n].YMost() - 1));
-      EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(
+          r.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
       EXPECT_FALSE(r.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
     }
     EXPECT_TRUE(r.Contains(-1, -1));
@@ -727,7 +730,8 @@ TEST(Gfx, RegionSub) {
   for (uint32_t i = 0; i < TestIterations; i++) {
     nsRegion r;
     for (uint32_t n = 0; n < RectsPerTest; n++) {
-      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      rects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                       rand() % 99 + 1);
     }
     r.SetEmpty();
     for (uint32_t n = 0; n < RectsPerTest; n++) {
@@ -737,7 +741,8 @@ TEST(Gfx, RegionSub) {
       EXPECT_TRUE(r.Contains(rects[n]));
     }
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
-      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                          rand() % 99 + 1);
     }
     nsRegion r2;
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
@@ -749,7 +754,8 @@ TEST(Gfx, RegionSub) {
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
       EXPECT_FALSE(r3.Contains(subRects[n].x, subRects[n].y));
       EXPECT_FALSE(r3.Contains(subRects[n].x, subRects[n].YMost() - 1));
-      EXPECT_FALSE(r3.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(
+          r3.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
       EXPECT_FALSE(r3.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
     }
   }
@@ -757,7 +763,8 @@ TEST(Gfx, RegionSub) {
     nsRegion r(nsRect(-1, -1, 202, 202));
     nsRegion r2;
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
-      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      subRects[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                          rand() % 99 + 1);
       r2.OrWith(subRects[n]);
     }
     nsRegion r3;
@@ -765,7 +772,8 @@ TEST(Gfx, RegionSub) {
     for (uint32_t n = 0; n < SubRectsPerTest; n++) {
       EXPECT_FALSE(r3.Contains(subRects[n].x, subRects[n].y));
       EXPECT_FALSE(r3.Contains(subRects[n].x, subRects[n].YMost() - 1));
-      EXPECT_FALSE(r3.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
+      EXPECT_FALSE(
+          r3.Contains(subRects[n].XMost() - 1, subRects[n].YMost() - 1));
       EXPECT_FALSE(r3.Contains(subRects[n].XMost() - 1, subRects[n].Y()));
     }
     EXPECT_TRUE(r3.Contains(-1, -1));
@@ -804,8 +812,10 @@ TEST(Gfx, RegionAndWith) {
       nsRegion r1;
       nsRegion r2;
       for (uint32_t n = 0; n < RectsPerTest; n++) {
-        rectsSet1[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
-        rectsSet2[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+        rectsSet1[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                             rand() % 99 + 1);
+        rectsSet2[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                             rand() % 99 + 1);
         r1.OrWith(rectsSet1[n]);
         r2.OrWith(rectsSet1[n]);
       }
@@ -830,12 +840,14 @@ TEST(Gfx, RegionAndWith) {
     for (uint32_t i = 0; i < TestIterations; i++) {
       nsRegion r;
       for (uint32_t n = 0; n < RectsPerTest; n++) {
-        rectsSet[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+        rectsSet[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                            rand() % 99 + 1);
       }
       for (uint32_t n = 0; n < RectsPerTest; n++) {
         r.OrWith(rectsSet[n]);
       }
-      testRect.SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      testRect.SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                       rand() % 99 + 1);
 
       nsRegion r2 = r;
       r2.AndWith(testRect);
@@ -898,8 +910,10 @@ TEST(Gfx, RegionAnd) {
       nsRegion r1;
       nsRegion r2;
       for (uint32_t n = 0; n < RectsPerTest; n++) {
-        rectsSet1[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
-        rectsSet2[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+        rectsSet1[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                             rand() % 99 + 1);
+        rectsSet2[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                             rand() % 99 + 1);
         r1.OrWith(rectsSet1[n]);
         r2.OrWith(rectsSet1[n]);
       }
@@ -924,12 +938,14 @@ TEST(Gfx, RegionAnd) {
     for (uint32_t i = 0; i < TestIterations; i++) {
       nsRegion r;
       for (uint32_t n = 0; n < RectsPerTest; n++) {
-        rectsSet[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+        rectsSet[n].SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                            rand() % 99 + 1);
       }
       for (uint32_t n = 0; n < RectsPerTest; n++) {
         r.OrWith(rectsSet[n]);
       }
-      testRect.SetRect(rand() % 100, rand() % 100, rand() % 99 + 1, rand() % 99 + 1);
+      testRect.SetRect(rand() % 100, rand() % 100, rand() % 99 + 1,
+                       rand() % 99 + 1);
 
       nsRegion r2;
       r2.And(r, testRect);
@@ -948,119 +964,109 @@ TEST(Gfx, RegionAnd) {
 }
 
 TEST(Gfx, RegionSimplify) {
-  { // ensure simplify works on a single rect
-    nsRegion r(nsRect(0,100,200,100));
+  {  // ensure simplify works on a single rect
+    nsRegion r(nsRect(0, 100, 200, 100));
 
-    r.SimplifyOutwardByArea(100*100);
+    r.SimplifyOutwardByArea(100 * 100);
 
-    nsRegion result(nsRect(0,100,200,100));
+    nsRegion result(nsRect(0, 100, 200, 100));
 
-    EXPECT_TRUE(r.IsEqual(result)) <<
-      "regions not the same";
+    EXPECT_TRUE(r.IsEqual(result)) << "regions not the same";
   }
 
-  { // the rectangles will be merged
-    nsRegion r(nsRect(0,100,200,100));
-    r.Or(r, nsRect(0,200,300,200));
+  {  // the rectangles will be merged
+    nsRegion r(nsRect(0, 100, 200, 100));
+    r.Or(r, nsRect(0, 200, 300, 200));
 
-    r.SimplifyOutwardByArea(100*100);
+    r.SimplifyOutwardByArea(100 * 100);
 
-    nsRegion result(nsRect(0,100,300,300));
+    nsRegion result(nsRect(0, 100, 300, 300));
 
-    EXPECT_TRUE(r.IsEqual(result)) <<
-      "regions not merged";
+    EXPECT_TRUE(r.IsEqual(result)) << "regions not merged";
   }
 
-  { // two rectangle on the first span
+  {  // two rectangle on the first span
     // one on the second
-    nsRegion r(nsRect(0,100,200,100));
-    r.Or(r, nsRect(0,200,300,200));
-    r.Or(r, nsRect(250,100,50,100));
+    nsRegion r(nsRect(0, 100, 200, 100));
+    r.Or(r, nsRect(0, 200, 300, 200));
+    r.Or(r, nsRect(250, 100, 50, 100));
 
-    EXPECT_TRUE(r.GetNumRects() == 3) <<
-      "wrong number of rects";
+    EXPECT_TRUE(r.GetNumRects() == 3) << "wrong number of rects";
 
-    r.SimplifyOutwardByArea(100*100);
+    r.SimplifyOutwardByArea(100 * 100);
 
-    nsRegion result(nsRect(0,100,300,300));
+    nsRegion result(nsRect(0, 100, 300, 300));
 
-    EXPECT_TRUE(r.IsEqual(result)) <<
-      "regions not merged";
+    EXPECT_TRUE(r.IsEqual(result)) << "regions not merged";
   }
 
-  { // the rectangles will be merged
-    nsRegion r(nsRect(0,100,200,100));
-    r.Or(r, nsRect(0,200,300,200));
-    r.Or(r, nsRect(250,100,50,100));
-    r.Sub(r, nsRect(200,200,40,200));
+  {  // the rectangles will be merged
+    nsRegion r(nsRect(0, 100, 200, 100));
+    r.Or(r, nsRect(0, 200, 300, 200));
+    r.Or(r, nsRect(250, 100, 50, 100));
+    r.Sub(r, nsRect(200, 200, 40, 200));
 
-    EXPECT_TRUE(r.GetNumRects() == 4) <<
-      "wrong number of rects";
+    EXPECT_TRUE(r.GetNumRects() == 4) << "wrong number of rects";
 
-    r.SimplifyOutwardByArea(100*100);
+    r.SimplifyOutwardByArea(100 * 100);
 
-    nsRegion result(nsRect(0,100,300,300));
-    result.Sub(result, nsRect(200,100,40,300));
+    nsRegion result(nsRect(0, 100, 300, 300));
+    result.Sub(result, nsRect(200, 100, 40, 300));
 
-    EXPECT_TRUE(r.IsEqual(result)) <<
-      "regions not merged";
+    EXPECT_TRUE(r.IsEqual(result)) << "regions not merged";
   }
 
-  { // three spans of rectangles
-    nsRegion r(nsRect(0,100,200,100));
-    r.Or(r, nsRect(0,200,300,200));
-    r.Or(r, nsRect(250,100,50,50));
-    r.Sub(r, nsRect(200,200,40,200));
+  {  // three spans of rectangles
+    nsRegion r(nsRect(0, 100, 200, 100));
+    r.Or(r, nsRect(0, 200, 300, 200));
+    r.Or(r, nsRect(250, 100, 50, 50));
+    r.Sub(r, nsRect(200, 200, 40, 200));
 
-    r.SimplifyOutwardByArea(100*100);
+    r.SimplifyOutwardByArea(100 * 100);
 
-    nsRegion result(nsRect(0,100,300,300));
-    result.Sub(result, nsRect(200,100,40,300));
+    nsRegion result(nsRect(0, 100, 300, 300));
+    result.Sub(result, nsRect(200, 100, 40, 300));
 
-    EXPECT_TRUE(r.IsEqual(result)) <<
-      "regions not merged";
+    EXPECT_TRUE(r.IsEqual(result)) << "regions not merged";
   }
 
-  { // three spans of rectangles and an unmerged rectangle
-    nsRegion r(nsRect(0,100,200,100));
-    r.Or(r, nsRect(0,200,300,200));
-    r.Or(r, nsRect(250,100,50,50));
-    r.Sub(r, nsRect(200,200,40,200));
-    r.Or(r, nsRect(250,900,150,50));
+  {  // three spans of rectangles and an unmerged rectangle
+    nsRegion r(nsRect(0, 100, 200, 100));
+    r.Or(r, nsRect(0, 200, 300, 200));
+    r.Or(r, nsRect(250, 100, 50, 50));
+    r.Sub(r, nsRect(200, 200, 40, 200));
+    r.Or(r, nsRect(250, 900, 150, 50));
 
-    r.SimplifyOutwardByArea(100*100);
+    r.SimplifyOutwardByArea(100 * 100);
 
-    nsRegion result(nsRect(0,100,300,300));
-    result.Sub(result, nsRect(200,100,40,300));
-    result.Or(result, nsRect(250,900,150,50));
+    nsRegion result(nsRect(0, 100, 300, 300));
+    result.Sub(result, nsRect(200, 100, 40, 300));
+    result.Or(result, nsRect(250, 900, 150, 50));
 
-    EXPECT_TRUE(r.IsEqual(result)) <<
-      "regions not merged";
+    EXPECT_TRUE(r.IsEqual(result)) << "regions not merged";
   }
 
-  { // unmerged regions
-    nsRegion r(nsRect(0,100,200,100));
-    r.Or(r, nsRect(0,200,300,200));
+  {  // unmerged regions
+    nsRegion r(nsRect(0, 100, 200, 100));
+    r.Or(r, nsRect(0, 200, 300, 200));
 
     r.SimplifyOutwardByArea(100);
 
-    nsRegion result(nsRect(0,100,200,100));
-    result.Or(result, nsRect(0,200,300,200));
+    nsRegion result(nsRect(0, 100, 200, 100));
+    result.Or(result, nsRect(0, 200, 300, 200));
 
-    EXPECT_TRUE(r.IsEqual(result)) <<
-      "regions not merged";
+    EXPECT_TRUE(r.IsEqual(result)) << "regions not merged";
   }
 
-  { // empty region
+  {  // empty region
     // just make sure this doesn't crash.
     nsRegion r;
     r.SimplifyOutwardByArea(100);
   }
 }
 
-TEST(Gfx, RegionContains)
-{
-  { // ensure Contains works on a simple region
+TEST(Gfx, RegionContains) {
+  {  // ensure Contains works on a simple region
     nsRegion r(nsRect(0, 0, 100, 100));
 
     EXPECT_TRUE(r.Contains(0, 0));
@@ -1080,7 +1086,7 @@ TEST(Gfx, RegionContains)
     EXPECT_FALSE(r.Contains(nsRect(100, 100, 0, 0)));
   }
 
-  { // empty regions contain nothing
+  {  // empty regions contain nothing
     nsRegion r(nsRect(100, 100, 0, 0));
 
     EXPECT_FALSE(r.Contains(0, 0));
@@ -1089,7 +1095,7 @@ TEST(Gfx, RegionContains)
     EXPECT_FALSE(r.Contains(nsRect(100, 100, 1, 1)));
   }
 
-  { // complex region contain tests
+  {  // complex region contain tests
     // The region looks like this, with two squares that overlap.
     // (hard to do accurately with ASCII art)
     // +------+
@@ -1116,7 +1122,7 @@ TEST(Gfx, RegionContains)
     EXPECT_FALSE(r.Contains(nsRect(49, 99, 2, 2)));
   }
 
-  { // region with a hole
+  {  // region with a hole
     nsRegion r(nsRect(0, 0, 100, 100));
     r.SubOut(nsRect(40, 40, 10, 10));
 
@@ -1135,7 +1141,8 @@ TEST(Gfx, RegionContains)
 #define REGION_VALUE 0xff
 
 struct RegionBitmap {
-  RegionBitmap(unsigned char *bitmap, int width, int height) : bitmap(bitmap), width(width), height(height) {}
+  RegionBitmap(unsigned char *bitmap, int width, int height)
+      : bitmap(bitmap), width(width), height(height) {}
 
   void clear() {
     for (int y = 0; y < height; y++) {
@@ -1148,7 +1155,7 @@ struct RegionBitmap {
   void set(nsRegion &region) {
     clear();
     for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
-      const nsRect& r = iter.Get();
+      const nsRect &r = iter.Get();
       for (int y = r.Y(); y < r.YMost(); y++) {
         for (int x = r.X(); x < r.XMost(); x++) {
           bitmap[x + y * width] = REGION_VALUE;
@@ -1184,10 +1191,9 @@ struct RegionBitmap {
   int height;
 };
 
-void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2, int y2)
-{
+void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2, int y2) {
   EXPECT_GE(x2, x1);
-  RegionBitmap *visitor = static_cast<RegionBitmap*>(closure);
+  RegionBitmap *visitor = static_cast<RegionBitmap *>(closure);
   unsigned char *bitmap = visitor->bitmap;
   const int width = visitor->width;
 
@@ -1203,7 +1209,7 @@ void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2, int y2)
     }
   } else if (side == VisitSide::LEFT) {
     while (y1 != y2) {
-      bitmap[x1 - 1 + y1 *width] = DILATE_VALUE;
+      bitmap[x1 - 1 + y1 * width] = DILATE_VALUE;
       y1++;
     }
   } else if (side == VisitSide::RIGHT) {
@@ -1214,8 +1220,7 @@ void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2, int y2)
   }
 }
 
-void TestVisit(nsRegion &r)
-{
+void TestVisit(nsRegion &r) {
   auto reference = mozilla::MakeUnique<unsigned char[]>(600 * 600);
   auto result = mozilla::MakeUnique<unsigned char[]>(600 * 600);
   RegionBitmap ref(reference.get(), 600, 600);
@@ -1230,19 +1235,19 @@ void TestVisit(nsRegion &r)
 }
 
 TEST(Gfx, RegionVisitEdges) {
-  { // visit edges
+  {  // visit edges
     nsRegion r(nsRect(20, 20, 100, 100));
     r.Or(r, nsRect(20, 120, 200, 100));
     TestVisit(r);
   }
 
-  { // two rects side by side - 1 pixel inbetween
+  {  // two rects side by side - 1 pixel inbetween
     nsRegion r(nsRect(20, 20, 100, 100));
     r.Or(r, nsRect(121, 20, 100, 100));
     TestVisit(r);
   }
 
-  { // two rects side by side - 2 pixels inbetween
+  {  // two rects side by side - 2 pixels inbetween
     nsRegion r(nsRect(20, 20, 100, 100));
     r.Or(r, nsRect(122, 20, 100, 100));
     TestVisit(r);
@@ -1281,7 +1286,7 @@ TEST(Gfx, RegionVisitEdges) {
     TestVisit(r);
   }
 
-  { // rect with a hole in it
+  {  // rect with a hole in it
     nsRegion r(nsRect(20, 20, 100, 100));
     r.Sub(r, nsRect(40, 40, 10, 10));
 

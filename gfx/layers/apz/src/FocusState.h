@@ -7,12 +7,12 @@
 #ifndef mozilla_layers_FocusState_h
 #define mozilla_layers_FocusState_h
 
-#include <unordered_map>    // for std::unordered_map
-#include <unordered_set>    // for std::unordered_set
+#include <unordered_map>  // for std::unordered_map
+#include <unordered_set>  // for std::unordered_set
 
-#include "mozilla/layers/FocusTarget.h" // for FocusTarget
-#include "mozilla/layers/ScrollableLayerGuid.h"   // for ViewID
-#include "mozilla/Mutex.h"  // for Mutex
+#include "mozilla/layers/FocusTarget.h"          // for FocusTarget
+#include "mozilla/layers/ScrollableLayerGuid.h"  // for ViewID
+#include "mozilla/Mutex.h"                       // for Mutex
 
 namespace mozilla {
 namespace layers {
@@ -67,9 +67,8 @@ namespace layers {
  * changes, have been processed and so we have a current target that we can use
  * again.
  */
-class FocusState final
-{
-public:
+class FocusState final {
+ public:
   FocusState();
 
   /**
@@ -96,8 +95,7 @@ public:
    * @param aOriginatingLayersId the layer tree ID that this focus target
                                  belongs to
    */
-  void Update(LayersId aRootLayerTreeId,
-              LayersId aOriginatingLayersId,
+  void Update(LayersId aRootLayerTreeId, LayersId aOriginatingLayersId,
               const FocusTarget& aTarget);
 
   /**
@@ -107,8 +105,8 @@ public:
 
   /**
    * Gets the scrollable layer that should be horizontally scrolled for a key
-   * event, if any. The returned ScrollableLayerGuid doesn't contain a presShellId,
-   * and so it should not be used in comparisons.
+   * event, if any. The returned ScrollableLayerGuid doesn't contain a
+   * presShellId, and so it should not be used in comparisons.
    *
    * No scrollable layer is returned if any of the following are true:
    *   1. We don't have a current focus target
@@ -127,7 +125,7 @@ public:
    */
   bool CanIgnoreKeyboardShortcutMisses() const;
 
-private:
+ private:
   /**
    * Whether the current focus state is known to be current or else if an event
    * has been processed that could change the focus but we have not received an
@@ -137,22 +135,20 @@ private:
    */
   bool IsCurrent(const MutexAutoLock& aLock) const;
 
-private:
+ private:
   // All methods should hold this lock, since this class is accessed via both
   // the updater and controller threads.
   mutable Mutex mMutex;
 
   // The set of focus targets received indexed by their layer tree ID
-  std::unordered_map<LayersId,
-                     FocusTarget,
-                     LayersId::HashFn> mFocusTree;
+  std::unordered_map<LayersId, FocusTarget, LayersId::HashFn> mFocusTree;
 
   // The focus sequence number of the last potentially focus changing event
   // processed by APZ. This number starts at one and increases monotonically.
-  // We don't worry about wrap around here because at a pace of 100 increments/sec,
-  // it would take 5.85*10^9 years before we would wrap around. This number will
-  // never be zero as that is used to catch uninitialized focus sequence numbers
-  // on input events.
+  // We don't worry about wrap around here because at a pace of 100
+  // increments/sec, it would take 5.85*10^9 years before we would wrap around.
+  // This number will never be zero as that is used to catch uninitialized focus
+  // sequence numbers on input events.
   uint64_t mLastAPZProcessedEvent;
   // The focus sequence number last received in a focus update.
   uint64_t mLastContentProcessedEvent;
@@ -163,7 +159,8 @@ private:
   // A flag that is false until the first call to Update().
   bool mReceivedUpdate;
 
-  // The layer tree ID which contains the scrollable frame of the focused element
+  // The layer tree ID which contains the scrollable frame of the focused
+  // element
   LayersId mFocusLayersId;
   // The scrollable layer corresponding to the scrollable frame that is used to
   // scroll the focused element. This depends on the direction the user is
@@ -172,7 +169,7 @@ private:
   ScrollableLayerGuid::ViewID mFocusVerticalTarget;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_FocusState_h
+#endif  // mozilla_layers_FocusState_h

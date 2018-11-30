@@ -13,7 +13,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
 
-template <class> struct already_AddRefed;
+template <class>
+struct already_AddRefed;
 
 namespace mozilla {
 
@@ -23,9 +24,7 @@ namespace dom {
 
 class IDBFileHandle;
 
-class IDBFileRequest final
-  : public DOMRequest
-{
+class IDBFileRequest final : public DOMRequest {
   RefPtr<IDBFileHandle> mFileHandle;
 
   nsString mEncoding;
@@ -33,58 +32,39 @@ class IDBFileRequest final
   bool mWrapAsDOMRequest;
   bool mHasEncoding;
 
-public:
+ public:
   class ResultCallback;
 
-  static already_AddRefed<IDBFileRequest>
-  Create(IDBFileHandle* aFileHandle,
-         bool aWrapAsDOMRequest);
+  static already_AddRefed<IDBFileRequest> Create(IDBFileHandle* aFileHandle,
+                                                 bool aWrapAsDOMRequest);
 
-  void
-  SetEncoding(const nsAString& aEncoding)
-  {
+  void SetEncoding(const nsAString& aEncoding) {
     mEncoding = aEncoding;
     mHasEncoding = true;
   }
 
-  const nsAString&
-  GetEncoding() const
-  {
-    return mEncoding;
-  }
+  const nsAString& GetEncoding() const { return mEncoding; }
 
-  bool
-  HasEncoding() const
-  {
-    return mHasEncoding;
-  }
+  bool HasEncoding() const { return mHasEncoding; }
 
-  void
-  FireProgressEvent(uint64_t aLoaded, uint64_t aTotal);
+  void FireProgressEvent(uint64_t aLoaded, uint64_t aTotal);
 
-  void
-  SetResultCallback(ResultCallback* aCallback);
+  void SetResultCallback(ResultCallback* aCallback);
 
   // WebIDL
-  IDBFileHandle*
-  GetFileHandle() const
-  {
+  IDBFileHandle* GetFileHandle() const {
     AssertIsOnOwningThread();
     return mFileHandle;
   }
 
-  IDBFileHandle*
-  GetLockedFile() const
-  {
+  IDBFileHandle* GetLockedFile() const {
     AssertIsOnOwningThread();
     return GetFileHandle();
   }
 
   IMPL_EVENT_HANDLER(progress)
 
-  void
-  AssertIsOnOwningThread() const
-  {
+  void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(IDBFileRequest);
   }
 
@@ -95,28 +75,25 @@ public:
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
-  IDBFileRequest(IDBFileHandle* aFileHandle,
-                 bool aWrapAsDOMRequest);
+ private:
+  IDBFileRequest(IDBFileHandle* aFileHandle, bool aWrapAsDOMRequest);
 
   ~IDBFileRequest();
 };
 
-class NS_NO_VTABLE IDBFileRequest::ResultCallback
-{
-public:
-  virtual nsresult
-  GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) = 0;
+class NS_NO_VTABLE IDBFileRequest::ResultCallback {
+ public:
+  virtual nsresult GetResult(JSContext* aCx,
+                             JS::MutableHandle<JS::Value> aResult) = 0;
 
-protected:
-  ResultCallback()
-  { }
+ protected:
+  ResultCallback() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbfilerequest_h__
+#endif  // mozilla_dom_idbfilerequest_h__

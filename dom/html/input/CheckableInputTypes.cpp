@@ -10,9 +10,7 @@
 
 /* input type=checkbox */
 
-bool
-CheckboxInputType::IsValueMissing() const
-{
+bool CheckboxInputType::IsValueMissing() const {
   if (!mInputElement->IsRequired()) {
     return false;
   }
@@ -24,9 +22,7 @@ CheckboxInputType::IsValueMissing() const
   return !mInputElement->Checked();
 }
 
-nsresult
-CheckboxInputType::GetValueMissingMessage(nsAString& aMessage)
-{
+nsresult CheckboxInputType::GetValueMissingMessage(nsAString& aMessage) {
   return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                             "FormValidationCheckboxMissing",
                                             aMessage);
@@ -34,10 +30,7 @@ CheckboxInputType::GetValueMissingMessage(nsAString& aMessage)
 
 /* input type=radio */
 
-nsresult
-RadioInputType::GetValueMissingMessage(nsAString& aMessage)
-{
-  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                            "FormValidationRadioMissing",
-                                            aMessage);
+nsresult RadioInputType::GetValueMissingMessage(nsAString& aMessage) {
+  return nsContentUtils::GetLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationRadioMissing", aMessage);
 }

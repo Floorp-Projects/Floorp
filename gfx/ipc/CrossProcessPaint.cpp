@@ -24,11 +24,11 @@
 // #define ENABLE_PAINT_LOG 1
 
 #if ENABLE_PAINT_LOG
-#  define PF_LOG(...) printf_stderr("PaintFragment: " __VA_ARGS__)
-#  define CPP_LOG(...) printf_stderr("CrossProcessPaint: " __VA_ARGS__)
+#define PF_LOG(...) printf_stderr("PaintFragment: " __VA_ARGS__)
+#define CPP_LOG(...) printf_stderr("CrossProcessPaint: " __VA_ARGS__)
 #else
-#  define PF_LOG(...)
-#  define CPP_LOG(...)
+#define PF_LOG(...)
+#define CPP_LOG(...)
 #endif
 
 namespace mozilla {
@@ -39,35 +39,29 @@ using namespace mozilla::ipc;
 /// The minimum scale we allow tabs to be rasterized at.
 static const float kMinPaintScale = 0.05f;
 
-/* static */ PaintFragment
-PaintFragment::Record(nsIDocShell* aDocShell,
-                      const IntRect& aRect,
-                      float aScale,
-                      nscolor aBackgroundColor)
-{
+/* static */ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
+                                                 const IntRect& aRect,
+                                                 float aScale,
+                                                 nscolor aBackgroundColor) {
   IntSize surfaceSize = aRect.Size();
   surfaceSize.width *= aScale;
   surfaceSize.height *= aScale;
 
-  CPP_LOG("Recording "
-          "[docshell=%p, "
-          "rect=(%d, %d) x (%d, %d), "
-          "scale=%f, "
-          "color=(%u, %u, %u, %u)]\n",
-    aDocShell,
-    aRect.x, aRect.y, aRect.width, aRect.height,
-    aScale,
-    NS_GET_R(aBackgroundColor),
-    NS_GET_G(aBackgroundColor),
-    NS_GET_B(aBackgroundColor),
-    NS_GET_A(aBackgroundColor));
+  CPP_LOG(
+      "Recording "
+      "[docshell=%p, "
+      "rect=(%d, %d) x (%d, %d), "
+      "scale=%f, "
+      "color=(%u, %u, %u, %u)]\n",
+      aDocShell, aRect.x, aRect.y, aRect.width, aRect.height, aScale,
+      NS_GET_R(aBackgroundColor), NS_GET_G(aBackgroundColor),
+      NS_GET_B(aBackgroundColor), NS_GET_A(aBackgroundColor));
 
   // Check for invalid sizes
   if (surfaceSize.width <= 0 || surfaceSize.height <= 0 ||
       !Factory::CheckSurfaceSize(surfaceSize)) {
-    PF_LOG("Invalid surface size of (%d x %d).\n",
-      surfaceSize.width,
-      surfaceSize.height);
+    PF_LOG("Invalid surface size of (%d x %d).\n", surfaceSize.width,
+           surfaceSize.height);
     return PaintFragment{};
   }
 
@@ -86,16 +80,14 @@ PaintFragment::Record(nsIDocShell* aDocShell,
 
   // Initialize the recorder
   SurfaceFormat format = SurfaceFormat::B8G8R8A8;
-  RefPtr<DrawTarget> referenceDt =
-    Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
-                              IntSize(1, 1),
-                              format);
+  RefPtr<DrawTarget> referenceDt = Factory::CreateDrawTarget(
+      gfxPlatform::GetPlatform()->GetSoftwareBackend(), IntSize(1, 1), format);
 
   // TODO: This may OOM crash if the content is complex enough
   RefPtr<DrawEventRecorderMemory> recorder =
-    MakeAndAddRef<DrawEventRecorderMemory>(nullptr);
+      MakeAndAddRef<DrawEventRecorderMemory>(nullptr);
   RefPtr<DrawTarget> dt =
-    Factory::CreateRecordingDrawTarget(recorder, referenceDt, surfaceSize);
+      Factory::CreateRecordingDrawTarget(recorder, referenceDt, surfaceSize);
 
   // Perform the actual rendering
   {
@@ -118,110 +110,83 @@ PaintFragment::Record(nsIDocShell* aDocShell,
   recorder->mOutputStream.mCapacity = 0;
 
   return PaintFragment{
-    surfaceSize,
-    std::move(recording),
-    std::move(recorder->TakeDependentSurfaces()),
+      surfaceSize,
+      std::move(recording),
+      std::move(recorder->TakeDependentSurfaces()),
   };
 }
 
-bool
-PaintFragment::IsEmpty() const
-{
+bool PaintFragment::IsEmpty() const {
   return !mRecording.mData || mRecording.mLen == 0 || mSize == IntSize(0, 0);
 }
 
-PaintFragment::PaintFragment(IntSize aSize,
-                             ByteBuf&& aRecording,
+PaintFragment::PaintFragment(IntSize aSize, ByteBuf&& aRecording,
                              nsTHashtable<nsUint64HashKey>&& aDependencies)
-  : mSize(aSize)
-  , mRecording(std::move(aRecording))
-  , mDependencies(std::move(aDependencies))
-{
-}
+    : mSize(aSize),
+      mRecording(std::move(aRecording)),
+      mDependencies(std::move(aDependencies)) {}
 
-/* static */ void
-CrossProcessPaint::StartLocal(nsIDocShell* aRoot,
-                              const IntRect& aRect,
-                              float aScale,
-                              nscolor aBackgroundColor,
-                              dom::Promise* aPromise)
-{
+/* static */ void CrossProcessPaint::StartLocal(nsIDocShell* aRoot,
+                                                const IntRect& aRect,
+                                                float aScale,
+                                                nscolor aBackgroundColor,
+                                                dom::Promise* aPromise) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   aScale = std::max(aScale, kMinPaintScale);
 
-  CPP_LOG("Starting local paint. "
-          "[docshell=%p, "
-          "rect=(%d, %d) x (%d, %d), "
-          "scale=%f, "
-          "color=(%u, %u, %u, %u)]\n",
-    aRoot,
-    aRect.x, aRect.y, aRect.width, aRect.height,
-    aScale,
-    NS_GET_R(aBackgroundColor),
-    NS_GET_G(aBackgroundColor),
-    NS_GET_B(aBackgroundColor),
-    NS_GET_A(aBackgroundColor));
+  CPP_LOG(
+      "Starting local paint. "
+      "[docshell=%p, "
+      "rect=(%d, %d) x (%d, %d), "
+      "scale=%f, "
+      "color=(%u, %u, %u, %u)]\n",
+      aRoot, aRect.x, aRect.y, aRect.width, aRect.height, aScale,
+      NS_GET_R(aBackgroundColor), NS_GET_G(aBackgroundColor),
+      NS_GET_B(aBackgroundColor), NS_GET_A(aBackgroundColor));
 
-  RefPtr<CrossProcessPaint> resolver = new CrossProcessPaint(aPromise,
-                                                             aScale,
-                                                             aBackgroundColor,
-                                                             dom::TabId(0));
-  resolver->ReceiveFragment(dom::TabId(0),
-                            PaintFragment::Record(aRoot,
-                                                  aRect,
-                                                  aScale,
-                                                  aBackgroundColor));
+  RefPtr<CrossProcessPaint> resolver =
+      new CrossProcessPaint(aPromise, aScale, aBackgroundColor, dom::TabId(0));
+  resolver->ReceiveFragment(
+      dom::TabId(0),
+      PaintFragment::Record(aRoot, aRect, aScale, aBackgroundColor));
 }
 
-/* static */ void
-CrossProcessPaint::StartRemote(dom::TabId aRoot,
-                               const IntRect& aRect,
-                               float aScale,
-                               nscolor aBackgroundColor,
-                               dom::Promise* aPromise)
-{
+/* static */ void CrossProcessPaint::StartRemote(dom::TabId aRoot,
+                                                 const IntRect& aRect,
+                                                 float aScale,
+                                                 nscolor aBackgroundColor,
+                                                 dom::Promise* aPromise) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   aScale = std::max(aScale, kMinPaintScale);
 
-  CPP_LOG("Starting remote paint. "
-          "[tab=%llu, "
-          "rect=(%d, %d) x (%d, %d), "
-          "scale=%f, "
-          "color=(%u, %u, %u, %u)]\n",
-    (uint64_t)aRoot,
-    aRect.x, aRect.y, aRect.width, aRect.height,
-    aScale,
-    NS_GET_R(aBackgroundColor),
-    NS_GET_G(aBackgroundColor),
-    NS_GET_B(aBackgroundColor),
-    NS_GET_A(aBackgroundColor));
+  CPP_LOG(
+      "Starting remote paint. "
+      "[tab=%llu, "
+      "rect=(%d, %d) x (%d, %d), "
+      "scale=%f, "
+      "color=(%u, %u, %u, %u)]\n",
+      (uint64_t)aRoot, aRect.x, aRect.y, aRect.width, aRect.height, aScale,
+      NS_GET_R(aBackgroundColor), NS_GET_G(aBackgroundColor),
+      NS_GET_B(aBackgroundColor), NS_GET_A(aBackgroundColor));
 
-  RefPtr<CrossProcessPaint> resolver = new CrossProcessPaint(aPromise,
-                                                             aScale,
-                                                             aBackgroundColor,
-                                                             aRoot);
+  RefPtr<CrossProcessPaint> resolver =
+      new CrossProcessPaint(aPromise, aScale, aBackgroundColor, aRoot);
   resolver->QueueRootPaint(aRoot, aRect, aScale, aBackgroundColor);
 }
 
-CrossProcessPaint::CrossProcessPaint(dom::Promise* aPromise,
-                                     float aScale,
+CrossProcessPaint::CrossProcessPaint(dom::Promise* aPromise, float aScale,
                                      nscolor aBackgroundColor,
                                      dom::TabId aRootId)
-    : mPromise{aPromise}
-    , mRootId{aRootId}
-    , mScale{aScale}
-    , mBackgroundColor{aBackgroundColor}
-    , mPendingFragments{1}
-{
-}
+    : mPromise{aPromise},
+      mRootId{aRootId},
+      mScale{aScale},
+      mBackgroundColor{aBackgroundColor},
+      mPendingFragments{1} {}
 
-CrossProcessPaint::~CrossProcessPaint()
-{
-}
+CrossProcessPaint::~CrossProcessPaint() {}
 
-void
-CrossProcessPaint::ReceiveFragment(dom::TabId aId, PaintFragment&& aFragment)
-{
+void CrossProcessPaint::ReceiveFragment(dom::TabId aId,
+                                        PaintFragment&& aFragment) {
   if (IsCleared()) {
     CPP_LOG("Ignoring fragment from %llu.\n", (uint64_t)aId);
     return;
@@ -233,8 +198,7 @@ CrossProcessPaint::ReceiveFragment(dom::TabId aId, PaintFragment&& aFragment)
 
   // Double check our invariants to protect against a compromised content
   // process
-  if (mPendingFragments == 0 ||
-      mReceivedFragments.GetValue(aId) ||
+  if (mPendingFragments == 0 || mReceivedFragments.GetValue(aId) ||
       aFragment.IsEmpty()) {
     CPP_LOG("Dropping invalid fragment from %llu.\n", (uint64_t)aId);
     LostFragment(aId);
@@ -256,9 +220,7 @@ CrossProcessPaint::ReceiveFragment(dom::TabId aId, PaintFragment&& aFragment)
   MaybeResolve();
 }
 
-void
-CrossProcessPaint::LostFragment(dom::TabId aId)
-{
+void CrossProcessPaint::LostFragment(dom::TabId aId) {
   if (IsCleared()) {
     CPP_LOG("Ignoring lost fragment from %llu.\n", (uint64_t)aId);
     return;
@@ -268,12 +230,8 @@ CrossProcessPaint::LostFragment(dom::TabId aId)
   Clear();
 }
 
-void
-CrossProcessPaint::QueueRootPaint(dom::TabId aId,
-                                  const IntRect& aRect,
-                                  float aScale,
-                                  nscolor aBackgroundColor)
-{
+void CrossProcessPaint::QueueRootPaint(dom::TabId aId, const IntRect& aRect,
+                                       float aScale, nscolor aBackgroundColor) {
   MOZ_ASSERT(!mReceivedFragments.GetValue(aId));
   MOZ_ASSERT(mPendingFragments == 1);
 
@@ -289,9 +247,7 @@ CrossProcessPaint::QueueRootPaint(dom::TabId aId,
   // incremented one pending fragment
 }
 
-void
-CrossProcessPaint::QueueSubPaint(dom::TabId aId)
-{
+void CrossProcessPaint::QueueSubPaint(dom::TabId aId) {
   MOZ_ASSERT(!mReceivedFragments.GetValue((uint64_t)aId));
 
   CPP_LOG("Queueing sub paint for %llu.\n", (uint64_t)aId);
@@ -305,23 +261,15 @@ CrossProcessPaint::QueueSubPaint(dom::TabId aId)
   mPendingFragments += 1;
 }
 
-void
-CrossProcessPaint::Clear()
-{
+void CrossProcessPaint::Clear() {
   mPromise = nullptr;
   mPendingFragments = 0;
   mReceivedFragments.Clear();
 }
 
-bool
-CrossProcessPaint::IsCleared() const
-{
-  return !mPromise;
-}
+bool CrossProcessPaint::IsCleared() const { return !mPromise; }
 
-void
-CrossProcessPaint::MaybeResolve()
-{
+void CrossProcessPaint::MaybeResolve() {
   // Don't do anything if we aren't ready, experienced an error, or already
   // resolved this paint
   if (IsCleared() || mPendingFragments > 0) {
@@ -347,10 +295,8 @@ CrossProcessPaint::MaybeResolve()
   CPP_LOG("Resolved all fragments.\n");
 
   ErrorResult rv;
-  RefPtr<dom::ImageBitmap> bitmap =
-    dom::ImageBitmap::CreateFromSourceSurface(mPromise->GetParentObject(),
-                                              root,
-                                              rv);
+  RefPtr<dom::ImageBitmap> bitmap = dom::ImageBitmap::CreateFromSourceSurface(
+      mPromise->GetParentObject(), root, rv);
 
   if (!rv.Failed()) {
     CPP_LOG("Success, fulfilling promise.\n");
@@ -362,10 +308,8 @@ CrossProcessPaint::MaybeResolve()
   Clear();
 }
 
-bool
-CrossProcessPaint::ResolveInternal(dom::TabId aId,
-                                   ResolvedSurfaceMap* aResolved)
-{
+bool CrossProcessPaint::ResolveInternal(dom::TabId aId,
+                                        ResolvedSurfaceMap* aResolved) {
   // We should not have resolved this paint already
   MOZ_ASSERT(!aResolved->GetWeak(aId));
 
@@ -383,13 +327,11 @@ CrossProcessPaint::ResolveInternal(dom::TabId aId,
 
   // Create the destination draw target
   RefPtr<DrawTarget> drawTarget =
-    gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(fragment->mSize,
-                                                                 SurfaceFormat::B8G8R8A8);
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+          fragment->mSize, SurfaceFormat::B8G8R8A8);
   if (!drawTarget || !drawTarget->IsValid()) {
     CPP_LOG("Couldn't create (%d x %d) surface for fragment %llu.\n",
-      fragment->mSize.width,
-      fragment->mSize.height,
-      (uint64_t)aId);
+            fragment->mSize.width, fragment->mSize.height, (uint64_t)aId);
     return false;
   }
 
@@ -400,15 +342,14 @@ CrossProcessPaint::ResolveInternal(dom::TabId aId,
     if (!translator.TranslateRecording((char*)fragment->mRecording.mData,
                                        fragment->mRecording.mLen)) {
       CPP_LOG("Couldn't translate recording for fragment %llu.\n",
-        (uint64_t)aId);
+              (uint64_t)aId);
       return false;
     }
   }
 
   RefPtr<SourceSurface> snapshot = drawTarget->Snapshot();
   if (!snapshot) {
-    CPP_LOG("Couldn't get snapshot for fragment %llu.\n",
-      (uint64_t)aId);
+    CPP_LOG("Couldn't get snapshot for fragment %llu.\n", (uint64_t)aId);
     return false;
   }
 
@@ -423,5 +364,5 @@ CrossProcessPaint::ResolveInternal(dom::TabId aId,
   return true;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

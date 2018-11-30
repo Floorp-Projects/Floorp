@@ -10,7 +10,7 @@
 namespace sandbox {
 class BrokerServices;
 class TargetServices;
-}
+}  // namespace sandbox
 
 // Things that use this file will probably want access to the IsSandboxedProcess
 // function defined in one of the Chromium sandbox cc files.
@@ -45,7 +45,7 @@ sandbox::BrokerServices* GetInitializedBrokerServices();
 
 PermissionsService* GetPermissionsService();
 
-} // sandboxing
-} // mozilla
+}  // namespace sandboxing
+}  // namespace mozilla
 
-#endif // mozilla_sandboxing_SandboxInitialization_h
+#endif  // mozilla_sandboxing_SandboxInitialization_h

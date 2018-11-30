@@ -12,20 +12,18 @@
 namespace mozilla {
 namespace layers {
 struct KeyboardScrollAction;
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 class nsIControllerCommandTable;
 
-class nsWindowCommandRegistration
-{
-public:
-  static nsresult  RegisterWindowCommands(nsIControllerCommandTable *ccm);
+class nsWindowCommandRegistration {
+ public:
+  static nsresult RegisterWindowCommands(nsIControllerCommandTable* ccm);
 };
 
-class nsGlobalWindowCommands
-{
-public:
+class nsGlobalWindowCommands {
+ public:
   typedef mozilla::layers::KeyboardScrollAction KeyboardScrollAction;
 
   /**
@@ -33,12 +31,12 @@ public:
    * that would be done in response to a command.
    *
    * @param aCommandName the name of the command
-   * @param aOutAction the result of searching for this command, must not be null
+   * @param aOutAction the result of searching for this command, must not be
+   * null
    * @returns whether a keyboard action was found or not
    */
   static bool FindScrollCommand(const char* aCommandName,
                                 KeyboardScrollAction* aOutAction);
 };
 
-#endif // nsGlobalWindowCommands_h__
-
+#endif  // nsGlobalWindowCommands_h__

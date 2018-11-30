@@ -5,10 +5,8 @@
 
 #include "mozilla/Attributes.h"
 
-#ifndef _MSC_VER // Not supported by clang-cl yet
+#ifndef _MSC_VER  // Not supported by clang-cl yet
 
-const char* __ubsan_default_options() {
-    return "print_stacktrace=1";
-}
+const char* __ubsan_default_options() { return "print_stacktrace=1"; }
 
 #endif

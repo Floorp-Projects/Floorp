@@ -16,22 +16,14 @@ namespace layers {
 
 using namespace gfx;
 
-MaskOperation::MaskOperation(FrameBuilder* aBuilder)
-{
-}
+MaskOperation::MaskOperation(FrameBuilder* aBuilder) {}
 
 MaskOperation::MaskOperation(FrameBuilder* aBuilder, MLGTexture* aSource)
- : mTexture(aSource)
-{
-}
+    : mTexture(aSource) {}
 
-MaskOperation::~MaskOperation()
-{
-}
+MaskOperation::~MaskOperation() {}
 
-static gfx::Rect
-ComputeQuadForMaskLayer(Layer* aLayer, const IntSize& aSize)
-{
+static gfx::Rect ComputeQuadForMaskLayer(Layer* aLayer, const IntSize& aSize) {
   const Matrix4x4& transform = aLayer->GetEffectiveTransform();
   MOZ_ASSERT(transform.Is2D(), "Mask layers should not have 3d transforms");
 
@@ -39,22 +31,18 @@ ComputeQuadForMaskLayer(Layer* aLayer, const IntSize& aSize)
   return transform.As2D().TransformBounds(bounds);
 }
 
-Rect
-MaskOperation::ComputeMaskRect(Layer* aLayer) const
-{
-  Layer* maskLayer = aLayer->GetMaskLayer()
-                     ? aLayer->GetMaskLayer()
-                     : aLayer->GetAncestorMaskLayerAt(0);
-  MOZ_ASSERT((aLayer->GetAncestorMaskLayerCount() == 0 && aLayer->GetMaskLayer()) ||
-             (aLayer->GetAncestorMaskLayerCount() == 1 && !aLayer->GetMaskLayer()));
+Rect MaskOperation::ComputeMaskRect(Layer* aLayer) const {
+  Layer* maskLayer = aLayer->GetMaskLayer() ? aLayer->GetMaskLayer()
+                                            : aLayer->GetAncestorMaskLayerAt(0);
+  MOZ_ASSERT(
+      (aLayer->GetAncestorMaskLayerCount() == 0 && aLayer->GetMaskLayer()) ||
+      (aLayer->GetAncestorMaskLayerCount() == 1 && !aLayer->GetMaskLayer()));
 
   return ComputeQuadForMaskLayer(maskLayer, mTexture->GetSize());
 }
 
 // This is only needed for std::map.
-bool
-MaskTexture::operator <(const MaskTexture& aOther) const
-{
+bool MaskTexture::operator<(const MaskTexture& aOther) const {
   if (mRect.X() != aOther.mRect.X()) {
     return mRect.X() < aOther.mRect.X();
   }
@@ -70,9 +58,7 @@ MaskTexture::operator <(const MaskTexture& aOther) const
   return mSource < aOther.mSource;
 }
 
-RefPtr<TextureSource>
-GetMaskLayerTexture(Layer* aLayer)
-{
+RefPtr<TextureSource> GetMaskLayerTexture(Layer* aLayer) {
   LayerMLGPU* layer = aLayer->AsHostLayer()->AsLayerMLGPU();
   TexturedLayerMLGPU* texLayer = layer->AsTexturedLayerMLGPU();
   if (!texLayer) {
@@ -89,18 +75,11 @@ GetMaskLayerTexture(Layer* aLayer)
 }
 
 MaskCombineOperation::MaskCombineOperation(FrameBuilder* aBuilder)
- : MaskOperation(aBuilder),
-   mBuilder(aBuilder)
-{
-}
+    : MaskOperation(aBuilder), mBuilder(aBuilder) {}
 
-MaskCombineOperation::~MaskCombineOperation()
-{
-}
+MaskCombineOperation::~MaskCombineOperation() {}
 
-void
-MaskCombineOperation::Init(const MaskTextureList& aTextures)
-{
+void MaskCombineOperation::Init(const MaskTextureList& aTextures) {
   // All masks for a single layer exist in the same coordinate space. Find the
   // area that covers all rects.
   Rect area = aTextures[0].mRect;
@@ -135,9 +114,7 @@ MaskCombineOperation::Init(const MaskTextureList& aTextures)
   mArea = area;
 }
 
-void
-MaskCombineOperation::PrepareForRendering()
-{
+void MaskCombineOperation::PrepareForRendering() {
   for (const auto& entry : mTextures) {
     Rect texCoords = TextureRectToCoords(entry.mRect, entry.mSource->GetSize());
 
@@ -151,9 +128,7 @@ MaskCombineOperation::PrepareForRendering()
   }
 }
 
-void
-MaskCombineOperation::Render()
-{
+void MaskCombineOperation::Render() {
   if (!mTarget) {
     return;
   }
@@ -184,9 +159,7 @@ MaskCombineOperation::Render()
   }
 }
 
-void
-AppendToMaskTextureList(MaskTextureList& aList, Layer* aLayer)
-{
+void AppendToMaskTextureList(MaskTextureList& aList, Layer* aLayer) {
   RefPtr<TextureSource> source = GetMaskLayerTexture(aLayer);
   if (!source) {
     return;
@@ -196,5 +169,5 @@ AppendToMaskTextureList(MaskTextureList& aList, Layer* aLayer)
   aList.push_back(MaskTexture(rect, source));
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

@@ -18,8 +18,7 @@ namespace dom {
 class ClientHandleParent;
 class ClientManagerService;
 
-class ClientSourceParent final : public PClientSourceParent
-{
+class ClientSourceParent final : public PClientSourceParent {
   ClientInfo mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
   RefPtr<ClientManagerService> mService;
@@ -28,76 +27,58 @@ class ClientSourceParent final : public PClientSourceParent
   bool mExecutionReady;
   bool mFrozen;
 
-  void
-  KillInvalidChild();
+  void KillInvalidChild();
 
   // PClientSourceParent
-  mozilla::ipc::IPCResult
-  RecvWorkerSyncPing() override;
+  mozilla::ipc::IPCResult RecvWorkerSyncPing() override;
 
-  mozilla::ipc::IPCResult
-  RecvTeardown() override;
+  mozilla::ipc::IPCResult RecvTeardown() override;
 
-  mozilla::ipc::IPCResult
-  RecvExecutionReady(const ClientSourceExecutionReadyArgs& aArgs) override;
+  mozilla::ipc::IPCResult RecvExecutionReady(
+      const ClientSourceExecutionReadyArgs& aArgs) override;
 
-  mozilla::ipc::IPCResult
-  RecvFreeze() override;
+  mozilla::ipc::IPCResult RecvFreeze() override;
 
-  mozilla::ipc::IPCResult
-  RecvThaw() override;
+  mozilla::ipc::IPCResult RecvThaw() override;
 
-  mozilla::ipc::IPCResult
-  RecvInheritController(const ClientControlledArgs& aArgs) override;
+  mozilla::ipc::IPCResult RecvInheritController(
+      const ClientControlledArgs& aArgs) override;
 
-  mozilla::ipc::IPCResult
-  RecvNoteDOMContentLoaded() override;
+  mozilla::ipc::IPCResult RecvNoteDOMContentLoaded() override;
 
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PClientSourceOpParent*
-  AllocPClientSourceOpParent(const ClientOpConstructorArgs& aArgs) override;
+  PClientSourceOpParent* AllocPClientSourceOpParent(
+      const ClientOpConstructorArgs& aArgs) override;
 
-  bool
-  DeallocPClientSourceOpParent(PClientSourceOpParent* aActor) override;
+  bool DeallocPClientSourceOpParent(PClientSourceOpParent* aActor) override;
 
-public:
+ public:
   explicit ClientSourceParent(const ClientSourceConstructorArgs& aArgs);
   ~ClientSourceParent();
 
-  void
-  Init();
+  void Init();
 
-  const ClientInfo&
-  Info() const;
+  const ClientInfo& Info() const;
 
-  bool
-  IsFrozen() const;
+  bool IsFrozen() const;
 
-  bool
-  ExecutionReady() const;
+  bool ExecutionReady() const;
 
-  RefPtr<GenericPromise>
-  ExecutionReadyPromise();
+  RefPtr<GenericPromise> ExecutionReadyPromise();
 
-  const Maybe<ServiceWorkerDescriptor>&
-  GetController() const;
+  const Maybe<ServiceWorkerDescriptor>& GetController() const;
 
-  void
-  ClearController();
+  void ClearController();
 
-  void
-  AttachHandle(ClientHandleParent* aClientSource);
+  void AttachHandle(ClientHandleParent* aClientSource);
 
-  void
-  DetachHandle(ClientHandleParent* aClientSource);
+  void DetachHandle(ClientHandleParent* aClientSource);
 
-  RefPtr<ClientOpPromise>
-  StartOp(const ClientOpConstructorArgs& aArgs);
+  RefPtr<ClientOpPromise> StartOp(const ClientOpConstructorArgs& aArgs);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientSourceParent_h
+#endif  // _mozilla_dom_ClientSourceParent_h

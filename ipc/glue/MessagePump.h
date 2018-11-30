@@ -26,119 +26,95 @@ namespace ipc {
 
 class DoWorkRunnable;
 
-class MessagePump : public base::MessagePumpDefault
-{
+class MessagePump : public base::MessagePumpDefault {
   friend class DoWorkRunnable;
 
-public:
+ public:
   explicit MessagePump(nsIEventTarget* aEventTarget);
 
   // From base::MessagePump.
-  virtual void
-  Run(base::MessagePump::Delegate* aDelegate) override;
+  virtual void Run(base::MessagePump::Delegate* aDelegate) override;
 
   // From base::MessagePump.
-  virtual void
-  ScheduleWork() override;
+  virtual void ScheduleWork() override;
 
   // From base::MessagePump.
-  virtual void
-  ScheduleWorkForNestedLoop() override;
+  virtual void ScheduleWorkForNestedLoop() override;
 
   // From base::MessagePump.
-  virtual void
-  ScheduleDelayedWork(const base::TimeTicks& aDelayedWorkTime) override;
+  virtual void ScheduleDelayedWork(
+      const base::TimeTicks& aDelayedWorkTime) override;
 
-  virtual nsIEventTarget*
-  GetXPCOMThread() override;
+  virtual nsIEventTarget* GetXPCOMThread() override;
 
-protected:
+ protected:
   virtual ~MessagePump();
 
-private:
+ private:
   // Only called by DoWorkRunnable.
   void DoDelayedWork(base::MessagePump::Delegate* aDelegate);
 
-protected:
+ protected:
   nsIEventTarget* mEventTarget;
 
   // mDelayedWorkTimer and mEventTarget are set in Run() by this class or its
   // subclasses.
   nsCOMPtr<nsITimer> mDelayedWorkTimer;
 
-private:
+ private:
   // Only accessed by this class.
   RefPtr<DoWorkRunnable> mDoWorkEvent;
 };
 
-class MessagePumpForChildProcess final: public MessagePump
-{
-public:
-  MessagePumpForChildProcess()
-    : MessagePump(nullptr),
-      mFirstRun(true)
-  { }
+class MessagePumpForChildProcess final : public MessagePump {
+ public:
+  MessagePumpForChildProcess() : MessagePump(nullptr), mFirstRun(true) {}
 
   virtual void Run(base::MessagePump::Delegate* aDelegate) override;
 
-private:
-  ~MessagePumpForChildProcess()
-  { }
+ private:
+  ~MessagePumpForChildProcess() {}
 
   bool mFirstRun;
 };
 
-class MessagePumpForNonMainThreads final : public MessagePump
-{
-public:
+class MessagePumpForNonMainThreads final : public MessagePump {
+ public:
   explicit MessagePumpForNonMainThreads(nsIEventTarget* aEventTarget)
-    : MessagePump(aEventTarget)
-  { }
+      : MessagePump(aEventTarget) {}
 
   virtual void Run(base::MessagePump::Delegate* aDelegate) override;
 
-private:
-  ~MessagePumpForNonMainThreads()
-  { }
+ private:
+  ~MessagePumpForNonMainThreads() {}
 };
 
 #if defined(XP_WIN)
 // Extends the TYPE_UI message pump to process xpcom events. Currently only
 // implemented for Win.
-class MessagePumpForNonMainUIThreads final:
-  public base::MessagePumpForUI,
-  public nsIThreadObserver
-{
-public:
+class MessagePumpForNonMainUIThreads final : public base::MessagePumpForUI,
+                                             public nsIThreadObserver {
+ public:
   // We don't want xpcom refing, chromium controls our lifetime via
   // RefCountedThreadSafe.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override {
-    return 2;
-  }
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) override  {
-    return 1;
-  }
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override { return 2; }
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) override { return 1; }
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_NSITHREADOBSERVER
 
-public:
-  explicit MessagePumpForNonMainUIThreads(nsIEventTarget* aEventTarget) :
-    mInWait(false),
-    mWaitLock("mInWait")
-  {
-  }
+ public:
+  explicit MessagePumpForNonMainUIThreads(nsIEventTarget* aEventTarget)
+      : mInWait(false), mWaitLock("mInWait") {}
 
   // The main run loop for this thread.
   virtual void DoRunLoop() override;
 
-  virtual nsIEventTarget*
-  GetXPCOMThread() override
-  {
-    return nullptr; // not sure what to do with this one
+  virtual nsIEventTarget* GetXPCOMThread() override {
+    return nullptr;  // not sure what to do with this one
   }
 
-protected:
+ protected:
   void SetInWait() {
     MutexAutoLock lock(mWaitLock);
     mInWait = true;
@@ -154,52 +130,43 @@ protected:
     return mInWait;
   }
 
-private:
-  ~MessagePumpForNonMainUIThreads()
-  {
-  }
+ private:
+  ~MessagePumpForNonMainUIThreads() {}
 
   bool mInWait;
   mozilla::Mutex mWaitLock;
 };
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
 #if defined(MOZ_WIDGET_ANDROID)
 /*`
- * The MessagePumpForAndroidUI exists to enable IPDL in the Android UI thread. The Android
- * UI thread event loop is controlled by Android. This prevents running an existing
- * MessagePump implementation in the Android UI thread. In order to enable IPDL on the
- * Android UI thread it is necessary to have a non-looping MessagePump. This class enables
- * forwarding of nsIRunnables from MessageLoop::PostTask_Helper to the registered
- * nsIEventTarget with out the need to control the event loop. The only member function
- * that should be invoked is GetXPCOMThread. All other member functions will invoke MOZ_CRASH
-*/
+ * The MessagePumpForAndroidUI exists to enable IPDL in the Android UI thread.
+ * The Android UI thread event loop is controlled by Android. This prevents
+ * running an existing MessagePump implementation in the Android UI thread. In
+ * order to enable IPDL on the Android UI thread it is necessary to have a
+ * non-looping MessagePump. This class enables forwarding of nsIRunnables from
+ * MessageLoop::PostTask_Helper to the registered nsIEventTarget with out the
+ * need to control the event loop. The only member function that should be
+ * invoked is GetXPCOMThread. All other member functions will invoke MOZ_CRASH
+ */
 class MessagePumpForAndroidUI : public base::MessagePump {
-
-public:
+ public:
   explicit MessagePumpForAndroidUI(nsIEventTarget* aEventTarget)
-    : mEventTarget(aEventTarget)
-  { }
+      : mEventTarget(aEventTarget) {}
 
   virtual void Run(Delegate* delegate);
   virtual void Quit();
   virtual void ScheduleWork();
   virtual void ScheduleDelayedWork(const base::TimeTicks& delayed_work_time);
-  virtual nsIEventTarget* GetXPCOMThread()
-  {
-    return mEventTarget;
-  }
+  virtual nsIEventTarget* GetXPCOMThread() { return mEventTarget; }
 
-private:
-  ~MessagePumpForAndroidUI()
-  { }
-  MessagePumpForAndroidUI()
-  { }
+ private:
+  ~MessagePumpForAndroidUI() {}
+  MessagePumpForAndroidUI() {}
 
   nsIEventTarget* mEventTarget;
 };
-#endif // defined(MOZ_WIDGET_ANDROID)
-
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 } /* namespace ipc */
 } /* namespace mozilla */

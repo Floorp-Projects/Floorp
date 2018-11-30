@@ -27,47 +27,42 @@
 
 class nsSVGImageFrame;
 
-class nsSVGImageListener final : public imgINotificationObserver
-{
-public:
-  explicit nsSVGImageListener(nsSVGImageFrame *aFrame);
+class nsSVGImageListener final : public imgINotificationObserver {
+ public:
+  explicit nsSVGImageListener(nsSVGImageFrame* aFrame);
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
-  void SetFrame(nsSVGImageFrame *frame) { mFrame = frame; }
+  void SetFrame(nsSVGImageFrame* frame) { mFrame = frame; }
 
-private:
+ private:
   ~nsSVGImageListener() {}
 
-  nsSVGImageFrame *mFrame;
+  nsSVGImageFrame* mFrame;
 };
 
-class nsSVGImageFrame final
-  : public mozilla::SVGGeometryFrame
-  , public nsIReflowCallback
-{
-  friend nsIFrame*
-  NS_NewSVGImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
+                              public nsIReflowCallback {
+  friend nsIFrame* NS_NewSVGImageFrame(nsIPresShell* aPresShell,
+                                       ComputedStyle* aStyle);
 
-protected:
+ protected:
   explicit nsSVGImageFrame(ComputedStyle* aStyle)
-    : SVGGeometryFrame(aStyle, kClassID)
-    , mReflowCallbackPosted(false)
-    , mForceSyncDecoding(false)
-  {
+      : SVGGeometryFrame(aStyle, kClassID),
+        mReflowCallbackPosted(false),
+        mForceSyncDecoding(false) {
     EnableVisibilityTracking();
   }
 
   virtual ~nsSVGImageFrame();
 
-public:
+ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSVGImageFrame)
 
   // nsSVGDisplayableFrame interface:
-  virtual void PaintSVG(gfxContext& aContext,
-                        const gfxMatrix& aTransform,
+  virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                         imgDrawingParams& aImgParams,
                         const nsIntRect* aDirtyRect = nullptr) override;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
@@ -77,21 +72,20 @@ public:
   virtual uint16_t GetHitTestFlags() override;
 
   // nsIFrame interface:
-  virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                                     nsAtom*        aAttribute,
-                                     int32_t         aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
-  void OnVisibilityChange(Visibility aNewVisibility,
-                          const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
+  void OnVisibilityChange(
+      Visibility aNewVisibility,
+      const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGImage"), aResult);
   }
 #endif
@@ -103,7 +97,7 @@ public:
   /// Always sync decode our image when painting if @aForce is true.
   void SetForceSyncDecoding(bool aForce) { mForceSyncDecoding = aForce; }
 
-private:
+ private:
   mozilla::gfx::Matrix GetRasterImageTransform(int32_t aNativeWidth,
                                                int32_t aNativeHeight);
   mozilla::gfx::Matrix GetVectorImageTransform();
@@ -120,4 +114,4 @@ private:
   friend class nsSVGImageListener;
 };
 
-#endif // __NS_SVGIMAGEFRAME_H__
+#endif  // __NS_SVGIMAGEFRAME_H__

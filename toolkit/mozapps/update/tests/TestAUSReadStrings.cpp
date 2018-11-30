@@ -8,15 +8,15 @@
  * directory with a Unicode character to test bug 473417.
  */
 #ifdef XP_WIN
-  #include <windows.h>
-  #define NS_main wmain
-  #define PATH_SEPARATOR_CHAR L'\\'
-  // On Windows, argv[0] can also have forward slashes instead
-  #define ALT_PATH_SEPARATOR_CHAR L'/'
+#include <windows.h>
+#define NS_main wmain
+#define PATH_SEPARATOR_CHAR L'\\'
+// On Windows, argv[0] can also have forward slashes instead
+#define ALT_PATH_SEPARATOR_CHAR L'/'
 #else
-  #include <unistd.h>
-  #define NS_main main
-  #define PATH_SEPARATOR_CHAR '/'
+#include <unistd.h>
+#define NS_main main
+#define PATH_SEPARATOR_CHAR '/'
 #endif
 
 #include <stdio.h>
@@ -31,17 +31,17 @@
 #include "mozilla/ArrayUtils.h"
 
 #ifndef MAXPATHLEN
-# ifdef PATH_MAX
-#  define MAXPATHLEN PATH_MAX
-# elif defined(MAX_PATH)
-#  define MAXPATHLEN MAX_PATH
-# elif defined(_MAX_PATH)
-#  define MAXPATHLEN _MAX_PATH
-# elif defined(CCHMAXPATH)
-#  define MAXPATHLEN CCHMAXPATH
-# else
-#  define MAXPATHLEN 1024
-# endif
+#ifdef PATH_MAX
+#define MAXPATHLEN PATH_MAX
+#elif defined(MAX_PATH)
+#define MAXPATHLEN MAX_PATH
+#elif defined(_MAX_PATH)
+#define MAXPATHLEN _MAX_PATH
+#elif defined(CCHMAXPATH)
+#define MAXPATHLEN CCHMAXPATH
+#else
+#define MAXPATHLEN 1024
+#endif
 #endif
 
 #define TEST_NAME "Updater ReadStrings"
@@ -55,8 +55,7 @@ static int gFailCount = 0;
  * "TEST-UNEXPECTED-FAIL " for the benefit of the test harness and
  * appending "\n" to eliminate having to type it at each call site.
  */
-void fail(const char* msg, ...)
-{
+void fail(const char *msg, ...) {
   va_list ap;
 
   printf("TEST-UNEXPECTED-FAIL | ");
@@ -69,8 +68,7 @@ void fail(const char* msg, ...)
   ++gFailCount;
 }
 
-int NS_main(int argc, NS_tchar **argv)
-{
+int NS_main(int argc, NS_tchar **argv) {
   printf("Running TestAUSReadStrings tests\n");
 
   int rv = 0;
@@ -82,35 +80,39 @@ int NS_main(int argc, NS_tchar **argv)
 #ifdef ALT_PATH_SEPARATOR_CHAR
   NS_tchar *altslash = NS_tstrrchr(argv[0], ALT_PATH_SEPARATOR_CHAR);
   slash = (slash > altslash) ? slash : altslash;
-#endif // ALT_PATH_SEPARATOR_CHAR
+#endif  // ALT_PATH_SEPARATOR_CHAR
 
   if (!slash) {
-    fail("%s | unable to find platform specific path separator (check 1)", TEST_NAME);
+    fail("%s | unable to find platform specific path separator (check 1)",
+         TEST_NAME);
     return 20;
   }
 
   *(++slash) = '\0';
   // Test success when the ini file exists with both Title and Info in the
   // Strings section and the values for Title and Info.
-  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings1.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings1.ini"),
+               argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval == OK) {
-    if (strcmp(testStrings.title, "Title Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B" \
-                                  "\xD1\x82\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5 " \
-                                  "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE " \
-                                  "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 " \
-                                  "\xE6\xB8\xAC\xE8\xA9\xA6 " \
-                                  "\xE6\xB5\x8B\xE8\xAF\x95") != 0) {
+    if (strcmp(testStrings.title,
+               "Title Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B"
+               "\xD1\x82\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5 "
+               "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE "
+               "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 "
+               "\xE6\xB8\xAC\xE8\xA9\xA6 "
+               "\xE6\xB5\x8B\xE8\xAF\x95") != 0) {
       rv = 21;
       fail("%s | Title ini value incorrect (check 3)", TEST_NAME);
     }
 
-    if (strcmp(testStrings.info, "Info Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B" \
-                                 "\xD1\x82\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5 " \
-                                 "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE " \
-                                 "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 " \
-                                 "\xE6\xB8\xAC\xE8\xA9\xA6 " \
-                                 "\xE6\xB5\x8B\xE8\xAF\x95\xE2\x80\xA6") != 0) {
+    if (strcmp(testStrings.info,
+               "Info Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B"
+               "\xD1\x82\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5 "
+               "\xCE\x94\xCE\xBF\xCE\xBA\xCE\xB9\xCE\xBC\xCE\xAE "
+               "\xE3\x83\x86\xE3\x82\xB9\xE3\x83\x88 "
+               "\xE6\xB8\xAC\xE8\xA9\xA6 "
+               "\xE6\xB5\x8B\xE8\xAF\x95\xE2\x80\xA6") != 0) {
       rv = 22;
       fail("%s | Info ini value incorrect (check 4)", TEST_NAME);
     }
@@ -121,7 +123,8 @@ int NS_main(int argc, NS_tchar **argv)
 
   // Test failure when the ini file exists without Title and with Info in the
   // Strings section.
-  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings2.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings2.ini"),
+               argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 24;
@@ -130,7 +133,8 @@ int NS_main(int argc, NS_tchar **argv)
 
   // Test failure when the ini file exists with Title and without Info in the
   // Strings section.
-  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings3.ini"),
+               argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 25;
@@ -138,7 +142,8 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
   // Test failure when the ini file doesn't exist
-  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStringsBogus.ini"), argv[0]);
+  NS_tsnprintf(inifile, ArrayLength(inifile),
+               NS_T("%sTestAUSReadStringsBogus.ini"), argv[0]);
   retval = ReadStrings(inifile, &testStrings);
   if (retval != READ_ERROR) {
     rv = 26;
@@ -146,8 +151,10 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
   // Test reading a non-default section name
-  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings3.ini"), argv[0]);
-  retval = ReadStrings(inifile, "Title\0", 1, &testStrings.title, "BogusSection2");
+  NS_tsnprintf(inifile, ArrayLength(inifile), NS_T("%sTestAUSReadStrings3.ini"),
+               argv[0]);
+  retval =
+      ReadStrings(inifile, "Title\0", 1, &testStrings.title, "BogusSection2");
   if (retval == OK) {
     if (strcmp(testStrings.title, "Bogus Title") != 0) {
       rv = 27;
@@ -157,7 +164,6 @@ int NS_main(int argc, NS_tchar **argv)
     fail("%s | ReadStrings returned %i (check 8)", TEST_NAME, retval);
     rv = 28;
   }
-
 
   if (rv == 0) {
     printf("TEST-PASS | %s | all checks passed\n", TEST_NAME);

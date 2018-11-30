@@ -18,12 +18,12 @@ class nsIFile;
 
 #if defined(XP_WIN)
 #include <windows.h>
-  typedef HANDLE     ProcessType;
+typedef HANDLE ProcessType;
 #elif defined(XP_UNIX)
-  typedef pid_t      ProcessType;
+typedef pid_t ProcessType;
 #else
 #include "prproces.h"
-  typedef PRProcess* ProcessType;
+typedef PRProcess *ProcessType;
 #endif
 
 /**
@@ -54,23 +54,18 @@ nsresult ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
 // updater application for staging an update.
 // XXX ehsan this is living in this file in order to make use of the existing
 // stuff here, we might want to move it elsewhere in the future.
-class nsUpdateProcessor final : public nsIUpdateProcessor
-{
-public:
+class nsUpdateProcessor final : public nsIUpdateProcessor {
+ public:
   nsUpdateProcessor();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUPDATEPROCESSOR
 
-private:
+ private:
   ~nsUpdateProcessor();
 
   struct StagedUpdateInfo {
-    StagedUpdateInfo()
-      : mArgc(0),
-        mArgv(nullptr),
-        mIsOSUpdate(false)
-    {}
+    StagedUpdateInfo() : mArgc(0), mArgv(nullptr), mIsOSUpdate(false) {}
     ~StagedUpdateInfo() {
       for (int i = 0; i < mArgc; ++i) {
         delete[] mArgv[i];
@@ -88,13 +83,13 @@ private:
     bool mIsOSUpdate;
   };
 
-private:
+ private:
   void StartStagedUpdate();
   void WaitForProcess();
   void UpdateDone();
   void ShutdownWatcherThread();
 
-private:
+ private:
   ProcessType mUpdaterPID;
   nsCOMPtr<nsIThread> mProcessWatcher;
   StagedUpdateInfo mInfo;

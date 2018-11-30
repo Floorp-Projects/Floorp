@@ -26,8 +26,7 @@ namespace recordreplay {
  * 'ssize_t compare(const L::Lookup&, const T&)' method ordering the elements.
  */
 template <class T, class L, class AllocPolicy, size_t ChunkPages>
-class SplayTree
-{
+class SplayTree {
   struct Node {
     T mItem;
     Node* mLeft;
@@ -35,8 +34,7 @@ class SplayTree
     Node* mParent;
 
     explicit Node(const T& aItem)
-      : mItem(aItem), mLeft(nullptr), mRight(nullptr), mParent(nullptr)
-    {}
+        : mItem(aItem), mLeft(nullptr), mRight(nullptr), mParent(nullptr) {}
   };
 
   AllocPolicy mAlloc;
@@ -46,15 +44,11 @@ class SplayTree
   SplayTree(const SplayTree&) = delete;
   SplayTree& operator=(const SplayTree&) = delete;
 
-public:
-
+ public:
   explicit SplayTree(const AllocPolicy& aAlloc = AllocPolicy())
-    : mAlloc(aAlloc), mRoot(nullptr), mFreeList(nullptr)
-  {}
+      : mAlloc(aAlloc), mRoot(nullptr), mFreeList(nullptr) {}
 
-  bool empty() const {
-    return !mRoot;
-  }
+  bool empty() const { return !mRoot; }
 
   void clear() {
     while (mRoot) {
@@ -62,7 +56,8 @@ public:
     }
   }
 
-  Maybe<T> maybeLookup(const typename L::Lookup& aLookup, bool aRemove = false) {
+  Maybe<T> maybeLookup(const typename L::Lookup& aLookup,
+                       bool aRemove = false) {
     if (!mRoot) {
       return Nothing();
     }
@@ -80,7 +75,8 @@ public:
   }
 
   // Lookup an item which matches aLookup, or the closest item less than it.
-  Maybe<T> lookupClosestLessOrEqual(const typename L::Lookup& aLookup, bool aRemove = false) {
+  Maybe<T> lookupClosestLessOrEqual(const typename L::Lookup& aLookup,
+                                    bool aRemove = false) {
     if (!mRoot) {
       return Nothing();
     }
@@ -143,17 +139,12 @@ public:
     bool mRemoved;
 
     Iter(SplayTree* aTree, Node* aNode)
-      : mTree(aTree), mNode(aNode), mRemoved(false)
-    {}
+        : mTree(aTree), mNode(aNode), mRemoved(false) {}
 
-  public:
-    const T& ref() {
-      return mNode->mItem;
-    }
+   public:
+    const T& ref() { return mNode->mItem; }
 
-    bool done() {
-      return !mNode;
-    }
+    bool done() { return !mNode; }
 
     Iter& operator++() {
       MOZ_RELEASE_ASSERT(!mRemoved);
@@ -188,8 +179,7 @@ public:
     return Iter(this, node);
   }
 
-private:
-
+ private:
   // Lookup an item matching aLookup, or the closest node to it.
   Node* lookup(const typename L::Lookup& aLookup) const {
     MOZ_RELEASE_ASSERT(mRoot);
@@ -250,9 +240,7 @@ private:
     checkCoherency(mRoot, nullptr);
   }
 
-  size_t NodesPerChunk() const {
-    return ChunkPages * PageSize / sizeof(Node);
-  }
+  size_t NodesPerChunk() const { return ChunkPages * PageSize / sizeof(Node); }
 
   Node* allocateNode(const T& aValue) {
     if (!mFreeList) {
@@ -264,7 +252,7 @@ private:
     }
     Node* node = mFreeList;
     mFreeList = node->mLeft;
-    new(node) Node(aValue);
+    new (node) Node(aValue);
     return node;
   }
 
@@ -343,11 +331,13 @@ private:
       return nullptr;
     }
     MOZ_RELEASE_ASSERT(aNode->mParent || aNode == mRoot);
-    MOZ_RELEASE_ASSERT(!aMinimum || L::compare(L::getLookup(aMinimum->mItem), aNode->mItem) <= 0);
+    MOZ_RELEASE_ASSERT(!aMinimum || L::compare(L::getLookup(aMinimum->mItem),
+                                               aNode->mItem) <= 0);
     if (aNode->mLeft) {
       MOZ_RELEASE_ASSERT(aNode->mLeft->mParent == aNode);
       Node* leftMaximum = checkCoherency(aNode->mLeft, aMinimum);
-      MOZ_RELEASE_ASSERT(L::compare(L::getLookup(leftMaximum->mItem), aNode->mItem) <= 0);
+      MOZ_RELEASE_ASSERT(
+          L::compare(L::getLookup(leftMaximum->mItem), aNode->mItem) <= 0);
     }
     if (aNode->mRight) {
       MOZ_RELEASE_ASSERT(aNode->mRight->mParent == aNode);
@@ -360,7 +350,7 @@ private:
 #endif
 };
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_SplayTree_h
+#endif  // mozilla_recordreplay_SplayTree_h

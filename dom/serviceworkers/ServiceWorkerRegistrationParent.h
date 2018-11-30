@@ -15,36 +15,31 @@ namespace dom {
 class IPCServiceWorkerRegistrationDescriptor;
 class ServiceWorkerRegistrationProxy;
 
-class ServiceWorkerRegistrationParent final : public PServiceWorkerRegistrationParent
-{
+class ServiceWorkerRegistrationParent final
+    : public PServiceWorkerRegistrationParent {
   RefPtr<ServiceWorkerRegistrationProxy> mProxy;
   bool mDeleteSent;
 
   // PServiceWorkerRegistrationParent
-  void
-  ActorDestroy(ActorDestroyReason aReason) override;
+  void ActorDestroy(ActorDestroyReason aReason) override;
 
-  mozilla::ipc::IPCResult
-  RecvTeardown() override;
+  mozilla::ipc::IPCResult RecvTeardown() override;
 
-  mozilla::ipc::IPCResult
-  RecvUnregister(UnregisterResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvUnregister(
+      UnregisterResolver&& aResolver) override;
 
-  mozilla::ipc::IPCResult
-  RecvUpdate(UpdateResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvUpdate(UpdateResolver&& aResolver) override;
 
-public:
+ public:
   ServiceWorkerRegistrationParent();
   ~ServiceWorkerRegistrationParent();
 
-  void
-  Init(const IPCServiceWorkerRegistrationDescriptor& aDescriptor);
+  void Init(const IPCServiceWorkerRegistrationDescriptor& aDescriptor);
 
-  void
-  MaybeSendDelete();
+  void MaybeSendDelete();
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkerregistrationparent_h__
+#endif  // mozilla_dom_serviceworkerregistrationparent_h__

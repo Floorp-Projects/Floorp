@@ -25,11 +25,10 @@ class DrawSingleTileCallback;
  * XXX(seth): There a known (performance, not correctness) issue with
  * GetImageContainer. See the comments for that method for more information.
  */
-class ClippedImage : public ImageWrapper
-{
+class ClippedImage : public ImageWrapper {
   typedef gfx::SourceSurface SourceSurface;
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ClippedImage, ImageWrapper)
 
   NS_IMETHOD GetWidth(int32_t* aWidth) override;
@@ -37,78 +36,67 @@ public:
   NS_IMETHOD GetIntrinsicSize(nsSize* aSize) override;
   NS_IMETHOD GetIntrinsicRatio(nsSize* aRatio) override;
   NS_IMETHOD_(already_AddRefed<SourceSurface>)
-    GetFrame(uint32_t aWhichFrame, uint32_t aFlags) override;
+  GetFrame(uint32_t aWhichFrame, uint32_t aFlags) override;
   NS_IMETHOD_(already_AddRefed<SourceSurface>)
-    GetFrameAtSize(const gfx::IntSize& aSize,
-                   uint32_t aWhichFrame,
-                   uint32_t aFlags) override;
-  NS_IMETHOD_(bool) IsImageContainerAvailable(layers::LayerManager* aManager,
-                                              uint32_t aFlags) override;
-  NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
-    GetImageContainer(layers::LayerManager* aManager,
-                      uint32_t aFlags) override;
+  GetFrameAtSize(const gfx::IntSize& aSize, uint32_t aWhichFrame,
+                 uint32_t aFlags) override;
   NS_IMETHOD_(bool)
-    IsImageContainerAvailableAtSize(layers::LayerManager* aManager,
-                                    const gfx::IntSize& aSize,
-                                    uint32_t aFlags) override;
+  IsImageContainerAvailable(layers::LayerManager* aManager,
+                            uint32_t aFlags) override;
+  NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
+  GetImageContainer(layers::LayerManager* aManager, uint32_t aFlags) override;
+  NS_IMETHOD_(bool)
+  IsImageContainerAvailableAtSize(layers::LayerManager* aManager,
+                                  const gfx::IntSize& aSize,
+                                  uint32_t aFlags) override;
   NS_IMETHOD_(ImgDrawResult)
-    GetImageContainerAtSize(layers::LayerManager* aManager,
-                            const gfx::IntSize& aSize,
-                            const Maybe<SVGImageContext>& aSVGContext,
-                            uint32_t aFlags,
-                            layers::ImageContainer** aOutContainer) override;
-  NS_IMETHOD_(ImgDrawResult) Draw(gfxContext* aContext,
-                               const nsIntSize& aSize,
-                               const ImageRegion& aRegion,
-                               uint32_t aWhichFrame,
-                               gfx::SamplingFilter aSamplingFilter,
-                               const Maybe<SVGImageContext>& aSVGContext,
-                               uint32_t aFlags,
-                               float aOpacity) override;
+  GetImageContainerAtSize(layers::LayerManager* aManager,
+                          const gfx::IntSize& aSize,
+                          const Maybe<SVGImageContext>& aSVGContext,
+                          uint32_t aFlags,
+                          layers::ImageContainer** aOutContainer) override;
+  NS_IMETHOD_(ImgDrawResult)
+  Draw(gfxContext* aContext, const nsIntSize& aSize, const ImageRegion& aRegion,
+       uint32_t aWhichFrame, gfx::SamplingFilter aSamplingFilter,
+       const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags,
+       float aOpacity) override;
   NS_IMETHOD RequestDiscard() override;
   NS_IMETHOD_(Orientation) GetOrientation() override;
-  NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect)
-    override;
-  nsIntSize OptimalImageSizeForDest(const gfxSize& aDest,
-                                    uint32_t aWhichFrame,
+  NS_IMETHOD_(nsIntRect)
+  GetImageSpaceInvalidationRect(const nsIntRect& aRect) override;
+  nsIntSize OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
                                     gfx::SamplingFilter aSamplingFilter,
                                     uint32_t aFlags) override;
 
-protected:
+ protected:
   ClippedImage(Image* aImage, nsIntRect aClip,
                const Maybe<nsSize>& aSVGViewportSize);
 
   virtual ~ClippedImage();
 
-private:
-  Pair<ImgDrawResult, RefPtr<SourceSurface>>
-    GetFrameInternal(const nsIntSize& aSize,
-                     const Maybe<SVGImageContext>& aSVGContext,
-                     uint32_t aWhichFrame,
-                     uint32_t aFlags,
-                     float aOpacity);
+ private:
+  Pair<ImgDrawResult, RefPtr<SourceSurface>> GetFrameInternal(
+      const nsIntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
+      uint32_t aWhichFrame, uint32_t aFlags, float aOpacity);
   bool ShouldClip();
-  ImgDrawResult DrawSingleTile(gfxContext* aContext,
-                            const nsIntSize& aSize,
-                            const ImageRegion& aRegion,
-                            uint32_t aWhichFrame,
-                            gfx::SamplingFilter aSamplingFilter,
-                            const Maybe<SVGImageContext>& aSVGContext,
-                            uint32_t aFlags,
-                            float aOpacity);
+  ImgDrawResult DrawSingleTile(gfxContext* aContext, const nsIntSize& aSize,
+                               const ImageRegion& aRegion, uint32_t aWhichFrame,
+                               gfx::SamplingFilter aSamplingFilter,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               uint32_t aFlags, float aOpacity);
 
   // If we are forced to draw a temporary surface, we cache it here.
   UniquePtr<ClippedImageCachedSurface> mCachedSurface;
 
-  nsIntRect        mClip;            // The region to clip to.
-  Maybe<bool>      mShouldClip;      // Memoized ShouldClip() if present.
-  Maybe<nsIntSize> mSVGViewportSize; // If we're clipping a VectorImage, this
-                                     // is the size of viewport of that image.
+  nsIntRect mClip;                    // The region to clip to.
+  Maybe<bool> mShouldClip;            // Memoized ShouldClip() if present.
+  Maybe<nsIntSize> mSVGViewportSize;  // If we're clipping a VectorImage, this
+                                      // is the size of viewport of that image.
   friend class DrawSingleTileCallback;
   friend class ImageOps;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_ClippedImage_h
+#endif  // mozilla_image_ClippedImage_h

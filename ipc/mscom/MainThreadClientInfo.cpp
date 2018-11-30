@@ -16,16 +16,14 @@ namespace mscom {
 
 /* static */
 HRESULT
-MainThreadClientInfo::Create(MainThreadClientInfo** aOutObj)
-{
+MainThreadClientInfo::Create(MainThreadClientInfo** aOutObj) {
   MOZ_ASSERT(aOutObj && NS_IsMainThread());
   *aOutObj = nullptr;
 
   RefPtr<MainThreadClientInfo> obj(new MainThreadClientInfo());
 
   RefPtr<IMessageFilter> prevFilter;
-  HRESULT hr = ::CoRegisterMessageFilter(obj.get(),
-                                         getter_AddRefs(prevFilter));
+  HRESULT hr = ::CoRegisterMessageFilter(obj.get(), getter_AddRefs(prevFilter));
   if (FAILED(hr)) {
     return hr;
   }
@@ -37,15 +35,13 @@ MainThreadClientInfo::Create(MainThreadClientInfo** aOutObj)
 }
 
 DWORD
-MainThreadClientInfo::GetLastRemoteCallThreadId() const
-{
+MainThreadClientInfo::GetLastRemoteCallThreadId() const {
   MOZ_ASSERT(NS_IsMainThread());
   return mLastRemoteCallTid;
 }
 
 HRESULT
-MainThreadClientInfo::QueryInterface(REFIID aIid, void** aOutInterface)
-{
+MainThreadClientInfo::QueryInterface(REFIID aIid, void** aOutInterface) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aOutInterface) {
@@ -62,16 +58,14 @@ MainThreadClientInfo::QueryInterface(REFIID aIid, void** aOutInterface)
 }
 
 ULONG
-MainThreadClientInfo::AddRef()
-{
+MainThreadClientInfo::AddRef() {
   MOZ_ASSERT(NS_IsMainThread());
 
   return ++mRefCnt;
 }
 
 ULONG
-MainThreadClientInfo::Release()
-{
+MainThreadClientInfo::Release() {
   MOZ_ASSERT(NS_IsMainThread());
 
   ULONG newCount = --mRefCnt;
@@ -84,14 +78,13 @@ MainThreadClientInfo::Release()
 DWORD
 MainThreadClientInfo::HandleInComingCall(DWORD aCallType, HTASK aCallerTid,
                                          DWORD aTickCount,
-                                         LPINTERFACEINFO aInterfaceInfo)
-{
+                                         LPINTERFACEINFO aInterfaceInfo) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // aCallerTid is an HTASK for historical reasons but is actually just a
   // regular DWORD Thread ID.
   mLastRemoteCallTid =
-    static_cast<DWORD>(reinterpret_cast<uintptr_t>(aCallerTid));
+      static_cast<DWORD>(reinterpret_cast<uintptr_t>(aCallerTid));
 
   if (!mPrevFilter) {
     return SERVERCALL_ISHANDLED;
@@ -103,8 +96,7 @@ MainThreadClientInfo::HandleInComingCall(DWORD aCallType, HTASK aCallerTid,
 
 DWORD
 MainThreadClientInfo::RetryRejectedCall(HTASK aCalleeTid, DWORD aTickCount,
-                                        DWORD aRejectType)
-{
+                                        DWORD aRejectType) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mPrevFilter) {
@@ -116,8 +108,7 @@ MainThreadClientInfo::RetryRejectedCall(HTASK aCalleeTid, DWORD aTickCount,
 
 DWORD
 MainThreadClientInfo::MessagePending(HTASK aCalleeTid, DWORD aTickCount,
-                                     DWORD aPendingType)
-{
+                                     DWORD aPendingType) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mPrevFilter) {
@@ -128,19 +119,15 @@ MainThreadClientInfo::MessagePending(HTASK aCalleeTid, DWORD aTickCount,
 }
 
 MainThreadClientInfo::MainThreadClientInfo()
-  : mRefCnt(0)
-  , mLastRemoteCallTid(0)
-{
+    : mRefCnt(0), mLastRemoteCallTid(0) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-void
-MainThreadClientInfo::Detach()
-{
+void MainThreadClientInfo::Detach() {
   MOZ_ASSERT(NS_IsMainThread());
   ::CoRegisterMessageFilter(mPrevFilter, nullptr);
   mPrevFilter = nullptr;
 }
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla

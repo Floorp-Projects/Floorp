@@ -10,16 +10,14 @@
 
 G_BEGIN_DECLS
 
-typedef struct _maiRedundantObjectFactory       maiRedundantObjectFactory;
-typedef struct _maiRedundantObjectFactoryClass  maiRedundantObjectFactoryClass;
+typedef struct _maiRedundantObjectFactory maiRedundantObjectFactory;
+typedef struct _maiRedundantObjectFactoryClass maiRedundantObjectFactoryClass;
 
-struct _maiRedundantObjectFactory
-{
+struct _maiRedundantObjectFactory {
   AtkObjectFactory parent;
 };
 
-struct _maiRedundantObjectFactoryClass
-{
+struct _maiRedundantObjectFactoryClass {
   AtkObjectFactoryClass parent_class;
 };
 

@@ -64,30 +64,24 @@ namespace mozilla {
  *     const static void release(type);
  *   }
  */
-template<typename Traits>
-class MOZ_NON_TEMPORARY_CLASS Scoped
-{
-public:
+template <typename Traits>
+class MOZ_NON_TEMPORARY_CLASS Scoped {
+ public:
   typedef typename Traits::type Resource;
 
   explicit Scoped(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-    : mValue(Traits::empty())
-  {
+      : mValue(Traits::empty()) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
-  explicit Scoped(const Resource& aValue
-                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mValue(aValue)
-  {
+  explicit Scoped(const Resource& aValue MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mValue(aValue) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
   /* Move constructor. */
-  Scoped(Scoped&& aOther
-         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mValue(std::move(aOther.mValue))
-  {
+  Scoped(Scoped&& aOther MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mValue(std::move(aOther.mValue)) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     aOther.mValue = Traits::empty();
   }
@@ -110,8 +104,7 @@ public:
    *
    * @return The original resource.
    */
-  Resource forget()
-  {
+  Resource forget() {
     Resource tmp = mValue;
     mValue = Traits::empty();
     return tmp;
@@ -122,8 +115,7 @@ public:
    *
    * If this |Scoped| is currently empty, this method has no effect.
    */
-  void dispose()
-  {
+  void dispose() {
     Traits::release(mValue);
     mValue = Traits::empty();
   }
@@ -140,27 +132,25 @@ public:
    */
   Scoped& operator=(const Resource& aOther) { return reset(aOther); }
 
-  Scoped& reset(const Resource& aOther)
-  {
+  Scoped& reset(const Resource& aOther) {
     Traits::release(mValue);
     mValue = aOther;
     return *this;
   }
 
   /* Move assignment operator. */
-  Scoped& operator=(Scoped&& aRhs)
-  {
+  Scoped& operator=(Scoped&& aRhs) {
     MOZ_ASSERT(&aRhs != this, "self-move-assignment not allowed");
     this->~Scoped();
-    new(this) Scoped(std::move(aRhs));
+    new (this) Scoped(std::move(aRhs));
     return *this;
   }
 
-private:
+ private:
   explicit Scoped(const Scoped& aValue) = delete;
   Scoped& operator=(const Scoped& aValue) = delete;
 
-private:
+ private:
   Resource mValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -174,38 +164,30 @@ private:
  * for more details.
  */
 #define SCOPED_TEMPLATE(name, Traits)                                         \
-template<typename Type>                                                       \
-struct MOZ_NON_TEMPORARY_CLASS name : public mozilla::Scoped<Traits<Type> >   \
-{                                                                             \
-  typedef mozilla::Scoped<Traits<Type> > Super;                               \
-  typedef typename Super::Resource Resource;                                  \
-  name& operator=(Resource aRhs)                                              \
-  {                                                                           \
-    Super::operator=(aRhs);                                                   \
-    return *this;                                                             \
-  }                                                                           \
-  name& operator=(name&& aRhs)                                                \
-  {                                                                           \
-    Super::operator=(std::move(aRhs));                                             \
-    return *this;                                                             \
-  }                                                                           \
-  explicit name(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)                         \
-    : Super(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT)                   \
-  {}                                                                          \
-  explicit name(Resource aRhs                                                 \
-                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)                              \
-    : Super(aRhs                                                              \
-            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)                        \
-  {}                                                                          \
-  name(name&& aRhs                                                            \
-       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)                                       \
-    : Super(std::move(aRhs)                                                        \
-            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)                        \
-  {}                                                                          \
-private:                                                                      \
-  explicit name(name&) = delete;                                              \
-  name& operator=(name&) = delete;                                            \
-};
+  template <typename Type>                                                    \
+  struct MOZ_NON_TEMPORARY_CLASS name                                         \
+      : public mozilla::Scoped<Traits<Type> > {                               \
+    typedef mozilla::Scoped<Traits<Type> > Super;                             \
+    typedef typename Super::Resource Resource;                                \
+    name& operator=(Resource aRhs) {                                          \
+      Super::operator=(aRhs);                                                 \
+      return *this;                                                           \
+    }                                                                         \
+    name& operator=(name&& aRhs) {                                            \
+      Super::operator=(std::move(aRhs));                                      \
+      return *this;                                                           \
+    }                                                                         \
+    explicit name(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)                       \
+        : Super(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT) {}            \
+    explicit name(Resource aRhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM)              \
+        : Super(aRhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}            \
+    name(name&& aRhs MOZ_GUARD_OBJECT_NOTIFIER_PARAM)                         \
+        : Super(std::move(aRhs) MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {} \
+                                                                              \
+   private:                                                                   \
+    explicit name(name&) = delete;                                            \
+    name& operator=(name&) = delete;                                          \
+  };
 
 /*
  * MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE makes it easy to create scoped
@@ -230,18 +212,20 @@ private:                                                                      \
  *   } // file is closed with PR_Close here
  */
 #define MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(name, Type, Deleter) \
-template <> inline void TypeSpecificDelete(Type* aValue) { Deleter(aValue); } \
-typedef ::mozilla::TypeSpecificScopedPointer<Type> name;
-
-template <typename T> void TypeSpecificDelete(T* aValue);
+  template <>                                                          \
+  inline void TypeSpecificDelete(Type* aValue) {                       \
+    Deleter(aValue);                                                   \
+  }                                                                    \
+  typedef ::mozilla::TypeSpecificScopedPointer<Type> name;
 
 template <typename T>
-struct TypeSpecificScopedPointerTraits
-{
+void TypeSpecificDelete(T* aValue);
+
+template <typename T>
+struct TypeSpecificScopedPointerTraits {
   typedef T* type;
   static type empty() { return nullptr; }
-  static void release(type aValue)
-  {
+  static void release(type aValue) {
     if (aValue) {
       TypeSpecificDelete(aValue);
     }

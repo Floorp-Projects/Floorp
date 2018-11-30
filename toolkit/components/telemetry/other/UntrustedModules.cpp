@@ -28,9 +28,7 @@ static const int32_t kUntrustedModuleLoadEventsTelemetryVersion = 1;
  * @param  aMaxFieldLength [in] The maximum length of the resulting string.
  *                         this must be long enough to hold the ellipses.
  */
-static void
-LimitStringLength(nsAString& aStr, size_t aMaxFieldLength)
-{
+static void LimitStringLength(nsAString& aStr, size_t aMaxFieldLength) {
   if (aStr.Length() <= aMaxFieldLength) {
     return;
   }
@@ -57,11 +55,9 @@ LimitStringLength(nsAString& aStr, size_t aMaxFieldLength)
  *                         (see LimitStringLength())
  * @return true upon success
  */
-static bool
-AddLengthLimitedStringProp(JSContext *cx, JS::HandleObject aObj,
-                           const char* aName, const nsAString& aVal,
-                           size_t aMaxFieldLength = 260)
-{
+static bool AddLengthLimitedStringProp(JSContext* cx, JS::HandleObject aObj,
+                                       const char* aName, const nsAString& aVal,
+                                       size_t aMaxFieldLength = 260) {
   JS::RootedValue jsval(cx);
   nsAutoString shortVal(aVal);
   LimitStringLength(shortVal, aMaxFieldLength);
@@ -83,12 +79,10 @@ AddLengthLimitedStringProp(JSContext *cx, JS::HandleObject aObj,
  *                                const ArrayElementT& aElement)
  * @return true if aRet was successfully assigned to the new array object.
  */
-template<typename T, size_t N, typename AllocPolicy, typename Converter>
-static bool
-VectorToJSArray(JSContext *cx, JS::MutableHandleObject aRet,
-                const Vector<T, N, AllocPolicy>& aContainer,
-                Converter&& aElementConverter)
-{
+template <typename T, size_t N, typename AllocPolicy, typename Converter>
+static bool VectorToJSArray(JSContext* cx, JS::MutableHandleObject aRet,
+                            const Vector<T, N, AllocPolicy>& aContainer,
+                            Converter&& aElementConverter) {
   JS::RootedObject arr(cx, JS_NewArrayObject(cx, 0));
   if (!arr) {
     return false;
@@ -116,10 +110,8 @@ VectorToJSArray(JSContext *cx, JS::MutableHandleObject aRet,
  * @param  aModInfo [in] The source object to convert.
  * @return true if aRet was successfully assigned.
  */
-static bool
-ModuleInfoToJSObj(JSContext *cx, JS::MutableHandleObject aRet,
-            const ModuleLoadEvent::ModuleInfo& aModInfo)
-{
+static bool ModuleInfoToJSObj(JSContext* cx, JS::MutableHandleObject aRet,
+                              const ModuleLoadEvent::ModuleInfo& aModInfo) {
   JS::RootedObject modObj(cx, JS_NewObject(cx, nullptr));
   if (!modObj) {
     return false;
@@ -139,12 +131,12 @@ ModuleInfoToJSObj(JSContext *cx, JS::MutableHandleObject aRet,
   }
 
   if (!AddLengthLimitedStringProp(cx, modObj, "loaderName",
-      aModInfo.mLdrName)) {
+                                  aModInfo.mLdrName)) {
     return false;
   }
 
   if (!AddLengthLimitedStringProp(cx, modObj, "moduleName",
-      aModInfo.mFilePathClean)) {
+                                  aModInfo.mFilePathClean)) {
     return false;
   }
 
@@ -166,10 +158,8 @@ ModuleInfoToJSObj(JSContext *cx, JS::MutableHandleObject aRet,
  * @param  aEvent [in] The event to convert from
  * @return true upon success
  */
-static bool
-ModuleLoadEventToJSArray(JSContext *cx, JS::MutableHandleValue aRet,
-                         const ModuleLoadEvent& aEvent)
-{
+static bool ModuleLoadEventToJSArray(JSContext* cx, JS::MutableHandleValue aRet,
+                                     const ModuleLoadEvent& aEvent) {
   JS::RootedValue jsval(cx);
   JS::RootedObject eObj(cx, JS_NewObject(cx, nullptr));
   if (!eObj) {
@@ -188,7 +178,8 @@ ModuleLoadEventToJSArray(JSContext *cx, JS::MutableHandleValue aRet,
 
   // Javascript doesn't like 64-bit integers; convert to double.
   jsval.setNumber((double)aEvent.mProcessUptimeMS);
-  if (!JS_DefineProperty(cx, eObj, "processUptimeMS", jsval, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, eObj, "processUptimeMS", jsval,
+                         JSPROP_ENUMERATE)) {
     return false;
   }
 
@@ -199,16 +190,15 @@ ModuleLoadEventToJSArray(JSContext *cx, JS::MutableHandleValue aRet,
 
   JS::RootedObject modulesArray(cx);
   bool ok = VectorToJSArray(cx, &modulesArray, aEvent.mModules,
-    [](JSContext *cx, JS::MutableHandleValue aRet,
-       const ModuleLoadEvent::ModuleInfo& aModInfo)
-    {
-      JS::RootedObject obj(cx);
-      if (!ModuleInfoToJSObj(cx, &obj, aModInfo)) {
-        return false;
-      }
-      aRet.setObject(*obj);
-      return true;
-    });
+                            [](JSContext* cx, JS::MutableHandleValue aRet,
+                               const ModuleLoadEvent::ModuleInfo& aModInfo) {
+                              JS::RootedObject obj(cx);
+                              if (!ModuleInfoToJSObj(cx, &obj, aModInfo)) {
+                                return false;
+                              }
+                              aRet.setObject(*obj);
+                              return true;
+                            });
   if (!ok) {
     return false;
   }
@@ -229,11 +219,9 @@ ModuleLoadEventToJSArray(JSContext *cx, JS::MutableHandleValue aRet,
  * @param  aRet  [out] This gets assigned to the newly created object.
  * @return nsresult
  */
-nsresult
-GetUntrustedModuleLoadEventsJSValue(const UntrustedModuleLoadTelemetryData& aData,
-                                    JSContext *cx,
-                                    JS::MutableHandle<JS::Value> aRet)
-{
+nsresult GetUntrustedModuleLoadEventsJSValue(
+    const UntrustedModuleLoadTelemetryData& aData, JSContext* cx,
+    JS::MutableHandle<JS::Value> aRet) {
   if (aData.mEvents.empty()) {
     aRet.setNull();
     return NS_OK;
@@ -246,33 +234,36 @@ GetUntrustedModuleLoadEventsJSValue(const UntrustedModuleLoadTelemetryData& aDat
   }
 
   jsval.setNumber((uint32_t)aData.mErrorModules);
-  if (!JS_DefineProperty(cx, mainObj, "errorModules", jsval, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, mainObj, "errorModules", jsval,
+                         JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
 
   jsval.setNumber((uint32_t)kUntrustedModuleLoadEventsTelemetryVersion);
-  if (!JS_DefineProperty(cx, mainObj, "structVersion", jsval, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, mainObj, "structVersion", jsval,
+                         JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
 
   JS::RootedObject eventsArray(cx);
-  if (!VectorToJSArray(cx, &eventsArray, aData.mEvents, &ModuleLoadEventToJSArray)) {
+  if (!VectorToJSArray(cx, &eventsArray, aData.mEvents,
+                       &ModuleLoadEventToJSArray)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!JS_DefineProperty(cx, mainObj, "events",
-                         eventsArray, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, mainObj, "events", eventsArray,
+                         JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
 
   JS::RootedObject combinedStacksObj(cx,
-      CreateJSStackObject(cx, aData.mStacks));
+                                     CreateJSStackObject(cx, aData.mStacks));
   if (!combinedStacksObj) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!JS_DefineProperty(cx, mainObj, "combinedStacks",
-                         combinedStacksObj, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(cx, mainObj, "combinedStacks", combinedStacksObj,
+                         JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -281,30 +272,26 @@ GetUntrustedModuleLoadEventsJSValue(const UntrustedModuleLoadTelemetryData& aDat
   return NS_OK;
 }
 
-class GetUntrustedModulesMainThreadRunnable final : public Runnable
-{
+class GetUntrustedModulesMainThreadRunnable final : public Runnable {
   nsMainThreadPtrHandle<dom::Promise> mPromise;
   bool mDataOK;
   UntrustedModuleLoadTelemetryData mData;
   nsCOMPtr<nsIThread> mWorkerThread;
 
-public:
+ public:
   GetUntrustedModulesMainThreadRunnable(
-        const nsMainThreadPtrHandle<dom::Promise>& aPromise,
-        bool aDataOK,
-        UntrustedModuleLoadTelemetryData&& aData)
-    : Runnable("GetUntrustedModulesMainThreadRunnable")
-    , mPromise(aPromise)
-    , mDataOK(aDataOK)
-    , mData(std::move(aData))
-    , mWorkerThread(do_GetCurrentThread())
-  {
+      const nsMainThreadPtrHandle<dom::Promise>& aPromise, bool aDataOK,
+      UntrustedModuleLoadTelemetryData&& aData)
+      : Runnable("GetUntrustedModulesMainThreadRunnable"),
+        mPromise(aPromise),
+        mDataOK(aDataOK),
+        mData(std::move(aData)),
+        mWorkerThread(do_GetCurrentThread()) {
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
     mWorkerThread->Shutdown();
@@ -334,36 +321,31 @@ public:
   }
 };
 
-class GetUntrustedModulesTelemetryDataRunnable final : public Runnable
-{
+class GetUntrustedModulesTelemetryDataRunnable final : public Runnable {
   nsMainThreadPtrHandle<dom::Promise> mPromise;
 
-public:
+ public:
   explicit GetUntrustedModulesTelemetryDataRunnable(
-        const nsMainThreadPtrHandle<dom::Promise>& aPromise)
-    : Runnable("GetUntrustedModulesTelemetryDataRunnable")
-    , mPromise(aPromise)
-  {
+      const nsMainThreadPtrHandle<dom::Promise>& aPromise)
+      : Runnable("GetUntrustedModulesTelemetryDataRunnable"),
+        mPromise(aPromise) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(!NS_IsMainThread());
     RefPtr<DllServices> dllSvc(DllServices::Get());
     UntrustedModuleLoadTelemetryData data;
     bool ok = dllSvc->GetUntrustedModuleTelemetryData(data);
 
     // Dispatch back to the main thread for remaining JS processing.
-    return NS_DispatchToMainThread(
-      new GetUntrustedModulesMainThreadRunnable(mPromise, ok, std::move(data)));
+    return NS_DispatchToMainThread(new GetUntrustedModulesMainThreadRunnable(
+        mPromise, ok, std::move(data)));
   }
 };
 
-nsresult
-GetUntrustedModuleLoadEvents(JSContext *cx, dom::Promise** aPromise)
-{
+nsresult GetUntrustedModuleLoadEvents(JSContext* cx, dom::Promise** aPromise) {
   // Create a promise using global context.
   nsIGlobalObject* global = xpc::CurrentNativeGlobal(cx);
   if (NS_WARN_IF(!global)) {
@@ -378,8 +360,7 @@ GetUntrustedModuleLoadEvents(JSContext *cx, dom::Promise** aPromise)
 
   // Create a worker thread to perform the heavy work.
   nsCOMPtr<nsIThread> workThread;
-  nsresult rv = NS_NewNamedThread("UntrustedDLLs",
-                                  getter_AddRefs(workThread));
+  nsresult rv = NS_NewNamedThread("UntrustedDLLs", getter_AddRefs(workThread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_FAILURE);
     return NS_OK;
@@ -388,8 +369,8 @@ GetUntrustedModuleLoadEvents(JSContext *cx, dom::Promise** aPromise)
   // In order to pass the promise through the worker thread to the main thread,
   // this is needed.
   nsMainThreadPtrHandle<dom::Promise> mainThreadPromise(
-    new nsMainThreadPtrHolder<dom::Promise>(
-      "Telemetry::UntrustedModuleLoadEvents::Promise", promise));
+      new nsMainThreadPtrHolder<dom::Promise>(
+          "Telemetry::UntrustedModuleLoadEvents::Promise", promise));
 
   nsCOMPtr<nsIRunnable> runnable =
       new GetUntrustedModulesTelemetryDataRunnable(mainThreadPromise);
@@ -399,5 +380,5 @@ GetUntrustedModuleLoadEvents(JSContext *cx, dom::Promise** aPromise)
                               nsIEventTarget::DISPATCH_NORMAL);
 }
 
-} // namespace Telemetry
-} // namespace mozilla
+}  // namespace Telemetry
+}  // namespace mozilla

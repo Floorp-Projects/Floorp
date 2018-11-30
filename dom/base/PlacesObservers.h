@@ -20,13 +20,11 @@ namespace mozilla {
 
 namespace dom {
 
-class PlacesObservers
-{
-public:
+class PlacesObservers {
+ public:
   static void AddListener(GlobalObject& aGlobal,
                           const nsTArray<PlacesEventType>& aEventTypes,
-                          PlacesEventCallback& aCallback,
-                          ErrorResult& rv);
+                          PlacesEventCallback& aCallback, ErrorResult& rv);
   static void AddListener(GlobalObject& aGlobal,
                           const nsTArray<PlacesEventType>& aEventTypes,
                           PlacesWeakCallbackWrapper& aCallback,
@@ -35,8 +33,7 @@ public:
                           places::INativePlacesEventCallback* aCallback);
   static void RemoveListener(GlobalObject& aGlobal,
                              const nsTArray<PlacesEventType>& aEventTypes,
-                             PlacesEventCallback& aCallback,
-                             ErrorResult& rv);
+                             PlacesEventCallback& aCallback, ErrorResult& rv);
   static void RemoveListener(GlobalObject& aGlobal,
                              const nsTArray<PlacesEventType>& aEventTypes,
                              PlacesWeakCallbackWrapper& aCallback,
@@ -44,19 +41,22 @@ public:
   static void RemoveListener(const nsTArray<PlacesEventType>& aEventTypes,
                              places::INativePlacesEventCallback* aCallback);
 
-  static void NotifyListeners(GlobalObject& aGlobal,
-                              const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
-                              ErrorResult& rv);
+  static void NotifyListeners(
+      GlobalObject& aGlobal,
+      const Sequence<OwningNonNull<PlacesEvent>>& aEvents, ErrorResult& rv);
 
-  static void NotifyListeners(const Sequence<OwningNonNull<PlacesEvent>>& aEvents);
+  static void NotifyListeners(
+      const Sequence<OwningNonNull<PlacesEvent>>& aEvents);
 
-private:
+ private:
   static void RemoveListener(uint32_t aFlags, PlacesEventCallback& aCallback);
-  static void RemoveListener(uint32_t aFlags, PlacesWeakCallbackWrapper& aCallback);
-  static void RemoveListener(uint32_t aFlags, places::INativePlacesEventCallback* aCallback);
+  static void RemoveListener(uint32_t aFlags,
+                             PlacesWeakCallbackWrapper& aCallback);
+  static void RemoveListener(uint32_t aFlags,
+                             places::INativePlacesEventCallback* aCallback);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PlacesObservers__
+#endif  // mozilla_dom_PlacesObservers__

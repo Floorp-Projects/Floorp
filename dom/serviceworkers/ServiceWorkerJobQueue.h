@@ -15,33 +15,28 @@ namespace dom {
 
 class ServiceWorkerJob;
 
-class ServiceWorkerJobQueue final
-{
+class ServiceWorkerJobQueue final {
   class Callback;
 
   nsTArray<RefPtr<ServiceWorkerJob>> mJobList;
 
   ~ServiceWorkerJobQueue();
 
-  void
-  JobFinished(ServiceWorkerJob* aJob);
+  void JobFinished(ServiceWorkerJob* aJob);
 
-  void
-  RunJob();
+  void RunJob();
 
-public:
+ public:
   ServiceWorkerJobQueue();
 
-  void
-  ScheduleJob(ServiceWorkerJob* aJob);
+  void ScheduleJob(ServiceWorkerJob* aJob);
 
-  void
-  CancelAll();
+  void CancelAll();
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkerjobqueue_h
+#endif  // mozilla_dom_serviceworkerjobqueue_h

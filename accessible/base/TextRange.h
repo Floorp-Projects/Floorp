@@ -12,7 +12,7 @@
 #include "nsRect.h"
 #include "nsTArray.h"
 
- class nsIVariant;
+class nsIVariant;
 
 namespace mozilla {
 namespace a11y {
@@ -23,39 +23,38 @@ class HyperTextAccessible;
 /**
  * A text point (hyper text + offset), represents a boundary of text range.
  */
-struct TextPoint final
-{
-  TextPoint(HyperTextAccessible* aContainer, int32_t aOffset) :
-    mContainer(aContainer), mOffset(aOffset) { }
-  TextPoint(const TextPoint& aPoint) :
-    mContainer(aPoint.mContainer), mOffset(aPoint.mOffset) { }
+struct TextPoint final {
+  TextPoint(HyperTextAccessible* aContainer, int32_t aOffset)
+      : mContainer(aContainer), mOffset(aOffset) {}
+  TextPoint(const TextPoint& aPoint)
+      : mContainer(aPoint.mContainer), mOffset(aPoint.mOffset) {}
 
   HyperTextAccessible* mContainer;
   int32_t mOffset;
 
-  bool operator ==(const TextPoint& aPoint) const
-    { return mContainer == aPoint.mContainer && mOffset == aPoint.mOffset; }
-  bool operator <(const TextPoint& aPoint) const;
+  bool operator==(const TextPoint& aPoint) const {
+    return mContainer == aPoint.mContainer && mOffset == aPoint.mOffset;
+  }
+  bool operator<(const TextPoint& aPoint) const;
 };
 
 /**
  * Represents a text range within the text control or document.
  */
-class TextRange final
-{
-public:
-  TextRange(HyperTextAccessible* aRoot,
-            HyperTextAccessible* aStartContainer, int32_t aStartOffset,
-            HyperTextAccessible* aEndContainer, int32_t aEndOffset);
+class TextRange final {
+ public:
+  TextRange(HyperTextAccessible* aRoot, HyperTextAccessible* aStartContainer,
+            int32_t aStartOffset, HyperTextAccessible* aEndContainer,
+            int32_t aEndOffset);
   TextRange() : mStartOffset{0}, mEndOffset{0} {}
-  TextRange(TextRange&& aRange) :
-    mRoot(std::move(aRange.mRoot)),
-    mStartContainer(std::move(aRange.mStartContainer)),
-    mEndContainer(std::move(aRange.mEndContainer)),
-    mStartOffset(aRange.mStartOffset), mEndOffset(aRange.mEndOffset) {}
+  TextRange(TextRange&& aRange)
+      : mRoot(std::move(aRange.mRoot)),
+        mStartContainer(std::move(aRange.mStartContainer)),
+        mEndContainer(std::move(aRange.mEndContainer)),
+        mStartOffset(aRange.mStartOffset),
+        mEndOffset(aRange.mEndOffset) {}
 
-  TextRange& operator= (TextRange&& aRange)
-  {
+  TextRange& operator=(TextRange&& aRange) {
     mRoot = std::move(aRange.mRoot);
     mStartContainer = std::move(aRange.mStartContainer);
     mEndContainer = std::move(aRange.mEndContainer);
@@ -69,14 +68,16 @@ public:
   HyperTextAccessible* EndContainer() const { return mEndContainer; }
   int32_t EndOffset() const { return mEndOffset; }
 
-  bool operator ==(const TextRange& aRange) const
-  {
+  bool operator==(const TextRange& aRange) const {
     return mStartContainer == aRange.mStartContainer &&
-      mStartOffset == aRange.mStartOffset &&
-      mEndContainer == aRange.mEndContainer && mEndOffset == aRange.mEndOffset;
+           mStartOffset == aRange.mStartOffset &&
+           mEndContainer == aRange.mEndContainer &&
+           mEndOffset == aRange.mEndOffset;
   }
 
-  TextPoint StartPoint() const { return TextPoint(mStartContainer, mStartOffset); }
+  TextPoint StartPoint() const {
+    return TextPoint(mStartContainer, mStartOffset);
+  }
   TextPoint EndPoint() const { return TextPoint(mEndContainer, mEndOffset); }
 
   /**
@@ -100,30 +101,22 @@ public:
    */
   void Bounds(nsTArray<nsIntRect> aRects) const;
 
-  enum ETextUnit {
-    eFormat,
-    eWord,
-    eLine,
-    eParagraph,
-    ePage,
-    eDocument
-  };
+  enum ETextUnit { eFormat, eWord, eLine, eParagraph, ePage, eDocument };
 
   /**
    * Move the range or its points on specified amount of given units.
    */
-  void Move(ETextUnit aUnit, int32_t aCount)
-  {
+  void Move(ETextUnit aUnit, int32_t aCount) {
     MoveEnd(aUnit, aCount);
     MoveStart(aUnit, aCount);
   }
-  void MoveStart(ETextUnit aUnit, int32_t aCount)
-  {
-    MoveInternal(aUnit, aCount, *mStartContainer, mStartOffset,
-                 mEndContainer, mEndOffset);
+  void MoveStart(ETextUnit aUnit, int32_t aCount) {
+    MoveInternal(aUnit, aCount, *mStartContainer, mStartOffset, mEndContainer,
+                 mEndOffset);
   }
-  void MoveEnd(ETextUnit aUnit, int32_t aCount)
-    { MoveInternal(aUnit, aCount, *mEndContainer, mEndOffset); }
+  void MoveEnd(ETextUnit aUnit, int32_t aCount) {
+    MoveInternal(aUnit, aCount, *mEndContainer, mEndOffset);
+  }
 
   /**
    * Move the range points to the closest unit boundaries.
@@ -136,10 +129,7 @@ public:
    */
   bool Crop(Accessible* aContainer);
 
-  enum EDirection {
-    eBackward,
-    eForward
-  };
+  enum EDirection { eBackward, eForward };
 
   /**
    * Return range enclosing the found text.
@@ -206,10 +196,7 @@ public:
   /**
    * Scroll the text range into view.
    */
-  enum EHowToAlign {
-    eAlignToTop,
-    eAlignToBottom
-  };
+  enum EHowToAlign { eAlignToTop, eAlignToBottom };
   void ScrollIntoView(EHowToAlign aHow) const;
 
   /**
@@ -217,21 +204,25 @@ public:
    */
   bool IsValid() const { return mRoot; }
 
-  void SetStartPoint(HyperTextAccessible* aContainer, int32_t aOffset)
-    { mStartContainer = aContainer; mStartOffset = aOffset; }
-  void SetEndPoint(HyperTextAccessible* aContainer, int32_t aOffset)
-    { mStartContainer = aContainer; mStartOffset = aOffset; }
+  void SetStartPoint(HyperTextAccessible* aContainer, int32_t aOffset) {
+    mStartContainer = aContainer;
+    mStartOffset = aOffset;
+  }
+  void SetEndPoint(HyperTextAccessible* aContainer, int32_t aOffset) {
+    mStartContainer = aContainer;
+    mStartOffset = aOffset;
+  }
 
-private:
+ private:
   TextRange(const TextRange& aRange) = delete;
   TextRange& operator=(const TextRange& aRange) = delete;
 
   friend class HyperTextAccessible;
   friend class xpcAccessibleTextRange;
 
-  void Set(HyperTextAccessible* aRoot,
-           HyperTextAccessible* aStartContainer, int32_t aStartOffset,
-           HyperTextAccessible* aEndContainer, int32_t aEndOffset);
+  void Set(HyperTextAccessible* aRoot, HyperTextAccessible* aStartContainer,
+           int32_t aStartOffset, HyperTextAccessible* aEndContainer,
+           int32_t aEndOffset);
 
   /**
    * Text() method helper.
@@ -254,7 +245,8 @@ private:
    */
   Accessible* CommonParent(Accessible* aAcc1, Accessible* aAcc2,
                            nsTArray<Accessible*>* aParents1, uint32_t* aPos1,
-                           nsTArray<Accessible*>* aParents2, uint32_t* aPos2) const;
+                           nsTArray<Accessible*>* aParents2,
+                           uint32_t* aPos2) const;
 
   RefPtr<HyperTextAccessible> mRoot;
   RefPtr<HyperTextAccessible> mStartContainer;
@@ -263,8 +255,7 @@ private:
   int32_t mEndOffset;
 };
 
-
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

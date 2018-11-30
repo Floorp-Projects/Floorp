@@ -34,9 +34,8 @@ class DigestOutputStream;
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaver
 
-class BackgroundFileSaver : public nsIBackgroundFileSaver
-{
-public:
+class BackgroundFileSaver : public nsIBackgroundFileSaver {
+ public:
   NS_DECL_NSIBACKGROUNDFILESAVER
 
   BackgroundFileSaver();
@@ -55,16 +54,15 @@ public:
   static uint32_t sThreadCount;
 
   /**
-   * Maximum number of worker threads reached during the current download session,
-   * used for telemetry.
+   * Maximum number of worker threads reached during the current download
+   * session, used for telemetry.
    *
    * When there are no more worker threads running, we consider the download
    * session finished, and this counter is reset.
    */
   static uint32_t sTelemetryMaxThreadCount;
 
-
-protected:
+ protected:
   virtual ~BackgroundFileSaver();
 
   /**
@@ -102,7 +100,7 @@ protected:
    */
   nsCOMPtr<nsIAsyncInputStream> mPipeInputStream;
 
-private:
+ private:
   friend class NotifyTargetChangeRunnable;
 
   /**
@@ -244,7 +242,7 @@ private:
    * @param aStatus
    *        Success or failure status specified when the copy was interrupted.
    */
-  static void AsyncCopyCallback(void *aClosure, nsresult aStatus);
+  static void AsyncCopyCallback(void* aClosure, nsresult aStatus);
 
   /**
    * Called on the control thread after state changes, to ensure that the worker
@@ -277,7 +275,7 @@ private:
    * Event called on the control thread to indicate that file contents will now
    * be saved to the specified file.
    */
-  nsresult NotifyTargetChange(nsIFile *aTarget);
+  nsresult NotifyTargetChange(nsIFile* aTarget);
 
   /**
    * Event called on the control thread to send the final notification.
@@ -295,11 +293,10 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaverOutputStream
 
-class BackgroundFileSaverOutputStream : public BackgroundFileSaver
-                                      , public nsIAsyncOutputStream
-                                      , public nsIOutputStreamCallback
-{
-public:
+class BackgroundFileSaverOutputStream : public BackgroundFileSaver,
+                                        public nsIAsyncOutputStream,
+                                        public nsIOutputStreamCallback {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   NS_DECL_NSIASYNCOUTPUTSTREAM
@@ -307,11 +304,11 @@ public:
 
   BackgroundFileSaverOutputStream();
 
-protected:
+ protected:
   virtual bool HasInfiniteBuffer() override;
   virtual nsAsyncCopyProgressFun GetProgressCallback() override;
 
-private:
+ private:
   ~BackgroundFileSaverOutputStream() = default;
 
   /**
@@ -324,21 +321,20 @@ private:
 //// BackgroundFileSaverStreamListener. This class is instantiated by
 // nsExternalHelperAppService, DownloadCore.jsm, and possibly others.
 
-class BackgroundFileSaverStreamListener final : public BackgroundFileSaver
-                                              , public nsIStreamListener
-{
-public:
+class BackgroundFileSaverStreamListener final : public BackgroundFileSaver,
+                                                public nsIStreamListener {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
   BackgroundFileSaverStreamListener();
 
-protected:
+ protected:
   virtual bool HasInfiniteBuffer() override;
   virtual nsAsyncCopyProgressFun GetProgressCallback() override;
 
-private:
+ private:
   ~BackgroundFileSaverStreamListener() = default;
 
   /**
@@ -365,7 +361,7 @@ private:
   /**
    * Called while NS_AsyncCopy is copying data.
    */
-  static void AsyncCopyProgressCallback(void *aClosure, uint32_t aCount);
+  static void AsyncCopyProgressCallback(void* aClosure, uint32_t aCount);
 
   /**
    * Called on the control thread to suspend or resume the request.
@@ -376,15 +372,14 @@ private:
 // A wrapper around nsIOutputStream, so that we can compute hashes on the
 // stream without copying and without polluting pristine NSS code with XPCOM
 // interfaces.
-class DigestOutputStream : public nsIOutputStream
-{
-public:
+class DigestOutputStream : public nsIOutputStream {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   // Constructor. Neither parameter may be null. The caller owns both.
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
 
-private:
+ private:
   virtual ~DigestOutputStream() = default;
 
   // Calls to write are passed to this stream.
@@ -396,7 +391,7 @@ private:
   DigestOutputStream(const DigestOutputStream& d) = delete;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

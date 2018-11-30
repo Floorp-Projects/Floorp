@@ -9,31 +9,46 @@
 #include "nsString.h"
 
 // Macros for adding a blocklist item to the static list.
-#define APPEND_TO_DRIVER_BLOCKLIST(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion) \
-    sDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion))
-#define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId) \
-    sDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId))
+#define APPEND_TO_DRIVER_BLOCKLIST(os, vendor, devices, feature,            \
+                                   featureStatus, driverComparator,         \
+                                   driverVersion, ruleId, suggestedVersion) \
+  sDriverInfo->AppendElement(GfxDriverInfo(                                 \
+      os, vendor, devices, feature, featureStatus, driverComparator,        \
+      driverVersion, ruleId, suggestedVersion))
+#define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, devices, feature,           \
+                                    featureStatus, driverComparator,        \
+                                    driverVersion, ruleId)                  \
+  sDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature,    \
+                                           featureStatus, driverComparator, \
+                                           driverVersion, ruleId))
 
-#define APPEND_TO_DRIVER_BLOCKLIST_RANGE(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, driverVersionMax, ruleId, suggestedVersion) \
-    do { \
-      MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE || \
-                 driverComparator == DRIVER_BETWEEN_INCLUSIVE || \
-                 driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
-      GfxDriverInfo info(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion); \
-      info.mDriverVersionMax = driverVersionMax; \
-      sDriverInfo->AppendElement(info); \
-    } while (false)
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE(                           \
+    os, vendor, devices, feature, featureStatus, driverComparator,  \
+    driverVersion, driverVersionMax, ruleId, suggestedVersion)      \
+  do {                                                              \
+    MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE ||      \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE ||      \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
+    GfxDriverInfo info(os, vendor, devices, feature, featureStatus, \
+                       driverComparator, driverVersion, ruleId,     \
+                       suggestedVersion);                           \
+    info.mDriverVersionMax = driverVersionMax;                      \
+    sDriverInfo->AppendElement(info);                               \
+  } while (false)
 
-#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, driverVersionMax, ruleId, suggestedVersion) \
-    do { \
-      MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE || \
-                 driverComparator == DRIVER_BETWEEN_INCLUSIVE || \
-                 driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
-      GfxDriverInfo info(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, ruleId, suggestedVersion, false, true); \
-      info.mDriverVersionMax = driverVersionMax; \
-      sDriverInfo->AppendElement(info); \
-    } while (false)
-
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2(                      \
+    os, vendor, devices, feature, featureStatus, driverComparator,  \
+    driverVersion, driverVersionMax, ruleId, suggestedVersion)      \
+  do {                                                              \
+    MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE ||      \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE ||      \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
+    GfxDriverInfo info(os, vendor, devices, feature, featureStatus, \
+                       driverComparator, driverVersion, ruleId,     \
+                       suggestedVersion, false, true);              \
+    info.mDriverVersionMax = driverVersionMax;                      \
+    sDriverInfo->AppendElement(info);                               \
+  } while (false)
 
 namespace mozilla {
 namespace widget {
@@ -64,17 +79,17 @@ enum class OperatingSystem {
 };
 
 enum VersionComparisonOp {
-  DRIVER_LESS_THAN,             // driver <  version
-  DRIVER_BUILD_ID_LESS_THAN,    // driver build id <  version
-  DRIVER_LESS_THAN_OR_EQUAL,    // driver <= version
-  DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, // driver build id <= version
-  DRIVER_GREATER_THAN,          // driver >  version
-  DRIVER_GREATER_THAN_OR_EQUAL, // driver >= version
-  DRIVER_EQUAL,                 // driver == version
-  DRIVER_NOT_EQUAL,             // driver != version
-  DRIVER_BETWEEN_EXCLUSIVE,     // driver > version && driver < versionMax
-  DRIVER_BETWEEN_INCLUSIVE,     // driver >= version && driver <= versionMax
-  DRIVER_BETWEEN_INCLUSIVE_START, // driver >= version && driver < versionMax
+  DRIVER_LESS_THAN,                    // driver <  version
+  DRIVER_BUILD_ID_LESS_THAN,           // driver build id <  version
+  DRIVER_LESS_THAN_OR_EQUAL,           // driver <= version
+  DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL,  // driver build id <= version
+  DRIVER_GREATER_THAN,                 // driver >  version
+  DRIVER_GREATER_THAN_OR_EQUAL,        // driver >= version
+  DRIVER_EQUAL,                        // driver == version
+  DRIVER_NOT_EQUAL,                    // driver != version
+  DRIVER_BETWEEN_EXCLUSIVE,        // driver > version && driver < versionMax
+  DRIVER_BETWEEN_INCLUSIVE,        // driver >= version && driver <= versionMax
+  DRIVER_BETWEEN_INCLUSIVE_START,  // driver >= version && driver < versionMax
   DRIVER_COMPARISON_IGNORED
 };
 
@@ -104,7 +119,7 @@ enum DeviceFamily {
 };
 
 enum DeviceVendor {
-  VendorAll, // There is an assumption that this is the first enum
+  VendorAll,  // There is an assumption that this is the first enum
   VendorIntel,
   VendorNVIDIA,
   VendorAMD,
@@ -118,18 +133,17 @@ enum DeviceVendor {
 /* Array of devices to match, or an empty array for all devices */
 typedef nsTArray<nsString> GfxDeviceFamily;
 
-struct GfxDriverInfo
-{
+struct GfxDriverInfo {
   // If |ownDevices| is true, you are transferring ownership of the devices
   // array, and it will be deleted when this GfxDriverInfo is destroyed.
-  GfxDriverInfo(OperatingSystem os, nsAString& vendor, GfxDeviceFamily* devices,
+  GfxDriverInfo(OperatingSystem os, nsAString &vendor, GfxDeviceFamily *devices,
                 int32_t feature, int32_t featureStatus, VersionComparisonOp op,
                 uint64_t driverVersion, const char *ruleId,
-                const char *suggestedVersion = nullptr,
-                bool ownDevices = false, bool gpu2 = false);
+                const char *suggestedVersion = nullptr, bool ownDevices = false,
+                bool gpu2 = false);
 
   GfxDriverInfo();
-  GfxDriverInfo(const GfxDriverInfo&);
+  GfxDriverInfo(const GfxDriverInfo &);
   ~GfxDriverInfo();
 
   OperatingSystem mOperatingSystem;
@@ -137,8 +151,8 @@ struct GfxDriverInfo
 
   nsString mAdapterVendor;
 
-  static GfxDeviceFamily* const allDevices;
-  GfxDeviceFamily* mDevices;
+  static GfxDeviceFamily *const allDevices;
+  GfxDeviceFamily *mDevices;
 
   // Whether the mDevices array should be deleted when this structure is
   // deallocated. False by default.
@@ -161,23 +175,22 @@ struct GfxDriverInfo
   const char *mSuggestedVersion;
   nsCString mRuleId;
 
-  static const GfxDeviceFamily* GetDeviceFamily(DeviceFamily id);
-  static GfxDeviceFamily* sDeviceFamilies[DeviceFamilyMax];
+  static const GfxDeviceFamily *GetDeviceFamily(DeviceFamily id);
+  static GfxDeviceFamily *sDeviceFamilies[DeviceFamilyMax];
 
-  static const nsAString& GetDeviceVendor(DeviceVendor id);
-  static nsAString* sDeviceVendors[DeviceVendorMax];
+  static const nsAString &GetDeviceVendor(DeviceVendor id);
+  static nsAString *sDeviceVendors[DeviceVendorMax];
 
   nsString mModel, mHardware, mProduct, mManufacturer;
 
   bool mGpu2;
 };
 
-#define GFX_DRIVER_VERSION(a,b,c,d) \
-  ((uint64_t(a)<<48) | (uint64_t(b)<<32) | (uint64_t(c)<<16) | uint64_t(d))
+#define GFX_DRIVER_VERSION(a, b, c, d)                               \
+  ((uint64_t(a) << 48) | (uint64_t(b) << 32) | (uint64_t(c) << 16) | \
+   uint64_t(d))
 
-inline uint64_t
-V(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
-{
+inline uint64_t V(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
   // We make sure every driver number is padded by 0s, this will allow us the
   // easiest 'compare as if decimals' approach. See ParseDriverVersion for a
   // more extensive explanation of this approach.
@@ -194,13 +207,13 @@ V(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 }
 
 // All destination string storage needs to have at least 5 bytes available.
-inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, char *aCStr, char *aDStr)
-{
+inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr,
+                               char *aCStr, char *aDStr) {
   // sscanf doesn't do what we want here to we parse this manually.
   int len = strlen(aSource);
 
   // This "4" is hardcoded in a few places, including once as a 3.
-  char *dest[4] = { aAStr, aBStr, aCStr, aDStr };
+  char *dest[4] = {aAStr, aBStr, aCStr, aDStr};
   unsigned destIdx = 0;
   unsigned destPos = 0;
 
@@ -211,7 +224,7 @@ inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, ch
     }
 
     if (aSource[i] == '.') {
-      MOZ_ASSERT (destIdx < 4 && destPos <= 4);
+      MOZ_ASSERT(destIdx < 4 && destPos <= 4);
       dest[destIdx++][destPos] = 0;
       destPos = 0;
       continue;
@@ -223,7 +236,7 @@ inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, ch
       continue;
     }
 
-    MOZ_ASSERT (destIdx < 4 && destPos < 4);
+    MOZ_ASSERT(destIdx < 4 && destPos < 4);
     dest[destIdx][destPos++] = aSource[i];
   }
 
@@ -233,7 +246,7 @@ inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, ch
   }
 
   // Add last terminator.
-  MOZ_ASSERT (destIdx < 4 && destPos <= 4);
+  MOZ_ASSERT(destIdx < 4 && destPos <= 4);
   dest[destIdx][destPos] = 0;
 
   if (destIdx != 3) {
@@ -247,8 +260,7 @@ inline bool SplitDriverVersion(const char *aSource, char *aAStr, char *aBStr, ch
 // a little strange but this method seems to do the right thing for all
 // different vendor's driver strings. i.e. .98 will become 9800, which is
 // larger than .978 which would become 9780.
-inline void PadDriverDecimal(char *aString)
-{
+inline void PadDriverDecimal(char *aString) {
   for (int i = 0; i < 4; i++) {
     if (!aString[i]) {
       for (int c = i; c < 4; c++) {
@@ -260,16 +272,16 @@ inline void PadDriverDecimal(char *aString)
   aString[4] = 0;
 }
 
-inline bool
-ParseDriverVersion(const nsAString& aVersion, uint64_t *aNumericVersion)
-{
+inline bool ParseDriverVersion(const nsAString &aVersion,
+                               uint64_t *aNumericVersion) {
   *aNumericVersion = 0;
 
 #if defined(XP_WIN)
   int a, b, c, d;
   char aStr[8], bStr[8], cStr[8], dStr[8];
   /* honestly, why do I even bother */
-  if (!SplitDriverVersion(NS_LossyConvertUTF16toASCII(aVersion).get(), aStr, bStr, cStr, dStr))
+  if (!SplitDriverVersion(NS_LossyConvertUTF16toASCII(aVersion).get(), aStr,
+                          bStr, cStr, dStr))
     return false;
 
   PadDriverDecimal(bStr);
@@ -300,7 +312,7 @@ ParseDriverVersion(const nsAString& aVersion, uint64_t *aNumericVersion)
 #endif
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif /*__mozilla_widget_GfxDriverInfo_h__ */

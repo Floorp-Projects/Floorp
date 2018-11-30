@@ -14,33 +14,28 @@
 
 typedef nsIContent* nsIContentPtr;
 
-enum eHtml5FlushState
-{
-  eNotFlushing = 0, // not flushing
-  eInFlush = 1,     // the Flush() method is on the call stack
-  eInDocUpdate = 2, // inside an update batch on the document
+enum eHtml5FlushState {
+  eNotFlushing = 0,  // not flushing
+  eInFlush = 1,      // the Flush() method is on the call stack
+  eInDocUpdate = 2,  // inside an update batch on the document
 };
 
-class nsHtml5DocumentBuilder : public nsContentSink
-{
+class nsHtml5DocumentBuilder : public nsContentSink {
   using Encoding = mozilla::Encoding;
-  template<typename T>
+  template <typename T>
   using NotNull = mozilla::NotNull<T>;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHtml5DocumentBuilder,
                                            nsContentSink)
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  inline void HoldElement(already_AddRefed<nsIContent> aContent)
-  {
+  inline void HoldElement(already_AddRefed<nsIContent> aContent) {
     *(mOwnedElements.AppendElement()) = aContent;
   }
 
-  nsresult Init(nsIDocument* aDoc,
-                nsIURI* aURI,
-                nsISupports* aContainer,
+  nsresult Init(nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer,
                 nsIChannel* aChannel);
 
   // Getters and setters for fields from nsContentSink
@@ -64,32 +59,28 @@ public:
 
   inline bool IsComplete() { return !mParser; }
 
-  inline void BeginDocUpdate()
-  {
+  inline void BeginDocUpdate() {
     MOZ_RELEASE_ASSERT(IsInFlush(), "Tried to double-open doc update.");
     MOZ_RELEASE_ASSERT(mParser, "Started doc update without parser.");
     mFlushState = eInDocUpdate;
     mDocument->BeginUpdate();
   }
 
-  inline void EndDocUpdate()
-  {
+  inline void EndDocUpdate() {
     MOZ_RELEASE_ASSERT(IsInDocUpdate(),
                        "Tried to end doc update without one open.");
     mFlushState = eInFlush;
     mDocument->EndUpdate();
   }
 
-  inline void BeginFlush()
-  {
+  inline void BeginFlush() {
     MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
                        "Tried to start a flush when already flushing.");
     MOZ_RELEASE_ASSERT(mParser, "Started a flush without parser.");
     mFlushState = eInFlush;
   }
 
-  inline void EndFlush()
-  {
+  inline void EndFlush() {
     MOZ_RELEASE_ASSERT(IsInFlush(), "Tried to end flush when not flushing.");
     mFlushState = eNotFlushing;
   }
@@ -108,8 +99,7 @@ public:
 
   void SetDocumentMode(nsHtml5DocumentMode m);
 
-  void SetNodeInfoManager(nsNodeInfoManager* aManager)
-  {
+  void SetNodeInfoManager(nsNodeInfoManager* aManager) {
     mNodeInfoManager = aManager;
   }
 
@@ -117,11 +107,11 @@ public:
   virtual void UpdateChildCounts() override;
   virtual nsresult FlushTags() override;
 
-protected:
+ protected:
   explicit nsHtml5DocumentBuilder(bool aRunsToCompletion);
   virtual ~nsHtml5DocumentBuilder();
 
-protected:
+ protected:
   AutoTArray<nsCOMPtr<nsIContent>, 32> mOwnedElements;
   /**
    * Non-NS_OK if this parser should refuse to process any more input.
@@ -135,4 +125,4 @@ protected:
   eHtml5FlushState mFlushState;
 };
 
-#endif // nsHtml5DocumentBuilder_h
+#endif  // nsHtml5DocumentBuilder_h

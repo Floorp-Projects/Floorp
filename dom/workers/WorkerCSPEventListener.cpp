@@ -14,29 +14,22 @@ using namespace mozilla::dom;
 
 namespace {
 
-class WorkerCSPEventRunnable final : public MainThreadWorkerRunnable
-{
-public:
-  WorkerCSPEventRunnable(WorkerPrivate* aWorkerPrivate,
-                         const nsAString& aJSON)
-    : MainThreadWorkerRunnable(aWorkerPrivate)
-    , mJSON(aJSON)
-  {}
+class WorkerCSPEventRunnable final : public MainThreadWorkerRunnable {
+ public:
+  WorkerCSPEventRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aJSON)
+      : MainThreadWorkerRunnable(aWorkerPrivate), mJSON(aJSON) {}
 
-private:
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
-  {
+ private:
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
     SecurityPolicyViolationEventInit violationEventInit;
     if (NS_WARN_IF(!violationEventInit.Init(mJSON))) {
       return true;
     }
 
     RefPtr<mozilla::dom::Event> event =
-      mozilla::dom::SecurityPolicyViolationEvent::Constructor(
-        aWorkerPrivate->GlobalScope(),
-        NS_LITERAL_STRING("securitypolicyviolation"),
-        violationEventInit);
+        mozilla::dom::SecurityPolicyViolationEvent::Constructor(
+            aWorkerPrivate->GlobalScope(),
+            NS_LITERAL_STRING("securitypolicyviolation"), violationEventInit);
     event->SetTrusted(true);
 
     aWorkerPrivate->GlobalScope()->DispatchEvent(*event);
@@ -46,22 +39,21 @@ private:
   const nsString mJSON;
 };
 
-} // anonymous
+}  // namespace
 
 NS_IMPL_ISUPPORTS(WorkerCSPEventListener, nsICSPEventListener)
 
 /* static */ already_AddRefed<WorkerCSPEventListener>
-WorkerCSPEventListener::Create(WorkerPrivate* aWorkerPrivate)
-{
+WorkerCSPEventListener::Create(WorkerPrivate* aWorkerPrivate) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<WorkerCSPEventListener> listener = new WorkerCSPEventListener();
 
   listener->mWorkerRef = WeakWorkerRef::Create(aWorkerPrivate, [listener]() {
-      MutexAutoLock lock(listener->mMutex);
-      listener->mWorkerRef = nullptr;
-    });
+    MutexAutoLock lock(listener->mMutex);
+    listener->mWorkerRef = nullptr;
+  });
 
   if (NS_WARN_IF(!listener->mWorkerRef)) {
     return nullptr;
@@ -71,12 +63,10 @@ WorkerCSPEventListener::Create(WorkerPrivate* aWorkerPrivate)
 }
 
 WorkerCSPEventListener::WorkerCSPEventListener()
-  : mMutex("WorkerCSPEventListener::mMutex")
-{}
+    : mMutex("WorkerCSPEventListener::mMutex") {}
 
 NS_IMETHODIMP
-WorkerCSPEventListener::OnCSPViolationEvent(const nsAString& aJSON)
-{
+WorkerCSPEventListener::OnCSPViolationEvent(const nsAString& aJSON) {
   MOZ_ASSERT(NS_IsMainThread());
 
   MutexAutoLock lock(mMutex);
@@ -88,7 +78,7 @@ WorkerCSPEventListener::OnCSPViolationEvent(const nsAString& aJSON)
   MOZ_ASSERT(workerPrivate);
 
   RefPtr<WorkerCSPEventRunnable> runnable =
-    new WorkerCSPEventRunnable(workerPrivate, aJSON);
+      new WorkerCSPEventRunnable(workerPrivate, aJSON);
   runnable->Dispatch();
 
   return NS_OK;

@@ -21,18 +21,14 @@ namespace mozilla {
  * They can be used to transform and clip a display item inside a flattened
  * nsDisplayTransform to the coordinate space of that nsDisplayTransform.
  */
-class TransformClipNode
-{
+class TransformClipNode {
   NS_INLINE_DECL_REFCOUNTING(TransformClipNode);
 
-public:
+ public:
   TransformClipNode(const RefPtr<TransformClipNode>& aParent,
                     const gfx::Matrix4x4Flagged& aTransform,
                     const Maybe<gfx::IntRect>& aClip)
-    : mParent(aParent)
-    , mTransform(aTransform)
-    , mClip(aClip)
-  {
+      : mParent(aParent), mTransform(aTransform), mClip(aClip) {
     MOZ_COUNT_CTOR(TransformClipNode);
   }
 
@@ -45,8 +41,7 @@ public:
    * Transforms and clips |aRect| up to the root transform node.
    * |aRect| is expected to be in app units.
    */
-  nsRect TransformRect(const nsRect& aRect, const int32_t aA2D) const
-  {
+  nsRect TransformRect(const nsRect& aRect, const int32_t aA2D) const {
     if (aRect.IsEmpty()) {
       return aRect;
     }
@@ -66,8 +61,7 @@ public:
    * Transforms and clips |aRect| up to the root transform node.
    * |aRect| is expected to be in integer pixels.
    */
-  gfx::IntRect TransformRect(const gfx::IntRect& aRect) const
-  {
+  gfx::IntRect TransformRect(const gfx::IntRect& aRect) const {
     if (aRect.IsEmpty()) {
       return aRect;
     }
@@ -81,8 +75,7 @@ public:
    * Transforms and clips |aRegion| up to the root transform node.
    * |aRegion| is expected be in integer pixels.
    */
-  nsIntRegion TransformRegion(const nsIntRegion& aRegion)
-  {
+  nsIntRegion TransformRegion(const nsIntRegion& aRegion) {
     if (aRegion.IsEmpty()) {
       return aRegion;
     }
@@ -105,7 +98,7 @@ public:
     return result;
   }
 
-protected:
+ protected:
   /**
    * Returns the post-transform clip, if there is one.
    */
@@ -117,8 +110,7 @@ protected:
    */
   const gfx::Matrix4x4Flagged& Transform() const { return mTransform; }
 
-  void TransformRect(gfx::Rect& aRect) const
-  {
+  void TransformRect(gfx::Rect& aRect) const {
     const TransformClipNode* node = this;
     while (node) {
       const gfx::Matrix4x4Flagged& transform = node->Transform();
@@ -133,7 +125,7 @@ protected:
     }
   }
 
-private:
+ private:
   ~TransformClipNode() { MOZ_COUNT_DTOR(TransformClipNode); }
 
   const RefPtr<TransformClipNode> mParent;
@@ -141,6 +133,6 @@ private:
   const Maybe<gfx::IntRect> mClip;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_PAINTING_TRANSFORMCLIPNODE_H */

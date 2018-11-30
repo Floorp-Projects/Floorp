@@ -21,24 +21,22 @@ using namespace mozilla::dom;
 
 namespace {
 
-static nsCString
-FormatStackString(JSContext* cx, JSPrincipals* aPrincipals, JS::HandleObject aStack)
-{
-    JS::RootedString formattedStack(cx);
-    if (!JS::BuildStackString(cx, aPrincipals, aStack, &formattedStack)) {
-        return nsCString();
-    }
+static nsCString FormatStackString(JSContext* cx, JSPrincipals* aPrincipals,
+                                   JS::HandleObject aStack) {
+  JS::RootedString formattedStack(cx);
+  if (!JS::BuildStackString(cx, aPrincipals, aStack, &formattedStack)) {
+    return nsCString();
+  }
 
-    nsAutoJSString stackJSString;
-    if (!stackJSString.init(cx, formattedStack)) {
-        return nsCString();
-    }
+  nsAutoJSString stackJSString;
+  if (!stackJSString.init(cx, formattedStack)) {
+    return nsCString();
+  }
 
-    return NS_ConvertUTF16toUTF8(stackJSString.get());
+  return NS_ConvertUTF16toUTF8(stackJSString.get());
 }
 
-}
-
+}  // namespace
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsScriptErrorWithStack)
 
@@ -66,61 +64,57 @@ NS_INTERFACE_MAP_END
 
 nsScriptErrorWithStack::nsScriptErrorWithStack(JS::HandleObject aStack,
                                                JS::HandleObject aStackGlobal)
-  : mStack(aStack)
-  , mStackGlobal(aStackGlobal)
-{
-    MOZ_ASSERT(NS_IsMainThread(), "You can't use this class on workers.");
+    : mStack(aStack), mStackGlobal(aStackGlobal) {
+  MOZ_ASSERT(NS_IsMainThread(), "You can't use this class on workers.");
 
-    MOZ_ASSERT(JS_IsGlobalObject(mStackGlobal));
-    js::AssertSameCompartment(mStack, mStackGlobal);
+  MOZ_ASSERT(JS_IsGlobalObject(mStackGlobal));
+  js::AssertSameCompartment(mStack, mStackGlobal);
 
-    mozilla::HoldJSObjects(this);
+  mozilla::HoldJSObjects(this);
 }
 
 nsScriptErrorWithStack::~nsScriptErrorWithStack() {
-    mozilla::DropJSObjects(this);
+  mozilla::DropJSObjects(this);
 }
 
 NS_IMETHODIMP
 nsScriptErrorWithStack::GetStack(JS::MutableHandleValue aStack) {
-    aStack.setObjectOrNull(mStack);
-    return NS_OK;
+  aStack.setObjectOrNull(mStack);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptErrorWithStack::GetStackGlobal(JS::MutableHandleValue aStackGlobal)
-{
-    aStackGlobal.setObjectOrNull(mStackGlobal);
-    return NS_OK;
+nsScriptErrorWithStack::GetStackGlobal(JS::MutableHandleValue aStackGlobal) {
+  aStackGlobal.setObjectOrNull(mStackGlobal);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult)
-{
-    MOZ_ASSERT(NS_IsMainThread());
+nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult) {
+  MOZ_ASSERT(NS_IsMainThread());
 
-    nsCString message;
-    nsresult rv = nsScriptErrorBase::ToString(message);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCString message;
+  nsresult rv = nsScriptErrorBase::ToString(message);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!mStack) {
-        aResult.Assign(message);
-        return NS_OK;
-    }
-
-    AutoJSAPI jsapi;
-    if (!jsapi.Init(mStackGlobal)) {
-        return NS_ERROR_FAILURE;
-    }
-
-    JSPrincipals* principals =
-        JS::GetRealmPrincipals(js::GetNonCCWObjectRealm(mStackGlobal));
-
-    JSContext* cx = jsapi.cx();
-    JS::RootedObject stack(cx, mStack);
-    nsCString stackString = FormatStackString(cx, principals, stack);
-    nsCString combined = message + NS_LITERAL_CSTRING("\n") + stackString;
-    aResult.Assign(combined);
-
+  if (!mStack) {
+    aResult.Assign(message);
     return NS_OK;
+  }
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mStackGlobal)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSPrincipals* principals =
+      JS::GetRealmPrincipals(js::GetNonCCWObjectRealm(mStackGlobal));
+
+  JSContext* cx = jsapi.cx();
+  JS::RootedObject stack(cx, mStack);
+  nsCString stackString = FormatStackString(cx, principals, stack);
+  nsCString combined = message + NS_LITERAL_CSTRING("\n") + stackString;
+  aResult.Assign(combined);
+
+  return NS_OK;
 }

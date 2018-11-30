@@ -24,18 +24,14 @@ class Layer;
  * Represents a layer that might have a non-rectangular geometry.
  */
 struct LayerPolygon {
-  explicit LayerPolygon(Layer* aLayer)
-    : layer(aLayer) {}
+  explicit LayerPolygon(Layer* aLayer) : layer(aLayer) {}
 
-  LayerPolygon(Layer* aLayer,
-               gfx::Polygon&& aGeometry)
-    : layer(aLayer), geometry(Some(std::move(aGeometry))) {}
+  LayerPolygon(Layer* aLayer, gfx::Polygon&& aGeometry)
+      : layer(aLayer), geometry(Some(std::move(aGeometry))) {}
 
-  LayerPolygon(Layer* aLayer,
-               nsTArray<gfx::Point4D>&& aPoints,
+  LayerPolygon(Layer* aLayer, nsTArray<gfx::Point4D>&& aPoints,
                const gfx::Point4D& aNormal)
-    : layer(aLayer)
-  {
+      : layer(aLayer) {
     geometry.emplace(std::move(aPoints), aNormal);
   }
 
@@ -63,21 +59,18 @@ typedef std::list<LayerPolygon> LayerList;
  */
 struct BSPTreeNode {
   explicit BSPTreeNode(nsTArray<LayerList*>& aListPointers)
-    : front(nullptr), back(nullptr)
-  {
+      : front(nullptr), back(nullptr) {
     // Store the layer list pointer to free memory when BSPTree is destroyed.
     aListPointers.AppendElement(&layers);
   }
 
-  const gfx::Polygon& First() const
-  {
+  const gfx::Polygon& First() const {
     MOZ_ASSERT(!layers.empty());
     MOZ_ASSERT(layers.front().geometry);
     return *layers.front().geometry;
   }
 
-  static void* operator new(size_t aSize, BSPTreeArena& mPool)
-  {
+  static void* operator new(size_t aSize, BSPTreeArena& mPool) {
     return mPool.Allocate(aSize);
   }
 
@@ -96,21 +89,18 @@ struct BSPTreeNode {
  * ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
  */
 class BSPTree {
-public:
+ public:
   /**
    * The constructor modifies layers in the given list.
    */
-  explicit BSPTree(std::list<LayerPolygon>& aLayers)
-  {
+  explicit BSPTree(std::list<LayerPolygon>& aLayers) {
     MOZ_ASSERT(!aLayers.empty());
 
     mRoot = new (mPool) BSPTreeNode(mListPointers);
     BuildTree(mRoot, aLayers);
   }
 
-
-  ~BSPTree()
-  {
+  ~BSPTree() {
     for (LayerList* listPtr : mListPointers) {
       listPtr->~LayerList();
     }
@@ -119,14 +109,13 @@ public:
   /**
    * Builds and returns the back-to-front draw order for the created BSP tree.
    */
-  nsTArray<LayerPolygon> GetDrawOrder() const
-  {
+  nsTArray<LayerPolygon> GetDrawOrder() const {
     nsTArray<LayerPolygon> layers;
     BuildDrawOrder(mRoot, layers);
     return layers;
   }
 
-private:
+ private:
   BSPTreeArena mPool;
   BSPTreeNode* mRoot;
   nsTArray<LayerList*> mListPointers;
@@ -138,11 +127,10 @@ private:
   void BuildDrawOrder(BSPTreeNode* aNode,
                       nsTArray<LayerPolygon>& aLayers) const;
 
-  void BuildTree(BSPTreeNode* aRoot,
-                 std::list<LayerPolygon>& aLayers);
+  void BuildTree(BSPTreeNode* aRoot, std::list<LayerPolygon>& aLayers);
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* MOZILLA_LAYERS_BSPTREE_H */

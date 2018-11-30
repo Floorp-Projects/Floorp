@@ -13,33 +13,27 @@
 namespace mozilla {
 namespace wr {
 
-/* static */ UniquePtr<RenderCompositor>
-RenderCompositorOGL::Create(RefPtr<widget::CompositorWidget>&& aWidget)
-{
+/* static */ UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
+    RefPtr<widget::CompositorWidget>&& aWidget) {
   RefPtr<gl::GLContext> gl;
   gl = gl::GLContextProvider::CreateForCompositorWidget(aWidget, true);
   if (!gl || !gl->MakeCurrent()) {
-    gfxCriticalNote << "Failed GL context creation for WebRender: " << gfx::hexa(gl.get());
+    gfxCriticalNote << "Failed GL context creation for WebRender: "
+                    << gfx::hexa(gl.get());
     return nullptr;
   }
   return MakeUnique<RenderCompositorOGL>(std::move(gl), std::move(aWidget));
 }
 
-RenderCompositorOGL::RenderCompositorOGL(RefPtr<gl::GLContext>&& aGL,
-                                         RefPtr<widget::CompositorWidget>&& aWidget)
-  : RenderCompositor(std::move(aWidget))
-  , mGL(aGL)
-{
+RenderCompositorOGL::RenderCompositorOGL(
+    RefPtr<gl::GLContext>&& aGL, RefPtr<widget::CompositorWidget>&& aWidget)
+    : RenderCompositor(std::move(aWidget)), mGL(aGL) {
   MOZ_ASSERT(mGL);
 }
 
-RenderCompositorOGL::~RenderCompositorOGL()
-{
-}
+RenderCompositorOGL::~RenderCompositorOGL() {}
 
-bool
-RenderCompositorOGL::BeginFrame()
-{
+bool RenderCompositorOGL::BeginFrame() {
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
@@ -47,20 +41,11 @@ RenderCompositorOGL::BeginFrame()
   return true;
 }
 
-void
-RenderCompositorOGL::EndFrame()
-{
-  mGL->SwapBuffers();
-}
+void RenderCompositorOGL::EndFrame() { mGL->SwapBuffers(); }
 
-void
-RenderCompositorOGL::WaitForGPU()
-{
-}
+void RenderCompositorOGL::WaitForGPU() {}
 
-void
-RenderCompositorOGL::Pause()
-{
+void RenderCompositorOGL::Pause() {
 #ifdef MOZ_WIDGET_ANDROID
   if (!mGL || mGL->IsDestroyed()) {
     return;
@@ -70,9 +55,7 @@ RenderCompositorOGL::Pause()
 #endif
 }
 
-bool
-RenderCompositorOGL::Resume()
-{
+bool RenderCompositorOGL::Resume() {
 #ifdef MOZ_WIDGET_ANDROID
   if (!mGL || mGL->IsDestroyed()) {
     return false;
@@ -84,12 +67,9 @@ RenderCompositorOGL::Resume()
 #endif
 }
 
-LayoutDeviceIntSize
-RenderCompositorOGL::GetBufferSize()
-{
+LayoutDeviceIntSize RenderCompositorOGL::GetBufferSize() {
   return mWidget->GetClientSize();
 }
 
-
-} // namespace wr
-} // namespace mozilla
+}  // namespace wr
+}  // namespace mozilla

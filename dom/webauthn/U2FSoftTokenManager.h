@@ -18,33 +18,29 @@
 namespace mozilla {
 namespace dom {
 
-class U2FSoftTokenManager final : public U2FTokenTransport
-{
-public:
+class U2FSoftTokenManager final : public U2FTokenTransport {
+ public:
   explicit U2FSoftTokenManager(uint32_t aCounter);
 
-  RefPtr<U2FRegisterPromise>
-  Register(const WebAuthnMakeCredentialInfo& aInfo,
-           bool aForceNoneAttestation) override;
+  RefPtr<U2FRegisterPromise> Register(const WebAuthnMakeCredentialInfo& aInfo,
+                                      bool aForceNoneAttestation) override;
 
-  RefPtr<U2FSignPromise>
-  Sign(const WebAuthnGetAssertionInfo& aInfo) override;
+  RefPtr<U2FSignPromise> Sign(const WebAuthnGetAssertionInfo& aInfo) override;
 
   void Cancel() override;
 
-private:
+ private:
   ~U2FSoftTokenManager() {}
   nsresult Init();
 
   nsresult IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
-                        const nsTArray<uint8_t>& aAppParam,
-                        bool& aResult);
+                        const nsTArray<uint8_t>& aAppParam, bool& aResult);
 
-  bool
-  FindRegisteredKeyHandle(const nsTArray<nsTArray<uint8_t>>& aAppIds,
-                          const nsTArray<WebAuthnScopedCredential>& aCredentials,
-                          /*out*/ nsTArray<uint8_t>& aKeyHandle,
-                          /*out*/ nsTArray<uint8_t>& aAppId);
+  bool FindRegisteredKeyHandle(
+      const nsTArray<nsTArray<uint8_t>>& aAppIds,
+      const nsTArray<WebAuthnScopedCredential>& aCredentials,
+      /*out*/ nsTArray<uint8_t>& aKeyHandle,
+      /*out*/ nsTArray<uint8_t>& aAppId);
 
   bool mInitialized;
   mozilla::UniquePK11SymKey mWrappingKey;
@@ -55,7 +51,7 @@ private:
   uint32_t mCounter;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_U2FSoftTokenManager_h
+#endif  // mozilla_dom_U2FSoftTokenManager_h

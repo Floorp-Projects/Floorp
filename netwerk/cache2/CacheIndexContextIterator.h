@@ -12,21 +12,20 @@ class nsILoadContextInfo;
 namespace mozilla {
 namespace net {
 
-class CacheIndexContextIterator : public CacheIndexIterator
-{
-public:
+class CacheIndexContextIterator : public CacheIndexIterator {
+ public:
   CacheIndexContextIterator(CacheIndex *aIndex, bool aAddNew,
                             nsILoadContextInfo *aInfo);
   virtual ~CacheIndexContextIterator() = default;
 
-private:
+ private:
   virtual void AddRecord(CacheIndexRecord *aRecord) override;
   virtual void AddRecords(const nsTArray<CacheIndexRecord *> &aRecords);
 
   nsCOMPtr<nsILoadContextInfo> mInfo;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif

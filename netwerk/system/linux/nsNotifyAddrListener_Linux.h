@@ -27,77 +27,75 @@
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
-                             public nsIObserver
-{
-    virtual ~nsNotifyAddrListener();
+                             public nsIObserver {
+  virtual ~nsNotifyAddrListener();
 
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSINETWORKLINKSERVICE
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSINETWORKLINKSERVICE
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIOBSERVER
+
+  nsNotifyAddrListener();
+  nsresult Init(void);
+
+ private:
+  class ChangeEvent : public mozilla::Runnable {
+   public:
     NS_DECL_NSIRUNNABLE
-    NS_DECL_NSIOBSERVER
+    ChangeEvent(nsINetworkLinkService* aService, const char* aEventID)
+        : mozilla::Runnable("nsNotifyAddrListener::ChangeEvent"),
+          mService(aService),
+          mEventID(aEventID) {}
 
-    nsNotifyAddrListener();
-    nsresult Init(void);
+   private:
+    nsCOMPtr<nsINetworkLinkService> mService;
+    const char* mEventID;
+  };
 
-private:
-    class ChangeEvent : public mozilla::Runnable {
-    public:
-        NS_DECL_NSIRUNNABLE
-        ChangeEvent(nsINetworkLinkService* aService, const char* aEventID)
-          : mozilla::Runnable("nsNotifyAddrListener::ChangeEvent")
-          , mService(aService)
-          , mEventID(aEventID)
-        {
-        }
-    private:
-        nsCOMPtr<nsINetworkLinkService> mService;
-        const char *mEventID;
-    };
+  // Called when xpcom-shutdown-threads is received.
+  nsresult Shutdown(void);
 
-    // Called when xpcom-shutdown-threads is received.
-    nsresult Shutdown(void);
+  // Called when a network change was detected
+  nsresult NetworkChanged();
 
-    // Called when a network change was detected
-    nsresult NetworkChanged();
+  // Sends the network event.
+  nsresult SendEvent(const char* aEventID);
 
-    // Sends the network event.
-    nsresult SendEvent(const char *aEventID);
+  // Figure out the current "network identification"
+  void calculateNetworkId(void);
+  nsCString mNetworkId;
 
-    // Figure out the current "network identification"
-    void calculateNetworkId(void);
-    nsCString mNetworkId;
+  // Checks if there's a network "link"
+  void checkLink(void);
 
-    // Checks if there's a network "link"
-    void checkLink(void);
+  // Deals with incoming NETLINK messages.
+  void OnNetlinkMessage(int NetlinkSocket);
 
-    // Deals with incoming NETLINK messages.
-    void OnNetlinkMessage(int NetlinkSocket);
+  nsCOMPtr<nsIThread> mThread;
 
-    nsCOMPtr<nsIThread> mThread;
+  // The network is up.
+  bool mLinkUp;
 
-    // The network is up.
-    bool mLinkUp;
+  // The network's up/down status is known.
+  bool mStatusKnown;
 
-    // The network's up/down status is known.
-    bool mStatusKnown;
+  // A pipe to signal shutdown with.
+  int mShutdownPipe[2];
 
-    // A pipe to signal shutdown with.
-    int mShutdownPipe[2];
+  // Network changed events are enabled
+  bool mAllowChangedEvent;
 
-    // Network changed events are enabled
-    bool mAllowChangedEvent;
+  // Flag set while coalescing change events
+  bool mCoalescingActive;
 
-    // Flag set while coalescing change events
-    bool mCoalescingActive;
+  // Time stamp for first event during coalescing
+  mozilla::TimeStamp mChangeTime;
 
-    // Time stamp for first event during coalescing
-    mozilla::TimeStamp mChangeTime;
-
-    // Seen Ip addresses. For Ipv6 addresses some time router renews their
-    // lifetime and we should not detect this as a network link change, so we
-    // keep info about all seen addresses.
-     nsClassHashtable<nsCStringHashKey, struct ifaddrmsg> mAddressInfo;
- };
+  // Seen Ip addresses. For Ipv6 addresses some time router renews their
+  // lifetime and we should not detect this as a network link change, so we
+  // keep info about all seen addresses.
+  nsClassHashtable<nsCStringHashKey, struct ifaddrmsg> mAddressInfo;
+};
 
 #endif /* NSNOTIFYADDRLISTENER_LINUX_H_ */

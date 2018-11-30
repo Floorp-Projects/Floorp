@@ -24,79 +24,83 @@
 namespace js {
 namespace wasm {
 
-extern bool
-GenerateBuiltinThunk(jit::MacroAssembler& masm, jit::ABIFunctionType abiType, ExitReason exitReason,
-                     void* funcPtr, CallableOffsets* offsets);
+extern bool GenerateBuiltinThunk(jit::MacroAssembler& masm,
+                                 jit::ABIFunctionType abiType,
+                                 ExitReason exitReason, void* funcPtr,
+                                 CallableOffsets* offsets);
 
-extern bool
-GenerateImportFunctions(const ModuleEnvironment& env, const FuncImportVector& imports,
-                        CompiledCode* code);
+extern bool GenerateImportFunctions(const ModuleEnvironment& env,
+                                    const FuncImportVector& imports,
+                                    CompiledCode* code);
 
-extern bool
-GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& imports,
-              const FuncExportVector& exports, CompiledCode* code);
+extern bool GenerateStubs(const ModuleEnvironment& env,
+                          const FuncImportVector& imports,
+                          const FuncExportVector& exports, CompiledCode* code);
 
-extern bool
-GenerateEntryStubs(jit::MacroAssembler& masm, size_t funcExportIndex,
-                   const FuncExport& funcExport, const Maybe<jit::ImmPtr>& callee,
-                   bool isAsmJS, HasGcTypes gcTypesConfigured, CodeRangeVector* codeRanges);
+extern bool GenerateEntryStubs(jit::MacroAssembler& masm,
+                               size_t funcExportIndex,
+                               const FuncExport& funcExport,
+                               const Maybe<jit::ImmPtr>& callee, bool isAsmJS,
+                               HasGcTypes gcTypesConfigured,
+                               CodeRangeVector* codeRanges);
 
 // An argument that will end up on the stack according to the system ABI, to be
 // passed to GenerateDirectCallFromJit. Since the direct JIT call creates its
 // own frame, it is its responsibility to put stack arguments to their expected
 // locations; so the caller of GenerateDirectCallFromJit can put them anywhere.
 
-class JitCallStackArg
-{
-  public:
-    enum class Tag {
-        Imm32,
-        GPR,
-        FPU,
-        Address,
-        Undefined,
-    };
+class JitCallStackArg {
+ public:
+  enum class Tag {
+    Imm32,
+    GPR,
+    FPU,
+    Address,
+    Undefined,
+  };
 
-  private:
-    Tag tag_;
-    union U {
-        int32_t imm32_;
-        jit::Register gpr_;
-        jit::FloatRegister fpu_;
-        jit::Address addr_;
-        U() {}
-    } arg;
+ private:
+  Tag tag_;
+  union U {
+    int32_t imm32_;
+    jit::Register gpr_;
+    jit::FloatRegister fpu_;
+    jit::Address addr_;
+    U() {}
+  } arg;
 
-  public:
-    JitCallStackArg()
-      : tag_(Tag::Undefined)
-    {}
-    explicit JitCallStackArg(int32_t imm32)
-      : tag_(Tag::Imm32)
-    {
-        arg.imm32_ = imm32;
-    }
-    explicit JitCallStackArg(jit::Register gpr)
-      : tag_(Tag::GPR)
-    {
-        arg.gpr_ = gpr;
-    }
-    explicit JitCallStackArg(jit::FloatRegister fpu)
-      : tag_(Tag::FPU)
-    {
-        new (&arg) jit::FloatRegister(fpu);
-    }
-    explicit JitCallStackArg(const jit::Address& addr)
-      : tag_(Tag::Address)
-    {
-        new (&arg) jit::Address(addr);
-    }
+ public:
+  JitCallStackArg() : tag_(Tag::Undefined) {}
+  explicit JitCallStackArg(int32_t imm32) : tag_(Tag::Imm32) {
+    arg.imm32_ = imm32;
+  }
+  explicit JitCallStackArg(jit::Register gpr) : tag_(Tag::GPR) {
+    arg.gpr_ = gpr;
+  }
+  explicit JitCallStackArg(jit::FloatRegister fpu) : tag_(Tag::FPU) {
+    new (&arg) jit::FloatRegister(fpu);
+  }
+  explicit JitCallStackArg(const jit::Address& addr) : tag_(Tag::Address) {
+    new (&arg) jit::Address(addr);
+  }
 
-    Tag tag() const { return tag_; }
-    int32_t imm32() const { MOZ_ASSERT(tag_ == Tag::Imm32); return arg.imm32_; }
-    jit::Register gpr() const { MOZ_ASSERT(tag_ == Tag::GPR); return arg.gpr_; }
-    jit::FloatRegister fpu() const { MOZ_ASSERT(tag_ == Tag::FPU); return arg.fpu_; }
-    const jit::Address& addr() const { MOZ_ASSERT(tag_ == Tag::Address); return arg.addr_; }
+  Tag tag() const { return tag_; }
+  int32_t imm32() const {
+    MOZ_ASSERT(tag_ == Tag::Imm32);
+    return arg.imm32_;
+  }
+  jit::Register gpr() const {
+    MOZ_ASSERT(tag_ == Tag::GPR);
+    return arg.gpr_;
+  }
+  jit::FloatRegister fpu() const {
+    MOZ_ASSERT(tag_ == Tag::FPU);
+    return arg.fpu_;
+  }
+  const jit::Address& addr() const {
+    MOZ_ASSERT(tag_ == Tag::Address);
+    return arg.addr_;
+  }
 };
 
 using JitCallStackArgVector = Vector<JitCallStackArg, 4, SystemAllocPolicy>;
@@ -112,17 +116,12 @@ using JitCallStackArgVector = Vector<JitCallStackArg, 4, SystemAllocPolicy>;
 // - all arguments passed on stack slot are alive as defined by a corresponding
 //   JitCallStackArg.
 
-extern void
-GenerateDirectCallFromJit(jit::MacroAssembler& masm,
-                          const FuncExport& fe,
-                          const Instance& inst,
-                          const JitCallStackArgVector& stackArgs,
-                          bool profilingEnabled,
-                          bool wasmGcEnabled,
-                          jit::Register scratch,
-                          uint32_t* callOffset);
+extern void GenerateDirectCallFromJit(
+    jit::MacroAssembler& masm, const FuncExport& fe, const Instance& inst,
+    const JitCallStackArgVector& stackArgs, bool profilingEnabled,
+    bool wasmGcEnabled, jit::Register scratch, uint32_t* callOffset);
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // wasm_stubs_h
+#endif  // wasm_stubs_h

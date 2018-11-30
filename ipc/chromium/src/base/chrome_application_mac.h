@@ -17,16 +17,13 @@
 - (void)hookForEvent:(NSEvent*)theEvent;
 @end
 
-
 @interface CrApplication : NSApplication {
  @private
   BOOL handlingSendEvent_;
- // Array of objects implementing the CrApplicationEventHookProtocol
+  // Array of objects implementing the CrApplicationEventHookProtocol
   scoped_nsobject<NSMutableArray> eventHooks_;
 }
-@property(readonly,
-          getter=isHandlingSendEvent,
-          nonatomic) BOOL handlingSendEvent;
+@property(readonly, getter=isHandlingSendEvent, nonatomic) BOOL handlingSendEvent;
 
 // Add or remove an event hook to be called for every sendEvent:
 // that the application receives.  These handlers are called before

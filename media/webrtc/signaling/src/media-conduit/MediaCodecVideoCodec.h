@@ -10,7 +10,7 @@
 namespace mozilla {
 class MediaCodecVideoCodec {
  public:
- enum CodecType {
+  enum CodecType {
     CODEC_VP8,
   };
   /**
@@ -26,6 +26,6 @@ class MediaCodecVideoCodec {
   static WebrtcVideoDecoder* CreateDecoder(CodecType aCodecType);
 };
 
-}
+}  // namespace mozilla
 
-#endif // MediaCodecVideoCodec_h__
+#endif  // MediaCodecVideoCodec_h__

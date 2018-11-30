@@ -18,8 +18,8 @@ namespace recordreplay {
 
 #define THREAD_STACK_TOP_SIZE 2048
 
-// Information about a thread's state, for use in saving or restoring checkpoints.
-// The contents of this structure are in preserved memory.
+// Information about a thread's state, for use in saving or restoring
+// checkpoints. The contents of this structure are in preserved memory.
 struct ThreadState {
   // Whether this thread should update its state when no longer idle. This is
   // only used for non-main threads.
@@ -28,7 +28,7 @@ struct ThreadState {
   // Register state, as stored by setjmp and restored by longjmp. Saved when a
   // non-main thread idles or the main thread begins to save all thread states.
   // When |mShouldRestore| is set, this is the state to set it to.
-  jmp_buf mRegisters; // jmp_buf is 148 bytes
+  jmp_buf mRegisters;  // jmp_buf is 148 bytes
   uint32_t mPadding;
 
   // Top of the stack, set as for |registers|. Stack pointer information is
@@ -41,7 +41,8 @@ struct ThreadState {
   uint8_t mStackTop[THREAD_STACK_TOP_SIZE];
   size_t mStackTopBytes;
 
-  // Stack contents to copy to |stackPointer|, non-nullptr if |mShouldRestore| is set.
+  // Stack contents to copy to |stackPointer|, non-nullptr if |mShouldRestore|
+  // is set.
   uint8_t* mStackContents;
 
   // Length of |stackContents|.
@@ -53,11 +54,9 @@ struct ThreadState {
 // main thread, which immediately updates its state when restoring checkpoints.
 static ThreadState* gThreadState;
 
-void
-InitializeThreadSnapshots(size_t aNumThreads)
-{
-  gThreadState = (ThreadState*) AllocateMemory(aNumThreads * sizeof(ThreadState),
-                                               MemoryKind::ThreadSnapshot);
+void InitializeThreadSnapshots(size_t aNumThreads) {
+  gThreadState = (ThreadState*)AllocateMemory(aNumThreads * sizeof(ThreadState),
+                                              MemoryKind::ThreadSnapshot);
 
   jmp_buf buf;
   if (setjmp(buf) == 0) {
@@ -66,11 +65,10 @@ InitializeThreadSnapshots(size_t aNumThreads)
   ThreadYield();
 }
 
-static void
-ClearThreadState(ThreadState* aInfo)
-{
+static void ClearThreadState(ThreadState* aInfo) {
   MOZ_RELEASE_ASSERT(aInfo->mShouldRestore);
-  DeallocateMemory(aInfo->mStackContents, aInfo->mStackBytes, MemoryKind::ThreadSnapshot);
+  DeallocateMemory(aInfo->mStackContents, aInfo->mStackBytes,
+                   MemoryKind::ThreadSnapshot);
   aInfo->mShouldRestore = false;
   aInfo->mStackContents = nullptr;
   aInfo->mStackBytes = 0;
@@ -78,9 +76,9 @@ ClearThreadState(ThreadState* aInfo)
 
 extern "C" {
 
-extern int
-SaveThreadStateOrReturnFromRestore(ThreadState* aInfo, int (*aSetjmpArg)(jmp_buf),
-                                   int* aStackSeparator);
+extern int SaveThreadStateOrReturnFromRestore(ThreadState* aInfo,
+                                              int (*aSetjmpArg)(jmp_buf),
+                                              int* aStackSeparator);
 
 #define THREAD_REGISTERS_OFFSET 8
 #define THREAD_STACK_POINTER_OFFSET 160
@@ -175,63 +173,62 @@ __asm(
   "ret;"
 );
 
-} // extern "C"
+}  // extern "C"
 
-bool
-SaveThreadState(size_t aId, int* aStackSeparator)
-{
-  static_assert(offsetof(ThreadState, mRegisters) == THREAD_REGISTERS_OFFSET &&
-                offsetof(ThreadState, mStackPointer) == THREAD_STACK_POINTER_OFFSET &&
-                offsetof(ThreadState, mStackTop) == THREAD_STACK_TOP_OFFSET &&
-                offsetof(ThreadState, mStackTopBytes) == THREAD_STACK_TOP_BYTES_OFFSET &&
-                offsetof(ThreadState, mStackContents) == THREAD_STACK_CONTENTS_OFFSET &&
-                offsetof(ThreadState, mStackBytes) == THREAD_STACK_BYTES_OFFSET,
-                "Incorrect ThreadState offsets");
+bool SaveThreadState(size_t aId, int* aStackSeparator) {
+  static_assert(
+      offsetof(ThreadState, mRegisters) == THREAD_REGISTERS_OFFSET &&
+          offsetof(ThreadState, mStackPointer) == THREAD_STACK_POINTER_OFFSET &&
+          offsetof(ThreadState, mStackTop) == THREAD_STACK_TOP_OFFSET &&
+          offsetof(ThreadState, mStackTopBytes) ==
+              THREAD_STACK_TOP_BYTES_OFFSET &&
+          offsetof(ThreadState, mStackContents) ==
+              THREAD_STACK_CONTENTS_OFFSET &&
+          offsetof(ThreadState, mStackBytes) == THREAD_STACK_BYTES_OFFSET,
+      "Incorrect ThreadState offsets");
 
   ThreadState* info = &gThreadState[aId];
   MOZ_RELEASE_ASSERT(!info->mShouldRestore);
-  bool res = SaveThreadStateOrReturnFromRestore(info, setjmp, aStackSeparator) == 0;
+  bool res =
+      SaveThreadStateOrReturnFromRestore(info, setjmp, aStackSeparator) == 0;
   if (!res) {
     ClearThreadState(info);
   }
   return res;
 }
 
-void
-RestoreThreadStack(size_t aId)
-{
+void RestoreThreadStack(size_t aId) {
   ThreadState* info = &gThreadState[aId];
   longjmp(info->mRegisters, 1);
-  MOZ_CRASH(); // longjmp does not return.
+  MOZ_CRASH();  // longjmp does not return.
 }
 
-static void
-SaveThreadStack(SavedThreadStack& aStack, size_t aId)
-{
+static void SaveThreadStack(SavedThreadStack& aStack, size_t aId) {
   Thread* thread = Thread::GetById(aId);
 
   ThreadState& info = gThreadState[aId];
   aStack.mStackPointer = info.mStackPointer;
   MemoryMove(aStack.mRegisters, info.mRegisters, sizeof(jmp_buf));
 
-  uint8_t* stackPointer = (uint8_t*) info.mStackPointer;
+  uint8_t* stackPointer = (uint8_t*)info.mStackPointer;
   uint8_t* stackTop = thread->StackBase() + thread->StackSize();
   MOZ_RELEASE_ASSERT(stackTop >= stackPointer);
   size_t stackBytes = stackTop - stackPointer;
 
   MOZ_RELEASE_ASSERT(stackBytes >= info.mStackTopBytes);
 
-  aStack.mStack = (uint8_t*) AllocateMemory(stackBytes, MemoryKind::ThreadSnapshot);
+  aStack.mStack =
+      (uint8_t*)AllocateMemory(stackBytes, MemoryKind::ThreadSnapshot);
   aStack.mStackBytes = stackBytes;
 
   MemoryMove(aStack.mStack, info.mStackTop, info.mStackTopBytes);
   MemoryMove(aStack.mStack + info.mStackTopBytes,
-             stackPointer + info.mStackTopBytes, stackBytes - info.mStackTopBytes);
+             stackPointer + info.mStackTopBytes,
+             stackBytes - info.mStackTopBytes);
 }
 
-static void
-RestoreStackForLoadingByThread(const SavedThreadStack& aStack, size_t aId)
-{
+static void RestoreStackForLoadingByThread(const SavedThreadStack& aStack,
+                                           size_t aId) {
   ThreadState& info = gThreadState[aId];
   MOZ_RELEASE_ASSERT(!info.mShouldRestore);
 
@@ -241,24 +238,20 @@ RestoreStackForLoadingByThread(const SavedThreadStack& aStack, size_t aId)
   info.mStackBytes = aStack.mStackBytes;
 
   uint8_t* stackContents =
-    (uint8_t*) AllocateMemory(info.mStackBytes, MemoryKind::ThreadSnapshot);
+      (uint8_t*)AllocateMemory(info.mStackBytes, MemoryKind::ThreadSnapshot);
   MemoryMove(stackContents, aStack.mStack, aStack.mStackBytes);
   info.mStackContents = stackContents;
   info.mShouldRestore = true;
 }
 
-bool
-ShouldRestoreThreadStack(size_t aId)
-{
+bool ShouldRestoreThreadStack(size_t aId) {
   return gThreadState[aId].mShouldRestore;
 }
 
-bool
-SaveAllThreads(SavedCheckpoint& aSaved)
-{
+bool SaveAllThreads(SavedCheckpoint& aSaved) {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
 
-  AutoPassThroughThreadEvents pt; // setjmp may perform system calls.
+  AutoPassThroughThreadEvents pt;  // setjmp may perform system calls.
   AutoDisallowMemoryChanges disallow;
 
   int stackSeparator = 0;
@@ -273,9 +266,7 @@ SaveAllThreads(SavedCheckpoint& aSaved)
   return true;
 }
 
-void
-RestoreAllThreads(const SavedCheckpoint& aSaved)
-{
+void RestoreAllThreads(const SavedCheckpoint& aSaved) {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
 
   // These will be matched by the Auto* classes in SaveAllThreads().
@@ -292,10 +283,9 @@ RestoreAllThreads(const SavedCheckpoint& aSaved)
   Unreachable();
 }
 
-void
-WaitForIdleThreadsToRestoreTheirStacks()
-{
-  // Wait for all other threads to restore their stack before resuming execution.
+void WaitForIdleThreadsToRestoreTheirStacks() {
+  // Wait for all other threads to restore their stack before resuming
+  // execution.
   while (true) {
     bool done = true;
     for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
@@ -311,5 +301,5 @@ WaitForIdleThreadsToRestoreTheirStacks()
   }
 }
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

@@ -7,29 +7,13 @@
 namespace mozilla {
 namespace widget {
 
-void
-HeadlessClipboardData::SetText(const nsAString &aText)
-{
-  mPlain = aText;
-}
+void HeadlessClipboardData::SetText(const nsAString& aText) { mPlain = aText; }
 
-bool
-HeadlessClipboardData::HasText() const
-{
-  return !mPlain.IsEmpty();
-}
+bool HeadlessClipboardData::HasText() const { return !mPlain.IsEmpty(); }
 
-const nsAString&
-HeadlessClipboardData::GetText() const
-{
-  return mPlain;
-}
+const nsAString& HeadlessClipboardData::GetText() const { return mPlain; }
 
-void
-HeadlessClipboardData::Clear()
-{
-  mPlain.Truncate(0);
-}
+void HeadlessClipboardData::Clear() { mPlain.Truncate(0); }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

@@ -12,36 +12,37 @@
 namespace mozilla {
 namespace layers {
 class CompositorThreadHolder;
-} // namespace layers
+}  // namespace layers
 
 namespace gfx {
 
-class VsyncBridgeParent final : public PVsyncBridgeParent
-{
-public:
+class VsyncBridgeParent final : public PVsyncBridgeParent {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncBridgeParent)
 
-  static RefPtr<VsyncBridgeParent> Start(Endpoint<PVsyncBridgeParent>&& aEndpoint);
+  static RefPtr<VsyncBridgeParent> Start(
+      Endpoint<PVsyncBridgeParent>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvNotifyVsync(const TimeStamp& vsyncTimeStamp, const LayersId& aLayersId) override;
+  mozilla::ipc::IPCResult RecvNotifyVsync(const TimeStamp& vsyncTimeStamp,
+                                          const LayersId& aLayersId) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPVsyncBridgeParent() override;
 
   void Shutdown();
 
-private:
+ private:
   VsyncBridgeParent();
   ~VsyncBridgeParent();
 
   void Open(Endpoint<PVsyncBridgeParent>&& aEndpoint);
   void ShutdownImpl();
 
-private:
+ private:
   bool mOpen;
   RefPtr<layers::CompositorThreadHolder> mCompositorThreadRef;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // include_gfx_ipc_VsyncBridgeParent_h
+#endif  // include_gfx_ipc_VsyncBridgeParent_h

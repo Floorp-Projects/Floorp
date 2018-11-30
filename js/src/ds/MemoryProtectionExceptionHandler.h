@@ -17,27 +17,26 @@ namespace js {
  * from other heap corruption crashes.
  */
 
-struct MemoryProtectionExceptionHandler
-{
-    /* Installs the exception handler; called early during initialization. */
-    static bool install();
+struct MemoryProtectionExceptionHandler {
+  /* Installs the exception handler; called early during initialization. */
+  static bool install();
 
-    /* If the exception handler is disabled, it won't be installed. */
-    static bool isDisabled();
+  /* If the exception handler is disabled, it won't be installed. */
+  static bool isDisabled();
 
-    /*
-     * Marks a region of memory as important; if something tries to access this
-     * region in an unauthorized way (e.g. writing to read-only memory),
-     * the resulting crash will be annotated to stand out from other random
-     * heap corruption.
-     */
-    static void addRegion(void* addr, size_t size);
+  /*
+   * Marks a region of memory as important; if something tries to access this
+   * region in an unauthorized way (e.g. writing to read-only memory),
+   * the resulting crash will be annotated to stand out from other random
+   * heap corruption.
+   */
+  static void addRegion(void* addr, size_t size);
 
-    /* Removes a previously added region. */
-    static void removeRegion(void* addr);
+  /* Removes a previously added region. */
+  static void removeRegion(void* addr);
 
-    /* Uninstalls the exception handler; called late during shutdown. */
-    static void uninstall();
+  /* Uninstalls the exception handler; called late during shutdown. */
+  static void uninstall();
 };
 
 } /* namespace js */

@@ -11,9 +11,7 @@
 namespace mozilla {
 namespace recordreplay {
 
-size_t
-ValueIndex::Insert(const void* aValue)
-{
+size_t ValueIndex::Insert(const void* aValue) {
   MOZ_RELEASE_ASSERT(!Contains(aValue));
 
   size_t index = mIndexCount++;
@@ -22,9 +20,7 @@ ValueIndex::Insert(const void* aValue)
   return index;
 }
 
-void
-ValueIndex::Remove(const void* aValue)
-{
+void ValueIndex::Remove(const void* aValue) {
   size_t index;
   if (!MaybeGetIndex(aValue, &index)) {
     return;
@@ -34,9 +30,7 @@ ValueIndex::Remove(const void* aValue)
   mIndexToValue.erase(index);
 }
 
-size_t
-ValueIndex::GetIndex(const void* aValue)
-{
+size_t ValueIndex::GetIndex(const void* aValue) {
   size_t index;
   if (!MaybeGetIndex(aValue, &index)) {
     MOZ_CRASH();
@@ -44,9 +38,7 @@ ValueIndex::GetIndex(const void* aValue)
   return index;
 }
 
-bool
-ValueIndex::MaybeGetIndex(const void* aValue, size_t* aIndex)
-{
+bool ValueIndex::MaybeGetIndex(const void* aValue, size_t* aIndex) {
   ValueToIndexMap::const_iterator iter = mValueToIndex.find(aValue);
   if (iter != mValueToIndex.end()) {
     *aIndex = iter->second;
@@ -55,33 +47,25 @@ ValueIndex::MaybeGetIndex(const void* aValue, size_t* aIndex)
   return false;
 }
 
-bool
-ValueIndex::Contains(const void* aValue)
-{
+bool ValueIndex::Contains(const void* aValue) {
   size_t index;
   return MaybeGetIndex(aValue, &index);
 }
 
-const void*
-ValueIndex::GetValue(size_t aIndex)
-{
+const void* ValueIndex::GetValue(size_t aIndex) {
   IndexToValueMap::const_iterator iter = mIndexToValue.find(aIndex);
   MOZ_RELEASE_ASSERT(iter != mIndexToValue.end());
   return iter->second;
 }
 
-bool
-ValueIndex::IsEmpty()
-{
+bool ValueIndex::IsEmpty() {
   MOZ_ASSERT(mValueToIndex.empty() == mIndexToValue.empty());
   return mValueToIndex.empty();
 }
 
-const ValueIndex::ValueToIndexMap&
-ValueIndex::GetValueToIndexMap()
-{
+const ValueIndex::ValueToIndexMap& ValueIndex::GetValueToIndexMap() {
   return mValueToIndex;
 }
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

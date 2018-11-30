@@ -16,120 +16,119 @@ namespace jit {
 class OutOfLineBailout;
 class OutOfLineTableSwitch;
 
-class CodeGeneratorARM64 : public CodeGeneratorShared
-{
-    friend class MoveResolverARM64;
+class CodeGeneratorARM64 : public CodeGeneratorShared {
+  friend class MoveResolverARM64;
 
-  protected:
-    CodeGeneratorARM64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
+ protected:
+  CodeGeneratorARM64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
-    NonAssertingLabel deoptLabel_;
+  NonAssertingLabel deoptLabel_;
 
-    MoveOperand toMoveOperand(const LAllocation a) const;
+  MoveOperand toMoveOperand(const LAllocation a) const;
 
-    void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);
-    void bailoutFrom(Label* label, LSnapshot* snapshot);
-    void bailout(LSnapshot* snapshot);
+  void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);
+  void bailoutFrom(Label* label, LSnapshot* snapshot);
+  void bailout(LSnapshot* snapshot);
 
-    template <typename T1, typename T2>
-    void bailoutCmpPtr(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot* snapshot) {
-        masm.cmpPtr(lhs, rhs);
-        return bailoutIf(c, snapshot);
-    }
-    void bailoutTestPtr(Assembler::Condition c, Register lhs, Register rhs, LSnapshot* snapshot) {
-        masm.testPtr(lhs, rhs);
-        return bailoutIf(c, snapshot);
-    }
-    template <typename T1, typename T2>
-    void bailoutCmp32(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot* snapshot) {
-        masm.cmp32(lhs, rhs);
-        return bailoutIf(c, snapshot);
-    }
-    template <typename T1, typename T2>
-    void bailoutTest32(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot* snapshot) {
-        masm.test32(lhs, rhs);
-        return bailoutIf(c, snapshot);
-    }
-    void bailoutIfFalseBool(Register reg, LSnapshot* snapshot) {
-        masm.test32(reg, Imm32(0xFF));
-        return bailoutIf(Assembler::Zero, snapshot);
-    }
+  template <typename T1, typename T2>
+  void bailoutCmpPtr(Assembler::Condition c, T1 lhs, T2 rhs,
+                     LSnapshot* snapshot) {
+    masm.cmpPtr(lhs, rhs);
+    return bailoutIf(c, snapshot);
+  }
+  void bailoutTestPtr(Assembler::Condition c, Register lhs, Register rhs,
+                      LSnapshot* snapshot) {
+    masm.testPtr(lhs, rhs);
+    return bailoutIf(c, snapshot);
+  }
+  template <typename T1, typename T2>
+  void bailoutCmp32(Assembler::Condition c, T1 lhs, T2 rhs,
+                    LSnapshot* snapshot) {
+    masm.cmp32(lhs, rhs);
+    return bailoutIf(c, snapshot);
+  }
+  template <typename T1, typename T2>
+  void bailoutTest32(Assembler::Condition c, T1 lhs, T2 rhs,
+                     LSnapshot* snapshot) {
+    masm.test32(lhs, rhs);
+    return bailoutIf(c, snapshot);
+  }
+  void bailoutIfFalseBool(Register reg, LSnapshot* snapshot) {
+    masm.test32(reg, Imm32(0xFF));
+    return bailoutIf(Assembler::Zero, snapshot);
+  }
 
-    bool generateOutOfLineCode();
+  bool generateOutOfLineCode();
 
-    void emitRoundDouble(FloatRegister src, Register dest, Label* fail);
+  void emitRoundDouble(FloatRegister src, Register dest, Label* fail);
 
-    // Emits a branch that directs control flow to the true block if |cond| is
-    // true, and the false block if |cond| is false.
-    void emitBranch(Assembler::Condition cond, MBasicBlock* ifTrue, MBasicBlock* ifFalse);
+  // Emits a branch that directs control flow to the true block if |cond| is
+  // true, and the false block if |cond| is false.
+  void emitBranch(Assembler::Condition cond, MBasicBlock* ifTrue,
+                  MBasicBlock* ifFalse);
 
-    void testNullEmitBranch(Assembler::Condition cond, const ValueOperand& value,
-                            MBasicBlock* ifTrue, MBasicBlock* ifFalse)
-    {
-        cond = masm.testNull(cond, value);
-        emitBranch(cond, ifTrue, ifFalse);
-    }
-    void testUndefinedEmitBranch(Assembler::Condition cond, const ValueOperand& value,
-                                 MBasicBlock* ifTrue, MBasicBlock* ifFalse)
-    {
-        cond = masm.testUndefined(cond, value);
-        emitBranch(cond, ifTrue, ifFalse);
-    }
-    void testObjectEmitBranch(Assembler::Condition cond, const ValueOperand& value,
-                              MBasicBlock* ifTrue, MBasicBlock* ifFalse)
-    {
-        cond = masm.testObject(cond, value);
-        emitBranch(cond, ifTrue, ifFalse);
-    }
-    void testZeroEmitBranch(Assembler::Condition cond, Register reg,
-                            MBasicBlock* ifTrue, MBasicBlock* ifFalse)
-    {
-        MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-        masm.cmpPtr(reg, ImmWord(0));
-        emitBranch(cond, ifTrue, ifFalse);
-    }
+  void testNullEmitBranch(Assembler::Condition cond, const ValueOperand& value,
+                          MBasicBlock* ifTrue, MBasicBlock* ifFalse) {
+    cond = masm.testNull(cond, value);
+    emitBranch(cond, ifTrue, ifFalse);
+  }
+  void testUndefinedEmitBranch(Assembler::Condition cond,
+                               const ValueOperand& value, MBasicBlock* ifTrue,
+                               MBasicBlock* ifFalse) {
+    cond = masm.testUndefined(cond, value);
+    emitBranch(cond, ifTrue, ifFalse);
+  }
+  void testObjectEmitBranch(Assembler::Condition cond,
+                            const ValueOperand& value, MBasicBlock* ifTrue,
+                            MBasicBlock* ifFalse) {
+    cond = masm.testObject(cond, value);
+    emitBranch(cond, ifTrue, ifFalse);
+  }
+  void testZeroEmitBranch(Assembler::Condition cond, Register reg,
+                          MBasicBlock* ifTrue, MBasicBlock* ifFalse) {
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    masm.cmpPtr(reg, ImmWord(0));
+    emitBranch(cond, ifTrue, ifFalse);
+  }
 
-    void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
+  void emitTableSwitchDispatch(MTableSwitch* mir, Register index,
+                               Register base);
 
-    ValueOperand ToValue(LInstruction* ins, size_t pos);
-    ValueOperand ToTempValue(LInstruction* ins, size_t pos);
+  ValueOperand ToValue(LInstruction* ins, size_t pos);
+  ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
-    void storeElementTyped(const LAllocation* value, MIRType valueType, MIRType elementType,
-                           Register elements, const LAllocation* index);
+  void storeElementTyped(const LAllocation* value, MIRType valueType,
+                         MIRType elementType, Register elements,
+                         const LAllocation* index);
 
-    void divICommon(MDiv* mir, Register lhs, Register rhs, Register output, LSnapshot* snapshot,
-                    Label& done);
-    void modICommon(MMod* mir, Register lhs, Register rhs, Register output, LSnapshot* snapshot,
-                    Label& done);
+  void divICommon(MDiv* mir, Register lhs, Register rhs, Register output,
+                  LSnapshot* snapshot, Label& done);
+  void modICommon(MMod* mir, Register lhs, Register rhs, Register output,
+                  LSnapshot* snapshot, Label& done);
 
-    void generateInvalidateEpilogue();
+  void generateInvalidateEpilogue();
 
-  public:
-    void visitOutOfLineBailout(OutOfLineBailout* ool);
-    void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
+ public:
+  void visitOutOfLineBailout(OutOfLineBailout* ool);
+  void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
 };
 
 typedef CodeGeneratorARM64 CodeGeneratorSpecific;
 
 // An out-of-line bailout thunk.
-class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM64>
-{
-  protected: // Silence Clang warning.
-    LSnapshot* snapshot_;
+class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM64> {
+ protected:  // Silence Clang warning.
+  LSnapshot* snapshot_;
 
-  public:
-    explicit OutOfLineBailout(LSnapshot* snapshot)
-      : snapshot_(snapshot)
-    { }
+ public:
+  explicit OutOfLineBailout(LSnapshot* snapshot) : snapshot_(snapshot) {}
 
-    void accept(CodeGeneratorARM64* codegen) override;
+  void accept(CodeGeneratorARM64* codegen) override;
 
-    LSnapshot* snapshot() const {
-        return snapshot_;
-    }
+  LSnapshot* snapshot() const { return snapshot_; }
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_arm64_CodeGenerator_arm64_h */

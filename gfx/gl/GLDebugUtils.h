@@ -13,7 +13,7 @@ namespace gl {
 
 const char* GLenumToStr(GLenum e);
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // !GLDEBUGUTILS_H_
+#endif  // !GLDEBUGUTILS_H_

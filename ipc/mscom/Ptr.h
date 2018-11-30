@@ -30,10 +30,8 @@ namespace mscom {
 namespace detail {
 
 template <typename T>
-struct MainThreadRelease
-{
-  void operator()(T* aPtr)
-  {
+struct MainThreadRelease {
+  void operator()(T* aPtr) {
     if (!aPtr) {
       return;
     }
@@ -41,34 +39,28 @@ struct MainThreadRelease
       aPtr->Release();
       return;
     }
-    DebugOnly<nsresult> rv =
-      SystemGroup::Dispatch(TaskCategory::Other,
-                            NewNonOwningRunnableMethod("mscom::MainThreadRelease",
-                                                       aPtr, &T::Release));
+    DebugOnly<nsresult> rv = SystemGroup::Dispatch(
+        TaskCategory::Other,
+        NewNonOwningRunnableMethod("mscom::MainThreadRelease", aPtr,
+                                   &T::Release));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 };
 
 template <typename T>
-struct MTADelete
-{
-  void operator()(T* aPtr)
-  {
+struct MTADelete {
+  void operator()(T* aPtr) {
     if (!aPtr) {
       return;
     }
 
-    EnsureMTA::AsyncOperation([aPtr]() -> void {
-      delete aPtr;
-    });
+    EnsureMTA::AsyncOperation([aPtr]() -> void { delete aPtr; });
   }
 };
 
 template <typename T>
-struct MTARelease
-{
-  void operator()(T* aPtr)
-  {
+struct MTARelease {
+  void operator()(T* aPtr) {
     if (!aPtr) {
       return;
     }
@@ -76,17 +68,14 @@ struct MTARelease
     // Static analysis doesn't recognize that, even though aPtr escapes the
     // current scope, we are in effect moving our strong ref into the lambda.
     void* ptr = aPtr;
-    EnsureMTA::AsyncOperation([ptr]() -> void {
-      reinterpret_cast<T*>(ptr)->Release();
-    });
+    EnsureMTA::AsyncOperation(
+        [ptr]() -> void { reinterpret_cast<T*>(ptr)->Release(); });
   }
 };
 
 template <typename T>
-struct MTAReleaseInChildProcess
-{
-  void operator()(T* aPtr)
-  {
+struct MTAReleaseInChildProcess {
+  void operator()(T* aPtr) {
     if (!aPtr) {
       return;
     }
@@ -100,24 +89,19 @@ struct MTAReleaseInChildProcess
     // Static analysis doesn't recognize that, even though aPtr escapes the
     // current scope, we are in effect moving our strong ref into the lambda.
     void* ptr = aPtr;
-    EnsureMTA::AsyncOperation([ptr]() -> void {
-      reinterpret_cast<T*>(ptr)->Release();
-    });
+    EnsureMTA::AsyncOperation(
+        [ptr]() -> void { reinterpret_cast<T*>(ptr)->Release(); });
   }
 };
 
-struct InterceptorTargetDeleter
-{
-  void operator()(IUnknown* aPtr)
-  {
+struct InterceptorTargetDeleter {
+  void operator()(IUnknown* aPtr) {
     // We intentionally do not touch the refcounts of interceptor targets!
   }
 };
 
-struct PreservedStreamDeleter
-{
-  void operator()(IStream* aPtr)
-  {
+struct PreservedStreamDeleter {
+  void operator()(IStream* aPtr) {
     if (!aPtr) {
       return;
     }
@@ -127,7 +111,7 @@ struct PreservedStreamDeleter
     void* ptr = aPtr;
     auto cleanup = [ptr]() -> void {
       DebugOnly<HRESULT> hr =
-        ::CoReleaseMarshalData(reinterpret_cast<LPSTREAM>(ptr));
+          ::CoReleaseMarshalData(reinterpret_cast<LPSTREAM>(ptr));
       MOZ_ASSERT(SUCCEEDED(hr));
       reinterpret_cast<LPSTREAM>(ptr)->Release();
     };
@@ -142,7 +126,7 @@ struct PreservedStreamDeleter
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 template <typename T>
 using STAUniquePtr = mozilla::UniquePtr<T, detail::MainThreadRelease<T>>;
@@ -154,75 +138,54 @@ template <typename T>
 using MTADeletePtr = mozilla::UniquePtr<T, detail::MTADelete<T>>;
 
 template <typename T>
-using ProxyUniquePtr = mozilla::UniquePtr<T, detail::MTAReleaseInChildProcess<T>>;
+using ProxyUniquePtr =
+    mozilla::UniquePtr<T, detail::MTAReleaseInChildProcess<T>>;
 
 template <typename T>
 using InterceptorTargetPtr =
-  mozilla::UniquePtr<T, detail::InterceptorTargetDeleter>;
+    mozilla::UniquePtr<T, detail::InterceptorTargetDeleter>;
 
 using PreservedStreamPtr =
-  mozilla::UniquePtr<IStream, detail::PreservedStreamDeleter>;
+    mozilla::UniquePtr<IStream, detail::PreservedStreamDeleter>;
 
 namespace detail {
 
 // We don't have direct access to UniquePtr's storage, so we use mPtrStorage
 // to receive the pointer and then set the target inside the destructor.
 template <typename T, typename Deleter>
-class UniquePtrGetterAddRefs
-{
-public:
+class UniquePtrGetterAddRefs {
+ public:
   explicit UniquePtrGetterAddRefs(UniquePtr<T, Deleter>& aSmartPtr)
-    : mTargetSmartPtr(aSmartPtr)
-    , mPtrStorage(nullptr)
-  {
-  }
+      : mTargetSmartPtr(aSmartPtr), mPtrStorage(nullptr) {}
 
-  ~UniquePtrGetterAddRefs()
-  {
-    mTargetSmartPtr.reset(mPtrStorage);
-  }
+  ~UniquePtrGetterAddRefs() { mTargetSmartPtr.reset(mPtrStorage); }
 
-  operator void**()
-  {
-    return reinterpret_cast<void**>(&mPtrStorage);
-  }
+  operator void**() { return reinterpret_cast<void**>(&mPtrStorage); }
 
-  operator T**()
-  {
-    return &mPtrStorage;
-  }
+  operator T**() { return &mPtrStorage; }
 
-  T*& operator*()
-  {
-    return mPtrStorage;
-  }
+  T*& operator*() { return mPtrStorage; }
 
-private:
+ private:
   UniquePtr<T, Deleter>& mTargetSmartPtr;
-  T*                     mPtrStorage;
+  T* mPtrStorage;
 };
 
-} // namespace detail
+}  // namespace detail
 
 template <typename T>
-inline STAUniquePtr<T>
-ToSTAUniquePtr(RefPtr<T>&& aRefPtr)
-{
+inline STAUniquePtr<T> ToSTAUniquePtr(RefPtr<T>&& aRefPtr) {
   return STAUniquePtr<T>(aRefPtr.forget().take());
 }
 
 template <typename T>
-inline STAUniquePtr<T>
-ToSTAUniquePtr(const RefPtr<T>& aRefPtr)
-{
+inline STAUniquePtr<T> ToSTAUniquePtr(const RefPtr<T>& aRefPtr) {
   MOZ_ASSERT(NS_IsMainThread());
   return STAUniquePtr<T>(do_AddRef(aRefPtr).take());
 }
 
 template <typename T>
-inline STAUniquePtr<T>
-ToSTAUniquePtr(T* aRawPtr)
-{
+inline STAUniquePtr<T> ToSTAUniquePtr(T* aRawPtr) {
   MOZ_ASSERT(NS_IsMainThread());
   if (aRawPtr) {
     aRawPtr->AddRef();
@@ -231,33 +194,25 @@ ToSTAUniquePtr(T* aRawPtr)
 }
 
 template <typename T, typename U>
-inline STAUniquePtr<T>
-ToSTAUniquePtr(const InterceptorTargetPtr<U>& aTarget)
-{
+inline STAUniquePtr<T> ToSTAUniquePtr(const InterceptorTargetPtr<U>& aTarget) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<T> newRef(static_cast<T*>(aTarget.get()));
   return ToSTAUniquePtr(std::move(newRef));
 }
 
 template <typename T>
-inline MTAUniquePtr<T>
-ToMTAUniquePtr(RefPtr<T>&& aRefPtr)
-{
+inline MTAUniquePtr<T> ToMTAUniquePtr(RefPtr<T>&& aRefPtr) {
   return MTAUniquePtr<T>(aRefPtr.forget().take());
 }
 
 template <typename T>
-inline MTAUniquePtr<T>
-ToMTAUniquePtr(const RefPtr<T>& aRefPtr)
-{
+inline MTAUniquePtr<T> ToMTAUniquePtr(const RefPtr<T>& aRefPtr) {
   MOZ_ASSERT(IsCurrentThreadMTA());
   return MTAUniquePtr<T>(do_AddRef(aRefPtr).take());
 }
 
 template <typename T>
-inline MTAUniquePtr<T>
-ToMTAUniquePtr(T* aRawPtr)
-{
+inline MTAUniquePtr<T> ToMTAUniquePtr(T* aRawPtr) {
   MOZ_ASSERT(IsCurrentThreadMTA());
   if (aRawPtr) {
     aRawPtr->AddRef();
@@ -266,16 +221,12 @@ ToMTAUniquePtr(T* aRawPtr)
 }
 
 template <typename T>
-inline ProxyUniquePtr<T>
-ToProxyUniquePtr(RefPtr<T>&& aRefPtr)
-{
+inline ProxyUniquePtr<T> ToProxyUniquePtr(RefPtr<T>&& aRefPtr) {
   return ProxyUniquePtr<T>(aRefPtr.forget().take());
 }
 
 template <typename T>
-inline ProxyUniquePtr<T>
-ToProxyUniquePtr(const RefPtr<T>& aRefPtr)
-{
+inline ProxyUniquePtr<T> ToProxyUniquePtr(const RefPtr<T>& aRefPtr) {
   MOZ_ASSERT(IsProxy(aRefPtr));
   MOZ_ASSERT((XRE_IsParentProcess() && NS_IsMainThread()) ||
              (XRE_IsContentProcess() && IsCurrentThreadMTA()));
@@ -284,9 +235,7 @@ ToProxyUniquePtr(const RefPtr<T>& aRefPtr)
 }
 
 template <typename T>
-inline ProxyUniquePtr<T>
-ToProxyUniquePtr(T* aRawPtr)
-{
+inline ProxyUniquePtr<T> ToProxyUniquePtr(T* aRawPtr) {
   MOZ_ASSERT(IsProxy(aRawPtr));
   MOZ_ASSERT((XRE_IsParentProcess() && NS_IsMainThread()) ||
              (XRE_IsContentProcess() && IsCurrentThreadMTA()));
@@ -298,69 +247,58 @@ ToProxyUniquePtr(T* aRawPtr)
 }
 
 template <typename T, typename Deleter>
-inline InterceptorTargetPtr<T>
-ToInterceptorTargetPtr(const UniquePtr<T, Deleter>& aTargetPtr)
-{
+inline InterceptorTargetPtr<T> ToInterceptorTargetPtr(
+    const UniquePtr<T, Deleter>& aTargetPtr) {
   return InterceptorTargetPtr<T>(aTargetPtr.get());
 }
 
-inline PreservedStreamPtr
-ToPreservedStreamPtr(RefPtr<IStream>&& aStream)
-{
+inline PreservedStreamPtr ToPreservedStreamPtr(RefPtr<IStream>&& aStream) {
   return PreservedStreamPtr(aStream.forget().take());
 }
 
-inline PreservedStreamPtr
-ToPreservedStreamPtr(already_AddRefed<IStream>& aStream)
-{
+inline PreservedStreamPtr ToPreservedStreamPtr(
+    already_AddRefed<IStream>& aStream) {
   return PreservedStreamPtr(aStream.take());
 }
 
 template <typename T, typename Deleter>
-inline detail::UniquePtrGetterAddRefs<T, Deleter>
-getter_AddRefs(UniquePtr<T, Deleter>& aSmartPtr)
-{
+inline detail::UniquePtrGetterAddRefs<T, Deleter> getter_AddRefs(
+    UniquePtr<T, Deleter>& aSmartPtr) {
   return detail::UniquePtrGetterAddRefs<T, Deleter>(aSmartPtr);
 }
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
 // This block makes it possible for these smart pointers to be correctly
 // applied in NewRunnableMethod and friends
 namespace detail {
 
-template<typename T>
-struct SmartPointerStorageClass<mozilla::mscom::STAUniquePtr<T>>
-{
+template <typename T>
+struct SmartPointerStorageClass<mozilla::mscom::STAUniquePtr<T>> {
   typedef StoreCopyPassByRRef<mozilla::mscom::STAUniquePtr<T>> Type;
 };
 
-template<typename T>
-struct SmartPointerStorageClass<mozilla::mscom::MTAUniquePtr<T>>
-{
+template <typename T>
+struct SmartPointerStorageClass<mozilla::mscom::MTAUniquePtr<T>> {
   typedef StoreCopyPassByRRef<mozilla::mscom::MTAUniquePtr<T>> Type;
 };
 
-template<typename T>
-struct SmartPointerStorageClass<mozilla::mscom::ProxyUniquePtr<T>>
-{
+template <typename T>
+struct SmartPointerStorageClass<mozilla::mscom::ProxyUniquePtr<T>> {
   typedef StoreCopyPassByRRef<mozilla::mscom::ProxyUniquePtr<T>> Type;
 };
 
-template<typename T>
-struct SmartPointerStorageClass<mozilla::mscom::InterceptorTargetPtr<T>>
-{
+template <typename T>
+struct SmartPointerStorageClass<mozilla::mscom::InterceptorTargetPtr<T>> {
   typedef StoreCopyPassByRRef<mozilla::mscom::InterceptorTargetPtr<T>> Type;
 };
 
-template<>
-struct SmartPointerStorageClass<mozilla::mscom::PreservedStreamPtr>
-{
+template <>
+struct SmartPointerStorageClass<mozilla::mscom::PreservedStreamPtr> {
   typedef StoreCopyPassByRRef<mozilla::mscom::PreservedStreamPtr> Type;
 };
 
-} // namespace detail
+}  // namespace detail
 
-#endif // mozilla_mscom_Ptr_h
-
+#endif  // mozilla_mscom_Ptr_h

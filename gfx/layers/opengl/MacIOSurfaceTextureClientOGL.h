@@ -14,15 +14,14 @@ class MacIOSurface;
 namespace mozilla {
 namespace layers {
 
-class MacIOSurfaceTextureData : public TextureData
-{
-public:
+class MacIOSurfaceTextureData : public TextureData {
+ public:
   static MacIOSurfaceTextureData* Create(MacIOSurface* aSurface,
                                          gfx::BackendType aBackend);
 
-  static MacIOSurfaceTextureData*
-  Create(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
-         gfx::BackendType aBackend);
+  static MacIOSurfaceTextureData* Create(const gfx::IntSize& aSize,
+                                         gfx::SurfaceFormat aFormat,
+                                         gfx::BackendType aBackend);
 
   ~MacIOSurfaceTextureData();
 
@@ -45,15 +44,14 @@ public:
   // For debugging purposes only.
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
 
-protected:
-  MacIOSurfaceTextureData(MacIOSurface* aSurface,
-                          gfx::BackendType aBackend);
+ protected:
+  MacIOSurfaceTextureData(MacIOSurface* aSurface, gfx::BackendType aBackend);
 
   RefPtr<MacIOSurface> mSurface;
   gfx::BackendType mBackend;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_MACIOSURFACETEXTURECLIENTOGL_H
+#endif  // MOZILLA_GFX_MACIOSURFACETEXTURECLIENTOGL_H

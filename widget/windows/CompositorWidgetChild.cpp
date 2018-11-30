@@ -13,68 +13,48 @@
 namespace mozilla {
 namespace widget {
 
-CompositorWidgetChild::CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
-                                             RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver)
- : mVsyncDispatcher(aVsyncDispatcher),
-   mVsyncObserver(aVsyncObserver)
-{
+CompositorWidgetChild::CompositorWidgetChild(
+    RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
+    RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver)
+    : mVsyncDispatcher(aVsyncDispatcher), mVsyncObserver(aVsyncObserver) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
 }
 
-CompositorWidgetChild::~CompositorWidgetChild()
-{
-}
+CompositorWidgetChild::~CompositorWidgetChild() {}
 
-void
-CompositorWidgetChild::EnterPresentLock()
-{
+void CompositorWidgetChild::EnterPresentLock() {
   Unused << SendEnterPresentLock();
 }
 
-void
-CompositorWidgetChild::LeavePresentLock()
-{
+void CompositorWidgetChild::LeavePresentLock() {
   Unused << SendLeavePresentLock();
 }
 
-void
-CompositorWidgetChild::OnDestroyWindow()
-{
-}
+void CompositorWidgetChild::OnDestroyWindow() {}
 
-void
-CompositorWidgetChild::UpdateTransparency(nsTransparencyMode aMode)
-{
+void CompositorWidgetChild::UpdateTransparency(nsTransparencyMode aMode) {
   Unused << SendUpdateTransparency(aMode);
 }
 
-void
-CompositorWidgetChild::ClearTransparentWindow()
-{
+void CompositorWidgetChild::ClearTransparentWindow() {
   Unused << SendClearTransparentWindow();
 }
 
-HDC
-CompositorWidgetChild::GetTransparentDC() const
-{
+HDC CompositorWidgetChild::GetTransparentDC() const {
   // Not supported in out-of-process mode.
   return nullptr;
 }
 
-mozilla::ipc::IPCResult
-CompositorWidgetChild::RecvObserveVsync()
-{
+mozilla::ipc::IPCResult CompositorWidgetChild::RecvObserveVsync() {
   mVsyncDispatcher->SetCompositorVsyncObserver(mVsyncObserver);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CompositorWidgetChild::RecvUnobserveVsync()
-{
+mozilla::ipc::IPCResult CompositorWidgetChild::RecvUnobserveVsync() {
   mVsyncDispatcher->SetCompositorVsyncObserver(nullptr);
   return IPC_OK();
 }
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla

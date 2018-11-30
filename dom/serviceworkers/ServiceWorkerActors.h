@@ -16,41 +16,31 @@ class IPCServiceWorkerDescriptor;
 class PServiceWorkerChild;
 class PServiceWorkerParent;
 
-PServiceWorkerChild*
-AllocServiceWorkerChild();
+PServiceWorkerChild* AllocServiceWorkerChild();
 
-bool
-DeallocServiceWorkerChild(PServiceWorkerChild* aActor);
+bool DeallocServiceWorkerChild(PServiceWorkerChild* aActor);
 
-PServiceWorkerParent*
-AllocServiceWorkerParent();
+PServiceWorkerParent* AllocServiceWorkerParent();
 
-bool
-DeallocServiceWorkerParent(PServiceWorkerParent* aActor);
+bool DeallocServiceWorkerParent(PServiceWorkerParent* aActor);
 
-void
-InitServiceWorkerParent(PServiceWorkerParent* aActor,
-                        const IPCServiceWorkerDescriptor& aDescriptor);
+void InitServiceWorkerParent(PServiceWorkerParent* aActor,
+                             const IPCServiceWorkerDescriptor& aDescriptor);
 
 // PServiceWorkerContainer
 
 class PServiceWorkerContainerChild;
 class PServiceWorkerContainerParent;
 
-PServiceWorkerContainerChild*
-AllocServiceWorkerContainerChild();
+PServiceWorkerContainerChild* AllocServiceWorkerContainerChild();
 
-bool
-DeallocServiceWorkerContainerChild(PServiceWorkerContainerChild* aActor);
+bool DeallocServiceWorkerContainerChild(PServiceWorkerContainerChild* aActor);
 
-PServiceWorkerContainerParent*
-AllocServiceWorkerContainerParent();
+PServiceWorkerContainerParent* AllocServiceWorkerContainerParent();
 
-bool
-DeallocServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor);
+bool DeallocServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor);
 
-void
-InitServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor);
+void InitServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor);
 
 // PServiceWorkerRegistration
 
@@ -58,23 +48,21 @@ class IPCServiceWorkerRegistrationDescriptor;
 class PServiceWorkerRegistrationChild;
 class PServiceWorkerRegistrationParent;
 
-PServiceWorkerRegistrationChild*
-AllocServiceWorkerRegistrationChild();
+PServiceWorkerRegistrationChild* AllocServiceWorkerRegistrationChild();
 
-bool
-DeallocServiceWorkerRegistrationChild(PServiceWorkerRegistrationChild* aActor);
+bool DeallocServiceWorkerRegistrationChild(
+    PServiceWorkerRegistrationChild* aActor);
 
-PServiceWorkerRegistrationParent*
-AllocServiceWorkerRegistrationParent();
+PServiceWorkerRegistrationParent* AllocServiceWorkerRegistrationParent();
 
-bool
-DeallocServiceWorkerRegistrationParent(PServiceWorkerRegistrationParent* aActor);
+bool DeallocServiceWorkerRegistrationParent(
+    PServiceWorkerRegistrationParent* aActor);
 
-void
-InitServiceWorkerRegistrationParent(PServiceWorkerRegistrationParent* aActor,
-                                    const IPCServiceWorkerRegistrationDescriptor& aDescriptor);
+void InitServiceWorkerRegistrationParent(
+    PServiceWorkerRegistrationParent* aActor,
+    const IPCServiceWorkerRegistrationDescriptor& aDescriptor);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_serviceworkeractors_h__
+#endif  // mozilla_dom_serviceworkeractors_h__

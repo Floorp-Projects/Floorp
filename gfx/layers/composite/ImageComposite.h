@@ -7,9 +7,9 @@
 #ifndef MOZILLA_GFX_IMAGECOMPOSITE_H
 #define MOZILLA_GFX_IMAGECOMPOSITE_H
 
-#include "CompositableHost.h"           // for CompositableTextureHostRef
+#include "CompositableHost.h"  // for CompositableTextureHostRef
 #include "mozilla/gfx/2D.h"
-#include "mozilla/TimeStamp.h"          // for TimeStamp
+#include "mozilla/TimeStamp.h"  // for TimeStamp
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -18,30 +18,26 @@ namespace layers {
 /**
  * Implements Image selection logic.
  */
-class ImageComposite
-{
-public:
+class ImageComposite {
+ public:
   static const float BIAS_TIME_MS;
 
   explicit ImageComposite();
   ~ImageComposite();
 
-  int32_t GetFrameID()
-  {
+  int32_t GetFrameID() {
     const TimedImage* img = ChooseImage();
     return img ? img->mFrameID : -1;
   }
 
-  int32_t GetProducerID()
-  {
+  int32_t GetProducerID() {
     const TimedImage* img = ChooseImage();
     return img ? img->mProducerID : -1;
   }
 
   int32_t GetLastFrameID() const { return mLastFrameID; }
   int32_t GetLastProducerID() const { return mLastProducerID; }
-  uint32_t GetDroppedFramesAndReset()
-  {
+  uint32_t GetDroppedFramesAndReset() {
     uint32_t dropped = mDroppedFrames;
     mDroppedFrames = 0;
     return dropped;
@@ -56,7 +52,7 @@ public:
     BIAS_POSITIVE,
   };
 
-protected:
+ protected:
   void UpdateBias(size_t aImageIndex);
 
   virtual TimeStamp GetCompositionTime() const = 0;
@@ -88,7 +84,7 @@ protected:
   int32_t mLastFrameID;
   int32_t mLastProducerID;
 
-private:
+ private:
   nsTArray<TimedImage> mImages;
   TimeStamp GetBiasedTime(const TimeStamp& aInput) const;
   // Scan new images and look for common ones in the existing mImages array.
@@ -105,7 +101,7 @@ private:
   uint32_t mLastChosenImageIndex;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // MOZILLA_GFX_IMAGECOMPOSITE_H
+#endif  // MOZILLA_GFX_IMAGECOMPOSITE_H

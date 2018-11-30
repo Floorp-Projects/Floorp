@@ -18,31 +18,30 @@
 namespace mozilla {
 namespace dom {
 
-typedef MozPromise<WebAuthnMakeCredentialResult, nsresult, true> U2FRegisterPromise;
+typedef MozPromise<WebAuthnMakeCredentialResult, nsresult, true>
+    U2FRegisterPromise;
 typedef MozPromise<WebAuthnGetAssertionResult, nsresult, true> U2FSignPromise;
 
-class U2FTokenTransport
-{
-public:
+class U2FTokenTransport {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(U2FTokenTransport);
   U2FTokenTransport() {}
 
-  virtual RefPtr<U2FRegisterPromise>
-  Register(const WebAuthnMakeCredentialInfo& aInfo,
-           bool aForceNoneAttestation) = 0;
+  virtual RefPtr<U2FRegisterPromise> Register(
+      const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation) = 0;
 
-  virtual RefPtr<U2FSignPromise>
-  Sign(const WebAuthnGetAssertionInfo& aInfo) = 0;
+  virtual RefPtr<U2FSignPromise> Sign(
+      const WebAuthnGetAssertionInfo& aInfo) = 0;
 
   virtual void Cancel() = 0;
 
-  virtual void Drop() { }
+  virtual void Drop() {}
 
-protected:
+ protected:
   virtual ~U2FTokenTransport() = default;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_U2FTokenTransport_h
+#endif  // mozilla_dom_U2FTokenTransport_h

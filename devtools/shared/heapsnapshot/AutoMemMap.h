@@ -31,26 +31,21 @@ namespace devtools {
 //       doStuffWithMappedMemory(mm.address());
 //     }
 //     // The memory is automatically unmapped when the AutoMemMap leaves scope.
-class MOZ_RAII AutoMemMap
-{
+class MOZ_RAII AutoMemMap {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
   PRFileInfo64 fileInfo;
-  PRFileDesc*  fd;
-  PRFileMap*   fileMap;
-  void*        addr;
+  PRFileDesc* fd;
+  PRFileMap* fileMap;
+  void* addr;
 
   AutoMemMap(const AutoMemMap& aOther) = delete;
   void operator=(const AutoMemMap& aOther) = delete;
 
-public:
+ public:
   explicit AutoMemMap(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-      : fileInfo()
-      , fd(nullptr)
-      , fileMap(nullptr)
-      , addr(nullptr)
-  {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      : fileInfo(), fd(nullptr), fileMap(nullptr), addr(nullptr) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   };
   ~AutoMemMap();
 
@@ -60,17 +55,23 @@ public:
 
   // Get the size of the memory mapped file.
   uint32_t size() const {
-      MOZ_ASSERT(fileInfo.size <= UINT32_MAX,
-                 "Should only call size() if init() succeeded.");
-      return uint32_t(fileInfo.size);
+    MOZ_ASSERT(fileInfo.size <= UINT32_MAX,
+               "Should only call size() if init() succeeded.");
+    return uint32_t(fileInfo.size);
   }
 
   // Get the mapped memory.
-  void* address() { MOZ_ASSERT(addr); return addr; }
-  const void* address() const { MOZ_ASSERT(addr); return addr; }
+  void* address() {
+    MOZ_ASSERT(addr);
+    return addr;
+  }
+  const void* address() const {
+    MOZ_ASSERT(addr);
+    return addr;
+  }
 };
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla
 
-#endif // mozilla_devtools_AutoMemMap_h
+#endif  // mozilla_devtools_AutoMemMap_h

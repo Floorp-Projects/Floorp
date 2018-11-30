@@ -34,164 +34,128 @@
 using namespace mozilla;
 MOZ_MTLOG_MODULE("mediapipeline")
 
-static MtransportTestUtils *test_utils;
+static MtransportTestUtils* test_utils;
 
 namespace {
 
 class FakeSourceMediaStream : public mozilla::SourceMediaStream {
+ public:
+  FakeSourceMediaStream() : SourceMediaStream() {}
 
-public:
+  virtual ~FakeSourceMediaStream() override { mMainThreadDestroyed = true; }
 
-  FakeSourceMediaStream()
-    : SourceMediaStream()
-  {
-  }
-
-  virtual ~FakeSourceMediaStream() override
-  {
-    mMainThreadDestroyed = true;
-  }
-
-  virtual StreamTime AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr) override
-  {
+  virtual StreamTime AppendToTrack(
+      TrackID aID, MediaSegment* aSegment,
+      MediaSegment* aRawSegment = nullptr) override {
     return aSegment->GetDuration();
   }
 };
 
 class FakeMediaStreamTrackSource : public mozilla::dom::MediaStreamTrackSource {
+ public:
+  FakeMediaStreamTrackSource() : MediaStreamTrackSource(nullptr, nsString()) {}
 
-public:
-
-  FakeMediaStreamTrackSource()
-    : MediaStreamTrackSource(nullptr, nsString())
-  {
-  }
-
-  virtual mozilla::dom::MediaSourceEnum GetMediaSource() const override
-  {
+  virtual mozilla::dom::MediaSourceEnum GetMediaSource() const override {
     return mozilla::dom::MediaSourceEnum::Microphone;
   }
 
+  virtual void Disable() override {}
 
-  virtual void Disable() override
-  {
-  }
+  virtual void Enable() override {}
 
-  virtual void Enable() override
-  {
-  }
-
-  virtual void Stop() override
-  {
-  }
-
+  virtual void Stop() override {}
 };
 
 class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
-
-public:
-
+ public:
   FakeAudioStreamTrack()
-    : AudioStreamTrack(new DOMMediaStream(nullptr), 0, 1,
-                       new FakeMediaStreamTrackSource())
-    , mMutex("Fake AudioStreamTrack")
-    , mStop(false)
-    , mCount(0)
-  {
-    NS_NewTimerWithFuncCallback(getter_AddRefs(mTimer),
-                                FakeAudioStreamTrackGenerateData, this, 20,
-                                nsITimer::TYPE_REPEATING_SLACK,
-                                "FakeAudioStreamTrack::FakeAudioStreamTrackGenerateData",
-                                test_utils->sts_target());
-
+      : AudioStreamTrack(new DOMMediaStream(nullptr), 0, 1,
+                         new FakeMediaStreamTrackSource()),
+        mMutex("Fake AudioStreamTrack"),
+        mStop(false),
+        mCount(0) {
+    NS_NewTimerWithFuncCallback(
+        getter_AddRefs(mTimer), FakeAudioStreamTrackGenerateData, this, 20,
+        nsITimer::TYPE_REPEATING_SLACK,
+        "FakeAudioStreamTrack::FakeAudioStreamTrackGenerateData",
+        test_utils->sts_target());
   }
 
-  void Stop()
-  {
+  void Stop() {
     mozilla::MutexAutoLock lock(mMutex);
     mStop = true;
     mTimer->Cancel();
   }
 
-  virtual void AddListener(MediaStreamTrackListener* aListener) override
-  {
+  virtual void AddListener(MediaStreamTrackListener* aListener) override {
     mozilla::MutexAutoLock lock(mMutex);
     mListeners.push_back(aListener);
   }
 
-  private:
-    std::vector<MediaStreamTrackListener*> mListeners;
-    mozilla::Mutex mMutex;
-    bool mStop;
-    nsCOMPtr<nsITimer> mTimer;
-    int mCount;
+ private:
+  std::vector<MediaStreamTrackListener*> mListeners;
+  mozilla::Mutex mMutex;
+  bool mStop;
+  nsCOMPtr<nsITimer> mTimer;
+  int mCount;
 
-    static void FakeAudioStreamTrackGenerateData(nsITimer* timer, void* closure)
-    {
-      auto mst = static_cast<FakeAudioStreamTrack*>(closure);
-      const int AUDIO_BUFFER_SIZE = 1600;
-      const int NUM_CHANNELS      = 2;
+  static void FakeAudioStreamTrackGenerateData(nsITimer* timer, void* closure) {
+    auto mst = static_cast<FakeAudioStreamTrack*>(closure);
+    const int AUDIO_BUFFER_SIZE = 1600;
+    const int NUM_CHANNELS = 2;
 
-      mozilla::MutexAutoLock lock(mst->mMutex);
-      if (mst->mStop) {
-        return;
-      }
-
-      RefPtr<mozilla::SharedBuffer> samples =
-        mozilla::SharedBuffer::Create(AUDIO_BUFFER_SIZE * NUM_CHANNELS * sizeof(int16_t));
-      int16_t* data = reinterpret_cast<int16_t *>(samples->Data());
-      for(int i=0; i<(AUDIO_BUFFER_SIZE * NUM_CHANNELS); i++) {
-        //saw tooth audio sample
-        data[i] = ((mst->mCount % 8) * 4000) - (7*4000)/2;
-        mst->mCount++;
-      }
-
-      mozilla::AudioSegment segment;
-      AutoTArray<const int16_t *,1> channels;
-      channels.AppendElement(data);
-      segment.AppendFrames(samples.forget(),
-                           channels,
-                           AUDIO_BUFFER_SIZE,
-                           PRINCIPAL_HANDLE_NONE);
-
-      for (auto& listener: mst->mListeners) {
-        listener->NotifyQueuedChanges(nullptr, 0, segment);
-      }
+    mozilla::MutexAutoLock lock(mst->mMutex);
+    if (mst->mStop) {
+      return;
     }
+
+    RefPtr<mozilla::SharedBuffer> samples = mozilla::SharedBuffer::Create(
+        AUDIO_BUFFER_SIZE * NUM_CHANNELS * sizeof(int16_t));
+    int16_t* data = reinterpret_cast<int16_t*>(samples->Data());
+    for (int i = 0; i < (AUDIO_BUFFER_SIZE * NUM_CHANNELS); i++) {
+      // saw tooth audio sample
+      data[i] = ((mst->mCount % 8) * 4000) - (7 * 4000) / 2;
+      mst->mCount++;
+    }
+
+    mozilla::AudioSegment segment;
+    AutoTArray<const int16_t*, 1> channels;
+    channels.AppendElement(data);
+    segment.AppendFrames(samples.forget(), channels, AUDIO_BUFFER_SIZE,
+                         PRINCIPAL_HANDLE_NONE);
+
+    for (auto& listener : mst->mListeners) {
+      listener->NotifyQueuedChanges(nullptr, 0, segment);
+    }
+  }
 };
 
 class LoopbackTransport : public MediaTransportBase {
  public:
-  LoopbackTransport()
-  {
+  LoopbackTransport() {
     SetState("mux", TransportLayer::TS_INIT, false);
     SetState("mux", TransportLayer::TS_INIT, true);
     SetState("non-mux", TransportLayer::TS_INIT, false);
     SetState("non-mux", TransportLayer::TS_INIT, true);
   }
 
-  static void InitAndConnect(LoopbackTransport &client, LoopbackTransport &server) {
+  static void InitAndConnect(LoopbackTransport& client,
+                             LoopbackTransport& server) {
     client.Connect(&server);
     server.Connect(&client);
   }
 
-  void Connect(LoopbackTransport* peer) {
-    peer_ = peer;
-  }
+  void Connect(LoopbackTransport* peer) { peer_ = peer; }
 
-  void Shutdown() {
-    peer_ = nullptr;
-  }
+  void Shutdown() { peer_ = nullptr; }
 
   void SendPacket(const std::string& aTransportId,
-                  MediaPacket& aPacket) override
-  {
+                  MediaPacket& aPacket) override {
     peer_->SignalPacketReceived(aTransportId, aPacket);
   }
 
   TransportLayer::State GetState(const std::string& aTransportId,
-                                 bool aRtcp) const override
-  {
+                                 bool aRtcp) const override {
     if (aRtcp) {
       auto it = mRtcpStates.find(aTransportId);
       if (it != mRtcpStates.end()) {
@@ -207,10 +171,8 @@ class LoopbackTransport : public MediaTransportBase {
     return TransportLayer::TS_NONE;
   }
 
-  void SetState(const std::string& aTransportId,
-                TransportLayer::State aState,
-                bool aRtcp)
-  {
+  void SetState(const std::string& aTransportId, TransportLayer::State aState,
+                bool aRtcp) {
     if (aRtcp) {
       mRtcpStates[aTransportId] = aState;
       SignalRtcpStateChange(aTransportId, aState);
@@ -220,7 +182,7 @@ class LoopbackTransport : public MediaTransportBase {
     }
   }
 
-private:
+ private:
   RefPtr<MediaTransportBase> peer_;
   std::map<std::string, TransportLayer::State> mRtpStates;
   std::map<std::string, TransportLayer::State> mRtcpStates;
@@ -228,61 +190,49 @@ private:
 
 class TestAgent {
  public:
-  TestAgent() :
-      audio_config_(109, "opus", 48000, 2, false),
-      audio_conduit_(mozilla::AudioSessionConduit::Create(
-        WebRtcCallWrapper::Create(),
-        test_utils->sts_target())),
-      audio_pipeline_(),
-      transport_(new LoopbackTransport) {
-  }
+  TestAgent()
+      : audio_config_(109, "opus", 48000, 2, false),
+        audio_conduit_(mozilla::AudioSessionConduit::Create(
+            WebRtcCallWrapper::Create(), test_utils->sts_target())),
+        audio_pipeline_(),
+        transport_(new LoopbackTransport) {}
 
-  static void Connect(TestAgent *client, TestAgent *server) {
-    LoopbackTransport::InitAndConnect(*client->transport_,
-                                      *server->transport_);
+  static void Connect(TestAgent* client, TestAgent* server) {
+    LoopbackTransport::InitAndConnect(*client->transport_, *server->transport_);
   }
 
   virtual void CreatePipeline(const std::string& aTransportId) = 0;
 
-  void SetState(const std::string& aTransportId,
-                TransportLayer::State aState,
-                bool aRtcp)
-  {
+  void SetState(const std::string& aTransportId, TransportLayer::State aState,
+                bool aRtcp) {
     mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(),
-        WrapRunnable(transport_,
-          &LoopbackTransport::SetState, aTransportId, aState, aRtcp));
+        WrapRunnable(transport_, &LoopbackTransport::SetState, aTransportId,
+                     aState, aRtcp));
   }
 
   void UpdateTransport(const std::string& aTransportId,
-                       nsAutoPtr<MediaPipelineFilter> aFilter)
-  {
+                       nsAutoPtr<MediaPipelineFilter> aFilter) {
     mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(),
-        WrapRunnable(audio_pipeline_,
-          &MediaPipeline::UpdateTransport_s, aTransportId, aFilter));
+        WrapRunnable(audio_pipeline_, &MediaPipeline::UpdateTransport_s,
+                     aTransportId, aFilter));
   }
 
   void Stop() {
     MOZ_MTLOG(ML_DEBUG, "Stopping");
 
-    if (audio_pipeline_)
-      audio_pipeline_->Stop();
+    if (audio_pipeline_) audio_pipeline_->Stop();
   }
 
-  void Shutdown_s() {
-    transport_->Shutdown();
-  }
+  void Shutdown_s() { transport_->Shutdown(); }
 
   void Shutdown() {
-    if (audio_pipeline_)
-      audio_pipeline_->Shutdown_m();
-    if (audio_stream_track_)
-      audio_stream_track_->Stop();
+    if (audio_pipeline_) audio_pipeline_->Shutdown_m();
+    if (audio_stream_track_) audio_stream_track_->Stop();
 
     mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(this, &TestAgent::Shutdown_s));
+        test_utils->sts_target(), WrapRunnable(this, &TestAgent::Shutdown_s));
   }
 
   uint32_t GetRemoteSSRC() {
@@ -297,17 +247,13 @@ class TestAgent {
     return res.empty() ? 0 : res[0];
   }
 
-  int GetAudioRtpCountSent() {
-    return audio_pipeline_->RtpPacketsSent();
-  }
+  int GetAudioRtpCountSent() { return audio_pipeline_->RtpPacketsSent(); }
 
   int GetAudioRtpCountReceived() {
     return audio_pipeline_->RtpPacketsReceived();
   }
 
-  int GetAudioRtcpCountSent() {
-    return audio_pipeline_->RtcpPacketsSent();
-  }
+  int GetAudioRtcpCountSent() { return audio_pipeline_->RtcpPacketsSent(); }
 
   int GetAudioRtcpCountReceived() {
     return audio_pipeline_->RtcpPacketsReceived();
@@ -328,25 +274,20 @@ class TestAgentSend : public TestAgent {
  public:
   TestAgentSend() {
     mozilla::MediaConduitErrorCode err =
-        static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->
-        ConfigureSendMediaCodec(&audio_config_);
+        static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get())
+            ->ConfigureSendMediaCodec(&audio_config_);
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
 
     audio_stream_track_ = new FakeAudioStreamTrack();
   }
 
   virtual void CreatePipeline(const std::string& aTransportId) {
-
     std::string test_pc;
 
     RefPtr<MediaPipelineTransmit> audio_pipeline =
-      new mozilla::MediaPipelineTransmit(
-        test_pc,
-        transport_,
-        nullptr,
-        test_utils->sts_target(),
-        false,
-        audio_conduit_);
+        new mozilla::MediaPipelineTransmit(test_pc, transport_, nullptr,
+                                           test_utils->sts_target(), false,
+                                           audio_conduit_);
 
     audio_pipeline->SetTrack(audio_stream_track_.get());
     audio_pipeline->Start();
@@ -358,17 +299,15 @@ class TestAgentSend : public TestAgent {
   }
 };
 
-
 class TestAgentReceive : public TestAgent {
  public:
-
   TestAgentReceive() {
     std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
     codecs.emplace_back(new AudioCodecConfig(audio_config_));
 
     mozilla::MediaConduitErrorCode err =
-        static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->
-        ConfigureRecvMediaCodecs(codecs);
+        static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get())
+            ->ConfigureRecvMediaCodecs(codecs);
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
   }
 
@@ -376,11 +315,8 @@ class TestAgentReceive : public TestAgent {
     std::string test_pc;
 
     audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
-        test_pc,
-        transport_,
-        nullptr,
-        test_utils->sts_target(),
-        static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
+        test_pc, transport_, nullptr, test_utils->sts_target(),
+        static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get()),
         nullptr);
 
     audio_pipeline_->Start();
@@ -393,14 +329,13 @@ class TestAgentReceive : public TestAgent {
   }
 
   void UpdateTransport_s(const std::string& aTransportId,
-      nsAutoPtr<MediaPipelineFilter> filter) {
+                         nsAutoPtr<MediaPipelineFilter> filter) {
     audio_pipeline_->UpdateTransport_s(aTransportId, filter);
   }
 
  private:
   nsAutoPtr<MediaPipelineFilter> bundle_filter_;
 };
-
 
 class MediaPipelineTest : public ::testing::Test {
  public:
@@ -418,19 +353,18 @@ class MediaPipelineTest : public ::testing::Test {
   // Setup transport.
   void InitTransports() {
     mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnableNM(&TestAgent::Connect, &p2_, &p1_));
+        test_utils->sts_target(),
+        WrapRunnableNM(&TestAgent::Connect, &p2_, &p1_));
   }
 
   // Verify RTP and RTCP
   void TestAudioSend(bool aIsRtcpMux,
                      nsAutoPtr<MediaPipelineFilter> initialFilter =
-                        nsAutoPtr<MediaPipelineFilter>(nullptr),
+                         nsAutoPtr<MediaPipelineFilter>(nullptr),
                      nsAutoPtr<MediaPipelineFilter> refinedFilter =
-                        nsAutoPtr<MediaPipelineFilter>(nullptr),
+                         nsAutoPtr<MediaPipelineFilter>(nullptr),
                      unsigned int ms_until_filter_update = 500,
                      unsigned int ms_of_traffic_after_answer = 10000) {
-
     bool bundle = !!(initialFilter);
     // We do not support testing bundle without rtcp mux, since that doesn't
     // make any sense.
@@ -502,40 +436,33 @@ class MediaPipelineTest : public ::testing::Test {
     ASSERT_GE(p2_.GetAudioRtcpCountReceived() + 1, p1_.GetAudioRtcpCountSent());
   }
 
-  void TestAudioReceiverBundle(bool bundle_accepted,
-      nsAutoPtr<MediaPipelineFilter> initialFilter,
+  void TestAudioReceiverBundle(
+      bool bundle_accepted, nsAutoPtr<MediaPipelineFilter> initialFilter,
       nsAutoPtr<MediaPipelineFilter> refinedFilter =
           nsAutoPtr<MediaPipelineFilter>(nullptr),
       unsigned int ms_until_answer = 500,
       unsigned int ms_of_traffic_after_answer = 10000) {
-    TestAudioSend(true,
-                  initialFilter,
-                  refinedFilter,
-                  ms_until_answer,
+    TestAudioSend(true, initialFilter, refinedFilter, ms_until_answer,
                   ms_of_traffic_after_answer);
   }
-protected:
+
+ protected:
   TestAgentSend p1_;
   TestAgentReceive p2_;
 };
 
 class MediaPipelineFilterTest : public ::testing::Test {
-  public:
-    bool Filter(MediaPipelineFilter& filter,
-                int32_t correlator,
-                uint32_t ssrc,
-                uint8_t payload_type) {
-
-      webrtc::RTPHeader header;
-      header.ssrc = ssrc;
-      header.payloadType = payload_type;
-      return filter.Filter(header, correlator);
-    }
+ public:
+  bool Filter(MediaPipelineFilter& filter, int32_t correlator, uint32_t ssrc,
+              uint8_t payload_type) {
+    webrtc::RTPHeader header;
+    header.ssrc = ssrc;
+    header.payloadType = payload_type;
+    return filter.Filter(header, correlator);
+  }
 };
 
-TEST_F(MediaPipelineFilterTest, TestConstruct) {
-  MediaPipelineFilter filter;
-}
+TEST_F(MediaPipelineFilterTest, TestConstruct) { MediaPipelineFilter filter; }
 
 TEST_F(MediaPipelineFilterTest, TestDefault) {
   MediaPipelineFilter filter;
@@ -549,22 +476,14 @@ TEST_F(MediaPipelineFilterTest, TestSSRCFilter) {
   ASSERT_FALSE(Filter(filter, 0, 556, 110));
 }
 
-#define SSRC(ssrc) \
-  ((ssrc >> 24) & 0xFF), \
-  ((ssrc >> 16) & 0xFF), \
-  ((ssrc >> 8 ) & 0xFF), \
-  (ssrc         & 0xFF)
+#define SSRC(ssrc)                                                    \
+  ((ssrc >> 24) & 0xFF), ((ssrc >> 16) & 0xFF), ((ssrc >> 8) & 0xFF), \
+      (ssrc & 0xFF)
 
 #define REPORT_FRAGMENT(ssrc) \
-  SSRC(ssrc), \
-  0,0,0,0, \
-  0,0,0,0, \
-  0,0,0,0, \
-  0,0,0,0, \
-  0,0,0,0
+  SSRC(ssrc), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
-#define RTCP_TYPEINFO(num_rrs, type, size) \
-  0x80 + num_rrs, type, 0, size
+#define RTCP_TYPEINFO(num_rrs, type, size) 0x80 + num_rrs, type, 0, size
 
 TEST_F(MediaPipelineFilterTest, TestCorrelatorFilter) {
   MediaPipelineFilter filter;
@@ -609,13 +528,9 @@ TEST_F(MediaPipelineFilterTest, TestRemoteSDPNoSSRCs) {
   ASSERT_TRUE(Filter(filter, 0, 555, 110));
 }
 
-TEST_F(MediaPipelineTest, TestAudioSendNoMux) {
-  TestAudioSend(false);
-}
+TEST_F(MediaPipelineTest, TestAudioSendNoMux) { TestAudioSend(false); }
 
-TEST_F(MediaPipelineTest, TestAudioSendMux) {
-  TestAudioSend(true);
-}
+TEST_F(MediaPipelineTest, TestAudioSendMux) { TestAudioSend(true); }
 
 TEST_F(MediaPipelineTest, TestAudioSendBundle) {
   nsAutoPtr<MediaPipelineFilter> filter(new MediaPipelineFilter);
@@ -623,13 +538,11 @@ TEST_F(MediaPipelineTest, TestAudioSendBundle) {
   // some RTCP will be sent at all. This is because the first RTCP packet
   // is sometimes sent before the transports are ready, which causes it to
   // be dropped.
-  TestAudioReceiverBundle(true,
-                          filter,
-  // We do not specify the filter for the remote description, so it will be
-  // set to something sane after a short time.
-                          nsAutoPtr<MediaPipelineFilter>(),
-                          10000,
-                          10000);
+  TestAudioReceiverBundle(
+      true, filter,
+      // We do not specify the filter for the remote description, so it will be
+      // set to something sane after a short time.
+      nsAutoPtr<MediaPipelineFilter>(), 10000, 10000);
 
   // Some packets should have been dropped, but not all
   ASSERT_GT(p1_.GetAudioRtpCountSent(), p2_.GetAudioRtpCountReceived());

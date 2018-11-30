@@ -30,57 +30,47 @@ const uint16_t kMajorRevision = 10;
 // not play in older players.
 const uint16_t kMinorRevision = 0;
 
-struct ReferencePtr
-{
-  ReferencePtr()
-    : mLongPtr(0)
-  {}
+struct ReferencePtr {
+  ReferencePtr() : mLongPtr(0) {}
 
-  MOZ_IMPLICIT ReferencePtr(const void* aLongPtr)
-    : mLongPtr(uint64_t(aLongPtr))
-  {}
+  MOZ_IMPLICIT ReferencePtr(const void *aLongPtr)
+      : mLongPtr(uint64_t(aLongPtr)) {}
 
   template <typename T>
-  MOZ_IMPLICIT ReferencePtr(const RefPtr<T>& aPtr)
-    : mLongPtr(uint64_t(aPtr.get()))
-  {}
+  MOZ_IMPLICIT ReferencePtr(const RefPtr<T> &aPtr)
+      : mLongPtr(uint64_t(aPtr.get())) {}
 
-  ReferencePtr &operator =(const void* aLongPtr) {
+  ReferencePtr &operator=(const void *aLongPtr) {
     mLongPtr = uint64_t(aLongPtr);
     return *this;
   }
 
   template <typename T>
-  ReferencePtr &operator =(const RefPtr<T>& aPtr) {
+  ReferencePtr &operator=(const RefPtr<T> &aPtr) {
     mLongPtr = uint64_t(aPtr.get());
     return *this;
   }
 
-  operator void*() const {
-    return (void*)mLongPtr;
-  }
+  operator void *() const { return (void *)mLongPtr; }
 
   uint64_t mLongPtr;
 };
 
-struct RecordedFontDetails
-{
+struct RecordedFontDetails {
   uint64_t fontDataKey;
   uint32_t size;
   uint32_t index;
 };
 
 // Used by the Azure drawing debugger (player2d)
-inline std::string StringFromPtr(ReferencePtr aPtr)
-{
+inline std::string StringFromPtr(ReferencePtr aPtr) {
   std::stringstream stream;
   stream << aPtr;
   return stream.str();
 }
 
-class Translator
-{
-public:
+class Translator {
+ public:
   virtual ~Translator() {}
 
   virtual DrawTarget *LookupDrawTarget(ReferencePtr aRefPtr) = 0;
@@ -89,48 +79,49 @@ public:
   virtual FilterNode *LookupFilterNode(ReferencePtr aRefPtr) = 0;
   virtual GradientStops *LookupGradientStops(ReferencePtr aRefPtr) = 0;
   virtual ScaledFont *LookupScaledFont(ReferencePtr aRefPtr) = 0;
-  virtual UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) = 0;
+  virtual UnscaledFont *LookupUnscaledFont(ReferencePtr aRefPtr) = 0;
   virtual NativeFontResource *LookupNativeFontResource(uint64_t aKey) = 0;
-  virtual already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) { return nullptr; }
+  virtual already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) {
+    return nullptr;
+  }
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) = 0;
   virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
   virtual void AddPath(ReferencePtr aRefPtr, Path *aPath) = 0;
   virtual void RemovePath(ReferencePtr aRefPtr) = 0;
   virtual void AddSourceSurface(ReferencePtr aRefPtr, SourceSurface *aPath) = 0;
   virtual void RemoveSourceSurface(ReferencePtr aRefPtr) = 0;
-  virtual void AddFilterNode(mozilla::gfx::ReferencePtr aRefPtr, FilterNode *aSurface) = 0;
+  virtual void AddFilterNode(mozilla::gfx::ReferencePtr aRefPtr,
+                             FilterNode *aSurface) = 0;
   virtual void RemoveFilterNode(mozilla::gfx::ReferencePtr aRefPtr) = 0;
   virtual void AddGradientStops(ReferencePtr aRefPtr, GradientStops *aPath) = 0;
   virtual void RemoveGradientStops(ReferencePtr aRefPtr) = 0;
   virtual void AddScaledFont(ReferencePtr aRefPtr, ScaledFont *aScaledFont) = 0;
   virtual void RemoveScaledFont(ReferencePtr aRefPtr) = 0;
-  virtual void AddUnscaledFont(ReferencePtr aRefPtr, UnscaledFont* aUnscaledFont) = 0;
+  virtual void AddUnscaledFont(ReferencePtr aRefPtr,
+                               UnscaledFont *aUnscaledFont) = 0;
   virtual void RemoveUnscaledFont(ReferencePtr aRefPtr) = 0;
-  virtual void AddNativeFontResource(uint64_t aKey,
-                                     NativeFontResource *aNativeFontResource) = 0;
+  virtual void AddNativeFontResource(
+      uint64_t aKey, NativeFontResource *aNativeFontResource) = 0;
 
   virtual already_AddRefed<DrawTarget> CreateDrawTarget(ReferencePtr aRefPtr,
                                                         const IntSize &aSize,
                                                         SurfaceFormat aFormat);
   virtual DrawTarget *GetReferenceDrawTarget() = 0;
-  virtual void* GetFontContext() { return nullptr; }
+  virtual void *GetFontContext() { return nullptr; }
 };
 
-struct ColorPatternStorage
-{
+struct ColorPatternStorage {
   Color mColor;
 };
 
-struct LinearGradientPatternStorage
-{
+struct LinearGradientPatternStorage {
   Point mBegin;
   Point mEnd;
   ReferencePtr mStops;
   Matrix mMatrix;
 };
 
-struct RadialGradientPatternStorage
-{
+struct RadialGradientPatternStorage {
   Point mCenter1;
   Point mCenter2;
   Float mRadius1;
@@ -139,8 +130,7 @@ struct RadialGradientPatternStorage
   Matrix mMatrix;
 };
 
-struct SurfacePatternStorage
-{
+struct SurfacePatternStorage {
   ExtendMode mExtend;
   SamplingFilter mSamplingFilter;
   ReferencePtr mSurface;
@@ -148,8 +138,7 @@ struct SurfacePatternStorage
   IntRect mSamplingRect;
 };
 
-struct PatternStorage
-{
+struct PatternStorage {
   PatternType mType;
   union {
     char *mStorage;
@@ -160,7 +149,6 @@ struct PatternStorage
   };
 };
 
-
 /* SizeCollector and MemWriter are used
  * in a pair to first collect the size of the
  * event that we're going to write and then
@@ -168,19 +156,17 @@ struct PatternStorage
  * size. */
 struct SizeCollector {
   SizeCollector() : mTotalSize(0) {}
-    void write(const char*, size_t s) {
-      mTotalSize += s;
-    }
+  void write(const char *, size_t s) { mTotalSize += s; }
   size_t mTotalSize;
 };
 
 struct MemWriter {
-  explicit MemWriter(char* aPtr) : mPtr(aPtr) {}
-    void write(const char* aData, size_t aSize) {
-       memcpy(mPtr, aData, aSize);
-       mPtr += aSize;
-    }
-  char* mPtr;
+  explicit MemWriter(char *aPtr) : mPtr(aPtr) {}
+  void write(const char *aData, size_t aSize) {
+    memcpy(mPtr, aData, aSize);
+    mPtr += aSize;
+  }
+  char *mPtr;
 };
 
 struct MemStream {
@@ -196,11 +182,11 @@ struct MemStream {
       if (mLength > mCapacity) {
         mCapacity = mLength * 2;
       }
-      mData = (char*)realloc(mData, mCapacity);
+      mData = (char *)realloc(mData, mCapacity);
     }
   }
 
-  void write(const char* aData, size_t aSize) {
+  void write(const char *aData, size_t aSize) {
     Resize(mLength + aSize);
     memcpy(mData + mLength - aSize, aData, aSize);
   }
@@ -210,13 +196,13 @@ struct MemStream {
 };
 
 class EventStream {
-public:
-  virtual void write(const char* aData, size_t aSize) = 0;
-  virtual void read(char* aOut, size_t aSize) = 0;
+ public:
+  virtual void write(const char *aData, size_t aSize) = 0;
+  virtual void read(char *aOut, size_t aSize) = 0;
 };
 
 class RecordedEvent {
-public:
+ public:
   enum EventType {
     DRAWTARGETCREATION = 0,
     DRAWTARGETDESTRUCTION,
@@ -263,7 +249,8 @@ public:
     INTOLUMINANCE,
     EXTERNALSURFACECREATION,
   };
-  static const uint32_t kTotalEventTypes = RecordedEvent::FILTERNODESETINPUT + 1;
+  static const uint32_t kTotalEventTypes =
+      RecordedEvent::FILTERNODESETINPUT + 1;
 
   virtual ~RecordedEvent() {}
 
@@ -279,20 +266,22 @@ public:
    */
   virtual bool PlayEvent(Translator *aTranslator) const { return true; }
 
-  virtual void RecordToStream(std::ostream& aStream) const = 0;
-  virtual void RecordToStream(EventStream& aStream) const = 0;
-  virtual void RecordToStream(MemStream& aStream) const = 0;
+  virtual void RecordToStream(std::ostream &aStream) const = 0;
+  virtual void RecordToStream(EventStream &aStream) const = 0;
+  virtual void RecordToStream(MemStream &aStream) const = 0;
 
-  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const { }
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const {}
 
-  template<class S>
-  void RecordPatternData(S &aStream, const PatternStorage &aPatternStorage) const;
-  template<class S>
+  template <class S>
+  void RecordPatternData(S &aStream,
+                         const PatternStorage &aPatternStorage) const;
+  template <class S>
   void ReadPatternData(S &aStream, PatternStorage &aPatternStorage) const;
   void StorePattern(PatternStorage &aDestination, const Pattern &aSource) const;
-  template<class S>
-  void RecordStrokeOptions(S &aStream, const StrokeOptions &aStrokeOptions) const;
-  template<class S>
+  template <class S>
+  void RecordStrokeOptions(S &aStream,
+                           const StrokeOptions &aStrokeOptions) const;
+  template <class S>
   void ReadStrokeOptions(S &aStream, StrokeOptions &aStrokeOptions);
 
   virtual std::string GetName() const = 0;
@@ -301,36 +290,42 @@ public:
 
   virtual ReferencePtr GetDestinedDT() { return nullptr; }
 
-  void OutputSimplePatternInfo(const PatternStorage &aStorage, std::stringstream &aOutput) const;
+  void OutputSimplePatternInfo(const PatternStorage &aStorage,
+                               std::stringstream &aOutput) const;
 
-  template<class S>
+  template <class S>
   static RecordedEvent *LoadEvent(S &aStream, EventType aType);
-  static RecordedEvent *LoadEventFromStream(std::istream &aStream, EventType aType);
-  static RecordedEvent *LoadEventFromStream(EventStream& aStream, EventType aType);
+  static RecordedEvent *LoadEventFromStream(std::istream &aStream,
+                                            EventType aType);
+  static RecordedEvent *LoadEventFromStream(EventStream &aStream,
+                                            EventType aType);
 
   // An alternative to LoadEvent that avoids a heap allocation for the event.
-  // This accepts a callable `f' that will take a RecordedEvent* as a single parameter
-  template<class S, class F>
+  // This accepts a callable `f' that will take a RecordedEvent* as a single
+  // parameter
+  template <class S, class F>
   static bool DoWithEvent(S &aStream, EventType aType, F f);
 
   EventType GetType() const { return (EventType)mType; }
-protected:
+
+ protected:
   friend class DrawEventRecorderPrivate;
   friend class DrawEventRecorderFile;
   friend class DrawEventRecorderMemory;
-  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont, std::ostream *aOutput);
-  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont, MemStream &aOutput);
-  template<class S>
+  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont,
+                                 std::ostream *aOutput);
+  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont,
+                                 MemStream &aOutput);
+  template <class S>
   static void RecordUnscaledFontImpl(UnscaledFont *aUnscaledFont, S &aOutput);
 
-  MOZ_IMPLICIT RecordedEvent(int32_t aType) : mType(aType)
-  {}
+  MOZ_IMPLICIT RecordedEvent(int32_t aType) : mType(aType) {}
 
   int32_t mType;
   std::vector<Float> mDashPatternStorage;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

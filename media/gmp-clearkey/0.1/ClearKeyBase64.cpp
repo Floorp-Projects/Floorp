@@ -21,29 +21,22 @@
 using namespace std;
 
 /**
-* Take a base64-encoded string, convert (in-place) each character to its
-* corresponding value in the [0x00, 0x3f] range, and truncate any padding.
-*/
-static bool
-Decode6Bit(string& aStr)
-{
+ * Take a base64-encoded string, convert (in-place) each character to its
+ * corresponding value in the [0x00, 0x3f] range, and truncate any padding.
+ */
+static bool Decode6Bit(string& aStr) {
   for (size_t i = 0; i < aStr.length(); i++) {
     if (aStr[i] >= 'A' && aStr[i] <= 'Z') {
       aStr[i] -= 'A';
-    }
-    else if (aStr[i] >= 'a' && aStr[i] <= 'z') {
+    } else if (aStr[i] >= 'a' && aStr[i] <= 'z') {
       aStr[i] -= 'a' - 26;
-    }
-    else if (aStr[i] >= '0' && aStr[i] <= '9') {
+    } else if (aStr[i] >= '0' && aStr[i] <= '9') {
       aStr[i] -= '0' - 52;
-    }
-    else if (aStr[i] == '-' || aStr[i] == '+') {
+    } else if (aStr[i] == '-' || aStr[i] == '+') {
       aStr[i] = 62;
-    }
-    else if (aStr[i] == '_' || aStr[i] == '/') {
+    } else if (aStr[i] == '_' || aStr[i] == '/') {
       aStr[i] = 63;
-    }
-    else {
+    } else {
       // Truncate '=' padding at the end of the aString.
       if (aStr[i] != '=') {
         aStr.erase(i, string::npos);
@@ -58,9 +51,7 @@ Decode6Bit(string& aStr)
   return true;
 }
 
-bool
-DecodeBase64(const string& aEncoded, vector<uint8_t>& aOutDecoded)
-{
+bool DecodeBase64(const string& aEncoded, vector<uint8_t>& aOutDecoded) {
   if (aEncoded.empty()) {
     aOutDecoded.clear();
     return true;
@@ -82,8 +73,7 @@ DecodeBase64(const string& aEncoded, vector<uint8_t>& aOutDecoded)
   for (size_t i = 0; i < encoded.length(); i++) {
     if (!shift) {
       *out = encoded[i] << 2;
-    }
-    else {
+    } else {
       *out |= encoded[i] >> (6 - shift);
       out++;
       if (out == aOutDecoded.end()) {

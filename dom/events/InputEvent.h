@@ -14,11 +14,9 @@
 namespace mozilla {
 namespace dom {
 
-class InputEvent : public UIEvent
-{
-public:
-  InputEvent(EventTarget* aOwner,
-             nsPresContext* aPresContext,
+class InputEvent : public UIEvent {
+ public:
+  InputEvent(EventTarget* aOwner, nsPresContext* aPresContext,
              InternalEditorInputEvent* aEvent);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(InputEvent, UIEvent)
@@ -28,23 +26,22 @@ public:
                                                   const InputEventInit& aParam,
                                                   ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return InputEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   bool IsComposing();
 
-protected:
+ protected:
   ~InputEvent() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::InputEvent>
-NS_NewDOMInputEvent(mozilla::dom::EventTarget* aOwner,
-                    nsPresContext* aPresContext,
-                    mozilla::InternalEditorInputEvent* aEvent);
+already_AddRefed<mozilla::dom::InputEvent> NS_NewDOMInputEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::InternalEditorInputEvent* aEvent);
 
-#endif // mozilla_dom_InputEvent_h_
+#endif  // mozilla_dom_InputEvent_h_

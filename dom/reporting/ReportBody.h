@@ -17,31 +17,25 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class ReportBody : public nsISupports
-                 , public nsWrapperCache
-{
-public:
+class ReportBody : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ReportBody)
 
   explicit ReportBody(nsPIDOMWindowInner* aWindow);
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner*
-  GetParentObject() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
-protected:
+ protected:
   virtual ~ReportBody();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ReportBody_h
+#endif  // mozilla_dom_ReportBody_h

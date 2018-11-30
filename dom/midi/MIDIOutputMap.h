@@ -19,28 +19,24 @@ namespace dom {
  * access. Almost all functions are implemented automatically by WebIDL.
  *
  */
-class MIDIOutputMap final : public nsISupports,
-                            public nsWrapperCache
-{
-public:
+class MIDIOutputMap final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MIDIOutputMap)
 
   explicit MIDIOutputMap(nsPIDOMWindowInner* aParent);
 
-  nsPIDOMWindowInner*
-  GetParentObject() const
-  {
-    return mParent;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mParent; }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-private:
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
+ private:
   ~MIDIOutputMap() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIOutputMap_h
+#endif  // mozilla_dom_MIDIOutputMap_h

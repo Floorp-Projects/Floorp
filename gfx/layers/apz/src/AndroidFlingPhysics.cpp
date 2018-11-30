@@ -18,8 +18,7 @@ namespace layers {
 // Chrome's implementation of fling physics on Android:
 // https://cs.chromium.org/chromium/src/ui/events/android/scroller.cc?rcl=3ae3aaff927038a5c644926842cb0c31dea60c79
 
-static double ComputeDeceleration(float aDPI)
-{
+static double ComputeDeceleration(float aDPI) {
   const float kFriction = 0.84f;
   const float kGravityEarth = 9.80665f;
   return kGravityEarth  // g (m/s^2)
@@ -32,14 +31,12 @@ static double ComputeDeceleration(float aDPI)
 const float kDecelerationRate = 2.3582018f;
 
 // Default friction constant in android.view.ViewConfiguration.
-static float GetFlingFriction()
-{
+static float GetFlingFriction() {
   return gfxPrefs::APZChromeFlingPhysicsFriction();
 }
 
 // Tension lines cross at (GetInflexion(), 1).
-static float GetInflexion()
-{
+static float GetInflexion() {
   // Clamp the inflexion to the range [0,1]. Values outside of this range
   // do not make sense in the physics model, and for negative values the
   // approximation used to compute the spline curve does not converge.
@@ -55,33 +52,33 @@ static float GetInflexion()
 
 // Fling scroll is stopped when the scroll position is |kThresholdForFlingEnd|
 // pixels or closer from the end.
-static float GetThresholdForFlingEnd()
-{
+static float GetThresholdForFlingEnd() {
   return gfxPrefs::APZChromeFlingPhysicsStopThreshold();
 }
 
-static double ComputeSplineDeceleration(ParentLayerCoord aVelocity, double aTuningCoeff)
-{
+static double ComputeSplineDeceleration(ParentLayerCoord aVelocity,
+                                        double aTuningCoeff) {
   float velocityPerSec = aVelocity * 1000.0f;
-  return std::log(GetInflexion() * velocityPerSec / (GetFlingFriction() * aTuningCoeff));
+  return std::log(GetInflexion() * velocityPerSec /
+                  (GetFlingFriction() * aTuningCoeff));
 }
 
-static TimeDuration ComputeFlingDuration(ParentLayerCoord aVelocity, double aTuningCoeff)
-{
+static TimeDuration ComputeFlingDuration(ParentLayerCoord aVelocity,
+                                         double aTuningCoeff) {
   const double splineDecel = ComputeSplineDeceleration(aVelocity, aTuningCoeff);
   const double timeSeconds = std::exp(splineDecel / (kDecelerationRate - 1.0));
   return TimeDuration::FromSeconds(timeSeconds);
 }
 
-static ParentLayerCoord ComputeFlingDistance(ParentLayerCoord aVelocity, double aTuningCoeff)
-{
+static ParentLayerCoord ComputeFlingDistance(ParentLayerCoord aVelocity,
+                                             double aTuningCoeff) {
   const double splineDecel = ComputeSplineDeceleration(aVelocity, aTuningCoeff);
   return GetFlingFriction() * aTuningCoeff *
-      std::exp(kDecelerationRate / (kDecelerationRate - 1.0) * splineDecel);
+         std::exp(kDecelerationRate / (kDecelerationRate - 1.0) * splineDecel);
 }
 
 struct SplineConstants {
-public:
+ public:
   SplineConstants() {
     const float kStartTension = 0.5f;
     const float kEndTension = 1.0f;
@@ -118,10 +115,8 @@ public:
     mSplinePositions[kNumSamples] = 1.0f;
   }
 
-  void CalculateCoefficients(float aTime,
-                             float* aOutDistanceCoef,
-                             float* aOutVelocityCoef)
-  {
+  void CalculateCoefficients(float aTime, float* aOutDistanceCoef,
+                             float* aOutVelocityCoef) {
     *aOutDistanceCoef = 1.0f;
     *aOutVelocityCoef = 0.0f;
     const int index = static_cast<int>(kNumSamples * aTime);
@@ -134,22 +129,21 @@ public:
       *aOutDistanceCoef = dInf + (aTime - tInf) * *aOutVelocityCoef;
     }
   }
-private:
+
+ private:
   static const int kNumSamples = 100;
   float mSplinePositions[kNumSamples + 1];
 };
 
 StaticAutoPtr<SplineConstants> gSplineConstants;
 
-/* static */ void AndroidFlingPhysics::InitializeGlobalState()
-{
+/* static */ void AndroidFlingPhysics::InitializeGlobalState() {
   gSplineConstants = new SplineConstants();
   ClearOnShutdown(&gSplineConstants);
 }
 
 void AndroidFlingPhysics::Init(const ParentLayerPoint& aStartingVelocity,
-                               float aPLPPI)
-{
+                               float aPLPPI) {
   mVelocity = aStartingVelocity.Length();
   // We should not have created a fling animation if there is no velocity.
   MOZ_ASSERT(mVelocity != 0.0f);
@@ -162,8 +156,8 @@ void AndroidFlingPhysics::Init(const ParentLayerPoint& aStartingVelocity,
   float coeffX = mVelocity == 0 ? 1.0f : aStartingVelocity.x / mVelocity;
   float coeffY = mVelocity == 0 ? 1.0f : aStartingVelocity.y / mVelocity;
   mTargetDistance = ComputeFlingDistance(mVelocity, tuningCoeff);
-  mTargetPos = ParentLayerPoint(mTargetDistance * coeffX,
-                                mTargetDistance * coeffY);
+  mTargetPos =
+      ParentLayerPoint(mTargetDistance * coeffX, mTargetDistance * coeffY);
   const float hyp = mTargetPos.Length();
   if (FuzzyEqualsAdditive(hyp, 0.0f)) {
     mDeltaNorm = ParentLayerPoint(1, 1);
@@ -173,8 +167,7 @@ void AndroidFlingPhysics::Init(const ParentLayerPoint& aStartingVelocity,
 }
 void AndroidFlingPhysics::Sample(const TimeDuration& aDelta,
                                  ParentLayerPoint* aOutVelocity,
-                                 ParentLayerPoint* aOutOffset)
-{
+                                 ParentLayerPoint* aOutOffset) {
   float newVelocity;
   if (SampleImpl(aDelta, &newVelocity)) {
     *aOutOffset = (mCurrentPos - mLastPos);
@@ -188,20 +181,22 @@ void AndroidFlingPhysics::Sample(const TimeDuration& aDelta,
 }
 
 bool AndroidFlingPhysics::SampleImpl(const TimeDuration& aDelta,
-                                     float* aOutVelocity)
-{
+                                     float* aOutVelocity) {
   mDurationSoFar += aDelta;
   if (mDurationSoFar >= mTargetDuration) {
     return false;
   }
 
-  const float timeRatio = mDurationSoFar.ToSeconds() / mTargetDuration.ToSeconds();
+  const float timeRatio =
+      mDurationSoFar.ToSeconds() / mTargetDuration.ToSeconds();
   float distanceCoef = 1.0f;
   float velocityCoef = 0.0f;
-  gSplineConstants->CalculateCoefficients(timeRatio, &distanceCoef, &velocityCoef);
+  gSplineConstants->CalculateCoefficients(timeRatio, &distanceCoef,
+                                          &velocityCoef);
 
   // The caller expects the velocity in pixels per _millisecond_.
-  *aOutVelocity = velocityCoef * mTargetDistance / mTargetDuration.ToMilliseconds();
+  *aOutVelocity =
+      velocityCoef * mTargetDistance / mTargetDuration.ToMilliseconds();
 
   mCurrentPos = mTargetPos * distanceCoef;
 
@@ -214,6 +209,5 @@ bool AndroidFlingPhysics::SampleImpl(const TimeDuration& aDelta,
   return true;
 }
 
-
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

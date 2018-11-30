@@ -16,7 +16,8 @@
 #include "mozpkix/pkixtypes.h"
 #include "secmodt.h"
 
-namespace mozilla { namespace psm {
+namespace mozilla {
+namespace psm {
 
 enum class ValidityCheckingMode {
   CheckingOff = 0,
@@ -56,7 +57,7 @@ bool LoadLoadableRoots(const nsCString& dir);
 void UnloadLoadableRoots();
 
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
-                              /*out*/ nsCString& nickname);
+                                      /*out*/ nsCString& nickname);
 
 /**
  * Build strings of base64 encoded issuer, serial, subject and public key data
@@ -77,17 +78,15 @@ nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
  *        NS_ERROR_FAILURE.
  */
 nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
-                              /*out*/ nsCString& encIssuer,
-                              /*out*/ nsCString& encSerial,
-                              /*out*/ nsCString& encSubject,
-                              /*out*/ nsCString& encPubKey);
+                                     /*out*/ nsCString& encIssuer,
+                                     /*out*/ nsCString& encSerial,
+                                     /*out*/ nsCString& encSubject,
+                                     /*out*/ nsCString& encPubKey);
 
 void SaveIntermediateCerts(const UniqueCERTCertList& certList);
 
-class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain
-{
-
-public:
+class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
+ public:
   typedef mozilla::pkix::Result Result;
 
   enum OCSPFetching {
@@ -98,52 +97,49 @@ public:
     LocalOnlyOCSPForEV = 4,
   };
 
-  NSSCertDBTrustDomain(SECTrustType certDBTrustType, OCSPFetching ocspFetching,
-                       OCSPCache& ocspCache, void* pinArg,
-                       mozilla::TimeDuration ocspTimeoutSoft,
-                       mozilla::TimeDuration ocspTimeoutHard,
-                       uint32_t certShortLifetimeInDays,
-                       CertVerifier::PinningMode pinningMode,
-                       unsigned int minRSABits,
-                       ValidityCheckingMode validityCheckingMode,
-                       CertVerifier::SHA1Mode sha1Mode,
-                       NetscapeStepUpPolicy netscapeStepUpPolicy,
-                       DistrustedCAPolicy distrustedCAPolicy,
-                       const OriginAttributes& originAttributes,
-                       UniqueCERTCertList& builtChain,
-          /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
-          /*optional*/ const char* hostname = nullptr);
+  NSSCertDBTrustDomain(
+      SECTrustType certDBTrustType, OCSPFetching ocspFetching,
+      OCSPCache& ocspCache, void* pinArg, mozilla::TimeDuration ocspTimeoutSoft,
+      mozilla::TimeDuration ocspTimeoutHard, uint32_t certShortLifetimeInDays,
+      CertVerifier::PinningMode pinningMode, unsigned int minRSABits,
+      ValidityCheckingMode validityCheckingMode,
+      CertVerifier::SHA1Mode sha1Mode,
+      NetscapeStepUpPolicy netscapeStepUpPolicy,
+      DistrustedCAPolicy distrustedCAPolicy,
+      const OriginAttributes& originAttributes, UniqueCERTCertList& builtChain,
+      /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
+      /*optional*/ const char* hostname = nullptr);
 
   virtual Result FindIssuer(mozilla::pkix::Input encodedIssuerName,
                             IssuerChecker& checker,
                             mozilla::pkix::Time time) override;
 
-  virtual Result GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                              const mozilla::pkix::CertPolicyId& policy,
-                              mozilla::pkix::Input candidateCertDER,
-                              /*out*/ mozilla::pkix::TrustLevel& trustLevel)
-                              override;
+  virtual Result GetCertTrust(
+      mozilla::pkix::EndEntityOrCA endEntityOrCA,
+      const mozilla::pkix::CertPolicyId& policy,
+      mozilla::pkix::Input candidateCertDER,
+      /*out*/ mozilla::pkix::TrustLevel& trustLevel) override;
 
   virtual Result CheckSignatureDigestAlgorithm(
-                   mozilla::pkix::DigestAlgorithm digestAlg,
-                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                   mozilla::pkix::Time notBefore) override;
+      mozilla::pkix::DigestAlgorithm digestAlg,
+      mozilla::pkix::EndEntityOrCA endEntityOrCA,
+      mozilla::pkix::Time notBefore) override;
 
   virtual Result CheckRSAPublicKeyModulusSizeInBits(
-                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                   unsigned int modulusSizeInBits) override;
+      mozilla::pkix::EndEntityOrCA endEntityOrCA,
+      unsigned int modulusSizeInBits) override;
 
   virtual Result VerifyRSAPKCS1SignedDigest(
-                   const mozilla::pkix::SignedDigest& signedDigest,
-                   mozilla::pkix::Input subjectPublicKeyInfo) override;
+      const mozilla::pkix::SignedDigest& signedDigest,
+      mozilla::pkix::Input subjectPublicKeyInfo) override;
 
   virtual Result CheckECDSACurveIsAcceptable(
-                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                   mozilla::pkix::NamedCurve curve) override;
+      mozilla::pkix::EndEntityOrCA endEntityOrCA,
+      mozilla::pkix::NamedCurve curve) override;
 
   virtual Result VerifyECDSASignedDigest(
-                   const mozilla::pkix::SignedDigest& signedDigest,
-                   mozilla::pkix::Input subjectPublicKeyInfo) override;
+      const mozilla::pkix::SignedDigest& signedDigest,
+      mozilla::pkix::Input subjectPublicKeyInfo) override;
 
   virtual Result DigestBuf(mozilla::pkix::Input item,
                            mozilla::pkix::DigestAlgorithm digestAlg,
@@ -151,38 +147,34 @@ public:
                            size_t digestBufLen) override;
 
   virtual Result CheckValidityIsAcceptable(
-                   mozilla::pkix::Time notBefore, mozilla::pkix::Time notAfter,
-                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                   mozilla::pkix::KeyPurposeId keyPurpose) override;
+      mozilla::pkix::Time notBefore, mozilla::pkix::Time notAfter,
+      mozilla::pkix::EndEntityOrCA endEntityOrCA,
+      mozilla::pkix::KeyPurposeId keyPurpose) override;
 
   virtual Result NetscapeStepUpMatchesServerAuth(
-                   mozilla::pkix::Time notBefore,
-                   /*out*/ bool& matches) override;
+      mozilla::pkix::Time notBefore,
+      /*out*/ bool& matches) override;
 
   virtual Result CheckRevocation(
-                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                   const mozilla::pkix::CertID& certID,
-                   mozilla::pkix::Time time,
-                   mozilla::pkix::Duration validityDuration,
+      mozilla::pkix::EndEntityOrCA endEntityOrCA,
+      const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
+      mozilla::pkix::Duration validityDuration,
       /*optional*/ const mozilla::pkix::Input* stapledOCSPResponse,
-      /*optional*/ const mozilla::pkix::Input* aiaExtension)
-                   override;
+      /*optional*/ const mozilla::pkix::Input* aiaExtension) override;
 
-  virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain,
-                              mozilla::pkix::Time time,
-                              const mozilla::pkix::CertPolicyId& requiredPolicy)
-                              override;
+  virtual Result IsChainValid(
+      const mozilla::pkix::DERArray& certChain, mozilla::pkix::Time time,
+      const mozilla::pkix::CertPolicyId& requiredPolicy) override;
 
   virtual void NoteAuxiliaryExtension(
-                   mozilla::pkix::AuxiliaryExtension extension,
-                   mozilla::pkix::Input extensionData) override;
+      mozilla::pkix::AuxiliaryExtension extension,
+      mozilla::pkix::Input extensionData) override;
 
   // Resets the OCSP stapling status and SCT lists accumulated during
   // the chain building.
   void ResetAccumulatedState();
 
-  CertVerifier::OCSPStaplingStatus GetOCSPStaplingStatus() const
-  {
+  CertVerifier::OCSPStaplingStatus GetOCSPStaplingStatus() const {
     return mOCSPStaplingStatus;
   }
 
@@ -196,21 +188,21 @@ public:
 
   bool GetIsErrorDueToDistrustedCAPolicy() const;
 
-private:
+ private:
   enum EncodedResponseSource {
     ResponseIsFromNetwork = 1,
     ResponseWasStapled = 2
   };
   Result VerifyAndMaybeCacheEncodedOCSPResponse(
-    const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
-    uint16_t maxLifetimeInDays, mozilla::pkix::Input encodedResponse,
-    EncodedResponseSource responseSource, /*out*/ bool& expired);
+      const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
+      uint16_t maxLifetimeInDays, mozilla::pkix::Input encodedResponse,
+      EncodedResponseSource responseSource, /*out*/ bool& expired);
   TimeDuration GetOCSPTimeout() const;
 
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;
-  OCSPCache& mOCSPCache; // non-owning!
-  void* mPinArg; // non-owning!
+  OCSPCache& mOCSPCache;  // non-owning!
+  void* mPinArg;          // non-owning!
   const mozilla::TimeDuration mOCSPTimeoutSoft;
   const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;
@@ -222,9 +214,9 @@ private:
   DistrustedCAPolicy mDistrustedCAPolicy;
   bool mSawDistrustedCAByPolicyError;
   const OriginAttributes& mOriginAttributes;
-  UniqueCERTCertList& mBuiltChain; // non-owning
+  UniqueCERTCertList& mBuiltChain;  // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
-  const char* mHostname; // non-owning - only used for pinning checks
+  const char* mHostname;  // non-owning - only used for pinning checks
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;
   CertVerifier::OCSPStaplingStatus mOCSPStaplingStatus;
   // Certificate Transparency data extracted during certificate verification
@@ -232,6 +224,7 @@ private:
   UniqueSECItem mSCTListFromOCSPStapling;
 };
 
-} } // namespace mozilla::psm
+}  // namespace psm
+}  // namespace mozilla
 
-#endif // NSSCertDBTrustDomain_h
+#endif  // NSSCertDBTrustDomain_h

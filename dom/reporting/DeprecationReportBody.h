@@ -13,39 +13,30 @@
 namespace mozilla {
 namespace dom {
 
-class DeprecationReportBody final : public ReportBody
-{
-public:
-  DeprecationReportBody(nsPIDOMWindowInner* aWindow,
-                        const nsAString& aId,
-                        const Nullable<Date>& aDate,
-                        const nsAString& aMessage,
+class DeprecationReportBody final : public ReportBody {
+ public:
+  DeprecationReportBody(nsPIDOMWindowInner* aWindow, const nsAString& aId,
+                        const Nullable<Date>& aDate, const nsAString& aMessage,
                         const nsAString& aSourceFile,
                         const Nullable<uint32_t>& aLineNumber,
                         const Nullable<uint32_t>& aColumnNumber);
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetId(nsAString& aId) const;
+  void GetId(nsAString& aId) const;
 
-  Nullable<Date>
-  GetAnticipatedRemoval() const;
+  Nullable<Date> GetAnticipatedRemoval() const;
 
-  void
-  GetMessage(nsAString& aMessage) const;
+  void GetMessage(nsAString& aMessage) const;
 
-  void
-  GetSourceFile(nsAString& aSourceFile) const;
+  void GetSourceFile(nsAString& aSourceFile) const;
 
-  Nullable<uint32_t>
-  GetLineNumber() const;
+  Nullable<uint32_t> GetLineNumber() const;
 
-  Nullable<uint32_t>
-  GetColumnNumber() const;
+  Nullable<uint32_t> GetColumnNumber() const;
 
-private:
+ private:
   ~DeprecationReportBody();
 
   const nsString mId;
@@ -56,7 +47,7 @@ private:
   const Nullable<uint32_t> mColumnNumber;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_DeprecationReportBody_h
+#endif  // mozilla_dom_DeprecationReportBody_h

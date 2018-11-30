@@ -13,27 +13,19 @@
 namespace mozilla {
 namespace dom {
 
-nsresult
-SerializeFromJSObject(JSContext* aCx,
-                      JS::HandleObject aObject,
-                      nsAString& aSerializedObject);
+nsresult SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject,
+                               nsAString& aSerializedObject);
 
-nsresult
-SerializeFromJSVal(JSContext* aCx,
-                   JS::HandleValue aValue,
-                   nsAString& aSerializedValue);
+nsresult SerializeFromJSVal(JSContext* aCx, JS::HandleValue aValue,
+                            nsAString& aSerializedValue);
 
-nsresult
-DeserializeToJSObject(const nsAString& aSerializedObject,
-                      JSContext* aCx,
-                      JS::MutableHandleObject aObject);
+nsresult DeserializeToJSObject(const nsAString& aSerializedObject,
+                               JSContext* aCx, JS::MutableHandleObject aObject);
 
-nsresult
-DeserializeToJSValue(const nsAString& aSerializedObject,
-                     JSContext* aCx,
-                     JS::MutableHandleValue aValue);
+nsresult DeserializeToJSValue(const nsAString& aSerializedObject,
+                              JSContext* aCx, JS::MutableHandleValue aValue);
 
-} // end of namespace dom
-} // end of namespace mozilla
+}  // end of namespace dom
+}  // end of namespace mozilla
 
 #endif

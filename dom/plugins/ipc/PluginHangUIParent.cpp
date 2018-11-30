@@ -33,40 +33,36 @@ using std::string;
 using std::vector;
 
 namespace {
-class nsPluginHangUITelemetry : public mozilla::Runnable
-{
-public:
+class nsPluginHangUITelemetry : public mozilla::Runnable {
+ public:
   nsPluginHangUITelemetry(int aResponseCode, int aDontAskCode,
                           uint32_t aResponseTimeMs, uint32_t aTimeoutMs)
-    : Runnable("nsPluginHangUITelemetry"),
-      mResponseCode(aResponseCode),
-      mDontAskCode(aDontAskCode),
-      mResponseTimeMs(aResponseTimeMs),
-      mTimeoutMs(aTimeoutMs)
-  {
-  }
+      : Runnable("nsPluginHangUITelemetry"),
+        mResponseCode(aResponseCode),
+        mDontAskCode(aDontAskCode),
+        mResponseTimeMs(aResponseTimeMs),
+        mTimeoutMs(aTimeoutMs) {}
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     mozilla::Telemetry::Accumulate(
-              mozilla::Telemetry::PLUGIN_HANG_UI_USER_RESPONSE, mResponseCode);
+        mozilla::Telemetry::PLUGIN_HANG_UI_USER_RESPONSE, mResponseCode);
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLUGIN_HANG_UI_DONT_ASK,
+                                   mDontAskCode);
     mozilla::Telemetry::Accumulate(
-              mozilla::Telemetry::PLUGIN_HANG_UI_DONT_ASK, mDontAskCode);
-    mozilla::Telemetry::Accumulate(
-              mozilla::Telemetry::PLUGIN_HANG_UI_RESPONSE_TIME, mResponseTimeMs);
-    mozilla::Telemetry::Accumulate(
-              mozilla::Telemetry::PLUGIN_HANG_TIME, mTimeoutMs + mResponseTimeMs);
+        mozilla::Telemetry::PLUGIN_HANG_UI_RESPONSE_TIME, mResponseTimeMs);
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PLUGIN_HANG_TIME,
+                                   mTimeoutMs + mResponseTimeMs);
     return NS_OK;
   }
 
-private:
+ private:
   int mResponseCode;
   int mDontAskCode;
   uint32_t mResponseTimeMs;
   uint32_t mTimeoutMs;
 };
-} // namespace
+}  // namespace
 
 namespace mozilla {
 namespace plugins {
@@ -74,25 +70,22 @@ namespace plugins {
 PluginHangUIParent::PluginHangUIParent(PluginModuleChromeParent* aModule,
                                        const int32_t aHangUITimeoutPref,
                                        const int32_t aChildTimeoutPref)
-  : mMutex("mozilla::plugins::PluginHangUIParent::mMutex"),
-    mModule(aModule),
-    mTimeoutPrefMs(static_cast<uint32_t>(aHangUITimeoutPref) * 1000U),
-    mIPCTimeoutMs(static_cast<uint32_t>(aChildTimeoutPref) * 1000U),
-    mMainThreadMessageLoop(MessageLoop::current()),
-    mIsShowing(false),
-    mLastUserResponse(0),
-    mHangUIProcessHandle(nullptr),
-    mMainWindowHandle(nullptr),
-    mRegWait(nullptr),
-    mShowEvent(nullptr),
-    mShowTicks(0),
-    mResponseTicks(0)
-{
-}
+    : mMutex("mozilla::plugins::PluginHangUIParent::mMutex"),
+      mModule(aModule),
+      mTimeoutPrefMs(static_cast<uint32_t>(aHangUITimeoutPref) * 1000U),
+      mIPCTimeoutMs(static_cast<uint32_t>(aChildTimeoutPref) * 1000U),
+      mMainThreadMessageLoop(MessageLoop::current()),
+      mIsShowing(false),
+      mLastUserResponse(0),
+      mHangUIProcessHandle(nullptr),
+      mMainWindowHandle(nullptr),
+      mRegWait(nullptr),
+      mShowEvent(nullptr),
+      mShowTicks(0),
+      mResponseTicks(0) {}
 
-PluginHangUIParent::~PluginHangUIParent()
-{
-  { // Scope for lock
+PluginHangUIParent::~PluginHangUIParent() {
+  {  // Scope for lock
     MutexAutoLock lock(mMutex);
     UnwatchHangUIChildProcess(true);
   }
@@ -104,21 +97,15 @@ PluginHangUIParent::~PluginHangUIParent()
   }
 }
 
-bool
-PluginHangUIParent::DontShowAgain() const
-{
+bool PluginHangUIParent::DontShowAgain() const {
   return (mLastUserResponse & HANGUI_USER_RESPONSE_DONT_SHOW_AGAIN);
 }
 
-bool
-PluginHangUIParent::WasLastHangStopped() const
-{
+bool PluginHangUIParent::WasLastHangStopped() const {
   return (mLastUserResponse & HANGUI_USER_RESPONSE_STOP);
 }
 
-unsigned int
-PluginHangUIParent::LastShowDurationMs() const
-{
+unsigned int PluginHangUIParent::LastShowDurationMs() const {
   // We only return something if there was a user response
   if (!mLastUserResponse) {
     return 0;
@@ -126,9 +113,7 @@ PluginHangUIParent::LastShowDurationMs() const
   return static_cast<unsigned int>(mResponseTicks - mShowTicks);
 }
 
-bool
-PluginHangUIParent::Init(const nsString& aPluginName)
-{
+bool PluginHangUIParent::Init(const nsString& aPluginName) {
   if (mHangUIProcessHandle) {
     return false;
   }
@@ -136,14 +121,13 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   nsresult rv;
   rv = mMiniShm.Init(this, ::IsDebuggerPresent() ? INFINITE : mIPCTimeoutMs);
   NS_ENSURE_SUCCESS(rv, false);
-  nsCOMPtr<nsIProperties>
-    directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  nsCOMPtr<nsIProperties> directoryService(
+      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   if (!directoryService) {
     return false;
   }
   nsCOMPtr<nsIFile> greDir;
-  rv = directoryService->Get(NS_GRE_DIR,
-                             NS_GET_IID(nsIFile),
+  rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile),
                              getter_AddRefs(greDir));
   if (NS_FAILED(rv)) {
     return false;
@@ -156,24 +140,20 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   CommandLine commandLine(exePath.value());
 
   nsAutoString localizedStr;
-  const char16_t* formatParams[] = { aPluginName.get() };
+  const char16_t* formatParams[] = {aPluginName.get()};
   rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                              "PluginHangUIMessage",
-                                             formatParams,
-                                             localizedStr);
+                                             formatParams, localizedStr);
   if (NS_FAILED(rv)) {
     return false;
   }
   commandLine.AppendLooseValue(localizedStr.get());
 
-  const char* keys[] = { "PluginHangUITitle",
-                         "PluginHangUIWaitButton",
-                         "PluginHangUIStopButton",
-                         "DontAskAgain" };
+  const char* keys[] = {"PluginHangUITitle", "PluginHangUIWaitButton",
+                        "PluginHangUIStopButton", "DontAskAgain"};
   for (unsigned int i = 0; i < ArrayLength(keys); ++i) {
     rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                            keys[i],
-                                            localizedStr);
+                                            keys[i], localizedStr);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -188,9 +168,8 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   hwndStr.AppendPrintf("%p", mMainWindowHandle);
   commandLine.AppendLooseValue(hwndStr.get());
 
-  ScopedHandle procHandle(::OpenProcess(SYNCHRONIZE,
-                                        TRUE,
-                                        GetCurrentProcessId()));
+  ScopedHandle procHandle(
+      ::OpenProcess(SYNCHRONIZE, TRUE, GetCurrentProcessId()));
   if (!procHandle.IsValid()) {
     return false;
   }
@@ -233,29 +212,21 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   mShowEvent = showEvent.Get();
 
   MutexAutoLock lock(mMutex);
-  STARTUPINFO startupInfo = { sizeof(STARTUPINFO) };
-  PROCESS_INFORMATION processInfo = { nullptr };
-  BOOL isProcessCreated = ::CreateProcess(exePath.value().c_str(),
-                                          const_cast<wchar_t*>(commandLine.command_line_string().c_str()),
-                                          nullptr,
-                                          nullptr,
-                                          TRUE,
-                                          DETACHED_PROCESS,
-                                          nullptr,
-                                          nullptr,
-                                          &startupInfo,
-                                          &processInfo);
+  STARTUPINFO startupInfo = {sizeof(STARTUPINFO)};
+  PROCESS_INFORMATION processInfo = {nullptr};
+  BOOL isProcessCreated = ::CreateProcess(
+      exePath.value().c_str(),
+      const_cast<wchar_t*>(commandLine.command_line_string().c_str()), nullptr,
+      nullptr, TRUE, DETACHED_PROCESS, nullptr, nullptr, &startupInfo,
+      &processInfo);
   if (isProcessCreated) {
     ::CloseHandle(processInfo.hThread);
     mHangUIProcessHandle = processInfo.hProcess;
-    ::RegisterWaitForSingleObject(&mRegWait,
-                                  processInfo.hProcess,
-                                  &SOnHangUIProcessExit,
-                                  this,
-                                  INFINITE,
+    ::RegisterWaitForSingleObject(&mRegWait, processInfo.hProcess,
+                                  &SOnHangUIProcessExit, this, INFINITE,
                                   WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
-    ::WaitForSingleObject(mShowEvent, ::IsDebuggerPresent() ? INFINITE
-                                                            : mIPCTimeoutMs);
+    ::WaitForSingleObject(mShowEvent,
+                          ::IsDebuggerPresent() ? INFINITE : mIPCTimeoutMs);
     // Setting this to true even if we time out on mShowEvent. This timeout
     // typically occurs when the machine is thrashing so badly that
     // plugin-hang-ui.exe is taking a while to start. If we didn't set
@@ -269,8 +240,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
 
 // static
 VOID CALLBACK PluginHangUIParent::SOnHangUIProcessExit(PVOID aContext,
-                                                       BOOLEAN aIsTimer)
-{
+                                                       BOOLEAN aIsTimer) {
   PluginHangUIParent* object = static_cast<PluginHangUIParent*>(aContext);
   MutexAutoLock lock(object->mMutex);
   // If the Hang UI child process died unexpectedly, act as if the UI cancelled
@@ -283,9 +253,7 @@ VOID CALLBACK PluginHangUIParent::SOnHangUIProcessExit(PVOID aContext,
 }
 
 // A precondition for this function is that the caller has locked mMutex
-bool
-PluginHangUIParent::UnwatchHangUIChildProcess(bool aWait)
-{
+bool PluginHangUIParent::UnwatchHangUIChildProcess(bool aWait) {
   mMutex.AssertCurrentThreadOwns();
   if (mRegWait) {
     // If aWait is false then we want to pass a nullptr (i.e. default
@@ -316,9 +284,7 @@ PluginHangUIParent::UnwatchHangUIChildProcess(bool aWait)
   return false;
 }
 
-bool
-PluginHangUIParent::Cancel()
-{
+bool PluginHangUIParent::Cancel() {
   MutexAutoLock lock(mMutex);
   bool result = mIsShowing && SendCancel();
   if (result) {
@@ -327,9 +293,7 @@ PluginHangUIParent::Cancel()
   return result;
 }
 
-bool
-PluginHangUIParent::SendCancel()
-{
+bool PluginHangUIParent::SendCancel() {
   PluginHangUICommand* cmd = nullptr;
   nsresult rv = mMiniShm.GetWritePtr(cmd);
   if (NS_FAILED(rv)) {
@@ -340,9 +304,7 @@ PluginHangUIParent::SendCancel()
 }
 
 // A precondition for this function is that the caller has locked mMutex
-bool
-PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
-{
+bool PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse) {
   mMutex.AssertCurrentThreadOwns();
   if (!mIsShowing && !(aResponse & HANGUI_USER_RESPONSE_CANCEL)) {
     // Don't process a user response if a cancellation is already pending
@@ -355,12 +317,11 @@ PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
   int responseCode;
   if (aResponse & HANGUI_USER_RESPONSE_STOP) {
     // User clicked Stop
-    mModule->TerminateChildProcess(mMainThreadMessageLoop,
-                                   mozilla::ipc::kInvalidProcessId,
-                                   NS_LITERAL_CSTRING("ModalHangUI"),
-                                   EmptyString());
+    mModule->TerminateChildProcess(
+        mMainThreadMessageLoop, mozilla::ipc::kInvalidProcessId,
+        NS_LITERAL_CSTRING("ModalHangUI"), EmptyString());
     responseCode = 1;
-  } else if(aResponse & HANGUI_USER_RESPONSE_CONTINUE) {
+  } else if (aResponse & HANGUI_USER_RESPONSE_CONTINUE) {
     mModule->OnHangUIContinue();
     // User clicked Continue
     responseCode = 2;
@@ -369,22 +330,19 @@ PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
     responseCode = 3;
   }
   int dontAskCode = (aResponse & HANGUI_USER_RESPONSE_DONT_SHOW_AGAIN) ? 1 : 0;
-  nsCOMPtr<nsIRunnable> workItem = new nsPluginHangUITelemetry(responseCode,
-                                                               dontAskCode,
-                                                               LastShowDurationMs(),
-                                                               mTimeoutPrefMs);
+  nsCOMPtr<nsIRunnable> workItem = new nsPluginHangUITelemetry(
+      responseCode, dontAskCode, LastShowDurationMs(), mTimeoutPrefMs);
   NS_DispatchToMainThread(workItem);
   return true;
 }
 
-nsresult
-PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
-{
+nsresult PluginHangUIParent::GetHangUIOwnerWindowHandle(
+    NativeWindowHandle& windowHandle) {
   windowHandle = nullptr;
 
   nsresult rv;
-  nsCOMPtr<nsIWindowMediator> winMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID,
-                                                        &rv));
+  nsCOMPtr<nsIWindowMediator> winMediator(
+      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIDOMWindowProxy> navWin;
@@ -401,7 +359,8 @@ PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
     return NS_ERROR_FAILURE;
   }
 
-  windowHandle = reinterpret_cast<NativeWindowHandle>(widget->GetNativeData(NS_NATIVE_WINDOW));
+  windowHandle = reinterpret_cast<NativeWindowHandle>(
+      widget->GetNativeData(NS_NATIVE_WINDOW));
   if (!windowHandle) {
     return NS_ERROR_FAILURE;
   }
@@ -409,13 +368,10 @@ PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
   return NS_OK;
 }
 
-void
-PluginHangUIParent::OnMiniShmEvent(MiniShmBase *aMiniShmObj)
-{
+void PluginHangUIParent::OnMiniShmEvent(MiniShmBase* aMiniShmObj) {
   const PluginHangUIResponse* response = nullptr;
   nsresult rv = aMiniShmObj->GetReadPtr(response);
-  NS_ASSERTION(NS_SUCCEEDED(rv),
-               "Couldn't obtain read pointer OnMiniShmEvent");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't obtain read pointer OnMiniShmEvent");
   if (NS_SUCCEEDED(rv)) {
     // The child process has returned a response so we shouldn't worry about
     // its state anymore.
@@ -425,9 +381,7 @@ PluginHangUIParent::OnMiniShmEvent(MiniShmBase *aMiniShmObj)
   }
 }
 
-void
-PluginHangUIParent::OnMiniShmConnect(MiniShmBase* aMiniShmObj)
-{
+void PluginHangUIParent::OnMiniShmConnect(MiniShmBase* aMiniShmObj) {
   PluginHangUICommand* cmd = nullptr;
   nsresult rv = aMiniShmObj->GetWritePtr(cmd);
   NS_ASSERTION(NS_SUCCEEDED(rv),
@@ -442,5 +396,5 @@ PluginHangUIParent::OnMiniShmConnect(MiniShmBase* aMiniShmObj)
   ::SetEvent(mShowEvent);
 }
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla

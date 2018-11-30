@@ -362,7 +362,8 @@ enum Role {
 
   /**
    * Represents a mathematical equation. It is used by MATHML, where there is a
-   * rich DOM subtree for an equation. Use FLAT_EQUATION for <img role="math" alt="[TeX]"/>
+   * rich DOM subtree for an equation. Use FLAT_EQUATION for <img role="math"
+   * alt="[TeX]"/>
    */
   EQUATION = 55,
 
@@ -418,7 +419,7 @@ enum Role {
   /**
    * Represents an arrow in one of the four cardinal directions.
    */
-  ARROW  = 65,
+  ARROW = 65,
 
   /**
    * Represents a control that can be drawn into and is used to trap events.
@@ -434,7 +435,7 @@ enum Role {
   /**
    * Represents a specialized dialog that lets the user choose a color.
    */
-  COLOR_CHOOSER  = 68,
+  COLOR_CHOOSER = 68,
 
   /**
    * Represents control whose purpose is to allow a user to edit a date.
@@ -1047,11 +1048,11 @@ enum Role {
   LAST_ROLE = FORM_LANDMARK
 };
 
-} // namespace role
+}  // namespace roles
 
 typedef enum mozilla::a11y::roles::Role role;
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

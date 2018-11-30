@@ -12,35 +12,27 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsRadioVisitor, nsIRadioVisitor)
 
-bool
-nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
-{
-  RefPtr<HTMLInputElement> radio =
-    static_cast<HTMLInputElement*>(aRadio);
+bool nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio) {
+  RefPtr<HTMLInputElement> radio = static_cast<HTMLInputElement*>(aRadio);
   NS_ASSERTION(radio, "Visit() passed a null button!");
 
   radio->SetCheckedChangedInternal(mCheckedChanged);
   return true;
 }
 
-bool
-nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
-{
+bool nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio) {
   if (aRadio == mExcludeElement) {
     return true;
   }
 
-  RefPtr<HTMLInputElement> radio =
-    static_cast<HTMLInputElement*>(aRadio);
+  RefPtr<HTMLInputElement> radio = static_cast<HTMLInputElement*>(aRadio);
   NS_ASSERTION(radio, "Visit() passed a null button!");
 
   *mCheckedChanged = radio->GetCheckedChanged();
   return false;
 }
 
-bool
-nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio)
-{
+bool nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio) {
   if (aRadio == mExcludeElement) {
     return true;
   }
@@ -55,9 +47,7 @@ nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio)
   return true;
 }
 
-bool
-nsRadioUpdateStateVisitor::Visit(nsIFormControl* aRadio)
-{
+bool nsRadioUpdateStateVisitor::Visit(nsIFormControl* aRadio) {
   if (aRadio == mExcludeElement) {
     return true;
   }

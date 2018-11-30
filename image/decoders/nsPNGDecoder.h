@@ -17,9 +17,8 @@ namespace mozilla {
 namespace image {
 class RasterImage;
 
-class nsPNGDecoder : public Decoder
-{
-public:
+class nsPNGDecoder : public Decoder {
+ public:
   virtual ~nsPNGDecoder();
 
   /// @return true if this PNG is a valid ICO resource.
@@ -27,7 +26,7 @@ public:
 
   DecoderType GetType() const override { return DecoderType::PNG; }
 
-protected:
+ protected:
   nsresult InitInternal() override;
   nsresult FinishInternal() override;
   LexerResult DoDecode(SourceBufferIterator& aIterator,
@@ -35,15 +34,14 @@ protected:
 
   Maybe<Telemetry::HistogramID> SpeedHistogram() const override;
 
-private:
+ private:
   friend class DecoderFactory;
 
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsPNGDecoder(RasterImage* aImage);
 
   /// The information necessary to create a frame.
-  struct FrameInfo
-  {
+  struct FrameInfo {
     gfx::IntRect mFrameRect;
     bool mIsInterlaced;
   };
@@ -51,17 +49,9 @@ private:
   nsresult CreateFrame(const FrameInfo& aFrameInfo);
   void EndImageFrame();
 
-  bool HasAlphaChannel() const
-  {
-    return mChannels == 2 || mChannels == 4;
-  }
+  bool HasAlphaChannel() const { return mChannels == 2 || mChannels == 4; }
 
-  enum class TransparencyType
-  {
-    eNone,
-    eAlpha,
-    eFrameRect
-  };
+  enum class TransparencyType { eNone, eAlpha, eFrameRect };
 
   TransparencyType GetTransparencyType(const gfx::IntRect& aFrameRect);
   void PostHasTransparencyIfNeeded(TransparencyType aTransparencyType);
@@ -75,11 +65,7 @@ private:
   void DoTerminate(png_structp aPNGStruct, TerminalState aState);
   void DoYield(png_structp aPNGStruct);
 
-  enum class State
-  {
-    PNG_DATA,
-    FINISHED_PNG_DATA
-  };
+  enum class State { PNG_DATA, FINISHED_PNG_DATA };
 
   LexerTransition<State> ReadPNGData(const char* aData, size_t aLength);
   LexerTransition<State> FinishedPNGData();
@@ -100,7 +86,7 @@ private:
   // to arrange to arrive back at the correct spot in the data after yielding.
   size_t mLastChunkLength;
 
-public:
+ public:
   png_structp mPNG;
   png_infop mInfo;
   nsIntRect mFrameRect;
@@ -118,8 +104,7 @@ public:
   bool mFrameIsHidden;
   bool mDisablePremultipliedAlpha;
 
-  struct AnimFrameInfo
-  {
+  struct AnimFrameInfo {
     AnimFrameInfo();
 #ifdef PNG_APNG_SUPPORTED
     AnimFrameInfo(png_structp aPNG, png_infop aInfo);
@@ -157,7 +142,7 @@ public:
   static const uint8_t pngSignatureBytes[];
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_decoders_nsPNGDecoder_h
+#endif  // mozilla_image_decoders_nsPNGDecoder_h

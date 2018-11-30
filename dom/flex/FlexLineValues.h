@@ -19,25 +19,20 @@ namespace dom {
 class Flex;
 class FlexItemValues;
 
-class FlexLineValues : public nsISupports
-                     , public nsWrapperCache
-{
-public:
-  explicit FlexLineValues(Flex* aParent,
-                          const ComputedFlexLineInfo* aLine);
+class FlexLineValues : public nsISupports, public nsWrapperCache {
+ public:
+  explicit FlexLineValues(Flex* aParent, const ComputedFlexLineInfo* aLine);
 
-protected:
+ protected:
   virtual ~FlexLineValues() = default;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FlexLineValues)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  Flex* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  Flex* GetParentObject() { return mParent; }
 
   FlexLineGrowthState GrowthState() const;
   double CrossStart() const;
@@ -47,7 +42,7 @@ public:
 
   void GetItems(nsTArray<RefPtr<FlexItemValues>>& aResult);
 
-protected:
+ protected:
   RefPtr<Flex> mParent;
 
   FlexLineGrowthState mGrowthState;
@@ -59,7 +54,7 @@ protected:
   nsTArray<RefPtr<FlexItemValues>> mItems;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_FlexLineValues_h */

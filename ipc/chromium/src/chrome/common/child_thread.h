@@ -14,8 +14,7 @@
 class ResourceDispatcher;
 
 // Child processes's background thread should derive from this class.
-class ChildThread : public IPC::Channel::Listener,
-                    public base::Thread {
+class ChildThread : public IPC::Channel::Listener, public base::Thread {
  public:
   // Creates the thread.
   explicit ChildThread(Thread::Options options);

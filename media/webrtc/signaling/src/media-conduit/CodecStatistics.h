@@ -17,75 +17,68 @@ namespace mozilla {
 
 // Statistics-gathering observer for Video Encoder and Decoder
 
-class VideoCodecStatistics : public webrtc::ViEEncoderObserver
-                           , public webrtc::ViEDecoderObserver
-{
-public:
+class VideoCodecStatistics : public webrtc::ViEEncoderObserver,
+                             public webrtc::ViEDecoderObserver {
+ public:
   VideoCodecStatistics(int channel, webrtc::ViECodec* vieCodec);
   ~VideoCodecStatistics();
   void Register(bool encoder);
 
   void SentFrame();
   virtual void OutgoingRate(const int video_channel,
-    const unsigned int framerate, const unsigned int bitrate) override;
+                            const unsigned int framerate,
+                            const unsigned int bitrate) override;
 
-  virtual void IncomingCodecChanged(const int video_channel,
-    const webrtc::VideoCodec& video_codec) override;
+  virtual void IncomingCodecChanged(
+      const int video_channel, const webrtc::VideoCodec& video_codec) override;
 
   virtual void IncomingRate(const int video_channel,
                             const unsigned int framerate,
                             const unsigned int bitrate) override;
 
-  void ReceiveStateChange(const int video_channel, webrtc::VideoReceiveState state) override;
+  void ReceiveStateChange(const int video_channel,
+                          webrtc::VideoReceiveState state) override;
 
   void EndOfCallStats();
 
-  virtual void RequestNewKeyFrame(const int video_channel) override {};
+  virtual void RequestNewKeyFrame(const int video_channel) override{};
 
-  virtual void SuspendChange(int video_channel, bool is_suspended) override {};
-  virtual void DecoderTiming(int decode_ms,
-                             int max_decode_ms,
-                             int current_delay_ms,
-                             int target_delay_ms,
-                             int jitter_buffer_ms,
-                             int min_playout_delay_ms,
+  virtual void SuspendChange(int video_channel, bool is_suspended) override{};
+  virtual void DecoderTiming(int decode_ms, int max_decode_ms,
+                             int current_delay_ms, int target_delay_ms,
+                             int jitter_buffer_ms, int min_playout_delay_ms,
                              int render_delay_ms) override {}
 
-  bool GetEncoderStats(double* framerateMean,
-                       double* framerateStdDev,
-                       double* bitrateMean,
-                       double* bitrateStdDev,
-                       uint32_t* droppedFrames)
-  {
-    *framerateMean   = mEncoderFps.Mean();
+  bool GetEncoderStats(double* framerateMean, double* framerateStdDev,
+                       double* bitrateMean, double* bitrateStdDev,
+                       uint32_t* droppedFrames) {
+    *framerateMean = mEncoderFps.Mean();
     *framerateStdDev = mEncoderFps.StandardDeviation();
-    *bitrateMean     = mEncoderBitRate.Mean();
-    *bitrateStdDev   = mEncoderBitRate.StandardDeviation();
-    *droppedFrames   = mEncoderDroppedFrames;
+    *bitrateMean = mEncoderBitRate.Mean();
+    *bitrateStdDev = mEncoderBitRate.StandardDeviation();
+    *droppedFrames = mEncoderDroppedFrames;
     return true;
   }
 
-  bool GetDecoderStats(double* framerateMean,
-                       double* framerateStdDev,
-                       double* bitrateMean,
-                       double* bitrateStdDev,
-                       uint32_t* discardedPackets)
-  {
-    *framerateMean    = mDecoderFps.Mean();
-    *framerateStdDev  = mDecoderFps.StandardDeviation();
-    *bitrateMean      = mDecoderBitRate.Mean();
-    *bitrateStdDev    = mDecoderBitRate.StandardDeviation();
+  bool GetDecoderStats(double* framerateMean, double* framerateStdDev,
+                       double* bitrateMean, double* bitrateStdDev,
+                       uint32_t* discardedPackets) {
+    *framerateMean = mDecoderFps.Mean();
+    *framerateStdDev = mDecoderFps.StandardDeviation();
+    *bitrateMean = mDecoderBitRate.Mean();
+    *bitrateStdDev = mDecoderBitRate.StandardDeviation();
     *discardedPackets = mDecoderDiscardedPackets;
     return true;
   }
 
   void Dump();
-private:
-  void Dump(RunningStat& s, const char *name);
+
+ private:
+  void Dump(RunningStat& s, const char* name);
 
   int mChannel;
   uint32_t mSentRawFrames;
-  ScopedCustomReleasePtr<webrtc::ViECodec> mPtrViECodec; // back-pointer
+  ScopedCustomReleasePtr<webrtc::ViECodec> mPtrViECodec;  // back-pointer
 
   RunningStat mEncoderBitRate;
   RunningStat mEncoderFps;
@@ -104,6 +97,6 @@ private:
   uint32_t mRecoveredLosses;
 };
 
-}
+}  // namespace mozilla
 
-#endif //CODEC_STATISTICS_H_
+#endif  // CODEC_STATISTICS_H_

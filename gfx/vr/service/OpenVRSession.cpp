@@ -16,8 +16,7 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
-#define BTN_MASK_FROM_ID(_id) \
-  ::vr::ButtonMaskFromId(vr::EVRButtonId::_id)
+#define BTN_MASK_FROM_ID(_id) ::vr::ButtonMaskFromId(vr::EVRButtonId::_id)
 
 // Haptic feedback is updated every 5ms, as this is
 // the minimum period between new haptic pulse requests.
@@ -33,12 +32,11 @@ namespace gfx {
 
 namespace {
 
-dom::GamepadHand
-GetControllerHandFromControllerRole(::vr::ETrackedControllerRole aRole)
-{
+dom::GamepadHand GetControllerHandFromControllerRole(
+    ::vr::ETrackedControllerRole aRole) {
   dom::GamepadHand hand;
 
-  switch(aRole) {
+  switch (aRole) {
     case ::vr::ETrackedControllerRole::TrackedControllerRole_Invalid:
     case ::vr::ETrackedControllerRole::TrackedControllerRole_OptOut:
       hand = dom::GamepadHand::_empty;
@@ -58,10 +56,9 @@ GetControllerHandFromControllerRole(::vr::ETrackedControllerRole aRole)
   return hand;
 }
 
-
-void
-UpdateButton(VRControllerState& aState, const ::vr::VRControllerState_t& aControllerState, uint32_t aButtonIndex, uint64_t aButtonMask)
-{
+void UpdateButton(VRControllerState& aState,
+                  const ::vr::VRControllerState_t& aControllerState,
+                  uint32_t aButtonIndex, uint64_t aButtonMask) {
   uint64_t mask = (1ULL << aButtonIndex);
   if ((aControllerState.ulButtonPressed & aButtonMask) == 0) {
     // not pressed
@@ -81,29 +78,23 @@ UpdateButton(VRControllerState& aState, const ::vr::VRControllerState_t& aContro
   }
 }
 
-}; // anonymous namespace
+};  // anonymous namespace
 
 OpenVRSession::OpenVRSession()
-  : VRSession()
-  , mVRSystem(nullptr)
-  , mVRChaperone(nullptr)
-  , mVRCompositor(nullptr)
-  , mControllerDeviceIndex{}
-  , mHapticPulseRemaining{}
-  , mHapticPulseIntensity{}
-  , mIsWindowsMR(false)
-  , mControllerHapticStateMutex("OpenVRSession::mControllerHapticStateMutex")
-{
-}
+    : VRSession(),
+      mVRSystem(nullptr),
+      mVRChaperone(nullptr),
+      mVRCompositor(nullptr),
+      mControllerDeviceIndex{},
+      mHapticPulseRemaining{},
+      mHapticPulseIntensity{},
+      mIsWindowsMR(false),
+      mControllerHapticStateMutex(
+          "OpenVRSession::mControllerHapticStateMutex") {}
 
-OpenVRSession::~OpenVRSession()
-{
-  Shutdown();
-}
+OpenVRSession::~OpenVRSession() { Shutdown(); }
 
-bool
-OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
-{
+bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
   if (!gfxPrefs::VREnabled() || !gfxPrefs::VROpenVREnabled()) {
     return false;
   }
@@ -125,17 +116,20 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     return false;
   }
 
-  mVRSystem = (::vr::IVRSystem *)::vr::VR_GetGenericInterface(::vr::IVRSystem_Version, &err);
+  mVRSystem = (::vr::IVRSystem*)::vr::VR_GetGenericInterface(
+      ::vr::IVRSystem_Version, &err);
   if (err || !mVRSystem) {
     Shutdown();
     return false;
   }
-  mVRChaperone = (::vr::IVRChaperone *)::vr::VR_GetGenericInterface(::vr::IVRChaperone_Version, &err);
+  mVRChaperone = (::vr::IVRChaperone*)::vr::VR_GetGenericInterface(
+      ::vr::IVRChaperone_Version, &err);
   if (err || !mVRChaperone) {
     Shutdown();
     return false;
   }
-  mVRCompositor = (::vr::IVRCompositor*)::vr::VR_GetGenericInterface(::vr::IVRCompositor_Version, &err);
+  mVRCompositor = (::vr::IVRCompositor*)::vr::VR_GetGenericInterface(
+      ::vr::IVRCompositor_Version, &err);
   if (err || !mVRCompositor) {
     Shutdown();
     return false;
@@ -158,18 +152,14 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
   }
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-    "OpenVRSession::StartHapticThread", [this]() {
-      StartHapticThread();
-  }));
-  
+      "OpenVRSession::StartHapticThread", [this]() { StartHapticThread(); }));
+
   // Succeeded
   return true;
 }
 
 #if defined(XP_WIN)
-bool
-OpenVRSession::CreateD3DObjects()
-{
+bool OpenVRSession::CreateD3DObjects() {
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetVRDevice();
   if (!device) {
     return false;
@@ -181,9 +171,7 @@ OpenVRSession::CreateD3DObjects()
 }
 #endif
 
-void
-OpenVRSession::Shutdown()
-{
+void OpenVRSession::Shutdown() {
   StopHapticTimer();
   StopHapticThread();
   if (mVRSystem || mVRCompositor || mVRSystem) {
@@ -194,26 +182,30 @@ OpenVRSession::Shutdown()
   }
 }
 
-bool
-OpenVRSession::InitState(VRSystemState& aSystemState)
-{
+bool OpenVRSession::InitState(VRSystemState& aSystemState) {
   VRDisplayState& state = aSystemState.displayState;
   strncpy(state.mDisplayName, "OpenVR HMD", kVRDisplayNameMaxLen);
   state.mEightCC = GFX_VR_EIGHTCC('O', 'p', 'e', 'n', 'V', 'R', ' ', ' ');
-  state.mIsConnected = mVRSystem->IsTrackedDeviceConnected(::vr::k_unTrackedDeviceIndex_Hmd);
+  state.mIsConnected =
+      mVRSystem->IsTrackedDeviceConnected(::vr::k_unTrackedDeviceIndex_Hmd);
   state.mIsMounted = false;
-  state.mCapabilityFlags = (VRDisplayCapabilityFlags)((int)VRDisplayCapabilityFlags::Cap_None |
-    (int)VRDisplayCapabilityFlags::Cap_Orientation |
-    (int)VRDisplayCapabilityFlags::Cap_Position |
-    (int)VRDisplayCapabilityFlags::Cap_External |
-    (int)VRDisplayCapabilityFlags::Cap_Present |
-    (int)VRDisplayCapabilityFlags::Cap_StageParameters);
+  state.mCapabilityFlags = (VRDisplayCapabilityFlags)(
+      (int)VRDisplayCapabilityFlags::Cap_None |
+      (int)VRDisplayCapabilityFlags::Cap_Orientation |
+      (int)VRDisplayCapabilityFlags::Cap_Position |
+      (int)VRDisplayCapabilityFlags::Cap_External |
+      (int)VRDisplayCapabilityFlags::Cap_Present |
+      (int)VRDisplayCapabilityFlags::Cap_StageParameters);
   state.mReportsDroppedFrames = true;
 
   ::vr::ETrackedPropertyError err;
-  bool bHasProximitySensor = mVRSystem->GetBoolTrackedDeviceProperty(::vr::k_unTrackedDeviceIndex_Hmd, ::vr::Prop_ContainsProximitySensor_Bool, &err);
+  bool bHasProximitySensor = mVRSystem->GetBoolTrackedDeviceProperty(
+      ::vr::k_unTrackedDeviceIndex_Hmd, ::vr::Prop_ContainsProximitySensor_Bool,
+      &err);
   if (err == ::vr::TrackedProp_Success && bHasProximitySensor) {
-    state.mCapabilityFlags = (VRDisplayCapabilityFlags)((int)state.mCapabilityFlags | (int)VRDisplayCapabilityFlags::Cap_MountDetection);
+    state.mCapabilityFlags = (VRDisplayCapabilityFlags)(
+        (int)state.mCapabilityFlags |
+        (int)VRDisplayCapabilityFlags::Cap_MountDetection);
   }
 
   uint32_t w, h;
@@ -229,20 +221,19 @@ OpenVRSession::InitState(VRSystemState& aSystemState)
 
   VRHMDSensorState& sensorState = aSystemState.sensorState;
   sensorState.flags = (VRDisplayCapabilityFlags)(
-    (int)VRDisplayCapabilityFlags::Cap_Orientation |
-    (int)VRDisplayCapabilityFlags::Cap_Position);
-  sensorState.pose.orientation[3] = 1.0f; // Default to an identity quaternion
+      (int)VRDisplayCapabilityFlags::Cap_Orientation |
+      (int)VRDisplayCapabilityFlags::Cap_Position);
+  sensorState.pose.orientation[3] = 1.0f;  // Default to an identity quaternion
 
   return true;
 }
 
-void
-OpenVRSession::UpdateStageParameters(VRDisplayState& aState)
-{
+void OpenVRSession::UpdateStageParameters(VRDisplayState& aState) {
   float sizeX = 0.0f;
   float sizeZ = 0.0f;
   if (mVRChaperone->GetPlayAreaSize(&sizeX, &sizeZ)) {
-    ::vr::HmdMatrix34_t t = mVRSystem->GetSeatedZeroPoseToStandingAbsoluteTrackingPose();
+    ::vr::HmdMatrix34_t t =
+        mVRSystem->GetSeatedZeroPoseToStandingAbsoluteTrackingPose();
     aState.mStageSize.width = sizeX;
     aState.mStageSize.height = sizeZ;
 
@@ -293,21 +284,21 @@ OpenVRSession::UpdateStageParameters(VRDisplayState& aState)
   }
 }
 
-void
-OpenVRSession::UpdateEyeParameters(VRSystemState& aState)
-{
+void OpenVRSession::UpdateEyeParameters(VRSystemState& aState) {
   // This must be called every frame in order to
   // account for continuous adjustments to ipd.
   gfx::Matrix4x4 headToEyeTransforms[2];
 
   for (uint32_t eye = 0; eye < 2; ++eye) {
-    ::vr::HmdMatrix34_t eyeToHead = mVRSystem->GetEyeToHeadTransform(static_cast<::vr::Hmd_Eye>(eye));
+    ::vr::HmdMatrix34_t eyeToHead =
+        mVRSystem->GetEyeToHeadTransform(static_cast<::vr::Hmd_Eye>(eye));
     aState.displayState.mEyeTranslation[eye].x = eyeToHead.m[0][3];
     aState.displayState.mEyeTranslation[eye].y = eyeToHead.m[1][3];
     aState.displayState.mEyeTranslation[eye].z = eyeToHead.m[2][3];
 
     float left, right, up, down;
-    mVRSystem->GetProjectionRaw(static_cast<::vr::Hmd_Eye>(eye), &left, &right, &up, &down);
+    mVRSystem->GetProjectionRaw(static_cast<::vr::Hmd_Eye>(eye), &left, &right,
+                                &up, &down);
     aState.displayState.mEyeFOV[eye].upDegrees = atan(-up) * 180.0 / M_PI;
     aState.displayState.mEyeFOV[eye].rightDegrees = atan(right) * 180.0 / M_PI;
     aState.displayState.mEyeFOV[eye].downDegrees = atan(down) * 180.0 / M_PI;
@@ -325,12 +316,11 @@ OpenVRSession::UpdateEyeParameters(VRSystemState& aState)
   aState.sensorState.CalcViewMatrices(headToEyeTransforms);
 }
 
-void
-OpenVRSession::UpdateHeadsetPose(VRSystemState& aState)
-{
+void OpenVRSession::UpdateHeadsetPose(VRSystemState& aState) {
   const uint32_t posesSize = ::vr::k_unTrackedDeviceIndex_Hmd + 1;
   ::vr::TrackedDevicePose_t poses[posesSize];
-  // Note: We *must* call WaitGetPoses in order for any rendering to happen at all.
+  // Note: We *must* call WaitGetPoses in order for any rendering to happen at
+  // all.
   mVRCompositor->WaitGetPoses(poses, posesSize, nullptr, 0);
 
   ::vr::Compositor_FrameTiming timing;
@@ -343,24 +333,28 @@ OpenVRSession::UpdateHeadsetPose(VRSystemState& aState)
   }
 
   if (poses[::vr::k_unTrackedDeviceIndex_Hmd].bDeviceIsConnected &&
-    poses[::vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid &&
-    poses[::vr::k_unTrackedDeviceIndex_Hmd].eTrackingResult == ::vr::TrackingResult_Running_OK)
-  {
-    const ::vr::TrackedDevicePose_t& pose = poses[::vr::k_unTrackedDeviceIndex_Hmd];
+      poses[::vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid &&
+      poses[::vr::k_unTrackedDeviceIndex_Hmd].eTrackingResult ==
+          ::vr::TrackingResult_Running_OK) {
+    const ::vr::TrackedDevicePose_t& pose =
+        poses[::vr::k_unTrackedDeviceIndex_Hmd];
 
     gfx::Matrix4x4 m;
     // NOTE! mDeviceToAbsoluteTracking is a 3x4 matrix, not 4x4.  But
     // because of its arrangement, we can copy the 12 elements in and
     // then transpose them to the right place.  We do this so we can
     // pull out a Quaternion.
-    memcpy(&m._11, &pose.mDeviceToAbsoluteTracking, sizeof(pose.mDeviceToAbsoluteTracking));
+    memcpy(&m._11, &pose.mDeviceToAbsoluteTracking,
+           sizeof(pose.mDeviceToAbsoluteTracking));
     m.Transpose();
 
     gfx::Quaternion rot;
     rot.SetFromRotationMatrix(m);
     rot.Invert();
 
-    aState.sensorState.flags = (VRDisplayCapabilityFlags)((int)aState.sensorState.flags | (int)VRDisplayCapabilityFlags::Cap_Orientation);
+    aState.sensorState.flags = (VRDisplayCapabilityFlags)(
+        (int)aState.sensorState.flags |
+        (int)VRDisplayCapabilityFlags::Cap_Orientation);
     aState.sensorState.pose.orientation[0] = rot.x;
     aState.sensorState.pose.orientation[1] = rot.y;
     aState.sensorState.pose.orientation[2] = rot.z;
@@ -369,7 +363,9 @@ OpenVRSession::UpdateHeadsetPose(VRSystemState& aState)
     aState.sensorState.pose.angularVelocity[1] = pose.vAngularVelocity.v[1];
     aState.sensorState.pose.angularVelocity[2] = pose.vAngularVelocity.v[2];
 
-    aState.sensorState.flags =(VRDisplayCapabilityFlags)((int)aState.sensorState.flags | (int)VRDisplayCapabilityFlags::Cap_Position);
+    aState.sensorState.flags =
+        (VRDisplayCapabilityFlags)((int)aState.sensorState.flags |
+                                   (int)VRDisplayCapabilityFlags::Cap_Position);
     aState.sensorState.pose.position[0] = m._41;
     aState.sensorState.pose.position[1] = m._42;
     aState.sensorState.pose.position[2] = m._43;
@@ -379,28 +375,26 @@ OpenVRSession::UpdateHeadsetPose(VRSystemState& aState)
   }
 }
 
-void
-OpenVRSession::EnumerateControllers(VRSystemState& aState)
-{
+void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
   MOZ_ASSERT(mVRSystem);
 
   MutexAutoLock lock(mControllerHapticStateMutex);
 
-  bool controllerPresent[kVRControllerMaxCount] = { false };
+  bool controllerPresent[kVRControllerMaxCount] = {false};
 
   // Basically, we would have HMDs in the tracked devices,
   // but we are just interested in the controllers.
-  for (::vr::TrackedDeviceIndex_t trackedDevice = ::vr::k_unTrackedDeviceIndex_Hmd + 1;
+  for (::vr::TrackedDeviceIndex_t trackedDevice =
+           ::vr::k_unTrackedDeviceIndex_Hmd + 1;
        trackedDevice < ::vr::k_unMaxTrackedDeviceCount; ++trackedDevice) {
-
     if (!mVRSystem->IsTrackedDeviceConnected(trackedDevice)) {
       continue;
     }
 
-    const ::vr::ETrackedDeviceClass deviceType = mVRSystem->
-                                                 GetTrackedDeviceClass(trackedDevice);
-    if (deviceType != ::vr::TrackedDeviceClass_Controller
-        && deviceType != ::vr::TrackedDeviceClass_GenericTracker) {
+    const ::vr::ETrackedDeviceClass deviceType =
+        mVRSystem->GetTrackedDeviceClass(trackedDevice);
+    if (deviceType != ::vr::TrackedDeviceClass_Controller &&
+        deviceType != ::vr::TrackedDeviceClass_GenericTracker) {
       continue;
     }
 
@@ -409,7 +403,8 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
 
     // Find the existing controller
     for (stateIndex = 0; stateIndex < kVRControllerMaxCount; stateIndex++) {
-      if (mControllerDeviceIndex[stateIndex] == 0 && firstEmptyIndex == kVRControllerMaxCount) {
+      if (mControllerDeviceIndex[stateIndex] == 0 &&
+          firstEmptyIndex == kVRControllerMaxCount) {
         firstEmptyIndex = stateIndex;
       }
       if (mControllerDeviceIndex[stateIndex] == trackedDevice) {
@@ -419,7 +414,9 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
     if (stateIndex == kVRControllerMaxCount) {
       // This is a new controller, let's add it
       if (firstEmptyIndex == kVRControllerMaxCount) {
-        NS_WARNING("OpenVR - Too many controllers, need to increase kVRControllerMaxCount.");
+        NS_WARNING(
+            "OpenVR - Too many controllers, need to increase "
+            "kVRControllerMaxCount.");
         continue;
       }
       stateIndex = firstEmptyIndex;
@@ -430,30 +427,32 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
 
       // Scan the axes that the controllers support
       for (uint32_t j = 0; j < ::vr::k_unControllerStateAxisCount; ++j) {
-        const uint32_t supportAxis = mVRSystem->GetInt32TrackedDeviceProperty(trackedDevice,
-                                      static_cast<vr::TrackedDeviceProperty>(
-                                      ::vr::Prop_Axis0Type_Int32 + j));
+        const uint32_t supportAxis = mVRSystem->GetInt32TrackedDeviceProperty(
+            trackedDevice, static_cast<vr::TrackedDeviceProperty>(
+                               ::vr::Prop_Axis0Type_Int32 + j));
         switch (supportAxis) {
           case ::vr::EVRControllerAxisType::k_eControllerAxis_Joystick:
           case ::vr::EVRControllerAxisType::k_eControllerAxis_TrackPad:
-            numAxes += 2; // It has x and y axes.
+            numAxes += 2;  // It has x and y axes.
             ++numButtons;
             break;
           case ::vr::k_eControllerAxis_Trigger:
             if (j <= 2) {
               ++numButtons;
             } else {
-          #ifdef DEBUG
-              // SteamVR Knuckles is the only special case for using 2D axis values on triggers.
+#ifdef DEBUG
+              // SteamVR Knuckles is the only special case for using 2D axis
+              // values on triggers.
               ::vr::ETrackedPropertyError err;
               uint32_t requiredBufferLen;
               char charBuf[128];
-              requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(trackedDevice,
-                                  ::vr::Prop_RenderModelName_String, charBuf, 128, &err);
+              requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(
+                  trackedDevice, ::vr::Prop_RenderModelName_String, charBuf,
+                  128, &err);
               MOZ_ASSERT(requiredBufferLen && err == ::vr::TrackedProp_Success);
               nsCString deviceId(charBuf);
               MOZ_ASSERT(deviceId.Find("knuckles") != kNotFound);
-          #endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
               numButtons += 2;
             }
             break;
@@ -462,40 +461,34 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
 
       // Scan the buttons that the controllers support
       const uint64_t supportButtons = mVRSystem->GetUint64TrackedDeviceProperty(
-                                       trackedDevice, ::vr::Prop_SupportedButtons_Uint64);
-      if (supportButtons &
-          BTN_MASK_FROM_ID(k_EButton_A)) {
+          trackedDevice, ::vr::Prop_SupportedButtons_Uint64);
+      if (supportButtons & BTN_MASK_FROM_ID(k_EButton_A)) {
         ++numButtons;
       }
-      if (supportButtons &
-          BTN_MASK_FROM_ID(k_EButton_Grip)) {
+      if (supportButtons & BTN_MASK_FROM_ID(k_EButton_Grip)) {
         ++numButtons;
       }
-      if (supportButtons &
-          BTN_MASK_FROM_ID(k_EButton_ApplicationMenu)) {
+      if (supportButtons & BTN_MASK_FROM_ID(k_EButton_ApplicationMenu)) {
         ++numButtons;
       }
-      if (supportButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Left)) {
+      if (supportButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Left)) {
         ++numButtons;
       }
-      if (supportButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Up)) {
+      if (supportButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Up)) {
         ++numButtons;
       }
-      if (supportButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Right)) {
+      if (supportButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Right)) {
         ++numButtons;
       }
-      if (supportButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Down)) {
+      if (supportButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Down)) {
         ++numButtons;
       }
 
       nsCString deviceId;
       GetControllerDeviceId(deviceType, trackedDevice, deviceId);
 
-      strncpy(controllerState.controllerName, deviceId.BeginReading(), kVRControllerNameMaxLen);
+      strncpy(controllerState.controllerName, deviceId.BeginReading(),
+              kVRControllerNameMaxLen);
       controllerState.numButtons = numButtons;
       controllerState.numAxes = numAxes;
       controllerState.numHaptics = kNumOpenVRHaptics;
@@ -511,49 +504,50 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
     controllerPresent[stateIndex] = true;
   }
   // Clear out entries for disconnected controllers
-  for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount; stateIndex++) {
-    if (!controllerPresent[stateIndex] && mControllerDeviceIndex[stateIndex] != 0) {
+  for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount;
+       stateIndex++) {
+    if (!controllerPresent[stateIndex] &&
+        mControllerDeviceIndex[stateIndex] != 0) {
       mControllerDeviceIndex[stateIndex] = 0;
       memset(&aState.controllerState[stateIndex], 0, sizeof(VRControllerState));
     }
   }
 }
 
-void
-OpenVRSession::UpdateControllerButtons(VRSystemState& aState)
-{
+void OpenVRSession::UpdateControllerButtons(VRSystemState& aState) {
   MOZ_ASSERT(mVRSystem);
 
-  // Compared to Edge, we have a wrong implementation for the vertical axis value.
-  // In order to not affect the current VR content, we add a workaround for yAxis.
+  // Compared to Edge, we have a wrong implementation for the vertical axis
+  // value. In order to not affect the current VR content, we add a workaround
+  // for yAxis.
   const float yAxisInvert = (mIsWindowsMR) ? -1.0f : 1.0f;
   const float triggerThreshold = gfxPrefs::VRControllerTriggerThreshold();
 
-  for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount; stateIndex++) {
-    ::vr::TrackedDeviceIndex_t trackedDevice = mControllerDeviceIndex[stateIndex];
+  for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount;
+       stateIndex++) {
+    ::vr::TrackedDeviceIndex_t trackedDevice =
+        mControllerDeviceIndex[stateIndex];
     if (trackedDevice == 0) {
       continue;
     }
     VRControllerState& controllerState = aState.controllerState[stateIndex];
-    const ::vr::ETrackedControllerRole role = mVRSystem->
-                                          GetControllerRoleForTrackedDeviceIndex(
-                                          trackedDevice);
+    const ::vr::ETrackedControllerRole role =
+        mVRSystem->GetControllerRoleForTrackedDeviceIndex(trackedDevice);
     dom::GamepadHand hand = GetControllerHandFromControllerRole(role);
     controllerState.hand = hand;
 
     ::vr::VRControllerState_t vrControllerState;
-    if (mVRSystem->GetControllerState(trackedDevice, &vrControllerState, sizeof(vrControllerState))) {
+    if (mVRSystem->GetControllerState(trackedDevice, &vrControllerState,
+                                      sizeof(vrControllerState))) {
       uint32_t axisIdx = 0;
       uint32_t buttonIdx = 0;
       for (uint32_t j = 0; j < ::vr::k_unControllerStateAxisCount; ++j) {
         const uint32_t axisType = mVRSystem->GetInt32TrackedDeviceProperty(
-                                   trackedDevice,
-                                   static_cast<::vr::TrackedDeviceProperty>(
-                                   ::vr::Prop_Axis0Type_Int32 + j));
+            trackedDevice, static_cast<::vr::TrackedDeviceProperty>(
+                               ::vr::Prop_Axis0Type_Int32 + j));
         switch (axisType) {
           case ::vr::EVRControllerAxisType::k_eControllerAxis_Joystick:
-          case ::vr::EVRControllerAxisType::k_eControllerAxis_TrackPad:
-          {
+          case ::vr::EVRControllerAxisType::k_eControllerAxis_TrackPad: {
             if (mIsWindowsMR) {
               // Adjust the input mapping for Windows MR which has
               // different order.
@@ -563,12 +557,14 @@ OpenVRSession::UpdateControllerButtons(VRSystemState& aState)
 
             controllerState.axisValue[axisIdx] = vrControllerState.rAxis[j].x;
             ++axisIdx;
-            controllerState.axisValue[axisIdx] = vrControllerState.rAxis[j].y * yAxisInvert;
+            controllerState.axisValue[axisIdx] =
+                vrControllerState.rAxis[j].y * yAxisInvert;
             ++axisIdx;
             uint64_t buttonMask = ::vr::ButtonMaskFromId(
-                                 static_cast<::vr::EVRButtonId>(::vr::k_EButton_Axis0 + j));
+                static_cast<::vr::EVRButtonId>(::vr::k_EButton_Axis0 + j));
 
-            UpdateButton(controllerState, vrControllerState, buttonIdx, buttonMask);
+            UpdateButton(controllerState, vrControllerState, buttonIdx,
+                         buttonMask);
             ++buttonIdx;
 
             if (mIsWindowsMR) {
@@ -577,16 +573,18 @@ OpenVRSession::UpdateControllerButtons(VRSystemState& aState)
             }
             break;
           }
-          case vr::EVRControllerAxisType::k_eControllerAxis_Trigger:
-          {
+          case vr::EVRControllerAxisType::k_eControllerAxis_Trigger: {
             if (j <= 2) {
-              UpdateTrigger(controllerState, buttonIdx, vrControllerState.rAxis[j].x, triggerThreshold);
+              UpdateTrigger(controllerState, buttonIdx,
+                            vrControllerState.rAxis[j].x, triggerThreshold);
               ++buttonIdx;
             } else {
               // For SteamVR Knuckles.
-              UpdateTrigger(controllerState, buttonIdx, vrControllerState.rAxis[j].x, triggerThreshold);
+              UpdateTrigger(controllerState, buttonIdx,
+                            vrControllerState.rAxis[j].x, triggerThreshold);
               ++buttonIdx;
-              UpdateTrigger(controllerState, buttonIdx, vrControllerState.rAxis[j].y, triggerThreshold);
+              UpdateTrigger(controllerState, buttonIdx,
+                            vrControllerState.rAxis[j].y, triggerThreshold);
               ++buttonIdx;
             }
             break;
@@ -594,21 +592,22 @@ OpenVRSession::UpdateControllerButtons(VRSystemState& aState)
         }
       }
 
-      const uint64_t supportedButtons = mVRSystem->GetUint64TrackedDeviceProperty(
-                                         trackedDevice, ::vr::Prop_SupportedButtons_Uint64);
-      if (supportedButtons &
-          BTN_MASK_FROM_ID(k_EButton_A)) {
-        UpdateButton(controllerState, vrControllerState, buttonIdx, BTN_MASK_FROM_ID(k_EButton_A));
+      const uint64_t supportedButtons =
+          mVRSystem->GetUint64TrackedDeviceProperty(
+              trackedDevice, ::vr::Prop_SupportedButtons_Uint64);
+      if (supportedButtons & BTN_MASK_FROM_ID(k_EButton_A)) {
+        UpdateButton(controllerState, vrControllerState, buttonIdx,
+                     BTN_MASK_FROM_ID(k_EButton_A));
         ++buttonIdx;
       }
-      if (supportedButtons &
-          BTN_MASK_FROM_ID(k_EButton_Grip)) {
-        UpdateButton(controllerState, vrControllerState, buttonIdx, BTN_MASK_FROM_ID(k_EButton_Grip));
+      if (supportedButtons & BTN_MASK_FROM_ID(k_EButton_Grip)) {
+        UpdateButton(controllerState, vrControllerState, buttonIdx,
+                     BTN_MASK_FROM_ID(k_EButton_Grip));
         ++buttonIdx;
       }
-      if (supportedButtons &
-          BTN_MASK_FROM_ID(k_EButton_ApplicationMenu)) {
-        UpdateButton(controllerState, vrControllerState, buttonIdx, BTN_MASK_FROM_ID(k_EButton_ApplicationMenu));
+      if (supportedButtons & BTN_MASK_FROM_ID(k_EButton_ApplicationMenu)) {
+        UpdateButton(controllerState, vrControllerState, buttonIdx,
+                     BTN_MASK_FROM_ID(k_EButton_ApplicationMenu));
         ++buttonIdx;
       }
       if (mIsWindowsMR) {
@@ -616,41 +615,42 @@ OpenVRSession::UpdateControllerButtons(VRSystemState& aState)
         // to k_eControllerAxis_TrackPad.
         ++buttonIdx;
       }
-      if (supportedButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Left)) {
-        UpdateButton(controllerState, vrControllerState, buttonIdx, BTN_MASK_FROM_ID(k_EButton_DPad_Left));
+      if (supportedButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Left)) {
+        UpdateButton(controllerState, vrControllerState, buttonIdx,
+                     BTN_MASK_FROM_ID(k_EButton_DPad_Left));
         ++buttonIdx;
       }
-      if (supportedButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Up)) {
-        UpdateButton(controllerState, vrControllerState, buttonIdx, BTN_MASK_FROM_ID(k_EButton_DPad_Up));
+      if (supportedButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Up)) {
+        UpdateButton(controllerState, vrControllerState, buttonIdx,
+                     BTN_MASK_FROM_ID(k_EButton_DPad_Up));
         ++buttonIdx;
       }
-      if (supportedButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Right)) {
-        UpdateButton(controllerState, vrControllerState, buttonIdx, BTN_MASK_FROM_ID(k_EButton_DPad_Right));
+      if (supportedButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Right)) {
+        UpdateButton(controllerState, vrControllerState, buttonIdx,
+                     BTN_MASK_FROM_ID(k_EButton_DPad_Right));
         ++buttonIdx;
       }
-      if (supportedButtons &
-          BTN_MASK_FROM_ID(k_EButton_DPad_Down)) {
-        UpdateButton(controllerState, vrControllerState, buttonIdx, BTN_MASK_FROM_ID(k_EButton_DPad_Down));
+      if (supportedButtons & BTN_MASK_FROM_ID(k_EButton_DPad_Down)) {
+        UpdateButton(controllerState, vrControllerState, buttonIdx,
+                     BTN_MASK_FROM_ID(k_EButton_DPad_Down));
         ++buttonIdx;
       }
     }
   }
 }
 
-void
-OpenVRSession::UpdateControllerPoses(VRSystemState& aState)
-{
+void OpenVRSession::UpdateControllerPoses(VRSystemState& aState) {
   MOZ_ASSERT(mVRSystem);
 
   ::vr::TrackedDevicePose_t poses[::vr::k_unMaxTrackedDeviceCount];
   mVRSystem->GetDeviceToAbsoluteTrackingPose(::vr::TrackingUniverseSeated, 0.0f,
-                                             poses, ::vr::k_unMaxTrackedDeviceCount);
+                                             poses,
+                                             ::vr::k_unMaxTrackedDeviceCount);
 
-  for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount; stateIndex++) {
-    ::vr::TrackedDeviceIndex_t trackedDevice = mControllerDeviceIndex[stateIndex];
+  for (uint32_t stateIndex = 0; stateIndex < kVRControllerMaxCount;
+       stateIndex++) {
+    ::vr::TrackedDeviceIndex_t trackedDevice =
+        mControllerDeviceIndex[stateIndex];
     if (trackedDevice == 0) {
       continue;
     }
@@ -661,7 +661,7 @@ OpenVRSession::UpdateControllerPoses(VRSystemState& aState)
       controllerState.flags = (dom::GamepadCapabilityFlags::Cap_Orientation |
                                dom::GamepadCapabilityFlags::Cap_Position);
     } else {
-      controllerState.flags =  dom::GamepadCapabilityFlags::Cap_None;
+      controllerState.flags = dom::GamepadCapabilityFlags::Cap_None;
     }
     if (pose.bPoseIsValid &&
         pose.eTrackingResult == ::vr::TrackingResult_Running_OK) {
@@ -671,7 +671,8 @@ OpenVRSession::UpdateControllerPoses(VRSystemState& aState)
       // because of its arrangement, we can copy the 12 elements in and
       // then transpose them to the right place.  We do this so we can
       // pull out a Quaternion.
-      memcpy(&m.components, &pose.mDeviceToAbsoluteTracking, sizeof(pose.mDeviceToAbsoluteTracking));
+      memcpy(&m.components, &pose.mDeviceToAbsoluteTracking,
+             sizeof(pose.mDeviceToAbsoluteTracking));
       m.Transpose();
 
       gfx::Quaternion rot;
@@ -707,20 +708,17 @@ OpenVRSession::UpdateControllerPoses(VRSystemState& aState)
   }
 }
 
-void
-OpenVRSession::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceType,
-                                     ::vr::TrackedDeviceIndex_t aDeviceIndex,
-                                     nsCString& aId)
-{
+void OpenVRSession::GetControllerDeviceId(
+    ::vr::ETrackedDeviceClass aDeviceType,
+    ::vr::TrackedDeviceIndex_t aDeviceIndex, nsCString& aId) {
   switch (aDeviceType) {
-    case ::vr::TrackedDeviceClass_Controller:
-    {
+    case ::vr::TrackedDeviceClass_Controller: {
       ::vr::ETrackedPropertyError err;
       uint32_t requiredBufferLen;
       bool isFound = false;
       char charBuf[128];
-      requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(aDeviceIndex,
-                          ::vr::Prop_RenderModelName_String, charBuf, 128, &err);
+      requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(
+          aDeviceIndex, ::vr::Prop_RenderModelName_String, charBuf, 128, &err);
       if (requiredBufferLen > 128) {
         MOZ_CRASH("Larger than the buffer size.");
       }
@@ -730,8 +728,8 @@ OpenVRSession::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceType,
         aId.AssignLiteral("OpenVR Knuckles");
         isFound = true;
       }
-      requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(aDeviceIndex,
-        ::vr::Prop_SerialNumber_String, charBuf, 128, &err);
+      requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(
+          aDeviceIndex, ::vr::Prop_SerialNumber_String, charBuf, 128, &err);
       if (requiredBufferLen > 128) {
         MOZ_CRASH("Larger than the buffer size.");
       }
@@ -747,8 +745,7 @@ OpenVRSession::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceType,
       }
       break;
     }
-    case ::vr::TrackedDeviceClass_GenericTracker:
-    {
+    case ::vr::TrackedDeviceClass_GenericTracker: {
       aId.AssignLiteral("OpenVR Tracker");
       break;
     }
@@ -758,9 +755,7 @@ OpenVRSession::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceType,
   }
 }
 
-void
-OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState)
-{
+void OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState) {
   UpdateHeadsetPose(aSystemState);
   UpdateEyeParameters(aSystemState);
   EnumerateControllers(aSystemState);
@@ -769,9 +764,7 @@ OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState)
   UpdateTelemetry(aSystemState);
 }
 
-void
-OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState)
-{
+void OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState) {
   bool isHmdPresent = ::vr::VR_IsHmdPresent();
   if (!isHmdPresent) {
     mShouldQuit = true;
@@ -815,35 +808,30 @@ OpenVRSession::ProcessEvents(mozilla::gfx::VRSystemState& aSystemState)
 }
 
 #if defined(XP_WIN)
-bool
-OpenVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                           ID3D11Texture2D* aTexture)
-{
-  return SubmitFrame((void *)aTexture,
-                     ::vr::ETextureType::TextureType_DirectX,
+bool OpenVRSession::SubmitFrame(
+    const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
+    ID3D11Texture2D* aTexture) {
+  return SubmitFrame((void*)aTexture, ::vr::ETextureType::TextureType_DirectX,
                      aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
 }
 #elif defined(XP_MACOSX)
-bool
-OpenVRSession::SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
-                           const VRLayerTextureHandle& aTexture)
-{
-  return SubmitFrame(aTexture,
-                     ::vr::ETextureType::TextureType_IOSurface,
+bool OpenVRSession::SubmitFrame(
+    const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
+    const VRLayerTextureHandle& aTexture) {
+  return SubmitFrame(aTexture, ::vr::ETextureType::TextureType_IOSurface,
                      aLayer.mLeftEyeRect, aLayer.mRightEyeRect);
 }
 #endif
 
-bool
-OpenVRSession::SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
-                           ::vr::ETextureType aTextureType,
-                           const VRLayerEyeRect& aLeftEyeRect,
-                           const VRLayerEyeRect& aRightEyeRect)
-{
+bool OpenVRSession::SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
+                                ::vr::ETextureType aTextureType,
+                                const VRLayerEyeRect& aLeftEyeRect,
+                                const VRLayerEyeRect& aRightEyeRect) {
   ::vr::Texture_t tex;
 #if defined(XP_MACOSX)
-  // We get aTextureHandle from get_SurfaceDescriptorMacIOSurface() at VRDisplayExternal.
-  // scaleFactor and opaque are skipped because they always are 1.0 and false.
+  // We get aTextureHandle from get_SurfaceDescriptorMacIOSurface() at
+  // VRDisplayExternal. scaleFactor and opaque are skipped because they always
+  // are 1.0 and false.
   RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(aTextureHandle);
   if (!surf) {
     NS_WARNING("OpenVRSession::SubmitFrame failed to get a MacIOSurface");
@@ -851,7 +839,7 @@ OpenVRSession::SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
   }
 
   const void* ioSurface = surf->GetIOSurfacePtr();
-  tex.handle = (void *)ioSurface;
+  tex.handle = (void*)ioSurface;
 #else
   tex.handle = aTextureHandle;
 #endif
@@ -884,32 +872,27 @@ OpenVRSession::SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
   return true;
 }
 
-void
-OpenVRSession::StopPresentation()
-{
+void OpenVRSession::StopPresentation() {
   mVRCompositor->ClearLastSubmittedFrame();
 
   ::vr::Compositor_CumulativeStats stats;
-  mVRCompositor->GetCumulativeStats(&stats, sizeof(::vr::Compositor_CumulativeStats));
+  mVRCompositor->GetCumulativeStats(&stats,
+                                    sizeof(::vr::Compositor_CumulativeStats));
 }
 
-bool
-OpenVRSession::StartPresentation()
-{
-  return true;
-}
+bool OpenVRSession::StartPresentation() { return true; }
 
-void
-OpenVRSession::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                             float aIntensity, float aDuration)
-{
+void OpenVRSession::VibrateHaptic(uint32_t aControllerIdx,
+                                  uint32_t aHapticIndex, float aIntensity,
+                                  float aDuration) {
   MutexAutoLock lock(mControllerHapticStateMutex);
   if (aHapticIndex >= kNumOpenVRHaptics ||
       aControllerIdx >= kVRControllerMaxCount) {
     return;
   }
 
-  ::vr::TrackedDeviceIndex_t deviceIndex = mControllerDeviceIndex[aControllerIdx];
+  ::vr::TrackedDeviceIndex_t deviceIndex =
+      mControllerDeviceIndex[aControllerIdx];
   if (deviceIndex == 0) {
     return;
   }
@@ -926,9 +909,7 @@ OpenVRSession::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
    */
 }
 
-void
-OpenVRSession::StartHapticThread()
-{
+void OpenVRSession::StartHapticThread() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mHapticThread) {
     mHapticThread = new VRThread(NS_LITERAL_CSTRING("VR_OpenVR_Haptics"));
@@ -937,47 +918,36 @@ OpenVRSession::StartHapticThread()
   StartHapticTimer();
 }
 
-void
-OpenVRSession::StopHapticThread()
-{
+void OpenVRSession::StopHapticThread() {
   if (mHapticThread) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "mHapticThread::Shutdown",
-      [thread = mHapticThread]() {
-        thread->Shutdown();
-    }));
+        "mHapticThread::Shutdown",
+        [thread = mHapticThread]() { thread->Shutdown(); }));
     mHapticThread = nullptr;
   }
 }
 
-void
-OpenVRSession::StartHapticTimer()
-{
+void OpenVRSession::StartHapticTimer() {
   if (!mHapticTimer && mHapticThread) {
     mLastHapticUpdate = TimeStamp();
     mHapticTimer = NS_NewTimer();
     mHapticTimer->SetTarget(mHapticThread->GetThread()->EventTarget());
     mHapticTimer->InitWithNamedFuncCallback(
-      HapticTimerCallback,
-      this,
-      kVRHapticUpdateInterval,
-      nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
-      "OpenVRSession::HapticTimerCallback");
+        HapticTimerCallback, this, kVRHapticUpdateInterval,
+        nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
+        "OpenVRSession::HapticTimerCallback");
   }
 }
 
-void
-OpenVRSession::StopHapticTimer()
-{
+void OpenVRSession::StopHapticTimer() {
   if (mHapticTimer) {
     mHapticTimer->Cancel();
     mHapticTimer = nullptr;
   }
 }
 
-/*static*/ void
-OpenVRSession::HapticTimerCallback(nsITimer* aTimer, void* aClosure)
-{
+/*static*/ void OpenVRSession::HapticTimerCallback(nsITimer* aTimer,
+                                                   void* aClosure) {
   /**
    * It is safe to use the pointer passed in aClosure to reference the
    * OpenVRSession object as the timer is canceled in OpenVRSession::Shutdown,
@@ -988,9 +958,7 @@ OpenVRSession::HapticTimerCallback(nsITimer* aTimer, void* aClosure)
   self->UpdateHaptics();
 }
 
-void
-OpenVRSession::UpdateHaptics()
-{
+void OpenVRSession::UpdateHaptics() {
   MOZ_ASSERT(mHapticThread->GetThread() == NS_GetCurrentThread());
   MOZ_ASSERT(mVRSystem);
 
@@ -1004,9 +972,11 @@ OpenVRSession::UpdateHaptics()
   float deltaTime = (float)(now - mLastHapticUpdate).ToSeconds();
   mLastHapticUpdate = now;
 
-  for (int iController = 0; iController < kVRControllerMaxCount; iController++) {
+  for (int iController = 0; iController < kVRControllerMaxCount;
+       iController++) {
     for (int iHaptic = 0; iHaptic < kNumOpenVRHaptics; iHaptic++) {
-      ::vr::TrackedDeviceIndex_t deviceIndex = mControllerDeviceIndex[iController];
+      ::vr::TrackedDeviceIndex_t deviceIndex =
+          mControllerDeviceIndex[iController];
       if (deviceIndex == 0) {
         continue;
       }
@@ -1016,9 +986,11 @@ OpenVRSession::UpdateHaptics()
         continue;
       }
       // We expect OpenVR to vibrate for 5 ms, but we found it only response the
-      // commend ~ 3.9 ms. For duration time longer than 3.9 ms, we separate them
-      // to a loop of 3.9 ms for make users feel that is a continuous events.
-      const float microSec = (duration < 0.0039f ? duration : 0.0039f) * 1000000.0f * intensity;
+      // commend ~ 3.9 ms. For duration time longer than 3.9 ms, we separate
+      // them to a loop of 3.9 ms for make users feel that is a continuous
+      // events.
+      const float microSec =
+          (duration < 0.0039f ? duration : 0.0039f) * 1000000.0f * intensity;
       mVRSystem->TriggerHapticPulse(deviceIndex, iHaptic, (uint32_t)microSec);
 
       duration -= deltaTime;
@@ -1030,9 +1002,7 @@ OpenVRSession::UpdateHaptics()
   }
 }
 
-void
-OpenVRSession::StopVibrateHaptic(uint32_t aControllerIdx)
-{
+void OpenVRSession::StopVibrateHaptic(uint32_t aControllerIdx) {
   MutexAutoLock lock(mControllerHapticStateMutex);
   if (aControllerIdx >= kVRControllerMaxCount) {
     return;
@@ -1042,9 +1012,7 @@ OpenVRSession::StopVibrateHaptic(uint32_t aControllerIdx)
   }
 }
 
-void
-OpenVRSession::StopAllHaptics()
-{
+void OpenVRSession::StopAllHaptics() {
   MutexAutoLock lock(mControllerHapticStateMutex);
   for (auto& controller : mHapticPulseRemaining) {
     for (auto& haptic : controller) {
@@ -1053,13 +1021,12 @@ OpenVRSession::StopAllHaptics()
   }
 }
 
-void
-OpenVRSession::UpdateTelemetry(VRSystemState& aSystemState)
-{
+void OpenVRSession::UpdateTelemetry(VRSystemState& aSystemState) {
   ::vr::Compositor_CumulativeStats stats;
-  mVRCompositor->GetCumulativeStats(&stats, sizeof(::vr::Compositor_CumulativeStats));
+  mVRCompositor->GetCumulativeStats(&stats,
+                                    sizeof(::vr::Compositor_CumulativeStats));
   aSystemState.displayState.mDroppedFrameCount = stats.m_nNumReprojectedFrames;
 }
 
-} // namespace mozilla
-} // namespace gfx
+}  // namespace gfx
+}  // namespace mozilla

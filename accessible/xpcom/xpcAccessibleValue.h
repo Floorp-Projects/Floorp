@@ -18,26 +18,25 @@ class Accessible;
  * XPCOM nsIAccessibleValue interface implementation, used by
  * xpcAccessibleGeneric class.
  */
-class xpcAccessibleValue : public nsIAccessibleValue
-{
-public:
+class xpcAccessibleValue : public nsIAccessibleValue {
+ public:
   NS_IMETHOD GetMaximumValue(double* aValue) final;
   NS_IMETHOD GetMinimumValue(double* aValue) final;
   NS_IMETHOD GetCurrentValue(double* aValue) final;
   NS_IMETHOD SetCurrentValue(double aValue) final;
   NS_IMETHOD GetMinimumIncrement(double* aMinIncrement) final;
 
-protected:
-  xpcAccessibleValue() { }
+ protected:
+  xpcAccessibleValue() {}
   virtual ~xpcAccessibleValue() {}
 
-private:
+ private:
   AccessibleOrProxy Intl();
 
   xpcAccessibleValue(const xpcAccessibleValue&) = delete;
-  xpcAccessibleValue& operator =(const xpcAccessibleValue&) = delete;
+  xpcAccessibleValue& operator=(const xpcAccessibleValue&) = delete;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 #endif

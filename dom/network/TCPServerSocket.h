@@ -21,35 +21,31 @@ class TCPSocketChild;
 class TCPServerSocketChild;
 class TCPServerSocketParent;
 
-class TCPServerSocket final : public DOMEventTargetHelper
-                            , public nsIServerSocketListener
-{
-public:
-  TCPServerSocket(nsIGlobalObject* aGlobal, uint16_t aPort, bool aUseArrayBuffers,
-                  uint16_t aBacklog);
+class TCPServerSocket final : public DOMEventTargetHelper,
+                              public nsIServerSocketListener {
+ public:
+  TCPServerSocket(nsIGlobalObject* aGlobal, uint16_t aPort,
+                  bool aUseArrayBuffers, uint16_t aBacklog);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(TCPServerSocket, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(TCPServerSocket,
+                                                         DOMEventTargetHelper)
   NS_DECL_NSISERVERSOCKETLISTENER
 
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return GetOwner();
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return GetOwner(); }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   nsresult Init();
 
   uint16_t LocalPort();
   void Close();
 
-  static already_AddRefed<TCPServerSocket>
-  Constructor(const GlobalObject& aGlobal,
-              uint16_t aPort,
-              const ServerSocketOptions& aOptions,
-              uint16_t aBacklog,
-              mozilla::ErrorResult& aRv);
+  static already_AddRefed<TCPServerSocket> Constructor(
+      const GlobalObject& aGlobal, uint16_t aPort,
+      const ServerSocketOptions& aOptions, uint16_t aBacklog,
+      mozilla::ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(connect);
   IMPL_EVENT_HANDLER(error);
@@ -61,7 +57,7 @@ public:
   // notifications to content processes.
   void SetServerBridgeParent(TCPServerSocketParent* aBridgeParent);
 
-private:
+ private:
   ~TCPServerSocket();
   // Dispatch a TCPServerSocketEvent event of a given type at this object.
   void FireEvent(const nsAString& aType, TCPSocket* aSocket);
@@ -74,11 +70,12 @@ private:
   RefPtr<TCPServerSocketParent> mServerBridgeParent;
   int32_t mPort;
   uint16_t mBacklog;
-  // True if any accepted sockets should use array buffers for received messages.
+  // True if any accepted sockets should use array buffers for received
+  // messages.
   bool mUseArrayBuffers;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TCPServerSocket_h
+#endif  // mozilla_dom_TCPServerSocket_h

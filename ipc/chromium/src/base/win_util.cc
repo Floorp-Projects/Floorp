@@ -18,8 +18,8 @@ std::wstring FormatMessage(unsigned messageid) {
   wchar_t* string_buffer = NULL;
   unsigned string_length = ::FormatMessage(
       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-      FORMAT_MESSAGE_IGNORE_INSERTS, NULL, messageid, 0,
-      reinterpret_cast<wchar_t *>(&string_buffer), 0, NULL);
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL, messageid, 0, reinterpret_cast<wchar_t*>(&string_buffer), 0, NULL);
 
   std::wstring formatted_string;
   if (string_buffer) {
@@ -32,8 +32,6 @@ std::wstring FormatMessage(unsigned messageid) {
   return formatted_string;
 }
 
-std::wstring FormatLastWin32Error() {
-  return FormatMessage(GetLastError());
-}
+std::wstring FormatLastWin32Error() { return FormatMessage(GetLastError()); }
 
 }  // namespace win_util

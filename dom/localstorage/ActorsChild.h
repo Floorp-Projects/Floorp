@@ -19,7 +19,7 @@ namespace ipc {
 
 class BackgroundChildImpl;
 
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
@@ -49,9 +49,7 @@ class LSSnapshot;
  *   which will result in the parent sending __delete__ which destroys the
  *   actor.
  */
-class LSDatabaseChild final
-  : public PBackgroundLSDatabaseChild
-{
+class LSDatabaseChild final : public PBackgroundLSDatabaseChild {
   friend class mozilla::ipc::BackgroundChildImpl;
   friend class LSDatabase;
   friend class LSObject;
@@ -60,40 +58,32 @@ class LSDatabaseChild final
 
   NS_DECL_OWNINGTHREAD
 
-public:
-  void
-  AssertIsOnOwningThread() const
-  {
+ public:
+  void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(LSDatabaseChild);
   }
 
-private:
+ private:
   // Only created by LSObject.
   explicit LSDatabaseChild(LSDatabase* aDatabase);
 
   // Only destroyed by mozilla::ipc::BackgroundChildImpl.
   ~LSDatabaseChild();
 
-  void
-  SendDeleteMeInternal();
+  void SendDeleteMeInternal();
 
   // IPDL methods are only called by IPDL.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  RecvRequestAllowToClose() override;
+  mozilla::ipc::IPCResult RecvRequestAllowToClose() override;
 
-  PBackgroundLSSnapshotChild*
-  AllocPBackgroundLSSnapshotChild(const nsString& aDocumentURI,
-                                  const bool& aIncreasePeakUsage,
-                                  const int64_t& aRequestedSize,
-                                  const int64_t& aMinSize,
-                                  LSSnapshotInitInfo* aInitInfo) override;
+  PBackgroundLSSnapshotChild* AllocPBackgroundLSSnapshotChild(
+      const nsString& aDocumentURI, const bool& aIncreasePeakUsage,
+      const int64_t& aRequestedSize, const int64_t& aMinSize,
+      LSSnapshotInitInfo* aInitInfo) override;
 
-  bool
-  DeallocPBackgroundLSSnapshotChild(PBackgroundLSSnapshotChild* aActor)
-                                    override;
+  bool DeallocPBackgroundLSSnapshotChild(
+      PBackgroundLSSnapshotChild* aActor) override;
 };
 
 /**
@@ -104,9 +94,7 @@ private:
  *
  * See `PBackgroundLSObserver.ipdl` for more info.
  */
-class LSObserverChild final
-  : public PBackgroundLSObserverChild
-{
+class LSObserverChild final : public PBackgroundLSObserverChild {
   friend class mozilla::ipc::BackgroundChildImpl;
   friend class LSObserver;
   friend class LSObject;
@@ -115,34 +103,29 @@ class LSObserverChild final
 
   NS_DECL_OWNINGTHREAD
 
-public:
-  void
-  AssertIsOnOwningThread() const
-  {
+ public:
+  void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(LSObserverChild);
   }
 
-private:
+ private:
   // Only created by LSObject.
   explicit LSObserverChild(LSObserver* aObserver);
 
   // Only destroyed by mozilla::ipc::BackgroundChildImpl.
   ~LSObserverChild();
 
-  void
-  SendDeleteMeInternal();
+  void SendDeleteMeInternal();
 
   // IPDL methods are only called by IPDL.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  RecvObserve(const PrincipalInfo& aPrinciplaInfo,
-              const uint32_t& aPrivateBrowsingId,
-              const nsString& aDocumentURI,
-              const nsString& aKey,
-              const nsString& aOldValue,
-              const nsString& aNewValue) override;
+  mozilla::ipc::IPCResult RecvObserve(const PrincipalInfo& aPrinciplaInfo,
+                                      const uint32_t& aPrivateBrowsingId,
+                                      const nsString& aDocumentURI,
+                                      const nsString& aKey,
+                                      const nsString& aOldValue,
+                                      const nsString& aNewValue) override;
 };
 
 /**
@@ -156,9 +139,7 @@ private:
  * See `PBackgroundLSRequest.ipdl`, `LSObject`, and `RequestHelper` for more
  * info.
  */
-class LSRequestChild final
-  : public PBackgroundLSRequestChild
-{
+class LSRequestChild final : public PBackgroundLSRequestChild {
   friend class LSObject;
   friend class LocalStorageManager2;
 
@@ -168,17 +149,14 @@ class LSRequestChild final
 
   NS_DECL_OWNINGTHREAD
 
-public:
-  void
-  AssertIsOnOwningThread() const
-  {
+ public:
+  void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(LSReqeustChild);
   }
 
-  bool
-  Finishing() const;
+  bool Finishing() const;
 
-private:
+ private:
   // Only created by LSObject.
   explicit LSRequestChild(LSRequestChildCallback* aCallback);
 
@@ -186,27 +164,22 @@ private:
   ~LSRequestChild();
 
   // IPDL methods are only called by IPDL.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  Recv__delete__(const LSRequestResponse& aResponse) override;
+  mozilla::ipc::IPCResult Recv__delete__(
+      const LSRequestResponse& aResponse) override;
 
-  mozilla::ipc::IPCResult
-  RecvReady() override;
+  mozilla::ipc::IPCResult RecvReady() override;
 };
 
-class NS_NO_VTABLE LSRequestChildCallback
-{
-public:
+class NS_NO_VTABLE LSRequestChildCallback {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void
-  OnResponse(const LSRequestResponse& aResponse) = 0;
+  virtual void OnResponse(const LSRequestResponse& aResponse) = 0;
 
-protected:
-  virtual ~LSRequestChildCallback()
-  { }
+ protected:
+  virtual ~LSRequestChildCallback() {}
 };
 
 /**
@@ -218,23 +191,19 @@ protected:
  *
  * See `PBackgroundLSSimpleRequest.ipdl` for more info.
  */
-class LSSimpleRequestChild final
-  : public PBackgroundLSSimpleRequestChild
-{
+class LSSimpleRequestChild final : public PBackgroundLSSimpleRequestChild {
   friend class LocalStorageManager2;
 
   RefPtr<LSSimpleRequestChildCallback> mCallback;
 
   NS_DECL_OWNINGTHREAD
 
-public:
-  void
-  AssertIsOnOwningThread() const
-  {
+ public:
+  void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(LSSimpleReqeustChild);
   }
 
-private:
+ private:
   // Only created by LocalStorageManager2.
   explicit LSSimpleRequestChild(LSSimpleRequestChildCallback* aCallback);
 
@@ -242,24 +211,20 @@ private:
   ~LSSimpleRequestChild();
 
   // IPDL methods are only called by IPDL.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  Recv__delete__(const LSSimpleRequestResponse& aResponse) override;
+  mozilla::ipc::IPCResult Recv__delete__(
+      const LSSimpleRequestResponse& aResponse) override;
 };
 
-class NS_NO_VTABLE LSSimpleRequestChildCallback
-{
-public:
+class NS_NO_VTABLE LSSimpleRequestChildCallback {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void
-  OnResponse(const LSSimpleRequestResponse& aResponse) = 0;
+  virtual void OnResponse(const LSSimpleRequestResponse& aResponse) = 0;
 
-protected:
-  virtual ~LSSimpleRequestChildCallback()
-  { }
+ protected:
+  virtual ~LSSimpleRequestChildCallback() {}
 };
 
 /**
@@ -272,9 +237,7 @@ protected:
  *
  * See `PBackgroundLSSnapshot.ipdl` and `LSSnapshot` for more info.
  */
-class LSSnapshotChild final
-  : public PBackgroundLSSnapshotChild
-{
+class LSSnapshotChild final : public PBackgroundLSSnapshotChild {
   friend class LSDatabase;
   friend class LSSnapshot;
 
@@ -282,32 +245,27 @@ class LSSnapshotChild final
 
   NS_DECL_OWNINGTHREAD
 
-public:
-  void
-  AssertIsOnOwningThread() const
-  {
+ public:
+  void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(LSSnapshotChild);
   }
 
-private:
+ private:
   // Only created by LSDatabase.
   explicit LSSnapshotChild(LSSnapshot* aSnapshot);
 
   // Only destroyed by LSDatabaseChild.
   ~LSSnapshotChild();
 
-  void
-  SendDeleteMeInternal();
+  void SendDeleteMeInternal();
 
   // IPDL methods are only called by IPDL.
-  void
-  ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult
-  RecvMarkDirty() override;
+  mozilla::ipc::IPCResult RecvMarkDirty() override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_localstorage_ActorsChild_h
+#endif  // mozilla_dom_localstorage_ActorsChild_h

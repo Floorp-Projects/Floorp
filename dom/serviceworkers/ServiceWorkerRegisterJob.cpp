@@ -13,19 +13,13 @@ namespace mozilla {
 namespace dom {
 
 ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(
-    nsIPrincipal* aPrincipal,
-    const nsACString& aScope,
-    const nsACString& aScriptSpec,
-    nsILoadGroup* aLoadGroup,
+    nsIPrincipal* aPrincipal, const nsACString& aScope,
+    const nsACString& aScriptSpec, nsILoadGroup* aLoadGroup,
     ServiceWorkerUpdateViaCache aUpdateViaCache)
-  : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope, aScriptSpec,
-                           aLoadGroup, aUpdateViaCache)
-{
-}
+    : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope, aScriptSpec,
+                             aLoadGroup, aUpdateViaCache) {}
 
-void
-ServiceWorkerRegisterJob::AsyncExecute()
-{
+void ServiceWorkerRegisterJob::AsyncExecute() {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -35,7 +29,7 @@ ServiceWorkerRegisterJob::AsyncExecute()
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    swm->GetRegistration(mPrincipal, mScope);
+      swm->GetRegistration(mPrincipal, mScope);
 
   if (registration) {
     bool sameUVC = GetUpdateViaCache() == registration->GetUpdateViaCache();
@@ -56,8 +50,8 @@ ServiceWorkerRegisterJob::AsyncExecute()
       return;
     }
   } else {
-    registration = swm->CreateNewRegistration(mScope, mPrincipal,
-                                              GetUpdateViaCache());
+    registration =
+        swm->CreateNewRegistration(mScope, mPrincipal, GetUpdateViaCache());
     if (!registration) {
       FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
       return;
@@ -68,9 +62,7 @@ ServiceWorkerRegisterJob::AsyncExecute()
   Update();
 }
 
-ServiceWorkerRegisterJob::~ServiceWorkerRegisterJob()
-{
-}
+ServiceWorkerRegisterJob::~ServiceWorkerRegisterJob() {}
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

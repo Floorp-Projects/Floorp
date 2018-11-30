@@ -8,25 +8,22 @@
 #include "nsIPrincipal.h"
 #include "nsString.h"
 
-class nsAlertsUtils final
-{
-private:
+class nsAlertsUtils final {
+ private:
   nsAlertsUtils() = delete;
 
-public:
+ public:
   /**
    * Indicates whether an alert from |aPrincipal| should include the source
    * string and action buttons. Returns false if |aPrincipal| is |nullptr|, or
    * a system, expanded, or null principal.
    */
-  static bool
-  IsActionablePrincipal(nsIPrincipal* aPrincipal);
+  static bool IsActionablePrincipal(nsIPrincipal* aPrincipal);
 
   /**
    * Sets |aHostPort| to the host and port from |aPrincipal|'s URI, or an
    * empty string if |aPrincipal| is not actionable.
    */
-  static void
-  GetSourceHostPort(nsIPrincipal* aPrincipal, nsAString& aHostPort);
+  static void GetSourceHostPort(nsIPrincipal* aPrincipal, nsAString& aHostPort);
 };
 #endif /* nsAlertsUtils_h */

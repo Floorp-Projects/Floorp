@@ -18,14 +18,12 @@ namespace dom {
 class FileSystemEntry;
 class FunctionStringCallback;
 
-class DataTransferItem final : public nsISupports
-                             , public nsWrapperCache
-{
-public:
+class DataTransferItem final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DataTransferItem);
 
-public:
+ public:
   // The spec only talks about the "file" and "string" kinds. Due to the Moz*
   // APIs, it is possible to attach any type to a DataTransferItem, meaning that
   // we can have other kinds then just FILE and STRING. These others are simply
@@ -38,100 +36,72 @@ public:
 
   DataTransferItem(DataTransfer* aDataTransfer, const nsAString& aType,
                    eKind aKind = KIND_OTHER)
-    : mIndex(0)
-    , mChromeOnly(false)
-    , mKind(aKind)
-    , mType(aType)
-    , mDataTransfer(aDataTransfer)
-  {
+      : mIndex(0),
+        mChromeOnly(false),
+        mKind(aKind),
+        mType(aType),
+        mDataTransfer(aDataTransfer) {
     MOZ_ASSERT(mDataTransfer, "Must be associated with a DataTransfer");
   }
 
   already_AddRefed<DataTransferItem> Clone(DataTransfer* aDataTransfer) const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   void GetAsString(FunctionStringCallback* aCallback,
-                   nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv);
+                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
-  void GetKind(nsAString& aKind) const
-  {
+  void GetKind(nsAString& aKind) const {
     switch (mKind) {
-    case KIND_FILE:
-      aKind = NS_LITERAL_STRING("file");
-      return;
-    case KIND_STRING:
-      aKind = NS_LITERAL_STRING("string");
-      return;
-    default:
-      aKind = NS_LITERAL_STRING("other");
-      return;
+      case KIND_FILE:
+        aKind = NS_LITERAL_STRING("file");
+        return;
+      case KIND_STRING:
+        aKind = NS_LITERAL_STRING("string");
+        return;
+      default:
+        aKind = NS_LITERAL_STRING("other");
+        return;
     }
   }
 
-  void GetInternalType(nsAString& aType) const
-  {
-    aType = mType;
-  }
+  void GetInternalType(nsAString& aType) const { aType = mType; }
 
   void GetType(nsAString& aType);
 
-  eKind Kind() const
-  {
-    return mKind;
-  }
+  eKind Kind() const { return mKind; }
 
-  already_AddRefed<File>
-  GetAsFile(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
+  already_AddRefed<File> GetAsFile(nsIPrincipal& aSubjectPrincipal,
+                                   ErrorResult& aRv);
 
-  already_AddRefed<FileSystemEntry>
-  GetAsEntry(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
+  already_AddRefed<FileSystemEntry> GetAsEntry(nsIPrincipal& aSubjectPrincipal,
+                                               ErrorResult& aRv);
 
-  DataTransfer* GetParentObject() const
-  {
-    return mDataTransfer;
-  }
+  DataTransfer* GetParentObject() const { return mDataTransfer; }
 
-  nsIPrincipal* Principal() const
-  {
-    return mPrincipal;
-  }
-  void SetPrincipal(nsIPrincipal* aPrincipal)
-  {
-    mPrincipal = aPrincipal;
-  }
+  nsIPrincipal* Principal() const { return mPrincipal; }
+  void SetPrincipal(nsIPrincipal* aPrincipal) { mPrincipal = aPrincipal; }
 
   already_AddRefed<nsIVariant> DataNoSecurityCheck();
-  // Data may return null if the clipboard state has changed since the type was detected.
+  // Data may return null if the clipboard state has changed since the type was
+  // detected.
   already_AddRefed<nsIVariant> Data(nsIPrincipal* aPrincipal, ErrorResult& aRv);
 
   // Note: This can modify the mKind.  Callers of this method must let the
   // relevant DataTransfer know, because its types list can change as a result.
   void SetData(nsIVariant* aData);
 
-  uint32_t Index() const
-  {
-    return mIndex;
-  }
-  void SetIndex(uint32_t aIndex)
-  {
-    mIndex = aIndex;
-  }
+  uint32_t Index() const { return mIndex; }
+  void SetIndex(uint32_t aIndex) { mIndex = aIndex; }
   void FillInExternalData();
 
-  bool ChromeOnly() const
-  {
-    return mChromeOnly;
-  }
-  void SetChromeOnly(bool aChromeOnly)
-  {
-    mChromeOnly = aChromeOnly;
-  }
+  bool ChromeOnly() const { return mChromeOnly; }
+  void SetChromeOnly(bool aChromeOnly) { mChromeOnly = aChromeOnly; }
 
   static eKind KindFromData(nsIVariant* aData);
 
-private:
+ private:
   ~DataTransferItem() {}
   already_AddRefed<File> CreateFileFromInputStream(nsIInputStream* aStream);
 
@@ -149,7 +119,7 @@ private:
   RefPtr<File> mCachedFile;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_DataTransferItem_h */

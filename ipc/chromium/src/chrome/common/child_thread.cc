@@ -20,8 +20,7 @@ ChildThread::ChildThread(Thread::Options options)
       switches::kProcessChannelID);
 }
 
-ChildThread::~ChildThread() {
-}
+ChildThread::~ChildThread() {}
 
 bool ChildThread::Run() {
   bool r = StartWithOptions(options_);
@@ -33,8 +32,7 @@ void ChildThread::OnChannelError() {
   owner_loop_->PostTask(task.forget());
 }
 
-void ChildThread::OnMessageReceived(IPC::Message&& msg) {
-}
+void ChildThread::OnMessageReceived(IPC::Message&& msg) {}
 
 ChildThread* ChildThread::current() {
   return ChildProcess::current()->child_thread();
@@ -42,9 +40,7 @@ ChildThread* ChildThread::current() {
 
 void ChildThread::Init() {
   channel_ = mozilla::MakeUnique<IPC::Channel>(channel_name_,
-                                               IPC::Channel::MODE_CLIENT,
-                                               this);
-
+                                               IPC::Channel::MODE_CLIENT, this);
 }
 
 void ChildThread::CleanUp() {

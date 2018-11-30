@@ -21,42 +21,38 @@
 //  2. set (with non-negative, non-zero count value)
 //  3. indefinite
 //
-class nsSMILRepeatCount
-{
-public:
+class nsSMILRepeatCount {
+ public:
   nsSMILRepeatCount() : mCount(kNotSet) {}
-  explicit nsSMILRepeatCount(double aCount)
-    : mCount(kNotSet) { SetCount(aCount); }
+  explicit nsSMILRepeatCount(double aCount) : mCount(kNotSet) {
+    SetCount(aCount);
+  }
 
   operator double() const {
     MOZ_ASSERT(IsDefinite(),
-      "Converting indefinite or unset repeat count to double");
+               "Converting indefinite or unset repeat count to double");
     return mCount;
   }
-  bool IsDefinite() const {
-    return mCount != kNotSet && mCount != kIndefinite;
-  }
+  bool IsDefinite() const { return mCount != kNotSet && mCount != kIndefinite; }
   bool IsIndefinite() const { return mCount == kIndefinite; }
   bool IsSet() const { return mCount != kNotSet; }
 
-  nsSMILRepeatCount& operator=(double aCount)
-  {
+  nsSMILRepeatCount& operator=(double aCount) {
     SetCount(aCount);
     return *this;
   }
-  void SetCount(double aCount)
-  {
+  void SetCount(double aCount) {
     NS_ASSERTION(aCount > 0.0, "Negative or zero repeat count");
     mCount = aCount > 0.0 ? aCount : kNotSet;
   }
   void SetIndefinite() { mCount = kIndefinite; }
   void Unset() { mCount = kNotSet; }
 
-private:
+ private:
   static const double kNotSet;
   static const double kIndefinite;
 
-  double  mCount;
+  double mCount;
 };
 
 #endif

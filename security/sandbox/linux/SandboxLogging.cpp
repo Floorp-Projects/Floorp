@@ -22,9 +22,7 @@ namespace mozilla {
 // Alters an iovec array to remove the first `toDrop` bytes.  This
 // complexity is necessary because writev can return a short write
 // (e.g., if stderr is a pipe and the buffer is almost full).
-static void
-IOVecDrop(struct iovec* iov, int iovcnt, size_t toDrop)
-{
+static void IOVecDrop(struct iovec* iov, int iovcnt, size_t toDrop) {
   while (toDrop > 0 && iovcnt > 0) {
     size_t toDropHere = std::min(toDrop, iov->iov_len);
     iov->iov_base = static_cast<char*>(iov->iov_base) + toDropHere;
@@ -35,18 +33,16 @@ IOVecDrop(struct iovec* iov, int iovcnt, size_t toDrop)
   }
 }
 
-void
-SandboxLogError(const char* message)
-{
+void SandboxLogError(const char* message) {
 #ifdef ANDROID
   // This uses writev internally and appears to be async signal safe.
   __android_log_write(ANDROID_LOG_ERROR, "Sandbox", message);
 #endif
   static const char logPrefix[] = "Sandbox: ", logSuffix[] = "\n";
   struct iovec iovs[3] = {
-    { const_cast<char*>(logPrefix), sizeof(logPrefix) - 1 },
-    { const_cast<char*>(message), strlen(message) },
-    { const_cast<char*>(logSuffix), sizeof(logSuffix) - 1 },
+      {const_cast<char*>(logPrefix), sizeof(logPrefix) - 1},
+      {const_cast<char*>(message), strlen(message)},
+      {const_cast<char*>(logSuffix), sizeof(logSuffix) - 1},
   };
   while (iovs[2].iov_len > 0) {
     ssize_t written = HANDLE_EINTR(writev(STDERR_FILENO, iovs, 3));
@@ -57,4 +53,4 @@ SandboxLogError(const char* message)
   }
 }
 
-}
+}  // namespace mozilla

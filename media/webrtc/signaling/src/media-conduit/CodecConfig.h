@@ -16,8 +16,7 @@ namespace mozilla {
 /**
  * Minimalistic Audio Codec Config Params
  */
-struct AudioCodecConfig
-{
+struct AudioCodecConfig {
   /*
    * The data-types for these properties mimic the
    * corresponding webrtc::CodecInst data-types.
@@ -35,15 +34,13 @@ struct AudioCodecConfig
 
   AudioCodecConfig(int type, std::string name, int freq, int channels,
                    bool FECEnabled)
-    : mType(type)
-    , mName(name)
-    , mFreq(freq)
-    , mChannels(channels)
-    , mFECEnabled(FECEnabled)
-    , mDtmfEnabled(false)
-    , mMaxPlaybackRate(0)
-  {
-  }
+      : mType(type),
+        mName(name),
+        mFreq(freq),
+        mChannels(channels),
+        mFECEnabled(FECEnabled),
+        mDtmfEnabled(false),
+        mMaxPlaybackRate(0) {}
 };
 
 /*
@@ -51,27 +48,24 @@ struct AudioCodecConfig
  * More to be added later depending on the use-case
  */
 
-#define    MAX_SPROP_LEN    128
+#define MAX_SPROP_LEN 128
 
 // used for holding SDP negotiation results
-struct VideoCodecConfigH264
-{
-    char       sprop_parameter_sets[MAX_SPROP_LEN];
-    int        packetization_mode;
-    int        profile_level_id;
-    int        tias_bw;
+struct VideoCodecConfigH264 {
+  char sprop_parameter_sets[MAX_SPROP_LEN];
+  int packetization_mode;
+  int profile_level_id;
+  int tias_bw;
 };
 
-
 // class so the std::strings can get freed more easily/reliably
-class VideoCodecConfig
-{
-public:
+class VideoCodecConfig {
+ public:
   /*
    * The data-types for these properties mimic the
    * corresponding webrtc::VideoCodec data-types.
    */
-  int mType; // payload type
+  int mType;  // payload type
   std::string mName;
 
   std::vector<std::string> mAckFbTypes;
@@ -92,8 +86,7 @@ public:
     std::string rid;
     EncodingConstraints constraints;
     bool operator==(const SimulcastEncoding& aOther) const {
-      return rid == aOther.rid &&
-        constraints == aOther.constraints;
+      return rid == aOther.rid && constraints == aOther.constraints;
     }
   };
   std::vector<SimulcastEncoding> mSimulcastEncodings;
@@ -105,22 +98,17 @@ public:
   // TODO: add external negotiated SPS/PPS
 
   bool operator==(const VideoCodecConfig& aRhs) const {
-    if (mType != aRhs.mType ||
-        mName != aRhs.mName ||
-        mAckFbTypes != aRhs.mAckFbTypes ||
-        mNackFbTypes != aRhs.mNackFbTypes ||
-        mCcmFbTypes != aRhs.mCcmFbTypes ||
-        mRembFbSet != aRhs.mRembFbSet ||
+    if (mType != aRhs.mType || mName != aRhs.mName ||
+        mAckFbTypes != aRhs.mAckFbTypes || mNackFbTypes != aRhs.mNackFbTypes ||
+        mCcmFbTypes != aRhs.mCcmFbTypes || mRembFbSet != aRhs.mRembFbSet ||
         mFECFbSet != aRhs.mFECFbSet ||
         mULPFECPayloadType != aRhs.mULPFECPayloadType ||
         mREDPayloadType != aRhs.mREDPayloadType ||
-        mREDRTXPayloadType != aRhs.mREDRTXPayloadType ||
-        mTias != aRhs.mTias ||
+        mREDRTXPayloadType != aRhs.mREDRTXPayloadType || mTias != aRhs.mTias ||
         !(mEncodingConstraints == aRhs.mEncodingConstraints) ||
         !(mSimulcastEncodings == aRhs.mSimulcastEncodings) ||
         mSpropParameterSets != aRhs.mSpropParameterSets ||
-        mProfile != aRhs.mProfile ||
-        mConstraints != aRhs.mConstraints ||
+        mProfile != aRhs.mProfile || mConstraints != aRhs.mConstraints ||
         mLevel != aRhs.mLevel ||
         mPacketizationMode != aRhs.mPacketizationMode) {
       return false;
@@ -129,24 +117,22 @@ public:
     return true;
   }
 
-  VideoCodecConfig(int type,
-                   std::string name,
+  VideoCodecConfig(int type, std::string name,
                    const EncodingConstraints& constraints,
-                   const struct VideoCodecConfigH264 *h264 = nullptr) :
-    mType(type),
-    mName(name),
-    mRembFbSet(false),
-    mFECFbSet(false),
-    mULPFECPayloadType(123),
-    mREDPayloadType(122),
-    mREDRTXPayloadType(-1),
-    mTias(0),
-    mEncodingConstraints(constraints),
-    mProfile(0x42),
-    mConstraints(0xE0),
-    mLevel(0x0C),
-    mPacketizationMode(1)
-  {
+                   const struct VideoCodecConfigH264* h264 = nullptr)
+      : mType(type),
+        mName(name),
+        mRembFbSet(false),
+        mFECFbSet(false),
+        mULPFECPayloadType(123),
+        mREDPayloadType(122),
+        mREDRTXPayloadType(-1),
+        mTias(0),
+        mEncodingConstraints(constraints),
+        mProfile(0x42),
+        mConstraints(0xE0),
+        mLevel(0x0C),
+        mPacketizationMode(1) {
     if (h264) {
       mProfile = (h264->profile_level_id & 0x00FF0000) >> 16;
       mConstraints = (h264->profile_level_id & 0x0000FF00) >> 8;
@@ -156,14 +142,13 @@ public:
     }
   }
 
-  bool ResolutionEquals(const VideoCodecConfig& aConfig) const
-  {
+  bool ResolutionEquals(const VideoCodecConfig& aConfig) const {
     if (mSimulcastEncodings.size() != aConfig.mSimulcastEncodings.size()) {
       return false;
     }
     for (size_t i = 0; i < mSimulcastEncodings.size(); ++i) {
       if (!mSimulcastEncodings[i].constraints.ResolutionEquals(
-            aConfig.mSimulcastEncodings[i].constraints)) {
+              aConfig.mSimulcastEncodings[i].constraints)) {
         return false;
       }
     }
@@ -172,8 +157,7 @@ public:
 
   // Nothing seems to use this right now. Do we intend to support this
   // someday?
-  bool RtcpFbAckIsSet(const std::string& type) const
-  {
+  bool RtcpFbAckIsSet(const std::string& type) const {
     for (auto i = mAckFbTypes.begin(); i != mAckFbTypes.end(); ++i) {
       if (*i == type) {
         return true;
@@ -182,8 +166,7 @@ public:
     return false;
   }
 
-  bool RtcpFbNackIsSet(const std::string& type) const
-  {
+  bool RtcpFbNackIsSet(const std::string& type) const {
     for (auto i = mNackFbTypes.begin(); i != mNackFbTypes.end(); ++i) {
       if (*i == type) {
         return true;
@@ -192,8 +175,7 @@ public:
     return false;
   }
 
-  bool RtcpFbCcmIsSet(const std::string& type) const
-  {
+  bool RtcpFbCcmIsSet(const std::string& type) const {
     for (auto i = mCcmFbTypes.begin(); i != mCcmFbTypes.end(); ++i) {
       if (*i == type) {
         return true;
@@ -205,7 +187,6 @@ public:
   bool RtcpFbRembIsSet() const { return mRembFbSet; }
 
   bool RtcpFbFECIsSet() const { return mFECFbSet; }
-
 };
-}
+}  // namespace mozilla
 #endif

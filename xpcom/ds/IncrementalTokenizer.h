@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef INCREMENTAL_TOKENIZER_H__
 #define INCREMENTAL_TOKENIZER_H__
@@ -16,32 +16,32 @@ class nsIInputStream;
 
 namespace mozilla {
 
-class IncrementalTokenizer : public TokenizerBase<char>
-{
-public:
+class IncrementalTokenizer : public TokenizerBase<char> {
+ public:
   /**
    * The consumer callback.  The function is called for every single token
    * as found in the input.  Failure result returned by this callback stops
    * the tokenization immediately and bubbles to result of Feed/FinishInput.
    *
-   * Fragment()s of consumed tokens are ensured to remain valid until next call to
-   * Feed/FinishInput and are pointing to a single linear buffer.  Hence, those can
-   * be safely used to accumulate the data for processing after Feed/FinishInput
-   * returned.
+   * Fragment()s of consumed tokens are ensured to remain valid until next call
+   * to Feed/FinishInput and are pointing to a single linear buffer.  Hence,
+   * those can be safely used to accumulate the data for processing after
+   * Feed/FinishInput returned.
    */
-  typedef std::function<nsresult(Token const&, IncrementalTokenizer& i)> Consumer;
+  typedef std::function<nsresult(Token const&, IncrementalTokenizer& i)>
+      Consumer;
 
   /**
    * For aWhitespaces and aAdditionalWordChars arguments see TokenizerBase.
    *
    * @param aConsumer
-   *    A mandatory non-null argument, a function that consumes the tokens as they
-   *    come when the tokenizer is fed.
+   *    A mandatory non-null argument, a function that consumes the tokens as
+   * they come when the tokenizer is fed.
    * @param aRawMinBuffered
-   *    When we have buffered at least aRawMinBuffered data, but there was no custom
-   *    token found so far because of too small incremental feed chunks, deliver
-   *    the raw data to preserve streaming and to save memory.  This only has effect
-   *    in OnlyCustomTokenizing mode.
+   *    When we have buffered at least aRawMinBuffered data, but there was no
+   * custom token found so far because of too small incremental feed chunks,
+   * deliver the raw data to preserve streaming and to save memory.  This only
+   * has effect in OnlyCustomTokenizing mode.
    */
   explicit IncrementalTokenizer(Consumer&& aConsumer,
                                 const char* aWhitespaces = nullptr,
@@ -49,12 +49,13 @@ public:
                                 uint32_t aRawMinBuffered = 1024);
 
   /**
-   * Pushes the input to be tokenized.  These directly call the Consumer callback
-   * on every found token.  Result of the Consumer callback is returned here.
+   * Pushes the input to be tokenized.  These directly call the Consumer
+   * callback on every found token.  Result of the Consumer callback is returned
+   * here.
    *
    * The tokenizer must be initialized with a valid consumer prior call to these
-   * methods.  It's not allowed to call Feed/FinishInput from inside the Consumer
-   * callback.
+   * methods.  It's not allowed to call Feed/FinishInput from inside the
+   * Consumer callback.
    */
   nsresult FeedInput(const nsACString& aInput);
   nsresult FeedInput(nsIInputStream* aInput, uint32_t aCount);
@@ -94,29 +95,32 @@ public:
    */
   void Rollback();
 
-private:
-  // Loops over the input with TokenizerBase::Parse and calls the Consumer callback.
+ private:
+  // Loops over the input with TokenizerBase::Parse and calls the Consumer
+  // callback.
   nsresult Process();
 
 #ifdef DEBUG
   // True when inside the consumer callback, used only for assertions.
   bool mConsuming;
-#endif // DEBUG
-  // Modifyable only from the Consumer callback, tells the parser to break, rollback
-  // and wait for more input.
+#endif  // DEBUG
+  // Modifyable only from the Consumer callback, tells the parser to break,
+  // rollback and wait for more input.
   bool mNeedMoreInput;
-  // Modifyable only from the Consumer callback, tells the parser to rollback and
-  // parse the input again, with (if modified) new settings of the tokenizer.
+  // Modifyable only from the Consumer callback, tells the parser to rollback
+  // and parse the input again, with (if modified) new settings of the
+  // tokenizer.
   bool mRollback;
   // The input buffer.  Updated with each call to Feed/FinishInput.
   nsCString mInput;
-  // Numerical index pointing at the current cursor position.  We don't keep direct
-  // reference to the string buffer since the buffer gets often reallocated.
+  // Numerical index pointing at the current cursor position.  We don't keep
+  // direct reference to the string buffer since the buffer gets often
+  // reallocated.
   nsCString::index_type mInputCursor;
   // Refernce to the consumer function.
   Consumer mConsumer;
 };
 
-} // mozilla
+}  // namespace mozilla
 
 #endif

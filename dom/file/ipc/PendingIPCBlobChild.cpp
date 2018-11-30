@@ -9,21 +9,16 @@
 namespace mozilla {
 namespace dom {
 
-PendingIPCBlobChild::PendingIPCBlobChild(const IPCBlob& aBlob)
-{
+PendingIPCBlobChild::PendingIPCBlobChild(const IPCBlob& aBlob) {
   mBlobImpl = IPCBlobUtils::Deserialize(aBlob);
   MOZ_ASSERT(mBlobImpl);
 }
 
-PendingIPCBlobChild::~PendingIPCBlobChild()
-{}
+PendingIPCBlobChild::~PendingIPCBlobChild() {}
 
-already_AddRefed<BlobImpl>
-PendingIPCBlobChild::SetPendingInfoAndDeleteActor(const nsString& aName,
-                                                  const nsString& aContentType,
-                                                  uint64_t aLength,
-                                                  int64_t aLastModifiedDate)
-{
+already_AddRefed<BlobImpl> PendingIPCBlobChild::SetPendingInfoAndDeleteActor(
+    const nsString& aName, const nsString& aContentType, uint64_t aLength,
+    int64_t aLastModifiedDate) {
   RefPtr<BlobImpl> blobImpl;
   blobImpl.swap(mBlobImpl);
 
@@ -36,10 +31,8 @@ PendingIPCBlobChild::SetPendingInfoAndDeleteActor(const nsString& aName,
   return blobImpl.forget();
 }
 
-already_AddRefed<BlobImpl>
-PendingIPCBlobChild::SetPendingInfoAndDeleteActor(const nsString& aContentType,
-                                                  uint64_t aLength)
-{
+already_AddRefed<BlobImpl> PendingIPCBlobChild::SetPendingInfoAndDeleteActor(
+    const nsString& aContentType, uint64_t aLength) {
   RefPtr<BlobImpl> blobImpl;
   blobImpl.swap(mBlobImpl);
 
@@ -51,5 +44,5 @@ PendingIPCBlobChild::SetPendingInfoAndDeleteActor(const nsString& aContentType,
   return blobImpl.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

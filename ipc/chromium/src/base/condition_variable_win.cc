@@ -11,8 +11,7 @@
 #include "base/time.h"
 
 ConditionVariable::ConditionVariable(Lock* user_lock)
-    : srwlock_(user_lock->lock_.native_handle())
-{
+    : srwlock_(user_lock->lock_.native_handle()) {
   DCHECK(user_lock);
   InitializeConditionVariable(&cv_);
 }
@@ -36,10 +35,6 @@ void ConditionVariable::TimedWait(const base::TimeDelta& max_time) {
   }
 }
 
-void ConditionVariable::Broadcast() {
-  WakeAllConditionVariable(&cv_);
-}
+void ConditionVariable::Broadcast() { WakeAllConditionVariable(&cv_); }
 
-void ConditionVariable::Signal() {
-  WakeConditionVariable(&cv_);
-}
+void ConditionVariable::Signal() { WakeConditionVariable(&cv_); }

@@ -44,49 +44,41 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 #endif /* ANDROID */
 
 #ifdef __ARM_EABI__
-extern "C" MOZ_EXPORT const void *
-__gnu_Unwind_Find_exidx(void *pc, int *pcount) __attribute__((weak));
+extern "C" MOZ_EXPORT const void *__gnu_Unwind_Find_exidx(void *pc, int *pcount)
+    __attribute__((weak));
 #endif
 
 /* Ideally we'd #include <link.h>, but that's a world of pain
  * Moreover, not all versions of android support it, so we need a weak
  * reference. */
-extern "C" MOZ_EXPORT int
-dl_iterate_phdr(dl_phdr_cb callback, void *data) __attribute__((weak));
+extern "C" MOZ_EXPORT int dl_iterate_phdr(dl_phdr_cb callback, void *data)
+    __attribute__((weak));
 
 /* Pointer to the PT_DYNAMIC section of the executable or library
  * containing this code. */
 extern "C" Elf::Dyn _DYNAMIC[];
 
-
 /**
  * dlfcn.h replacements functions
  */
 
-void *
-__wrap_dlopen(const char *path, int flags)
-{
+void *__wrap_dlopen(const char *path, int flags) {
   RefPtr<LibHandle> handle = ElfLoader::Singleton.Load(path, flags);
-  if (handle)
-    handle->AddDirectRef();
+  if (handle) handle->AddDirectRef();
   return handle;
 }
 
-const char *
-__wrap_dlerror(void)
-{
-  const char* error = ElfLoader::Singleton.lastError.exchange(nullptr);
+const char *__wrap_dlerror(void) {
+  const char *error = ElfLoader::Singleton.lastError.exchange(nullptr);
   if (error) {
-      // Return a custom error if available.
-      return error;
+    // Return a custom error if available.
+    return error;
   }
   // Or fallback to the system error.
   return dlerror();
 }
 
-void *
-__wrap_dlsym(void *handle, const char *symbol)
-{
+void *__wrap_dlsym(void *handle, const char *symbol) {
   if (!handle) {
     ElfLoader::Singleton.lastError = "dlsym(NULL, sym) unsupported";
     return nullptr;
@@ -96,13 +88,11 @@ __wrap_dlsym(void *handle, const char *symbol)
     return h->GetSymbolPtr(symbol);
   }
 
-  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
+  ElfLoader::Singleton.lastError = nullptr;  // Use system dlerror.
   return dlsym(handle, symbol);
 }
 
-int
-__wrap_dlclose(void *handle)
-{
+int __wrap_dlclose(void *handle) {
   if (!handle) {
     ElfLoader::Singleton.lastError = "No handle given to dlclose()";
     return -1;
@@ -111,9 +101,7 @@ __wrap_dlclose(void *handle)
   return 0;
 }
 
-int
-__wrap_dladdr(void *addr, Dl_info *info)
-{
+int __wrap_dladdr(void *addr, Dl_info *info) {
   RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(addr);
   if (!handle) {
     return dladdr(addr, info);
@@ -123,21 +111,19 @@ __wrap_dladdr(void *addr, Dl_info *info)
   return 1;
 }
 
-class DlIteratePhdrHelper
-{
-public:
-  DlIteratePhdrHelper()
-  {
+class DlIteratePhdrHelper {
+ public:
+  DlIteratePhdrHelper() {
     int pipefd[2];
     valid_pipe = (pipe(pipefd) == 0);
     read_fd.reset(pipefd[0]);
     write_fd.reset(pipefd[1]);
   }
 
-  int fill_and_call(dl_phdr_cb callback, const void* l_addr,
-                    const char* l_name, void* data);
+  int fill_and_call(dl_phdr_cb callback, const void *l_addr, const char *l_name,
+                    void *data);
 
-private:
+ private:
   bool valid_pipe;
   AutoCloseFD read_fd;
   AutoCloseFD write_fd;
@@ -146,93 +132,87 @@ private:
 // This function is called for each shared library iterated over by
 // dl_iterate_phdr, and is used to fill a dl_phdr_info which is then
 // sent through to the dl_iterate_phdr callback.
-int
-DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void* l_addr,
-                                   const char* l_name, void *data)
-{
-    dl_phdr_info info;
-    info.dlpi_addr = reinterpret_cast<Elf::Addr>(l_addr);
-    info.dlpi_name = l_name;
-    info.dlpi_phdr = nullptr;
-    info.dlpi_phnum = 0;
+int DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void *l_addr,
+                                       const char *l_name, void *data) {
+  dl_phdr_info info;
+  info.dlpi_addr = reinterpret_cast<Elf::Addr>(l_addr);
+  info.dlpi_name = l_name;
+  info.dlpi_phdr = nullptr;
+  info.dlpi_phnum = 0;
 
-    // Assuming l_addr points to Elf headers (in most cases, this is true),
-    // get the Phdr location from there.
-    // Unfortunately, when l_addr doesn't point to Elf headers, it may point
-    // to unmapped memory, or worse, unreadable memory. The only way to detect
-    // the latter without causing a SIGSEGV is to use the pointer in a system
-    // call that will try to read from there, and return an EFAULT error if
-    // it can't. One such system call is write(). It used to be possible to
-    // use a file descriptor on /dev/null for these kind of things, but recent
-    // Linux kernels never return an EFAULT error when using /dev/null.
-    // So instead, we use a self pipe. We do however need to read() from the
-    // read end of the pipe as well so as to not fill up the pipe buffer and
-    // block on subsequent writes.
-    // In the unlikely event reads from or write to the pipe fail for some
-    // other reason than EFAULT, we don't try any further and just skip setting
-    // the Phdr location for all subsequent libraries, rather than trying to
-    // start over with a new pipe.
-    int can_read = true;
-    if (valid_pipe) {
-      int ret;
-      char raw_ehdr[sizeof(Elf::Ehdr)];
-      static_assert(sizeof(raw_ehdr) < PIPE_BUF, "PIPE_BUF is too small");
-      do {
-        // writes are atomic when smaller than PIPE_BUF, per POSIX.1-2008.
-        ret = write(write_fd, l_addr, sizeof(raw_ehdr));
-      } while (ret == -1 && errno == EINTR);
-      if (ret != sizeof(raw_ehdr)) {
-        if (ret == -1 && errno == EFAULT) {
-          can_read = false;
-        } else {
-          valid_pipe = false;
-        }
+  // Assuming l_addr points to Elf headers (in most cases, this is true),
+  // get the Phdr location from there.
+  // Unfortunately, when l_addr doesn't point to Elf headers, it may point
+  // to unmapped memory, or worse, unreadable memory. The only way to detect
+  // the latter without causing a SIGSEGV is to use the pointer in a system
+  // call that will try to read from there, and return an EFAULT error if
+  // it can't. One such system call is write(). It used to be possible to
+  // use a file descriptor on /dev/null for these kind of things, but recent
+  // Linux kernels never return an EFAULT error when using /dev/null.
+  // So instead, we use a self pipe. We do however need to read() from the
+  // read end of the pipe as well so as to not fill up the pipe buffer and
+  // block on subsequent writes.
+  // In the unlikely event reads from or write to the pipe fail for some
+  // other reason than EFAULT, we don't try any further and just skip setting
+  // the Phdr location for all subsequent libraries, rather than trying to
+  // start over with a new pipe.
+  int can_read = true;
+  if (valid_pipe) {
+    int ret;
+    char raw_ehdr[sizeof(Elf::Ehdr)];
+    static_assert(sizeof(raw_ehdr) < PIPE_BUF, "PIPE_BUF is too small");
+    do {
+      // writes are atomic when smaller than PIPE_BUF, per POSIX.1-2008.
+      ret = write(write_fd, l_addr, sizeof(raw_ehdr));
+    } while (ret == -1 && errno == EINTR);
+    if (ret != sizeof(raw_ehdr)) {
+      if (ret == -1 && errno == EFAULT) {
+        can_read = false;
       } else {
-        size_t nbytes = 0;
-        do {
-          // Per POSIX.1-2008, interrupted reads can return a length smaller
-          // than the given one instead of failing with errno EINTR.
-          ret = read(read_fd, raw_ehdr + nbytes, sizeof(raw_ehdr) - nbytes);
-          if (ret > 0)
-              nbytes += ret;
-        } while ((nbytes != sizeof(raw_ehdr) && ret > 0) ||
-                 (ret == -1 && errno == EINTR));
-        if (nbytes != sizeof(raw_ehdr)) {
-          valid_pipe = false;
-        }
+        valid_pipe = false;
+      }
+    } else {
+      size_t nbytes = 0;
+      do {
+        // Per POSIX.1-2008, interrupted reads can return a length smaller
+        // than the given one instead of failing with errno EINTR.
+        ret = read(read_fd, raw_ehdr + nbytes, sizeof(raw_ehdr) - nbytes);
+        if (ret > 0) nbytes += ret;
+      } while ((nbytes != sizeof(raw_ehdr) && ret > 0) ||
+               (ret == -1 && errno == EINTR));
+      if (nbytes != sizeof(raw_ehdr)) {
+        valid_pipe = false;
       }
     }
+  }
 
-    if (valid_pipe && can_read) {
-      const Elf::Ehdr *ehdr = Elf::Ehdr::validate(l_addr);
-      if (ehdr) {
-        info.dlpi_phdr = reinterpret_cast<const Elf::Phdr *>(
-                         reinterpret_cast<const char *>(ehdr) + ehdr->e_phoff);
-        info.dlpi_phnum = ehdr->e_phnum;
-      }
+  if (valid_pipe && can_read) {
+    const Elf::Ehdr *ehdr = Elf::Ehdr::validate(l_addr);
+    if (ehdr) {
+      info.dlpi_phdr = reinterpret_cast<const Elf::Phdr *>(
+          reinterpret_cast<const char *>(ehdr) + ehdr->e_phoff);
+      info.dlpi_phnum = ehdr->e_phnum;
     }
+  }
 
-    return callback(&info, sizeof(dl_phdr_info), data);
+  return callback(&info, sizeof(dl_phdr_info), data);
 }
 
-int
-__wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
-{
+int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data) {
   DlIteratePhdrHelper helper;
   AutoLock lock(&ElfLoader::Singleton.handlesMutex);
 
   if (dl_iterate_phdr) {
     for (ElfLoader::LibHandleList::reverse_iterator it =
-	   ElfLoader::Singleton.handles.rbegin();
-	 it < ElfLoader::Singleton.handles.rend(); ++it) {
-      BaseElf* elf = (*it)->AsBaseElf();
+             ElfLoader::Singleton.handles.rbegin();
+         it < ElfLoader::Singleton.handles.rend(); ++it) {
+      BaseElf *elf = (*it)->AsBaseElf();
       if (!elf) {
-	continue;
+        continue;
       }
       int ret = helper.fill_and_call(callback, (*it)->GetBase(),
-				     (*it)->GetPath(), data);
-      if (ret)
-        return ret;
+                                     (*it)->GetPath(), data);
+      if (ret) return ret;
     }
     return dl_iterate_phdr(callback, data);
   }
@@ -240,27 +220,22 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
   /* For versions of Android that don't support dl_iterate_phdr (< 5.0),
    * we go through the debugger helper data, which is known to be racy, but
    * there's not much we can do about this :( . */
-  if (!ElfLoader::Singleton.dbg)
-    return -1;
+  if (!ElfLoader::Singleton.dbg) return -1;
 
-  for (ElfLoader::DebuggerHelper::iterator it = ElfLoader::Singleton.dbg.begin();
+  for (ElfLoader::DebuggerHelper::iterator it =
+           ElfLoader::Singleton.dbg.begin();
        it < ElfLoader::Singleton.dbg.end(); ++it) {
     int ret = helper.fill_and_call(callback, it->l_addr, it->l_name, data);
-    if (ret)
-      return ret;
+    if (ret) return ret;
   }
   return 0;
 }
 
 #ifdef __ARM_EABI__
-const void *
-__wrap___gnu_Unwind_Find_exidx(void *pc, int *pcount)
-{
+const void *__wrap___gnu_Unwind_Find_exidx(void *pc, int *pcount) {
   RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(pc);
-  if (handle)
-    return handle->FindExidx(pcount);
-  if (__gnu_Unwind_Find_exidx)
-    return __gnu_Unwind_Find_exidx(pc, pcount);
+  if (handle) return handle->FindExidx(pcount);
+  if (__gnu_Unwind_Find_exidx) return __gnu_Unwind_Find_exidx(pc, pcount);
   *pcount = 0;
   return nullptr;
 }
@@ -270,33 +245,24 @@ __wrap___gnu_Unwind_Find_exidx(void *pc, int *pcount)
  * faulty.lib public API
  */
 
-MFBT_API size_t
-__dl_get_mappable_length(void *handle) {
-  if (!handle)
-    return 0;
+MFBT_API size_t __dl_get_mappable_length(void *handle) {
+  if (!handle) return 0;
   return reinterpret_cast<LibHandle *>(handle)->GetMappableLength();
 }
 
-MFBT_API void *
-__dl_mmap(void *handle, void *addr, size_t length, off_t offset)
-{
-  if (!handle)
-    return nullptr;
+MFBT_API void *__dl_mmap(void *handle, void *addr, size_t length,
+                         off_t offset) {
+  if (!handle) return nullptr;
   return reinterpret_cast<LibHandle *>(handle)->MappableMMap(addr, length,
                                                              offset);
 }
 
-MFBT_API void
-__dl_munmap(void *handle, void *addr, size_t length)
-{
-  if (!handle)
-    return;
+MFBT_API void __dl_munmap(void *handle, void *addr, size_t length) {
+  if (!handle) return;
   return reinterpret_cast<LibHandle *>(handle)->MappableMUnmap(addr, length);
 }
 
-MFBT_API bool
-IsSignalHandlingBroken()
-{
+MFBT_API bool IsSignalHandlingBroken() {
   return ElfLoader::Singleton.isSignalHandlingBroken();
 }
 
@@ -305,12 +271,9 @@ namespace {
 /**
  * Returns the part after the last '/' for the given path
  */
-const char *
-LeafName(const char *path)
-{
+const char *LeafName(const char *path) {
   const char *lastSlash = strrchr(path, '/');
-  if (lastSlash)
-    return lastSlash + 1;
+  if (lastSlash) return lastSlash + 1;
   return path;
 }
 
@@ -318,8 +281,7 @@ LeafName(const char *path)
 /**
  * Return the current Android version, or 0 on failure.
  */
-int
-GetAndroidSDKVersion() {
+int GetAndroidSDKVersion() {
   static int version = 0;
   if (version) {
     return version;
@@ -340,9 +302,8 @@ GetAndroidSDKVersion() {
  * from the callback, which is called while the lock is held. Return true on
  * success.
  */
-template<class Lambda>
-static bool
-RunWithSystemLinkerLock(Lambda&& aLambda) {
+template <class Lambda>
+static bool RunWithSystemLinkerLock(Lambda &&aLambda) {
   if (!dl_iterate_phdr) {
     // No dl_iterate_phdr support.
     return false;
@@ -356,11 +317,13 @@ RunWithSystemLinkerLock(Lambda&& aLambda) {
   }
 #endif
 
-  dl_iterate_phdr([] (dl_phdr_info*, size_t, void* lambda) -> int {
-    (*static_cast<Lambda*>(lambda))();
-    // Return 1 to stop iterating.
-    return 1;
-  }, &aLambda);
+  dl_iterate_phdr(
+      [](dl_phdr_info *, size_t, void *lambda) -> int {
+        (*static_cast<Lambda *>(lambda))();
+        // Return 1 to stop iterating.
+        return 1;
+      },
+      &aLambda);
   return true;
 }
 
@@ -369,60 +332,42 @@ RunWithSystemLinkerLock(Lambda&& aLambda) {
 /**
  * LibHandle
  */
-LibHandle::~LibHandle()
-{
-  free(path);
-}
+LibHandle::~LibHandle() { free(path); }
 
-const char *
-LibHandle::GetName() const
-{
+const char *LibHandle::GetName() const {
   return path ? LeafName(path) : nullptr;
 }
 
-size_t
-LibHandle::GetMappableLength() const
-{
-  if (!mappable)
-    mappable = GetMappable();
-  if (!mappable)
-    return 0;
+size_t LibHandle::GetMappableLength() const {
+  if (!mappable) mappable = GetMappable();
+  if (!mappable) return 0;
   return mappable->GetLength();
 }
 
-void *
-LibHandle::MappableMMap(void *addr, size_t length, off_t offset) const
-{
-  if (!mappable)
-    mappable = GetMappable();
-  if (!mappable)
-    return MAP_FAILED;
-  void* mapped = mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
+void *LibHandle::MappableMMap(void *addr, size_t length, off_t offset) const {
+  if (!mappable) mappable = GetMappable();
+  if (!mappable) return MAP_FAILED;
+  void *mapped = mappable->mmap(addr, length, PROT_READ, MAP_PRIVATE, offset);
   return mapped;
 }
 
-void
-LibHandle::MappableMUnmap(void *addr, size_t length) const
-{
-  if (mappable)
-    mappable->munmap(addr, length);
+void LibHandle::MappableMUnmap(void *addr, size_t length) const {
+  if (mappable) mappable->munmap(addr, length);
 }
 
 /**
  * SystemElf
  */
-already_AddRefed<LibHandle>
-SystemElf::Load(const char *path, int flags)
-{
+already_AddRefed<LibHandle> SystemElf::Load(const char *path, int flags) {
   /* The Android linker returns a handle when the file name matches an
    * already loaded library, even when the full path doesn't exist */
-  if (path && path[0] == '/' && (access(path, F_OK) == -1)){
+  if (path && path[0] == '/' && (access(path, F_OK) == -1)) {
     DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, (void *)nullptr);
     ElfLoader::Singleton.lastError = "Specified file does not exist";
     return nullptr;
   }
 
-  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
+  ElfLoader::Singleton.lastError = nullptr;  // Use system dlerror.
   void *handle = dlopen(path, flags);
   DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, handle);
   if (handle) {
@@ -434,31 +379,25 @@ SystemElf::Load(const char *path, int flags)
   return nullptr;
 }
 
-SystemElf::~SystemElf()
-{
-  if (!dlhandle)
-    return;
+SystemElf::~SystemElf() {
+  if (!dlhandle) return;
   DEBUG_LOG("dlclose(%p [\"%s\"])", dlhandle, GetPath());
-  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
+  ElfLoader::Singleton.lastError = nullptr;  // Use system dlerror.
   dlclose(dlhandle);
   ElfLoader::Singleton.Forget(this);
 }
 
-void *
-SystemElf::GetSymbolPtr(const char *symbol) const
-{
-  ElfLoader::Singleton.lastError = nullptr; // Use system dlerror.
+void *SystemElf::GetSymbolPtr(const char *symbol) const {
+  ElfLoader::Singleton.lastError = nullptr;  // Use system dlerror.
   void *sym = dlsym(dlhandle, symbol);
-  DEBUG_LOG("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
+  DEBUG_LOG("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol,
+            sym);
   return sym;
 }
 
-Mappable *
-SystemElf::GetMappable() const
-{
+Mappable *SystemElf::GetMappable() const {
   const char *path = GetPath();
-  if (!path)
-    return nullptr;
+  if (!path) return nullptr;
 #ifdef ANDROID
   /* On Android, if we don't have the full path, try in /system/lib */
   const char *name = LeafName(path);
@@ -474,9 +413,7 @@ SystemElf::GetMappable() const
 }
 
 #ifdef __ARM_EABI__
-const void *
-SystemElf::FindExidx(int *pcount) const
-{
+const void *SystemElf::FindExidx(int *pcount) const {
   /* TODO: properly implement when ElfLoader::GetHandleByPtr
      does return SystemElf handles */
   *pcount = 0;
@@ -491,15 +428,13 @@ SystemElf::FindExidx(int *pcount) const
 /* Unique ElfLoader instance */
 ElfLoader ElfLoader::Singleton;
 
-already_AddRefed<LibHandle>
-ElfLoader::Load(const char *path, int flags, LibHandle *parent)
-{
+already_AddRefed<LibHandle> ElfLoader::Load(const char *path, int flags,
+                                            LibHandle *parent) {
   /* Ensure logging is initialized or refresh if environment changed. */
   Logging::Init();
 
   /* Ensure self_elf initialization. */
-  if (!self_elf)
-    Init();
+  if (!self_elf) Init();
 
   RefPtr<LibHandle> handle;
 
@@ -548,29 +483,24 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   Mappable *mappable = GetMappableFromPath(path);
 
   /* Try loading with the custom linker if we have a Mappable */
-  if (mappable)
-    handle = CustomElf::Load(mappable, path, flags);
+  if (mappable) handle = CustomElf::Load(mappable, path, flags);
 
   /* Try loading with the system linker if everything above failed */
-  if (!handle)
-    handle = SystemElf::Load(path, flags);
+  if (!handle) handle = SystemElf::Load(path, flags);
 
   /* If we didn't have an absolute path and haven't been able to load
    * a library yet, try in the system search path */
-  if (!handle && abs_path)
-    handle = SystemElf::Load(name, flags);
+  if (!handle && abs_path) handle = SystemElf::Load(name, flags);
 
-  delete [] abs_path;
-  DEBUG_LOG("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", requested_path, flags,
-            reinterpret_cast<void *>(parent), parent ? parent->GetPath() : "",
-            static_cast<void *>(handle));
+  delete[] abs_path;
+  DEBUG_LOG("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", requested_path,
+            flags, reinterpret_cast<void *>(parent),
+            parent ? parent->GetPath() : "", static_cast<void *>(handle));
 
   return handle.forget();
 }
 
-already_AddRefed<LibHandle>
-ElfLoader::GetHandleByPtr(void *addr)
-{
+already_AddRefed<LibHandle> ElfLoader::GetHandleByPtr(void *addr) {
   AutoLock lock(&handlesMutex);
   /* Scan the list of handles we already have for a match */
   for (LibHandleList::iterator it = handles.begin(); it < handles.end(); ++it) {
@@ -582,16 +512,15 @@ ElfLoader::GetHandleByPtr(void *addr)
   return nullptr;
 }
 
-Mappable *
-ElfLoader::GetMappableFromPath(const char *path)
-{
+Mappable *ElfLoader::GetMappableFromPath(const char *path) {
   const char *name = LeafName(path);
   Mappable *mappable = nullptr;
   RefPtr<Zip> zip;
   const char *subpath;
   if ((subpath = strchr(path, '!'))) {
     char *zip_path = strndup(path, subpath - path);
-    while (*(++subpath) == '/') { }
+    while (*(++subpath) == '/') {
+    }
     zip = ZipCollection::GetZip(zip_path);
     free(zip_path);
     Zip::Stream s;
@@ -611,22 +540,17 @@ ElfLoader::GetMappableFromPath(const char *path)
     }
   }
   /* If we couldn't load above, try with a MappableFile */
-  if (!mappable && !zip)
-    mappable = MappableFile::Create(path);
+  if (!mappable && !zip) mappable = MappableFile::Create(path);
 
   return mappable;
 }
 
-void
-ElfLoader::Register(LibHandle *handle)
-{
+void ElfLoader::Register(LibHandle *handle) {
   AutoLock lock(&handlesMutex);
   handles.push_back(handle);
 }
 
-void
-ElfLoader::Register(CustomElf *handle)
-{
+void ElfLoader::Register(CustomElf *handle) {
   Register(static_cast<LibHandle *>(handle));
   if (dbg) {
     // We could race with the system linker when modifying the debug map, so
@@ -635,17 +559,16 @@ ElfLoader::Register(CustomElf *handle)
   }
 }
 
-void
-ElfLoader::Forget(LibHandle *handle)
-{
+void ElfLoader::Forget(LibHandle *handle) {
   /* Ensure logging is initialized or refresh if environment changed. */
   Logging::Init();
 
   AutoLock lock(&handlesMutex);
-  LibHandleList::iterator it = std::find(handles.begin(), handles.end(), handle);
+  LibHandleList::iterator it =
+      std::find(handles.begin(), handles.end(), handle);
   if (it != handles.end()) {
-    DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
-                                                handle->GetPath());
+    DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"])",
+              reinterpret_cast<void *>(handle), handle->GetPath());
     handles.erase(it);
   } else {
     DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"]): Handle not found",
@@ -653,9 +576,7 @@ ElfLoader::Forget(LibHandle *handle)
   }
 }
 
-void
-ElfLoader::Forget(CustomElf *handle)
-{
+void ElfLoader::Forget(CustomElf *handle) {
   Forget(static_cast<LibHandle *>(handle));
   if (dbg) {
     // We could race with the system linker when modifying the debug map, so
@@ -664,9 +585,7 @@ ElfLoader::Forget(CustomElf *handle)
   }
 }
 
-void
-ElfLoader::Init()
-{
+void ElfLoader::Init() {
   Dl_info info;
   /* On Android < 4.1 can't reenter dl* functions. So when the library
    * containing this code is dlopen()ed, it can't call dladdr from a
@@ -684,8 +603,7 @@ ElfLoader::Init()
 #endif
 }
 
-ElfLoader::~ElfLoader()
-{
+ElfLoader::~ElfLoader() {
   LibHandleList list;
 
   if (!Singleton.IsShutdownExpected()) {
@@ -717,21 +635,24 @@ ElfLoader::~ElfLoader()
   }
   /* Force release all external references to the handles collected above */
   for (LibHandleList::iterator it = list.begin(); it < list.end(); ++it) {
-    while ((*it)->ReleaseDirectRef()) { }
+    while ((*it)->ReleaseDirectRef()) {
+    }
   }
   /* Remove the remaining system handles. */
   if (handles.size()) {
     list = handles;
-    for (LibHandleList::reverse_iterator it = list.rbegin();
-         it < list.rend(); ++it) {
+    for (LibHandleList::reverse_iterator it = list.rbegin(); it < list.rend();
+         ++it) {
       if ((*it)->AsSystemElf()) {
-        DEBUG_LOG("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
-                  "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
-                  (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
+        DEBUG_LOG(
+            "ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
+            "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
+            (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
       } else {
-        DEBUG_LOG("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
-                  "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
-                  (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
+        DEBUG_LOG(
+            "ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
+            "[%" PRIdPTR " direct refs, %" PRIdPTR " refs total]",
+            (*it)->GetPath(), (*it)->DirectRefCount(), (*it)->refCount());
         /* Not removing, since it could have references to other libraries,
          * destroying them as a side effect, and possibly leaving dangling
          * pointers in the handle list we're scanning */
@@ -742,42 +663,34 @@ ElfLoader::~ElfLoader()
 }
 
 #ifdef __ARM_EABI__
-int
-ElfLoader::__wrap_aeabi_atexit(void *that, ElfLoader::Destructor destructor,
-                               void *dso_handle)
-{
+int ElfLoader::__wrap_aeabi_atexit(void *that, ElfLoader::Destructor destructor,
+                                   void *dso_handle) {
   Singleton.destructors.push_back(
-    DestructorCaller(destructor, that, dso_handle));
+      DestructorCaller(destructor, that, dso_handle));
   return 0;
 }
 #else
-int
-ElfLoader::__wrap_cxa_atexit(ElfLoader::Destructor destructor, void *that,
-                             void *dso_handle)
-{
+int ElfLoader::__wrap_cxa_atexit(ElfLoader::Destructor destructor, void *that,
+                                 void *dso_handle) {
   Singleton.destructors.push_back(
-    DestructorCaller(destructor, that, dso_handle));
+      DestructorCaller(destructor, that, dso_handle));
   return 0;
 }
 #endif
 
-void
-ElfLoader::__wrap_cxa_finalize(void *dso_handle)
-{
+void ElfLoader::__wrap_cxa_finalize(void *dso_handle) {
   /* Call all destructors for the given DSO handle in reverse order they were
    * registered. */
   std::vector<DestructorCaller>::reverse_iterator it;
-  for (it = Singleton.destructors.rbegin();
-       it < Singleton.destructors.rend(); ++it) {
+  for (it = Singleton.destructors.rbegin(); it < Singleton.destructors.rend();
+       ++it) {
     if (it->IsForHandle(dso_handle)) {
       it->Call();
     }
   }
 }
 
-void
-ElfLoader::DestructorCaller::Call()
-{
+void ElfLoader::DestructorCaller::Call() {
   if (destructor) {
     DEBUG_LOG("ElfLoader::DestructorCaller::Call(%p, %p, %p)",
               FunctionPtr(destructor), object, dso_handle);
@@ -786,8 +699,8 @@ ElfLoader::DestructorCaller::Call()
   }
 }
 
-ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
-{
+ElfLoader::DebuggerHelper::DebuggerHelper()
+    : dbg(nullptr), firstAdded(nullptr) {
   /* Find ELF auxiliary vectors.
    *
    * The kernel stores the following data on the stack when starting a
@@ -833,27 +746,24 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
    * consecutive strings, we found strings the kernel put on stack. */
   char **env;
   for (env = environ; *env; env++)
-    if (*env + strlen(*env) + 1 == env[1])
-      break;
-  if (!*env)
-    return;
+    if (*env + strlen(*env) + 1 == env[1]) break;
+  if (!*env) return;
 
   /* Next, we scan the stack backwards to find a pointer to one of those
    * strings we found above, which will give us the location of the original
    * envp list. As we are looking for pointers, we need to look at 32-bits or
    * 64-bits aligned values, depening on the architecture. */
-  char **scan = reinterpret_cast<char **>(
-                reinterpret_cast<uintptr_t>(*env) & ~(sizeof(void *) - 1));
-  while (*env != *scan)
-    scan--;
+  char **scan = reinterpret_cast<char **>(reinterpret_cast<uintptr_t>(*env) &
+                                          ~(sizeof(void *) - 1));
+  while (*env != *scan) scan--;
 
   /* Finally, scan forward to find the last environment variable pointer and
    * thus the first auxiliary vector. */
-  while (*scan++);
+  while (*scan++)
+    ;
 
   /* Some platforms have more NULLs here, so skip them if we encounter them */
-  while (!*scan)
-    scan++;
+  while (!*scan) scan++;
 
   AuxVector *auxv = reinterpret_cast<AuxVector *>(scan);
 
@@ -864,12 +774,11 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
   char *base = nullptr;
   while (auxv->type) {
     if (auxv->type == AT_PHDR) {
-      phdrs.Init(reinterpret_cast<Elf::Phdr*>(auxv->value));
+      phdrs.Init(reinterpret_cast<Elf::Phdr *>(auxv->value));
       /* Assume the base address is the first byte of the same page */
       base = reinterpret_cast<char *>(PageAlignedPtr(auxv->value));
     }
-    if (auxv->type == AT_PHNUM)
-      phdrs.Init(auxv->value);
+    if (auxv->type == AT_PHNUM) phdrs.Init(auxv->value);
     auxv++;
   }
 
@@ -892,8 +801,8 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
       DEBUG_LOG("Failed to open /proc/self/exe");
       return;
     }
-    mem.Assign(MemoryRange::mmap(base, PageSize(), PROT_READ, MAP_PRIVATE,
-                                 fd, 0));
+    mem.Assign(
+        MemoryRange::mmap(base, PageSize(), PROT_READ, MAP_PRIVATE, fd, 0));
     /* If we don't manage to map at the right address, just give up. */
     if (mem != base) {
       DEBUG_LOG("Couldn't read program headers");
@@ -903,8 +812,8 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
   /* Sanity check: the first bytes at the base address should be an ELF
    * header. */
   if (!Elf::Ehdr::validate(base)) {
-     DEBUG_LOG("Couldn't find program base");
-     return;
+    DEBUG_LOG("Couldn't find program base");
+    return;
   }
 
   /* Search for the program PT_DYNAMIC segment */
@@ -916,8 +825,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
      * loaded at an address that is not the wanted base address of the
      * library. We thus need to adjust the base address, compensating for the
      * virtual address of the PT_LOAD segment corresponding to offset 0. */
-    if (phdr->p_type == PT_LOAD && phdr->p_offset == 0)
-      base -= phdr->p_vaddr;
+    if (phdr->p_type == PT_LOAD && phdr->p_offset == 0) base -= phdr->p_vaddr;
     if (phdr->p_type == PT_DYNAMIC)
       dyns.Init(base + phdr->p_vaddr, phdr->p_filesz);
   }
@@ -941,25 +849,23 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
  * an instance. Permissions to the memory page where the pointer lies are
  * restored to their original value when the instance is destroyed.
  */
-class EnsureWritable
-{
-public:
+class EnsureWritable {
+ public:
   template <typename T>
-  explicit EnsureWritable(T *ptr, size_t length_ = sizeof(T))
-  {
+  explicit EnsureWritable(T *ptr, size_t length_ = sizeof(T)) {
     MOZ_ASSERT(length_ < PageSize());
     prot = -1;
     page = MAP_FAILED;
 
     char *firstPage = PageAlignedPtr(reinterpret_cast<char *>(ptr));
-    char *lastPageEnd = PageAlignedEndPtr(reinterpret_cast<char *>(ptr) + length_);
+    char *lastPageEnd =
+        PageAlignedEndPtr(reinterpret_cast<char *>(ptr) + length_);
     length = lastPageEnd - firstPage;
     uintptr_t start = reinterpret_cast<uintptr_t>(firstPage);
     uintptr_t end;
 
     prot = getProt(start, &end);
-    if (prot == -1 || (start + length) > end)
-      MOZ_CRASH();
+    if (prot == -1 || (start + length) > end) MOZ_CRASH();
 
     if (prot & PROT_WRITE) {
       success = true;
@@ -970,26 +876,21 @@ public:
     int ret = mprotect(page, length, prot | PROT_WRITE);
     success = ret == 0;
     if (!success) {
-      ERROR("mprotect(%p, %zu, %d) = %d (errno=%d; %s)",
-            page, length, prot | PROT_WRITE, ret,
-            errno, strerror(errno));
+      ERROR("mprotect(%p, %zu, %d) = %d (errno=%d; %s)", page, length,
+            prot | PROT_WRITE, ret, errno, strerror(errno));
     }
   }
 
-  bool IsWritable() const {
-    return success;
-  }
+  bool IsWritable() const { return success; }
 
-  ~EnsureWritable()
-  {
+  ~EnsureWritable() {
     if (success && page != MAP_FAILED) {
       mprotect(page, length, prot);
-}
+    }
   }
 
-private:
-  int getProt(uintptr_t addr, uintptr_t *end)
-  {
+ private:
+  int getProt(uintptr_t addr, uintptr_t *end) {
     /* The interesting part of the /proc/self/maps format looks like:
      * startAddr-endAddr rwxp */
     int result = 0;
@@ -997,10 +898,10 @@ private:
     while (f) {
       unsigned long long startAddr, endAddr;
       char perms[5];
-      if (fscanf(f, "%llx-%llx %4s %*1024[^\n] ", &startAddr, &endAddr, perms) != 3)
+      if (fscanf(f, "%llx-%llx %4s %*1024[^\n] ", &startAddr, &endAddr,
+                 perms) != 3)
         return -1;
-      if (addr < startAddr || addr >= endAddr)
-        continue;
+      if (addr < startAddr || addr >= endAddr) continue;
       if (perms[0] == 'r')
         result |= PROT_READ;
       else if (perms[0] != '-')
@@ -1041,11 +942,8 @@ private:
  * program executable, so the system linker should not be changing
  * r_debug::r_map.
  */
-void
-ElfLoader::DebuggerHelper::Add(ElfLoader::link_map *map)
-{
-  if (!dbg->r_brk)
-    return;
+void ElfLoader::DebuggerHelper::Add(ElfLoader::link_map *map) {
+  if (!dbg->r_brk) return;
 
   dbg->r_state = r_debug::RT_ADD;
   dbg->r_brk();
@@ -1073,11 +971,8 @@ ElfLoader::DebuggerHelper::Add(ElfLoader::link_map *map)
   dbg->r_brk();
 }
 
-void
-ElfLoader::DebuggerHelper::Remove(ElfLoader::link_map *map)
-{
-  if (!dbg->r_brk)
-    return;
+void ElfLoader::DebuggerHelper::Remove(ElfLoader::link_map *map) {
+  if (!dbg->r_brk) return;
 
   dbg->r_state = r_debug::RT_DELETE;
   dbg->r_brk();
@@ -1123,55 +1018,52 @@ ElfLoader::DebuggerHelper::Remove(ElfLoader::link_map *map)
  */
 
 /* libc's sigaction */
-extern "C" int
-sigaction(int signum, const struct sigaction *act,
-          struct sigaction *oldact);
+extern "C" int sigaction(int signum, const struct sigaction *act,
+                         struct sigaction *oldact);
 
 /* Simple reimplementation of sigaction. This is roughly equivalent
  * to the assembly that comes in bionic, but not quite equivalent to
  * glibc's implementation, so we only use this on Android. */
-int
-sys_sigaction(int signum, const struct sigaction *act,
-              struct sigaction *oldact)
-{
+int sys_sigaction(int signum, const struct sigaction *act,
+                  struct sigaction *oldact) {
   return syscall(__NR_sigaction, signum, act, oldact);
 }
 
 /* Replace the first instructions of the given function with a jump
  * to the given new function. */
 template <typename T>
-static bool
-Divert(T func, T new_func)
-{
+static bool Divert(T func, T new_func) {
   void *ptr = FunctionPtr(func);
   uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
 
 #if defined(__i386__)
   // A 32-bit jump is a 5 bytes instruction.
   EnsureWritable w(ptr, 5);
-  *reinterpret_cast<unsigned char *>(addr) = 0xe9; // jmp
+  *reinterpret_cast<unsigned char *>(addr) = 0xe9;  // jmp
   *reinterpret_cast<intptr_t *>(addr + 1) =
-    reinterpret_cast<uintptr_t>(new_func) - addr - 5; // target displacement
+      reinterpret_cast<uintptr_t>(new_func) - addr - 5;  // target displacement
   return true;
 #elif defined(__arm__) || defined(__aarch64__)
   const unsigned char trampoline[] = {
-# ifdef __arm__
-                            // .thumb
-    0x46, 0x04,             // nop
-    0x78, 0x47,             // bx pc
-    0x46, 0x04,             // nop
-                            // .arm
-    0x04, 0xf0, 0x1f, 0xe5, // ldr pc, [pc, #-4]
-                            // .word <new_func>
-# else // __aarch64__
-    0x50, 0x00, 0x00, 0x58, // ldr x16, [pc, #8]   ; x16 (aka ip0) is the first
-    0x00, 0x02, 0x1f, 0xd6, // br x16              ; intra-procedure-call
-                            // .word <new_func.lo> ; scratch register.
-                            // .word <new_func.hi>
-# endif
+#ifdef __arm__
+      // .thumb
+      0x46, 0x04,              // nop
+      0x78, 0x47,              // bx pc
+      0x46, 0x04,              // nop
+                               // .arm
+      0x04, 0xf0, 0x1f, 0xe5,  // ldr pc, [pc, #-4]
+                               // .word <new_func>
+#else  // __aarch64__
+      0x50, 0x00,
+      0x00, 0x58,  // ldr x16, [pc, #8]   ; x16 (aka ip0) is the first
+      0x00, 0x02,
+      0x1f, 0xd6,  // br x16              ; intra-procedure-call
+                   // .word <new_func.lo> ; scratch register.
+                   // .word <new_func.hi>
+#endif
   };
   const unsigned char *start;
-# ifdef __arm__
+#ifdef __arm__
   if (addr & 0x01) {
     /* Function is thumb, the actual address of the code is without the
      * least significant bit. */
@@ -1185,7 +1077,7 @@ Divert(T func, T new_func)
     /* Function is arm, we only need the arm part of the trampoline */
     start = trampoline + 6;
   }
-# else // __aarch64__
+#else  // __aarch64__
   start = trampoline;
 #endif
 
@@ -1193,8 +1085,9 @@ Divert(T func, T new_func)
   EnsureWritable w(reinterpret_cast<void *>(addr), len + sizeof(void *));
   memcpy(reinterpret_cast<void *>(addr), start, len);
   *reinterpret_cast<void **>(addr + len) = FunctionPtr(new_func);
-  __builtin___clear_cache(reinterpret_cast<char*>(addr),
-                          reinterpret_cast<char*>(addr + len + sizeof(void *)));
+  __builtin___clear_cache(
+      reinterpret_cast<char *>(addr),
+      reinterpret_cast<char *>(addr + len + sizeof(void *)));
   return true;
 #else
   return false;
@@ -1203,9 +1096,7 @@ Divert(T func, T new_func)
 #else
 #define sys_sigaction sigaction
 template <typename T>
-static bool
-Divert(T func, T new_func)
-{
+static bool Divert(T func, T new_func) {
   return false;
 }
 #endif
@@ -1213,8 +1104,7 @@ Divert(T func, T new_func)
 namespace {
 
 /* Clock that only accounts for time spent in the current process. */
-static uint64_t ProcessTimeStamp_Now()
-{
+static uint64_t ProcessTimeStamp_Now() {
   struct timespec ts;
   int rv = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
 
@@ -1226,7 +1116,7 @@ static uint64_t ProcessTimeStamp_Now()
   return baseNs + (uint64_t)ts.tv_nsec;
 }
 
-}
+}  // namespace
 
 /* Data structure used to pass data to the temporary signal handler,
  * as well as triggering a test crash. */
@@ -1236,9 +1126,10 @@ struct TmpData {
 };
 
 SEGVHandler::SEGVHandler()
-: initialized(false), registeredHandler(false), signalHandlingBroken(true)
-, signalHandlingSlow(true)
-{
+    : initialized(false),
+      registeredHandler(false),
+      signalHandlingBroken(true),
+      signalHandlingSlow(true) {
   /* Ensure logging is initialized before the DEBUG_LOG in the test_handler.
    * As this constructor runs before the ElfLoader constructor (by effect
    * of ElfLoader inheriting from this class), this also initializes on behalf
@@ -1269,15 +1160,12 @@ SEGVHandler::SEGVHandler()
   sigemptyset(&action.sa_mask);
   action.sa_flags = SA_SIGINFO | SA_NODEFER;
   action.sa_restorer = nullptr;
-  stackPtr.Assign(MemoryRange::mmap(nullptr, PageSize(),
-                                    PROT_READ | PROT_WRITE,
+  stackPtr.Assign(MemoryRange::mmap(nullptr, PageSize(), PROT_READ | PROT_WRITE,
                                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-  if (stackPtr.get() == MAP_FAILED)
-    return;
-  if (sys_sigaction(SIGSEGV, &action, nullptr))
-    return;
+  if (stackPtr.get() == MAP_FAILED) return;
+  if (sys_sigaction(SIGSEGV, &action, nullptr)) return;
 
-  TmpData *data = reinterpret_cast<TmpData*>(stackPtr.get());
+  TmpData *data = reinterpret_cast<TmpData *>(stackPtr.get());
   data->crash_timestamp = ProcessTimeStamp_Now();
   mprotect(stackPtr, stackPtr.GetLength(), PROT_NONE);
   data->crash_int = 123;
@@ -1286,15 +1174,12 @@ SEGVHandler::SEGVHandler()
   stackPtr.Assign(MAP_FAILED, 0);
 }
 
-void
-SEGVHandler::FinishInitialization()
-{
+void SEGVHandler::FinishInitialization() {
   /* Ideally, we'd need some locking here, but in practice, we're not
    * going to race with another thread. */
   initialized = true;
 
-  if (signalHandlingBroken || signalHandlingSlow)
-    return;
+  if (signalHandlingBroken || signalHandlingSlow) return;
 
   typedef int (*sigaction_func)(int, const struct sigaction *,
                                 struct sigaction *);
@@ -1332,14 +1217,15 @@ SEGVHandler::FinishInitialization()
   if (libc) {
     /*
      * Lollipop bionic only has a small trampoline in sigaction, with the real
-     * work happening in __sigaction. Divert there instead of sigaction if it exists.
-     * Bug 1154803
+     * work happening in __sigaction. Divert there instead of sigaction if it
+     * exists. Bug 1154803
      */
-    libc_sigaction = reinterpret_cast<sigaction_func>(dlsym(libc, "__sigaction"));
+    libc_sigaction =
+        reinterpret_cast<sigaction_func>(dlsym(libc, "__sigaction"));
 
     if (!libc_sigaction) {
       libc_sigaction =
-        reinterpret_cast<sigaction_func>(dlsym(libc, "sigaction"));
+          reinterpret_cast<sigaction_func>(dlsym(libc, "sigaction"));
     }
   } else
 #endif
@@ -1347,26 +1233,22 @@ SEGVHandler::FinishInitialization()
     libc_sigaction = sigaction;
   }
 
-  if (!Divert(libc_sigaction, __wrap_sigaction))
-    return;
+  if (!Divert(libc_sigaction, __wrap_sigaction)) return;
 
   /* Setup an alternative stack if the already existing one is not big
    * enough, or if there is none. */
   if (sigaltstack(nullptr, &oldStack) == 0) {
-    if (oldStack.ss_flags == SS_ONSTACK)
-      oldStack.ss_flags = 0;
+    if (oldStack.ss_flags == SS_ONSTACK) oldStack.ss_flags = 0;
     if (!oldStack.ss_sp || oldStack.ss_size < stackSize) {
       stackPtr.Assign(MemoryRange::mmap(nullptr, stackSize,
                                         PROT_READ | PROT_WRITE,
                                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-      if (stackPtr.get() == MAP_FAILED)
-        return;
+      if (stackPtr.get() == MAP_FAILED) return;
       stack_t stack;
       stack.ss_sp = stackPtr;
       stack.ss_size = stackSize;
       stack.ss_flags = 0;
-      if (sigaltstack(&stack, nullptr) != 0)
-        return;
+      if (sigaltstack(&stack, nullptr) != 0) return;
     }
   }
   /* Register our own handler, and store the already registered one in
@@ -1376,41 +1258,34 @@ SEGVHandler::FinishInitialization()
   registeredHandler = !sys_sigaction(SIGSEGV, &action, &this->action);
 }
 
-SEGVHandler::~SEGVHandler()
-{
+SEGVHandler::~SEGVHandler() {
   /* Restore alternative stack for signals */
-  if (oldStack.ss_flags != SS_ONSTACK)
-    sigaltstack(&oldStack, nullptr);
+  if (oldStack.ss_flags != SS_ONSTACK) sigaltstack(&oldStack, nullptr);
   /* Restore original signal handler */
-  if (registeredHandler)
-    sys_sigaction(SIGSEGV, &this->action, nullptr);
+  if (registeredHandler) sys_sigaction(SIGSEGV, &this->action, nullptr);
 }
 
 /* Test handler for a deliberately triggered SIGSEGV that determines whether
  * useful information is provided to signal handlers, particularly whether
  * si_addr is filled in properly, and whether the segfault handler is called
  * quickly enough. */
-void SEGVHandler::test_handler(int signum, siginfo_t *info, void *context)
-{
+void SEGVHandler::test_handler(int signum, siginfo_t *info, void *context) {
   SEGVHandler &that = ElfLoader::Singleton;
-  if (signum == SIGSEGV && info &&
-      info->si_addr == that.stackPtr.get())
+  if (signum == SIGSEGV && info && info->si_addr == that.stackPtr.get())
     that.signalHandlingBroken = false;
   mprotect(that.stackPtr, that.stackPtr.GetLength(), PROT_READ | PROT_WRITE);
-  TmpData *data = reinterpret_cast<TmpData*>(that.stackPtr.get());
+  TmpData *data = reinterpret_cast<TmpData *>(that.stackPtr.get());
   uint64_t latency = ProcessTimeStamp_Now() - data->crash_timestamp;
   DEBUG_LOG("SEGVHandler latency: %" PRIu64, latency);
   /* See bug 886736 for timings on different devices, 150 µs is reasonably above
    * the latency on "working" devices and seems to be short enough to not incur
    * a huge overhead to on-demand decompression. */
-  if (latency <= 150000)
-    that.signalHandlingSlow = false;
+  if (latency <= 150000) that.signalHandlingSlow = false;
 }
 
 /* TODO: "properly" handle signal masks and flags */
-void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
-{
-  //ASSERT(signum == SIGSEGV);
+void SEGVHandler::handler(int signum, siginfo_t *info, void *context) {
+  // ASSERT(signum == SIGSEGV);
   DEBUG_LOG("Caught segmentation fault @%p", info->si_addr);
 
   /* Redispatch to the registered handler */
@@ -1433,20 +1308,16 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
   }
 }
 
-int
-SEGVHandler::__wrap_sigaction(int signum, const struct sigaction *act,
-                              struct sigaction *oldact)
-{
+int SEGVHandler::__wrap_sigaction(int signum, const struct sigaction *act,
+                                  struct sigaction *oldact) {
   SEGVHandler &that = ElfLoader::Singleton;
 
   /* Use system sigaction() function for all but SIGSEGV signals. */
   if (!that.registeredHandler || (signum != SIGSEGV))
     return sys_sigaction(signum, act, oldact);
 
-  if (oldact)
-    *oldact = that.action;
-  if (act)
-    that.action = *act;
+  if (oldact) *oldact = that.action;
+  if (act) that.action = *act;
   return 0;
 }
 

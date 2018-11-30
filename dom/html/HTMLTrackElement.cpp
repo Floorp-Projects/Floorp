@@ -47,10 +47,9 @@ static mozilla::LazyLogModule gTrackElementLog("nsTrackElement");
 
 // Replace the usual NS_IMPL_NS_NEW_HTML_ELEMENT(Track) so
 // we can return an UnknownElement instead when pref'd off.
-nsGenericHTMLElement*
-NS_NewHTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                       mozilla::dom::FromParser aFromParser)
-{
+nsGenericHTMLElement* NS_NewHTMLTrackElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    mozilla::dom::FromParser aFromParser) {
   return new mozilla::dom::HTMLTrackElement(std::move(aNodeInfo));
 }
 
@@ -59,46 +58,41 @@ namespace dom {
 
 // Map html attribute string values to TextTrackKind enums.
 static constexpr nsAttrValue::EnumTable kKindTable[] = {
-  { "subtitles", static_cast<int16_t>(TextTrackKind::Subtitles) },
-  { "captions", static_cast<int16_t>(TextTrackKind::Captions) },
-  { "descriptions", static_cast<int16_t>(TextTrackKind::Descriptions) },
-  { "chapters", static_cast<int16_t>(TextTrackKind::Chapters) },
-  { "metadata", static_cast<int16_t>(TextTrackKind::Metadata) },
-  { nullptr, 0 }
-};
+    {"subtitles", static_cast<int16_t>(TextTrackKind::Subtitles)},
+    {"captions", static_cast<int16_t>(TextTrackKind::Captions)},
+    {"descriptions", static_cast<int16_t>(TextTrackKind::Descriptions)},
+    {"chapters", static_cast<int16_t>(TextTrackKind::Chapters)},
+    {"metadata", static_cast<int16_t>(TextTrackKind::Metadata)},
+    {nullptr, 0}};
 
 // Invalid values are treated as "metadata" in ParseAttribute, but if no value
 // at all is specified, it's treated as "subtitles" in GetKind
-static const nsAttrValue::EnumTable* const kKindTableInvalidValueDefault = &kKindTable[4];
+static const nsAttrValue::EnumTable* const kKindTableInvalidValueDefault =
+    &kKindTable[4];
 
-class WindowDestroyObserver final : public nsIObserver
-{
+class WindowDestroyObserver final : public nsIObserver {
   NS_DECL_ISUPPORTS
 
-public:
+ public:
   explicit WindowDestroyObserver(HTMLTrackElement* aElement, uint64_t aWinID)
-    : mTrackElement(aElement)
-    , mInnerID(aWinID)
-  {
+      : mTrackElement(aElement), mInnerID(aWinID) {
     RegisterWindowDestroyObserver();
   }
-  void RegisterWindowDestroyObserver()
-  {
+  void RegisterWindowDestroyObserver() {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->AddObserver(this, "inner-window-destroyed", false);
     }
   }
-  void UnRegisterWindowDestroyObserver()
-  {
+  void UnRegisterWindowDestroyObserver() {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, "inner-window-destroyed");
     }
     mTrackElement = nullptr;
   }
-  NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
-  {
+  NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
+                        const char16_t* aData) override {
     MOZ_ASSERT(NS_IsMainThread());
     if (strcmp(aTopic, "inner-window-destroyed") == 0) {
       nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
@@ -116,29 +110,29 @@ public:
     return NS_OK;
   }
 
-private:
-  ~WindowDestroyObserver() {};
+ private:
+  ~WindowDestroyObserver(){};
   HTMLTrackElement* mTrackElement;
   uint64_t mInnerID;
 };
 NS_IMPL_ISUPPORTS(WindowDestroyObserver, nsIObserver);
 
 /** HTMLTrackElement */
-HTMLTrackElement::HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo))
-  , mLoadResourceDispatched(false)
-  , mWindowDestroyObserver(nullptr)
-{
+HTMLTrackElement::HTMLTrackElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)),
+      mLoadResourceDispatched(false),
+      mWindowDestroyObserver(nullptr) {
   nsISupports* parentObject = OwnerDoc()->GetParentObject();
   NS_ENSURE_TRUE_VOID(parentObject);
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
   if (window) {
-    mWindowDestroyObserver = new WindowDestroyObserver(this, window->WindowID());
+    mWindowDestroyObserver =
+        new WindowDestroyObserver(this, window->WindowID());
   }
 }
 
-HTMLTrackElement::~HTMLTrackElement()
-{
+HTMLTrackElement::~HTMLTrackElement() {
   if (mWindowDestroyObserver) {
     mWindowDestroyObserver->UnRegisterWindowDestroyObserver();
   }
@@ -153,30 +147,23 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLTrackElement, nsGenericHTMLElement,
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLTrackElement,
                                                nsGenericHTMLElement)
 
-void
-HTMLTrackElement::GetKind(DOMString& aKind) const
-{
+void HTMLTrackElement::GetKind(DOMString& aKind) const {
   GetEnumAttr(nsGkAtoms::kind, kKindTable[0].tag, aKind);
 }
 
-void
-HTMLTrackElement::OnChannelRedirect(nsIChannel* aChannel,
-                                    nsIChannel* aNewChannel,
-                                    uint32_t aFlags)
-{
+void HTMLTrackElement::OnChannelRedirect(nsIChannel* aChannel,
+                                         nsIChannel* aNewChannel,
+                                         uint32_t aFlags) {
   NS_ASSERTION(aChannel == mChannel, "Channels should match!");
   mChannel = aNewChannel;
 }
 
-JSObject*
-HTMLTrackElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLTrackElement::WrapNode(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return HTMLTrackElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-TextTrack*
-HTMLTrackElement::GetTrack()
-{
+TextTrack* HTMLTrackElement::GetTrack() {
   if (!mTrack) {
     CreateTextTrack();
   }
@@ -184,9 +171,7 @@ HTMLTrackElement::GetTrack()
   return mTrack;
 }
 
-void
-HTMLTrackElement::CreateTextTrack()
-{
+void HTMLTrackElement::CreateTextTrack() {
   nsString label, srcLang;
   GetSrclang(srcLang);
   GetLabel(label);
@@ -198,16 +183,14 @@ HTMLTrackElement::CreateTextTrack()
     kind = TextTrackKind::Subtitles;
   }
 
-  nsISupports* parentObject =
-    OwnerDoc()->GetParentObject();
+  nsISupports* parentObject = OwnerDoc()->GetParentObject();
 
   NS_ENSURE_TRUE_VOID(parentObject);
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
-  mTrack = new TextTrack(window, kind, label, srcLang,
-                         TextTrackMode::Disabled,
-                         TextTrackReadyState::NotLoaded,
-                         TextTrackSource::Track);
+  mTrack =
+      new TextTrack(window, kind, label, srcLang, TextTrackMode::Disabled,
+                    TextTrackReadyState::NotLoaded, TextTrackSource::Track);
   mTrack->SetTrackElement(this);
 
   if (mMediaParent) {
@@ -215,13 +198,10 @@ HTMLTrackElement::CreateTextTrack()
   }
 }
 
-bool
-HTMLTrackElement::ParseAttribute(int32_t aNamespaceID,
-                                 nsAtom* aAttribute,
-                                 const nsAString& aValue,
-                                 nsIPrincipal* aMaybeScriptedPrincipal,
-                                 nsAttrValue& aResult)
-{
+bool HTMLTrackElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                      const nsAString& aValue,
+                                      nsIPrincipal* aMaybeScriptedPrincipal,
+                                      nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::kind) {
     // Case-insensitive lookup, with the first element as the default.
     return aResult.ParseEnumValue(aValue, kKindTable, false,
@@ -229,16 +209,11 @@ HTMLTrackElement::ParseAttribute(int32_t aNamespaceID,
   }
 
   // Otherwise call the generic implementation.
-  return nsGenericHTMLElement::ParseAttribute(aNamespaceID,
-                                              aAttribute,
-                                              aValue,
-                                              aMaybeScriptedPrincipal,
-                                              aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aMaybeScriptedPrincipal, aResult);
 }
 
-void
-HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError)
-{
+void HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError) {
   SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
   uint16_t oldReadyState = ReadyState();
   SetReadyState(TextTrackReadyState::NotLoaded);
@@ -261,22 +236,17 @@ HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError)
   DispatchLoadResource();
 }
 
-void
-HTMLTrackElement::DispatchLoadResource()
-{
+void HTMLTrackElement::DispatchLoadResource() {
   if (!mLoadResourceDispatched) {
     RefPtr<Runnable> r =
-      NewRunnableMethod("dom::HTMLTrackElement::LoadResource",
-                        this,
-                        &HTMLTrackElement::LoadResource);
+        NewRunnableMethod("dom::HTMLTrackElement::LoadResource", this,
+                          &HTMLTrackElement::LoadResource);
     nsContentUtils::RunInStableState(r.forget());
     mLoadResourceDispatched = true;
   }
 }
 
-void
-HTMLTrackElement::LoadResource()
-{
+void HTMLTrackElement::LoadResource() {
   mLoadResourceDispatched = false;
 
   // Find our 'src' url
@@ -289,14 +259,15 @@ HTMLTrackElement::LoadResource()
   nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
   LOG(LogLevel::Info, ("%p Trying to load from src=%s", this,
-      NS_ConvertUTF16toUTF8(src).get()));
+                       NS_ConvertUTF16toUTF8(src).get()));
 
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannel = nullptr;
   }
 
-  // According to https://www.w3.org/TR/html5/embedded-content-0.html#sourcing-out-of-band-text-tracks
+  // According to
+  // https://www.w3.org/TR/html5/embedded-content-0.html#sourcing-out-of-band-text-tracks
   //
   // "8: If the track element's parent is a media element then let CORS mode
   // be the state of the parent media element's crossorigin content attribute.
@@ -323,14 +294,11 @@ HTMLTrackElement::LoadResource()
 
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> loadGroup = OwnerDoc()->GetDocumentLoadGroup();
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     uri,
-                     static_cast<Element*>(this),
-                     secFlags,
-                     nsIContentPolicy::TYPE_INTERNAL_TRACK,
-                     nullptr, // PerformanceStorage
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, static_cast<Element*>(this),
+                     secFlags, nsIContentPolicy::TYPE_INTERNAL_TRACK,
+                     nullptr,  // PerformanceStorage
                      loadGroup,
-                     nullptr,   // aCallbacks
+                     nullptr,  // aCallbacks
                      nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI);
 
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
@@ -351,14 +319,11 @@ HTMLTrackElement::LoadResource()
   mChannel = channel;
 }
 
-nsresult
-HTMLTrackElement::BindToTree(nsIDocument* aDocument,
-                             nsIContent* aParent,
-                             nsIContent* aBindingParent)
-{
-  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument,
-                                                 aParent,
-                                                 aBindingParent);
+nsresult HTMLTrackElement::BindToTree(nsIDocument* aDocument,
+                                      nsIContent* aParent,
+                                      nsIContent* aBindingParent) {
+  nsresult rv =
+      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(LogLevel::Debug, ("Track Element bound to tree."));
@@ -387,9 +352,7 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
   return NS_OK;
 }
 
-void
-HTMLTrackElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
+void HTMLTrackElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   if (mMediaParent && aNullParent) {
     // mTrack can be null if HTMLTrackElement::LoadResource has never been
     // called.
@@ -403,9 +366,7 @@ HTMLTrackElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-uint16_t
-HTMLTrackElement::ReadyState() const
-{
+uint16_t HTMLTrackElement::ReadyState() const {
   if (!mTrack) {
     return TextTrackReadyState::NotLoaded;
   }
@@ -413,9 +374,7 @@ HTMLTrackElement::ReadyState() const
   return mTrack->ReadyState();
 }
 
-void
-HTMLTrackElement::SetReadyState(uint16_t aReadyState)
-{
+void HTMLTrackElement::SetReadyState(uint16_t aReadyState) {
   if (ReadyState() == aReadyState) {
     return;
   }
@@ -433,24 +392,18 @@ HTMLTrackElement::SetReadyState(uint16_t aReadyState)
   }
 }
 
-void
-HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName)
-{
+void HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName) {
   nsIDocument* doc = OwnerDoc();
   if (!doc) {
     return;
   }
   nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<const nsString>(
-    "dom::HTMLTrackElement::DispatchTrustedEvent",
-    this,
-    &HTMLTrackElement::DispatchTrustedEvent,
-    aEventName);
+      "dom::HTMLTrackElement::DispatchTrustedEvent", this,
+      &HTMLTrackElement::DispatchTrustedEvent, aEventName);
   doc->Dispatch(TaskCategory::Other, runnable.forget());
 }
 
-void
-HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName)
-{
+void HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName) {
   nsIDocument* doc = OwnerDoc();
   if (!doc) {
     return;
@@ -459,15 +412,9 @@ HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName)
                                        aName, CanBubble::eNo, Cancelable::eNo);
 }
 
-void
-HTMLTrackElement::DropChannel()
-{
-  mChannel = nullptr;
-}
+void HTMLTrackElement::DropChannel() { mChannel = nullptr; }
 
-void
-HTMLTrackElement::NotifyShutdown()
-{
+void HTMLTrackElement::NotifyShutdown() {
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
   }
@@ -475,5 +422,5 @@ HTMLTrackElement::NotifyShutdown()
   mListener = nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

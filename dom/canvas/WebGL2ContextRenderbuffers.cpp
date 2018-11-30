@@ -12,73 +12,75 @@
 
 namespace mozilla {
 
-void
-WebGL2Context::GetInternalformatParameter(JSContext* cx, GLenum target,
-                                          GLenum internalformat, GLenum pname,
-                                          JS::MutableHandleValue retval,
-                                          ErrorResult& out_rv)
-{
-    const FuncScope funcScope(*this, "getInternalfomratParameter");
-    retval.setObjectOrNull(nullptr);
+void WebGL2Context::GetInternalformatParameter(JSContext* cx, GLenum target,
+                                               GLenum internalformat,
+                                               GLenum pname,
+                                               JS::MutableHandleValue retval,
+                                               ErrorResult& out_rv) {
+  const FuncScope funcScope(*this, "getInternalfomratParameter");
+  retval.setObjectOrNull(nullptr);
 
-    if (IsContextLost())
-        return;
+  if (IsContextLost()) return;
 
-    if (target != LOCAL_GL_RENDERBUFFER) {
-        ErrorInvalidEnum("`target` must be RENDERBUFFER.");
-        return;
-    }
+  if (target != LOCAL_GL_RENDERBUFFER) {
+    ErrorInvalidEnum("`target` must be RENDERBUFFER.");
+    return;
+  }
 
-    // GLES 3.0.4 $4.4.4 p212:
-    // "An internal format is color-renderable if it is one of the formats from table 3.13
-    //  noted as color-renderable or if it is unsized format RGBA or RGB."
+  // GLES 3.0.4 $4.4.4 p212:
+  // "An internal format is color-renderable if it is one of the formats from
+  // table 3.13
+  //  noted as color-renderable or if it is unsized format RGBA or RGB."
 
-    GLenum sizedFormat;
-    switch (internalformat) {
+  GLenum sizedFormat;
+  switch (internalformat) {
     case LOCAL_GL_RGB:
-        sizedFormat = LOCAL_GL_RGB8;
-        break;
+      sizedFormat = LOCAL_GL_RGB8;
+      break;
     case LOCAL_GL_RGBA:
-        sizedFormat = LOCAL_GL_RGBA8;
-        break;
+      sizedFormat = LOCAL_GL_RGBA8;
+      break;
     default:
-        sizedFormat = internalformat;
-        break;
-    }
+      sizedFormat = internalformat;
+      break;
+  }
 
-    // In RenderbufferStorage, we allow DEPTH_STENCIL. Therefore, it is accepted for
-    // internalformat as well. Please ignore the conformance test fail for DEPTH_STENCIL.
+  // In RenderbufferStorage, we allow DEPTH_STENCIL. Therefore, it is accepted
+  // for internalformat as well. Please ignore the conformance test fail for
+  // DEPTH_STENCIL.
 
-    const auto usage = mFormatUsage->GetRBUsage(sizedFormat);
-    if (!usage) {
-        ErrorInvalidEnum("`internalformat` must be color-, depth-, or stencil-renderable, was: 0x%04x.",
-                         internalformat);
-        return;
-    }
+  const auto usage = mFormatUsage->GetRBUsage(sizedFormat);
+  if (!usage) {
+    ErrorInvalidEnum(
+        "`internalformat` must be color-, depth-, or stencil-renderable, was: "
+        "0x%04x.",
+        internalformat);
+    return;
+  }
 
-    if (pname != LOCAL_GL_SAMPLES) {
-        ErrorInvalidEnum("`pname` must be SAMPLES.");
-        return;
-    }
+  if (pname != LOCAL_GL_SAMPLES) {
+    ErrorInvalidEnum("`pname` must be SAMPLES.");
+    return;
+  }
 
-    GLint* samples = nullptr;
-    GLint sampleCount = 0;
+  GLint* samples = nullptr;
+  GLint sampleCount = 0;
+  gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
+                           LOCAL_GL_NUM_SAMPLE_COUNTS, 1, &sampleCount);
+  if (sampleCount > 0) {
+    samples = new GLint[sampleCount];
     gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
-                             LOCAL_GL_NUM_SAMPLE_COUNTS, 1, &sampleCount);
-    if (sampleCount > 0) {
-        samples = new GLint[sampleCount];
-        gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat, LOCAL_GL_SAMPLES,
-                                 sampleCount, samples);
-    }
+                             LOCAL_GL_SAMPLES, sampleCount, samples);
+  }
 
-    JSObject* obj = dom::Int32Array::Create(cx, this, sampleCount, samples);
-    if (!obj) {
-        out_rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+  JSObject* obj = dom::Int32Array::Create(cx, this, sampleCount, samples);
+  if (!obj) {
+    out_rv = NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    delete[] samples;
+  delete[] samples;
 
-    retval.setObjectOrNull(obj);
+  retval.setObjectOrNull(obj);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

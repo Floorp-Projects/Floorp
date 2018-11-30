@@ -15,12 +15,10 @@
 namespace mozilla {
 namespace dom {
 
-class MediaError final : public nsISupports,
-                         public nsWrapperCache
-{
+class MediaError final : public nsISupports, public nsWrapperCache {
   ~MediaError() {}
 
-public:
+ public:
   MediaError(HTMLMediaElement* aParent, uint16_t aCode,
              const nsACString& aMessage = nsCString());
 
@@ -28,21 +26,16 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaError)
 
-  HTMLMediaElement* GetParentObject() const
-  {
-    return mParent;
-  }
+  HTMLMediaElement* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  uint16_t Code() const
-  {
-    return mCode;
-  }
+  uint16_t Code() const { return mCode; }
 
   void GetMessage(nsAString& aResult) const;
 
-private:
+ private:
   RefPtr<HTMLMediaElement> mParent;
 
   // Error code
@@ -51,7 +44,7 @@ private:
   const nsCString mMessage;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MediaError_h
+#endif  // mozilla_dom_MediaError_h

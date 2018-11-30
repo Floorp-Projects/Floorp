@@ -35,20 +35,17 @@ namespace dom {
 class Exception;
 class WorkerJSContext;
 class WorkletJSContext;
-} // namespace dom
+}  // namespace dom
 
 // Contains various stats about the cycle collection.
-struct CycleCollectorResults
-{
-  CycleCollectorResults()
-  {
+struct CycleCollectorResults {
+  CycleCollectorResults() {
     // Initialize here so when we increment mNumSlices the first time we're
     // not using uninitialized memory.
     Init();
   }
 
-  void Init()
-  {
+  void Init() {
     mForcedGC = false;
     mMergedZones = false;
     mAnyManual = false;
@@ -74,30 +71,28 @@ struct CycleCollectorResults
   uint32_t mNumSlices;
 };
 
-class MicroTaskRunnable
-{
-public:
+class MicroTaskRunnable {
+ public:
   MicroTaskRunnable() {}
   NS_INLINE_DECL_REFCOUNTING(MicroTaskRunnable)
   virtual void Run(AutoSlowOperation& aAso) = 0;
   virtual bool Suppressed() { return false; }
-protected:
+
+ protected:
   virtual ~MicroTaskRunnable() {}
 };
 
 class CycleCollectedJSContext
-  : dom::PerThreadAtomCache
-  , public LinkedListElement<CycleCollectedJSContext>
-{
+    : dom::PerThreadAtomCache,
+      public LinkedListElement<CycleCollectedJSContext> {
   friend class CycleCollectedJSRuntime;
 
-protected:
+ protected:
   CycleCollectedJSContext();
   virtual ~CycleCollectedJSContext();
 
   MOZ_IS_CLASS_INIT
-  nsresult Initialize(JSRuntime* aParentRuntime,
-                      uint32_t aMaxBytes,
+  nsresult Initialize(JSRuntime* aParentRuntime, uint32_t aMaxBytes,
                       uint32_t aMaxNurseryBytes);
 
   // See explanation in mIsPrimaryContext.
@@ -108,7 +103,7 @@ protected:
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   MOZ_IS_CLASS_INIT
   void InitializeCommon();
 
@@ -119,18 +114,19 @@ private:
                                         JS::HandleObject aAllocationSite,
                                         JS::HandleObject aIncumbentGlobal,
                                         void* aData);
-  static void PromiseRejectionTrackerCallback(JSContext* aCx,
-                                              JS::HandleObject aPromise,
-                                              JS::PromiseRejectionHandlingState state,
-                                              void* aData);
+  static void PromiseRejectionTrackerCallback(
+      JSContext* aCx, JS::HandleObject aPromise,
+      JS::PromiseRejectionHandlingState state, void* aData);
 
   void AfterProcessMicrotasks();
-public:
+
+ public:
   void ProcessStableStateQueue();
-private:
+
+ private:
   void CleanupIDBTransactions(uint32_t aRecursionDepth);
 
-public:
+ public:
   enum DeferredFinalizeType {
     FinalizeIncrementally,
     FinalizeNow,
@@ -139,8 +135,7 @@ public:
   virtual dom::WorkerJSContext* GetAsWorkerJSContext() { return nullptr; }
   virtual dom::WorkletJSContext* GetAsWorkletJSContext() { return nullptr; }
 
-  CycleCollectedJSRuntime* Runtime() const
-  {
+  CycleCollectedJSRuntime* Runtime() const {
     MOZ_ASSERT(mRuntime);
     return mRuntime;
   }
@@ -151,27 +146,24 @@ public:
   std::queue<RefPtr<MicroTaskRunnable>>& GetMicroTaskQueue();
   std::queue<RefPtr<MicroTaskRunnable>>& GetDebuggerMicroTaskQueue();
 
-  JSContext* Context() const
-  {
+  JSContext* Context() const {
     MOZ_ASSERT(mJSContext);
     return mJSContext;
   }
 
-  JS::RootingContext* RootingCx() const
-  {
+  JS::RootingContext* RootingCx() const {
     MOZ_ASSERT(mJSContext);
     return JS::RootingContext::get(mJSContext);
   }
 
-  void SetTargetedMicroTaskRecursionDepth(uint32_t aDepth)
-  {
+  void SetTargetedMicroTaskRecursionDepth(uint32_t aDepth) {
     mTargetedMicroTaskRecursionDepth = aDepth;
   }
 
-protected:
+ protected:
   JSContext* MaybeContext() const { return mJSContext; }
 
-public:
+ public:
   // nsThread entrypoints
   virtual void BeforeProcessTask(bool aMightBlock);
   virtual void AfterProcessTask(uint32_t aRecursionDepth);
@@ -196,45 +188,30 @@ public:
   static CycleCollectedJSContext* Get();
 
   // Queue an async microtask to the current main or worker thread.
-  virtual void DispatchToMicroTask(already_AddRefed<MicroTaskRunnable> aRunnable);
+  virtual void DispatchToMicroTask(
+      already_AddRefed<MicroTaskRunnable> aRunnable);
 
   // Call EnterMicroTask when you're entering JS execution.
   // Usually the best way to do this is to use nsAutoMicroTask.
-  void EnterMicroTask()
-  {
-    ++mMicroTaskLevel;
-  }
+  void EnterMicroTask() { ++mMicroTaskLevel; }
 
-  void LeaveMicroTask()
-  {
+  void LeaveMicroTask() {
     if (--mMicroTaskLevel == 0) {
       PerformMicroTaskCheckPoint();
     }
   }
 
-  bool IsInMicroTask()
-  {
-    return mMicroTaskLevel != 0;
-  }
+  bool IsInMicroTask() { return mMicroTaskLevel != 0; }
 
-  uint32_t MicroTaskLevel()
-  {
-    return mMicroTaskLevel;
-  }
+  uint32_t MicroTaskLevel() { return mMicroTaskLevel; }
 
-  void SetMicroTaskLevel(uint32_t aLevel)
-  {
-    mMicroTaskLevel = aLevel;
-  }
+  void SetMicroTaskLevel(uint32_t aLevel) { mMicroTaskLevel = aLevel; }
 
   bool PerformMicroTaskCheckPoint(bool aForce = false);
 
   void PerformDebuggerMicroTaskCheckpoint();
 
-  bool IsInStableOrMetaStableState()
-  {
-    return mDoingStableStates;
-  }
+  bool IsInStableOrMetaStableState() { return mDoingStableStates; }
 
   // Storage for watching rejected promises waiting for some client to
   // consume their rejection.
@@ -242,17 +219,20 @@ public:
   // event loop without the rejection being handled.
   // Note that this can contain nullptrs in place of promises removed because
   // they're consumed before it'd be reported.
-  JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>> mUncaughtRejections;
+  JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>>
+      mUncaughtRejections;
 
   // Promises in this list have previously been reported as rejected
   // (because they were in the above list), but the rejection was handled
   // in the last turn of the event loop.
-  JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>> mConsumedRejections;
-  nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */ >> mUncaughtRejectionObservers;
+  JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>>
+      mConsumedRejections;
+  nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */>>
+      mUncaughtRejectionObservers;
 
   virtual bool IsSystemCaller() const = 0;
 
-private:
+ private:
   // A primary context owns the mRuntime. Non-main-thread contexts should always
   // be primary. On the main thread, the primary context should be the first one
   // created and the last one destroyed. Non-primary contexts are used for
@@ -264,10 +244,9 @@ private:
   JSContext* mJSContext;
 
   nsCOMPtr<dom::Exception> mPendingException;
-  nsThread* mOwningThread; // Manual refcounting to avoid include hell.
+  nsThread* mOwningThread;  // Manual refcounting to avoid include hell.
 
-  struct PendingIDBTransactionData
-  {
+  struct PendingIDBTransactionData {
     nsCOMPtr<nsIRunnable> mTransaction;
     uint32_t mRecursionDepth;
   };
@@ -289,18 +268,15 @@ private:
   uint32_t mMicroTaskRecursionDepth;
 };
 
-class MOZ_STACK_CLASS nsAutoMicroTask
-{
-public:
-  nsAutoMicroTask()
-  {
+class MOZ_STACK_CLASS nsAutoMicroTask {
+ public:
+  nsAutoMicroTask() {
     CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
     if (ccjs) {
       ccjs->EnterMicroTask();
     }
   }
-  ~nsAutoMicroTask()
-  {
+  ~nsAutoMicroTask() {
     CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
     if (ccjs) {
       ccjs->LeaveMicroTask();
@@ -308,6 +284,6 @@ public:
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_CycleCollectedJSContext_h
+#endif  // mozilla_CycleCollectedJSContext_h

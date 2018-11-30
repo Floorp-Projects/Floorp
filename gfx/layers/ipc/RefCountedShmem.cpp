@@ -15,9 +15,7 @@
 namespace mozilla {
 namespace layers {
 
-uint8_t*
-RefCountedShm::GetBytes(const RefCountedShmem& aShm)
-{
+uint8_t* RefCountedShm::GetBytes(const RefCountedShmem& aShm) {
   uint8_t* data = aShm.buffer().get<uint8_t>();
   if (!data) {
     return nullptr;
@@ -25,9 +23,7 @@ RefCountedShm::GetBytes(const RefCountedShmem& aShm)
   return data + SHM_REFCOUNT_HEADER_SIZE;
 }
 
-size_t
-RefCountedShm::GetSize(const RefCountedShmem& aShm)
-{
+size_t RefCountedShm::GetSize(const RefCountedShmem& aShm) {
   if (!IsValid(aShm)) {
     return 0;
   }
@@ -39,15 +35,12 @@ RefCountedShm::GetSize(const RefCountedShmem& aShm)
   return totalSize - SHM_REFCOUNT_HEADER_SIZE;
 }
 
-bool
-RefCountedShm::IsValid(const RefCountedShmem& aShm)
-{
-  return aShm.buffer().IsWritable() && aShm.buffer().Size<uint8_t>() > SHM_REFCOUNT_HEADER_SIZE;
+bool RefCountedShm::IsValid(const RefCountedShmem& aShm) {
+  return aShm.buffer().IsWritable() &&
+         aShm.buffer().Size<uint8_t>() > SHM_REFCOUNT_HEADER_SIZE;
 }
 
-int32_t
-RefCountedShm::GetReferenceCount(const RefCountedShmem& aShm)
-{
+int32_t RefCountedShm::GetReferenceCount(const RefCountedShmem& aShm) {
   if (!IsValid(aShm)) {
     return 0;
   }
@@ -55,39 +48,33 @@ RefCountedShm::GetReferenceCount(const RefCountedShmem& aShm)
   return *aShm.buffer().get<Atomic<int32_t>>();
 }
 
-int32_t
-RefCountedShm::AddRef(const RefCountedShmem& aShm)
-{
+int32_t RefCountedShm::AddRef(const RefCountedShmem& aShm) {
   if (!IsValid(aShm)) {
     return 0;
   }
 
   auto* counter = aShm.buffer().get<Atomic<int32_t>>();
   if (counter) {
-      return (*counter)++;
+    return (*counter)++;
   }
   return 0;
 }
 
-int32_t
-RefCountedShm::Release(const RefCountedShmem& aShm)
-{
+int32_t RefCountedShm::Release(const RefCountedShmem& aShm) {
   if (!IsValid(aShm)) {
     return 0;
   }
 
   auto* counter = aShm.buffer().get<Atomic<int32_t>>();
   if (counter) {
-      return --(*counter);
+    return --(*counter);
   }
 
   return 0;
 }
 
-bool
-RefCountedShm::Alloc(mozilla::ipc::IProtocol* aAllocator, size_t aSize,
-                       RefCountedShmem& aShm)
-{
+bool RefCountedShm::Alloc(mozilla::ipc::IProtocol* aAllocator, size_t aSize,
+                          RefCountedShmem& aShm) {
   MOZ_ASSERT(!IsValid(aShm));
   auto shmType = ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
   auto size = aSize + SHM_REFCOUNT_HEADER_SIZE;
@@ -97,12 +84,11 @@ RefCountedShm::Alloc(mozilla::ipc::IProtocol* aAllocator, size_t aSize,
   return true;
 }
 
-void
-RefCountedShm::Dealloc(mozilla::ipc::IProtocol* aAllocator, RefCountedShmem& aShm)
-{
+void RefCountedShm::Dealloc(mozilla::ipc::IProtocol* aAllocator,
+                            RefCountedShmem& aShm) {
   aAllocator->DeallocShmem(aShm.buffer());
   aShm.buffer() = ipc::Shmem();
 }
 
-} //namespace
-} //namespace
+}  // namespace layers
+}  // namespace mozilla

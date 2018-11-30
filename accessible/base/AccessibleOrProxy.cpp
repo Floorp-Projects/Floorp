@@ -9,9 +9,7 @@
 namespace mozilla {
 namespace a11y {
 
-AccessibleOrProxy
-AccessibleOrProxy::Parent() const
-{
+AccessibleOrProxy AccessibleOrProxy::Parent() const {
   if (IsAccessible()) {
     return AsAccessible()->Parent();
   }
@@ -29,5 +27,5 @@ AccessibleOrProxy::Parent() const
   return proxy->OuterDocOfRemoteBrowser();
 }
 
-}
-}
+}  // namespace a11y
+}  // namespace mozilla

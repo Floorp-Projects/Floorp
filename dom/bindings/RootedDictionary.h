@@ -14,45 +14,35 @@
 namespace mozilla {
 namespace dom {
 
-template<typename T>
-class MOZ_RAII RootedDictionary final : public T,
-                                         private JS::CustomAutoRooter
-{
-public:
+template <typename T>
+class MOZ_RAII RootedDictionary final : public T, private JS::CustomAutoRooter {
+ public:
   template <typename CX>
-  explicit RootedDictionary(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
-    T(),
-    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  {
-  }
+  explicit RootedDictionary(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : T(),
+        JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 
-  virtual void trace(JSTracer *trc) override
-  {
-    this->TraceDictionary(trc);
-  }
+  virtual void trace(JSTracer* trc) override { this->TraceDictionary(trc); }
 };
 
-template<typename T>
+template <typename T>
 class MOZ_RAII NullableRootedDictionary final : public Nullable<T>,
-                                                 private JS::CustomAutoRooter
-{
-public:
+                                                private JS::CustomAutoRooter {
+ public:
   template <typename CX>
-  explicit NullableRootedDictionary(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
-    Nullable<T>(),
-    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  {
-  }
+  explicit NullableRootedDictionary(
+      const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : Nullable<T>(),
+        JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 
-  virtual void trace(JSTracer *trc) override
-  {
+  virtual void trace(JSTracer* trc) override {
     if (!this->IsNull()) {
       this->Value().TraceDictionary(trc);
     }
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_RootedDictionary_h__ */

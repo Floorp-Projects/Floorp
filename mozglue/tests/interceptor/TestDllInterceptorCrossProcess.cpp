@@ -14,18 +14,13 @@
 
 using std::wstring;
 
-extern "C" __declspec(dllexport) int
-ReturnResult()
-{
-  return 2;
-}
+extern "C" __declspec(dllexport) int ReturnResult() { return 2; }
 
-static mozilla::CrossProcessDllInterceptor::FuncHookType<decltype(&ReturnResult)>
-  gOrigReturnResult;
+static mozilla::CrossProcessDllInterceptor::FuncHookType<decltype(
+    &ReturnResult)>
+    gOrigReturnResult;
 
-static int
-ReturnResultHook()
-{
+static int ReturnResultHook() {
   if (gOrigReturnResult() != 2) {
     return 3;
   }
@@ -33,15 +28,16 @@ ReturnResultHook()
   return 0;
 }
 
-int ParentMain(int argc, wchar_t* argv[])
-{
+int ParentMain(int argc, wchar_t* argv[]) {
   mozilla::SetArgv0ToFullBinaryPath(argv);
 
   // We'll add the child process to a job so that, in the event of a failure in
   // this parent process, the child process will be automatically terminated.
   nsAutoHandle job(::CreateJobObject(nullptr, nullptr));
   if (!job) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Job creation failed\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Job creation "
+        "failed\n");
     return 1;
   }
 
@@ -50,25 +46,26 @@ int ParentMain(int argc, wchar_t* argv[])
 
   if (!::SetInformationJobObject(job.get(), JobObjectExtendedLimitInformation,
                                  &jobInfo, sizeof(jobInfo))) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Job config failed\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Job config "
+        "failed\n");
     return 1;
   }
 
   wchar_t childArgv_1[] = L"-child";
 
-  wchar_t* childArgv[] = {
-    argv[0],
-    childArgv_1
-  };
+  wchar_t* childArgv[] = {argv[0], childArgv_1};
 
-  mozilla::UniquePtr<wchar_t[]>
-    cmdLine(mozilla::MakeCommandLine(mozilla::ArrayLength(childArgv), childArgv));
+  mozilla::UniquePtr<wchar_t[]> cmdLine(
+      mozilla::MakeCommandLine(mozilla::ArrayLength(childArgv), childArgv));
 
-  STARTUPINFOW si = { sizeof(si) };
+  STARTUPINFOW si = {sizeof(si)};
   PROCESS_INFORMATION pi;
   if (!::CreateProcessW(argv[0], cmdLine.get(), nullptr, nullptr, FALSE,
                         CREATE_SUSPENDED, nullptr, nullptr, &si, &pi)) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to spawn child process\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to spawn "
+        "child process\n");
     return 1;
   }
 
@@ -76,7 +73,9 @@ int ParentMain(int argc, wchar_t* argv[])
   nsAutoHandle childMainThread(pi.hThread);
 
   if (!::AssignProcessToJobObject(job.get(), childProcess.get())) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to assign child process to job\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to assign "
+        "child process to job\n");
     ::TerminateProcess(childProcess.get(), 1);
     return 1;
   }
@@ -86,57 +85,67 @@ int ParentMain(int argc, wchar_t* argv[])
 
   if (!gOrigReturnResult.Set(childProcess.get(), intcpt, "ReturnResult",
                              &ReturnResultHook)) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to add hook\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to add "
+        "hook\n");
     return 1;
   }
 
   printf("TEST-PASS | DllInterceptorCrossProcess | Hook added\n");
 
   if (::ResumeThread(childMainThread.get()) == static_cast<DWORD>(-1)) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to resume child thread\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to resume "
+        "child thread\n");
     return 1;
   }
 
   BOOL remoteDebugging;
-  bool debugging = ::IsDebuggerPresent() ||
-                   (::CheckRemoteDebuggerPresent(childProcess.get(),
-                                                 &remoteDebugging) &&
-                    remoteDebugging);
+  bool debugging =
+      ::IsDebuggerPresent() ||
+      (::CheckRemoteDebuggerPresent(childProcess.get(), &remoteDebugging) &&
+       remoteDebugging);
 
-  DWORD waitResult = ::WaitForSingleObject(childProcess.get(),
-                                           debugging ? INFINITE : 60000);
+  DWORD waitResult =
+      ::WaitForSingleObject(childProcess.get(), debugging ? INFINITE : 60000);
   if (waitResult != WAIT_OBJECT_0) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Child process failed to finish\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Child process "
+        "failed to finish\n");
     return 1;
   }
 
   DWORD childExitCode;
   if (!::GetExitCodeProcess(childProcess.get(), &childExitCode)) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to obtain child process exit code\n");
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to obtain "
+        "child process exit code\n");
     return 1;
   }
 
   if (childExitCode) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Child process exit code is %lu instead of 0\n", childExitCode);
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Child process "
+        "exit code is %lu instead of 0\n",
+        childExitCode);
     return 1;
   }
 
-  printf("TEST-PASS | DllInterceptorCrossProcess | Child process exit code is zero\n");
+  printf(
+      "TEST-PASS | DllInterceptorCrossProcess | Child process exit code is "
+      "zero\n");
   return 0;
 }
 
-extern "C"
-int wmain(int argc, wchar_t* argv[])
-{
+extern "C" int wmain(int argc, wchar_t* argv[]) {
   if (argc > 1) {
     // clang keeps inlining this call despite every attempt to force it to do
-    // otherwise. We'll use GetProcAddress and call its function pointer instead.
-    auto pReturnResult =
-      reinterpret_cast<decltype(&ReturnResult)>(
+    // otherwise. We'll use GetProcAddress and call its function pointer
+    // instead.
+    auto pReturnResult = reinterpret_cast<decltype(&ReturnResult)>(
         ::GetProcAddress(::GetModuleHandleW(nullptr), "ReturnResult"));
     return pReturnResult();
   }
 
   return ParentMain(argc, argv);
 }
-

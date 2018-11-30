@@ -16,42 +16,23 @@ namespace mozilla {
 namespace dom {
 
 // static
-already_AddRefed<Touch>
-Touch::Constructor(const GlobalObject& aGlobal,
-                   const TouchInit& aParam,
-                   ErrorResult& aRv)
-{
+already_AddRefed<Touch> Touch::Constructor(const GlobalObject& aGlobal,
+                                           const TouchInit& aParam,
+                                           ErrorResult& aRv) {
   // Annoyingly many parameters, make sure the ordering is the same as in the
   // Touch constructor.
-  RefPtr<Touch> touch = new Touch(aParam.mTarget,
-                                  aParam.mIdentifier,
-                                  aParam.mPageX,
-                                  aParam.mPageY,
-                                  aParam.mScreenX,
-                                  aParam.mScreenY,
-                                  aParam.mClientX,
-                                  aParam.mClientY,
-                                  aParam.mRadiusX,
-                                  aParam.mRadiusY,
-                                  aParam.mRotationAngle,
-                                  aParam.mForce);
+  RefPtr<Touch> touch = new Touch(
+      aParam.mTarget, aParam.mIdentifier, aParam.mPageX, aParam.mPageY,
+      aParam.mScreenX, aParam.mScreenY, aParam.mClientX, aParam.mClientY,
+      aParam.mRadiusX, aParam.mRadiusY, aParam.mRotationAngle, aParam.mForce);
   return touch.forget();
 }
 
-Touch::Touch(EventTarget* aTarget,
-             int32_t aIdentifier,
-             int32_t aPageX,
-             int32_t aPageY,
-             int32_t aScreenX,
-             int32_t aScreenY,
-             int32_t aClientX,
-             int32_t aClientY,
-             int32_t aRadiusX,
-             int32_t aRadiusY,
-             float aRotationAngle,
-             float aForce)
-  : mIsTouchEventSuppressed(false)
-{
+Touch::Touch(EventTarget* aTarget, int32_t aIdentifier, int32_t aPageX,
+             int32_t aPageY, int32_t aScreenX, int32_t aScreenY,
+             int32_t aClientX, int32_t aClientY, int32_t aRadiusX,
+             int32_t aRadiusY, float aRotationAngle, float aForce)
+    : mIsTouchEventSuppressed(false) {
   mTarget = aTarget;
   mOriginalTarget = aTarget;
   mIdentifier = aIdentifier;
@@ -70,13 +51,9 @@ Touch::Touch(EventTarget* aTarget,
   nsJSContext::LikelyShortLivingObjectCreated();
 }
 
-Touch::Touch(int32_t aIdentifier,
-             LayoutDeviceIntPoint aPoint,
-             LayoutDeviceIntPoint aRadius,
-             float aRotationAngle,
-             float aForce)
-  : mIsTouchEventSuppressed(false)
-{
+Touch::Touch(int32_t aIdentifier, LayoutDeviceIntPoint aPoint,
+             LayoutDeviceIntPoint aRadius, float aRotationAngle, float aForce)
+    : mIsTouchEventSuppressed(false) {
   mIdentifier = aIdentifier;
   mPagePoint = CSSIntPoint(0, 0);
   mScreenPoint = CSSIntPoint(0, 0);
@@ -93,32 +70,27 @@ Touch::Touch(int32_t aIdentifier,
 }
 
 Touch::Touch(const Touch& aOther)
-  : mOriginalTarget(aOther.mOriginalTarget)
-  , mTarget(aOther.mTarget)
-  , mRefPoint(aOther.mRefPoint)
-  , mChanged(aOther.mChanged)
-  , mIsTouchEventSuppressed(aOther.mIsTouchEventSuppressed)
-  , mMessage(aOther.mMessage)
-  , mIdentifier(aOther.mIdentifier)
-  , mPagePoint(aOther.mPagePoint)
-  , mClientPoint(aOther.mClientPoint)
-  , mScreenPoint(aOther.mScreenPoint)
-  , mRadius(aOther.mRadius)
-  , mRotationAngle(aOther.mRotationAngle)
-  , mForce(aOther.mForce)
-  , mPointsInitialized(aOther.mPointsInitialized)
-{
+    : mOriginalTarget(aOther.mOriginalTarget),
+      mTarget(aOther.mTarget),
+      mRefPoint(aOther.mRefPoint),
+      mChanged(aOther.mChanged),
+      mIsTouchEventSuppressed(aOther.mIsTouchEventSuppressed),
+      mMessage(aOther.mMessage),
+      mIdentifier(aOther.mIdentifier),
+      mPagePoint(aOther.mPagePoint),
+      mClientPoint(aOther.mClientPoint),
+      mScreenPoint(aOther.mScreenPoint),
+      mRadius(aOther.mRadius),
+      mRotationAngle(aOther.mRotationAngle),
+      mForce(aOther.mForce),
+      mPointsInitialized(aOther.mPointsInitialized) {
   nsJSContext::LikelyShortLivingObjectCreated();
 }
 
-Touch::~Touch()
-{
-}
+Touch::~Touch() {}
 
 // static
-bool
-Touch::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
-{
+bool Touch::PrefEnabled(JSContext* aCx, JSObject* aGlobal) {
   return TouchEvent::PrefEnabled(aCx, aGlobal);
 }
 
@@ -132,9 +104,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Touch)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Touch)
 
-EventTarget*
-Touch::GetTarget() const
-{
+EventTarget* Touch::GetTarget() const {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTarget);
   if (content && content->ChromeOnlyAccess() &&
       !nsContentUtils::LegacyIsCallerNativeCode() &&
@@ -145,9 +115,7 @@ Touch::GetTarget() const
   return mTarget;
 }
 
-int32_t
-Touch::ScreenX(CallerType aCallerType) const
-{
+int32_t Touch::ScreenX(CallerType aCallerType) const {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return ClientX();
   }
@@ -155,9 +123,7 @@ Touch::ScreenX(CallerType aCallerType) const
   return mScreenPoint.x;
 }
 
-int32_t
-Touch::ScreenY(CallerType aCallerType) const
-{
+int32_t Touch::ScreenY(CallerType aCallerType) const {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return ClientY();
   }
@@ -165,9 +131,7 @@ Touch::ScreenY(CallerType aCallerType) const
   return mScreenPoint.y;
 }
 
-int32_t
-Touch::RadiusX(CallerType aCallerType) const
-{
+int32_t Touch::RadiusX(CallerType aCallerType) const {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0;
   }
@@ -175,9 +139,7 @@ Touch::RadiusX(CallerType aCallerType) const
   return mRadius.x;
 }
 
-int32_t
-Touch::RadiusY(CallerType aCallerType) const
-{
+int32_t Touch::RadiusY(CallerType aCallerType) const {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0;
   }
@@ -185,9 +147,7 @@ Touch::RadiusY(CallerType aCallerType) const
   return mRadius.y;
 }
 
-float
-Touch::RotationAngle(CallerType aCallerType) const
-{
+float Touch::RotationAngle(CallerType aCallerType) const {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0.0f;
   }
@@ -195,9 +155,7 @@ Touch::RotationAngle(CallerType aCallerType) const
   return mRotationAngle;
 }
 
-float
-Touch::Force(CallerType aCallerType) const
-{
+float Touch::Force(CallerType aCallerType) const {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     return 0.0f;
   }
@@ -205,54 +163,42 @@ Touch::Force(CallerType aCallerType) const
   return mForce;
 }
 
-void
-Touch::InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent)
-{
+void Touch::InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent) {
   if (mPointsInitialized) {
     return;
   }
-  mClientPoint = Event::GetClientCoords(
-    aPresContext, aEvent, mRefPoint, mClientPoint);
-  mPagePoint = Event::GetPageCoords(
-    aPresContext, aEvent, mRefPoint, mClientPoint);
+  mClientPoint =
+      Event::GetClientCoords(aPresContext, aEvent, mRefPoint, mClientPoint);
+  mPagePoint =
+      Event::GetPageCoords(aPresContext, aEvent, mRefPoint, mClientPoint);
   mScreenPoint = Event::GetScreenCoords(aPresContext, aEvent, mRefPoint);
   mPointsInitialized = true;
 }
 
-void
-Touch::SetTouchTarget(EventTarget* aTarget)
-{
+void Touch::SetTouchTarget(EventTarget* aTarget) {
   mOriginalTarget = aTarget;
   mTarget = aTarget;
 }
 
-bool
-Touch::Equals(Touch* aTouch)
-{
-  return mRefPoint == aTouch->mRefPoint &&
-         mForce == aTouch->mForce &&
+bool Touch::Equals(Touch* aTouch) {
+  return mRefPoint == aTouch->mRefPoint && mForce == aTouch->mForce &&
          mRotationAngle == aTouch->mRotationAngle &&
-         mRadius.x == aTouch->mRadius.x &&
-         mRadius.y == aTouch->mRadius.y;
+         mRadius.x == aTouch->mRadius.x && mRadius.y == aTouch->mRadius.y;
 }
 
-JSObject*
-Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Touch_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // Parent ourselves to the global of the target. This achieves the desirable
 // effects of parenting to the target, but avoids making the touch inaccessible
 // when the target happens to be NAC and therefore reflected into the XBL scope.
-nsIGlobalObject*
-Touch::GetParentObject()
-{
+nsIGlobalObject* Touch::GetParentObject() {
   if (!mOriginalTarget) {
     return nullptr;
   }
   return mOriginalTarget->GetOwnerGlobal();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

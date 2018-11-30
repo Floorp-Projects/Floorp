@@ -14,34 +14,30 @@
 namespace mozilla {
 namespace net {
 
-class nsInputStreamChannel : public nsBaseChannel
-                           , public nsIInputStreamChannel
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIINPUTSTREAMCHANNEL
+class nsInputStreamChannel : public nsBaseChannel,
+                             public nsIInputStreamChannel {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIINPUTSTREAMCHANNEL
 
-    nsInputStreamChannel() :
-      mIsSrcdocChannel(false) {}
+  nsInputStreamChannel() : mIsSrcdocChannel(false) {}
 
-protected:
-    virtual ~nsInputStreamChannel() = default;
+ protected:
+  virtual ~nsInputStreamChannel() = default;
 
-    virtual nsresult OpenContentStream(bool async, nsIInputStream **result,
-                                       nsIChannel** channel) override;
+  virtual nsresult OpenContentStream(bool async, nsIInputStream** result,
+                                     nsIChannel** channel) override;
 
-    virtual void OnChannelDone() override {
-        mContentStream = nullptr;
-    }
+  virtual void OnChannelDone() override { mContentStream = nullptr; }
 
-private:
-    nsCOMPtr<nsIInputStream> mContentStream;
-    nsCOMPtr<nsIURI> mBaseURI;
-    nsString mSrcdocData;
-    bool mIsSrcdocChannel;
+ private:
+  nsCOMPtr<nsIInputStream> mContentStream;
+  nsCOMPtr<nsIURI> mBaseURI;
+  nsString mSrcdocData;
+  bool mIsSrcdocChannel;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // !nsInputStreamChannel_h__
+#endif  // !nsInputStreamChannel_h__

@@ -26,31 +26,26 @@ using namespace mozilla::a11y;
 // TextAttrsMgr
 ////////////////////////////////////////////////////////////////////////////////
 
-void
-TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
-                            uint32_t* aStartOffset,
-                            uint32_t* aEndOffset)
-{
+void TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
+                                 uint32_t* aStartOffset, uint32_t* aEndOffset) {
   // 1. Hyper text accessible must be specified always.
   // 2. Offset accessible and result hyper text offsets must be specified in
   // the case of text attributes.
   // 3. Offset accessible and result hyper text offsets must not be specified
   // but include default text attributes flag and attributes list must be
   // specified in the case of default text attributes.
-  MOZ_ASSERT(mHyperTextAcc &&
-             ((mOffsetAcc && mOffsetAccIdx != -1 &&
-               aStartOffset && aEndOffset) ||
-             (!mOffsetAcc && mOffsetAccIdx == -1 &&
-               !aStartOffset && !aEndOffset &&
-              mIncludeDefAttrs && aAttributes)),
-             "Wrong usage of TextAttrsMgr!");
+  MOZ_ASSERT(
+      mHyperTextAcc &&
+          ((mOffsetAcc && mOffsetAccIdx != -1 && aStartOffset && aEndOffset) ||
+           (!mOffsetAcc && mOffsetAccIdx == -1 && !aStartOffset &&
+            !aEndOffset && mIncludeDefAttrs && aAttributes)),
+      "Wrong usage of TextAttrsMgr!");
 
   // Embedded objects are combined into own range with empty attributes set.
   if (mOffsetAcc && !mOffsetAcc->IsText()) {
     for (int32_t childIdx = mOffsetAccIdx - 1; childIdx >= 0; childIdx--) {
       Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
-      if (currAcc->IsText())
-        break;
+      if (currAcc->IsText()) break;
 
       (*aStartOffset)--;
     }
@@ -59,8 +54,7 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
     for (uint32_t childIdx = mOffsetAccIdx + 1; childIdx < childCount;
          childIdx++) {
       Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
-      if (currAcc->IsText())
-        break;
+      if (currAcc->IsText()) break;
 
       (*aEndOffset)++;
     }
@@ -72,21 +66,19 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   // accessible it's role content and root frame.
   nsIContent* hyperTextElm = mHyperTextAcc->GetContent();
   if (!hyperTextElm)
-    return; // XXX: we don't support text attrs on document with no body
+    return;  // XXX: we don't support text attrs on document with no body
 
   nsIFrame* rootFrame = mHyperTextAcc->GetFrame();
   MOZ_ASSERT(rootFrame, "No frame for accessible!");
-  if (!rootFrame)
-    return;
+  if (!rootFrame) return;
 
   nsIContent *offsetNode = nullptr, *offsetElm = nullptr;
-  nsIFrame *frame = nullptr;
+  nsIFrame* frame = nullptr;
   if (mOffsetAcc) {
     offsetNode = mOffsetAcc->GetContent();
     offsetElm = nsCoreUtils::GetDOMElementFor(offsetNode);
     MOZ_ASSERT(offsetElm, "No element for offset accessible!");
-    if (!offsetElm)
-      return;
+    if (!offsetElm) return;
 
     frame = offsetElm->GetPrimaryFrame();
   }
@@ -124,20 +116,11 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   // "text-position" text attribute
   TextPosTextAttr textPosTextAttr(rootFrame, frame);
 
-  TextAttr* attrArray[] =
-  {
-    &langTextAttr,
-    &invalidTextAttr,
-    &bgColorTextAttr,
-    &colorTextAttr,
-    &fontFamilyTextAttr,
-    &fontSizeTextAttr,
-    &fontStyleTextAttr,
-    &fontWeightTextAttr,
-    &autoGenTextAttr,
-    &textDecorTextAttr,
-    &textPosTextAttr
-  };
+  TextAttr* attrArray[] = {
+      &langTextAttr,      &invalidTextAttr,    &bgColorTextAttr,
+      &colorTextAttr,     &fontFamilyTextAttr, &fontSizeTextAttr,
+      &fontStyleTextAttr, &fontWeightTextAttr, &autoGenTextAttr,
+      &textDecorTextAttr, &textPosTextAttr};
 
   // Expose text attributes if applicable.
   if (aAttributes) {
@@ -150,18 +133,15 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
     GetRange(attrArray, ArrayLength(attrArray), aStartOffset, aEndOffset);
 }
 
-void
-TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
-                       uint32_t* aStartOffset, uint32_t* aEndOffset)
-{
+void TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
+                            uint32_t* aStartOffset, uint32_t* aEndOffset) {
   // Navigate backward from anchor accessible to find start offset.
   for (int32_t childIdx = mOffsetAccIdx - 1; childIdx >= 0; childIdx--) {
     Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
 
     // Stop on embedded accessible since embedded accessibles are combined into
     // own range.
-    if (!currAcc->IsText())
-      break;
+    if (!currAcc->IsText()) break;
 
     MOZ_ASSERT(nsCoreUtils::GetDOMElementFor(currAcc->GetContent()),
                "Text accessible has to have an associated DOM element");
@@ -175,8 +155,7 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
       }
     }
 
-    if (offsetFound)
-      break;
+    if (offsetFound) break;
 
     *(aStartOffset) -= nsAccUtils::TextLength(currAcc);
   }
@@ -185,8 +164,7 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
   uint32_t childLen = mHyperTextAcc->ChildCount();
   for (uint32_t childIdx = mOffsetAccIdx + 1; childIdx < childLen; childIdx++) {
     Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
-    if (!currAcc->IsText())
-      break;
+    if (!currAcc->IsText()) break;
 
     MOZ_ASSERT(nsCoreUtils::GetDOMElementFor(currAcc->GetContent()),
                "Text accessible has to have an associated DOM element");
@@ -203,25 +181,21 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
       }
     }
 
-    if (offsetFound)
-      break;
+    if (offsetFound) break;
 
     (*aEndOffset) += nsAccUtils::TextLength(currAcc);
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // LangTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::LangTextAttr::
-  LangTextAttr(HyperTextAccessible* aRoot,
-               nsIContent* aRootElm, nsIContent* aElm) :
-  TTextAttr<nsString>(!aElm), mRootContent(aRootElm)
-{
+TextAttrsMgr::LangTextAttr::LangTextAttr(HyperTextAccessible* aRoot,
+                                         nsIContent* aRootElm, nsIContent* aElm)
+    : TTextAttr<nsString>(!aElm), mRootContent(aRootElm) {
   aRoot->Language(mRootNativeValue);
-  mIsRootDefined =  !mRootNativeValue.IsEmpty();
+  mIsRootDefined = !mRootNativeValue.IsEmpty();
 
   if (aElm) {
     nsCoreUtils::GetLanguageFor(aElm, mRootContent, mNativeValue);
@@ -229,21 +203,16 @@ TextAttrsMgr::LangTextAttr::
   }
 }
 
-TextAttrsMgr::LangTextAttr::
-  ~LangTextAttr() {}
+TextAttrsMgr::LangTextAttr::~LangTextAttr() {}
 
-bool
-TextAttrsMgr::LangTextAttr::
-  GetValueFor(Accessible* aAccessible, nsString* aValue)
-{
+bool TextAttrsMgr::LangTextAttr::GetValueFor(Accessible* aAccessible,
+                                             nsString* aValue) {
   nsCoreUtils::GetLanguageFor(aAccessible->GetContent(), mRootContent, *aValue);
   return !aValue->IsEmpty();
 }
 
-void
-TextAttrsMgr::LangTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const nsString& aValue)
-{
+void TextAttrsMgr::LangTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const nsString& aValue) {
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::language, aValue);
 }
 
@@ -251,27 +220,21 @@ TextAttrsMgr::LangTextAttr::
 // InvalidTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::InvalidTextAttr::
-  InvalidTextAttr(nsIContent* aRootElm, nsIContent* aElm) :
-  TTextAttr<uint32_t>(!aElm), mRootElm(aRootElm)
-{
+TextAttrsMgr::InvalidTextAttr::InvalidTextAttr(nsIContent* aRootElm,
+                                               nsIContent* aElm)
+    : TTextAttr<uint32_t>(!aElm), mRootElm(aRootElm) {
   mIsRootDefined = GetValue(mRootElm, &mRootNativeValue);
-  if (aElm)
-    mIsDefined = GetValue(aElm, &mNativeValue);
+  if (aElm) mIsDefined = GetValue(aElm, &mNativeValue);
 }
 
-bool
-TextAttrsMgr::InvalidTextAttr::
-  GetValueFor(Accessible* aAccessible, uint32_t* aValue)
-{
+bool TextAttrsMgr::InvalidTextAttr::GetValueFor(Accessible* aAccessible,
+                                                uint32_t* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   return elm ? GetValue(elm, aValue) : false;
 }
 
-void
-TextAttrsMgr::InvalidTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const uint32_t& aValue)
-{
+void TextAttrsMgr::InvalidTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const uint32_t& aValue) {
   switch (aValue) {
     case eFalse:
       nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::invalid,
@@ -295,20 +258,16 @@ TextAttrsMgr::InvalidTextAttr::
   }
 }
 
-bool
-TextAttrsMgr::InvalidTextAttr::
-  GetValue(nsIContent* aElm, uint32_t* aValue)
-{
+bool TextAttrsMgr::InvalidTextAttr::GetValue(nsIContent* aElm,
+                                             uint32_t* aValue) {
   nsIContent* elm = aElm;
   do {
     if (nsAccUtils::HasDefinedARIAToken(elm, nsGkAtoms::aria_invalid)) {
-      static Element::AttrValuesArray tokens[] =
-        { nsGkAtoms::_false, nsGkAtoms::grammar, nsGkAtoms::spelling,
-          nullptr };
+      static Element::AttrValuesArray tokens[] = {
+          nsGkAtoms::_false, nsGkAtoms::grammar, nsGkAtoms::spelling, nullptr};
 
-      int32_t idx = elm->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                      nsGkAtoms::aria_invalid,
-                                                      tokens, eCaseMatters);
+      int32_t idx = elm->AsElement()->FindAttrValueIn(
+          kNameSpaceID_None, nsGkAtoms::aria_invalid, tokens, eCaseMatters);
       switch (idx) {
         case 0:
           *aValue = eFalse;
@@ -329,24 +288,19 @@ TextAttrsMgr::InvalidTextAttr::
   return false;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // BGColorTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::BGColorTextAttr::
-  BGColorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<nscolor>(!aFrame), mRootFrame(aRootFrame)
-{
+TextAttrsMgr::BGColorTextAttr::BGColorTextAttr(nsIFrame* aRootFrame,
+                                               nsIFrame* aFrame)
+    : TTextAttr<nscolor>(!aFrame), mRootFrame(aRootFrame) {
   mIsRootDefined = GetColor(mRootFrame, &mRootNativeValue);
-  if (aFrame)
-    mIsDefined = GetColor(aFrame, &mNativeValue);
+  if (aFrame) mIsDefined = GetColor(aFrame, &mNativeValue);
 }
 
-bool
-TextAttrsMgr::BGColorTextAttr::
-  GetValueFor(Accessible* aAccessible, nscolor* aValue)
-{
+bool TextAttrsMgr::BGColorTextAttr::GetValueFor(Accessible* aAccessible,
+                                                nscolor* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
@@ -357,27 +311,23 @@ TextAttrsMgr::BGColorTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::BGColorTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const nscolor& aValue)
-{
+void TextAttrsMgr::BGColorTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const nscolor& aValue) {
   nsAutoString formattedValue;
   StyleInfo::FormatColor(aValue, formattedValue);
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::backgroundColor,
                          formattedValue);
 }
 
-bool
-TextAttrsMgr::BGColorTextAttr::
-  GetColor(nsIFrame* aFrame, nscolor* aColor)
-{
+bool TextAttrsMgr::BGColorTextAttr::GetColor(nsIFrame* aFrame,
+                                             nscolor* aColor) {
   nscolor backgroundColor = aFrame->StyleBackground()->BackgroundColor(aFrame);
   if (NS_GET_A(backgroundColor) > 0) {
     *aColor = backgroundColor;
     return true;
   }
 
-  nsContainerFrame *parentFrame = aFrame->GetParent();
+  nsContainerFrame* parentFrame = aFrame->GetParent();
   if (!parentFrame) {
     *aColor = aFrame->PresContext()->DefaultBackgroundColor();
     return true;
@@ -386,21 +336,18 @@ TextAttrsMgr::BGColorTextAttr::
   // Each frame of parents chain for the initially passed 'aFrame' has
   // transparent background color. So background color isn't changed from
   // 'mRootFrame' to initially passed 'aFrame'.
-  if (parentFrame == mRootFrame)
-    return false;
+  if (parentFrame == mRootFrame) return false;
 
   return GetColor(parentFrame, aColor);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // ColorTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::ColorTextAttr::
-  ColorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<nscolor>(!aFrame)
-{
+TextAttrsMgr::ColorTextAttr::ColorTextAttr(nsIFrame* aRootFrame,
+                                           nsIFrame* aFrame)
+    : TTextAttr<nscolor>(!aFrame) {
   mRootNativeValue = aRootFrame->StyleColor()->mColor;
   mIsRootDefined = true;
 
@@ -410,10 +357,8 @@ TextAttrsMgr::ColorTextAttr::
   }
 }
 
-bool
-TextAttrsMgr::ColorTextAttr::
-  GetValueFor(Accessible* aAccessible, nscolor* aValue)
-{
+bool TextAttrsMgr::ColorTextAttr::GetValueFor(Accessible* aAccessible,
+                                              nscolor* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
@@ -425,34 +370,27 @@ TextAttrsMgr::ColorTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::ColorTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const nscolor& aValue)
-{
+void TextAttrsMgr::ColorTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const nscolor& aValue) {
   nsAutoString formattedValue;
   StyleInfo::FormatColor(aValue, formattedValue);
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::color, formattedValue);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // FontFamilyTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::FontFamilyTextAttr::
-  FontFamilyTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<nsString>(!aFrame)
-{
+TextAttrsMgr::FontFamilyTextAttr::FontFamilyTextAttr(nsIFrame* aRootFrame,
+                                                     nsIFrame* aFrame)
+    : TTextAttr<nsString>(!aFrame) {
   mIsRootDefined = GetFontFamily(aRootFrame, mRootNativeValue);
 
-  if (aFrame)
-    mIsDefined = GetFontFamily(aFrame, mNativeValue);
+  if (aFrame) mIsDefined = GetFontFamily(aFrame, mNativeValue);
 }
 
-bool
-TextAttrsMgr::FontFamilyTextAttr::
-  GetValueFor(Accessible* aAccessible, nsString* aValue)
-{
+bool TextAttrsMgr::FontFamilyTextAttr::GetValueFor(Accessible* aAccessible,
+                                                   nsString* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
@@ -463,19 +401,15 @@ TextAttrsMgr::FontFamilyTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::FontFamilyTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const nsString& aValue)
-{
+void TextAttrsMgr::FontFamilyTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const nsString& aValue) {
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_family, aValue);
 }
 
-bool
-TextAttrsMgr::FontFamilyTextAttr::
-  GetFontFamily(nsIFrame* aFrame, nsString& aFamily)
-{
+bool TextAttrsMgr::FontFamilyTextAttr::GetFontFamily(nsIFrame* aFrame,
+                                                     nsString& aFamily) {
   RefPtr<nsFontMetrics> fm =
-    nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
+      nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
 
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* font = fontGroup->GetFirstValidFont();
@@ -484,15 +418,13 @@ TextAttrsMgr::FontFamilyTextAttr::
   return true;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // FontSizeTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::FontSizeTextAttr::
-  FontSizeTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<nscoord>(!aFrame)
-{
+TextAttrsMgr::FontSizeTextAttr::FontSizeTextAttr(nsIFrame* aRootFrame,
+                                                 nsIFrame* aFrame)
+    : TTextAttr<nscoord>(!aFrame) {
   mDC = aRootFrame->PresContext()->DeviceContext();
 
   mRootNativeValue = aRootFrame->StyleFont()->mSize;
@@ -504,10 +436,8 @@ TextAttrsMgr::FontSizeTextAttr::
   }
 }
 
-bool
-TextAttrsMgr::FontSizeTextAttr::
-  GetValueFor(Accessible* aAccessible, nscoord* aValue)
-{
+bool TextAttrsMgr::FontSizeTextAttr::GetValueFor(Accessible* aAccessible,
+                                                 nscoord* aValue) {
   nsIContent* el = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (el) {
     nsIFrame* frame = el->GetPrimaryFrame();
@@ -519,10 +449,8 @@ TextAttrsMgr::FontSizeTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::FontSizeTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const nscoord& aValue)
-{
+void TextAttrsMgr::FontSizeTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const nscoord& aValue) {
   // Convert from nscoord to pt.
   //
   // Note: according to IA2, "The conversion doesn't have to be exact.
@@ -531,10 +459,9 @@ TextAttrsMgr::FontSizeTextAttr::
   // ATK does not specify a unit and will likely follow IA2 here.
   //
   // XXX todo: consider sharing this code with layout module? (bug 474621)
-  float px =
-    NSAppUnitsToFloatPixels(aValue, mozilla::AppUnitsPerCSSPixel());
+  float px = NSAppUnitsToFloatPixels(aValue, mozilla::AppUnitsPerCSSPixel());
   // Each pt is 4/3 of a CSS pixel.
-  int pts = NS_lround(px*3/4);
+  int pts = NS_lround(px * 3 / 4);
 
   nsAutoString value;
   value.AppendInt(pts);
@@ -543,15 +470,13 @@ TextAttrsMgr::FontSizeTextAttr::
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_size, value);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // FontStyleTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::FontStyleTextAttr::
-  FontStyleTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<FontSlantStyle>(!aFrame)
-{
+TextAttrsMgr::FontStyleTextAttr::FontStyleTextAttr(nsIFrame* aRootFrame,
+                                                   nsIFrame* aFrame)
+    : TTextAttr<FontSlantStyle>(!aFrame) {
   mRootNativeValue = aRootFrame->StyleFont()->mFont.style;
   mIsRootDefined = true;
 
@@ -561,10 +486,8 @@ TextAttrsMgr::FontStyleTextAttr::
   }
 }
 
-bool
-TextAttrsMgr::FontStyleTextAttr::
-  GetValueFor(Accessible* aAccessible, FontSlantStyle* aValue)
-{
+bool TextAttrsMgr::FontStyleTextAttr::GetValueFor(Accessible* aAccessible,
+                                                  FontSlantStyle* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
@@ -576,25 +499,20 @@ TextAttrsMgr::FontStyleTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::FontStyleTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes,
-              const FontSlantStyle& aValue)
-{
+void TextAttrsMgr::FontStyleTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const FontSlantStyle& aValue) {
   nsAutoString string;
   nsStyleUtil::AppendFontSlantStyle(aValue, string);
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_style, string);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // FontWeightTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::FontWeightTextAttr::
-  FontWeightTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<FontWeight>(!aFrame)
-{
+TextAttrsMgr::FontWeightTextAttr::FontWeightTextAttr(nsIFrame* aRootFrame,
+                                                     nsIFrame* aFrame)
+    : TTextAttr<FontWeight>(!aFrame) {
   mRootNativeValue = GetFontWeight(aRootFrame);
   mIsRootDefined = true;
 
@@ -604,10 +522,8 @@ TextAttrsMgr::FontWeightTextAttr::
   }
 }
 
-bool
-TextAttrsMgr::FontWeightTextAttr::
-  GetValueFor(Accessible* aAccessible, FontWeight* aValue)
-{
+bool TextAttrsMgr::FontWeightTextAttr::GetValueFor(Accessible* aAccessible,
+                                                   FontWeight* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
@@ -619,28 +535,22 @@ TextAttrsMgr::FontWeightTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::FontWeightTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes,
-              const FontWeight& aValue)
-{
+void TextAttrsMgr::FontWeightTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const FontWeight& aValue) {
   nsAutoString formattedValue;
   formattedValue.AppendFloat(aValue.ToFloat());
 
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::fontWeight, formattedValue);
 }
 
-FontWeight
-TextAttrsMgr::FontWeightTextAttr::
-  GetFontWeight(nsIFrame* aFrame)
-{
+FontWeight TextAttrsMgr::FontWeightTextAttr::GetFontWeight(nsIFrame* aFrame) {
   // nsFont::width isn't suitable here because it's necessary to expose real
   // value of font weight (used font might not have some font weight values).
   RefPtr<nsFontMetrics> fm =
-    nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
+      nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
 
-  gfxFontGroup *fontGroup = fm->GetThebesFontGroup();
-  gfxFont *font = fontGroup->GetFirstValidFont();
+  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
+  gfxFont* font = fontGroup->GetFirstValidFont();
 
   // When there doesn't exist a bold font in the family and so the rendering of
   // a non-bold font face is changed so that the user sees what looks like a
@@ -658,60 +568,52 @@ TextAttrsMgr::FontWeightTextAttr::
   // number as getComputedStyle(). fontEntry->Weight() will give the weight
   // range supported by the font face used, so we clamp the weight that was
   // requested by style to what is actually supported by the font.
-  gfxFontEntry *fontEntry = font->GetFontEntry();
+  gfxFontEntry* fontEntry = font->GetFontEntry();
   return fontEntry->Weight().Clamp(font->GetStyle()->weight);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // AutoGeneratedTextAttr
 ////////////////////////////////////////////////////////////////////////////////
-TextAttrsMgr::AutoGeneratedTextAttr::
-  AutoGeneratedTextAttr(HyperTextAccessible* aHyperTextAcc,
-                        Accessible* aAccessible) :
-  TTextAttr<bool>(!aAccessible)
-{
+TextAttrsMgr::AutoGeneratedTextAttr::AutoGeneratedTextAttr(
+    HyperTextAccessible* aHyperTextAcc, Accessible* aAccessible)
+    : TTextAttr<bool>(!aAccessible) {
   mRootNativeValue = false;
   mIsRootDefined = false;
 
   if (aAccessible)
-    mIsDefined = mNativeValue = (aAccessible->NativeRole() == roles::STATICTEXT);
+    mIsDefined = mNativeValue =
+        (aAccessible->NativeRole() == roles::STATICTEXT);
 }
 
-bool
-TextAttrsMgr::AutoGeneratedTextAttr::
-  GetValueFor(Accessible* aAccessible, bool* aValue)
-{
+bool TextAttrsMgr::AutoGeneratedTextAttr::GetValueFor(Accessible* aAccessible,
+                                                      bool* aValue) {
   return *aValue = (aAccessible->NativeRole() == roles::STATICTEXT);
 }
 
-void
-TextAttrsMgr::AutoGeneratedTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const bool& aValue)
-{
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::auto_generated,
-                         aValue ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"));
+void TextAttrsMgr::AutoGeneratedTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const bool& aValue) {
+  nsAccUtils::SetAccAttr(
+      aAttributes, nsGkAtoms::auto_generated,
+      aValue ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TextDecorTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::TextDecorValue::
-  TextDecorValue(nsIFrame* aFrame)
-{
+TextAttrsMgr::TextDecorValue::TextDecorValue(nsIFrame* aFrame) {
   const nsStyleTextReset* textReset = aFrame->StyleTextReset();
   mStyle = textReset->mTextDecorationStyle;
   mColor = textReset->mTextDecorationColor.CalcColor(aFrame);
   mLine = textReset->mTextDecorationLine &
-    (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
-     NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);
+          (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
+           NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);
 }
 
-TextAttrsMgr::TextDecorTextAttr::
-  TextDecorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<TextDecorValue>(!aFrame)
-{
+TextAttrsMgr::TextDecorTextAttr::TextDecorTextAttr(nsIFrame* aRootFrame,
+                                                   nsIFrame* aFrame)
+    : TTextAttr<TextDecorValue>(!aFrame) {
   mRootNativeValue = TextDecorValue(aRootFrame);
   mIsRootDefined = mRootNativeValue.IsDefined();
 
@@ -721,10 +623,8 @@ TextAttrsMgr::TextDecorTextAttr::
   }
 }
 
-bool
-TextAttrsMgr::TextDecorTextAttr::
-  GetValueFor(Accessible* aAccessible, TextDecorValue* aValue)
-{
+bool TextAttrsMgr::TextDecorTextAttr::GetValueFor(Accessible* aAccessible,
+                                                  TextDecorValue* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
@@ -736,15 +636,12 @@ TextAttrsMgr::TextDecorTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::TextDecorTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const TextDecorValue& aValue)
-{
+void TextAttrsMgr::TextDecorTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const TextDecorValue& aValue) {
   if (aValue.IsUnderline()) {
     nsAutoString formattedStyle;
     StyleInfo::FormatTextDecorationStyle(aValue.Style(), formattedStyle);
-    nsAccUtils::SetAccAttr(aAttributes,
-                           nsGkAtoms::textUnderlineStyle,
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textUnderlineStyle,
                            formattedStyle);
 
     nsAutoString formattedColor;
@@ -757,8 +654,7 @@ TextAttrsMgr::TextDecorTextAttr::
   if (aValue.IsLineThrough()) {
     nsAutoString formattedStyle;
     StyleInfo::FormatTextDecorationStyle(aValue.Style(), formattedStyle);
-    nsAccUtils::SetAccAttr(aAttributes,
-                           nsGkAtoms::textLineThroughStyle,
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textLineThroughStyle,
                            formattedStyle);
 
     nsAutoString formattedColor;
@@ -772,10 +668,9 @@ TextAttrsMgr::TextDecorTextAttr::
 // TextPosTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
-TextAttrsMgr::TextPosTextAttr::
-  TextPosTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<TextPosValue>(!aFrame)
-{
+TextAttrsMgr::TextPosTextAttr::TextPosTextAttr(nsIFrame* aRootFrame,
+                                               nsIFrame* aFrame)
+    : TTextAttr<TextPosValue>(!aFrame) {
   mRootNativeValue = GetTextPosValue(aRootFrame);
   mIsRootDefined = mRootNativeValue != eTextPosNone;
 
@@ -785,10 +680,8 @@ TextAttrsMgr::TextPosTextAttr::
   }
 }
 
-bool
-TextAttrsMgr::TextPosTextAttr::
-  GetValueFor(Accessible* aAccessible, TextPosValue* aValue)
-{
+bool TextAttrsMgr::TextPosTextAttr::GetValueFor(Accessible* aAccessible,
+                                                TextPosValue* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
@@ -800,10 +693,8 @@ TextAttrsMgr::TextPosTextAttr::
   return false;
 }
 
-void
-TextAttrsMgr::TextPosTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const TextPosValue& aValue)
-{
+void TextAttrsMgr::TextPosTextAttr::ExposeValue(
+    nsIPersistentProperties* aAttributes, const TextPosValue& aValue) {
   switch (aValue) {
     case eTextPosBaseline:
       nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textPosition,
@@ -825,10 +716,8 @@ TextAttrsMgr::TextPosTextAttr::
   }
 }
 
-TextAttrsMgr::TextPosValue
-TextAttrsMgr::TextPosTextAttr::
-  GetTextPosValue(nsIFrame* aFrame) const
-{
+TextAttrsMgr::TextPosValue TextAttrsMgr::TextPosTextAttr::GetTextPosValue(
+    nsIFrame* aFrame) const {
   const nsStyleCoord& styleCoord = aFrame->StyleDisplay()->mVerticalAlign;
   switch (styleCoord.GetUnit()) {
     case eStyleUnit_Enumerated:
@@ -840,34 +729,31 @@ TextAttrsMgr::TextPosTextAttr::
         case NS_STYLE_VERTICAL_ALIGN_SUPER:
           return eTextPosSuper;
 
-        // No good guess for these:
-        //   NS_STYLE_VERTICAL_ALIGN_TOP
-        //   NS_STYLE_VERTICAL_ALIGN_TEXT_TOP
-        //   NS_STYLE_VERTICAL_ALIGN_MIDDLE
-        //   NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM
-        //   NS_STYLE_VERTICAL_ALIGN_BOTTOM
-        //   NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE
-        // Do not expose value of text-position attribute.
+          // No good guess for these:
+          //   NS_STYLE_VERTICAL_ALIGN_TOP
+          //   NS_STYLE_VERTICAL_ALIGN_TEXT_TOP
+          //   NS_STYLE_VERTICAL_ALIGN_MIDDLE
+          //   NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM
+          //   NS_STYLE_VERTICAL_ALIGN_BOTTOM
+          //   NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE
+          // Do not expose value of text-position attribute.
 
         default:
           break;
       }
       return eTextPosNone;
 
-    case eStyleUnit_Percent:
-    {
+    case eStyleUnit_Percent: {
       float percentValue = styleCoord.GetPercentValue();
-      return percentValue > 0 ?
-        eTextPosSuper :
-        (percentValue < 0 ? eTextPosSub : eTextPosBaseline);
+      return percentValue > 0
+                 ? eTextPosSuper
+                 : (percentValue < 0 ? eTextPosSub : eTextPosBaseline);
     }
 
-    case eStyleUnit_Coord:
-    {
-       nscoord coordValue = styleCoord.GetCoordValue();
-       return coordValue > 0 ?
-         eTextPosSuper :
-         (coordValue < 0 ? eTextPosSub : eTextPosBaseline);
+    case eStyleUnit_Coord: {
+      nscoord coordValue = styleCoord.GetCoordValue();
+      return coordValue > 0 ? eTextPosSuper
+                            : (coordValue < 0 ? eTextPosSub : eTextPosBaseline);
     }
 
     case eStyleUnit_Null:
@@ -884,10 +770,8 @@ TextAttrsMgr::TextPosTextAttr::
 
   const nsIContent* content = aFrame->GetContent();
   if (content) {
-    if (content->IsHTMLElement(nsGkAtoms::sup))
-      return eTextPosSuper;
-    if (content->IsHTMLElement(nsGkAtoms::sub))
-      return eTextPosSub;
+    if (content->IsHTMLElement(nsGkAtoms::sup)) return eTextPosSuper;
+    if (content->IsHTMLElement(nsGkAtoms::sub)) return eTextPosSub;
   }
 
   return eTextPosNone;

@@ -15,56 +15,52 @@ namespace mozilla {
 
 namespace ipc {
 class URIParams;
-} // namespace ipc
+}  // namespace ipc
 
-enum DomainSetChangeType{
-    ACTIVATE_POLICY,
-    DEACTIVATE_POLICY,
-    ADD_DOMAIN,
-    REMOVE_DOMAIN,
-    CLEAR_DOMAINS
+enum DomainSetChangeType {
+  ACTIVATE_POLICY,
+  DEACTIVATE_POLICY,
+  ADD_DOMAIN,
+  REMOVE_DOMAIN,
+  CLEAR_DOMAINS
 };
 
-enum DomainSetType{
-    NO_TYPE,
-    BLOCKLIST,
-    SUPER_BLOCKLIST,
-    ALLOWLIST,
-    SUPER_ALLOWLIST
+enum DomainSetType {
+  NO_TYPE,
+  BLOCKLIST,
+  SUPER_BLOCKLIST,
+  ALLOWLIST,
+  SUPER_ALLOWLIST
 };
 
-class DomainSet final : public nsIDomainSet
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMAINSET
+class DomainSet final : public nsIDomainSet {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMAINSET
 
-    explicit DomainSet(DomainSetType aType)
-        : mType(aType)
-    {}
+  explicit DomainSet(DomainSetType aType) : mType(aType) {}
 
-    void CloneSet(InfallibleTArray<mozilla::ipc::URIParams>* aDomains);
+  void CloneSet(InfallibleTArray<mozilla::ipc::URIParams>* aDomains);
 
-protected:
-    virtual ~DomainSet() {}
-    nsTHashtable<nsURIHashKey> mHashTable;
-    DomainSetType mType;
+ protected:
+  virtual ~DomainSet() {}
+  nsTHashtable<nsURIHashKey> mHashTable;
+  DomainSetType mType;
 };
 
-class DomainPolicy final : public nsIDomainPolicy
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMAINPOLICY
-    DomainPolicy();
+class DomainPolicy final : public nsIDomainPolicy {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMAINPOLICY
+  DomainPolicy();
 
-private:
-    virtual ~DomainPolicy();
+ private:
+  virtual ~DomainPolicy();
 
-    RefPtr<DomainSet> mBlocklist;
-    RefPtr<DomainSet> mSuperBlocklist;
-    RefPtr<DomainSet> mAllowlist;
-    RefPtr<DomainSet> mSuperAllowlist;
+  RefPtr<DomainSet> mBlocklist;
+  RefPtr<DomainSet> mSuperBlocklist;
+  RefPtr<DomainSet> mAllowlist;
+  RefPtr<DomainSet> mSuperAllowlist;
 };
 
 } /* namespace mozilla */

@@ -12,9 +12,12 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#define DOMERROR_IID \
-{ 0x220cb63f, 0xa37d, 0x4ba4, \
- { 0x8e, 0x31, 0xfc, 0xde, 0xec, 0x48, 0xe1, 0x66 } }
+#define DOMERROR_IID                                 \
+  {                                                  \
+    0x220cb63f, 0xa37d, 0x4ba4, {                    \
+      0x8e, 0x31, 0xfc, 0xde, 0xec, 0x48, 0xe1, 0x66 \
+    }                                                \
+  }
 
 class nsPIDOMWindowInner;
 
@@ -26,17 +29,15 @@ namespace dom {
 
 class GlobalObject;
 
-class DOMError : public nsISupports,
-                 public nsWrapperCache
-{
+class DOMError : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsString mName;
   nsString mMessage;
 
-protected:
+ protected:
   virtual ~DOMError();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMError)
 
@@ -54,32 +55,24 @@ public:
   DOMError(nsPIDOMWindowInner* aWindow, const nsAString& aName,
            const nsAString& aMessage);
 
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<DOMError>
-  Constructor(const GlobalObject& global, const nsAString& name,
-              const nsAString& message, ErrorResult& aRv);
+  static already_AddRefed<DOMError> Constructor(const GlobalObject& global,
+                                                const nsAString& name,
+                                                const nsAString& message,
+                                                ErrorResult& aRv);
 
-  void GetName(nsString& aRetval) const
-  {
-    aRetval = mName;
-  }
+  void GetName(nsString& aRetval) const { aRetval = mName; }
 
-  void GetMessage(nsString& aRetval) const
-  {
-    aRetval = mMessage;
-  }
+  void GetMessage(nsString& aRetval) const { aRetval = mMessage; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMError, DOMERROR_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_domerror_h__
+#endif  // mozilla_dom_domerror_h__

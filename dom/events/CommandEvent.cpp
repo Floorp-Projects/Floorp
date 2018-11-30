@@ -11,12 +11,9 @@
 namespace mozilla {
 namespace dom {
 
-CommandEvent::CommandEvent(EventTarget* aOwner,
-                           nsPresContext* aPresContext,
+CommandEvent::CommandEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                            WidgetCommandEvent* aEvent)
-  : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new WidgetCommandEvent())
-{
+    : Event(aOwner, aPresContext, aEvent ? aEvent : new WidgetCommandEvent()) {
   mEvent->mTime = PR_Now();
   if (aEvent) {
     mEventIsInternal = false;
@@ -25,9 +22,7 @@ CommandEvent::CommandEvent(EventTarget* aOwner,
   }
 }
 
-void
-CommandEvent::GetCommand(nsAString& aCommand)
-{
+void CommandEvent::GetCommand(nsAString& aCommand) {
   nsAtom* command = mEvent->AsCommandEvent()->mCommand;
   if (command) {
     command->ToString(aCommand);
@@ -36,18 +31,15 @@ CommandEvent::GetCommand(nsAString& aCommand)
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-already_AddRefed<CommandEvent>
-NS_NewDOMCommandEvent(EventTarget* aOwner,
-                      nsPresContext* aPresContext,
-                      WidgetCommandEvent* aEvent)
-{
-  RefPtr<CommandEvent> it =
-    new CommandEvent(aOwner, aPresContext, aEvent);
+already_AddRefed<CommandEvent> NS_NewDOMCommandEvent(
+    EventTarget* aOwner, nsPresContext* aPresContext,
+    WidgetCommandEvent* aEvent) {
+  RefPtr<CommandEvent> it = new CommandEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

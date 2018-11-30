@@ -19,22 +19,33 @@
 
 #include "nsString.h"
 
-struct ScopedDelete
-{
-  void operator()(SecretService* ss) { if (ss) g_object_unref(ss); }
-  void operator()(SecretCollection* sc) { if (sc) g_object_unref(sc); }
-  void operator()(GError* error) { if (error) g_error_free(error); }
-  void operator()(GList* list) { if (list) g_list_free(list); }
-  void operator()(SecretValue* val) { if (val) secret_value_unref(val); }
-  void operator()(SecretItem* val) { if (val) g_object_unref(val); }
-  void operator()(char* val) { if (val) secret_password_free(val); }
+struct ScopedDelete {
+  void operator()(SecretService* ss) {
+    if (ss) g_object_unref(ss);
+  }
+  void operator()(SecretCollection* sc) {
+    if (sc) g_object_unref(sc);
+  }
+  void operator()(GError* error) {
+    if (error) g_error_free(error);
+  }
+  void operator()(GList* list) {
+    if (list) g_list_free(list);
+  }
+  void operator()(SecretValue* val) {
+    if (val) secret_value_unref(val);
+  }
+  void operator()(SecretItem* val) {
+    if (val) g_object_unref(val);
+  }
+  void operator()(char* val) {
+    if (val) secret_password_free(val);
+  }
 };
 
-template<class T>
-struct ScopedMaybeDelete
-{
-  void operator()(T* ptr)
-  {
+template <class T>
+struct ScopedMaybeDelete {
+  void operator()(T* ptr) {
     if (ptr) {
       ScopedDelete del;
       del(ptr);
@@ -54,13 +65,12 @@ typedef std::unique_ptr<char, ScopedMaybeDelete<char>> ScopedPassword;
 
 #undef SCOPED
 
-class LibSecret final : public AbstractOSKeyStore
-{
-public:
+class LibSecret final : public AbstractOSKeyStore {
+ public:
   LibSecret();
 
   virtual nsresult RetrieveSecret(const nsACString& label,
-                        /* out */ nsACString& secret) override;
+                                  /* out */ nsACString& secret) override;
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) override;
   virtual nsresult DeleteSecret(const nsACString& label) override;
@@ -70,4 +80,4 @@ public:
   virtual ~LibSecret();
 };
 
-#endif // LibSecret_h
+#endif  // LibSecret_h

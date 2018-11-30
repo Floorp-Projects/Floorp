@@ -17,29 +17,30 @@ class VRService;
 class VRSystemManagerExternal;
 
 class VRParent final : public PVRParent {
-
-public:
+ public:
   VRParent();
-  bool Init(base::ProcessId aParentPid,
-            const char* aParentBuildID,
-            MessageLoop* aIOLoop,
-            IPC::Channel* aChannel);
+  bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
+            MessageLoop* aIOLoop, IPC::Channel* aChannel);
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-protected:
-  virtual mozilla::ipc::IPCResult RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint) override;
-  virtual mozilla::ipc::IPCResult RecvInit(nsTArray<GfxPrefSetting>&& prefs,
-                                           nsTArray<GfxVarUpdate>&& vars,
-                                           const DevicePrefs& devicePrefs) override;
-  virtual mozilla::ipc::IPCResult RecvNotifyVsync(const TimeStamp& vsyncTimestamp) override;
-  virtual mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& setting) override;
-  virtual mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref) override;
+ protected:
+  virtual mozilla::ipc::IPCResult RecvNewGPUVRManager(
+      Endpoint<PVRGPUParent>&& aEndpoint) override;
+  virtual mozilla::ipc::IPCResult RecvInit(
+      nsTArray<GfxPrefSetting>&& prefs, nsTArray<GfxVarUpdate>&& vars,
+      const DevicePrefs& devicePrefs) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyVsync(
+      const TimeStamp& vsyncTimestamp) override;
+  virtual mozilla::ipc::IPCResult RecvUpdatePref(
+      const GfxPrefSetting& setting) override;
+  virtual mozilla::ipc::IPCResult RecvUpdateVar(
+      const GfxVarUpdate& pref) override;
 
-private:
+ private:
   RefPtr<VRGPUParent> mVRGPUParent;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_PARENT_H
+#endif  // GFX_VR_PARENT_H

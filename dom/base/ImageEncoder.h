@@ -23,26 +23,23 @@ namespace mozilla {
 namespace layers {
 class AsyncCanvasRenderer;
 class Image;
-} // namespace layers
+}  // namespace layers
 
 namespace dom {
 
 class EncodeCompleteCallback;
 class EncodingRunnable;
 
-class ImageEncoder
-{
-public:
+class ImageEncoder {
+ public:
   // Extracts data synchronously and gives you a stream containing the image
   // represented by aContext. aType may change to "image/png" if we had to fall
   // back to a PNG encoder. A return value of NS_OK implies successful data
   // extraction. If there are any unrecognized custom parse options in
   // aOptions, NS_ERROR_INVALID_ARG will be returned. When encountering this
   // error it is usual to call this function again without any options at all.
-  static nsresult ExtractData(nsAString& aType,
-                              const nsAString& aOptions,
-                              const nsIntSize aSize,
-                              bool aUsePlaceholder,
+  static nsresult ExtractData(nsAString& aType, const nsAString& aOptions,
+                              const nsIntSize aSize, bool aUsePlaceholder,
                               nsICanvasRenderingContextInternal* aContext,
                               layers::AsyncCanvasRenderer* aRenderer,
                               nsIInputStream** aStream);
@@ -58,12 +55,10 @@ public:
   // success.
   // Note: The callback has to set a valid parent for content for the generated
   // Blob object.
-  static nsresult ExtractDataAsync(nsAString& aType,
-                                   const nsAString& aOptions,
+  static nsresult ExtractDataAsync(nsAString& aType, const nsAString& aOptions,
                                    bool aUsingCustomOptions,
                                    UniquePtr<uint8_t[]> aImageBuffer,
-                                   int32_t aFormat,
-                                   const nsIntSize aSize,
+                                   int32_t aFormat, const nsIntSize aSize,
                                    bool aUsePlaceholder,
                                    EncodeCompleteCallback* aEncodeCallback);
 
@@ -72,38 +67,28 @@ public:
   // will be called on main thread when encoding process is success.
   // Note: The callback has to set a valid parent for content for the generated
   // Blob object.
-  static nsresult ExtractDataFromLayersImageAsync(nsAString& aType,
-                                                  const nsAString& aOptions,
-                                                  bool aUsingCustomOptions,
-                                                  layers::Image* aImage,
-                                                  bool aUsePlaceholder,
-                                                  EncodeCompleteCallback* aEncodeCallback);
+  static nsresult ExtractDataFromLayersImageAsync(
+      nsAString& aType, const nsAString& aOptions, bool aUsingCustomOptions,
+      layers::Image* aImage, bool aUsePlaceholder,
+      EncodeCompleteCallback* aEncodeCallback);
 
   // Gives you a stream containing the image represented by aImageBuffer.
   // The format is given in aFormat, for example
   // imgIEncoder::INPUT_FORMAT_HOSTARGB.
-  static nsresult GetInputStream(int32_t aWidth,
-                                 int32_t aHeight,
-                                 uint8_t* aImageBuffer,
-                                 int32_t aFormat,
+  static nsresult GetInputStream(int32_t aWidth, int32_t aHeight,
+                                 uint8_t* aImageBuffer, int32_t aFormat,
                                  imgIEncoder* aEncoder,
                                  const char16_t* aEncoderOptions,
                                  nsIInputStream** aStream);
 
-private:
+ private:
   // When called asynchronously, aContext and aRenderer are null.
-  static nsresult
-  ExtractDataInternal(const nsAString& aType,
-                      const nsAString& aOptions,
-                      uint8_t* aImageBuffer,
-                      int32_t aFormat,
-                      const nsIntSize aSize,
-                      bool aUsePlaceholder,
-                      layers::Image* aImage,
-                      nsICanvasRenderingContextInternal* aContext,
-                      layers::AsyncCanvasRenderer* aRenderer,
-                      nsIInputStream** aStream,
-                      imgIEncoder* aEncoder);
+  static nsresult ExtractDataInternal(
+      const nsAString& aType, const nsAString& aOptions, uint8_t* aImageBuffer,
+      int32_t aFormat, const nsIntSize aSize, bool aUsePlaceholder,
+      layers::Image* aImage, nsICanvasRenderingContextInternal* aContext,
+      layers::AsyncCanvasRenderer* aRenderer, nsIInputStream** aStream,
+      imgIEncoder* aEncoder);
 
   // Creates and returns an encoder instance of the type specified in aType.
   // aType may change to "image/png" if no instance of the original type could
@@ -122,21 +107,21 @@ private:
 };
 
 /**
- *  The callback interface of ExtractDataAsync and ExtractDataFromLayersImageAsync.
- *  ReceiveBlob() is called on main thread when encoding is complete.
+ *  The callback interface of ExtractDataAsync and
+ * ExtractDataFromLayersImageAsync. ReceiveBlob() is called on main thread when
+ * encoding is complete.
  */
-class EncodeCompleteCallback
-{
-public:
+class EncodeCompleteCallback {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(EncodeCompleteCallback)
 
   virtual nsresult ReceiveBlob(already_AddRefed<Blob> aBlob) = 0;
 
-protected:
+ protected:
   virtual ~EncodeCompleteCallback() {}
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // ImageEncoder_h
+#endif  // ImageEncoder_h

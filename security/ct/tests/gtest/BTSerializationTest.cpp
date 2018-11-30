@@ -8,29 +8,31 @@
 #include "CTTestUtils.h"
 #include "gtest/gtest.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 using namespace pkix;
 
-class BTSerializationTest : public ::testing::Test
-{
-public:
-  void SetUp() override
-  {
+class BTSerializationTest : public ::testing::Test {
+ public:
+  void SetUp() override {
     mTestInclusionProof = GetTestInclusionProof();
     mTestInclusionProofUnexpectedData = GetTestInclusionProofUnexpectedData();
     mTestInclusionProofInvalidHashSize = GetTestInclusionProofInvalidHashSize();
     mTestInclusionProofInvalidHash = GetTestInclusionProofInvalidHash();
     mTestInclusionProofMissingLogId = GetTestInclusionProofMissingLogId();
     mTestInclusionProofNullPathLength = GetTestInclusionProofNullPathLength();
-    mTestInclusionProofPathLengthTooSmall = GetTestInclusionProofPathLengthTooSmall();
-    mTestInclusionProofPathLengthTooLarge = GetTestInclusionProofPathLengthTooLarge();
+    mTestInclusionProofPathLengthTooSmall =
+        GetTestInclusionProofPathLengthTooSmall();
+    mTestInclusionProofPathLengthTooLarge =
+        GetTestInclusionProofPathLengthTooLarge();
     mTestInclusionProofNullTreeSize = GetTestInclusionProofNullTreeSize();
-    mTestInclusionProofLeafIndexOutOfBounds = GetTestInclusionProofLeafIndexOutOfBounds();
+    mTestInclusionProofLeafIndexOutOfBounds =
+        GetTestInclusionProofLeafIndexOutOfBounds();
     mTestInclusionProofExtraData = GetTestInclusionProofExtraData();
   }
 
-protected:
+ protected:
   Buffer mTestInclusionProof;
   Buffer mTestInclusionProofUnexpectedData;
   Buffer mTestInclusionProofInvalidHashSize;
@@ -44,13 +46,12 @@ protected:
   Buffer mTestInclusionProofExtraData;
 };
 
-TEST_F(BTSerializationTest, DecodesInclusionProof)
-{
+TEST_F(BTSerializationTest, DecodesInclusionProof) {
   const uint64_t expectedTreeSize = 4;
   const uint64_t expectedLeafIndex = 2;
   const uint64_t expectedInclusionPathElements = 2;
 
-  Buffer expectedLogId = { 0x01, 0x00 };
+  Buffer expectedLogId = {0x01, 0x00};
 
   Input encodedProofInput = InputForBuffer(mTestInclusionProof);
   InclusionProofDataV2 ipr;
@@ -63,73 +64,77 @@ TEST_F(BTSerializationTest, DecodesInclusionProof)
   EXPECT_EQ(GetTestNodeHash1(), ipr.inclusionPath[1]);
 }
 
-TEST_F(BTSerializationTest, FailsDecodingInclusionProofUnexpectedData)
-{
+TEST_F(BTSerializationTest, FailsDecodingInclusionProofUnexpectedData) {
   Input encodedProofInput = InputForBuffer(mTestInclusionProofUnexpectedData);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingInvalidHashSize)
-{
+TEST_F(BTSerializationTest, FailsDecodingInvalidHashSize) {
   Input encodedProofInput = InputForBuffer(mTestInclusionProofInvalidHashSize);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingInvalidHash)
-{
+TEST_F(BTSerializationTest, FailsDecodingInvalidHash) {
   Input encodedProofInput = InputForBuffer(mTestInclusionProofInvalidHash);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingMissingLogId)
-{
+TEST_F(BTSerializationTest, FailsDecodingMissingLogId) {
   Input encodedProofInput = InputForBuffer(mTestInclusionProofMissingLogId);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingNullPathLength)
-{
+TEST_F(BTSerializationTest, FailsDecodingNullPathLength) {
   Input encodedProofInput = InputForBuffer(mTestInclusionProofNullPathLength);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingPathLengthTooSmall)
-{
-  Input encodedProofInput = InputForBuffer(mTestInclusionProofPathLengthTooSmall);
+TEST_F(BTSerializationTest, FailsDecodingPathLengthTooSmall) {
+  Input encodedProofInput =
+      InputForBuffer(mTestInclusionProofPathLengthTooSmall);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingPathLengthTooLarge)
-{
-  Input encodedProofInput = InputForBuffer(mTestInclusionProofPathLengthTooLarge);
+TEST_F(BTSerializationTest, FailsDecodingPathLengthTooLarge) {
+  Input encodedProofInput =
+      InputForBuffer(mTestInclusionProofPathLengthTooLarge);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingNullTreeSize)
-{
+TEST_F(BTSerializationTest, FailsDecodingNullTreeSize) {
   Input encodedProofInput = InputForBuffer(mTestInclusionProofNullTreeSize);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingLeafIndexOutOfBounds)
-{
-  Input encodedProofInput = InputForBuffer(mTestInclusionProofLeafIndexOutOfBounds);
+TEST_F(BTSerializationTest, FailsDecodingLeafIndexOutOfBounds) {
+  Input encodedProofInput =
+      InputForBuffer(mTestInclusionProofLeafIndexOutOfBounds);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
 
-TEST_F(BTSerializationTest, FailsDecodingExtraData)
-{
+TEST_F(BTSerializationTest, FailsDecodingExtraData) {
   Input encodedProofInput = InputForBuffer(mTestInclusionProofExtraData);
   InclusionProofDataV2 ipr;
-  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofInput, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER,
+            DecodeInclusionProof(encodedProofInput, ipr));
 }
-} } // namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

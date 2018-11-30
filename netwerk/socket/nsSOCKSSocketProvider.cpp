@@ -17,30 +17,28 @@ using mozilla::OriginAttributes;
 
 NS_IMPL_ISUPPORTS(nsSOCKSSocketProvider, nsISocketProvider)
 
-nsresult
-nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-    nsCOMPtr<nsISocketProvider> inst =
-            new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
-    if (!inst)
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    else
-        rv = inst->QueryInterface(aIID, aResult);
-    return rv;
+nsresult nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID,
+                                         void **aResult) {
+  nsresult rv;
+  nsCOMPtr<nsISocketProvider> inst =
+      new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
+  if (!inst)
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  else
+    rv = inst->QueryInterface(aIID, aResult);
+  return rv;
 }
 
-nsresult
-nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-    nsCOMPtr<nsISocketProvider> inst =
-            new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
-    if (!inst)
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    else
-        rv = inst->QueryInterface(aIID, aResult);
-    return rv;
+nsresult nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID,
+                                         void **aResult) {
+  nsresult rv;
+  nsCOMPtr<nsISocketProvider> inst =
+      new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
+  if (!inst)
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  else
+    rv = inst->QueryInterface(aIID, aResult);
+  return rv;
 }
 
 // Per-platform implemenation of OpenTCPSocket helper function
@@ -49,21 +47,18 @@ nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID, void **aResu
 #if defined(XP_WIN)
 // The proxy host on Windows may be a named pipe uri, in which
 // case a named-pipe (rather than a socket) should be returned
-static PRFileDesc*
-OpenTCPSocket(int32_t family,
-              nsIProxyInfo *proxy)
-{
-    PRFileDesc* sock = nullptr;
+static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *proxy) {
+  PRFileDesc *sock = nullptr;
 
-    nsAutoCString proxyHost;
-    proxy->GetHost(proxyHost);
-    if (IsNamedPipePath(proxyHost)) {
-        sock = CreateNamedPipeLayer();
-    } else {
-        sock = PR_OpenTCPSocket(family);
-    }
+  nsAutoCString proxyHost;
+  proxy->GetHost(proxyHost);
+  if (IsNamedPipePath(proxyHost)) {
+    sock = CreateNamedPipeLayer();
+  } else {
+    sock = PR_OpenTCPSocket(family);
+  }
 
-    return sock;
+  return sock;
 }
 #elif defined(XP_UNIX)
 // The proxy host on UNIX systems may point to a local file uri
@@ -74,83 +69,52 @@ OpenTCPSocket(int32_t family,
 // with the proper family, but we want to do it early here so that
 // we can enforce seccomp policy to blacklist socket(AF_INET) calls
 // to prevent the content sandbox from creating network requests
-static PRFileDesc*
-OpenTCPSocket(int32_t family,
-              nsIProxyInfo *proxy)
-{
-    nsAutoCString proxyHost;
-    proxy->GetHost(proxyHost);
-    if (StringBeginsWith(proxyHost, NS_LITERAL_CSTRING("file://"))) {
-        family = AF_LOCAL;
-    }
+static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *proxy) {
+  nsAutoCString proxyHost;
+  proxy->GetHost(proxyHost);
+  if (StringBeginsWith(proxyHost, NS_LITERAL_CSTRING("file://"))) {
+    family = AF_LOCAL;
+  }
 
-    return PR_OpenTCPSocket(family);
+  return PR_OpenTCPSocket(family);
 }
 #else
 // Default, pass-through to PR_OpenTCPSocket
-static PRFileDesc*
-OpenTCPSocket(int32_t family,
-              nsIProxyInfo*)
-{
-    return PR_OpenTCPSocket(family);
+static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *) {
+  return PR_OpenTCPSocket(family);
 }
 #endif
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::NewSocket(int32_t family,
-                                 const char *host,
-                                 int32_t port,
+nsSOCKSSocketProvider::NewSocket(int32_t family, const char *host, int32_t port,
                                  nsIProxyInfo *proxy,
                                  const OriginAttributes &originAttributes,
-                                 uint32_t flags,
-                                 uint32_t tlsFlags,
-                                 PRFileDesc **result,
-                                 nsISupports **socksInfo)
-{
-    PRFileDesc *sock = OpenTCPSocket(family, proxy);
-    if (!sock) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+                                 uint32_t flags, uint32_t tlsFlags,
+                                 PRFileDesc **result, nsISupports **socksInfo) {
+  PRFileDesc *sock = OpenTCPSocket(family, proxy);
+  if (!sock) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    nsresult rv = nsSOCKSIOLayerAddToSocket(family,
-                                            host,
-                                            port,
-                                            proxy,
-                                            mVersion,
-                                            flags,
-                                            tlsFlags,
-                                            sock,
-                                            socksInfo);
-    if (NS_SUCCEEDED(rv)) {
-        *result = sock;
-        return NS_OK;
-    }
+  nsresult rv = nsSOCKSIOLayerAddToSocket(family, host, port, proxy, mVersion,
+                                          flags, tlsFlags, sock, socksInfo);
+  if (NS_SUCCEEDED(rv)) {
+    *result = sock;
+    return NS_OK;
+  }
 
-    return NS_ERROR_SOCKET_CREATE_FAILED;
+  return NS_ERROR_SOCKET_CREATE_FAILED;
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::AddToSocket(int32_t family,
-                                   const char *host,
-                                   int32_t port,
-                                   nsIProxyInfo *proxy,
+nsSOCKSSocketProvider::AddToSocket(int32_t family, const char *host,
+                                   int32_t port, nsIProxyInfo *proxy,
                                    const OriginAttributes &originAttributes,
-                                   uint32_t flags,
-                                   uint32_t tlsFlags,
-                                   PRFileDesc *sock,
-                                   nsISupports **socksInfo)
-{
-    nsresult rv = nsSOCKSIOLayerAddToSocket(family,
-                                            host,
-                                            port,
-                                            proxy,
-                                            mVersion,
-                                            flags,
-                                            tlsFlags,
-                                            sock,
-                                            socksInfo);
+                                   uint32_t flags, uint32_t tlsFlags,
+                                   PRFileDesc *sock, nsISupports **socksInfo) {
+  nsresult rv = nsSOCKSIOLayerAddToSocket(family, host, port, proxy, mVersion,
+                                          flags, tlsFlags, sock, socksInfo);
 
-    if (NS_FAILED(rv))
-        rv = NS_ERROR_SOCKET_CREATE_FAILED;
-    return rv;
+  if (NS_FAILED(rv)) rv = NS_ERROR_SOCKET_CREATE_FAILED;
+  return rv;
 }

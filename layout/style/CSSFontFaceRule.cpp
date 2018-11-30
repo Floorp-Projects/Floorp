@@ -28,41 +28,33 @@ NS_INTERFACE_MAP_BEGIN(CSSFontFaceRuleDecl)
   if (aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)) ||
       aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
     return ContainingRule()->QueryInterface(aIID, aInstancePtr);
-  }
-  else
+  } else
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_USING_AGGREGATOR(CSSFontFaceRuleDecl, ContainingRule())
 NS_IMPL_RELEASE_USING_AGGREGATOR(CSSFontFaceRuleDecl, ContainingRule())
 
 // helper for string GetPropertyValue and RemovePropertyValue
-void
-CSSFontFaceRuleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
-                                      nsAString& aResult) const
-{
+void CSSFontFaceRuleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
+                                           nsAString& aResult) const {
   MOZ_ASSERT(aResult.IsEmpty());
   Servo_FontFaceRule_GetDescriptorCssText(mRawRule, aFontDescID, &aResult);
 }
 
-void
-CSSFontFaceRuleDecl::GetCssText(nsAString& aCssText)
-{
+void CSSFontFaceRuleDecl::GetCssText(nsAString& aCssText) {
   aCssText.Truncate();
   Servo_FontFaceRule_GetDeclCssText(mRawRule, &aCssText);
 }
 
-void
-CSSFontFaceRuleDecl::SetCssText(const nsAString& aCssText,
-                                nsIPrincipal* aSubjectPrincipal,
-                                ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED); // bug 443978
+void CSSFontFaceRuleDecl::SetCssText(const nsAString& aCssText,
+                                     nsIPrincipal* aSubjectPrincipal,
+                                     ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);  // bug 443978
 }
 
 NS_IMETHODIMP
 CSSFontFaceRuleDecl::GetPropertyValue(const nsAString& aPropName,
-                                      nsAString& aResult)
-{
+                                      nsAString& aResult) {
   aResult.Truncate();
   GetPropertyValue(nsCSSProps::LookupFontDesc(aPropName), aResult);
   return NS_OK;
@@ -70,11 +62,9 @@ CSSFontFaceRuleDecl::GetPropertyValue(const nsAString& aPropName,
 
 NS_IMETHODIMP
 CSSFontFaceRuleDecl::RemoveProperty(const nsAString& aPropName,
-                                    nsAString& aResult)
-{
+                                    nsAString& aResult) {
   nsCSSFontDesc descID = nsCSSProps::LookupFontDesc(aPropName);
-  NS_ASSERTION(descID >= eCSSFontDesc_UNKNOWN &&
-               descID < eCSSFontDesc_COUNT,
+  NS_ASSERTION(descID >= eCSSFontDesc_UNKNOWN && descID < eCSSFontDesc_COUNT,
                "LookupFontDesc returned value out of range");
 
   aResult.Truncate();
@@ -85,10 +75,8 @@ CSSFontFaceRuleDecl::RemoveProperty(const nsAString& aPropName,
   return NS_OK;
 }
 
-void
-CSSFontFaceRuleDecl::GetPropertyPriority(const nsAString& aPropName,
-                                         nsAString& aResult)
-{
+void CSSFontFaceRuleDecl::GetPropertyPriority(const nsAString& aPropName,
+                                              nsAString& aResult) {
   // font descriptors do not have priorities at present
   aResult.Truncate();
 }
@@ -97,24 +85,19 @@ NS_IMETHODIMP
 CSSFontFaceRuleDecl::SetProperty(const nsAString& aPropName,
                                  const nsAString& aValue,
                                  const nsAString& aPriority,
-                                 nsIPrincipal* aSubjectPrincipal)
-{
+                                 nsIPrincipal* aSubjectPrincipal) {
   // FIXME(heycam): If we are changing unicode-range, then a FontFace object
   // representing this rule must have its mUnicodeRange value invalidated.
 
-  return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
+  return NS_ERROR_NOT_IMPLEMENTED;  // bug 443978
 }
 
-uint32_t
-CSSFontFaceRuleDecl::Length()
-{
+uint32_t CSSFontFaceRuleDecl::Length() {
   return Servo_FontFaceRule_Length(mRawRule);
 }
 
-void
-CSSFontFaceRuleDecl::IndexedGetter(uint32_t aIndex, bool& aFound,
-                                   nsAString& aResult)
-{
+void CSSFontFaceRuleDecl::IndexedGetter(uint32_t aIndex, bool& aFound,
+                                        nsAString& aResult) {
   nsCSSFontDesc id = Servo_FontFaceRule_IndexGetter(mRawRule, aIndex);
   if (id != eCSSFontDesc_UNKNOWN) {
     aFound = true;
@@ -124,21 +107,14 @@ CSSFontFaceRuleDecl::IndexedGetter(uint32_t aIndex, bool& aFound,
   }
 }
 
-css::Rule*
-CSSFontFaceRuleDecl::GetParentRule()
-{
-  return ContainingRule();
-}
+css::Rule* CSSFontFaceRuleDecl::GetParentRule() { return ContainingRule(); }
 
-nsINode*
-CSSFontFaceRuleDecl::GetParentObject()
-{
+nsINode* CSSFontFaceRuleDecl::GetParentObject() {
   return ContainingRule()->GetParentObject();
 }
 
-JSObject*
-CSSFontFaceRuleDecl::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* CSSFontFaceRuleDecl::WrapObject(JSContext* cx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return CSSStyleDeclaration_Binding::Wrap(cx, this, aGivenProto);
 }
 
@@ -173,9 +149,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSFontFaceRule,
   // Keep this in sync with IsCCLeaf.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-bool
-CSSFontFaceRule::IsCCLeaf() const
-{
+bool CSSFontFaceRule::IsCCLeaf() const {
   if (!Rule::IsCCLeaf()) {
     return false;
   }
@@ -183,12 +157,11 @@ CSSFontFaceRule::IsCCLeaf() const
   return !mDecl.PreservingWrapper();
 }
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSFontFaceRule, mozilla::css::Rule)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSFontFaceRule,
+                                               mozilla::css::Rule)
 
 #ifdef DEBUG
-void
-CSSFontFaceRule::List(FILE* out, int32_t aIndent) const
-{
+void CSSFontFaceRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -198,34 +171,23 @@ CSSFontFaceRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-uint16_t
-CSSFontFaceRule::Type() const
-{
+uint16_t CSSFontFaceRule::Type() const {
   return CSSRule_Binding::FONT_FACE_RULE;
 }
 
-void
-CSSFontFaceRule::GetCssText(nsAString& aCssText) const
-{
+void CSSFontFaceRule::GetCssText(nsAString& aCssText) const {
   aCssText.Truncate();
   Servo_FontFaceRule_GetCssText(Raw(), &aCssText);
 }
 
-nsICSSDeclaration*
-CSSFontFaceRule::Style()
-{
-  return &mDecl;
-}
+nsICSSDeclaration* CSSFontFaceRule::Style() { return &mDecl; }
 
-/* virtual */ size_t
-CSSFontFaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+/* virtual */ size_t CSSFontFaceRule::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-/* virtual */ JSObject*
-CSSFontFaceRule::WrapObject(JSContext* aCx,
-                            JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* CSSFontFaceRule::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSFontFaceRule_Binding::Wrap(aCx, this, aGivenProto);
 }

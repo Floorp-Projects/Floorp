@@ -14,48 +14,25 @@
 #endif
 #define CRLF "\r\n"
 
-namespace mozilla
-{
+namespace mozilla {
 
-unsigned int
-SipccSdpMediaSection::GetPort() const
-{
-  return mPort;
-}
+unsigned int SipccSdpMediaSection::GetPort() const { return mPort; }
 
-void
-SipccSdpMediaSection::SetPort(unsigned int port)
-{
-  mPort = port;
-}
+void SipccSdpMediaSection::SetPort(unsigned int port) { mPort = port; }
 
-unsigned int
-SipccSdpMediaSection::GetPortCount() const
-{
-  return mPortCount;
-}
+unsigned int SipccSdpMediaSection::GetPortCount() const { return mPortCount; }
 
-SdpMediaSection::Protocol
-SipccSdpMediaSection::GetProtocol() const
-{
+SdpMediaSection::Protocol SipccSdpMediaSection::GetProtocol() const {
   return mProtocol;
 }
 
-const SdpConnection&
-SipccSdpMediaSection::GetConnection() const
-{
+const SdpConnection& SipccSdpMediaSection::GetConnection() const {
   return *mConnection;
 }
 
-SdpConnection&
-SipccSdpMediaSection::GetConnection()
-{
-  return *mConnection;
-}
+SdpConnection& SipccSdpMediaSection::GetConnection() { return *mConnection; }
 
-uint32_t
-SipccSdpMediaSection::GetBandwidth(const std::string& type) const
-{
+uint32_t SipccSdpMediaSection::GetBandwidth(const std::string& type) const {
   auto found = mBandwidths.find(type);
   if (found == mBandwidths.end()) {
     return 0;
@@ -63,34 +40,24 @@ SipccSdpMediaSection::GetBandwidth(const std::string& type) const
   return found->second;
 }
 
-const std::vector<std::string>&
-SipccSdpMediaSection::GetFormats() const
-{
+const std::vector<std::string>& SipccSdpMediaSection::GetFormats() const {
   return mFormats;
 }
 
-const SdpAttributeList&
-SipccSdpMediaSection::GetAttributeList() const
-{
+const SdpAttributeList& SipccSdpMediaSection::GetAttributeList() const {
   return mAttributeList;
 }
 
-SdpAttributeList&
-SipccSdpMediaSection::GetAttributeList()
-{
+SdpAttributeList& SipccSdpMediaSection::GetAttributeList() {
   return mAttributeList;
 }
 
-SdpDirectionAttribute
-SipccSdpMediaSection::GetDirectionAttribute() const
-{
+SdpDirectionAttribute SipccSdpMediaSection::GetDirectionAttribute() const {
   return SdpDirectionAttribute(mAttributeList.GetDirection());
 }
 
-bool
-SipccSdpMediaSection::Load(sdp_t* sdp, uint16_t level,
-                           SdpErrorHolder& errorHolder)
-{
+bool SipccSdpMediaSection::Load(sdp_t* sdp, uint16_t level,
+                                SdpErrorHolder& errorHolder) {
   switch (sdp_get_media_type(sdp, level)) {
     case SDP_MEDIA_AUDIO:
       mMediaType = kAudio;
@@ -147,10 +114,8 @@ SipccSdpMediaSection::Load(sdp_t* sdp, uint16_t level,
   return LoadConnection(sdp, level, errorHolder);
 }
 
-bool
-SipccSdpMediaSection::LoadProtocol(sdp_t* sdp, uint16_t level,
-                                   SdpErrorHolder& errorHolder)
-{
+bool SipccSdpMediaSection::LoadProtocol(sdp_t* sdp, uint16_t level,
+                                        SdpErrorHolder& errorHolder) {
   switch (sdp_get_media_transport(sdp, level)) {
     case SDP_TRANSPORT_RTPAVP:
       mProtocol = kRtpAvp;
@@ -194,11 +159,8 @@ SipccSdpMediaSection::LoadProtocol(sdp_t* sdp, uint16_t level,
   return true;
 }
 
-bool
-SipccSdpMediaSection::LoadFormats(sdp_t* sdp,
-                                  uint16_t level,
-                                  SdpErrorHolder& errorHolder)
-{
+bool SipccSdpMediaSection::LoadFormats(sdp_t* sdp, uint16_t level,
+                                       SdpErrorHolder& errorHolder) {
   sdp_media_e mtype = sdp_get_media_type(sdp, level);
 
   if (mtype == SDP_MEDIA_APPLICATION) {
@@ -206,7 +168,7 @@ SipccSdpMediaSection::LoadFormats(sdp_t* sdp,
     if ((ttype == SDP_TRANSPORT_UDPDTLSSCTP) ||
         (ttype == SDP_TRANSPORT_TCPDTLSSCTP)) {
       if (sdp_get_media_sctp_fmt(sdp, level) ==
-            SDP_SCTP_MEDIA_FMT_WEBRTC_DATACHANNEL) {
+          SDP_SCTP_MEDIA_FMT_WEBRTC_DATACHANNEL) {
         mFormats.push_back("webrtc-datachannel");
       }
     } else {
@@ -218,7 +180,7 @@ SipccSdpMediaSection::LoadFormats(sdp_t* sdp,
   } else if (mtype == SDP_MEDIA_AUDIO || mtype == SDP_MEDIA_VIDEO) {
     uint16_t count = sdp_get_media_num_payload_types(sdp, level);
     for (uint16_t i = 0; i < count; ++i) {
-      sdp_payload_ind_e indicator; // we ignore this, which is fine
+      sdp_payload_ind_e indicator;  // we ignore this, which is fine
       uint32_t ptype =
           sdp_get_media_payload_type(sdp, level, i + 1, &indicator);
 
@@ -242,34 +204,27 @@ SipccSdpMediaSection::LoadFormats(sdp_t* sdp,
   return true;
 }
 
-bool
-SipccSdpMediaSection::ValidateSimulcast(sdp_t* sdp, uint16_t level,
-                                        SdpErrorHolder& errorHolder) const
-{
+bool SipccSdpMediaSection::ValidateSimulcast(
+    sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder) const {
   if (!GetAttributeList().HasAttribute(SdpAttribute::kSimulcastAttribute)) {
     return true;
   }
 
   const SdpSimulcastAttribute& simulcast(GetAttributeList().GetSimulcast());
-  if (!ValidateSimulcastVersions(
-        sdp, level, simulcast.sendVersions, sdp::kSend, errorHolder)) {
+  if (!ValidateSimulcastVersions(sdp, level, simulcast.sendVersions, sdp::kSend,
+                                 errorHolder)) {
     return false;
   }
-  if (!ValidateSimulcastVersions(
-        sdp, level, simulcast.recvVersions, sdp::kRecv, errorHolder)) {
+  if (!ValidateSimulcastVersions(sdp, level, simulcast.recvVersions, sdp::kRecv,
+                                 errorHolder)) {
     return false;
   }
   return true;
 }
 
-bool
-SipccSdpMediaSection::ValidateSimulcastVersions(
-    sdp_t* sdp,
-    uint16_t level,
-    const SdpSimulcastAttribute::Versions& versions,
-    sdp::Direction direction,
-    SdpErrorHolder& errorHolder) const
-{
+bool SipccSdpMediaSection::ValidateSimulcastVersions(
+    sdp_t* sdp, uint16_t level, const SdpSimulcastAttribute::Versions& versions,
+    sdp::Direction direction, SdpErrorHolder& errorHolder) const {
   if (versions.IsSet() && !(direction & GetDirectionAttribute().mValue)) {
     errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
                               "simulcast attribute has a direction that is "
@@ -290,8 +245,7 @@ SipccSdpMediaSection::ValidateSimulcastVersions(
           return false;
         }
       } else if (versions.type == SdpSimulcastAttribute::Versions::kPt) {
-        if (std::find(mFormats.begin(), mFormats.end(), id)
-            == mFormats.end()) {
+        if (std::find(mFormats.begin(), mFormats.end(), id) == mFormats.end()) {
           std::ostringstream os;
           os << "No pt for \'" << id << "\'";
           errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
@@ -304,10 +258,8 @@ SipccSdpMediaSection::ValidateSimulcastVersions(
   return true;
 }
 
-bool
-SipccSdpMediaSection::LoadConnection(sdp_t* sdp, uint16_t level,
-                                     SdpErrorHolder& errorHolder)
-{
+bool SipccSdpMediaSection::LoadConnection(sdp_t* sdp, uint16_t level,
+                                          SdpErrorHolder& errorHolder) {
   if (!sdp_connection_valid(sdp, level)) {
     level = SDP_SESSION_LEVEL;
     if (!sdp_connection_valid(sdp, level)) {
@@ -352,10 +304,9 @@ SipccSdpMediaSection::LoadConnection(sdp_t* sdp, uint16_t level,
   return true;
 }
 
-void
-SipccSdpMediaSection::AddCodec(const std::string& pt, const std::string& name,
-                               uint32_t clockrate, uint16_t channels)
-{
+void SipccSdpMediaSection::AddCodec(const std::string& pt,
+                                    const std::string& name, uint32_t clockrate,
+                                    uint16_t channels) {
   mFormats.push_back(pt);
 
   SdpRtpmapAttributeList* rtpmap = new SdpRtpmapAttributeList();
@@ -386,9 +337,7 @@ SipccSdpMediaSection::AddCodec(const std::string& pt, const std::string& name,
   mAttributeList.SetAttribute(rtpmap);
 }
 
-void
-SipccSdpMediaSection::ClearCodecs()
-{
+void SipccSdpMediaSection::ClearCodecs() {
   mFormats.clear();
   mAttributeList.RemoveAttribute(SdpAttribute::kRtpmapAttribute);
   mAttributeList.RemoveAttribute(SdpAttribute::kFmtpAttribute);
@@ -396,22 +345,20 @@ SipccSdpMediaSection::ClearCodecs()
   mAttributeList.RemoveAttribute(SdpAttribute::kRtcpFbAttribute);
 }
 
-void
-SipccSdpMediaSection::AddDataChannel(const std::string& name, uint16_t port,
-                                     uint16_t streams, uint32_t message_size)
-{
+void SipccSdpMediaSection::AddDataChannel(const std::string& name,
+                                          uint16_t port, uint16_t streams,
+                                          uint32_t message_size) {
   // Only one allowed, for now. This may change as the specs (and deployments)
   // evolve.
   mFormats.clear();
-  if ((mProtocol == kUdpDtlsSctp) ||
-      (mProtocol == kTcpDtlsSctp)) {
+  if ((mProtocol == kUdpDtlsSctp) || (mProtocol == kTcpDtlsSctp)) {
     // new data channel format according to draft 21
     mFormats.push_back(name);
-    mAttributeList.SetAttribute(new SdpNumberAttribute(
-          SdpAttribute::kSctpPortAttribute, port));
+    mAttributeList.SetAttribute(
+        new SdpNumberAttribute(SdpAttribute::kSctpPortAttribute, port));
     if (message_size) {
       mAttributeList.SetAttribute(new SdpNumberAttribute(
-            SdpAttribute::kMaxMessageSizeAttribute, message_size));
+          SdpAttribute::kMaxMessageSizeAttribute, message_size));
     }
   } else {
     // old data channels format according to draft 05
@@ -423,14 +370,12 @@ SipccSdpMediaSection::AddDataChannel(const std::string& name, uint16_t port,
     if (message_size) {
       // This is a workaround to allow detecting Firefox's w/o EOR support
       mAttributeList.SetAttribute(new SdpNumberAttribute(
-            SdpAttribute::kMaxMessageSizeAttribute, message_size));
+          SdpAttribute::kMaxMessageSizeAttribute, message_size));
     }
   }
 }
 
-void
-SipccSdpMediaSection::Serialize(std::ostream& os) const
-{
+void SipccSdpMediaSection::Serialize(std::ostream& os) const {
   os << "m=" << mMediaType << " " << mPort;
   if (mPortCount) {
     os << "/" << mPortCount;
@@ -454,4 +399,4 @@ SipccSdpMediaSection::Serialize(std::ostream& os) const
   os << mAttributeList;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

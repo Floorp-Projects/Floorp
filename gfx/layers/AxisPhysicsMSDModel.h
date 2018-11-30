@@ -17,7 +17,7 @@ namespace layers {
  * model.  A unit mass is assumed.
  */
 class AxisPhysicsMSDModel : public AxisPhysicsModel {
-public:
+ public:
   AxisPhysicsMSDModel(double aInitialPosition, double aInitialDestination,
                       double aInitialVelocity, double aSpringConstant,
                       double aDampingRatio);
@@ -40,11 +40,10 @@ public:
    */
   bool IsFinished(double aSmallestVisibleIncrement);
 
-protected:
+ protected:
   virtual double Acceleration(const State &aState) override;
 
-private:
-
+ private:
   /**
    * mDestination represents the target position and the resting position of
    * the simulated spring.
@@ -76,11 +75,9 @@ private:
    * - Reaches destination (exponentially decays) without oscillating.
    */
   double mDampingRatio;
-
 };
 
-
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

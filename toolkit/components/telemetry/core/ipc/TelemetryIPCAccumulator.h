@@ -21,25 +21,26 @@ class TimeStamp;
 namespace TelemetryIPCAccumulator {
 
 // Histogram accumulation functions.
-void AccumulateChildHistogram(mozilla::Telemetry::HistogramID aId, uint32_t aSample);
-void AccumulateChildKeyedHistogram(mozilla::Telemetry::HistogramID aId, const nsCString& aKey,
-                                   uint32_t aSample);
+void AccumulateChildHistogram(mozilla::Telemetry::HistogramID aId,
+                              uint32_t aSample);
+void AccumulateChildKeyedHistogram(mozilla::Telemetry::HistogramID aId,
+                                   const nsCString& aKey, uint32_t aSample);
 
 // Scalar accumulation functions.
 void RecordChildScalarAction(uint32_t aId, bool aDynamic,
                              mozilla::Telemetry::ScalarActionType aAction,
                              const mozilla::Telemetry::ScalarVariant& aValue);
 
-void RecordChildKeyedScalarAction(uint32_t aId, bool aDynamic, const nsAString& aKey,
-                                  mozilla::Telemetry::ScalarActionType aAction,
-                                  const mozilla::Telemetry::ScalarVariant& aValue);
+void RecordChildKeyedScalarAction(
+    uint32_t aId, bool aDynamic, const nsAString& aKey,
+    mozilla::Telemetry::ScalarActionType aAction,
+    const mozilla::Telemetry::ScalarVariant& aValue);
 
-void RecordChildEvent(const mozilla::TimeStamp& timestamp,
-                      const nsACString& category,
-                      const nsACString& method,
-                      const nsACString& object,
-                      const mozilla::Maybe<nsCString>& value,
-                      const nsTArray<mozilla::Telemetry::EventExtraEntry>& extra);
+void RecordChildEvent(
+    const mozilla::TimeStamp& timestamp, const nsACString& category,
+    const nsACString& method, const nsACString& object,
+    const mozilla::Maybe<nsCString>& value,
+    const nsTArray<mozilla::Telemetry::EventExtraEntry>& extra);
 
 void IPCTimerFired(nsITimer* aTimer, void* aClosure);
 
@@ -47,7 +48,7 @@ void DeInitializeGlobalState();
 
 void DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent);
 
-}
-}
+}  // namespace TelemetryIPCAccumulator
+}  // namespace mozilla
 
-#endif // TelemetryIPCAccumulator_h__
+#endif  // TelemetryIPCAccumulator_h__

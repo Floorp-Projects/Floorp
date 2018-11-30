@@ -10,29 +10,26 @@
 
 namespace mozilla {
 
-class WebGL1Context
-    : public WebGLContext
-{
-public:
-    static WebGL1Context* Create();
+class WebGL1Context : public WebGLContext {
+ public:
+  static WebGL1Context* Create();
 
-private:
-    WebGL1Context();
+ private:
+  WebGL1Context();
 
-    virtual UniquePtr<webgl::FormatUsageAuthority>
-    CreateFormatUsage(gl::GLContext* gl) const override;
+  virtual UniquePtr<webgl::FormatUsageAuthority> CreateFormatUsage(
+      gl::GLContext* gl) const override;
 
-public:
-    virtual ~WebGL1Context();
+ public:
+  virtual ~WebGL1Context();
 
-    virtual bool IsWebGL2() const override {
-        return false;
-    }
+  virtual bool IsWebGL2() const override { return false; }
 
-    // nsWrapperCache
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
+  // nsWrapperCache
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WEBGL_1_CONTEXT_H_
+#endif  // WEBGL_1_CONTEXT_H_

@@ -14,11 +14,13 @@
 
 namespace mozilla {
 
-RecursiveMutex::RecursiveMutex(const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : BlockingResourceBase(aName, eRecursiveMutex)
+RecursiveMutex::RecursiveMutex(
+    const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : BlockingResourceBase(aName, eRecursiveMutex)
 #ifdef DEBUG
-  , mOwningThread(nullptr)
-  , mEntryCount(0)
+      ,
+      mOwningThread(nullptr),
+      mEntryCount(0)
 #endif
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -34,8 +36,8 @@ RecursiveMutex::RecursiveMutex(const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM
 #else
   DWORD flags = 0;
 #endif
-  BOOL r = InitializeCriticalSectionEx(NativeHandle(mMutex),
-                                       sLockSpinCount, flags);
+  BOOL r =
+      InitializeCriticalSectionEx(NativeHandle(mMutex), sLockSpinCount, flags);
   MOZ_RELEASE_ASSERT(r);
 #else
   pthread_mutexattr_t attr;
@@ -43,8 +45,9 @@ RecursiveMutex::RecursiveMutex(const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM
   MOZ_RELEASE_ASSERT(pthread_mutexattr_init(&attr) == 0,
                      "pthread_mutexattr_init failed");
 
-  MOZ_RELEASE_ASSERT(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) == 0,
-                     "pthread_mutexattr_settype failed");
+  MOZ_RELEASE_ASSERT(
+      pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) == 0,
+      "pthread_mutexattr_settype failed");
 
   MOZ_RELEASE_ASSERT(pthread_mutex_init(&mMutex, &attr) == 0,
                      "pthread_mutex_init failed");
@@ -54,8 +57,7 @@ RecursiveMutex::RecursiveMutex(const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM
 #endif
 }
 
-RecursiveMutex::~RecursiveMutex()
-{
+RecursiveMutex::~RecursiveMutex() {
 #ifdef XP_WIN
   DeleteCriticalSection(NativeHandle(mMutex));
 #else
@@ -64,9 +66,7 @@ RecursiveMutex::~RecursiveMutex()
 #endif
 }
 
-void
-RecursiveMutex::LockInternal()
-{
+void RecursiveMutex::LockInternal() {
 #ifdef XP_WIN
   EnterCriticalSection(NativeHandle(mMutex));
 #else
@@ -75,9 +75,7 @@ RecursiveMutex::LockInternal()
 #endif
 }
 
-void
-RecursiveMutex::UnlockInternal()
-{
+void RecursiveMutex::UnlockInternal() {
 #ifdef XP_WIN
   LeaveCriticalSection(NativeHandle(mMutex));
 #else
@@ -86,4 +84,4 @@ RecursiveMutex::UnlockInternal()
 #endif
 }
 
-} // namespace mozilla
+}  // namespace mozilla

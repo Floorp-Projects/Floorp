@@ -39,9 +39,8 @@ class IDecodingTask;
  * off-main-thread in the image decoding thread pool, or on some combination of
  * the two.
  */
-class DecodePool final : public nsIObserver
-{
-public:
+class DecodePool final : public nsIObserver {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -73,9 +72,9 @@ public:
 
   /**
    * Run @aTask synchronously. This does not guarantee that @aTask will complete
-   * synchronously. If, for example, @aTask doesn't yet have the data it needs to
-   * run synchronously, it may recover by scheduling an async task to finish up
-   * the work when the remaining data is available.
+   * synchronously. If, for example, @aTask doesn't yet have the data it needs
+   * to run synchronously, it may recover by scheduling an async task to finish
+   * up the work when the remaining data is available.
    */
   void SyncRunIfPossible(IDecodingTask* aTask, const nsCString& aURI);
 
@@ -88,7 +87,7 @@ public:
    */
   already_AddRefed<nsIEventTarget> GetIOEventTarget();
 
-private:
+ private:
   friend class DecodePoolWorker;
 
   DecodePool();
@@ -100,11 +99,11 @@ private:
   RefPtr<DecodePoolImpl> mImpl;
 
   // mMutex protects mIOThread.
-  Mutex                         mMutex;
-  nsCOMPtr<nsIThread>           mIOThread;
+  Mutex mMutex;
+  nsCOMPtr<nsIThread> mIOThread;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_DecodePool_h
+#endif  // mozilla_image_DecodePool_h

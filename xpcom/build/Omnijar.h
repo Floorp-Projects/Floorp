@@ -17,9 +17,8 @@
 
 namespace mozilla {
 
-class Omnijar
-{
-private:
+class Omnijar {
+ private:
   /**
    * Store an nsIFile for an omni.jar. We can store two paths here, one
    * for GRE (corresponding to resource://gre/) and one for APP
@@ -49,19 +48,14 @@ private:
    */
   static bool sIsUnified;
 
-public:
-  enum Type
-  {
-    GRE = 0,
-    APP = 1
-  };
+ public:
+  enum Type { GRE = 0, APP = 1 };
 
-private:
+ private:
   /**
    * Returns whether we are using nested jars.
    */
-  static inline bool IsNested(Type aType)
-  {
+  static inline bool IsNested(Type aType) {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     return !!sOuterReader[aType];
   }
@@ -71,14 +65,13 @@ private:
    * jars. Returns nullptr in the same cases GetPath() would, or if not using
    * nested jars.
    */
-  static inline already_AddRefed<nsZipArchive> GetOuterReader(Type aType)
-  {
+  static inline already_AddRefed<nsZipArchive> GetOuterReader(Type aType) {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     RefPtr<nsZipArchive> reader = sOuterReader[aType].get();
     return reader.forget();
   }
 
-public:
+ public:
   /**
    * Returns whether SetBase has been called at least once with
    * a valid nsIFile
@@ -104,8 +97,7 @@ public:
    * Returns nullptr when there is no corresponding omni.jar.
    * Also returns nullptr for APP in the unified case.
    */
-  static inline already_AddRefed<nsIFile> GetPath(Type aType)
-  {
+  static inline already_AddRefed<nsIFile> GetPath(Type aType) {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     nsCOMPtr<nsIFile> path = sPath[aType].get();
     return path.forget();
@@ -115,8 +107,7 @@ public:
    * Returns whether GRE or APP use an omni.jar. Returns PR_False for
    * APP when using an omni.jar in the unified case.
    */
-  static inline bool HasOmnijar(Type aType)
-  {
+  static inline bool HasOmnijar(Type aType) {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     return !!sPath[aType];
   }
@@ -125,8 +116,7 @@ public:
    * Returns a nsZipArchive pointer for the omni.jar file for GRE or
    * APP. Returns nullptr in the same cases GetPath() would.
    */
-  static inline already_AddRefed<nsZipArchive> GetReader(Type aType)
-  {
+  static inline already_AddRefed<nsZipArchive> GetReader(Type aType) {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
     RefPtr<nsZipArchive> reader = sReader[aType].get();
     return reader.forget();
@@ -147,7 +137,7 @@ public:
    */
   static nsresult GetURIString(Type aType, nsACString& aResult);
 
-private:
+ private:
   /**
    * Used internally, respectively by Init() and CleanUp()
    */

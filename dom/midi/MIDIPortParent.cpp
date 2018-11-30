@@ -16,9 +16,8 @@ namespace dom {
 // MIDI ports back and forth to the Rust libraries.
 static uint32_t gId = 0;
 
-mozilla::ipc::IPCResult
-MIDIPortParent::RecvSend(nsTArray<MIDIMessage>&& aMsgs)
-{
+mozilla::ipc::IPCResult MIDIPortParent::RecvSend(
+    nsTArray<MIDIMessage>&& aMsgs) {
   if (mConnectionState != MIDIPortConnectionState::Open) {
     mMessageQueue.AppendElements(aMsgs);
     if (MIDIPlatformService::IsRunning()) {
@@ -32,18 +31,14 @@ MIDIPortParent::RecvSend(nsTArray<MIDIMessage>&& aMsgs)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-MIDIPortParent::RecvOpen()
-{
+mozilla::ipc::IPCResult MIDIPortParent::RecvOpen() {
   if (MIDIPlatformService::IsRunning()) {
     MIDIPlatformService::Get()->Open(this);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-MIDIPortParent::RecvClose()
-{
+mozilla::ipc::IPCResult MIDIPortParent::RecvClose() {
   if (mConnectionState != MIDIPortConnectionState::Closed) {
     if (MIDIPlatformService::IsRunning()) {
       MIDIPlatformService::Get()->Close(this);
@@ -52,18 +47,14 @@ MIDIPortParent::RecvClose()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-MIDIPortParent::RecvClear()
-{
+mozilla::ipc::IPCResult MIDIPortParent::RecvClear() {
   if (MIDIPlatformService::IsRunning()) {
     MIDIPlatformService::Get()->Clear(this);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-MIDIPortParent::RecvShutdown()
-{
+mozilla::ipc::IPCResult MIDIPortParent::RecvShutdown() {
   if (mShuttingDown) {
     return IPC_OK();
   }
@@ -72,9 +63,7 @@ MIDIPortParent::RecvShutdown()
   return IPC_OK();
 }
 
-void
-MIDIPortParent::Teardown()
-{
+void MIDIPortParent::Teardown() {
   mMessageQueue.Clear();
   MIDIPortInterface::Shutdown();
   if (MIDIPlatformService::IsRunning()) {
@@ -82,15 +71,11 @@ MIDIPortParent::Teardown()
   }
 }
 
-void
-MIDIPortParent::ActorDestroy(ActorDestroyReason)
-{
-}
+void MIDIPortParent::ActorDestroy(ActorDestroyReason) {}
 
-bool
-MIDIPortParent::SendUpdateStatus(const MIDIPortDeviceState& aDeviceState,
-                                 const MIDIPortConnectionState& aConnectionState)
-{
+bool MIDIPortParent::SendUpdateStatus(
+    const MIDIPortDeviceState& aDeviceState,
+    const MIDIPortConnectionState& aConnectionState) {
   if (mShuttingDown) {
     return true;
   }
@@ -103,23 +88,23 @@ MIDIPortParent::SendUpdateStatus(const MIDIPortDeviceState& aDeviceState,
              aDeviceState == MIDIPortDeviceState::Connected &&
              !mMessageQueue.IsEmpty()) {
     if (MIDIPlatformService::IsRunning()) {
-      MIDIPlatformService::Get()->QueueMessages(MIDIPortInterface::mId, mMessageQueue);
+      MIDIPlatformService::Get()->QueueMessages(MIDIPortInterface::mId,
+                                                mMessageQueue);
     }
     mMessageQueue.Clear();
   }
-  return PMIDIPortParent::SendUpdateStatus(static_cast<uint32_t>(mDeviceState),
-                                           static_cast<uint32_t>(mConnectionState));
+  return PMIDIPortParent::SendUpdateStatus(
+      static_cast<uint32_t>(mDeviceState),
+      static_cast<uint32_t>(mConnectionState));
 }
 
 MIDIPortParent::MIDIPortParent(const MIDIPortInfo& aPortInfo,
-                               const bool aSysexEnabled) :
-  MIDIPortInterface(aPortInfo, aSysexEnabled),
-  mInternalId(++gId)
-{
+                               const bool aSysexEnabled)
+    : MIDIPortInterface(aPortInfo, aSysexEnabled), mInternalId(++gId) {
   MOZ_ASSERT(MIDIPlatformService::IsRunning(),
              "Shouldn't be able to add MIDI port without MIDI service!");
   MIDIPlatformService::Get()->AddPort(this);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

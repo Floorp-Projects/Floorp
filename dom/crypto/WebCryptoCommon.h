@@ -15,119 +15,115 @@
 #include "pk11pub.h"
 
 // WebCrypto algorithm names
-#define WEBCRYPTO_ALG_AES_CBC       "AES-CBC"
-#define WEBCRYPTO_ALG_AES_CTR       "AES-CTR"
-#define WEBCRYPTO_ALG_AES_GCM       "AES-GCM"
-#define WEBCRYPTO_ALG_AES_KW        "AES-KW"
-#define WEBCRYPTO_ALG_SHA1          "SHA-1"
-#define WEBCRYPTO_ALG_SHA256        "SHA-256"
-#define WEBCRYPTO_ALG_SHA384        "SHA-384"
-#define WEBCRYPTO_ALG_SHA512        "SHA-512"
-#define WEBCRYPTO_ALG_HMAC          "HMAC"
-#define WEBCRYPTO_ALG_HKDF          "HKDF"
-#define WEBCRYPTO_ALG_PBKDF2        "PBKDF2"
-#define WEBCRYPTO_ALG_RSASSA_PKCS1  "RSASSA-PKCS1-v1_5"
-#define WEBCRYPTO_ALG_RSA_OAEP      "RSA-OAEP"
-#define WEBCRYPTO_ALG_RSA_PSS       "RSA-PSS"
-#define WEBCRYPTO_ALG_ECDH          "ECDH"
-#define WEBCRYPTO_ALG_ECDSA         "ECDSA"
-#define WEBCRYPTO_ALG_DH            "DH"
+#define WEBCRYPTO_ALG_AES_CBC "AES-CBC"
+#define WEBCRYPTO_ALG_AES_CTR "AES-CTR"
+#define WEBCRYPTO_ALG_AES_GCM "AES-GCM"
+#define WEBCRYPTO_ALG_AES_KW "AES-KW"
+#define WEBCRYPTO_ALG_SHA1 "SHA-1"
+#define WEBCRYPTO_ALG_SHA256 "SHA-256"
+#define WEBCRYPTO_ALG_SHA384 "SHA-384"
+#define WEBCRYPTO_ALG_SHA512 "SHA-512"
+#define WEBCRYPTO_ALG_HMAC "HMAC"
+#define WEBCRYPTO_ALG_HKDF "HKDF"
+#define WEBCRYPTO_ALG_PBKDF2 "PBKDF2"
+#define WEBCRYPTO_ALG_RSASSA_PKCS1 "RSASSA-PKCS1-v1_5"
+#define WEBCRYPTO_ALG_RSA_OAEP "RSA-OAEP"
+#define WEBCRYPTO_ALG_RSA_PSS "RSA-PSS"
+#define WEBCRYPTO_ALG_ECDH "ECDH"
+#define WEBCRYPTO_ALG_ECDSA "ECDSA"
+#define WEBCRYPTO_ALG_DH "DH"
 
 // WebCrypto key formats
-#define WEBCRYPTO_KEY_FORMAT_RAW    "raw"
-#define WEBCRYPTO_KEY_FORMAT_PKCS8  "pkcs8"
-#define WEBCRYPTO_KEY_FORMAT_SPKI   "spki"
-#define WEBCRYPTO_KEY_FORMAT_JWK    "jwk"
+#define WEBCRYPTO_KEY_FORMAT_RAW "raw"
+#define WEBCRYPTO_KEY_FORMAT_PKCS8 "pkcs8"
+#define WEBCRYPTO_KEY_FORMAT_SPKI "spki"
+#define WEBCRYPTO_KEY_FORMAT_JWK "jwk"
 
 // WebCrypto key types
-#define WEBCRYPTO_KEY_TYPE_PUBLIC  "public"
+#define WEBCRYPTO_KEY_TYPE_PUBLIC "public"
 #define WEBCRYPTO_KEY_TYPE_PRIVATE "private"
-#define WEBCRYPTO_KEY_TYPE_SECRET  "secret"
+#define WEBCRYPTO_KEY_TYPE_SECRET "secret"
 
 // WebCrypto key usages
-#define WEBCRYPTO_KEY_USAGE_ENCRYPT     "encrypt"
-#define WEBCRYPTO_KEY_USAGE_DECRYPT     "decrypt"
-#define WEBCRYPTO_KEY_USAGE_SIGN        "sign"
-#define WEBCRYPTO_KEY_USAGE_VERIFY      "verify"
-#define WEBCRYPTO_KEY_USAGE_DERIVEKEY   "deriveKey"
-#define WEBCRYPTO_KEY_USAGE_DERIVEBITS  "deriveBits"
-#define WEBCRYPTO_KEY_USAGE_WRAPKEY     "wrapKey"
-#define WEBCRYPTO_KEY_USAGE_UNWRAPKEY   "unwrapKey"
+#define WEBCRYPTO_KEY_USAGE_ENCRYPT "encrypt"
+#define WEBCRYPTO_KEY_USAGE_DECRYPT "decrypt"
+#define WEBCRYPTO_KEY_USAGE_SIGN "sign"
+#define WEBCRYPTO_KEY_USAGE_VERIFY "verify"
+#define WEBCRYPTO_KEY_USAGE_DERIVEKEY "deriveKey"
+#define WEBCRYPTO_KEY_USAGE_DERIVEBITS "deriveBits"
+#define WEBCRYPTO_KEY_USAGE_WRAPKEY "wrapKey"
+#define WEBCRYPTO_KEY_USAGE_UNWRAPKEY "unwrapKey"
 
 // WebCrypto named curves
-#define WEBCRYPTO_NAMED_CURVE_P256  "P-256"
-#define WEBCRYPTO_NAMED_CURVE_P384  "P-384"
-#define WEBCRYPTO_NAMED_CURVE_P521  "P-521"
+#define WEBCRYPTO_NAMED_CURVE_P256 "P-256"
+#define WEBCRYPTO_NAMED_CURVE_P384 "P-384"
+#define WEBCRYPTO_NAMED_CURVE_P521 "P-521"
 
 // JWK key types
-#define JWK_TYPE_SYMMETRIC          "oct"
-#define JWK_TYPE_RSA                "RSA"
-#define JWK_TYPE_EC                 "EC"
+#define JWK_TYPE_SYMMETRIC "oct"
+#define JWK_TYPE_RSA "RSA"
+#define JWK_TYPE_EC "EC"
 
 // JWK algorithms
-#define JWK_ALG_A128CBC             "A128CBC"  // CBC
-#define JWK_ALG_A192CBC             "A192CBC"
-#define JWK_ALG_A256CBC             "A256CBC"
-#define JWK_ALG_A128CTR             "A128CTR"  // CTR
-#define JWK_ALG_A192CTR             "A192CTR"
-#define JWK_ALG_A256CTR             "A256CTR"
-#define JWK_ALG_A128GCM             "A128GCM"  // GCM
-#define JWK_ALG_A192GCM             "A192GCM"
-#define JWK_ALG_A256GCM             "A256GCM"
-#define JWK_ALG_A128KW              "A128KW"   // KW
-#define JWK_ALG_A192KW              "A192KW"
-#define JWK_ALG_A256KW              "A256KW"
-#define JWK_ALG_HS1                 "HS1"      // HMAC
-#define JWK_ALG_HS256               "HS256"
-#define JWK_ALG_HS384               "HS384"
-#define JWK_ALG_HS512               "HS512"
-#define JWK_ALG_RS1                 "RS1"      // RSASSA-PKCS1
-#define JWK_ALG_RS256               "RS256"
-#define JWK_ALG_RS384               "RS384"
-#define JWK_ALG_RS512               "RS512"
-#define JWK_ALG_RSA_OAEP            "RSA-OAEP" // RSA-OAEP
-#define JWK_ALG_RSA_OAEP_256        "RSA-OAEP-256"
-#define JWK_ALG_RSA_OAEP_384        "RSA-OAEP-384"
-#define JWK_ALG_RSA_OAEP_512        "RSA-OAEP-512"
-#define JWK_ALG_PS1                 "PS1"      // RSA-PSS
-#define JWK_ALG_PS256               "PS256"
-#define JWK_ALG_PS384               "PS384"
-#define JWK_ALG_PS512               "PS512"
-#define JWK_ALG_ECDSA_P_256         "ES256"
-#define JWK_ALG_ECDSA_P_384         "ES384"
-#define JWK_ALG_ECDSA_P_521         "ES521"
+#define JWK_ALG_A128CBC "A128CBC"  // CBC
+#define JWK_ALG_A192CBC "A192CBC"
+#define JWK_ALG_A256CBC "A256CBC"
+#define JWK_ALG_A128CTR "A128CTR"  // CTR
+#define JWK_ALG_A192CTR "A192CTR"
+#define JWK_ALG_A256CTR "A256CTR"
+#define JWK_ALG_A128GCM "A128GCM"  // GCM
+#define JWK_ALG_A192GCM "A192GCM"
+#define JWK_ALG_A256GCM "A256GCM"
+#define JWK_ALG_A128KW "A128KW"  // KW
+#define JWK_ALG_A192KW "A192KW"
+#define JWK_ALG_A256KW "A256KW"
+#define JWK_ALG_HS1 "HS1"  // HMAC
+#define JWK_ALG_HS256 "HS256"
+#define JWK_ALG_HS384 "HS384"
+#define JWK_ALG_HS512 "HS512"
+#define JWK_ALG_RS1 "RS1"  // RSASSA-PKCS1
+#define JWK_ALG_RS256 "RS256"
+#define JWK_ALG_RS384 "RS384"
+#define JWK_ALG_RS512 "RS512"
+#define JWK_ALG_RSA_OAEP "RSA-OAEP"  // RSA-OAEP
+#define JWK_ALG_RSA_OAEP_256 "RSA-OAEP-256"
+#define JWK_ALG_RSA_OAEP_384 "RSA-OAEP-384"
+#define JWK_ALG_RSA_OAEP_512 "RSA-OAEP-512"
+#define JWK_ALG_PS1 "PS1"  // RSA-PSS
+#define JWK_ALG_PS256 "PS256"
+#define JWK_ALG_PS384 "PS384"
+#define JWK_ALG_PS512 "PS512"
+#define JWK_ALG_ECDSA_P_256 "ES256"
+#define JWK_ALG_ECDSA_P_384 "ES384"
+#define JWK_ALG_ECDSA_P_521 "ES521"
 
 // JWK usages
-#define JWK_USE_ENC                 "enc"
-#define JWK_USE_SIG                 "sig"
+#define JWK_USE_ENC "enc"
+#define JWK_USE_SIG "sig"
 
 // Define an unknown mechanism type
-#define UNKNOWN_CK_MECHANISM        CKM_VENDOR_DEFINED+1
+#define UNKNOWN_CK_MECHANISM CKM_VENDOR_DEFINED + 1
 
 // python security/pkix/tools/DottedOIDToCode.py id-ecDH 1.3.132.112
-static const uint8_t id_ecDH[] = { 0x2b, 0x81, 0x04, 0x70 };
-const SECItem SEC_OID_DATA_EC_DH = { siBuffer, (unsigned char*)id_ecDH,
-                                     static_cast<unsigned int>(
-                                       mozilla::ArrayLength(id_ecDH)) };
+static const uint8_t id_ecDH[] = {0x2b, 0x81, 0x04, 0x70};
+const SECItem SEC_OID_DATA_EC_DH = {
+    siBuffer, (unsigned char*)id_ecDH,
+    static_cast<unsigned int>(mozilla::ArrayLength(id_ecDH))};
 
 // clang-format off
 // python security/pkix/tools/DottedOIDToCode.py dhKeyAgreement 1.2.840.113549.1.3.1
 // clang-format on
-static const uint8_t dhKeyAgreement[] = {
-  0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x03, 0x01
-};
-const SECItem SEC_OID_DATA_DH_KEY_AGREEMENT = { siBuffer,
-                                                (unsigned char*)dhKeyAgreement,
-                                                static_cast<unsigned int>(
-                                                  mozilla::ArrayLength(dhKeyAgreement)) };
+static const uint8_t dhKeyAgreement[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
+                                         0x0d, 0x01, 0x03, 0x01};
+const SECItem SEC_OID_DATA_DH_KEY_AGREEMENT = {
+    siBuffer, (unsigned char*)dhKeyAgreement,
+    static_cast<unsigned int>(mozilla::ArrayLength(dhKeyAgreement))};
 
 namespace mozilla {
 namespace dom {
 
 // Helper functions for structured cloning
-inline bool
-ReadString(JSStructuredCloneReader* aReader, nsString& aString)
-{
+inline bool ReadString(JSStructuredCloneReader* aReader, nsString& aString) {
   bool read;
   uint32_t nameLength, zero;
   read = JS_ReadUint32Pair(aReader, &nameLength, &zero);
@@ -139,7 +135,8 @@ ReadString(JSStructuredCloneReader* aReader, nsString& aString)
     return false;
   }
   size_t charSize = sizeof(nsString::char_type);
-  read = JS_ReadBytes(aReader, (void*) aString.BeginWriting(), nameLength * charSize);
+  read = JS_ReadBytes(aReader, (void*)aString.BeginWriting(),
+                      nameLength * charSize);
   if (!read) {
     return false;
   }
@@ -147,17 +144,15 @@ ReadString(JSStructuredCloneReader* aReader, nsString& aString)
   return true;
 }
 
-inline bool
-WriteString(JSStructuredCloneWriter* aWriter, const nsString& aString)
-{
+inline bool WriteString(JSStructuredCloneWriter* aWriter,
+                        const nsString& aString) {
   size_t charSize = sizeof(nsString::char_type);
   return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
          JS_WriteBytes(aWriter, aString.get(), aString.Length() * charSize);
 }
 
-inline bool
-ReadBuffer(JSStructuredCloneReader* aReader, CryptoBuffer& aBuffer)
-{
+inline bool ReadBuffer(JSStructuredCloneReader* aReader,
+                       CryptoBuffer& aBuffer) {
   uint32_t length, zero;
   bool ret = JS_ReadUint32Pair(aReader, &length, &zero);
   if (!ret) {
@@ -173,9 +168,8 @@ ReadBuffer(JSStructuredCloneReader* aReader, CryptoBuffer& aBuffer)
   return ret;
 }
 
-inline bool
-WriteBuffer(JSStructuredCloneWriter* aWriter, const uint8_t* aBuffer, size_t aLength)
-{
+inline bool WriteBuffer(JSStructuredCloneWriter* aWriter,
+                        const uint8_t* aBuffer, size_t aLength) {
   bool ret = JS_WriteUint32Pair(aWriter, aLength, 0);
   if (ret && aLength > 0) {
     ret = JS_WriteBytes(aWriter, aBuffer, aLength);
@@ -183,15 +177,12 @@ WriteBuffer(JSStructuredCloneWriter* aWriter, const uint8_t* aBuffer, size_t aLe
   return ret;
 }
 
-inline bool
-WriteBuffer(JSStructuredCloneWriter* aWriter, const CryptoBuffer& aBuffer)
-{
+inline bool WriteBuffer(JSStructuredCloneWriter* aWriter,
+                        const CryptoBuffer& aBuffer) {
   return WriteBuffer(aWriter, aBuffer.Elements(), aBuffer.Length());
 }
 
-inline CK_MECHANISM_TYPE
-MapAlgorithmNameToMechanism(const nsString& aName)
-{
+inline CK_MECHANISM_TYPE MapAlgorithmNameToMechanism(const nsString& aName) {
   CK_MECHANISM_TYPE mechanism(UNKNOWN_CK_MECHANISM);
 
   // Set mechanism based on algorithm name
@@ -229,11 +220,9 @@ MapAlgorithmNameToMechanism(const nsString& aName)
 }
 
 #define NORMALIZED_EQUALS(aTest, aConst) \
-        nsContentUtils::EqualsIgnoreASCIICase(aTest, NS_LITERAL_STRING(aConst))
+  nsContentUtils::EqualsIgnoreASCIICase(aTest, NS_LITERAL_STRING(aConst))
 
-inline bool
-NormalizeToken(const nsString& aName, nsString& aDest)
-{
+inline bool NormalizeToken(const nsString& aName, nsString& aDest) {
   // Algorithm names
   if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_AES_CBC)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_AES_CBC);
@@ -269,7 +258,7 @@ NormalizeToken(const nsString& aName, nsString& aDest)
     aDest.AssignLiteral(WEBCRYPTO_ALG_ECDSA);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_DH)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_DH);
-  // Named curve values
+    // Named curve values
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_NAMED_CURVE_P256)) {
     aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P256);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_NAMED_CURVE_P384)) {
@@ -283,9 +272,7 @@ NormalizeToken(const nsString& aName, nsString& aDest)
   return true;
 }
 
-inline bool
-CheckEncodedECParameters(const SECItem* aEcParams)
-{
+inline bool CheckEncodedECParameters(const SECItem* aEcParams) {
   // Need at least two bytes for a valid ASN.1 encoding.
   if (aEcParams->len < 2) {
     return false;
@@ -309,9 +296,8 @@ CheckEncodedECParameters(const SECItem* aEcParams)
   return true;
 }
 
-inline SECItem*
-CreateECParamsForCurve(const nsString& aNamedCurve, PLArenaPool* aArena)
-{
+inline SECItem* CreateECParamsForCurve(const nsString& aNamedCurve,
+                                       PLArenaPool* aArena) {
   MOZ_ASSERT(aArena);
   SECOidTag curveOIDTag;
 
@@ -350,7 +336,7 @@ CreateECParamsForCurve(const nsString& aNamedCurve, PLArenaPool* aArena)
   return params;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WebCryptoCommon_h
+#endif  // mozilla_dom_WebCryptoCommon_h

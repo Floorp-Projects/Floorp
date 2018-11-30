@@ -11,34 +11,30 @@ NS_IMPL_ISUPPORTS(ShortcutKeys, nsIObserver);
 StaticRefPtr<ShortcutKeys> ShortcutKeys::sInstance;
 
 ShortcutKeys::ShortcutKeys()
-  : mBrowserHandlers(nullptr)
-  , mEditorHandlers(nullptr)
-  , mInputHandlers(nullptr)
-  , mTextAreaHandlers(nullptr)
-{
+    : mBrowserHandlers(nullptr),
+      mEditorHandlers(nullptr),
+      mInputHandlers(nullptr),
+      mTextAreaHandlers(nullptr) {
   MOZ_ASSERT(!sInstance, "Attempt to instantiate a second ShortcutKeys.");
   nsContentUtils::RegisterShutdownObserver(this);
 }
 
-ShortcutKeys::~ShortcutKeys()
-{
+ShortcutKeys::~ShortcutKeys() {
   delete mBrowserHandlers;
   delete mEditorHandlers;
   delete mInputHandlers;
   delete mTextAreaHandlers;
 }
 
-nsresult
-ShortcutKeys::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-{
+nsresult ShortcutKeys::Observe(nsISupports* aSubject, const char* aTopic,
+                               const char16_t* aData) {
   // Clear our strong reference so we can clean up.
   sInstance = nullptr;
   return NS_OK;
 }
 
-/* static */ nsXBLPrototypeHandler*
-ShortcutKeys::GetHandlers(HandlerType aType)
-{
+/* static */ nsXBLPrototypeHandler* ShortcutKeys::GetHandlers(
+    HandlerType aType) {
   if (!sInstance) {
     sInstance = new ShortcutKeys();
   }
@@ -46,9 +42,8 @@ ShortcutKeys::GetHandlers(HandlerType aType)
   return sInstance->EnsureHandlers(aType);
 }
 
-/* static */ nsAtom*
-ShortcutKeys::ConvertEventToDOMEventType(const WidgetKeyboardEvent* aWidgetKeyboardEvent)
-{
+/* static */ nsAtom* ShortcutKeys::ConvertEventToDOMEventType(
+    const WidgetKeyboardEvent* aWidgetKeyboardEvent) {
   if (aWidgetKeyboardEvent->IsKeyDownOrKeyDownOnPlugin()) {
     return nsGkAtoms::keydown;
   }
@@ -64,13 +59,12 @@ ShortcutKeys::ConvertEventToDOMEventType(const WidgetKeyboardEvent* aWidgetKeybo
       aWidgetKeyboardEvent->mMessage == eAccessKeyNotFound) {
     return nsGkAtoms::keypress;
   }
-  MOZ_ASSERT_UNREACHABLE("All event messages relating to shortcut keys should be handled");
+  MOZ_ASSERT_UNREACHABLE(
+      "All event messages relating to shortcut keys should be handled");
   return nullptr;
 }
 
-nsXBLPrototypeHandler*
-ShortcutKeys::EnsureHandlers(HandlerType aType)
-{
+nsXBLPrototypeHandler* ShortcutKeys::EnsureHandlers(HandlerType aType) {
   ShortcutKeyData* keyData;
   nsXBLPrototypeHandler** cache;
 
@@ -101,8 +95,7 @@ ShortcutKeys::EnsureHandlers(HandlerType aType)
 
   nsXBLPrototypeHandler* lastHandler = nullptr;
   while (keyData->event) {
-    nsXBLPrototypeHandler* handler =
-      new nsXBLPrototypeHandler(keyData);
+    nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(keyData);
     if (lastHandler) {
       lastHandler->SetNextHandler(handler);
     } else {
@@ -115,4 +108,4 @@ ShortcutKeys::EnsureHandlers(HandlerType aType)
   return *cache;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

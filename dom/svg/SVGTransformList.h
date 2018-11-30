@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGTransform;
-} // namespace dom
+}  // namespace dom
 
 /**
  * ATTENTION! WARNING! WATCH OUT!!
@@ -27,13 +27,12 @@ class SVGTransform;
  *
  * The DOM wrapper class for this class is DOMSVGTransformList.
  */
-class SVGTransformList
-{
+class SVGTransformList {
   friend class nsSVGAnimatedTransformList;
   friend class DOMSVGTransformList;
   friend class dom::SVGTransform;
 
-public:
+ public:
   SVGTransformList() {}
   ~SVGTransformList() {}
 
@@ -43,13 +42,9 @@ public:
   /// This may return an incomplete string on OOM, but that's acceptable.
   void GetValueAsString(nsAString& aValue) const;
 
-  bool IsEmpty() const {
-    return mItems.IsEmpty();
-  }
+  bool IsEmpty() const { return mItems.IsEmpty(); }
 
-  uint32_t Length() const {
-    return mItems.Length();
-  }
+  uint32_t Length() const { return mItems.Length(); }
 
   const nsSVGTransform& operator[](uint32_t aIndex) const {
     return mItems[aIndex];
@@ -59,13 +54,9 @@ public:
     return mItems == rhs.mItems;
   }
 
-  bool SetCapacity(uint32_t size) {
-    return mItems.SetCapacity(size, fallible);
-  }
+  bool SetCapacity(uint32_t size) { return mItems.SetCapacity(size, fallible); }
 
-  void Compact() {
-    mItems.Compact();
-  }
+  void Compact() { mItems.Compact(); }
 
   gfxMatrix GetConsolidationMatrix() const;
 
@@ -76,8 +67,7 @@ public:
   // SVGAnimatedTransformList and having that class act as an intermediary so it
   // can take care of keeping DOM wrappers in sync.
 
-protected:
-
+ protected:
   /**
    * These may fail on OOM if the internal capacity needs to be increased, in
    * which case the list will be left unmodified.
@@ -85,9 +75,7 @@ protected:
   nsresult CopyFrom(const SVGTransformList& rhs);
   nsresult CopyFrom(const nsTArray<nsSVGTransform>& aTransformArray);
 
-  nsSVGTransform& operator[](uint32_t aIndex) {
-    return mItems[aIndex];
-  }
+  nsSVGTransform& operator[](uint32_t aIndex) { return mItems[aIndex]; }
 
   /**
    * This may fail (return false) on OOM if the internal capacity is being
@@ -97,17 +85,14 @@ protected:
     return mItems.SetLength(aNumberOfItems, fallible);
   }
 
-private:
-
+ private:
   // Marking the following private only serves to show which methods are only
   // used by our friend classes (as opposed to our subclasses) - it doesn't
   // really provide additional safety.
 
   nsresult SetValueFromString(const nsAString& aValue);
 
-  void Clear() {
-    mItems.Clear();
-  }
+  void Clear() { mItems.Clear(); }
 
   bool InsertItem(uint32_t aIndex, const nsSVGTransform& aTransform) {
     if (aIndex >= mItems.Length()) {
@@ -132,14 +117,15 @@ private:
     return !!mItems.AppendElement(aTransform, fallible);
   }
 
-protected:
+ protected:
   /*
-   * See SVGLengthList for the rationale for using FallibleTArray<nsSVGTransform>
-   * instead of FallibleTArray<nsSVGTransform, 1>.
+   * See SVGLengthList for the rationale for using
+   * FallibleTArray<nsSVGTransform> instead of FallibleTArray<nsSVGTransform,
+   * 1>.
    */
   FallibleTArray<nsSVGTransform> mItems;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SVGTRANSFORMLIST_H__
+#endif  // MOZILLA_SVGTRANSFORMLIST_H__

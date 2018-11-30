@@ -11,25 +11,27 @@
 
 class nsIFormControl;
 
-#define NS_FORM_METHOD_GET  0
+#define NS_FORM_METHOD_GET 0
 #define NS_FORM_METHOD_POST 1
 #define NS_FORM_ENCTYPE_URLENCODED 0
-#define NS_FORM_ENCTYPE_MULTIPART  1
-#define NS_FORM_ENCTYPE_TEXTPLAIN  2
+#define NS_FORM_ENCTYPE_MULTIPART 1
+#define NS_FORM_ENCTYPE_TEXTPLAIN 2
 
 // IID for the nsIForm interface
-#define NS_IFORM_IID \
-{ 0x5e8464c8, 0x015d, 0x4cf9, \
-  { 0x92, 0xc9, 0xa6, 0xb3, 0x30, 0x8f, 0x60, 0x9d } }
+#define NS_IFORM_IID                                 \
+  {                                                  \
+    0x5e8464c8, 0x015d, 0x4cf9, {                    \
+      0x92, 0xc9, 0xa6, 0xb3, 0x30, 0x8f, 0x60, 0x9d \
+    }                                                \
+  }
 
 /**
  * This interface provides some methods that can be used to access the
  * guts of a form.  It's being slowly phased out.
  */
 
-class nsIForm : public nsISupports
-{
-public:
+class nsIForm : public nsISupports {
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
 
   /**
@@ -60,7 +62,7 @@ public:
    * Get the default submit element. If there's no default submit element,
    * return null.
    */
-   NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const = 0;
+  NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIForm, NS_IFORM_IID)

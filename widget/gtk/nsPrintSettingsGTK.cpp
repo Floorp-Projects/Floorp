@@ -9,47 +9,39 @@
 #include <stdlib.h>
 #include <algorithm>
 
-static
-gboolean ref_printer(GtkPrinter *aPrinter, gpointer aData)
-{
-  ((nsPrintSettingsGTK*) aData)->SetGtkPrinter(aPrinter);
+static gboolean ref_printer(GtkPrinter* aPrinter, gpointer aData) {
+  ((nsPrintSettingsGTK*)aData)->SetGtkPrinter(aPrinter);
   return TRUE;
 }
 
-static
-gboolean printer_enumerator(GtkPrinter *aPrinter, gpointer aData)
-{
-  if (gtk_printer_is_default(aPrinter))
-    return ref_printer(aPrinter, aData);
+static gboolean printer_enumerator(GtkPrinter* aPrinter, gpointer aData) {
+  if (gtk_printer_is_default(aPrinter)) return ref_printer(aPrinter, aData);
 
-  return FALSE; // Keep 'em coming...
+  return FALSE;  // Keep 'em coming...
 }
 
-static
-GtkPaperSize* moz_gtk_paper_size_copy_to_new_custom(GtkPaperSize* oldPaperSize)
-{
+static GtkPaperSize* moz_gtk_paper_size_copy_to_new_custom(
+    GtkPaperSize* oldPaperSize) {
   // We make a "custom-ified" copy of the paper size so it can be changed later.
-  return gtk_paper_size_new_custom(gtk_paper_size_get_name(oldPaperSize),
-                                   gtk_paper_size_get_display_name(oldPaperSize),
-                                   gtk_paper_size_get_width(oldPaperSize, GTK_UNIT_INCH),
-                                   gtk_paper_size_get_height(oldPaperSize, GTK_UNIT_INCH),
-                                   GTK_UNIT_INCH);
+  return gtk_paper_size_new_custom(
+      gtk_paper_size_get_name(oldPaperSize),
+      gtk_paper_size_get_display_name(oldPaperSize),
+      gtk_paper_size_get_width(oldPaperSize, GTK_UNIT_INCH),
+      gtk_paper_size_get_height(oldPaperSize, GTK_UNIT_INCH), GTK_UNIT_INCH);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsGTK,
-                            nsPrintSettings,
+NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsGTK, nsPrintSettings,
                             nsPrintSettingsGTK)
 
 /** ---------------------------------------------------
  */
-nsPrintSettingsGTK::nsPrintSettingsGTK() :
-  mPageSetup(nullptr),
-  mPrintSettings(nullptr),
-  mGTKPrinter(nullptr),
-  mPrintSelectionOnly(false)
-{
-  // The aim here is to set up the objects enough that silent printing works well.
-  // These will be replaced anyway if the print dialog is used.
+nsPrintSettingsGTK::nsPrintSettingsGTK()
+    : mPageSetup(nullptr),
+      mPrintSettings(nullptr),
+      mGTKPrinter(nullptr),
+      mPrintSelectionOnly(false) {
+  // The aim here is to set up the objects enough that silent printing works
+  // well. These will be replaced anyway if the print dialog is used.
   mPrintSettings = gtk_print_settings_new();
   GtkPageSetup* pageSetup = gtk_page_setup_new();
   SetGtkPageSetup(pageSetup);
@@ -60,8 +52,7 @@ nsPrintSettingsGTK::nsPrintSettingsGTK() :
 
 /** ---------------------------------------------------
  */
-nsPrintSettingsGTK::~nsPrintSettingsGTK()
-{
+nsPrintSettingsGTK::~nsPrintSettingsGTK() {
   if (mPageSetup) {
     g_object_unref(mPageSetup);
     mPageSetup = nullptr;
@@ -78,39 +69,35 @@ nsPrintSettingsGTK::~nsPrintSettingsGTK()
 
 /** ---------------------------------------------------
  */
-nsPrintSettingsGTK::nsPrintSettingsGTK(const nsPrintSettingsGTK& aPS) :
-  mPageSetup(nullptr),
-  mPrintSettings(nullptr),
-  mGTKPrinter(nullptr),
-  mPrintSelectionOnly(false)
-{
+nsPrintSettingsGTK::nsPrintSettingsGTK(const nsPrintSettingsGTK& aPS)
+    : mPageSetup(nullptr),
+      mPrintSettings(nullptr),
+      mGTKPrinter(nullptr),
+      mPrintSelectionOnly(false) {
   *this = aPS;
 }
 
 /** ---------------------------------------------------
  */
-nsPrintSettingsGTK& nsPrintSettingsGTK::operator=(const nsPrintSettingsGTK& rhs)
-{
+nsPrintSettingsGTK& nsPrintSettingsGTK::operator=(
+    const nsPrintSettingsGTK& rhs) {
   if (this == &rhs) {
     return *this;
   }
 
   nsPrintSettings::operator=(rhs);
 
-  if (mPageSetup)
-    g_object_unref(mPageSetup);
+  if (mPageSetup) g_object_unref(mPageSetup);
   mPageSetup = gtk_page_setup_copy(rhs.mPageSetup);
   // NOTE: No need to re-initialize mUnwriteableMargin here (even
   // though mPageSetup is changing). It'll be copied correctly by
   // nsPrintSettings::operator=.
 
-  if (mPrintSettings)
-    g_object_unref(mPrintSettings);
+  if (mPrintSettings) g_object_unref(mPrintSettings);
   mPrintSettings = gtk_print_settings_copy(rhs.mPrintSettings);
 
-  if (mGTKPrinter)
-    g_object_unref(mGTKPrinter);
-  mGTKPrinter = (GtkPrinter*) g_object_ref(rhs.mGTKPrinter);
+  if (mGTKPrinter) g_object_unref(mGTKPrinter);
+  mGTKPrinter = (GtkPrinter*)g_object_ref(rhs.mGTKPrinter);
 
   mPrintSelectionOnly = rhs.mPrintSelectionOnly;
 
@@ -119,41 +106,33 @@ nsPrintSettingsGTK& nsPrintSettingsGTK::operator=(const nsPrintSettingsGTK& rhs)
 
 /** -------------------------------------------
  */
-nsresult nsPrintSettingsGTK::_Clone(nsIPrintSettings **_retval)
-{
+nsresult nsPrintSettingsGTK::_Clone(nsIPrintSettings** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
 
-  nsPrintSettingsGTK *newSettings = new nsPrintSettingsGTK(*this);
-  if (!newSettings)
-    return NS_ERROR_FAILURE;
+  nsPrintSettingsGTK* newSettings = new nsPrintSettingsGTK(*this);
+  if (!newSettings) return NS_ERROR_FAILURE;
   *_retval = newSettings;
   NS_ADDREF(*_retval);
   return NS_OK;
 }
 
-
 /** -------------------------------------------
  */
 NS_IMETHODIMP
-nsPrintSettingsGTK::_Assign(nsIPrintSettings *aPS)
-{
-  nsPrintSettingsGTK *printSettingsGTK = static_cast<nsPrintSettingsGTK*>(aPS);
-  if (!printSettingsGTK)
-    return NS_ERROR_UNEXPECTED;
+nsPrintSettingsGTK::_Assign(nsIPrintSettings* aPS) {
+  nsPrintSettingsGTK* printSettingsGTK = static_cast<nsPrintSettingsGTK*>(aPS);
+  if (!printSettingsGTK) return NS_ERROR_UNEXPECTED;
   *this = *printSettingsGTK;
   return NS_OK;
 }
 
 /** ---------------------------------------------------
  */
-void
-nsPrintSettingsGTK::SetGtkPageSetup(GtkPageSetup *aPageSetup)
-{
-  if (mPageSetup)
-    g_object_unref(mPageSetup);
+void nsPrintSettingsGTK::SetGtkPageSetup(GtkPageSetup* aPageSetup) {
+  if (mPageSetup) g_object_unref(mPageSetup);
 
-  mPageSetup = (GtkPageSetup*) g_object_ref(aPageSetup);
+  mPageSetup = (GtkPageSetup*)g_object_ref(aPageSetup);
   InitUnwriteableMargin();
 
   // If the paper size is not custom, then we make a custom copy of the
@@ -162,7 +141,7 @@ nsPrintSettingsGTK::SetGtkPageSetup(GtkPageSetup *aPageSetup)
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(aPageSetup);
   if (!gtk_paper_size_is_custom(paperSize)) {
     GtkPaperSize* customPaperSize =
-      moz_gtk_paper_size_copy_to_new_custom(paperSize);
+        moz_gtk_paper_size_copy_to_new_custom(paperSize);
     gtk_page_setup_set_paper_size(mPageSetup, customPaperSize);
     gtk_paper_size_free(customPaperSize);
   }
@@ -171,18 +150,15 @@ nsPrintSettingsGTK::SetGtkPageSetup(GtkPageSetup *aPageSetup)
 
 /** ---------------------------------------------------
  */
-void
-nsPrintSettingsGTK::SetGtkPrintSettings(GtkPrintSettings *aPrintSettings)
-{
-  if (mPrintSettings)
-    g_object_unref(mPrintSettings);
+void nsPrintSettingsGTK::SetGtkPrintSettings(GtkPrintSettings* aPrintSettings) {
+  if (mPrintSettings) g_object_unref(mPrintSettings);
 
-  mPrintSettings = (GtkPrintSettings*) g_object_ref(aPrintSettings);
+  mPrintSettings = (GtkPrintSettings*)g_object_ref(aPrintSettings);
 
   GtkPaperSize* paperSize = gtk_print_settings_get_paper_size(aPrintSettings);
   if (paperSize) {
     GtkPaperSize* customPaperSize =
-      moz_gtk_paper_size_copy_to_new_custom(paperSize);
+        moz_gtk_paper_size_copy_to_new_custom(paperSize);
     gtk_paper_size_free(paperSize);
     gtk_page_setup_set_paper_size(mPageSetup, customPaperSize);
     gtk_paper_size_free(customPaperSize);
@@ -195,17 +171,13 @@ nsPrintSettingsGTK::SetGtkPrintSettings(GtkPrintSettings *aPrintSettings)
 
 /** ---------------------------------------------------
  */
-void
-nsPrintSettingsGTK::SetGtkPrinter(GtkPrinter *aPrinter)
-{
-  if (mGTKPrinter)
-    g_object_unref(mGTKPrinter);
+void nsPrintSettingsGTK::SetGtkPrinter(GtkPrinter* aPrinter) {
+  if (mGTKPrinter) g_object_unref(mGTKPrinter);
 
-  mGTKPrinter = (GtkPrinter*) g_object_ref(aPrinter);
+  mGTKPrinter = (GtkPrinter*)g_object_ref(aPrinter);
 }
 
-NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t *aOutputFormat)
-{
+NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t* aOutputFormat) {
   NS_ENSURE_ARG_POINTER(aOutputFormat);
 
   int16_t format;
@@ -232,8 +204,7 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t *aOutputFormat)
  * from the GTK objects rather than our own variables.
  */
 
-NS_IMETHODIMP nsPrintSettingsGTK::GetPrintRange(int16_t *aPrintRange)
-{
+NS_IMETHODIMP nsPrintSettingsGTK::GetPrintRange(int16_t* aPrintRange) {
   NS_ENSURE_ARG_POINTER(aPrintRange);
   if (mPrintSelectionOnly) {
     *aPrintRange = kRangeSelection;
@@ -248,8 +219,7 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetPrintRange(int16_t *aPrintRange)
 
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettingsGTK::SetPrintRange(int16_t aPrintRange)
-{
+NS_IMETHODIMP nsPrintSettingsGTK::SetPrintRange(int16_t aPrintRange) {
   if (aPrintRange == kRangeSelection) {
     mPrintSelectionOnly = true;
     return NS_OK;
@@ -264,10 +234,10 @@ NS_IMETHODIMP nsPrintSettingsGTK::SetPrintRange(int16_t aPrintRange)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetStartPageRange(int32_t *aStartPageRange)
-{
+nsPrintSettingsGTK::GetStartPageRange(int32_t* aStartPageRange) {
   gint ctRanges;
-  GtkPageRange* lstRanges = gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
+  GtkPageRange* lstRanges =
+      gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
 
   // Make sure we got a range.
   if (ctRanges < 1) {
@@ -286,8 +256,7 @@ nsPrintSettingsGTK::GetStartPageRange(int32_t *aStartPageRange)
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetStartPageRange(int32_t aStartPageRange)
-{
+nsPrintSettingsGTK::SetStartPageRange(int32_t aStartPageRange) {
   int32_t endRange;
   GetEndPageRange(&endRange);
 
@@ -301,10 +270,10 @@ nsPrintSettingsGTK::SetStartPageRange(int32_t aStartPageRange)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetEndPageRange(int32_t *aEndPageRange)
-{
+nsPrintSettingsGTK::GetEndPageRange(int32_t* aEndPageRange) {
   gint ctRanges;
-  GtkPageRange* lstRanges = gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
+  GtkPageRange* lstRanges =
+      gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
 
   if (ctRanges < 1) {
     *aEndPageRange = 1;
@@ -320,8 +289,7 @@ nsPrintSettingsGTK::GetEndPageRange(int32_t *aEndPageRange)
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetEndPageRange(int32_t aEndPageRange)
-{
+nsPrintSettingsGTK::SetEndPageRange(int32_t aEndPageRange) {
   int32_t startRange;
   GetStartPageRange(&startRange);
 
@@ -335,34 +303,29 @@ nsPrintSettingsGTK::SetEndPageRange(int32_t aEndPageRange)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPrintReversed(bool *aPrintReversed)
-{
+nsPrintSettingsGTK::GetPrintReversed(bool* aPrintReversed) {
   *aPrintReversed = gtk_print_settings_get_reverse(mPrintSettings);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPrintReversed(bool aPrintReversed)
-{
+nsPrintSettingsGTK::SetPrintReversed(bool aPrintReversed) {
   gtk_print_settings_set_reverse(mPrintSettings, aPrintReversed);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPrintInColor(bool *aPrintInColor)
-{
+nsPrintSettingsGTK::GetPrintInColor(bool* aPrintInColor) {
   *aPrintInColor = gtk_print_settings_get_use_color(mPrintSettings);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPrintInColor(bool aPrintInColor)
-{
+nsPrintSettingsGTK::SetPrintInColor(bool aPrintInColor) {
   gtk_print_settings_set_use_color(mPrintSettings, aPrintInColor);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetOrientation(int32_t *aOrientation)
-{
+nsPrintSettingsGTK::GetOrientation(int32_t* aOrientation) {
   NS_ENSURE_ARG_POINTER(aOrientation);
 
   GtkPageOrientation gtkOrient = gtk_page_setup_get_orientation(mPageSetup);
@@ -380,8 +343,7 @@ nsPrintSettingsGTK::GetOrientation(int32_t *aOrientation)
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetOrientation(int32_t aOrientation)
-{
+nsPrintSettingsGTK::SetOrientation(int32_t aOrientation) {
   GtkPageOrientation gtkOrient;
   if (aOrientation == kLandscapeOrientation)
     gtkOrient = GTK_PAGE_ORIENTATION_LANDSCAPE;
@@ -394,10 +356,10 @@ nsPrintSettingsGTK::SetOrientation(int32_t aOrientation)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetToFileName(nsAString& aToFileName)
-{
+nsPrintSettingsGTK::GetToFileName(nsAString& aToFileName) {
   // Get the gtk output filename
-  const char* gtk_output_uri = gtk_print_settings_get(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI);
+  const char* gtk_output_uri =
+      gtk_print_settings_get(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI);
   if (!gtk_output_uri) {
     aToFileName = mToFileName;
     return NS_OK;
@@ -407,16 +369,14 @@ nsPrintSettingsGTK::GetToFileName(nsAString& aToFileName)
   nsCOMPtr<nsIFile> file;
   nsresult rv = NS_GetFileFromURLSpec(nsDependentCString(gtk_output_uri),
                                       getter_AddRefs(file));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   // Extract the path
   return file->GetPath(aToFileName);
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetToFileName(const nsAString& aToFileName)
-{
+nsPrintSettingsGTK::SetToFileName(const nsAString& aToFileName) {
   if (aToFileName.IsEmpty()) {
     mToFileName.SetLength(0);
     gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI,
@@ -424,7 +384,8 @@ nsPrintSettingsGTK::SetToFileName(const nsAString& aToFileName)
     return NS_OK;
   }
 
-  gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "pdf");
+  gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT,
+                         "pdf");
 
   nsCOMPtr<nsIFile> file;
   nsresult rv = NS_NewLocalFile(aToFileName, true, getter_AddRefs(file));
@@ -435,21 +396,22 @@ nsPrintSettingsGTK::SetToFileName(const nsAString& aToFileName)
   rv = NS_GetURLSpecFromFile(file, url);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI, url.get());
+  gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI,
+                         url.get());
   mToFileName = aToFileName;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPrinterName(nsAString& aPrinter)
-{
+nsPrintSettingsGTK::GetPrinterName(nsAString& aPrinter) {
   const char* gtkPrintName = gtk_print_settings_get_printer(mPrintSettings);
   if (!gtkPrintName) {
     if (GTK_IS_PRINTER(mGTKPrinter)) {
       gtkPrintName = gtk_printer_get_name(mGTKPrinter);
     } else {
-      // This mimics what nsPrintSettingsImpl does when we try to Get before we Set
+      // This mimics what nsPrintSettingsImpl does when we try to Get before we
+      // Set
       aPrinter.Truncate();
       return NS_OK;
     }
@@ -459,8 +421,7 @@ nsPrintSettingsGTK::GetPrinterName(nsAString& aPrinter)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPrinterName(const nsAString& aPrinter)
-{
+nsPrintSettingsGTK::SetPrinterName(const nsAString& aPrinter) {
   NS_ConvertUTF16toUTF8 gtkPrinter(aPrinter);
 
   if (StringBeginsWith(gtkPrinter, NS_LITERAL_CSTRING("CUPS/"))) {
@@ -483,44 +444,38 @@ nsPrintSettingsGTK::SetPrinterName(const nsAString& aPrinter)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetNumCopies(int32_t *aNumCopies)
-{
+nsPrintSettingsGTK::GetNumCopies(int32_t* aNumCopies) {
   NS_ENSURE_ARG_POINTER(aNumCopies);
   *aNumCopies = gtk_print_settings_get_n_copies(mPrintSettings);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetNumCopies(int32_t aNumCopies)
-{
+nsPrintSettingsGTK::SetNumCopies(int32_t aNumCopies) {
   gtk_print_settings_set_n_copies(mPrintSettings, aNumCopies);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetScaling(double *aScaling)
-{
+nsPrintSettingsGTK::GetScaling(double* aScaling) {
   *aScaling = gtk_print_settings_get_scale(mPrintSettings) / 100.0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetScaling(double aScaling)
-{
+nsPrintSettingsGTK::SetScaling(double aScaling) {
   gtk_print_settings_set_scale(mPrintSettings, aScaling * 100.0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPaperName(nsAString& aPaperName)
-{
+nsPrintSettingsGTK::GetPaperName(nsAString& aPaperName) {
   const gchar* name =
-    gtk_paper_size_get_name(gtk_page_setup_get_paper_size(mPageSetup));
+      gtk_paper_size_get_name(gtk_page_setup_get_paper_size(mPageSetup));
   aPaperName = NS_ConvertUTF8toUTF16(name);
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPaperName(const nsAString& aPaperName)
-{
+nsPrintSettingsGTK::SetPaperName(const nsAString& aPaperName) {
   NS_ConvertUTF16toUTF8 gtkPaperName(aPaperName);
 
   // Convert these Gecko names to GTK names
@@ -533,12 +488,12 @@ nsPrintSettingsGTK::SetPaperName(const nsAString& aPaperName)
   gdouble width = gtk_paper_size_get_width(oldPaperSize, GTK_UNIT_INCH);
   gdouble height = gtk_paper_size_get_height(oldPaperSize, GTK_UNIT_INCH);
 
-  // Try to get the display name from the name so our paper size fits in the Page Setup dialog.
+  // Try to get the display name from the name so our paper size fits in the
+  // Page Setup dialog.
   GtkPaperSize* paperSize = gtk_paper_size_new(gtkPaperName.get());
-  GtkPaperSize* customPaperSize =
-    gtk_paper_size_new_custom(gtkPaperName.get(),
-                              gtk_paper_size_get_display_name(paperSize),
-                              width, height, GTK_UNIT_INCH);
+  GtkPaperSize* customPaperSize = gtk_paper_size_new_custom(
+      gtkPaperName.get(), gtk_paper_size_get_display_name(paperSize), width,
+      height, GTK_UNIT_INCH);
   gtk_paper_size_free(paperSize);
 
   gtk_page_setup_set_paper_size(mPageSetup, customPaperSize);
@@ -547,31 +502,28 @@ nsPrintSettingsGTK::SetPaperName(const nsAString& aPaperName)
   return NS_OK;
 }
 
-GtkUnit
-nsPrintSettingsGTK::GetGTKUnit(int16_t aGeckoUnit)
-{
+GtkUnit nsPrintSettingsGTK::GetGTKUnit(int16_t aGeckoUnit) {
   if (aGeckoUnit == kPaperSizeMillimeters)
     return GTK_UNIT_MM;
   else
     return GTK_UNIT_INCH;
 }
 
-void
-nsPrintSettingsGTK::SaveNewPageSize()
-{
+void nsPrintSettingsGTK::SaveNewPageSize() {
   gtk_print_settings_set_paper_size(mPrintSettings,
                                     gtk_page_setup_get_paper_size(mPageSetup));
 }
 
-void
-nsPrintSettingsGTK::InitUnwriteableMargin()
-{
+void nsPrintSettingsGTK::InitUnwriteableMargin() {
   mUnwriteableMargin.SizeTo(
-   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_top_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_right_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_bottom_margin(mPageSetup, GTK_UNIT_INCH)),
-   NS_INCHES_TO_INT_TWIPS(gtk_page_setup_get_left_margin(mPageSetup, GTK_UNIT_INCH))
-  );
+      NS_INCHES_TO_INT_TWIPS(
+          gtk_page_setup_get_top_margin(mPageSetup, GTK_UNIT_INCH)),
+      NS_INCHES_TO_INT_TWIPS(
+          gtk_page_setup_get_right_margin(mPageSetup, GTK_UNIT_INCH)),
+      NS_INCHES_TO_INT_TWIPS(
+          gtk_page_setup_get_bottom_margin(mPageSetup, GTK_UNIT_INCH)),
+      NS_INCHES_TO_INT_TWIPS(
+          gtk_page_setup_get_left_margin(mPageSetup, GTK_UNIT_INCH)));
 }
 
 /**
@@ -587,108 +539,102 @@ nsPrintSettingsGTK::InitUnwriteableMargin()
  * are ignored by the nsPrintSettings::SetUnwriteableMargin functions.)
  */
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetUnwriteableMarginInTwips(nsIntMargin& aUnwriteableMargin)
-{
+nsPrintSettingsGTK::SetUnwriteableMarginInTwips(
+    nsIntMargin& aUnwriteableMargin) {
   nsPrintSettings::SetUnwriteableMarginInTwips(aUnwriteableMargin);
-  gtk_page_setup_set_top_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.top), GTK_UNIT_INCH);
-  gtk_page_setup_set_left_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.left), GTK_UNIT_INCH);
-  gtk_page_setup_set_bottom_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.bottom), GTK_UNIT_INCH);
-  gtk_page_setup_set_right_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.right), GTK_UNIT_INCH);
+  gtk_page_setup_set_top_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.top), GTK_UNIT_INCH);
+  gtk_page_setup_set_left_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.left), GTK_UNIT_INCH);
+  gtk_page_setup_set_bottom_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.bottom), GTK_UNIT_INCH);
+  gtk_page_setup_set_right_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.right), GTK_UNIT_INCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetUnwriteableMarginTop(double aUnwriteableMarginTop)
-{
+nsPrintSettingsGTK::SetUnwriteableMarginTop(double aUnwriteableMarginTop) {
   nsPrintSettings::SetUnwriteableMarginTop(aUnwriteableMarginTop);
-  gtk_page_setup_set_top_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.top), GTK_UNIT_INCH);
+  gtk_page_setup_set_top_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.top), GTK_UNIT_INCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetUnwriteableMarginLeft(double aUnwriteableMarginLeft)
-{
+nsPrintSettingsGTK::SetUnwriteableMarginLeft(double aUnwriteableMarginLeft) {
   nsPrintSettings::SetUnwriteableMarginLeft(aUnwriteableMarginLeft);
-  gtk_page_setup_set_left_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.left), GTK_UNIT_INCH);
+  gtk_page_setup_set_left_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.left), GTK_UNIT_INCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetUnwriteableMarginBottom(double aUnwriteableMarginBottom)
-{
+nsPrintSettingsGTK::SetUnwriteableMarginBottom(
+    double aUnwriteableMarginBottom) {
   nsPrintSettings::SetUnwriteableMarginBottom(aUnwriteableMarginBottom);
-  gtk_page_setup_set_bottom_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.bottom), GTK_UNIT_INCH);
+  gtk_page_setup_set_bottom_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.bottom), GTK_UNIT_INCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetUnwriteableMarginRight(double aUnwriteableMarginRight)
-{
+nsPrintSettingsGTK::SetUnwriteableMarginRight(double aUnwriteableMarginRight) {
   nsPrintSettings::SetUnwriteableMarginRight(aUnwriteableMarginRight);
-  gtk_page_setup_set_right_margin(mPageSetup,
-           NS_TWIPS_TO_INCHES(mUnwriteableMargin.right), GTK_UNIT_INCH);
+  gtk_page_setup_set_right_margin(
+      mPageSetup, NS_TWIPS_TO_INCHES(mUnwriteableMargin.right), GTK_UNIT_INCH);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPaperWidth(double *aPaperWidth)
-{
+nsPrintSettingsGTK::GetPaperWidth(double* aPaperWidth) {
   NS_ENSURE_ARG_POINTER(aPaperWidth);
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(mPageSetup);
   *aPaperWidth =
-    gtk_paper_size_get_width(paperSize, GetGTKUnit(mPaperSizeUnit));
+      gtk_paper_size_get_width(paperSize, GetGTKUnit(mPaperSizeUnit));
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPaperWidth(double aPaperWidth)
-{
+nsPrintSettingsGTK::SetPaperWidth(double aPaperWidth) {
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(mPageSetup);
-  gtk_paper_size_set_size(paperSize,
-                          aPaperWidth,
-                          gtk_paper_size_get_height(paperSize, GetGTKUnit(mPaperSizeUnit)),
-                          GetGTKUnit(mPaperSizeUnit));
+  gtk_paper_size_set_size(
+      paperSize, aPaperWidth,
+      gtk_paper_size_get_height(paperSize, GetGTKUnit(mPaperSizeUnit)),
+      GetGTKUnit(mPaperSizeUnit));
   SaveNewPageSize();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPaperHeight(double *aPaperHeight)
-{
+nsPrintSettingsGTK::GetPaperHeight(double* aPaperHeight) {
   NS_ENSURE_ARG_POINTER(aPaperHeight);
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(mPageSetup);
   *aPaperHeight =
-    gtk_paper_size_get_height(paperSize, GetGTKUnit(mPaperSizeUnit));
+      gtk_paper_size_get_height(paperSize, GetGTKUnit(mPaperSizeUnit));
   return NS_OK;
 }
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPaperHeight(double aPaperHeight)
-{
+nsPrintSettingsGTK::SetPaperHeight(double aPaperHeight) {
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(mPageSetup);
-  gtk_paper_size_set_size(paperSize,
-                          gtk_paper_size_get_width(paperSize, GetGTKUnit(mPaperSizeUnit)),
-                          aPaperHeight,
-                          GetGTKUnit(mPaperSizeUnit));
+  gtk_paper_size_set_size(
+      paperSize,
+      gtk_paper_size_get_width(paperSize, GetGTKUnit(mPaperSizeUnit)),
+      aPaperHeight, GetGTKUnit(mPaperSizeUnit));
   SaveNewPageSize();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetPaperSizeUnit(int16_t aPaperSizeUnit)
-{
-  // Convert units internally. e.g. they might have set the values while we're still in mm but
-  // they change to inch just afterwards, expecting that their sizes are in inches.
+nsPrintSettingsGTK::SetPaperSizeUnit(int16_t aPaperSizeUnit) {
+  // Convert units internally. e.g. they might have set the values while we're
+  // still in mm but they change to inch just afterwards, expecting that their
+  // sizes are in inches.
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(mPageSetup);
-  gtk_paper_size_set_size(paperSize,
-                          gtk_paper_size_get_width(paperSize, GetGTKUnit(mPaperSizeUnit)),
-                          gtk_paper_size_get_height(paperSize, GetGTKUnit(mPaperSizeUnit)),
-                          GetGTKUnit(aPaperSizeUnit));
+  gtk_paper_size_set_size(
+      paperSize,
+      gtk_paper_size_get_width(paperSize, GetGTKUnit(mPaperSizeUnit)),
+      gtk_paper_size_get_height(paperSize, GetGTKUnit(mPaperSizeUnit)),
+      GetGTKUnit(aPaperSizeUnit));
   SaveNewPageSize();
 
   mPaperSizeUnit = aPaperSizeUnit;
@@ -696,11 +642,12 @@ nsPrintSettingsGTK::SetPaperSizeUnit(int16_t aPaperSizeUnit)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetEffectivePageSize(double *aWidth, double *aHeight)
-{
+nsPrintSettingsGTK::GetEffectivePageSize(double* aWidth, double* aHeight) {
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(mPageSetup);
-  *aWidth  = NS_INCHES_TO_INT_TWIPS(gtk_paper_size_get_width(paperSize, GTK_UNIT_INCH));
-  *aHeight = NS_INCHES_TO_INT_TWIPS(gtk_paper_size_get_height(paperSize, GTK_UNIT_INCH));
+  *aWidth = NS_INCHES_TO_INT_TWIPS(
+      gtk_paper_size_get_width(paperSize, GTK_UNIT_INCH));
+  *aHeight = NS_INCHES_TO_INT_TWIPS(
+      gtk_paper_size_get_height(paperSize, GTK_UNIT_INCH));
 
   GtkPageOrientation gtkOrient = gtk_page_setup_get_orientation(mPageSetup);
 
@@ -714,11 +661,11 @@ nsPrintSettingsGTK::GetEffectivePageSize(double *aWidth, double *aHeight)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetupSilentPrinting()
-{
-  // We have to get a printer here, rather than when the print settings are constructed.
-  // This is because when we request sync, GTK makes us wait in the *event loop* while waiting
-  // for the enumeration to finish. We must do this when event loop runs are expected.
+nsPrintSettingsGTK::SetupSilentPrinting() {
+  // We have to get a printer here, rather than when the print settings are
+  // constructed. This is because when we request sync, GTK makes us wait in the
+  // *event loop* while waiting for the enumeration to finish. We must do this
+  // when event loop runs are expected.
   gtk_enumerate_printers(printer_enumerator, this, nullptr, TRUE);
 
   // XXX If no default printer set, get the first one.
@@ -729,17 +676,17 @@ nsPrintSettingsGTK::SetupSilentPrinting()
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetPageRanges(nsTArray<int32_t> &aPages)
-{
+nsPrintSettingsGTK::GetPageRanges(nsTArray<int32_t>& aPages) {
   gint ctRanges;
-  GtkPageRange* lstRanges = gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
+  GtkPageRange* lstRanges =
+      gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
 
   aPages.Clear();
 
   if (ctRanges > 1) {
     for (gint i = 0; i < ctRanges; i++) {
-      aPages.AppendElement(lstRanges[i].start+1);
-      aPages.AppendElement(lstRanges[i].end+1);
+      aPages.AppendElement(lstRanges[i].start + 1);
+      aPages.AppendElement(lstRanges[i].end + 1);
     }
   }
 
@@ -748,24 +695,22 @@ nsPrintSettingsGTK::GetPageRanges(nsTArray<int32_t> &aPages)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetResolution(int32_t *aResolution)
-{
-  if (!gtk_print_settings_has_key(mPrintSettings, GTK_PRINT_SETTINGS_RESOLUTION))
+nsPrintSettingsGTK::GetResolution(int32_t* aResolution) {
+  if (!gtk_print_settings_has_key(mPrintSettings,
+                                  GTK_PRINT_SETTINGS_RESOLUTION))
     return NS_ERROR_FAILURE;
   *aResolution = gtk_print_settings_get_resolution(mPrintSettings);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetResolution(int32_t aResolution)
-{
+nsPrintSettingsGTK::SetResolution(int32_t aResolution) {
   gtk_print_settings_set_resolution(mPrintSettings, aResolution);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::GetDuplex(int32_t *aDuplex)
-{
+nsPrintSettingsGTK::GetDuplex(int32_t* aDuplex) {
   if (!gtk_print_settings_has_key(mPrintSettings, GTK_PRINT_SETTINGS_DUPLEX)) {
     *aDuplex = GTK_PRINT_DUPLEX_SIMPLEX;
   } else {
@@ -775,12 +720,11 @@ nsPrintSettingsGTK::GetDuplex(int32_t *aDuplex)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsGTK::SetDuplex(int32_t aDuplex)
-{
+nsPrintSettingsGTK::SetDuplex(int32_t aDuplex) {
   MOZ_ASSERT(aDuplex >= GTK_PRINT_DUPLEX_SIMPLEX &&
-             aDuplex <= GTK_PRINT_DUPLEX_VERTICAL,
+                 aDuplex <= GTK_PRINT_DUPLEX_VERTICAL,
              "value is out of bounds for GtkPrintDuplex enum");
-  gtk_print_settings_set_duplex(mPrintSettings, static_cast<GtkPrintDuplex>(aDuplex));
+  gtk_print_settings_set_duplex(mPrintSettings,
+                                static_cast<GtkPrintDuplex>(aDuplex));
   return NS_OK;
 }
-

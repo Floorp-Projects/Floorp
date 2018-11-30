@@ -61,9 +61,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(PaymentRequest, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(PaymentRequest, DOMEventTargetHelper)
 
-bool
-PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
-{
+bool PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj) {
 #if defined(NIGHTLY_BUILD)
   if (!XRE_IsContentProcess()) {
     return false;
@@ -91,10 +89,8 @@ PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
 #endif
 }
 
-nsresult
-PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
-                                       nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
+                                                nsAString& aErrorMsg) {
   /*
    *   The syntax of a standardized payment method identifier is given by the
    *   following [ABNF]:
@@ -113,13 +109,15 @@ PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
       aErrorMsg.Append(aIdentifier);
       aErrorMsg.AppendLiteral("' is not valid. The character '");
       aErrorMsg.Append(*start);
-      aErrorMsg.AppendLiteral("' at the beginning or after the '-' must be in the range [a-z].");
+      aErrorMsg.AppendLiteral(
+          "' at the beginning or after the '-' must be in the range [a-z].");
       return NS_ERROR_RANGE_ERR;
     }
     ++start;
     // the rest can be in the range %x61-7A + DIGITs
     while (start != end && *start != '-' &&
-           ((*start >= 'a' && *start <= 'z') || (*start >= '0' && *start <= '9'))) {
+           ((*start >= 'a' && *start <= 'z') ||
+            (*start >= '0' && *start <= '9'))) {
       ++start;
     }
     // if the char is not in the range %x61-7A + DIGITs, it must be '-'
@@ -147,10 +145,8 @@ PaymentRequest::IsValidStandardizedPMI(const nsAString& aIdentifier,
   return NS_OK;
 }
 
-nsresult
-PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
-                                               nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsValidPaymentMethodIdentifier(
+    const nsAString& aIdentifier, nsAString& aErrorMsg) {
   if (aIdentifier.IsEmpty()) {
     aErrorMsg.AssignLiteral("Payment method identifier is required.");
     return NS_ERROR_TYPE_ERR;
@@ -169,11 +165,9 @@ PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
   uint32_t authorityPos = 0;
   int32_t authorityLen = 0;
   NS_ConvertUTF16toUTF8 url(aIdentifier);
-  nsresult rv = urlParser->ParseURL(url.get(),
-                                    url.Length(),
-                                    &schemePos, &schemeLen,
-                                    &authorityPos, &authorityLen,
-                                    nullptr, nullptr);
+  nsresult rv =
+      urlParser->ParseURL(url.get(), url.Length(), &schemePos, &schemeLen,
+                          &authorityPos, &authorityLen, nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_RANGE_ERR);
   if (schemeLen == -1) {
     // The PMI is not a URL-based PMI, check if it is a standardized PMI
@@ -200,13 +194,11 @@ PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
   int32_t hostnameLen = 0;
   int32_t port = 0;
 
-  NS_ConvertUTF16toUTF8 authority(Substring(aIdentifier, authorityPos, authorityLen));
-  rv = urlParser->ParseAuthority(authority.get(),
-                                 authority.Length(),
-                                 &usernamePos, &usernameLen,
-                                 &passwordPos, &passwordLen,
-                                 &hostnamePos, &hostnameLen,
-                                 &port);
+  NS_ConvertUTF16toUTF8 authority(
+      Substring(aIdentifier, authorityPos, authorityLen));
+  rv = urlParser->ParseAuthority(
+      authority.get(), authority.Length(), &usernamePos, &usernameLen,
+      &passwordPos, &passwordLen, &hostnamePos, &hostnameLen, &port);
   if (NS_FAILED(rv)) {
     // Handle the special cases that URLParser treats it as an invalid URL, but
     // are used in web-platform-test
@@ -234,8 +226,8 @@ PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
       passwordPos = 0;
       passwordLen = -1;
     }
-    // Parse server information when both username and password are empty or do not
-    // exist.
+    // Parse server information when both username and password are empty or do
+    // not exist.
     if ((usernameLen <= 0) && (passwordLen <= 0)) {
       if (authority.Length() - atPos - 1 == 0) {
         aErrorMsg.AssignLiteral("'");
@@ -245,11 +237,9 @@ PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
       }
       // Re-using nsIURLParser::ParseServerInfo to extract the hostname and port
       // information. This can help us to handle complicated IPv6 cases.
-      nsAutoCString serverInfo(Substring(authority,
-                                         atPos + 1,
-                                         authority.Length() - atPos - 1));
-      rv = urlParser->ParseServerInfo(serverInfo.get(),
-                                      serverInfo.Length(),
+      nsAutoCString serverInfo(
+          Substring(authority, atPos + 1, authority.Length() - atPos - 1));
+      rv = urlParser->ParseServerInfo(serverInfo.get(), serverInfo.Length(),
                                       &hostnamePos, &hostnameLen, &port);
       if (NS_FAILED(rv)) {
         // ParseServerInfo returns NS_ERROR_MALFORMED_URI in all fail cases, we
@@ -262,7 +252,8 @@ PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
   if (usernameLen > 0 || passwordLen > 0) {
     aErrorMsg.AssignLiteral("'");
     aErrorMsg.Append(aIdentifier);
-    aErrorMsg.AssignLiteral("' is not valid. Username and password must be empty.");
+    aErrorMsg.AssignLiteral(
+        "' is not valid. Username and password must be empty.");
     return NS_ERROR_RANGE_ERR;
   }
 
@@ -276,19 +267,17 @@ PaymentRequest::IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
   return NS_OK;
 }
 
-nsresult
-PaymentRequest::IsValidMethodData(JSContext* aCx,
-                                  const Sequence<PaymentMethodData>& aMethodData,
-                                  nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsValidMethodData(
+    JSContext* aCx, const Sequence<PaymentMethodData>& aMethodData,
+    nsAString& aErrorMsg) {
   if (!aMethodData.Length()) {
     aErrorMsg.AssignLiteral("At least one payment method is required.");
     return NS_ERROR_TYPE_ERR;
   }
 
   for (const PaymentMethodData& methodData : aMethodData) {
-    nsresult rv = IsValidPaymentMethodIdentifier(methodData.mSupportedMethods,
-                                                 aErrorMsg);
+    nsresult rv =
+        IsValidPaymentMethodIdentifier(methodData.mSupportedMethods, aErrorMsg);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -300,8 +289,7 @@ PaymentRequest::IsValidMethodData(JSContext* aCx,
         continue;
       }
       MOZ_ASSERT(aCx);
-      if (!service->IsValidBasicCardRequest(aCx,
-                                            methodData.mData.Value(),
+      if (!service->IsValidBasicCardRequest(aCx, methodData.mData.Value(),
                                             aErrorMsg)) {
         return NS_ERROR_TYPE_ERR;
       }
@@ -311,11 +299,9 @@ PaymentRequest::IsValidMethodData(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult
-PaymentRequest::IsValidNumber(const nsAString& aItem,
-                              const nsAString& aStr,
-                              nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsValidNumber(const nsAString& aItem,
+                                       const nsAString& aStr,
+                                       nsAString& aErrorMsg) {
   nsresult error = NS_ERROR_FAILURE;
 
   if (!aStr.IsEmpty()) {
@@ -332,8 +318,7 @@ PaymentRequest::IsValidNumber(const nsAString& aItem,
     //
     // For example, ".1" is not valid for '.' is not in [0-9],
     // and " 0.1" either for beginning with ' '
-    if (aValue.Last() != '.' &&
-        aValue.CharAt(beginningIndex) >= '0' &&
+    if (aValue.Last() != '.' && aValue.CharAt(beginningIndex) >= '0' &&
         aValue.CharAt(beginningIndex) <= '9') {
       aValue.ToFloat(&error);
     }
@@ -350,11 +335,9 @@ PaymentRequest::IsValidNumber(const nsAString& aItem,
   return NS_OK;
 }
 
-nsresult
-PaymentRequest::IsNonNegativeNumber(const nsAString& aItem,
-                                    const nsAString& aStr,
-                                    nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsNonNegativeNumber(const nsAString& aItem,
+                                             const nsAString& aStr,
+                                             nsAString& aErrorMsg) {
   nsresult error = NS_ERROR_FAILURE;
 
   if (!aStr.IsEmpty()) {
@@ -362,8 +345,7 @@ PaymentRequest::IsNonNegativeNumber(const nsAString& aItem,
     // Ensure
     // - the beginning character is a digit in [0-9], and
     // - the last character is not '.'
-    if (aValue.Last() != '.' &&
-        aValue.First() >= '0' &&
+    if (aValue.Last() != '.' && aValue.First() >= '0' &&
         aValue.First() <= '9') {
       aValue.ToFloat(&error);
     }
@@ -374,55 +356,54 @@ PaymentRequest::IsNonNegativeNumber(const nsAString& aItem,
     aErrorMsg.Append(aItem);
     aErrorMsg.AppendLiteral("\"(");
     aErrorMsg.Append(aStr);
-    aErrorMsg.AppendLiteral(") must be a valid and non-negative decimal monetary value.");
+    aErrorMsg.AppendLiteral(
+        ") must be a valid and non-negative decimal monetary value.");
     return NS_ERROR_TYPE_ERR;
   }
   return NS_OK;
 }
 
-nsresult
-PaymentRequest::IsValidCurrency(const nsAString& aItem,
-                                const nsAString& aCurrency,
-                                nsAString& aErrorMsg)
-{
-   /*
-    *  According to spec in https://w3c.github.io/payment-request/#validity-checkers,
-    *  perform currency validation with following criteria
-    *  1. The currency length must be 3.
-    *  2. The currency contains any character that must be in the range "A" to "Z"
-    *     (U+0041 to U+005A) or the range "a" to "z" (U+0061 to U+007A)
-    */
-   if (aCurrency.Length() != 3) {
-     aErrorMsg.AssignLiteral("The length amount.currency of \"");
-     aErrorMsg.Append(aItem);
-     aErrorMsg.AppendLiteral("\"(");
-     aErrorMsg.Append(aCurrency);
-     aErrorMsg.AppendLiteral(") must be 3.");
-     return NS_ERROR_RANGE_ERR;
-   }
-   // Don't use nsUnicharUtils::ToUpperCase, it converts the invalid "ınr" PMI to
-   // to the valid one "INR".
-   for (uint32_t idx = 0; idx < aCurrency.Length(); ++idx) {
-     if ((aCurrency.CharAt(idx) >= 'A' && aCurrency.CharAt(idx) <= 'Z') ||
-         (aCurrency.CharAt(idx) >= 'a' && aCurrency.CharAt(idx) <= 'z')) {
-       continue;
-     }
-     aErrorMsg.AssignLiteral("The character amount.currency of \"");
-     aErrorMsg.Append(aItem);
-     aErrorMsg.AppendLiteral("\"(");
-     aErrorMsg.Append(aCurrency);
-     aErrorMsg.AppendLiteral(") must be in the range 'A' to 'Z'(U+0041 to U+005A) or 'a' to 'z'(U+0061 to U+007A).");
-     return NS_ERROR_RANGE_ERR;
-   }
-   return NS_OK;
+nsresult PaymentRequest::IsValidCurrency(const nsAString& aItem,
+                                         const nsAString& aCurrency,
+                                         nsAString& aErrorMsg) {
+  /*
+   *  According to spec in
+   * https://w3c.github.io/payment-request/#validity-checkers, perform currency
+   * validation with following criteria
+   *  1. The currency length must be 3.
+   *  2. The currency contains any character that must be in the range "A" to
+   * "Z" (U+0041 to U+005A) or the range "a" to "z" (U+0061 to U+007A)
+   */
+  if (aCurrency.Length() != 3) {
+    aErrorMsg.AssignLiteral("The length amount.currency of \"");
+    aErrorMsg.Append(aItem);
+    aErrorMsg.AppendLiteral("\"(");
+    aErrorMsg.Append(aCurrency);
+    aErrorMsg.AppendLiteral(") must be 3.");
+    return NS_ERROR_RANGE_ERR;
+  }
+  // Don't use nsUnicharUtils::ToUpperCase, it converts the invalid "ınr" PMI to
+  // to the valid one "INR".
+  for (uint32_t idx = 0; idx < aCurrency.Length(); ++idx) {
+    if ((aCurrency.CharAt(idx) >= 'A' && aCurrency.CharAt(idx) <= 'Z') ||
+        (aCurrency.CharAt(idx) >= 'a' && aCurrency.CharAt(idx) <= 'z')) {
+      continue;
+    }
+    aErrorMsg.AssignLiteral("The character amount.currency of \"");
+    aErrorMsg.Append(aItem);
+    aErrorMsg.AppendLiteral("\"(");
+    aErrorMsg.Append(aCurrency);
+    aErrorMsg.AppendLiteral(
+        ") must be in the range 'A' to 'Z'(U+0041 to U+005A) or 'a' to "
+        "'z'(U+0061 to U+007A).");
+    return NS_ERROR_RANGE_ERR;
+  }
+  return NS_OK;
 }
 
-nsresult
-PaymentRequest::IsValidCurrencyAmount(const nsAString& aItem,
-                                      const PaymentCurrencyAmount& aAmount,
-                                      const bool aIsTotalItem,
-                                      nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsValidCurrencyAmount(
+    const nsAString& aItem, const PaymentCurrencyAmount& aAmount,
+    const bool aIsTotalItem, nsAString& aErrorMsg) {
   nsresult rv;
   rv = IsValidCurrency(aItem, aAmount.mCurrency, aErrorMsg);
   if (NS_FAILED(rv)) {
@@ -442,15 +423,13 @@ PaymentRequest::IsValidCurrencyAmount(const nsAString& aItem,
   return NS_OK;
 }
 
-nsresult
-PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails,
-                                   const bool aRequestShipping,
-                                   nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails,
+                                            const bool aRequestShipping,
+                                            nsAString& aErrorMsg) {
   // Check the amount.value and amount.currency of detail.total
   nsresult rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.total"),
                                       aDetails.mTotal.mAmount,
-                                      true, // isTotalItem
+                                      true,  // isTotalItem
                                       aErrorMsg);
   if (NS_FAILED(rv)) {
     return rv;
@@ -458,16 +437,14 @@ PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails,
   return IsValidDetailsBase(aDetails, aRequestShipping, aErrorMsg);
 }
 
-nsresult
-PaymentRequest::IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails,
-                                     const bool aRequestShipping)
-{
+nsresult PaymentRequest::IsValidDetailsUpdate(
+    const PaymentDetailsUpdate& aDetails, const bool aRequestShipping) {
   nsAutoString message;
   // Check the amount.value and amount.currency of detail.total
   if (aDetails.mTotal.WasPassed()) {
     nsresult rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.total"),
                                         aDetails.mTotal.Value().mAmount,
-                                        true, // isTotalItem
+                                        true,  // isTotalItem
                                         message);
     if (NS_FAILED(rv)) {
       return rv;
@@ -476,18 +453,15 @@ PaymentRequest::IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails,
   return IsValidDetailsBase(aDetails, aRequestShipping, message);
 }
 
-nsresult
-PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails,
-                                   const bool aRequestShipping,
-                                   nsAString& aErrorMsg)
-{
+nsresult PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails,
+                                            const bool aRequestShipping,
+                                            nsAString& aErrorMsg) {
   nsresult rv;
   // Check the amount.value of each item in the display items
   if (aDetails.mDisplayItems.WasPassed()) {
     const Sequence<PaymentItem>& displayItems = aDetails.mDisplayItems.Value();
     for (const PaymentItem& displayItem : displayItems) {
-      rv = IsValidCurrencyAmount(displayItem.mLabel,
-                                 displayItem.mAmount,
+      rv = IsValidCurrencyAmount(displayItem.mLabel, displayItem.mAmount,
                                  false,  // isTotalItem
                                  aErrorMsg);
       if (NS_FAILED(rv)) {
@@ -498,7 +472,8 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails,
 
   // Check the shipping option
   if (aDetails.mShippingOptions.WasPassed() && aRequestShipping) {
-    const Sequence<PaymentShippingOption>& shippingOptions = aDetails.mShippingOptions.Value();
+    const Sequence<PaymentShippingOption>& shippingOptions =
+        aDetails.mShippingOptions.Value();
     nsTArray<nsString> seenIDs;
     for (const PaymentShippingOption& shippingOption : shippingOptions) {
       rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.shippingOptions"),
@@ -520,26 +495,28 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails,
 
   // Check payment details modifiers
   if (aDetails.mModifiers.WasPassed()) {
-    const Sequence<PaymentDetailsModifier>& modifiers = aDetails.mModifiers.Value();
+    const Sequence<PaymentDetailsModifier>& modifiers =
+        aDetails.mModifiers.Value();
     for (const PaymentDetailsModifier& modifier : modifiers) {
-      rv = IsValidPaymentMethodIdentifier(modifier.mSupportedMethods, aErrorMsg);
+      rv =
+          IsValidPaymentMethodIdentifier(modifier.mSupportedMethods, aErrorMsg);
       if (NS_FAILED(rv)) {
         return rv;
       }
       if (modifier.mTotal.WasPassed()) {
         rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.modifiers.total"),
                                    modifier.mTotal.Value().mAmount,
-                                   true, // isTotalItem
+                                   true,  // isTotalItem
                                    aErrorMsg);
         if (NS_FAILED(rv)) {
           return rv;
         }
       }
       if (modifier.mAdditionalDisplayItems.WasPassed()) {
-        const Sequence<PaymentItem>& displayItems = modifier.mAdditionalDisplayItems.Value();
+        const Sequence<PaymentItem>& displayItems =
+            modifier.mAdditionalDisplayItems.Value();
         for (const PaymentItem& displayItem : displayItems) {
-          rv = IsValidCurrencyAmount(displayItem.mLabel,
-                                     displayItem.mAmount,
+          rv = IsValidCurrencyAmount(displayItem.mLabel, displayItem.mAmount,
                                      false,  // isTotalItem
                                      aErrorMsg);
           if (NS_FAILED(rv)) {
@@ -553,14 +530,12 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails,
   return NS_OK;
 }
 
-already_AddRefed<PaymentRequest>
-PaymentRequest::Constructor(const GlobalObject& aGlobal,
-                            const Sequence<PaymentMethodData>& aMethodData,
-                            const PaymentDetailsInit& aDetails,
-                            const PaymentOptions& aOptions,
-                            ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+already_AddRefed<PaymentRequest> PaymentRequest::Constructor(
+    const GlobalObject& aGlobal, const Sequence<PaymentMethodData>& aMethodData,
+    const PaymentDetailsInit& aDetails, const PaymentOptions& aOptions,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -571,7 +546,6 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
-
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   if (!doc) {
@@ -598,9 +572,7 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
 
   // Check payment methods and details
   nsAutoString message;
-  nsresult rv = IsValidMethodData(aGlobal.Context(),
-                                  aMethodData,
-                                  message);
+  nsresult rv = IsValidMethodData(aGlobal.Context(), aMethodData, message);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_TYPE_ERR) {
       aRv.ThrowTypeError<MSG_ILLEGAL_TYPE_PR_CONSTRUCTOR>(message);
@@ -626,8 +598,9 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
 
   // Create PaymentRequest and set its |mId|
   RefPtr<PaymentRequest> request;
-  rv = manager->CreatePayment(aGlobal.Context(), window, topLevelPrincipal, aMethodData,
-                              aDetails, aOptions, getter_AddRefs(request));
+  rv = manager->CreatePayment(aGlobal.Context(), window, topLevelPrincipal,
+                              aMethodData, aDetails, aOptions,
+                              getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return nullptr;
@@ -635,9 +608,8 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
   return request.forget();
 }
 
-already_AddRefed<PaymentRequest>
-PaymentRequest::CreatePaymentRequest(nsPIDOMWindowInner* aWindow, nsresult& aRv)
-{
+already_AddRefed<PaymentRequest> PaymentRequest::CreatePaymentRequest(
+    nsPIDOMWindowInner* aWindow, nsresult& aRv) {
   // Generate a unique id for identification
   nsID uuid;
   aRv = nsContentUtils::GenerateUUIDInPlace(uuid);
@@ -658,23 +630,21 @@ PaymentRequest::CreatePaymentRequest(nsPIDOMWindowInner* aWindow, nsresult& aRv)
   return request.forget();
 }
 
-PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aInternalId)
-  : DOMEventTargetHelper(aWindow)
-  , mInternalId(aInternalId)
-  , mShippingAddress(nullptr)
-  , mUpdating(false)
-  , mRequestShipping(false)
-  , mUpdateError(NS_OK)
-  , mState(eCreated)
-  , mIPC(nullptr)
-{
+PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow,
+                               const nsAString& aInternalId)
+    : DOMEventTargetHelper(aWindow),
+      mInternalId(aInternalId),
+      mShippingAddress(nullptr),
+      mUpdating(false),
+      mRequestShipping(false),
+      mUpdateError(NS_OK),
+      mState(eCreated),
+      mIPC(nullptr) {
   MOZ_ASSERT(aWindow);
   RegisterActivityObserver();
 }
 
-already_AddRefed<Promise>
-PaymentRequest::CanMakePayment(ErrorResult& aRv)
-{
+already_AddRefed<Promise> PaymentRequest::CanMakePayment(ErrorResult& aRv) {
   if (mState != eCreated) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -705,29 +675,24 @@ PaymentRequest::CanMakePayment(ErrorResult& aRv)
   return promise.forget();
 }
 
-void
-PaymentRequest::RespondCanMakePayment(bool aResult)
-{
+void PaymentRequest::RespondCanMakePayment(bool aResult) {
   MOZ_ASSERT(mResultPromise);
   mResultPromise->MaybeResolve(aResult);
   mResultPromise = nullptr;
 }
 
-already_AddRefed<Promise>
-PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
-                     ErrorResult& aRv)
-{
+already_AddRefed<Promise> PaymentRequest::Show(
+    const Optional<OwningNonNull<Promise>>& aDetailsPromise, ErrorResult& aRv) {
   nsIGlobalObject* global = GetOwnerGlobal();
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
   MOZ_ASSERT(win);
   nsIDocument* doc = win->GetExtantDoc();
 
   if (!EventStateManager::IsHandlingUserInput()) {
-    nsString msg = NS_LITERAL_STRING("User activation is now required to call PaymentRequest.show()");
-    nsContentUtils::ReportToConsoleNonLocalized(msg,
-                                                nsIScriptError::warningFlag,
-                                                NS_LITERAL_CSTRING("Security"),
-                                                doc);
+    nsString msg = NS_LITERAL_STRING(
+        "User activation is now required to call PaymentRequest.show()");
+    nsContentUtils::ReportToConsoleNonLocalized(
+        msg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"), doc);
     if (StaticPrefs::dom_payments_request_user_interaction_required()) {
       aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
@@ -775,9 +740,7 @@ PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
   return promise.forget();
 }
 
-void
-PaymentRequest::RejectShowPayment(nsresult aRejectReason)
-{
+void PaymentRequest::RejectShowPayment(nsresult aRejectReason) {
   MOZ_ASSERT(mAcceptPromise || mResponse);
   MOZ_ASSERT(mState == eInteractive);
 
@@ -790,14 +753,12 @@ PaymentRequest::RejectShowPayment(nsresult aRejectReason)
   mAcceptPromise = nullptr;
 }
 
-void
-PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
-                                   const ResponseData& aDetails,
-                                   const nsAString& aPayerName,
-                                   const nsAString& aPayerEmail,
-                                   const nsAString& aPayerPhone,
-                                   nsresult aRv)
-{
+void PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
+                                        const ResponseData& aDetails,
+                                        const nsAString& aPayerName,
+                                        const nsAString& aPayerEmail,
+                                        const nsAString& aPayerPhone,
+                                        nsresult aRv) {
   MOZ_ASSERT(mAcceptPromise || mResponse);
   MOZ_ASSERT(mState == eInteractive);
 
@@ -814,10 +775,9 @@ PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
     mResponse->RespondRetry(aMethodName, mShippingOption, mShippingAddress,
                             aDetails, aPayerName, aPayerEmail, aPayerPhone);
   } else {
-    RefPtr<PaymentResponse> paymentResponse =
-      new PaymentResponse(GetOwner(), this, mId, aMethodName,
-                          mShippingOption, mShippingAddress, aDetails,
-                          aPayerName, aPayerEmail, aPayerPhone);
+    RefPtr<PaymentResponse> paymentResponse = new PaymentResponse(
+        GetOwner(), this, mId, aMethodName, mShippingOption, mShippingAddress,
+        aDetails, aPayerName, aPayerEmail, aPayerPhone);
     mResponse = paymentResponse;
     mAcceptPromise->MaybeResolve(paymentResponse);
   }
@@ -826,16 +786,12 @@ PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
   mAcceptPromise = nullptr;
 }
 
-void
-PaymentRequest::RespondComplete()
-{
+void PaymentRequest::RespondComplete() {
   MOZ_ASSERT(mResponse);
   mResponse->RespondComplete();
 }
 
-already_AddRefed<Promise>
-PaymentRequest::Abort(ErrorResult& aRv)
-{
+already_AddRefed<Promise> PaymentRequest::Abort(ErrorResult& aRv) {
   if (mState != eInteractive) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -866,9 +822,7 @@ PaymentRequest::Abort(ErrorResult& aRv)
   return promise.forget();
 }
 
-void
-PaymentRequest::RespondAbortPayment(bool aSuccess)
-{
+void PaymentRequest::RespondAbortPayment(bool aSuccess) {
   // Check whether we are aborting the update:
   //
   // - If |mUpdateError| is not NS_OK, we are aborting the update as
@@ -900,9 +854,8 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
   }
 }
 
-nsresult
-PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails)
-{
+nsresult PaymentRequest::UpdatePayment(JSContext* aCx,
+                                       const PaymentDetailsUpdate& aDetails) {
   NS_ENSURE_ARG_POINTER(aCx);
   if (mState != eInteractive) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -918,9 +871,7 @@ PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetai
   return NS_OK;
 }
 
-void
-PaymentRequest::AbortUpdate(nsresult aRv)
-{
+void PaymentRequest::AbortUpdate(nsresult aRv) {
   MOZ_ASSERT(NS_FAILED(aRv));
 
   if (mState != eInteractive) {
@@ -934,16 +885,16 @@ PaymentRequest::AbortUpdate(nsresult aRv)
     return;
   }
 
-  // Remember update error |aRv| and do the following steps in RespondShowPayment.
+  // Remember update error |aRv| and do the following steps in
+  // RespondShowPayment.
   // 1. Set target.state to closed
   // 2. Reject the promise target.acceptPromise with exception "aRv"
   // 3. Abort the algorithm with update error
   mUpdateError = aRv;
 }
 
-nsresult
-PaymentRequest::RetryPayment(JSContext* aCx, const PaymentValidationErrors& aErrors)
-{
+nsresult PaymentRequest::RetryPayment(JSContext* aCx,
+                                      const PaymentValidationErrors& aErrors) {
   if (mState == eInteractive) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -957,52 +908,30 @@ PaymentRequest::RetryPayment(JSContext* aCx, const PaymentValidationErrors& aErr
   return NS_OK;
 }
 
-void
-PaymentRequest::GetId(nsAString& aRetVal) const
-{
-  aRetVal = mId;
-}
+void PaymentRequest::GetId(nsAString& aRetVal) const { aRetVal = mId; }
 
-void
-PaymentRequest::GetInternalId(nsAString& aRetVal)
-{
+void PaymentRequest::GetInternalId(nsAString& aRetVal) {
   aRetVal = mInternalId;
 }
 
-void
-PaymentRequest::SetId(const nsAString& aId)
-{
-  mId = aId;
-}
+void PaymentRequest::SetId(const nsAString& aId) { mId = aId; }
 
-bool
-PaymentRequest::Equals(const nsAString& aInternalId) const
-{
+bool PaymentRequest::Equals(const nsAString& aInternalId) const {
   return mInternalId.Equals(aInternalId);
 }
 
-bool
-PaymentRequest::ReadyForUpdate()
-{
+bool PaymentRequest::ReadyForUpdate() {
   return mState == eInteractive && !mUpdating;
 }
 
-void
-PaymentRequest::SetUpdating(bool aUpdating)
-{
-  mUpdating = aUpdating;
-}
+void PaymentRequest::SetUpdating(bool aUpdating) { mUpdating = aUpdating; }
 
-already_AddRefed<PaymentResponse>
-PaymentRequest::GetResponse() const
-{
+already_AddRefed<PaymentResponse> PaymentRequest::GetResponse() const {
   RefPtr<PaymentResponse> response = mResponse;
   return response.forget();
 }
 
-nsresult
-PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
-{
+nsresult PaymentRequest::DispatchUpdateEvent(const nsAString& aType) {
   MOZ_ASSERT(ReadyForUpdate());
 
   PaymentRequestUpdateEventInit init;
@@ -1010,7 +939,7 @@ PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
   init.mCancelable = false;
 
   RefPtr<PaymentRequestUpdateEvent> event =
-    PaymentRequestUpdateEvent::Constructor(this, aType, init);
+      PaymentRequestUpdateEvent::Constructor(this, aType, init);
   event->SetTrusted(true);
   event->SetRequest(this);
 
@@ -1019,9 +948,8 @@ PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
   return rv.StealNSResult();
 }
 
-nsresult
-PaymentRequest::DispatchMerchantValidationEvent(const nsAString& aType)
-{
+nsresult PaymentRequest::DispatchMerchantValidationEvent(
+    const nsAString& aType) {
   MOZ_ASSERT(ReadyForUpdate());
 
   MerchantValidationEventInit init;
@@ -1031,7 +959,7 @@ PaymentRequest::DispatchMerchantValidationEvent(const nsAString& aType)
 
   ErrorResult rv;
   RefPtr<MerchantValidationEvent> event =
-    MerchantValidationEvent::Constructor(this, aType, init, rv);
+      MerchantValidationEvent::Constructor(this, aType, init, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
@@ -1042,10 +970,8 @@ PaymentRequest::DispatchMerchantValidationEvent(const nsAString& aType)
   return rv.StealNSResult();
 }
 
-nsresult
-PaymentRequest::DispatchPaymentMethodChangeEvent(const nsAString& aMethodName,
-                                                 const ChangeDetails& aMethodDetails)
-{
+nsresult PaymentRequest::DispatchPaymentMethodChangeEvent(
+    const nsAString& aMethodName, const ChangeDetails& aMethodDetails) {
   MOZ_ASSERT(ReadyForUpdate());
 
   PaymentRequestUpdateEventInit init;
@@ -1053,11 +979,9 @@ PaymentRequest::DispatchPaymentMethodChangeEvent(const nsAString& aMethodName,
   init.mCancelable = false;
 
   RefPtr<PaymentMethodChangeEvent> event =
-    PaymentMethodChangeEvent::Constructor(this,
-                                          NS_LITERAL_STRING("paymentmethodchange"),
-                                          init,
-                                          aMethodName,
-                                          aMethodDetails);
+      PaymentMethodChangeEvent::Constructor(
+          this, NS_LITERAL_STRING("paymentmethodchange"), init, aMethodName,
+          aMethodDetails);
   event->SetTrusted(true);
   event->SetRequest(this);
 
@@ -1066,94 +990,71 @@ PaymentRequest::DispatchPaymentMethodChangeEvent(const nsAString& aMethodName,
   return rv.StealNSResult();
 }
 
-already_AddRefed<PaymentAddress>
-PaymentRequest::GetShippingAddress() const
-{
+already_AddRefed<PaymentAddress> PaymentRequest::GetShippingAddress() const {
   RefPtr<PaymentAddress> address = mShippingAddress;
   return address.forget();
 }
 
-nsresult
-PaymentRequest::UpdateShippingAddress(const nsAString& aCountry,
-                                      const nsTArray<nsString>& aAddressLine,
-                                      const nsAString& aRegion,
-                                      const nsAString& aRegionCode,
-                                      const nsAString& aCity,
-                                      const nsAString& aDependentLocality,
-                                      const nsAString& aPostalCode,
-                                      const nsAString& aSortingCode,
-                                      const nsAString& aOrganization,
-                                      const nsAString& aRecipient,
-                                      const nsAString& aPhone)
-{
+nsresult PaymentRequest::UpdateShippingAddress(
+    const nsAString& aCountry, const nsTArray<nsString>& aAddressLine,
+    const nsAString& aRegion, const nsAString& aRegionCode,
+    const nsAString& aCity, const nsAString& aDependentLocality,
+    const nsAString& aPostalCode, const nsAString& aSortingCode,
+    const nsAString& aOrganization, const nsAString& aRecipient,
+    const nsAString& aPhone) {
   nsTArray<nsString> emptyArray;
-  mShippingAddress = new PaymentAddress(GetOwner(), aCountry, emptyArray,
-                                        aRegion, aRegionCode, aCity,
-                                        aDependentLocality, aPostalCode,
-                                        aSortingCode, EmptyString(),
-                                        EmptyString(), EmptyString());
-  mFullShippingAddress = new PaymentAddress(GetOwner(), aCountry, aAddressLine,
-                                            aRegion, aRegionCode, aCity,
-                                            aDependentLocality,
-                                            aPostalCode, aSortingCode,
-                                            aOrganization, aRecipient, aPhone);
+  mShippingAddress =
+      new PaymentAddress(GetOwner(), aCountry, emptyArray, aRegion, aRegionCode,
+                         aCity, aDependentLocality, aPostalCode, aSortingCode,
+                         EmptyString(), EmptyString(), EmptyString());
+  mFullShippingAddress =
+      new PaymentAddress(GetOwner(), aCountry, aAddressLine, aRegion,
+                         aRegionCode, aCity, aDependentLocality, aPostalCode,
+                         aSortingCode, aOrganization, aRecipient, aPhone);
   // Fire shippingaddresschange event
   return DispatchUpdateEvent(NS_LITERAL_STRING("shippingaddresschange"));
 }
 
-void
-PaymentRequest::SetShippingOption(const nsAString& aShippingOption)
-{
+void PaymentRequest::SetShippingOption(const nsAString& aShippingOption) {
   mShippingOption = aShippingOption;
 }
 
-void
-PaymentRequest::GetShippingOption(nsAString& aRetVal) const
-{
+void PaymentRequest::GetShippingOption(nsAString& aRetVal) const {
   aRetVal = mShippingOption;
 }
 
-nsresult
-PaymentRequest::UpdateShippingOption(const nsAString& aShippingOption)
-{
+nsresult PaymentRequest::UpdateShippingOption(
+    const nsAString& aShippingOption) {
   mShippingOption = aShippingOption;
 
   // Fire shippingaddresschange event
   return DispatchUpdateEvent(NS_LITERAL_STRING("shippingoptionchange"));
 }
 
-nsresult
-PaymentRequest::UpdatePaymentMethod(const nsAString& aMethodName,
-                                    const ChangeDetails& aMethodDetails)
-{
+nsresult PaymentRequest::UpdatePaymentMethod(
+    const nsAString& aMethodName, const ChangeDetails& aMethodDetails) {
   return DispatchPaymentMethodChangeEvent(aMethodName, aMethodDetails);
 }
 
-void
-PaymentRequest::SetShippingType(const Nullable<PaymentShippingType>& aShippingType)
-{
+void PaymentRequest::SetShippingType(
+    const Nullable<PaymentShippingType>& aShippingType) {
   mShippingType = aShippingType;
 }
 
-Nullable<PaymentShippingType>
-PaymentRequest::GetShippingType() const
-{
+Nullable<PaymentShippingType> PaymentRequest::GetShippingType() const {
   return mShippingType;
 }
 
-void PaymentRequest::GetOptions(PaymentOptions& aRetVal) const
-{
+void PaymentRequest::GetOptions(PaymentOptions& aRetVal) const {
   aRetVal = mOptions;
 }
 
-void PaymentRequest::SetOptions(const PaymentOptions& aOptions)
-{
+void PaymentRequest::SetOptions(const PaymentOptions& aOptions) {
   mOptions = aOptions;
 }
 
-void
-PaymentRequest::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
+void PaymentRequest::ResolvedCallback(JSContext* aCx,
+                                      JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(aCx);
   mUpdating = false;
   if (NS_WARN_IF(!aValue.isObject())) {
@@ -1181,40 +1082,33 @@ PaymentRequest::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   }
 }
 
-void
-PaymentRequest::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
+void PaymentRequest::RejectedCallback(JSContext* aCx,
+                                      JS::Handle<JS::Value> aValue) {
   mUpdating = false;
   AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
 }
 
-void
-PaymentRequest::RegisterActivityObserver()
-{
+void PaymentRequest::RegisterActivityObserver() {
   if (nsPIDOMWindowInner* window = GetOwner()) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     if (doc) {
       doc->RegisterActivityObserver(
-        NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
+          NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
     }
   }
 }
 
-void
-PaymentRequest::UnregisterActivityObserver()
-{
+void PaymentRequest::UnregisterActivityObserver() {
   if (nsPIDOMWindowInner* window = GetOwner()) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     if (doc) {
       doc->UnregisterActivityObserver(
-        NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
+          NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
     }
   }
 }
 
-void
-PaymentRequest::NotifyOwnerDocumentActivityChanged()
-{
+void PaymentRequest::NotifyOwnerDocumentActivityChanged() {
   nsPIDOMWindowInner* window = GetOwner();
   NS_ENSURE_TRUE_VOID(window);
   nsIDocument* doc = window->GetExtantDoc();
@@ -1226,8 +1120,7 @@ PaymentRequest::NotifyOwnerDocumentActivityChanged()
   }
 }
 
-PaymentRequest::~PaymentRequest()
-{
+PaymentRequest::~PaymentRequest() {
   if (mIPC) {
     // If we're being destroyed, the PaymentRequestManager isn't holding any
     // references to us and we can't be waiting for any replies.
@@ -1236,11 +1129,10 @@ PaymentRequest::~PaymentRequest()
   UnregisterActivityObserver();
 }
 
-JSObject*
-PaymentRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* PaymentRequest::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return PaymentRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

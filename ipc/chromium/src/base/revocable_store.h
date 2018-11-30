@@ -22,13 +22,14 @@ class RevocableStore {
   class StoreRef final {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StoreRef)
-    explicit StoreRef(RevocableStore* aStore) : store_(aStore) { }
+    explicit StoreRef(RevocableStore* aStore) : store_(aStore) {}
 
     void set_store(RevocableStore* aStore) { store_ = aStore; }
     RevocableStore* store() const { return store_; }
 
    protected:
     ~StoreRef() {}
+
    private:
     RevocableStore* store_;
 
@@ -45,7 +46,7 @@ class RevocableStore {
     // This item has been revoked if it no longer has a pointer to the store.
     bool revoked() const { return !store_reference_->store(); }
 
-  private:
+   private:
     // We hold a reference to the store through this ref pointer.  We release
     // this reference on destruction.
     RefPtr<StoreRef> store_reference_;

@@ -184,7 +184,6 @@ HTML_TAG(video, Video, Video)
 HTML_HTMLELEMENT_TAG(wbr)
 HTML_TAG(xmp, Pre, Pre)
 
-
 /* These are not for tags. But they will be included in the nsHTMLTag
    enum anyway */
 

@@ -11,17 +11,14 @@
 #include "nsSimpleURI.h"
 #include "nsURIHashKey.h"
 
-static bool
-HasFlag(nsIURI* aURI, uint32_t aFlag)
-{
+static bool HasFlag(nsIURI* aURI, uint32_t aFlag) {
   nsresult rv;
   bool value = false;
   rv = NS_URIChainHasFlags(aURI, aFlag, &value);
   return NS_SUCCEEDED(rv) && value;
 }
 
-gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI)
-{
+gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aURI);
 
@@ -38,10 +35,11 @@ gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI)
     // hold it strongly here as well.  (And we'd have to
     // NS_ReleaseOnMainThreadSystemGroup it in our destructor anyway.)
     RefPtr<mozilla::net::nsSimpleURI> simpleURI =
-      mozilla::net::nsSimpleURI::From(aURI);
+        mozilla::net::nsSimpleURI::From(aURI);
     mSimpleURI = simpleURI;
 
-    NS_ASSERTION(mSimpleURI, "Why aren't our data: URLs backed by nsSimpleURI?");
+    NS_ASSERTION(mSimpleURI,
+                 "Why aren't our data: URLs backed by nsSimpleURI?");
   } else {
     mSimpleURI = nullptr;
   }
@@ -53,19 +51,15 @@ gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI)
   mHash = nsURIHashKey::HashKey(mURI);
 
   mInheritsSecurityContext =
-    HasFlag(aURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT);
-  mSyncLoadIsOK =
-    HasFlag(aURI, nsIProtocolHandler::URI_SYNC_LOAD_IS_OK);
+      HasFlag(aURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT);
+  mSyncLoadIsOK = HasFlag(aURI, nsIProtocolHandler::URI_SYNC_LOAD_IS_OK);
 }
 
-gfxFontSrcURI::~gfxFontSrcURI()
-{
+gfxFontSrcURI::~gfxFontSrcURI() {
   NS_ReleaseOnMainThreadSystemGroup("gfxFontSrcURI::mURI", mURI.forget());
 }
 
-bool
-gfxFontSrcURI::Equals(gfxFontSrcURI* aOther)
-{
+bool gfxFontSrcURI::Equals(gfxFontSrcURI* aOther) {
   if (mSimpleURI) {
     if (aOther->mSimpleURI) {
       return mSimpleURI->Equals(aOther->mSimpleURI);
@@ -97,9 +91,7 @@ gfxFontSrcURI::Equals(gfxFontSrcURI* aOther)
   return mSpec == aOther->mSpec;
 }
 
-nsresult
-gfxFontSrcURI::GetSpec(nsACString& aResult)
-{
+nsresult gfxFontSrcURI::GetSpec(nsACString& aResult) {
   if (mSimpleURI) {
     return mSimpleURI->GetSpec(aResult);
   }
@@ -108,9 +100,7 @@ gfxFontSrcURI::GetSpec(nsACString& aResult)
   return NS_OK;
 }
 
-nsCString
-gfxFontSrcURI::GetSpecOrDefault()
-{
+nsCString gfxFontSrcURI::GetSpecOrDefault() {
   if (mSimpleURI) {
     return mSimpleURI->GetSpecOrDefault();
   }

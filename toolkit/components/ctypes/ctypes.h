@@ -12,19 +12,18 @@
 namespace mozilla {
 namespace ctypes {
 
-class Module final : public nsIXPCScriptable
-{
-public:
+class Module final : public nsIXPCScriptable {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSCRIPTABLE
 
   Module();
 
-private:
+ private:
   ~Module();
 };
 
-} // namespace ctypes
-} // namespace mozilla
+}  // namespace ctypes
+}  // namespace mozilla
 
 #endif

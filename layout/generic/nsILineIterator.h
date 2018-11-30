@@ -23,12 +23,11 @@ struct nsRect;
  * When you are finished using the iterator, call DisposeLineIterator()
  * to destroy the iterator if appropriate.
  */
-class nsILineIterator
-{
-protected:
-  ~nsILineIterator() { }
+class nsILineIterator {
+ protected:
+  ~nsILineIterator() {}
 
-public:
+ public:
   virtual void DisposeLineIterator() = 0;
 
   /**
@@ -56,10 +55,8 @@ public:
   // the line (which is based on the in-flow position of the frames on
   // the line; if a frame was moved because of relative positioning
   // then its coordinates may be outside the line bounds).
-  NS_IMETHOD GetLine(int32_t aLineNumber,
-                     nsIFrame** aFirstFrameOnLine,
-                     int32_t* aNumFramesOnLine,
-                     nsRect& aLineBounds) = 0;
+  NS_IMETHOD GetLine(int32_t aLineNumber, nsIFrame** aFirstFrameOnLine,
+                     int32_t* aNumFramesOnLine, nsRect& aLineBounds) = 0;
 
   /**
    * Given a frame that's a child of the block, find which line its on
@@ -75,50 +72,44 @@ public:
   // of aPos is irrelevant.)
   // The aPosIsBeforeFirstFrame and aPosIsAfterLastFrame flags are updated
   // appropriately.
-  NS_IMETHOD FindFrameAt(int32_t aLineNumber,
-                         nsPoint aPos,
-                         nsIFrame** aFrameFound,
-                         bool* aPosIsBeforeFirstFrame,
+  NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,
+                         nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
                          bool* aPosIsAfterLastFrame) = 0;
 
-  // Give the line iterator implementor a chance todo something more complicated than
-  // nsIFrame::GetNextSibling()
+  // Give the line iterator implementor a chance todo something more complicated
+  // than nsIFrame::GetNextSibling()
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber) = 0;
 
-  // Check whether visual and logical order of frames within a line are identical.
+  // Check whether visual and logical order of frames within a line are
+  // identical.
   //  If not, return the first and last visual frames
-  NS_IMETHOD CheckLineOrder(int32_t                  aLine,
-                            bool                     *aIsReordered,
-                            nsIFrame                 **aFirstVisual,
-                            nsIFrame                 **aLastVisual) = 0;
+  NS_IMETHOD CheckLineOrder(int32_t aLine, bool* aIsReordered,
+                            nsIFrame** aFirstVisual,
+                            nsIFrame** aLastVisual) = 0;
 };
 
-class nsAutoLineIterator
-{
-public:
-  nsAutoLineIterator() : mRawPtr(nullptr) { }
-  MOZ_IMPLICIT nsAutoLineIterator(nsILineIterator *i) : mRawPtr(i) { }
+class nsAutoLineIterator {
+ public:
+  nsAutoLineIterator() : mRawPtr(nullptr) {}
+  MOZ_IMPLICIT nsAutoLineIterator(nsILineIterator* i) : mRawPtr(i) {}
 
   ~nsAutoLineIterator() {
-    if (mRawPtr)
-      mRawPtr->DisposeLineIterator();
+    if (mRawPtr) mRawPtr->DisposeLineIterator();
   }
 
   operator nsILineIterator*() { return mRawPtr; }
   nsILineIterator* operator->() { return mRawPtr; }
 
   nsILineIterator* operator=(nsILineIterator* i) {
-    if (i == mRawPtr)
-      return i;
+    if (i == mRawPtr) return i;
 
-    if (mRawPtr)
-      mRawPtr->DisposeLineIterator();
+    if (mRawPtr) mRawPtr->DisposeLineIterator();
 
     mRawPtr = i;
     return i;
   }
 
-private:
+ private:
   nsILineIterator* mRawPtr;
 };
 

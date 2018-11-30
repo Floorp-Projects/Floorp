@@ -24,8 +24,7 @@
  * interfaces and does not guarantee ability to get any particular
  * interfaces via the nsIInterfaceRequestor implementation.
  */
-#define NS_WEBBROWSER_CONTRACTID \
-  "@mozilla.org/embedding/browser/nsWebBrowser;1"
+#define NS_WEBBROWSER_CONTRACTID "@mozilla.org/embedding/browser/nsWebBrowser;1"
 
 /**
  * Prompt Service ContractID
@@ -40,7 +39,6 @@
  * want more control over the way prompts, alerts, and confirmation dialogs are
  * presented to the user.
  */
-#define NS_PROMPTSERVICE_CONTRACTID \
- "@mozilla.org/embedcomp/prompt-service;1"
+#define NS_PROMPTSERVICE_CONTRACTID "@mozilla.org/embedcomp/prompt-service;1"
 
-#endif // NSEMBEDCID_H
+#endif  // NSEMBEDCID_H

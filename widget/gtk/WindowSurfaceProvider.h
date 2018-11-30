@@ -16,7 +16,7 @@
 #ifdef MOZ_WAYLAND
 #include <gdk/gdkwayland.h>
 #endif
-#include <X11/Xlib.h> // for Window, Display, Visual, etc.
+#include <X11/Xlib.h>  // for Window, Display, Visual, etc.
 #include "X11UndefineNone.h"
 
 class nsWindow;
@@ -29,9 +29,8 @@ namespace widget {
  * The main purpose of this class is to allow sharing of logic between
  * nsWindow and GtkCompositorWidget, for when OMTC is enabled or disabled.
  */
-class WindowSurfaceProvider final
-{
-public:
+class WindowSurfaceProvider final {
+ public:
   WindowSurfaceProvider();
 
   /**
@@ -40,15 +39,11 @@ public:
    * own the Display, Window, etc, and they must continue to exist
    * while WindowSurfaceProvider is used.
    */
-  void Initialize(
-      Display* aDisplay,
-      Window aWindow,
-      Visual* aVisual,
-      int aDepth,
-      bool aIsShaped);
+  void Initialize(Display* aDisplay, Window aWindow, Visual* aVisual,
+                  int aDepth, bool aIsShaped);
 
 #ifdef MOZ_WAYLAND
-   void Initialize(nsWindow *aWidget);
+  void Initialize(nsWindow* aWidget);
 #endif
 
   /**
@@ -58,29 +53,28 @@ public:
    */
   void CleanupResources();
 
-  already_AddRefed<gfx::DrawTarget>
-  StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
-                             layers::BufferMode* aBufferMode);
+  already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
+      LayoutDeviceIntRegion& aInvalidRegion, layers::BufferMode* aBufferMode);
   void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
                                 LayoutDeviceIntRegion& aInvalidRegion);
 
-private:
+ private:
   UniquePtr<WindowSurface> CreateWindowSurface();
 
   // Can we access X?
-  bool        mIsX11Display;
-  Display*    mXDisplay;
-  Window      mXWindow;
-  Visual*     mXVisual;
-  int         mXDepth;
+  bool mIsX11Display;
+  Display* mXDisplay;
+  Window mXWindow;
+  Visual* mXVisual;
+  int mXDepth;
   UniquePtr<WindowSurface> mWindowSurface;
 #ifdef MOZ_WAYLAND
-  nsWindow*   mWidget;
+  nsWindow* mWidget;
 #endif
-  bool        mIsShaped;
+  bool mIsShaped;
 };
 
 }  // namespace widget
 }  // namespace mozilla
 
-#endif // _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_PROVIDER_H
+#endif  // _MOZILLA_WIDGET_GTK_WINDOW_SURFACE_PROVIDER_H

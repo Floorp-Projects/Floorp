@@ -14,24 +14,22 @@
 namespace mozilla {
 namespace dom {
 
-class FontFaceSetIterator final
-{
-public:
+class FontFaceSetIterator final {
+ public:
   FontFaceSetIterator(mozilla::dom::FontFaceSet* aFontFaceSet,
                       bool aIsKeyAndValue);
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(FontFaceSetIterator)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FontFaceSetIterator)
 
-  bool WrapObject(JSContext* aCx,
-                  JS::Handle<JSObject*> aGivenProto,
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
 
   // WebIDL
   void Next(JSContext* aCx, FontFaceSetIteratorResult& aResult,
             mozilla::ErrorResult& aRv);
 
-private:
+ private:
   ~FontFaceSetIterator();
 
   RefPtr<FontFaceSet> mFontFaceSet;
@@ -39,7 +37,7 @@ private:
   bool mIsKeyAndValue;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // !defined(mozilla_dom_FontFaceSetIterator_h)
+#endif  // !defined(mozilla_dom_FontFaceSetIterator_h)

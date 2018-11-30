@@ -20,50 +20,45 @@
  * dlfcn.h replacement functions
  */
 extern "C" {
-  void *__wrap_dlopen(const char *path, int flags);
-  const char *__wrap_dlerror(void);
-  void *__wrap_dlsym(void *handle, const char *symbol);
-  int __wrap_dlclose(void *handle);
+void *__wrap_dlopen(const char *path, int flags);
+const char *__wrap_dlerror(void);
+void *__wrap_dlsym(void *handle, const char *symbol);
+int __wrap_dlclose(void *handle);
 
 #ifndef HAVE_DLADDR
-  typedef struct {
-    const char *dli_fname;
-    void *dli_fbase;
-    const char *dli_sname;
-    void *dli_saddr;
-  } Dl_info;
+typedef struct {
+  const char *dli_fname;
+  void *dli_fbase;
+  const char *dli_sname;
+  void *dli_saddr;
+} Dl_info;
 #endif
-  int __wrap_dladdr(void *addr, Dl_info *info);
+int __wrap_dladdr(void *addr, Dl_info *info);
 
-  struct dl_phdr_info {
-    Elf::Addr dlpi_addr;
-    const char *dlpi_name;
-    const Elf::Phdr *dlpi_phdr;
-    Elf::Half dlpi_phnum;
-  };
+struct dl_phdr_info {
+  Elf::Addr dlpi_addr;
+  const char *dlpi_name;
+  const Elf::Phdr *dlpi_phdr;
+  Elf::Half dlpi_phnum;
+};
 
-  typedef int (*dl_phdr_cb)(struct dl_phdr_info *, size_t, void *);
-  int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data);
+typedef int (*dl_phdr_cb)(struct dl_phdr_info *, size_t, void *);
+int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data);
 
 #ifdef __ARM_EABI__
-  const void *__wrap___gnu_Unwind_Find_exidx(void *pc, int *pcount);
+const void *__wrap___gnu_Unwind_Find_exidx(void *pc, int *pcount);
 #endif
 
 /**
  * faulty.lib public API
  */
-MFBT_API size_t
-__dl_get_mappable_length(void *handle);
+MFBT_API size_t __dl_get_mappable_length(void *handle);
 
-MFBT_API void *
-__dl_mmap(void *handle, void *addr, size_t length, off_t offset);
+MFBT_API void *__dl_mmap(void *handle, void *addr, size_t length, off_t offset);
 
-MFBT_API void
-__dl_munmap(void *handle, void *addr, size_t length);
+MFBT_API void __dl_munmap(void *handle, void *addr, size_t length);
 
-MFBT_API bool
-IsSignalHandlingBroken();
-
+MFBT_API bool IsSignalHandlingBroken();
 }
 
 /* Forward declarations for use in LibHandle */
@@ -82,10 +77,11 @@ class LibHandle;
 namespace mozilla {
 namespace detail {
 
-template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() const;
+template <>
+inline void RefCounted<LibHandle, AtomicRefCount>::Release() const;
 
-template <> inline RefCounted<LibHandle, AtomicRefCount>::~RefCounted()
-{
+template <>
+inline RefCounted<LibHandle, AtomicRefCount>::~RefCounted() {
   MOZ_ASSERT(mRefCnt == 0x7fffdead);
 }
 
@@ -96,18 +92,17 @@ template <> inline RefCounted<LibHandle, AtomicRefCount>::~RefCounted()
  * Abstract class for loaded libraries. Libraries may be loaded through the
  * system linker or this linker, both cases will be derived from this class.
  */
-class LibHandle: public mozilla::external::AtomicRefCounted<LibHandle>
-{
-public:
+class LibHandle : public mozilla::external::AtomicRefCounted<LibHandle> {
+ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(LibHandle)
   /**
    * Constructor. Takes the path of the loaded library and will store a copy
    * of the leaf name.
    */
   LibHandle(const char *path)
-  : directRefCnt(0), path(path ? strdup(path) : nullptr), mappable(nullptr)
-  {
-  }
+      : directRefCnt(0),
+        path(path ? strdup(path) : nullptr),
+        mappable(nullptr) {}
 
   /**
    * Destructor.
@@ -141,10 +136,7 @@ public:
    * Returns the full path of the library, when available. Otherwise, returns
    * the file name.
    */
-  const char *GetPath() const
-  {
-    return path;
-  }
+  const char *GetPath() const { return path; }
 
   /**
    * Library handles can be referenced from other library handles or
@@ -152,8 +144,7 @@ public:
    * able to distinguish between the two kind of referencing for better
    * bookkeeping.
    */
-  void AddDirectRef()
-  {
+  void AddDirectRef() {
     mozilla::external::AtomicRefCounted<LibHandle>::AddRef();
     ++directRefCnt;
   }
@@ -162,8 +153,7 @@ public:
    * Releases a direct reference, and returns whether there are any direct
    * references left.
    */
-  bool ReleaseDirectRef()
-  {
+  bool ReleaseDirectRef() {
     const MozRefCountType count = --directRefCnt;
     MOZ_ASSERT(count + 1 > 0);
     MOZ_ASSERT(count + 1 <=
@@ -175,10 +165,7 @@ public:
   /**
    * Returns the number of direct references
    */
-  MozRefCountType DirectRefCount()
-  {
-    return directRefCnt;
-  }
+  MozRefCountType DirectRefCount() { return directRefCnt; }
 
   /**
    * Returns the complete size of the file or stream behind the library
@@ -206,7 +193,7 @@ public:
   virtual const void *FindExidx(int *pcount) const = 0;
 #endif
 
-protected:
+ protected:
   /**
    * Returns a mappable object for use by MappableMMap and related functions.
    */
@@ -224,7 +211,7 @@ protected:
   virtual BaseElf *AsBaseElf() { return nullptr; }
   virtual SystemElf *AsSystemElf() { return nullptr; }
 
-private:
+ private:
   mozilla::Atomic<MozRefCountType> directRefCnt;
   char *path;
 
@@ -243,10 +230,10 @@ private:
 namespace mozilla {
 namespace detail {
 
-template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() const {
+template <>
+inline void RefCounted<LibHandle, AtomicRefCount>::Release() const {
 #ifdef DEBUG
-  if (mRefCnt > 0x7fff0000)
-    MOZ_ASSERT(mRefCnt > 0x7fffdead);
+  if (mRefCnt > 0x7fff0000) MOZ_ASSERT(mRefCnt > 0x7fffdead);
 #endif
   MOZ_ASSERT(mRefCnt > 0);
   if (mRefCnt > 0) {
@@ -256,7 +243,7 @@ template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() const {
 #else
       mRefCnt = 1;
 #endif
-      delete static_cast<const LibHandle*>(this);
+      delete static_cast<const LibHandle *>(this);
     }
   }
 }
@@ -267,9 +254,8 @@ template <> inline void RefCounted<LibHandle, AtomicRefCount>::Release() const {
 /**
  * Class handling libraries loaded by the system linker
  */
-class SystemElf: public LibHandle
-{
-public:
+class SystemElf : public LibHandle {
+ public:
   /**
    * Returns a new SystemElf for the given path. The given flags are passed
    * to dlopen().
@@ -288,7 +274,7 @@ public:
   virtual const void *FindExidx(int *pcount) const;
 #endif
 
-protected:
+ protected:
   virtual Mappable *GetMappable() const;
 
   /**
@@ -302,17 +288,14 @@ protected:
    * Remove the reference to the system linker handle. This avoids dlclose()
    * being called when the instance is destroyed.
    */
-  void Forget()
-  {
-    dlhandle = nullptr;
-  }
+  void Forget() { dlhandle = nullptr; }
 
-private:
+ private:
   /**
    * Private constructor
    */
   SystemElf(const char *path, void *handle)
-  : LibHandle(path), dlhandle(handle) { }
+      : LibHandle(path), dlhandle(handle) {}
 
   /* Handle as returned by system dlopen() */
   void *dlhandle;
@@ -324,28 +307,23 @@ private:
  * allows a handler to be set for faults in other places, and redispatches
  * to the handler set through signal() or sigaction().
  */
-class SEGVHandler
-{
-public:
+class SEGVHandler {
+ public:
   bool hasRegisteredHandler() {
-    if (! initialized)
-      FinishInitialization();
+    if (!initialized) FinishInitialization();
     return registeredHandler;
   }
 
-  bool isSignalHandlingBroken() {
-    return signalHandlingBroken;
-  }
+  bool isSignalHandlingBroken() { return signalHandlingBroken; }
 
   static int __wrap_sigaction(int signum, const struct sigaction *act,
                               struct sigaction *oldact);
 
-protected:
+ protected:
   SEGVHandler();
   ~SEGVHandler();
 
-private:
-
+ private:
   /**
    * The constructor doesn't do all initialization, and the tail is done
    * at a later time.
@@ -393,9 +371,8 @@ private:
 /**
  * Elf Loader class in charge of loading and bookkeeping libraries.
  */
-class ElfLoader: public SEGVHandler
-{
-public:
+class ElfLoader : public SEGVHandler {
+ public:
   /**
    * The Elf Loader instance
    */
@@ -408,7 +385,7 @@ public:
    * directory containing that parent library for the library to load.
    */
   already_AddRefed<LibHandle> Load(const char *path, int flags,
-                                        LibHandle *parent = nullptr);
+                                   LibHandle *parent = nullptr);
 
   /**
    * Returns the handle of the library containing the given address in
@@ -429,10 +406,10 @@ public:
   void ExpectShutdown(bool val) { expect_shutdown = val; }
   bool IsShutdownExpected() { return expect_shutdown; }
 
-private:
+ private:
   bool expect_shutdown;
 
-protected:
+ protected:
   /**
    * Registers the given handle. This method is meant to be called by
    * LibHandle subclass creators.
@@ -453,11 +430,10 @@ protected:
   friend int __wrap_dlclose(void *handle);
   /* __wrap_dlerror() returns this custom last error if non-null or the system
    * dlerror() value if this is null. Must refer to a string constant. */
-  mozilla::Atomic<const char*, mozilla::Relaxed> lastError;
+  mozilla::Atomic<const char *, mozilla::Relaxed> lastError;
 
-private:
-  ElfLoader() : expect_shutdown(true), lastError(nullptr)
-  {
+ private:
+  ElfLoader() : expect_shutdown(true), lastError(nullptr) {
     pthread_mutex_init(&handlesMutex, nullptr);
   }
 
@@ -487,7 +463,7 @@ private:
 
   pthread_mutex_t handlesMutex;
 
-protected:
+ protected:
   friend class CustomElf;
   friend class LoadedElf;
 
@@ -525,9 +501,9 @@ protected:
    * associated object to call it with, and DSO handle.
    */
   class DestructorCaller {
-  public:
+   public:
     DestructorCaller(Destructor destructor, void *object, void *dso_handle)
-    : destructor(destructor), object(object), dso_handle(dso_handle) { }
+        : destructor(destructor), object(object), dso_handle(dso_handle) {}
 
     /**
      * Call the destructor function with the associated object.
@@ -538,24 +514,22 @@ protected:
     /**
      * Returns whether the destructor is associated to the given DSO handle
      */
-    bool IsForHandle(void *handle) const
-    {
-      return handle == dso_handle;
-    }
+    bool IsForHandle(void *handle) const { return handle == dso_handle; }
 
-  private:
+   private:
     Destructor destructor;
     void *object;
     void *dso_handle;
   };
 
-private:
+ private:
   /* Keep track of all registered destructors */
   std::vector<DestructorCaller> destructors;
 
   /* Forward declaration, see further below */
   class DebuggerHelper;
-public:
+
+ public:
   /* Loaded object descriptor for the debugger interface below*/
   struct link_map {
     /* Base address of the loaded object. */
@@ -565,13 +539,13 @@ public:
     /* Address of the PT_DYNAMIC segment. */
     const void *l_ld;
 
-  private:
+   private:
     friend class ElfLoader::DebuggerHelper;
     /* Double linked list of loaded objects. */
     link_map *l_next, *l_prev;
   };
 
-private:
+ private:
   /* Data structure used by the linker to give details about shared objects it
    * loaded to debuggers. This is normally defined in link.h, but Android
    * headers lack this file. */
@@ -604,17 +578,13 @@ private:
 
   /* Helper class used to integrate libraries loaded by this linker in
    * r_debug */
-  class DebuggerHelper
-  {
-  public:
+  class DebuggerHelper {
+   public:
     DebuggerHelper();
 
     void Init(AuxVector *auvx);
 
-    explicit operator bool()
-    {
-      return dbg;
-    }
+    explicit operator bool() { return dbg; }
 
     /* Make the debugger aware of a new loaded object */
     void Add(link_map *map);
@@ -623,45 +593,35 @@ private:
     void Remove(link_map *map);
 
     /* Iterates over all link_maps */
-    class iterator
-    {
-    public:
-      const link_map *operator ->() const
-      {
-        return item;
-      }
+    class iterator {
+     public:
+      const link_map *operator->() const { return item; }
 
-      const link_map &operator ++()
-      {
+      const link_map &operator++() {
         item = item->l_next;
         return *item;
       }
 
-      bool operator<(const iterator &other) const
-      {
-        if (other.item == nullptr)
-          return item ? true : false;
-        MOZ_CRASH("DebuggerHelper::iterator::operator< called with something else than DebuggerHelper::end()");
+      bool operator<(const iterator &other) const {
+        if (other.item == nullptr) return item ? true : false;
+        MOZ_CRASH(
+            "DebuggerHelper::iterator::operator< called with something else "
+            "than DebuggerHelper::end()");
       }
-    protected:
-      friend class DebuggerHelper;
-      explicit iterator(const link_map *item): item(item) { }
 
-    private:
+     protected:
+      friend class DebuggerHelper;
+      explicit iterator(const link_map *item) : item(item) {}
+
+     private:
       const link_map *item;
     };
 
-    iterator begin() const
-    {
-      return iterator(dbg ? dbg->r_map : nullptr);
-    }
+    iterator begin() const { return iterator(dbg ? dbg->r_map : nullptr); }
 
-    iterator end() const
-    {
-      return iterator(nullptr);
-    }
+    iterator end() const { return iterator(nullptr); }
 
-  private:
+   private:
     r_debug *dbg;
     link_map *firstAdded;
   };

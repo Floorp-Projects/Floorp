@@ -13,91 +13,82 @@ namespace dom {
 
 using mozilla::ipc::IPCResult;
 
-void
-ServiceWorkerRegistrationParent::ActorDestroy(ActorDestroyReason aReason)
-{
+void ServiceWorkerRegistrationParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mProxy) {
     mProxy->RevokeActor(this);
     mProxy = nullptr;
   }
 }
 
-IPCResult
-ServiceWorkerRegistrationParent::RecvTeardown()
-{
+IPCResult ServiceWorkerRegistrationParent::RecvTeardown() {
   MaybeSendDelete();
   return IPC_OK();
 }
 
 namespace {
 
-void
-ResolveUnregister(PServiceWorkerRegistrationParent::UnregisterResolver&& aResolver,
-                  bool aSuccess, nsresult aRv)
-{
+void ResolveUnregister(
+    PServiceWorkerRegistrationParent::UnregisterResolver&& aResolver,
+    bool aSuccess, nsresult aRv) {
   aResolver(Tuple<const bool&, const CopyableErrorResult&>(
-    aSuccess, CopyableErrorResult(aRv)));
+      aSuccess, CopyableErrorResult(aRv)));
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
-IPCResult
-ServiceWorkerRegistrationParent::RecvUnregister(UnregisterResolver&& aResolver)
-{
+IPCResult ServiceWorkerRegistrationParent::RecvUnregister(
+    UnregisterResolver&& aResolver) {
   if (!mProxy) {
-    ResolveUnregister(std::move(aResolver), false, NS_ERROR_DOM_INVALID_STATE_ERR);
+    ResolveUnregister(std::move(aResolver), false,
+                      NS_ERROR_DOM_INVALID_STATE_ERR);
     return IPC_OK();
   }
 
-  mProxy->Unregister()->Then(GetCurrentThreadSerialEventTarget(), __func__,
-    [aResolver] (bool aSuccess) mutable {
-      ResolveUnregister(std::move(aResolver), aSuccess, NS_OK);
-    }, [aResolver] (nsresult aRv) mutable {
-      ResolveUnregister(std::move(aResolver), false, aRv);
-    });
+  mProxy->Unregister()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [aResolver](bool aSuccess) mutable {
+        ResolveUnregister(std::move(aResolver), aSuccess, NS_OK);
+      },
+      [aResolver](nsresult aRv) mutable {
+        ResolveUnregister(std::move(aResolver), false, aRv);
+      });
 
   return IPC_OK();
 }
 
-IPCResult
-ServiceWorkerRegistrationParent::RecvUpdate(UpdateResolver&& aResolver)
-{
+IPCResult ServiceWorkerRegistrationParent::RecvUpdate(
+    UpdateResolver&& aResolver) {
   if (!mProxy) {
     aResolver(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return IPC_OK();
   }
 
-  mProxy->Update()->Then(GetCurrentThreadSerialEventTarget(), __func__,
-    [aResolver] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-      aResolver(aDescriptor.ToIPC());
-    }, [aResolver] (const CopyableErrorResult& aResult) {
-      aResolver(aResult);
-    });
+  mProxy->Update()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [aResolver](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+        aResolver(aDescriptor.ToIPC());
+      },
+      [aResolver](const CopyableErrorResult& aResult) { aResolver(aResult); });
 
   return IPC_OK();
 }
 
 ServiceWorkerRegistrationParent::ServiceWorkerRegistrationParent()
-  : mDeleteSent(false)
-{
-}
+    : mDeleteSent(false) {}
 
-ServiceWorkerRegistrationParent::~ServiceWorkerRegistrationParent()
-{
+ServiceWorkerRegistrationParent::~ServiceWorkerRegistrationParent() {
   MOZ_DIAGNOSTIC_ASSERT(!mProxy);
 }
 
-void
-ServiceWorkerRegistrationParent::Init(const IPCServiceWorkerRegistrationDescriptor& aDescriptor)
-{
+void ServiceWorkerRegistrationParent::Init(
+    const IPCServiceWorkerRegistrationDescriptor& aDescriptor) {
   MOZ_DIAGNOSTIC_ASSERT(!mProxy);
-  mProxy = new ServiceWorkerRegistrationProxy(ServiceWorkerRegistrationDescriptor(aDescriptor));
+  mProxy = new ServiceWorkerRegistrationProxy(
+      ServiceWorkerRegistrationDescriptor(aDescriptor));
   mProxy->Init(this);
 }
 
-void
-ServiceWorkerRegistrationParent::MaybeSendDelete()
-{
+void ServiceWorkerRegistrationParent::MaybeSendDelete() {
   if (mDeleteSent) {
     return;
   }
@@ -105,5 +96,5 @@ ServiceWorkerRegistrationParent::MaybeSendDelete()
   Unused << Send__delete__(this);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

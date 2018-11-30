@@ -21,37 +21,27 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMQuad, mParent, mBounds, mPoints[0],
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMQuad, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMQuad, Release)
 
-DOMQuad::DOMQuad(nsISupports* aParent, CSSPoint aPoints[4])
-  : mParent(aParent)
-{
+DOMQuad::DOMQuad(nsISupports* aParent, CSSPoint aPoints[4]) : mParent(aParent) {
   for (uint32_t i = 0; i < 4; ++i) {
     mPoints[i] = new DOMPoint(aParent, aPoints[i].x, aPoints[i].y);
   }
 }
 
-DOMQuad::DOMQuad(nsISupports* aParent)
-  : mParent(aParent)
-{
-}
+DOMQuad::DOMQuad(nsISupports* aParent) : mParent(aParent) {}
 
-DOMQuad::~DOMQuad()
-{
-}
+DOMQuad::~DOMQuad() {}
 
-JSObject*
-DOMQuad::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DOMQuad::WrapObject(JSContext* aCx,
+                              JS::Handle<JSObject*> aGivenProto) {
   return DOMQuad_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMQuad>
-DOMQuad::Constructor(const GlobalObject& aGlobal,
-                     const DOMPointInit& aP1,
-                     const DOMPointInit& aP2,
-                     const DOMPointInit& aP3,
-                     const DOMPointInit& aP4,
-                     ErrorResult& aRV)
-{
+already_AddRefed<DOMQuad> DOMQuad::Constructor(const GlobalObject& aGlobal,
+                                               const DOMPointInit& aP1,
+                                               const DOMPointInit& aP2,
+                                               const DOMPointInit& aP3,
+                                               const DOMPointInit& aP4,
+                                               ErrorResult& aRV) {
   RefPtr<DOMQuad> obj = new DOMQuad(aGlobal.GetAsSupports());
   obj->mPoints[0] = DOMPoint::FromPoint(aGlobal, aP1);
   obj->mPoints[1] = DOMPoint::FromPoint(aGlobal, aP2);
@@ -60,10 +50,9 @@ DOMQuad::Constructor(const GlobalObject& aGlobal,
   return obj.forget();
 }
 
-already_AddRefed<DOMQuad>
-DOMQuad::Constructor(const GlobalObject& aGlobal, const DOMRectReadOnly& aRect,
-                     ErrorResult& aRV)
-{
+already_AddRefed<DOMQuad> DOMQuad::Constructor(const GlobalObject& aGlobal,
+                                               const DOMRectReadOnly& aRect,
+                                               ErrorResult& aRV) {
   CSSPoint points[4];
   Float x = aRect.X(), y = aRect.Y(), w = aRect.Width(), h = aRect.Height();
   points[0] = CSSPoint(x, y);
@@ -74,9 +63,7 @@ DOMQuad::Constructor(const GlobalObject& aGlobal, const DOMRectReadOnly& aRect,
   return obj.forget();
 }
 
-void
-DOMQuad::GetHorizontalMinMax(double* aX1, double* aX2) const
-{
+void DOMQuad::GetHorizontalMinMax(double* aX1, double* aX2) const {
   double x1, x2;
   x1 = x2 = Point(0)->X();
   for (uint32_t i = 1; i < 4; ++i) {
@@ -88,9 +75,7 @@ DOMQuad::GetHorizontalMinMax(double* aX1, double* aX2) const
   *aX2 = x2;
 }
 
-void
-DOMQuad::GetVerticalMinMax(double* aY1, double* aY2) const
-{
+void DOMQuad::GetVerticalMinMax(double* aY1, double* aY2) const {
   double y1, y2;
   y1 = y2 = Point(0)->Y();
   for (uint32_t i = 1; i < 4; ++i) {
@@ -102,32 +87,26 @@ DOMQuad::GetVerticalMinMax(double* aY1, double* aY2) const
   *aY2 = y2;
 }
 
-DOMRectReadOnly*
-DOMQuad::Bounds()
-{
+DOMRectReadOnly* DOMQuad::Bounds() {
   if (!mBounds) {
     mBounds = GetBounds();
   }
   return mBounds;
 }
 
-already_AddRefed<DOMRectReadOnly>
-DOMQuad::GetBounds() const
-{
+already_AddRefed<DOMRectReadOnly> DOMQuad::GetBounds() const {
   double x1, x2;
   double y1, y2;
 
   GetHorizontalMinMax(&x1, &x2);
   GetVerticalMinMax(&y1, &y2);
 
-  RefPtr<DOMRectReadOnly> rval = new DOMRectReadOnly(GetParentObject(),
-                                                     x1, y1, x2 - x1, y2 - y1);
+  RefPtr<DOMRectReadOnly> rval =
+      new DOMRectReadOnly(GetParentObject(), x1, y1, x2 - x1, y2 - y1);
   return rval.forget();
 }
 
-void
-DOMQuad::ToJSON(DOMQuadJSON& aInit)
-{
+void DOMQuad::ToJSON(DOMQuadJSON& aInit) {
   aInit.mP1.Construct(RefPtr<DOMPoint>(P1()).forget());
   aInit.mP2.Construct(RefPtr<DOMPoint>(P2()).forget());
   aInit.mP3.Construct(RefPtr<DOMPoint>(P3()).forget());

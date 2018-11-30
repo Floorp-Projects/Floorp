@@ -38,19 +38,17 @@ class CommandBufferBuilder;
 /// several DrawingJobs.
 ///
 /// CommandBuffer objects are built using CommandBufferBuilder.
-class CommandBuffer : public external::AtomicRefCounted<CommandBuffer>
-{
-public:
+class CommandBuffer : public external::AtomicRefCounted<CommandBuffer> {
+ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(CommandBuffer)
 
   ~CommandBuffer();
 
   const DrawingCommand* GetDrawingCommand(ptrdiff_t aId);
 
-protected:
+ protected:
   explicit CommandBuffer(size_t aSize = 256)
-  : mStorage(IterableArena::GROWABLE, aSize)
-  {}
+      : mStorage(IterableArena::GROWABLE, aSize) {}
 
   IterableArena mStorage;
   friend class CommandBufferBuilder;
@@ -60,18 +58,16 @@ protected:
 ///
 /// The builder is a separate object to ensure that commands are not added to a
 /// submitted CommandBuffer.
-class CommandBufferBuilder
-{
-public:
+class CommandBufferBuilder {
+ public:
   void BeginCommandBuffer(size_t aBufferSize = 256);
 
   already_AddRefed<CommandBuffer> EndCommandBuffer();
 
   /// Build the CommandBuffer, command after command.
   /// This must be used between BeginCommandBuffer and EndCommandBuffer.
-  template<typename T, typename... Args>
-  ptrdiff_t AddCommand(Args&&... aArgs)
-  {
+  template <typename T, typename... Args>
+  ptrdiff_t AddCommand(Args&&... aArgs) {
     static_assert(IsBaseOf<DrawingCommand, T>::value,
                   "T must derive from DrawingCommand");
     return mCommands->mStorage.Alloc<T>(std::forward<Args>(aArgs)...);
@@ -79,23 +75,20 @@ public:
 
   bool HasCommands() const { return !!mCommands; }
 
-protected:
+ protected:
   RefPtr<CommandBuffer> mCommands;
 };
 
 /// Stores multiple commands to be executed sequencially.
 class DrawingJob : public Job {
-public:
+ public:
   ~DrawingJob();
 
   virtual JobStatus Run() override;
 
-protected:
-  DrawingJob(DrawTarget* aTarget,
-              IntPoint aOffset,
-              SyncObject* aStart,
-              SyncObject* aCompletion,
-              WorkerThread* aPinToWorker = nullptr);
+ protected:
+  DrawingJob(DrawTarget* aTarget, IntPoint aOffset, SyncObject* aStart,
+             SyncObject* aCompletion, WorkerThread* aPinToWorker = nullptr);
 
   /// Runs the tasks's destructors and resets the buffer.
   void Clear();
@@ -115,7 +108,7 @@ protected:
 /// The builder is a separate object to ensure that commands are not added to a
 /// submitted DrawingJob.
 class DrawingJobBuilder {
-public:
+ public:
   DrawingJobBuilder();
 
   ~DrawingJobBuilder();
@@ -124,36 +117,33 @@ public:
   ///
   /// call this method before starting to add commands.
   void BeginDrawingJob(DrawTarget* aTarget, IntPoint aOffset,
-                        SyncObject* aStart = nullptr);
+                       SyncObject* aStart = nullptr);
 
   /// Build the DrawingJob, command after command.
   /// This must be used between BeginDrawingJob and EndDrawingJob.
-  void AddCommand(ptrdiff_t offset)
-  {
-    mCommandOffsets.push_back(offset);
-  }
+  void AddCommand(ptrdiff_t offset) { mCommandOffsets.push_back(offset); }
 
   /// Finalizes and returns the drawing task.
   ///
   /// If aCompletion is not null, the sync object will be signaled after the
   /// task buffer is destroyed (and after the destructor of the tasks have run).
-  /// In most cases this means after the completion of all tasks in the task buffer,
-  /// but also when the task buffer is destroyed due to an error.
+  /// In most cases this means after the completion of all tasks in the task
+  /// buffer, but also when the task buffer is destroyed due to an error.
   DrawingJob* EndDrawingJob(CommandBuffer* aCmdBuffer,
-                              SyncObject* aCompletion = nullptr,
-                              WorkerThread* aPinToWorker = nullptr);
+                            SyncObject* aCompletion = nullptr,
+                            WorkerThread* aPinToWorker = nullptr);
 
   /// Returns true between BeginDrawingJob and EndDrawingJob, false otherwise.
   bool HasDrawingJob() const { return !!mDrawTarget; }
 
-protected:
+ protected:
   std::vector<ptrdiff_t> mCommandOffsets;
   RefPtr<DrawTarget> mDrawTarget;
   IntPoint mOffset;
   RefPtr<SyncObject> mStart;
 };
 
-} // namespace
-} // namespace
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

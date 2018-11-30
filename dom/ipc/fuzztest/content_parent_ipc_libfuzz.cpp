@@ -14,21 +14,15 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
 
-int
-FuzzingInitContentParentIPC(int* argc, char*** argv)
-{
-  return 0;
-}
+int FuzzingInitContentParentIPC(int* argc, char*** argv) { return 0; }
 
-static int
-RunContentParentIPCFuzzing(const uint8_t* data, size_t size)
-{
+static int RunContentParentIPCFuzzing(const uint8_t* data, size_t size) {
   static mozilla::dom::ContentParent* p =
-    mozilla::ipc::ProtocolFuzzerHelper::CreateContentParent(
-      nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+      mozilla::ipc::ProtocolFuzzerHelper::CreateContentParent(
+          nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
 
   static nsTArray<nsCString> ignored = mozilla::ipc::LoadIPCMessageBlacklist(
-    getenv("MOZ_IPC_MESSAGE_FUZZ_BLACKLIST"));
+      getenv("MOZ_IPC_MESSAGE_FUZZ_BLACKLIST"));
 
   mozilla::ipc::FuzzProtocol(p, data, size, ignored);
 
@@ -36,5 +30,4 @@ RunContentParentIPCFuzzing(const uint8_t* data, size_t size)
 }
 
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitContentParentIPC,
-                          RunContentParentIPCFuzzing,
-                          ContentParentIPC);
+                          RunContentParentIPCFuzzing, ContentParentIPC);

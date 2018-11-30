@@ -26,19 +26,14 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIConstraintValidation::nsIConstraintValidation()
-  : mValidityBitField(0)
-  // By default, all elements are subjects to constraint validation.
-  , mBarredFromConstraintValidation(false)
-{
-}
+    : mValidityBitField(0)
+      // By default, all elements are subjects to constraint validation.
+      ,
+      mBarredFromConstraintValidation(false) {}
 
-nsIConstraintValidation::~nsIConstraintValidation()
-{
-}
+nsIConstraintValidation::~nsIConstraintValidation() {}
 
-mozilla::dom::ValidityState*
-nsIConstraintValidation::Validity()
-{
+mozilla::dom::ValidityState* nsIConstraintValidation::Validity() {
   if (!mValidity) {
     mValidity = new mozilla::dom::ValidityState(this);
   }
@@ -46,15 +41,14 @@ nsIConstraintValidation::Validity()
   return mValidity;
 }
 
-void
-nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
-                                              ErrorResult& aError)
-{
+void nsIConstraintValidation::GetValidationMessage(
+    nsAString& aValidationMessage, ErrorResult& aError) {
   aValidationMessage.Truncate();
 
   if (IsCandidateForConstraintValidation() && !IsValid()) {
     nsCOMPtr<Element> element = do_QueryInterface(this);
-    NS_ASSERTION(element, "This class should be inherited by HTML elements only!");
+    NS_ASSERTION(element,
+                 "This class should be inherited by HTML elements only!");
 
     nsAutoString authorMessage;
     element->GetAttr(kNameSpaceID_None, nsGkAtoms::x_moz_errormessage,
@@ -98,27 +92,22 @@ nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
   }
 }
 
-bool
-nsIConstraintValidation::CheckValidity()
-{
+bool nsIConstraintValidation::CheckValidity() {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     return true;
   }
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(this);
-  NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
+  NS_ASSERTION(content,
+               "This class should be inherited by HTML elements only!");
 
-  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(),
-                                       content,
+  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
                                        NS_LITERAL_STRING("invalid"),
-                                       CanBubble::eNo,
-                                       Cancelable::eYes);
+                                       CanBubble::eNo, Cancelable::eYes);
   return false;
 }
 
-nsresult
-nsIConstraintValidation::CheckValidity(bool* aValidity)
-{
+nsresult nsIConstraintValidation::CheckValidity(bool* aValidity) {
   NS_ENSURE_ARG_POINTER(aValidity);
 
   *aValidity = CheckValidity();
@@ -126,9 +115,7 @@ nsIConstraintValidation::CheckValidity(bool* aValidity)
   return NS_OK;
 }
 
-bool
-nsIConstraintValidation::ReportValidity()
-{
+bool nsIConstraintValidation::ReportValidity() {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     return true;
   }
@@ -137,11 +124,9 @@ nsIConstraintValidation::ReportValidity()
   MOZ_ASSERT(element, "This class should be inherited by HTML elements only!");
 
   bool defaultAction = true;
-  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
-                                       NS_LITERAL_STRING("invalid"),
-                                       CanBubble::eNo,
-                                       Cancelable::eYes,
-                                       &defaultAction);
+  nsContentUtils::DispatchTrustedEvent(
+      element->OwnerDoc(), element, NS_LITERAL_STRING("invalid"),
+      CanBubble::eNo, Cancelable::eYes, &defaultAction);
   if (!defaultAction) {
     return false;
   }
@@ -158,20 +143,18 @@ nsIConstraintValidation::ReportValidity()
     return false;
   }
 
-  RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(element->OwnerDoc(),
-                                                   nullptr, nullptr);
-  event->InitCustomEvent(jsapi.cx(),
-                         NS_LITERAL_STRING("MozInvalidForm"),
+  RefPtr<CustomEvent> event =
+      NS_NewDOMCustomEvent(element->OwnerDoc(), nullptr, nullptr);
+  event->InitCustomEvent(jsapi.cx(), NS_LITERAL_STRING("MozInvalidForm"),
                          /* CanBubble */ true,
-                         /* Cancelable */ true,
-                         detail);
+                         /* Cancelable */ true, detail);
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   element->DispatchEvent(*event);
 
   nsCOMPtr<nsIObserverService> service =
-    mozilla::services::GetObserverService();
+      mozilla::services::GetObserverService();
   if (!service) {
     NS_WARNING("No observer service available!");
     return true;
@@ -215,10 +198,8 @@ nsIConstraintValidation::ReportValidity()
   return false;
 }
 
-void
-nsIConstraintValidation::SetValidityState(ValidityStateType aState,
-                                          bool aValue)
-{
+void nsIConstraintValidation::SetValidityState(ValidityStateType aState,
+                                               bool aValue) {
   bool previousValidity = IsValid();
 
   if (aValue) {
@@ -233,27 +214,23 @@ nsIConstraintValidation::SetValidityState(ValidityStateType aState,
     NS_ASSERTION(formCtrl, "This interface should be used by form elements!");
 
     HTMLFormElement* form =
-      static_cast<HTMLFormElement*>(formCtrl->GetFormElement());
+        static_cast<HTMLFormElement*>(formCtrl->GetFormElement());
     if (form) {
       form->UpdateValidity(IsValid());
     }
     HTMLFieldSetElement* fieldSet = formCtrl->GetFieldSet();
-      if (fieldSet) {
+    if (fieldSet) {
       fieldSet->UpdateValidity(IsValid());
     }
   }
 }
 
-void
-nsIConstraintValidation::SetCustomValidity(const nsAString& aError)
-{
+void nsIConstraintValidation::SetCustomValidity(const nsAString& aError) {
   mCustomValidity.Assign(aError);
   SetValidityState(VALIDITY_STATE_CUSTOM_ERROR, !mCustomValidity.IsEmpty());
 }
 
-void
-nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred)
-{
+void nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred) {
   bool previousBarred = mBarredFromConstraintValidation;
 
   mBarredFromConstraintValidation = aBarred;
@@ -268,7 +245,7 @@ nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred)
     // inform the form and fieldset that we are now valid. Otherwise, we are now
     // invalid.
     HTMLFormElement* form =
-      static_cast<HTMLFormElement*>(formCtrl->GetFormElement());
+        static_cast<HTMLFormElement*>(formCtrl->GetFormElement());
     if (form) {
       form->UpdateValidity(aBarred);
     }
@@ -278,4 +255,3 @@ nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred)
     }
   }
 }
-

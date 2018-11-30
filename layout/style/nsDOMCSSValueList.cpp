@@ -15,23 +15,16 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsDOMCSSValueList::nsDOMCSSValueList(bool aCommaDelimited)
-  : CSSValue()
-  , mCommaDelimited(aCommaDelimited)
-{
-}
+    : CSSValue(), mCommaDelimited(aCommaDelimited) {}
 
 nsDOMCSSValueList::~nsDOMCSSValueList() = default;
 
-void
-nsDOMCSSValueList::AppendCSSValue(already_AddRefed<CSSValue> aValue)
-{
+void nsDOMCSSValueList::AppendCSSValue(already_AddRefed<CSSValue> aValue) {
   RefPtr<CSSValue> val = aValue;
   mCSSValues.AppendElement(std::move(val));
 }
 
-void
-nsDOMCSSValueList::GetCssText(nsAString& aCssText)
-{
+void nsDOMCSSValueList::GetCssText(nsAString& aCssText) {
   aCssText.Truncate();
 
   uint32_t count = mCSSValues.Length();
@@ -45,14 +38,14 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
 
   nsAutoString tmpStr;
   for (uint32_t i = 0; i < count; ++i) {
-    CSSValue *cssValue = mCSSValues[i];
-    NS_ASSERTION(cssValue, "Eek!  Someone filled the value list with null CSSValues!");
+    CSSValue* cssValue = mCSSValues[i];
+    NS_ASSERTION(cssValue,
+                 "Eek!  Someone filled the value list with null CSSValues!");
     ErrorResult dummy;
     if (cssValue) {
       cssValue->GetCssText(tmpStr, dummy);
 
       if (tmpStr.IsEmpty()) {
-
 #ifdef DEBUG_caillon
         NS_ERROR("Eek!  An empty CSSValue!  Bad!");
 #endif
@@ -70,8 +63,6 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
   }
 }
 
-void
-nsDOMCSSValueList::GetCssText(nsString& aCssText, ErrorResult& aRv)
-{
+void nsDOMCSSValueList::GetCssText(nsString& aCssText, ErrorResult& aRv) {
   GetCssText(aCssText);
 }

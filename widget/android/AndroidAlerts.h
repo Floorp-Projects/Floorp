@@ -17,9 +17,8 @@
 namespace mozilla {
 namespace widget {
 
-class AndroidAlerts : public nsIAlertsService
-{
-public:
+class AndroidAlerts : public nsIAlertsService {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTSSERVICE
 
@@ -28,17 +27,14 @@ public:
   static void NotifyListener(const nsAString& aName, const char* aTopic,
                              const char16_t* aCookie);
 
-protected:
-  virtual ~AndroidAlerts()
-  {
-      sListenerMap = nullptr;
-  }
+ protected:
+  virtual ~AndroidAlerts() { sListenerMap = nullptr; }
 
   using ListenerMap = nsInterfaceHashtable<nsStringHashKey, nsIObserver>;
   static StaticAutoPtr<ListenerMap> sListenerMap;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // nsAndroidAlerts_h__
+#endif  // nsAndroidAlerts_h__

@@ -31,13 +31,8 @@ namespace mozilla {
 // In the future we should set the tainting value within necko so that it is
 // consistently applied.  Once that is done consumers can replace checks against
 // the final URL and CORS mode with checks against tainting.
-enum class LoadTainting : uint8_t
-{
-  Basic = 0,
-  CORS = 1,
-  Opaque = 2
-};
+enum class LoadTainting : uint8_t { Basic = 0, CORS = 1, Opaque = 2 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_LoadTainting_h
+#endif  // mozilla_LoadTainting_h

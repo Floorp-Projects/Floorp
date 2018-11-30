@@ -25,9 +25,7 @@ class FileDescriptorSet {
 
   // Mac and Linux both limit the number of file descriptors per message to
   // slightly more than 250.
-  enum {
-    MAX_DESCRIPTORS_PER_MESSAGE = 250
-  };
+  enum { MAX_DESCRIPTORS_PER_MESSAGE = 250 };
 
   void CopyFrom(const FileDescriptorSet& other);
 
@@ -41,7 +39,6 @@ class FileDescriptorSet {
   bool AddAndAutoClose(int fd);
 
   // ---------------------------------------------------------------------------
-
 
   // ---------------------------------------------------------------------------
   // Interfaces for accessing during message deserialisation...
@@ -61,7 +58,6 @@ class FileDescriptorSet {
 
   // ---------------------------------------------------------------------------
 
-
   // ---------------------------------------------------------------------------
   // Interfaces for transmission...
 
@@ -75,7 +71,6 @@ class FileDescriptorSet {
   void CommitAll();
 
   // ---------------------------------------------------------------------------
-
 
   // ---------------------------------------------------------------------------
   // Interfaces for receiving...

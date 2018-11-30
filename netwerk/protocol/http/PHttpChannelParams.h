@@ -24,14 +24,12 @@ namespace net {
 struct RequestHeaderTuple {
   nsCString mHeader;
   nsCString mValue;
-  bool      mMerge;
-  bool      mEmpty;
+  bool mMerge;
+  bool mEmpty;
 
-  bool operator ==(const RequestHeaderTuple &other) const {
-    return mHeader.Equals(other.mHeader) &&
-           mValue.Equals(other.mValue) &&
-           mMerge == other.mMerge &&
-           mEmpty == other.mEmpty;
+  bool operator==(const RequestHeaderTuple& other) const {
+    return mHeader.Equals(other.mHeader) && mValue.Equals(other.mValue) &&
+           mMerge == other.mMerge && mEmpty == other.mEmpty;
   }
 };
 
@@ -39,28 +37,25 @@ typedef nsTArray<RequestHeaderTuple> RequestHeaderTuples;
 
 typedef nsTArray<Tuple<nsCString, nsCString>> ArrayOfStringPairs;
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 namespace IPC {
 
-template<>
-struct ParamTraits<mozilla::Tuple<nsCString, nsCString>>
-{
+template <>
+struct ParamTraits<mozilla::Tuple<nsCString, nsCString>> {
   typedef mozilla::Tuple<nsCString, nsCString> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, mozilla::Get<0>(aParam));
     WriteParam(aMsg, mozilla::Get<1>(aParam));
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     nsCString first;
     nsCString second;
-    if (!ReadParam(aMsg, aIter, &first) ||
-        !ReadParam(aMsg, aIter, &second))
+    if (!ReadParam(aMsg, aIter, &first) || !ReadParam(aMsg, aIter, &second))
       return false;
 
     *aResult = mozilla::MakeTuple(first, second);
@@ -68,24 +63,22 @@ struct ParamTraits<mozilla::Tuple<nsCString, nsCString>>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::net::RequestHeaderTuple>
-{
+template <>
+struct ParamTraits<mozilla::net::RequestHeaderTuple> {
   typedef mozilla::net::RequestHeaderTuple paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mHeader);
     WriteParam(aMsg, aParam.mValue);
     WriteParam(aMsg, aParam.mMerge);
     WriteParam(aMsg, aParam.mEmpty);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     if (!ReadParam(aMsg, aIter, &aResult->mHeader) ||
-        !ReadParam(aMsg, aIter, &aResult->mValue)  ||
-        !ReadParam(aMsg, aIter, &aResult->mMerge)  ||
+        !ReadParam(aMsg, aIter, &aResult->mValue) ||
+        !ReadParam(aMsg, aIter, &aResult->mMerge) ||
         !ReadParam(aMsg, aIter, &aResult->mEmpty))
       return false;
 
@@ -93,24 +86,21 @@ struct ParamTraits<mozilla::net::RequestHeaderTuple>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::net::nsHttpAtom>
-{
+template <>
+struct ParamTraits<mozilla::net::nsHttpAtom> {
   typedef mozilla::net::nsHttpAtom paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     // aParam.get() cannot be null.
     MOZ_ASSERT(aParam.get(), "null nsHTTPAtom value");
     nsAutoCString value(aParam.get());
     WriteParam(aMsg, value);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     nsAutoCString value;
-    if (!ReadParam(aMsg, aIter, &value))
-      return false;
+    if (!ReadParam(aMsg, aIter, &value)) return false;
 
     *aResult = mozilla::net::nsHttp::ResolveAtom(value.get());
     MOZ_ASSERT(aResult->get(), "atom table not initialized");
@@ -118,13 +108,11 @@ struct ParamTraits<mozilla::net::nsHttpAtom>
   }
 };
 
-template<>
-struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
-{
+template <>
+struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry> {
   typedef mozilla::net::nsHttpHeaderArray::nsEntry paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     if (aParam.headerNameOriginal.IsEmpty()) {
       WriteParam(aMsg, aParam.header);
     } else {
@@ -141,7 +129,8 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
       case mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault:
         WriteParam(aMsg, (uint8_t)2);
         break;
-      case mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginalAndResponse:
+      case mozilla::net::nsHttpHeaderArray::
+          eVarietyResponseNetOriginalAndResponse:
         WriteParam(aMsg, (uint8_t)3);
         break;
       case mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal:
@@ -152,12 +141,12 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     uint8_t variety;
     nsAutoCString header;
     if (!ReadParam(aMsg, aIter, &header) ||
-        !ReadParam(aMsg, aIter, &aResult->value)  ||
+        !ReadParam(aMsg, aIter, &aResult->value) ||
         !ReadParam(aMsg, aIter, &variety))
       return false;
 
@@ -172,16 +161,20 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
         aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyUnknown;
         break;
       case 1:
-        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyRequestOverride;
+        aResult->variety =
+            mozilla::net::nsHttpHeaderArray::eVarietyRequestOverride;
         break;
       case 2:
-        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault;
+        aResult->variety =
+            mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault;
         break;
       case 3:
-        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginalAndResponse;
+        aResult->variety = mozilla::net::nsHttpHeaderArray::
+            eVarietyResponseNetOriginalAndResponse;
         break;
       case 4:
-        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal;
+        aResult->variety =
+            mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal;
         break;
       case 5:
         aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyResponse;
@@ -194,35 +187,29 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
   }
 };
 
-
-template<>
-struct ParamTraits<mozilla::net::nsHttpHeaderArray>
-{
+template <>
+struct ParamTraits<mozilla::net::nsHttpHeaderArray> {
   typedef mozilla::net::nsHttpHeaderArray paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     paramType& p = const_cast<paramType&>(aParam);
 
     WriteParam(aMsg, p.mHeaders);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    if (!ReadParam(aMsg, aIter, &aResult->mHeaders))
-      return false;
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (!ReadParam(aMsg, aIter, &aResult->mHeaders)) return false;
 
     return true;
   }
 };
 
-template<>
-struct ParamTraits<mozilla::net::nsHttpResponseHead>
-{
+template <>
+struct ParamTraits<mozilla::net::nsHttpResponseHead> {
   typedef mozilla::net::nsHttpResponseHead paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mHeaders);
     WriteParam(aMsg, static_cast<uint32_t>(aParam.mVersion));
     WriteParam(aMsg, aParam.mStatus);
@@ -236,16 +223,16 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead>
     WriteParam(aMsg, aParam.mPragmaNoCache);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     uint32_t version;
-    if (!ReadParam(aMsg, aIter, &aResult->mHeaders)             ||
-        !ReadParam(aMsg, aIter, &version)             ||
-        !ReadParam(aMsg, aIter, &aResult->mStatus)              ||
-        !ReadParam(aMsg, aIter, &aResult->mStatusText)          ||
-        !ReadParam(aMsg, aIter, &aResult->mContentLength)       ||
-        !ReadParam(aMsg, aIter, &aResult->mContentType)         ||
-        !ReadParam(aMsg, aIter, &aResult->mContentCharset)      ||
+    if (!ReadParam(aMsg, aIter, &aResult->mHeaders) ||
+        !ReadParam(aMsg, aIter, &version) ||
+        !ReadParam(aMsg, aIter, &aResult->mStatus) ||
+        !ReadParam(aMsg, aIter, &aResult->mStatusText) ||
+        !ReadParam(aMsg, aIter, &aResult->mContentLength) ||
+        !ReadParam(aMsg, aIter, &aResult->mContentType) ||
+        !ReadParam(aMsg, aIter, &aResult->mContentCharset) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlPrivate) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlNoStore) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlNoCache) ||
@@ -257,6 +244,6 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead>
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // mozilla_net_PHttpChannelParams_h
+#endif  // mozilla_net_PHttpChannelParams_h

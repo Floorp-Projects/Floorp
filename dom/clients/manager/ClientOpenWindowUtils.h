@@ -12,10 +12,10 @@
 namespace mozilla {
 namespace dom {
 
-already_AddRefed<ClientOpPromise>
-ClientOpenWindowInCurrentProcess(const ClientOpenWindowArgs &aArgs);
+already_AddRefed<ClientOpPromise> ClientOpenWindowInCurrentProcess(
+    const ClientOpenWindowArgs &aArgs);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientOpenWindowUtils_h
+#endif  // _mozilla_dom_ClientOpenWindowUtils_h

@@ -23,37 +23,32 @@ class nsIScrollableFrame;
 
 namespace mozilla {
 
-class StickyScrollContainer final : public nsIScrollPositionListener
-{
-public:
+class StickyScrollContainer final : public nsIScrollPositionListener {
+ public:
   /**
    * Find (and create if necessary) the StickyScrollContainer associated with
    * the scroll container of the given frame, if a scroll container exists.
    */
-  static StickyScrollContainer* GetStickyScrollContainerForFrame(nsIFrame* aFrame);
+  static StickyScrollContainer* GetStickyScrollContainerForFrame(
+      nsIFrame* aFrame);
 
   /**
    * Find the StickyScrollContainer associated with the given scroll frame,
    * if it exists.
    */
-  static StickyScrollContainer* GetStickyScrollContainerForScrollFrame(nsIFrame* aScrollFrame);
+  static StickyScrollContainer* GetStickyScrollContainerForScrollFrame(
+      nsIFrame* aScrollFrame);
 
   /**
    * aFrame may have moved into or out of a scroll frame's frame subtree.
    */
-  static void NotifyReparentedFrameAcrossScrollFrameBoundary(nsIFrame* aFrame,
-                                                             nsIFrame* aOldParent);
+  static void NotifyReparentedFrameAcrossScrollFrameBoundary(
+      nsIFrame* aFrame, nsIFrame* aOldParent);
 
-  void AddFrame(nsIFrame* aFrame) {
-    mFrames.AppendElement(aFrame);
-  }
-  void RemoveFrame(nsIFrame* aFrame) {
-    mFrames.RemoveElement(aFrame);
-  }
+  void AddFrame(nsIFrame* aFrame) { mFrames.AppendElement(aFrame); }
+  void RemoveFrame(nsIFrame* aFrame) { mFrames.RemoveElement(aFrame); }
 
-  nsIScrollableFrame* ScrollFrame() const {
-    return mScrollFrame;
-  }
+  nsIScrollableFrame* ScrollFrame() const { return mScrollFrame; }
 
   // Compute the offsets for a sticky position element
   static void ComputeStickyOffsets(nsIFrame* aFrame);
@@ -68,7 +63,8 @@ public:
    * Compute where a frame should not scroll with the page, represented by the
    * difference of two rectangles.
    */
-  void GetScrollRanges(nsIFrame* aFrame, nsRectAbsolute* aOuter, nsRectAbsolute* aInner) const;
+  void GetScrollRanges(nsIFrame* aFrame, nsRectAbsolute* aOuter,
+                       nsRectAbsolute* aInner) const;
 
   /**
    * Compute and set the position of a frame and its following continuations.
@@ -89,7 +85,7 @@ public:
 
   ~StickyScrollContainer();
 
-private:
+ private:
   explicit StickyScrollContainer(nsIScrollableFrame* aScrollFrame);
 
   /**
@@ -106,6 +102,6 @@ private:
   nsPoint mScrollPosition;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* StickyScrollContainer_h */

@@ -16,13 +16,10 @@ namespace a11y {
 
 class TableAccessible;
 
-class ia2AccessibleTable : public IAccessibleTable,
-                           public IAccessibleTable2
-{
-public:
-
+class ia2AccessibleTable : public IAccessibleTable, public IAccessibleTable2 {
+ public:
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
+  STDMETHODIMP QueryInterface(REFIID, void **);
 
   // IAccessibleTable
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_accessibleAt(
@@ -141,7 +138,6 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_modelChange(
       /* [retval][out] */ IA2TableModelChange *modelChange);
 
-
   // IAccessibleTable2
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_cellAt(
@@ -164,13 +160,13 @@ public:
       /* [out, size_is(,*nRows)] */ long **selectedRows,
       /* [out, retval] */ long *nRows);
 
-protected:
-  ia2AccessibleTable(TableAccessible* aTable) : mTable(aTable) {}
+ protected:
+  ia2AccessibleTable(TableAccessible *aTable) : mTable(aTable) {}
 
-  TableAccessible* mTable;
+  TableAccessible *mTable;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

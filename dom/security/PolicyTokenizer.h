@@ -13,8 +13,8 @@
 /**
  * How does the parsing work?
  *
- * We generate tokens by splitting the policy-string by whitespace and semicolon.
- * Interally the tokens are represented as an array of string-arrays:
+ * We generate tokens by splitting the policy-string by whitespace and
+ * semicolon. Interally the tokens are represented as an array of string-arrays:
  *
  *  [
  *    [ name, src, src, src, ... ],
@@ -30,56 +30,49 @@
  *  ]
  */
 
-typedef nsTArray< nsTArray<nsString> > policyTokens;
+typedef nsTArray<nsTArray<nsString> > policyTokens;
 
 class PolicyTokenizer {
+ public:
+  static void tokenizePolicy(const nsAString& aPolicyString,
+                             policyTokens& outTokens);
 
-  public:
-    static void tokenizePolicy(const nsAString &aPolicyString, policyTokens& outTokens);
+ private:
+  PolicyTokenizer(const char16_t* aStart, const char16_t* aEnd);
+  ~PolicyTokenizer();
 
-  private:
-    PolicyTokenizer(const char16_t* aStart, const char16_t* aEnd);
-    ~PolicyTokenizer();
+  inline bool atEnd() { return mCurChar >= mEndChar; }
 
-    inline bool atEnd()
-    {
-      return mCurChar >= mEndChar;
+  inline void skipWhiteSpace() {
+    while (mCurChar < mEndChar && nsContentUtils::IsHTMLWhitespace(*mCurChar)) {
+      mCurToken.Append(*mCurChar++);
     }
+    mCurToken.Truncate();
+  }
 
-    inline void skipWhiteSpace()
-    {
-      while (mCurChar < mEndChar &&
-             nsContentUtils::IsHTMLWhitespace(*mCurChar)) {
-        mCurToken.Append(*mCurChar++);
-      }
-      mCurToken.Truncate();
+  inline void skipWhiteSpaceAndSemicolon() {
+    while (mCurChar < mEndChar &&
+           (*mCurChar == ';' || nsContentUtils::IsHTMLWhitespace(*mCurChar))) {
+      mCurToken.Append(*mCurChar++);
     }
+    mCurToken.Truncate();
+  }
 
-    inline void skipWhiteSpaceAndSemicolon()
-    {
-      while (mCurChar < mEndChar && (*mCurChar == ';' ||
-             nsContentUtils::IsHTMLWhitespace(*mCurChar))){
-        mCurToken.Append(*mCurChar++);
-      }
-      mCurToken.Truncate();
+  inline bool accept(char16_t aChar) {
+    NS_ASSERTION(mCurChar < mEndChar, "Trying to dereference mEndChar");
+    if (*mCurChar == aChar) {
+      mCurToken.Append(*mCurChar++);
+      return true;
     }
+    return false;
+  }
 
-    inline bool accept(char16_t aChar)
-    {
-      NS_ASSERTION(mCurChar < mEndChar, "Trying to dereference mEndChar");
-      if (*mCurChar == aChar) {
-        mCurToken.Append(*mCurChar++);
-        return true;
-      }
-      return false;
-    }
+  void generateNextToken();
+  void generateTokens(policyTokens& outTokens);
 
-    void generateNextToken();
-    void generateTokens(policyTokens& outTokens);
-
-    const char16_t* mCurChar;
-    const char16_t* mEndChar;
-    nsString        mCurToken;
+  const char16_t* mCurChar;
+  const char16_t* mEndChar;
+  nsString mCurToken;
 };
 
 #endif /* PolicyTokenizer_h___ */

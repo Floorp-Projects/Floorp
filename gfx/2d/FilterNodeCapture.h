@@ -16,75 +16,84 @@
 namespace mozilla {
 namespace gfx {
 
-class FilterNodeCapture final : public FilterNode
-{
-public:
+class FilterNodeCapture final : public FilterNode {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeCapture, override)
 
   explicit FilterNodeCapture(FilterType aType)
-    : mType{aType}
-    , mInputsChanged{true}
-  {
+      : mType{aType}, mInputsChanged{true} {}
+
+  virtual FilterBackend GetBackendType() override {
+    return FILTER_BACKEND_CAPTURE;
   }
 
-  virtual FilterBackend GetBackendType() override { return FILTER_BACKEND_CAPTURE; }
+  RefPtr<FilterNode> Validate(DrawTarget *aDT);
 
-  RefPtr<FilterNode> Validate(DrawTarget* aDT);
-
-  template<typename T, typename C>
-  void Replace(uint32_t aIndex, const T& aValue, C& aContainer)
-  {
+  template <typename T, typename C>
+  void Replace(uint32_t aIndex, const T &aValue, C &aContainer) {
     // This replace function avoids generating the hash twice.
-    auto result = aContainer.insert({ aIndex, typename C::mapped_type(aValue) });
+    auto result = aContainer.insert({aIndex, typename C::mapped_type(aValue)});
     if (!result.second) {
       result.first->second = typename C::mapped_type(aValue);
     }
   }
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override
-  {
+  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
     mInputsChanged = true;
     Replace(aIndex, RefPtr<SourceSurface>(aSurface), mInputs);
   }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override
-  {
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
     mInputsChanged = true;
     Replace(aIndex, RefPtr<FilterNode>(aFilter), mInputs);
   }
 
-  using AttributeValue = Variant<
-    uint32_t,
-    Float,
-    Point,
-    Matrix5x4,
-    Point3D,
-    Size,
-    IntSize,
-    Color,
-    Rect,
-    IntRect,
-    bool,
-    std::vector<Float>,
-    IntPoint,
-    Matrix
-  >;
+  using AttributeValue =
+      Variant<uint32_t, Float, Point, Matrix5x4, Point3D, Size, IntSize, Color,
+              Rect, IntRect, bool, std::vector<Float>, IntPoint, Matrix>;
 
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, Float aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Point &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Point3D &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Size &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Color &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Rect &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, bool aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Float *aValues, uint32_t aSize) override;
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override { Replace(aIndex, aValue, mAttributes); }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix &aValue) override { Replace(aIndex, aValue, mAttributes); }
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, Float aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Point &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Point3D &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Size &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const IntSize &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Color &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Rect &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, bool aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Float *aValues,
+                            uint32_t aSize) override;
+  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
+  virtual void SetAttribute(uint32_t aIndex, const Matrix &aValue) override {
+    Replace(aIndex, aValue, mAttributes);
+  }
 
-private:
+ private:
   FilterType mType;
   RefPtr<FilterNode> mFilterNodeInternal;
 
@@ -93,13 +102,15 @@ private:
 
   // This always contains all inputs, so that Validate may be called on input
   // filter nodes.
-  std::unordered_map<uint32_t, Variant<RefPtr<SourceSurface>, RefPtr<FilterNode>>> mInputs;
-  
+  std::unordered_map<uint32_t,
+                     Variant<RefPtr<SourceSurface>, RefPtr<FilterNode>>>
+      mInputs;
+
   // This is true if SetInput was called since the last validation.
   bool mInputsChanged;
 };
 
-}
-}
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

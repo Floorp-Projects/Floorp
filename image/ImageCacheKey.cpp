@@ -24,9 +24,7 @@ using namespace dom;
 
 namespace image {
 
-static Maybe<uint64_t>
-BlobSerial(nsIURI* aURI)
-{
+static Maybe<uint64_t> BlobSerial(nsIURI* aURI) {
   nsAutoCString spec;
   aURI->GetSpec(spec);
 
@@ -39,16 +37,13 @@ BlobSerial(nsIURI* aURI)
   return Nothing();
 }
 
-ImageCacheKey::ImageCacheKey(nsIURI* aURI,
-                             const OriginAttributes& aAttrs,
-                             nsIDocument* aDocument,
-                             nsresult& aRv)
-  : mURI(aURI)
-  , mOriginAttributes(aAttrs)
-  , mControlledDocument(GetSpecialCaseDocumentToken(aDocument, aURI))
-  , mHash(0)
-  , mIsChrome(false)
-{
+ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
+                             nsIDocument* aDocument, nsresult& aRv)
+    : mURI(aURI),
+      mOriginAttributes(aAttrs),
+      mControlledDocument(GetSpecialCaseDocumentToken(aDocument, aURI)),
+      mHash(0),
+      mIsChrome(false) {
   if (SchemeIs("blob")) {
     mBlobSerial = BlobSerial(mURI);
   } else if (SchemeIs("chrome")) {
@@ -77,29 +72,26 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI,
 }
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
-  : mURI(aOther.mURI)
-  , mBlobSerial(aOther.mBlobSerial)
-  , mBlobRef(aOther.mBlobRef)
-  , mOriginAttributes(aOther.mOriginAttributes)
-  , mControlledDocument(aOther.mControlledDocument)
-  , mHash(aOther.mHash)
-  , mIsChrome(aOther.mIsChrome)
-{ }
+    : mURI(aOther.mURI),
+      mBlobSerial(aOther.mBlobSerial),
+      mBlobRef(aOther.mBlobRef),
+      mOriginAttributes(aOther.mOriginAttributes),
+      mControlledDocument(aOther.mControlledDocument),
+      mHash(aOther.mHash),
+      mIsChrome(aOther.mIsChrome) {}
 
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
-  : mURI(std::move(aOther.mURI))
-  , mBlobSerial(std::move(aOther.mBlobSerial))
-  , mBlobRef(std::move(aOther.mBlobRef))
-  , mOriginAttributes(aOther.mOriginAttributes)
-  , mControlledDocument(aOther.mControlledDocument)
-  , mHash(aOther.mHash)
-  , mIsChrome(aOther.mIsChrome)
-{ }
+    : mURI(std::move(aOther.mURI)),
+      mBlobSerial(std::move(aOther.mBlobSerial)),
+      mBlobRef(std::move(aOther.mBlobRef)),
+      mOriginAttributes(aOther.mOriginAttributes),
+      mControlledDocument(aOther.mControlledDocument),
+      mHash(aOther.mHash),
+      mIsChrome(aOther.mIsChrome) {}
 
-bool
-ImageCacheKey::operator==(const ImageCacheKey& aOther) const
-{
-  // Don't share the image cache between a controlled document and anything else.
+bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
+  // Don't share the image cache between a controlled document and anything
+  // else.
   if (mControlledDocument != aOther.mControlledDocument) {
     return false;
   }
@@ -110,8 +102,7 @@ ImageCacheKey::operator==(const ImageCacheKey& aOther) const
   if (mBlobSerial || aOther.mBlobSerial) {
     // If at least one of us has a blob serial, just compare the blob serial and
     // the ref portion of the URIs.
-    return mBlobSerial == aOther.mBlobSerial &&
-           mBlobRef == aOther.mBlobRef;
+    return mBlobSerial == aOther.mBlobSerial && mBlobRef == aOther.mBlobRef;
   }
 
   // For non-blob URIs, compare the URIs.
@@ -120,16 +111,13 @@ ImageCacheKey::operator==(const ImageCacheKey& aOther) const
   return NS_SUCCEEDED(rv) && equals;
 }
 
-bool
-ImageCacheKey::SchemeIs(const char* aScheme)
-{
+bool ImageCacheKey::SchemeIs(const char* aScheme) {
   bool matches = false;
   return NS_SUCCEEDED(mURI->SchemeIs(aScheme, &matches)) && matches;
 }
 
-/* static */ void*
-ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
-{
+/* static */ void* ImageCacheKey::GetSpecialCaseDocumentToken(
+    nsIDocument* aDocument, nsIURI* aURI) {
   // Cookie-averse documents can never have storage granted to them.  Since they
   // may not have inner windows, they would require special handling below, so
   // just bail out early here.
@@ -147,8 +135,9 @@ ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
   // If the window is 3rd party resource, let's see if first-party storage
   // access is granted for this image.
   if (nsContentUtils::IsTrackingResourceWindow(aDocument->GetInnerWindow())) {
-    return nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI) ?
-             aDocument : nullptr;
+    return nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI)
+               ? aDocument
+               : nullptr;
   }
 
   // Another scenario is if this image is a 3rd party resource loaded by a
@@ -157,13 +146,13 @@ ImageCacheKey::GetSpecialCaseDocumentToken(nsIDocument* aDocument, nsIURI* aURI)
   // this point.  The best approach here is to be conservative: if we are sure
   // that the permission is granted, let's return a nullptr. Otherwise, let's
   // make a unique image cache.
-  if (!AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(aDocument->GetInnerWindow(),
-                                                                    aURI)) {
+  if (!AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
+          aDocument->GetInnerWindow(), aURI)) {
     return aDocument;
   }
 
   return nullptr;
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

@@ -14,12 +14,10 @@
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SdpErrorHolder.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
-class SipccSdpParser final : public SdpErrorHolder
-{
-public:
+class SipccSdpParser final : public SdpErrorHolder {
+ public:
   SipccSdpParser() {}
   virtual ~SipccSdpParser() {}
 
@@ -30,6 +28,6 @@ public:
   UniquePtr<Sdp> Parse(const std::string& sdpText);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

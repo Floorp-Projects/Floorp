@@ -14,30 +14,22 @@
  * @param ps the ContextState containing the stack information needed
  * for evaluation
  * @return the result of the evaluation
-**/
-nsresult
-RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
-{
-    txXPathTreeWalker walker(aContext->getContextNode());
-    walker.moveToRoot();
+ **/
+nsresult RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult) {
+  txXPathTreeWalker walker(aContext->getContextNode());
+  walker.moveToRoot();
 
-    return aContext->recycler()->getNodeSet(walker.getCurrentPosition(),
-                                            aResult);
+  return aContext->recycler()->getNodeSet(walker.getCurrentPosition(), aResult);
 }
 
 TX_IMPL_EXPR_STUBS_0(RootExpr, NODESET_RESULT)
 
-bool
-RootExpr::isSensitiveTo(ContextSensitivity aContext)
-{
-    return !!(aContext & NODE_CONTEXT);
+bool RootExpr::isSensitiveTo(ContextSensitivity aContext) {
+  return !!(aContext & NODE_CONTEXT);
 }
 
 #ifdef TX_TO_STRING
-void
-RootExpr::toString(nsAString& dest)
-{
-    if (mSerialize)
-        dest.Append(char16_t('/'));
+void RootExpr::toString(nsAString& dest) {
+  if (mSerialize) dest.Append(char16_t('/'));
 }
 #endif

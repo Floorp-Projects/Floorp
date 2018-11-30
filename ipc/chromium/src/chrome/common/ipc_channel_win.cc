@@ -22,9 +22,9 @@
 // so it has to hold the nsAutoOwningThread as a pointer, and we need a slightly
 // different macro.
 #ifdef DEBUG
-#define ASSERT_OWNINGTHREAD(_class) \
-  if (nsAutoOwningThread* owningThread = _mOwningThread.get()) {               \
-    owningThread->AssertOwnership(#_class " not thread-safe"); \
+#define ASSERT_OWNINGTHREAD(_class)                              \
+  if (nsAutoOwningThread* owningThread = _mOwningThread.get()) { \
+    owningThread->AssertOwnership(#_class " not thread-safe");   \
   }
 #else
 #define ASSERT_OWNINGTHREAD(_class) ((void)0)
@@ -46,7 +46,7 @@ Channel::ChannelImpl::State::~State() {
 //------------------------------------------------------------------------------
 
 Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
-                              Listener* listener)
+                                  Listener* listener)
     : ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)),
@@ -56,14 +56,15 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
 
   if (!CreatePipe(channel_id, mode)) {
     // The pipe may have been closed already.
-    CHROMIUM_LOG(WARNING) << "Unable to create pipe named \"" << channel_id <<
-                             "\" in " << (mode == 0 ? "server" : "client") << " mode.";
+    CHROMIUM_LOG(WARNING) << "Unable to create pipe named \"" << channel_id
+                          << "\" in " << (mode == 0 ? "server" : "client")
+                          << " mode.";
   }
 }
 
 Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id,
-                                  HANDLE server_pipe,
-                                  Mode mode, Listener* listener)
+                                  HANDLE server_pipe, Mode mode,
+                                  Listener* listener)
     : ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)),
@@ -91,21 +92,17 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   input_buf_offset_ = 0;
 }
 
-void Channel::ChannelImpl::OutputQueuePush(Message* msg)
-{
+void Channel::ChannelImpl::OutputQueuePush(Message* msg) {
   output_queue_.push(msg);
   output_queue_length_++;
 }
 
-void Channel::ChannelImpl::OutputQueuePop()
-{
+void Channel::ChannelImpl::OutputQueuePop() {
   output_queue_.pop();
   output_queue_length_--;
 }
 
-HANDLE Channel::ChannelImpl::GetServerPipeHandle() const {
-  return pipe_;
-}
+HANDLE Channel::ChannelImpl::GetServerPipeHandle() const { return pipe_; }
 
 void Channel::ChannelImpl::Close() {
   ASSERT_OWNINGTHREAD(ChannelImpl);
@@ -143,14 +140,14 @@ bool Channel::ChannelImpl::Send(Message* message) {
   ASSERT_OWNINGTHREAD(ChannelImpl);
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
   DLOG(INFO) << "sending message @" << message << " on channel @" << this
-             << " with type " << message->type()
-             << " (" << output_queue_.size() << " in queue)";
+             << " with type " << message->type() << " (" << output_queue_.size()
+             << " in queue)";
 #endif
-
 
   if (closed_) {
     if (mozilla::ipc::LoggingEnabled()) {
-      fprintf(stderr, "Can't send message %s, because this channel is closed.\n",
+      fprintf(stderr,
+              "Can't send message %s, because this channel is closed.\n",
               message->name());
     }
     delete message;
@@ -161,8 +158,7 @@ bool Channel::ChannelImpl::Send(Message* message) {
   // ensure waiting to write
   if (!waiting_connect_) {
     if (!output_state_.is_pending) {
-      if (!ProcessOutgoingMessages(NULL, 0))
-        return false;
+      if (!ProcessOutgoingMessages(NULL, 0)) return false;
     }
   }
 
@@ -197,24 +193,20 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
     waiting_for_shared_secret_ = !!shared_secret_;
     pipe_ = CreateNamedPipeW(pipe_name.c_str(),
                              PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
-                                FILE_FLAG_FIRST_PIPE_INSTANCE,
+                                 FILE_FLAG_FIRST_PIPE_INSTANCE,
                              PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
-                             1,         // number of pipe instances
+                             1,  // number of pipe instances
                              // output buffer size (XXX tune)
                              Channel::kReadBufferSize,
                              // input buffer size (XXX tune)
                              Channel::kReadBufferSize,
-                             5000,      // timeout in milliseconds (XXX tune)
+                             5000,  // timeout in milliseconds (XXX tune)
                              NULL);
   } else {
-    pipe_ = CreateFileW(pipe_name.c_str(),
-                        GENERIC_READ | GENERIC_WRITE,
-                        0,
-                        NULL,
-                        OPEN_EXISTING,
-                        SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION |
-                            FILE_FLAG_OVERLAPPED,
-                        NULL);
+    pipe_ = CreateFileW(
+        pipe_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+        SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION | FILE_FLAG_OVERLAPPED,
+        NULL);
   }
   if (pipe_ == INVALID_HANDLE_VALUE) {
     // If this process is being closed, the pipe may be gone already.
@@ -228,8 +220,8 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
 }
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
-  mozilla::UniquePtr<Message> m = mozilla::MakeUnique<Message>(MSG_ROUTING_NONE,
-                                                               HELLO_MESSAGE_TYPE);
+  mozilla::UniquePtr<Message> m =
+      mozilla::MakeUnique<Message>(MSG_ROUTING_NONE, HELLO_MESSAGE_TYPE);
 
   // If we're waiting for our shared secret from the other end's hello message
   // then don't give the game away by sending it in ours.
@@ -237,8 +229,7 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
 
   // Also, don't send if the value is zero (for IPC backwards compatability).
   if (!m->WriteInt(GetCurrentProcessId()) ||
-      (secret && !m->WriteUInt32(secret)))
-  {
+      (secret && !m->WriteUInt32(secret))) {
     CloseHandle(pipe_);
     pipe_ = INVALID_HANDLE_VALUE;
     return false;
@@ -255,14 +246,12 @@ bool Channel::ChannelImpl::Connect() {
   }
 #endif
 
-  if (pipe_ == INVALID_HANDLE_VALUE)
-    return false;
+  if (pipe_ == INVALID_HANDLE_VALUE) return false;
 
   MessageLoopForIO::current()->RegisterIOHandler(pipe_, this);
 
   // Check to see if there is a client connected to our pipe...
-  if (waiting_connect_)
-    ProcessConnection();
+  if (waiting_connect_) ProcessConnection();
 
   if (!input_state_.is_pending) {
     // Complete setup asynchronously. By not setting input_state_.is_pending
@@ -272,19 +261,16 @@ bool Channel::ChannelImpl::Connect() {
         &Channel::ChannelImpl::OnIOCompleted, &input_state_.context, 0, 0));
   }
 
-  if (!waiting_connect_)
-    ProcessOutgoingMessages(NULL, 0);
+  if (!waiting_connect_) ProcessOutgoingMessages(NULL, 0);
   return true;
 }
 
 bool Channel::ChannelImpl::ProcessConnection() {
   ASSERT_OWNINGTHREAD(ChannelImpl);
-  if (input_state_.is_pending)
-    input_state_.is_pending = false;
+  if (input_state_.is_pending) input_state_.is_pending = false;
 
   // Do we have a client connected to our pipe?
-  if (INVALID_HANDLE_VALUE == pipe_)
-    return false;
+  if (INVALID_HANDLE_VALUE == pipe_) return false;
 
   BOOL ok = ConnectNamedPipe(pipe_, &input_state_.context.overlapped);
 
@@ -297,30 +283,28 @@ bool Channel::ChannelImpl::ProcessConnection() {
   }
 
   switch (err) {
-  case ERROR_IO_PENDING:
-    input_state_.is_pending = true;
-    break;
-  case ERROR_PIPE_CONNECTED:
-    waiting_connect_ = false;
-    break;
-  default:
-    NOTREACHED();
-    return false;
+    case ERROR_IO_PENDING:
+      input_state_.is_pending = true;
+      break;
+    case ERROR_PIPE_CONNECTED:
+      waiting_connect_ = false;
+      break;
+    default:
+      NOTREACHED();
+      return false;
   }
 
   return true;
 }
 
 bool Channel::ChannelImpl::ProcessIncomingMessages(
-    MessageLoopForIO::IOContext* context,
-    DWORD bytes_read) {
+    MessageLoopForIO::IOContext* context, DWORD bytes_read) {
   ASSERT_OWNINGTHREAD(ChannelImpl);
   if (input_state_.is_pending) {
     input_state_.is_pending = false;
     DCHECK(context);
 
-    if (!context || !bytes_read)
-      return false;
+    if (!context || !bytes_read) return false;
   } else {
     // This happens at channel initialization.
     DCHECK(!bytes_read && context == &input_state_.context);
@@ -328,15 +312,12 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
 
   for (;;) {
     if (bytes_read == 0) {
-      if (INVALID_HANDLE_VALUE == pipe_)
-        return false;
+      if (INVALID_HANDLE_VALUE == pipe_) return false;
 
       // Read from pipe...
-      BOOL ok = ReadFile(pipe_,
-                         input_buf_ + input_buf_offset_,
+      BOOL ok = ReadFile(pipe_, input_buf_ + input_buf_offset_,
                          Channel::kReadBufferSize - input_buf_offset_,
-                         &bytes_read,
-                         &input_state_.context.overlapped);
+                         &bytes_read, &input_state_.context.overlapped);
       if (!ok) {
         DWORD err = GetLastError();
         if (err == ERROR_IO_PENDING) {
@@ -353,8 +334,8 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
 
     // Process messages from input buffer.
 
-    const char *p = input_buf_;
-    const char *end = input_buf_ + input_buf_offset_ + bytes_read;
+    const char* p = input_buf_;
+    const char* end = input_buf_ + input_buf_offset_ + bytes_read;
 
     while (p < end) {
       // Try to figure out how big the message is. Size is 0 if we haven't read
@@ -418,26 +399,26 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
       Message& m = incoming_message_.ref();
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
-      DLOG(INFO) << "received message on channel @" << this <<
-                    " with type " << m.type();
+      DLOG(INFO) << "received message on channel @" << this << " with type "
+                 << m.type();
 #endif
       if (m.routing_id() == MSG_ROUTING_NONE &&
-	  m.type() == HELLO_MESSAGE_TYPE) {
-	// The Hello message contains the process id and must include the
-	// shared secret, if we are waiting for it.
-	MessageIterator it = MessageIterator(m);
-	int32_t claimed_pid = it.NextInt();
-	if (waiting_for_shared_secret_ && (it.NextInt() != shared_secret_)) {
-	  NOTREACHED();
-	  // Something went wrong. Abort connection.
-	  Close();
-	  listener_->OnChannelError();
-	  return false;
-	}
-	waiting_for_shared_secret_ = false;
-	listener_->OnChannelConnected(claimed_pid);
+          m.type() == HELLO_MESSAGE_TYPE) {
+        // The Hello message contains the process id and must include the
+        // shared secret, if we are waiting for it.
+        MessageIterator it = MessageIterator(m);
+        int32_t claimed_pid = it.NextInt();
+        if (waiting_for_shared_secret_ && (it.NextInt() != shared_secret_)) {
+          NOTREACHED();
+          // Something went wrong. Abort connection.
+          Close();
+          listener_->OnChannelError();
+          return false;
+        }
+        waiting_for_shared_secret_ = false;
+        listener_->OnChannelConnected(claimed_pid);
       } else {
-	listener_->OnMessageReceived(std::move(m));
+        listener_->OnMessageReceived(std::move(m));
       }
 
       incoming_message_.reset();
@@ -450,8 +431,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
 }
 
 bool Channel::ChannelImpl::ProcessOutgoingMessages(
-    MessageLoopForIO::IOContext* context,
-    DWORD bytes_written) {
+    MessageLoopForIO::IOContext* context, DWORD bytes_written) {
   DCHECK(!waiting_connect_);  // Why are we trying to send messages if there's
                               // no connection?
   ASSERT_OWNINGTHREAD(ChannelImpl);
@@ -478,11 +458,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     }
   }
 
-  if (output_queue_.empty())
-    return true;
+  if (output_queue_.empty()) return true;
 
-  if (INVALID_HANDLE_VALUE == pipe_)
-    return false;
+  if (INVALID_HANDLE_VALUE == pipe_) return false;
 
   // Write to pipe...
   Message* m = output_queue_.front();
@@ -493,19 +471,16 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
   }
 
   Pickle::BufferList::IterImpl& iter = partial_write_iter_.ref();
-  BOOL ok = WriteFile(pipe_,
-                      iter.Data(),
-                      iter.RemainingInSegment(),
-                      &bytes_written,
-                      &output_state_.context.overlapped);
+  BOOL ok = WriteFile(pipe_, iter.Data(), iter.RemainingInSegment(),
+                      &bytes_written, &output_state_.context.overlapped);
   if (!ok) {
     DWORD err = GetLastError();
     if (err == ERROR_IO_PENDING) {
       output_state_.is_pending = true;
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
-      DLOG(INFO) << "sent pending message @" << m << " on channel @" <<
-                    this << " with type " << m->type();
+      DLOG(INFO) << "sent pending message @" << m << " on channel @" << this
+                 << " with type " << m->type();
 #endif
 
       return true;
@@ -515,8 +490,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
   }
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
-  DLOG(INFO) << "sent message @" << m << " on channel @" << this <<
-                " with type " << m->type();
+  DLOG(INFO) << "sent message @" << m << " on channel @" << this
+             << " with type " << m->type();
 #endif
 
   output_state_.is_pending = true;
@@ -524,18 +499,16 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
 }
 
 void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
-                            DWORD bytes_transfered, DWORD error) {
+                                         DWORD bytes_transfered, DWORD error) {
   bool ok;
   ASSERT_OWNINGTHREAD(ChannelImpl);
   if (context == &input_state_.context) {
     if (waiting_connect_) {
-      if (!ProcessConnection())
-        return;
+      if (!ProcessConnection()) return;
       // We may have some messages queued up to send...
       if (!output_queue_.empty() && !output_state_.is_pending)
         ProcessOutgoingMessages(NULL, 0);
-      if (input_state_.is_pending)
-        return;
+      if (input_state_.is_pending) return;
       // else, fall-through and look for incoming messages...
     }
     // we don't support recursion through OnMessageReceived yet!
@@ -554,27 +527,22 @@ void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
   }
 }
 
-bool Channel::ChannelImpl::Unsound_IsClosed() const
-{
-  return closed_;
-}
+bool Channel::ChannelImpl::Unsound_IsClosed() const { return closed_; }
 
-uint32_t Channel::ChannelImpl::Unsound_NumQueuedMessages() const
-{
+uint32_t Channel::ChannelImpl::Unsound_NumQueuedMessages() const {
   return output_queue_length_;
 }
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
-Channel::Channel(const std::wstring& channel_id, Mode mode,
-                 Listener* listener)
+Channel::Channel(const std::wstring& channel_id, Mode mode, Listener* listener)
     : channel_impl_(new ChannelImpl(channel_id, mode, listener)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
-Channel::Channel(const std::wstring& channel_id, void* server_pipe,
-                 Mode mode, Listener* listener)
-   : channel_impl_(new ChannelImpl(channel_id, server_pipe, mode, listener)) {
+Channel::Channel(const std::wstring& channel_id, void* server_pipe, Mode mode,
+                 Listener* listener)
+    : channel_impl_(new ChannelImpl(channel_id, server_pipe, mode, listener)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
@@ -583,13 +551,9 @@ Channel::~Channel() {
   delete channel_impl_;
 }
 
-bool Channel::Connect() {
-  return channel_impl_->Connect();
-}
+bool Channel::Connect() { return channel_impl_->Connect(); }
 
-void Channel::Close() {
-  channel_impl_->Close();
-}
+void Channel::Close() { channel_impl_->Close(); }
 
 void* Channel::GetServerPipeHandle() const {
   return channel_impl_->GetServerPipeHandle();
@@ -599,9 +563,7 @@ Channel::Listener* Channel::set_listener(Listener* listener) {
   return channel_impl_->set_listener(listener);
 }
 
-bool Channel::Send(Message* message) {
-  return channel_impl_->Send(message);
-}
+bool Channel::Send(Message* message) { return channel_impl_->Send(message); }
 
 bool Channel::Unsound_IsClosed() const {
   return channel_impl_->Unsound_IsClosed();
@@ -618,8 +580,7 @@ std::wstring Channel::GenerateVerifiedChannelID(const std::wstring& prefix) {
   // included in the pipe name, but sent as part of the client hello, to
   // prevent hijacking the pipe name to spoof the client.
   std::wstring id = prefix;
-  if (!id.empty())
-    id.append(L".");
+  if (!id.empty()) id.append(L".");
   int secret;
   do {  // Guarantee we get a non-zero value.
     secret = base::RandInt(0, std::numeric_limits<int>::max());

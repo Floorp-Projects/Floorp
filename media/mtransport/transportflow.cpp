@@ -36,11 +36,12 @@ TransportFlow::~TransportFlow() {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-void TransportFlow::DestroyFinal(nsAutoPtr<std::deque<TransportLayer *> > layers) {
+void TransportFlow::DestroyFinal(
+    nsAutoPtr<std::deque<TransportLayer*>> layers) {
   ClearLayers(layers.get());
 }
 
-void TransportFlow::ClearLayers(std::deque<TransportLayer *>* layers) {
+void TransportFlow::ClearLayers(std::deque<TransportLayer*>* layers) {
   while (!layers->empty()) {
     delete layers->front();
     layers->pop_front();
@@ -54,31 +55,28 @@ void TransportFlow::PushLayer(TransportLayer* layer) {
   layer->SetFlowId(id_);
 }
 
-TransportLayer *TransportFlow::GetLayer(const std::string& id) const {
+TransportLayer* TransportFlow::GetLayer(const std::string& id) const {
   CheckThread();
 
   if (layers_) {
     for (TransportLayer* layer : *layers_) {
-      if (layer->id() == id)
-        return layer;
+      if (layer->id() == id) return layer;
     }
   }
 
   return nullptr;
 }
 
-void TransportFlow::EnsureSameThread(TransportLayer *layer)  {
+void TransportFlow::EnsureSameThread(TransportLayer* layer) {
   // Enforce that if any of the layers have a thread binding,
   // they all have the same binding.
   if (target_) {
     const nsCOMPtr<nsIEventTarget>& lthread = layer->GetThread();
 
-    if (lthread && (lthread != target_))
-      MOZ_CRASH();
-  }
-  else {
+    if (lthread && (lthread != target_)) MOZ_CRASH();
+  } else {
     target_ = layer->GetThread();
   }
 }
 
-}  // close namespace
+}  // namespace mozilla

@@ -11,23 +11,16 @@
 #include "nsIDocShell.h"
 #include "nsIHTMLDocument.h"
 
-nsHtml5OplessBuilder::nsHtml5OplessBuilder()
-  : nsHtml5DocumentBuilder(true)
-{
-}
+nsHtml5OplessBuilder::nsHtml5OplessBuilder() : nsHtml5DocumentBuilder(true) {}
 
 nsHtml5OplessBuilder::~nsHtml5OplessBuilder() {}
 
-void
-nsHtml5OplessBuilder::Start()
-{
+void nsHtml5OplessBuilder::Start() {
   BeginFlush();
   BeginDocUpdate();
 }
 
-void
-nsHtml5OplessBuilder::Finish()
-{
+void nsHtml5OplessBuilder::Finish() {
   EndDocUpdate();
   EndFlush();
   DropParserAndPerfHint();
@@ -40,8 +33,6 @@ nsHtml5OplessBuilder::Finish()
   mOwnedElements.Clear();
 }
 
-void
-nsHtml5OplessBuilder::SetParser(nsParserBase* aParser)
-{
+void nsHtml5OplessBuilder::SetParser(nsParserBase* aParser) {
   mParser = aParser;
 }

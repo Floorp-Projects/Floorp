@@ -11,27 +11,20 @@
 namespace mozilla {
 namespace gfx {
 
-NativeFontResourceFreeType::NativeFontResourceFreeType(UniquePtr<uint8_t[]>&& aFontData,
-                                                       uint32_t aDataLength,
-                                                       FT_Face aFace)
-  : mFontData(std::move(aFontData))
-  , mDataLength(aDataLength)
-  , mFace(aFace)
-{
-}
+NativeFontResourceFreeType::NativeFontResourceFreeType(
+    UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength, FT_Face aFace)
+    : mFontData(std::move(aFontData)), mDataLength(aDataLength), mFace(aFace) {}
 
-NativeFontResourceFreeType::~NativeFontResourceFreeType()
-{
+NativeFontResourceFreeType::~NativeFontResourceFreeType() {
   if (mFace) {
     Factory::ReleaseFTFace(mFace);
     mFace = nullptr;
   }
 }
 
-template<class T>
-already_AddRefed<T>
-NativeFontResourceFreeType::CreateInternal(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary)
-{
+template <class T>
+already_AddRefed<T> NativeFontResourceFreeType::CreateInternal(
+    uint8_t* aFontData, uint32_t aDataLength, FT_Library aFTLibrary) {
   if (!aFontData || !aDataLength) {
     return nullptr;
   }
@@ -41,7 +34,8 @@ NativeFontResourceFreeType::CreateInternal(uint8_t *aFontData, uint32_t aDataLen
   }
   memcpy(fontData.get(), aFontData, aDataLength);
 
-  FT_Face face = Factory::NewFTFaceFromData(aFTLibrary, fontData.get(), aDataLength, 0);
+  FT_Face face =
+      Factory::NewFTFaceFromData(aFTLibrary, fontData.get(), aDataLength, 0);
   if (!face) {
     return nullptr;
   }
@@ -55,49 +49,44 @@ NativeFontResourceFreeType::CreateInternal(uint8_t *aFontData, uint32_t aDataLen
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-already_AddRefed<NativeFontResourceFreeType>
-NativeFontResourceFreeType::Create(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary)
-{
-  return CreateInternal<NativeFontResourceFreeType>(aFontData, aDataLength, aFTLibrary);
+already_AddRefed<NativeFontResourceFreeType> NativeFontResourceFreeType::Create(
+    uint8_t* aFontData, uint32_t aDataLength, FT_Library aFTLibrary) {
+  return CreateInternal<NativeFontResourceFreeType>(aFontData, aDataLength,
+                                                    aFTLibrary);
 }
 
-already_AddRefed<UnscaledFont>
-NativeFontResourceFreeType::CreateUnscaledFont(uint32_t aIndex,
-                                               const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
-{
+already_AddRefed<UnscaledFont> NativeFontResourceFreeType::CreateUnscaledFont(
+    uint32_t aIndex, const uint8_t* aInstanceData,
+    uint32_t aInstanceDataLength) {
   RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFreeType(mFace, this);
   return unscaledFont.forget();
 }
 #endif
 
-FT_Face
-NativeFontResourceFreeType::CloneFace()
-{
-  return Factory::NewFTFaceFromData(mFace->glyph->library, mFontData.get(), mDataLength, 0);
+FT_Face NativeFontResourceFreeType::CloneFace() {
+  return Factory::NewFTFaceFromData(mFace->glyph->library, mFontData.get(),
+                                    mDataLength, 0);
 }
 
 #ifdef MOZ_WIDGET_GTK
-NativeFontResourceFontconfig::NativeFontResourceFontconfig(UniquePtr<uint8_t[]>&& aFontData,
-                                                           uint32_t aDataLength,
-                                                           FT_Face aFace)
-  : NativeFontResourceFreeType(std::move(aFontData), aDataLength, aFace)
-{
-}
+NativeFontResourceFontconfig::NativeFontResourceFontconfig(
+    UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength, FT_Face aFace)
+    : NativeFontResourceFreeType(std::move(aFontData), aDataLength, aFace) {}
 
-already_AddRefed<UnscaledFont>
-NativeFontResourceFontconfig::CreateUnscaledFont(uint32_t aIndex,
-                                                 const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
-{
+already_AddRefed<UnscaledFont> NativeFontResourceFontconfig::CreateUnscaledFont(
+    uint32_t aIndex, const uint8_t* aInstanceData,
+    uint32_t aInstanceDataLength) {
   RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(mFace, this);
   return unscaledFont.forget();
 }
 
 already_AddRefed<NativeFontResourceFontconfig>
-NativeFontResourceFontconfig::Create(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary)
-{
-  return CreateInternal<NativeFontResourceFontconfig>(aFontData, aDataLength, aFTLibrary);
+NativeFontResourceFontconfig::Create(uint8_t* aFontData, uint32_t aDataLength,
+                                     FT_Library aFTLibrary) {
+  return CreateInternal<NativeFontResourceFontconfig>(aFontData, aDataLength,
+                                                      aFTLibrary);
 }
 #endif
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla

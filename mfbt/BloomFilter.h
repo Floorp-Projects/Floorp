@@ -52,9 +52,8 @@ namespace mozilla {
  * configurations.
  */
 
-template<unsigned KeySize, class T>
-class BloomFilter
-{
+template <unsigned KeySize, class T>
+class BloomFilter {
   /*
    * A counting Bloom filter with 8-bit counters.  For now we assume
    * that having two hash functions is enough, but we may revisit that
@@ -103,9 +102,8 @@ class BloomFilter
    * positive rate for N == 100 and to quite bad false positive
    * rates for larger N.
    */
-public:
-  BloomFilter()
-  {
+ public:
+  BloomFilter() {
     static_assert(KeySize <= kKeyShift, "KeySize too big");
 
     // Should we have a custom operator new using calloc instead and
@@ -145,35 +143,23 @@ public:
   void remove(uint32_t aHash);
   bool mightContain(uint32_t aHash) const;
 
-private:
+ private:
   static const size_t kArraySize = (1 << KeySize);
   static const uint32_t kKeyMask = (1 << KeySize) - 1;
   static const uint32_t kKeyShift = 16;
 
-  static uint32_t hash1(uint32_t aHash)
-  {
-    return aHash & kKeyMask;
-  }
-  static uint32_t hash2(uint32_t aHash)
-  {
+  static uint32_t hash1(uint32_t aHash) { return aHash & kKeyMask; }
+  static uint32_t hash2(uint32_t aHash) {
     return (aHash >> kKeyShift) & kKeyMask;
   }
 
-  uint8_t& firstSlot(uint32_t aHash)
-  {
-    return mCounters[hash1(aHash)];
-  }
-  uint8_t& secondSlot(uint32_t aHash)
-  {
-    return mCounters[hash2(aHash)];
-  }
+  uint8_t& firstSlot(uint32_t aHash) { return mCounters[hash1(aHash)]; }
+  uint8_t& secondSlot(uint32_t aHash) { return mCounters[hash2(aHash)]; }
 
-  const uint8_t& firstSlot(uint32_t aHash) const
-  {
+  const uint8_t& firstSlot(uint32_t aHash) const {
     return mCounters[hash1(aHash)];
   }
-  const uint8_t& secondSlot(uint32_t aHash) const
-  {
+  const uint8_t& secondSlot(uint32_t aHash) const {
     return mCounters[hash2(aHash)];
   }
 
@@ -182,17 +168,13 @@ private:
   uint8_t mCounters[kArraySize];
 };
 
-template<unsigned KeySize, class T>
-inline void
-BloomFilter<KeySize, T>::clear()
-{
+template <unsigned KeySize, class T>
+inline void BloomFilter<KeySize, T>::clear() {
   memset(mCounters, 0, kArraySize);
 }
 
-template<unsigned KeySize, class T>
-inline void
-BloomFilter<KeySize, T>::add(uint32_t aHash)
-{
+template <unsigned KeySize, class T>
+inline void BloomFilter<KeySize, T>::add(uint32_t aHash) {
   uint8_t& slot1 = firstSlot(aHash);
   if (MOZ_LIKELY(!full(slot1))) {
     ++slot1;
@@ -203,18 +185,14 @@ BloomFilter<KeySize, T>::add(uint32_t aHash)
   }
 }
 
-template<unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE void
-BloomFilter<KeySize, T>::add(const T* aValue)
-{
+template <unsigned KeySize, class T>
+MOZ_ALWAYS_INLINE void BloomFilter<KeySize, T>::add(const T* aValue) {
   uint32_t hash = aValue->hash();
   return add(hash);
 }
 
-template<unsigned KeySize, class T>
-inline void
-BloomFilter<KeySize, T>::remove(uint32_t aHash)
-{
+template <unsigned KeySize, class T>
+inline void BloomFilter<KeySize, T>::remove(uint32_t aHash) {
   // If the slots are full, we don't know whether we bumped them to be
   // there when we added or not, so just leave them full.
   uint8_t& slot1 = firstSlot(aHash);
@@ -227,30 +205,26 @@ BloomFilter<KeySize, T>::remove(uint32_t aHash)
   }
 }
 
-template<unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE void
-BloomFilter<KeySize, T>::remove(const T* aValue)
-{
+template <unsigned KeySize, class T>
+MOZ_ALWAYS_INLINE void BloomFilter<KeySize, T>::remove(const T* aValue) {
   uint32_t hash = aValue->hash();
   remove(hash);
 }
 
-template<unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE bool
-BloomFilter<KeySize, T>::mightContain(uint32_t aHash) const
-{
+template <unsigned KeySize, class T>
+MOZ_ALWAYS_INLINE bool BloomFilter<KeySize, T>::mightContain(
+    uint32_t aHash) const {
   // Check that all the slots for this hash contain something
   return firstSlot(aHash) && secondSlot(aHash);
 }
 
-template<unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE bool
-BloomFilter<KeySize, T>::mightContain(const T* aValue) const
-{
+template <unsigned KeySize, class T>
+MOZ_ALWAYS_INLINE bool BloomFilter<KeySize, T>::mightContain(
+    const T* aValue) const {
   uint32_t hash = aValue->hash();
   return mightContain(hash);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_BloomFilter_h */

@@ -30,40 +30,35 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::dom::Optional;
 using mozilla::dom::GlobalObject;
+using mozilla::dom::Optional;
 
 // static
-already_AddRefed<FileReaderSync>
-FileReaderSync::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
-{
+already_AddRefed<FileReaderSync> FileReaderSync::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
   RefPtr<FileReaderSync> frs = new FileReaderSync();
 
   return frs.forget();
 }
 
-bool
-FileReaderSync::WrapObject(JSContext* aCx,
-                           JS::Handle<JSObject*> aGivenProto,
-                           JS::MutableHandle<JSObject*> aReflector)
-{
+bool FileReaderSync::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto,
+                                JS::MutableHandle<JSObject*> aReflector) {
   return FileReaderSync_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
-void
-FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
-                                  JS::Handle<JSObject*> aScopeObj,
-                                  Blob& aBlob,
-                                  JS::MutableHandle<JSObject*> aRetval,
-                                  ErrorResult& aRv)
-{
+void FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
+                                       JS::Handle<JSObject*> aScopeObj,
+                                       Blob& aBlob,
+                                       JS::MutableHandle<JSObject*> aRetval,
+                                       ErrorResult& aRv) {
   uint64_t blobSize = aBlob.GetSize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
   UniquePtr<char[], JS::FreePolicy> bufferData(
-    js_pod_arena_malloc<char>(js::ArrayBufferContentsArena, blobSize));
+      js_pod_arena_malloc<char>(js::ArrayBufferContentsArena, blobSize));
   if (!bufferData) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
@@ -87,7 +82,8 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
     return;
   }
 
-  JSObject* arrayBuffer = JS_NewArrayBufferWithContents(aCx, blobSize, bufferData.get());
+  JSObject* arrayBuffer =
+      JS_NewArrayBufferWithContents(aCx, blobSize, bufferData.get());
   if (!arrayBuffer) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
@@ -99,11 +95,8 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   aRetval.set(arrayBuffer);
 }
 
-void
-FileReaderSync::ReadAsBinaryString(Blob& aBlob,
-                                   nsAString& aResult,
-                                   ErrorResult& aRv)
-{
+void FileReaderSync::ReadAsBinaryString(Blob& aBlob, nsAString& aResult,
+                                        ErrorResult& aRv) {
   nsCOMPtr<nsIInputStream> stream;
   aBlob.CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -127,12 +120,9 @@ FileReaderSync::ReadAsBinaryString(Blob& aBlob,
   } while (numRead > 0);
 }
 
-void
-FileReaderSync::ReadAsText(Blob& aBlob,
-                           const Optional<nsAString>& aEncoding,
-                           nsAString& aResult,
-                           ErrorResult& aRv)
-{
+void FileReaderSync::ReadAsText(Blob& aBlob,
+                                const Optional<nsAString>& aEncoding,
+                                nsAString& aResult, ErrorResult& aRv) {
   nsCOMPtr<nsIInputStream> stream;
   aBlob.CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -158,8 +148,8 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   }
 
   // Try the API argument.
-  const Encoding* encoding = aEncoding.WasPassed() ?
-    Encoding::ForLabel(aEncoding.Value()) : nullptr;
+  const Encoding* encoding =
+      aEncoding.WasPassed() ? Encoding::ForLabel(aEncoding.Value()) : nullptr;
   if (!encoding) {
     // API argument failed. Try the type property of the blob.
     nsAutoString type16;
@@ -168,11 +158,8 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     nsAutoCString specifiedCharset;
     bool haveCharset;
     int32_t charsetStart, charsetEnd;
-    NS_ExtractCharsetFromContentType(type,
-                                     specifiedCharset,
-                                     &haveCharset,
-                                     &charsetStart,
-                                     &charsetEnd);
+    NS_ExtractCharsetFromContentType(type, specifiedCharset, &haveCharset,
+                                     &charsetStart, &charsetEnd);
     encoding = Encoding::ForLabel(specifiedCharset);
     if (!encoding) {
       // Type property failed. Use UTF-8.
@@ -190,7 +177,7 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   // but this doesn't work correctly for nsPipe3 - See bug 1349570.
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
-    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+      do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   if (NS_WARN_IF(!multiplexStream)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -208,7 +195,7 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   }
 
   uint64_t blobSize = aBlob.GetSize(aRv);
-  if (NS_WARN_IF(aRv.Failed())){
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
@@ -238,10 +225,8 @@ FileReaderSync::ReadAsText(Blob& aBlob,
   }
 }
 
-void
-FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
-                              ErrorResult& aRv)
-{
+void FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
+                                   ErrorResult& aRv) {
   nsAutoString scratchResult;
   scratchResult.AssignLiteral("data:");
 
@@ -257,12 +242,12 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
 
   nsCOMPtr<nsIInputStream> stream;
   aBlob.CreateInputStream(getter_AddRefs(stream), aRv);
-  if (NS_WARN_IF(aRv.Failed())){
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
   uint64_t blobSize = aBlob.GetSize(aRv);
-  if (NS_WARN_IF(aRv.Failed())){
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
@@ -288,7 +273,7 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
 
   nsAutoString encodedData;
   aRv = Base64EncodeInputStream(syncStream, encodedData, size);
-  if (NS_WARN_IF(aRv.Failed())){
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
@@ -297,17 +282,16 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
   aResult = scratchResult;
 }
 
-nsresult
-FileReaderSync::ConvertStream(nsIInputStream *aStream,
-                              const char *aCharset,
-                              nsAString &aResult)
-{
+nsresult FileReaderSync::ConvertStream(nsIInputStream* aStream,
+                                       const char* aCharset,
+                                       nsAString& aResult) {
   nsCOMPtr<nsIConverterInputStream> converterStream =
-    do_CreateInstance("@mozilla.org/intl/converter-input-stream;1");
+      do_CreateInstance("@mozilla.org/intl/converter-input-stream;1");
   NS_ENSURE_TRUE(converterStream, NS_ERROR_FAILURE);
 
-  nsresult rv = converterStream->Init(aStream, aCharset, 8192,
-                  nsIConverterInputStream::DEFAULT_REPLACEMENT_CHARACTER);
+  nsresult rv = converterStream->Init(
+      aStream, aCharset, 8192,
+      nsIConverterInputStream::DEFAULT_REPLACEMENT_CHARACTER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIUnicharInputStream> unicharStream = converterStream;
@@ -330,17 +314,13 @@ FileReaderSync::ConvertStream(nsIInputStream *aStream,
 namespace {
 
 // This runnable is used to terminate the sync event loop.
-class ReadReadyRunnable final : public WorkerSyncRunnable
-{
-public:
+class ReadReadyRunnable final : public WorkerSyncRunnable {
+ public:
   ReadReadyRunnable(WorkerPrivate* aWorkerPrivate,
                     nsIEventTarget* aSyncLoopTarget)
-    : WorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget)
-  {}
+      : WorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget) {}
 
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(mSyncLoopTarget);
 
@@ -351,35 +331,29 @@ public:
     return true;
   }
 
-private:
-  ~ReadReadyRunnable()
-  {}
+ private:
+  ~ReadReadyRunnable() {}
 };
 
 // This class implements nsIInputStreamCallback and it will be called when the
 // stream is ready to be read.
-class ReadCallback final : public nsIInputStreamCallback
-{
-public:
+class ReadCallback final : public nsIInputStreamCallback {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   ReadCallback(WorkerPrivate* aWorkerPrivate, nsIEventTarget* aEventTarget)
-    : mWorkerPrivate(aWorkerPrivate)
-    , mEventTarget(aEventTarget)
-  {}
+      : mWorkerPrivate(aWorkerPrivate), mEventTarget(aEventTarget) {}
 
   NS_IMETHOD
-  OnInputStreamReady(nsIAsyncInputStream* aStream) override
-  {
+  OnInputStreamReady(nsIAsyncInputStream* aStream) override {
     // I/O Thread. Now we need to block the sync event loop.
     RefPtr<ReadReadyRunnable> runnable =
-      new ReadReadyRunnable(mWorkerPrivate, mEventTarget);
+        new ReadReadyRunnable(mWorkerPrivate, mEventTarget);
     return mEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   }
 
-private:
-  ~ReadCallback()
-  {}
+ private:
+  ~ReadCallback() {}
 
   // The worker is kept alive because of the sync event loop.
   WorkerPrivate* mWorkerPrivate;
@@ -394,12 +368,10 @@ NS_INTERFACE_MAP_BEGIN(ReadCallback)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStreamCallback)
 NS_INTERFACE_MAP_END
 
-} // anonymous
+}  // namespace
 
-nsresult
-FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
-                         uint32_t aBufferSize, uint32_t* aRead)
-{
+nsresult FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
+                                  uint32_t aBufferSize, uint32_t* aRead) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aRead);
@@ -408,8 +380,7 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
   nsresult rv = aStream->Read(aBuffer, aBufferSize, aRead);
 
   // Nothing else to read.
-  if (rv == NS_BASE_STREAM_CLOSED ||
-      (NS_SUCCEEDED(rv) && *aRead == 0)) {
+  if (rv == NS_BASE_STREAM_CLOSED || (NS_SUCCEEDED(rv) && *aRead == 0)) {
     return NS_OK;
   }
 
@@ -452,10 +423,10 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
   }
 
   RefPtr<ReadCallback> callback =
-    new ReadCallback(workerPrivate, syncLoopTarget);
+      new ReadCallback(workerPrivate, syncLoopTarget);
 
   nsCOMPtr<nsIEventTarget> target =
-    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(target);
 
   rv = asyncStream->AsyncWait(callback, 0, aBufferSize, target);
@@ -471,17 +442,17 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
   return SyncRead(aStream, aBuffer, aBufferSize, aRead);
 }
 
-nsresult
-FileReaderSync::ConvertAsyncToSyncStream(uint64_t aStreamSize,
-                                         already_AddRefed<nsIInputStream> aAsyncStream,
-                                         nsIInputStream** aSyncStream)
-{
+nsresult FileReaderSync::ConvertAsyncToSyncStream(
+    uint64_t aStreamSize, already_AddRefed<nsIInputStream> aAsyncStream,
+    nsIInputStream** aSyncStream) {
   nsCOMPtr<nsIInputStream> asyncInputStream = std::move(aAsyncStream);
 
   // If the stream is not async, we just need it to be bufferable.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(asyncInputStream);
+  nsCOMPtr<nsIAsyncInputStream> asyncStream =
+      do_QueryInterface(asyncInputStream);
   if (!asyncStream) {
-    return NS_NewBufferedInputStream(aSyncStream, asyncInputStream.forget(), 4096);
+    return NS_NewBufferedInputStream(aSyncStream, asyncInputStream.forget(),
+                                     4096);
   }
 
   nsAutoCString buffer;
@@ -491,7 +462,7 @@ FileReaderSync::ConvertAsyncToSyncStream(uint64_t aStreamSize,
 
   uint32_t read;
   nsresult rv =
-    SyncRead(asyncInputStream, buffer.BeginWriting(), aStreamSize, &read);
+      SyncRead(asyncInputStream, buffer.BeginWriting(), aStreamSize, &read);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -10,22 +10,20 @@
 
 class nsOfflineCacheDevice;
 
-class nsApplicationCache : public nsIApplicationCache
-                         , public nsSupportsWeakReference
-{
-public:
+class nsApplicationCache : public nsIApplicationCache,
+                           public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPLICATIONCACHE
 
-  nsApplicationCache(nsOfflineCacheDevice *device,
-                     const nsACString &group,
+  nsApplicationCache(nsOfflineCacheDevice *device, const nsACString &group,
                      const nsACString &clientID);
 
   nsApplicationCache();
 
   void MarkInvalid();
 
-private:
+ private:
   virtual ~nsApplicationCache();
 
   RefPtr<nsOfflineCacheDevice> mDevice;
@@ -33,4 +31,3 @@ private:
   nsCString mClientID;
   bool mValid;
 };
-

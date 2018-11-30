@@ -11,177 +11,120 @@
 namespace mozilla {
 namespace dom {
 
-ClientWindowState::ClientWindowState(mozilla::dom::VisibilityState aVisibilityState,
-                                     const TimeStamp& aLastFocusTime,
-                                     nsContentUtils::StorageAccess aStorageAccess,
-                                     bool aFocused)
-  : mData(MakeUnique<IPCClientWindowState>(aVisibilityState, aLastFocusTime,
-                                           aStorageAccess, aFocused))
-{
-}
+ClientWindowState::ClientWindowState(
+    mozilla::dom::VisibilityState aVisibilityState,
+    const TimeStamp& aLastFocusTime,
+    nsContentUtils::StorageAccess aStorageAccess, bool aFocused)
+    : mData(MakeUnique<IPCClientWindowState>(aVisibilityState, aLastFocusTime,
+                                             aStorageAccess, aFocused)) {}
 
 ClientWindowState::ClientWindowState(const IPCClientWindowState& aData)
-  : mData(MakeUnique<IPCClientWindowState>(aData))
-{
-}
+    : mData(MakeUnique<IPCClientWindowState>(aData)) {}
 
-ClientWindowState::ClientWindowState(const ClientWindowState& aRight)
-{
+ClientWindowState::ClientWindowState(const ClientWindowState& aRight) {
   operator=(aRight);
 }
 
 ClientWindowState::ClientWindowState(ClientWindowState&& aRight)
-  : mData(std::move(aRight.mData))
-{
-}
+    : mData(std::move(aRight.mData)) {}
 
-ClientWindowState&
-ClientWindowState::operator=(const ClientWindowState& aRight)
-{
+ClientWindowState& ClientWindowState::operator=(
+    const ClientWindowState& aRight) {
   mData.reset();
   mData = MakeUnique<IPCClientWindowState>(*aRight.mData);
   return *this;
 }
 
-ClientWindowState&
-ClientWindowState::operator=(ClientWindowState&& aRight)
-{
+ClientWindowState& ClientWindowState::operator=(ClientWindowState&& aRight) {
   mData.reset();
   mData = std::move(aRight.mData);
   return *this;
 }
 
-ClientWindowState::~ClientWindowState()
-{
-}
+ClientWindowState::~ClientWindowState() {}
 
-mozilla::dom::VisibilityState
-ClientWindowState::VisibilityState() const
-{
+mozilla::dom::VisibilityState ClientWindowState::VisibilityState() const {
   return mData->visibilityState();
 }
 
-const TimeStamp&
-ClientWindowState::LastFocusTime() const
-{
+const TimeStamp& ClientWindowState::LastFocusTime() const {
   return mData->lastFocusTime();
 }
 
-bool
-ClientWindowState::Focused() const
-{
-  return mData->focused();
-}
+bool ClientWindowState::Focused() const { return mData->focused(); }
 
-nsContentUtils::StorageAccess
-ClientWindowState::GetStorageAccess() const
-{
+nsContentUtils::StorageAccess ClientWindowState::GetStorageAccess() const {
   return mData->storageAccess();
 }
 
-const IPCClientWindowState&
-ClientWindowState::ToIPC() const
-{
-  return *mData;
-}
+const IPCClientWindowState& ClientWindowState::ToIPC() const { return *mData; }
 
-ClientWorkerState::ClientWorkerState(nsContentUtils::StorageAccess aStorageAccess)
-  : mData(MakeUnique<IPCClientWorkerState>(aStorageAccess))
-{
-}
+ClientWorkerState::ClientWorkerState(
+    nsContentUtils::StorageAccess aStorageAccess)
+    : mData(MakeUnique<IPCClientWorkerState>(aStorageAccess)) {}
 
 ClientWorkerState::ClientWorkerState(const IPCClientWorkerState& aData)
-  : mData(MakeUnique<IPCClientWorkerState>(aData))
-{
-}
+    : mData(MakeUnique<IPCClientWorkerState>(aData)) {}
 
 ClientWorkerState::ClientWorkerState(ClientWorkerState&& aRight)
-  : mData(std::move(aRight.mData))
-{
-}
+    : mData(std::move(aRight.mData)) {}
 
-ClientWorkerState::ClientWorkerState(const ClientWorkerState& aRight)
-{
+ClientWorkerState::ClientWorkerState(const ClientWorkerState& aRight) {
   operator=(aRight);
 }
 
-ClientWorkerState&
-ClientWorkerState::operator=(const ClientWorkerState& aRight)
-{
+ClientWorkerState& ClientWorkerState::operator=(
+    const ClientWorkerState& aRight) {
   mData.reset();
   mData = MakeUnique<IPCClientWorkerState>(*aRight.mData);
   return *this;
 }
 
-ClientWorkerState&
-ClientWorkerState::operator=(ClientWorkerState&& aRight)
-{
+ClientWorkerState& ClientWorkerState::operator=(ClientWorkerState&& aRight) {
   mData.reset();
   mData = std::move(aRight.mData);
   return *this;
 }
 
-ClientWorkerState::~ClientWorkerState()
-{
-}
+ClientWorkerState::~ClientWorkerState() {}
 
-nsContentUtils::StorageAccess
-ClientWorkerState::GetStorageAccess() const
-{
+nsContentUtils::StorageAccess ClientWorkerState::GetStorageAccess() const {
   return mData->storageAccess();
 }
 
-const IPCClientWorkerState&
-ClientWorkerState::ToIPC() const
-{
-  return *mData;
-}
+const IPCClientWorkerState& ClientWorkerState::ToIPC() const { return *mData; }
 
-ClientState::ClientState()
-{
-}
+ClientState::ClientState() {}
 
-ClientState::ClientState(const ClientWindowState& aWindowState)
-{
+ClientState::ClientState(const ClientWindowState& aWindowState) {
   mData.emplace(AsVariant(aWindowState));
 }
 
-ClientState::ClientState(const ClientWorkerState& aWorkerState)
-{
+ClientState::ClientState(const ClientWorkerState& aWorkerState) {
   mData.emplace(AsVariant(aWorkerState));
 }
 
-ClientState::ClientState(const IPCClientWindowState& aData)
-{
+ClientState::ClientState(const IPCClientWindowState& aData) {
   mData.emplace(AsVariant(ClientWindowState(aData)));
 }
 
-ClientState::ClientState(const IPCClientWorkerState& aData)
-{
+ClientState::ClientState(const IPCClientWorkerState& aData) {
   mData.emplace(AsVariant(ClientWorkerState(aData)));
 }
 
 ClientState::ClientState(ClientState&& aRight)
-  : mData(std::move(aRight.mData))
-{
-}
+    : mData(std::move(aRight.mData)) {}
 
-ClientState&
-ClientState::operator=(ClientState&& aRight)
-{
+ClientState& ClientState::operator=(ClientState&& aRight) {
   mData = std::move(aRight.mData);
   return *this;
 }
 
-ClientState::~ClientState()
-{
-}
+ClientState::~ClientState() {}
 
 // static
-ClientState
-ClientState::FromIPC(const IPCClientState& aData)
-{
-  switch(aData.type()) {
+ClientState ClientState::FromIPC(const IPCClientState& aData) {
+  switch (aData.type()) {
     case IPCClientState::TIPCClientWindowState:
       return ClientState(aData.get_IPCClientWindowState());
     case IPCClientState::TIPCClientWorkerState:
@@ -191,33 +134,23 @@ ClientState::FromIPC(const IPCClientState& aData)
   }
 }
 
-bool
-ClientState::IsWindowState() const
-{
+bool ClientState::IsWindowState() const {
   return mData.isSome() && mData.ref().is<ClientWindowState>();
 }
 
-const ClientWindowState&
-ClientState::AsWindowState() const
-{
+const ClientWindowState& ClientState::AsWindowState() const {
   return mData.ref().as<ClientWindowState>();
 }
 
-bool
-ClientState::IsWorkerState() const
-{
+bool ClientState::IsWorkerState() const {
   return mData.isSome() && mData.ref().is<ClientWorkerState>();
 }
 
-const ClientWorkerState&
-ClientState::AsWorkerState() const
-{
+const ClientWorkerState& ClientState::AsWorkerState() const {
   return mData.ref().as<ClientWorkerState>();
 }
 
-nsContentUtils::StorageAccess
-ClientState::GetStorageAccess() const
-{
+nsContentUtils::StorageAccess ClientState::GetStorageAccess() const {
   if (IsWindowState()) {
     return AsWindowState().GetStorageAccess();
   }
@@ -225,9 +158,7 @@ ClientState::GetStorageAccess() const
   return AsWorkerState().GetStorageAccess();
 }
 
-const IPCClientState
-ClientState::ToIPC() const
-{
+const IPCClientState ClientState::ToIPC() const {
   if (IsWindowState()) {
     return IPCClientState(AsWindowState().ToIPC());
   }
@@ -235,5 +166,5 @@ ClientState::ToIPC() const
   return IPCClientState(AsWorkerState().ToIPC());
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

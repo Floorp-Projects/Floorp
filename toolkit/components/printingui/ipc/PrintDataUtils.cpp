@@ -22,104 +22,86 @@ namespace embedding {
 NS_IMPL_ISUPPORTS(MockWebBrowserPrint, nsIWebBrowserPrint);
 
 MockWebBrowserPrint::MockWebBrowserPrint(const PrintData &aData)
-  : mData(aData)
-{
-}
+    : mData(aData) {}
 
-MockWebBrowserPrint::~MockWebBrowserPrint()
-{
-}
+MockWebBrowserPrint::~MockWebBrowserPrint() {}
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetGlobalPrintSettings(nsIPrintSettings **aGlobalPrintSettings)
-{
+MockWebBrowserPrint::GetGlobalPrintSettings(
+    nsIPrintSettings **aGlobalPrintSettings) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetCurrentPrintSettings(nsIPrintSettings **aCurrentPrintSettings)
-{
+MockWebBrowserPrint::GetCurrentPrintSettings(
+    nsIPrintSettings **aCurrentPrintSettings) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetDoingPrint(bool *aDoingPrint)
-{
+MockWebBrowserPrint::GetDoingPrint(bool *aDoingPrint) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetDoingPrintPreview(bool *aDoingPrintPreview)
-{
+MockWebBrowserPrint::GetDoingPrintPreview(bool *aDoingPrintPreview) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetIsFramesetDocument(bool *aIsFramesetDocument)
-{
+MockWebBrowserPrint::GetIsFramesetDocument(bool *aIsFramesetDocument) {
   *aIsFramesetDocument = mData.isFramesetDocument();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetIsFramesetFrameSelected(bool *aIsFramesetFrameSelected)
-{
+MockWebBrowserPrint::GetIsFramesetFrameSelected(
+    bool *aIsFramesetFrameSelected) {
   *aIsFramesetFrameSelected = mData.isFramesetFrameSelected();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetIsIFrameSelected(bool *aIsIFrameSelected)
-{
+MockWebBrowserPrint::GetIsIFrameSelected(bool *aIsIFrameSelected) {
   *aIsIFrameSelected = mData.isIFrameSelected();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetIsRangeSelection(bool *aIsRangeSelection)
-{
+MockWebBrowserPrint::GetIsRangeSelection(bool *aIsRangeSelection) {
   *aIsRangeSelection = mData.isRangeSelection();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::GetPrintPreviewNumPages(int32_t *aPrintPreviewNumPages)
-{
+MockWebBrowserPrint::GetPrintPreviewNumPages(int32_t *aPrintPreviewNumPages) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::Print(nsIPrintSettings* aThePrintSettings,
-                           nsIWebProgressListener* aWPListener)
-{
+MockWebBrowserPrint::Print(nsIPrintSettings *aThePrintSettings,
+                           nsIWebProgressListener *aWPListener) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::PrintPreview(nsIPrintSettings* aThePrintSettings,
-                                  mozIDOMWindowProxy* aChildDOMWin,
-                                  nsIWebProgressListener* aWPListener)
-{
+MockWebBrowserPrint::PrintPreview(nsIPrintSettings *aThePrintSettings,
+                                  mozIDOMWindowProxy *aChildDOMWin,
+                                  nsIWebProgressListener *aWPListener) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::PrintPreviewNavigate(int16_t aNavType,
-                                          int32_t aPageNum)
-{
+MockWebBrowserPrint::PrintPreviewNavigate(int16_t aNavType, int32_t aPageNum) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::Cancel()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+MockWebBrowserPrint::Cancel() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::EnumerateDocumentNames(uint32_t* aCount,
-                                            char16_t*** aResult)
-{
+MockWebBrowserPrint::EnumerateDocumentNames(uint32_t *aCount,
+                                            char16_t ***aResult) {
   *aCount = 0;
   *aResult = nullptr;
 
@@ -131,7 +113,7 @@ MockWebBrowserPrint::EnumerateDocumentNames(uint32_t* aCount,
   // dialog, and even then, it only cares about the first document
   // name. That's why we only send a single document name through
   // PrintData.
-  char16_t** array = (char16_t**) moz_xmalloc(sizeof(char16_t*));
+  char16_t **array = (char16_t **)moz_xmalloc(sizeof(char16_t *));
   array[0] = ToNewUnicode(mData.printJobName());
 
   *aCount = 1;
@@ -140,11 +122,7 @@ MockWebBrowserPrint::EnumerateDocumentNames(uint32_t* aCount,
 }
 
 NS_IMETHODIMP
-MockWebBrowserPrint::ExitPrintPreview()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+MockWebBrowserPrint::ExitPrintPreview() { return NS_ERROR_NOT_IMPLEMENTED; }
 
-} // namespace embedding
-} // namespace mozilla
-
+}  // namespace embedding
+}  // namespace mozilla

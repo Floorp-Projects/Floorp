@@ -24,17 +24,15 @@ namespace mozilla {
 class EditorBase;
 namespace dom {
 class Element;
-} // namespace dom
+}  // namespace dom
 
-class CreateElementTransaction final : public EditTransactionBase
-{
-protected:
-  template<typename PT, typename CT>
-  CreateElementTransaction(EditorBase& aEditorBase,
-                           nsAtom& aTag,
+class CreateElementTransaction final : public EditTransactionBase {
+ protected:
+  template <typename PT, typename CT>
+  CreateElementTransaction(EditorBase& aEditorBase, nsAtom& aTag,
                            const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
-public:
+ public:
   /**
    * Create a transaction for creating a new child node of the container of
    * aPointToInsert of type aTag.
@@ -46,11 +44,10 @@ public:
    *                        or after, the new node will be appended to the
    *                        container.
    */
-  template<typename PT, typename CT>
-  static already_AddRefed<CreateElementTransaction>
-  Create(EditorBase& aEditorBase,
-         nsAtom& aTag,
-         const EditorDOMPointBase<PT, CT>& aPointToInsert);
+  template <typename PT, typename CT>
+  static already_AddRefed<CreateElementTransaction> Create(
+      EditorBase& aEditorBase, nsAtom& aTag,
+      const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CreateElementTransaction,
@@ -62,7 +59,7 @@ public:
 
   already_AddRefed<dom::Element> GetNewNode();
 
-protected:
+ protected:
   virtual ~CreateElementTransaction();
 
   /**
@@ -83,6 +80,6 @@ protected:
   nsCOMPtr<dom::Element> mNewNode;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef CreateElementTransaction_h
+#endif  // #ifndef CreateElementTransaction_h

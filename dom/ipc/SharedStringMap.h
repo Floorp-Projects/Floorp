@@ -31,11 +31,10 @@ class SharedStringMapBuilder;
  * instance has been initialized, the memory that it allocates can never be
  * freed before process shutdown. Do not use it for short-lived mappings.
  */
-class SharedStringMap
-{
+class SharedStringMap {
   using FileDescriptor = mozilla::ipc::FileDescriptor;
 
-public:
+ public:
   /**
    * The header at the beginning of the shared memory region describing its
    * layout. The layout of the shared memory is as follows:
@@ -82,7 +81,8 @@ public:
   struct Entry {
     // The offset and size of the entry's UTF-8 key in the key string table.
     StringTableEntry mKey;
-    // The offset and size of the entry's UTF-16 value in the value string table.
+    // The offset and size of the entry's UTF-16 value in the value string
+    // table.
     StringTableEntry mValue;
   };
 
@@ -108,14 +108,14 @@ public:
    */
   bool Get(const nsCString& aKey, nsAString& aValue);
 
-private:
+ private:
   /**
    * Searches for an entry for the given key. If found, returns true, and
    * places its index in the entry array in aIndex.
    */
   bool Find(const nsCString& aKey, size_t* aIndex);
 
-public:
+ public:
   /**
    * Returns the number of entries in the map.
    */
@@ -130,8 +130,7 @@ public:
    * The returned value is a literal string which references the mapped memory
    * region.
    */
-  nsCString GetKeyAt(uint32_t aIndex) const
-  {
+  nsCString GetKeyAt(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < Count());
     return KeyTable().Get(Entries()[aIndex].mKey);
   }
@@ -144,8 +143,7 @@ public:
    * The returned value is a literal string which references the mapped memory
    * region.
    */
-  nsString GetValueAt(uint32_t aIndex) const
-  {
+  nsString GetValueAt(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < Count());
     return ValueTable().Get(Entries()[aIndex].mValue);
   }
@@ -160,42 +158,30 @@ public:
 
   size_t MapSize() const { return mMap.size(); }
 
-protected:
+ protected:
   ~SharedStringMap() = default;
 
-private:
-
+ private:
   // Type-safe getters for values in the shared memory region:
-  const Header& GetHeader() const
-  {
-    return mMap.get<Header>()[0];
+  const Header& GetHeader() const { return mMap.get<Header>()[0]; }
+
+  RangedPtr<const Entry> Entries() const {
+    return {reinterpret_cast<const Entry*>(&GetHeader() + 1), EntryCount()};
   }
 
-  RangedPtr<const Entry> Entries() const
-  {
-    return { reinterpret_cast<const Entry*>(&GetHeader() + 1),
-             EntryCount() };
-  }
+  uint32_t EntryCount() const { return GetHeader().mEntryCount; }
 
-  uint32_t EntryCount() const
-  {
-    return GetHeader().mEntryCount;
-  }
-
-  StringTable<nsCString> KeyTable() const
-  {
+  StringTable<nsCString> KeyTable() const {
     auto& header = GetHeader();
-    return { { &mMap.get<uint8_t>()[header.mKeyStringsOffset],
-               header.mKeyStringsSize } };
+    return {{&mMap.get<uint8_t>()[header.mKeyStringsOffset],
+             header.mKeyStringsSize}};
   }
 
-  StringTable<nsString> ValueTable() const
-  {
+  StringTable<nsString> ValueTable() const {
     auto& header = GetHeader();
-    return { { &mMap.get<uint8_t>()[header.mValueStringsOffset],
-               header.mValueStringsSize } };
+    return {{&mMap.get<uint8_t>()[header.mValueStringsOffset],
+             header.mValueStringsSize}};
   }
-
 
   loader::AutoMemMap mMap;
 };
@@ -205,9 +191,8 @@ private:
  * SharedStringMap. Each key-value pair in the final map is added to the
  * builder, before it is finalized and transformed into a snapshot.
  */
-class MOZ_RAII SharedStringMapBuilder
-{
-public:
+class MOZ_RAII SharedStringMapBuilder {
+ public:
   SharedStringMapBuilder() = default;
 
   /**
@@ -222,7 +207,7 @@ public:
    */
   Result<Ok, nsresult> Finalize(loader::AutoMemMap& aMap);
 
-private:
+ private:
   using Entry = SharedStringMap::Entry;
 
   StringTableBuilder<nsCStringHashKey, nsCString> mKeyTable;
@@ -231,9 +216,8 @@ private:
   nsDataHashtable<nsCStringHashKey, Entry> mEntries;
 };
 
-} // ipc
-} // dom
-} // mozilla
+}  // namespace ipc
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // dom_ipc_SharedStringMap_h
-
+#endif  // dom_ipc_SharedStringMap_h

@@ -13,25 +13,23 @@
 
 using namespace mozilla;
 
-class SVGFEUnstyledLeafFrame final : public nsFrame
-{
-  friend nsIFrame*
-  NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-protected:
+class SVGFEUnstyledLeafFrame final : public nsFrame {
+  friend nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
+                                                ComputedStyle* aStyle);
+
+ protected:
   explicit SVGFEUnstyledLeafFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
-  {
+      : nsFrame(aStyle, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
-public:
+ public:
   NS_DECL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override {}
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
-  {
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & eSupportsContainLayoutAndPaint) {
       return false;
     }
@@ -40,15 +38,13 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGFEUnstyledLeaf"), aResult);
   }
 #endif
 
-  virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                                    nsAtom* aAttribute,
-                                    int32_t  aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     // We don't maintain a visual overflow rect
@@ -56,24 +52,24 @@ public:
   }
 };
 
-nsIFrame*
-NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
-{
+nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
+                                       ComputedStyle* aStyle) {
   return new (aPresShell) SVGFEUnstyledLeafFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)
 
-nsresult
-SVGFEUnstyledLeafFrame::AttributeChanged(int32_t  aNameSpaceID,
-                                         nsAtom* aAttribute,
-                                         int32_t  aModType)
-{
-  SVGFEUnstyledElement *element = static_cast<SVGFEUnstyledElement*>(GetContent());
+nsresult SVGFEUnstyledLeafFrame::AttributeChanged(int32_t aNameSpaceID,
+                                                  nsAtom* aAttribute,
+                                                  int32_t aModType) {
+  SVGFEUnstyledElement* element =
+      static_cast<SVGFEUnstyledElement*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
-    MOZ_ASSERT(GetParent()->GetParent()->IsSVGFilterFrame(),
-               "Observers observe the filter, so that's what we must invalidate");
-    SVGObserverUtils::InvalidateDirectRenderingObservers(GetParent()->GetParent());
+    MOZ_ASSERT(
+        GetParent()->GetParent()->IsSVGFilterFrame(),
+        "Observers observe the filter, so that's what we must invalidate");
+    SVGObserverUtils::InvalidateDirectRenderingObservers(
+        GetParent()->GetParent());
   }
 
   return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);

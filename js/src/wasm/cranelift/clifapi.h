@@ -29,35 +29,37 @@
 // This type is always opaque on the C++ side.
 struct CraneliftCompiler;
 
-extern "C"
-{
-    // A static initializer, that must be called only once.
-    void cranelift_initialize();
+extern "C" {
+// A static initializer, that must be called only once.
+void cranelift_initialize();
 
-    // Allocate a Cranelift compiler for compiling functions in `env`.
-    //
-    // The compiler can be used for compiling multiple functions, but it must only be used from a
-    // single thread.
-    //
-    // Returns NULL is a Cranelift compiler could not be created for the current CPU architecture.
-    //
-    // The memory associated with the compiler must be freed by calling `cranelift_compiler_destroy`.
-    CraneliftCompiler* cranelift_compiler_create(const CraneliftStaticEnvironment* staticEnv,
-                                                 const CraneliftModuleEnvironment* env);
+// Allocate a Cranelift compiler for compiling functions in `env`.
+//
+// The compiler can be used for compiling multiple functions, but it must only
+// be used from a single thread.
+//
+// Returns NULL is a Cranelift compiler could not be created for the current CPU
+// architecture.
+//
+// The memory associated with the compiler must be freed by calling
+// `cranelift_compiler_destroy`.
+CraneliftCompiler* cranelift_compiler_create(
+    const CraneliftStaticEnvironment* staticEnv,
+    const CraneliftModuleEnvironment* env);
 
-    // Destroy a Cranelift compiler object.
-    //
-    // This releases all resources used by the compiler.
-    void cranelift_compiler_destroy(CraneliftCompiler* compiler);
+// Destroy a Cranelift compiler object.
+//
+// This releases all resources used by the compiler.
+void cranelift_compiler_destroy(CraneliftCompiler* compiler);
 
-    // Compile a single function with `compiler`.
-    //
-    // The function described by `data` is compiled.
-    //
-    // Returns true on success.
-    bool cranelift_compile_function(CraneliftCompiler* compiler,
-                                    const CraneliftFuncCompileInput* data,
-                                    CraneliftCompiledFunc* result);
-} // extern "C"
+// Compile a single function with `compiler`.
+//
+// The function described by `data` is compiled.
+//
+// Returns true on success.
+bool cranelift_compile_function(CraneliftCompiler* compiler,
+                                const CraneliftFuncCompileInput* data,
+                                CraneliftCompiledFunc* result);
+}  // extern "C"
 
-#endif // wasm_cranelift_clifapi_h
+#endif  // wasm_cranelift_clifapi_h

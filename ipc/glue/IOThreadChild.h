@@ -16,14 +16,13 @@ namespace ipc {
 // The IOThreadChild class represents a background thread where the
 // IPC IO MessageLoop lives.
 class IOThreadChild : public ChildThread {
-public:
+ public:
   IOThreadChild()
-    : ChildThread(base::Thread::Options(MessageLoop::TYPE_IO,
-                                        0)) // stack size
-  { }
+      : ChildThread(base::Thread::Options(MessageLoop::TYPE_IO,
+                                          0))  // stack size
+  {}
 
-  ~IOThreadChild()
-  { }
+  ~IOThreadChild() {}
 
   static MessageLoop* message_loop() {
     return IOThreadChild::current()->Thread::message_loop();
@@ -34,16 +33,16 @@ public:
     return IOThreadChild::current()->ChildThread::channel();
   }
 
-protected:
+ protected:
   static IOThreadChild* current() {
     return static_cast<IOThreadChild*>(ChildThread::current());
   }
 
-private:
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(IOThreadChild);
 };
 
-} // namespace ipc
-} // namespace mozilla
+}  // namespace ipc
+}  // namespace mozilla
 
 #endif  // ifndef dom_plugins_IOThreadChild_h

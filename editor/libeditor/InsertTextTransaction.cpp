@@ -5,49 +5,40 @@
 
 #include "InsertTextTransaction.h"
 
-#include "mozilla/EditorBase.h"         // mEditorBase
-#include "mozilla/SelectionState.h"     // RangeUpdater
-#include "mozilla/dom/Selection.h"      // Selection local var
-#include "mozilla/dom/Text.h"           // mTextNode
-#include "nsAString.h"                  // nsAString parameter
-#include "nsDebug.h"                    // for NS_ASSERTION, etc.
-#include "nsError.h"                    // for NS_OK, etc.
-#include "nsQueryObject.h"              // for do_QueryObject
+#include "mozilla/EditorBase.h"      // mEditorBase
+#include "mozilla/SelectionState.h"  // RangeUpdater
+#include "mozilla/dom/Selection.h"   // Selection local var
+#include "mozilla/dom/Text.h"        // mTextNode
+#include "nsAString.h"               // nsAString parameter
+#include "nsDebug.h"                 // for NS_ASSERTION, etc.
+#include "nsError.h"                 // for NS_OK, etc.
+#include "nsQueryObject.h"           // for do_QueryObject
 
 namespace mozilla {
 
 using namespace dom;
 
 // static
-already_AddRefed<InsertTextTransaction>
-InsertTextTransaction::Create(EditorBase& aEditorBase,
-                              const nsAString& aStringToInsert,
-                              Text& aTextNode,
-                              uint32_t aOffset)
-{
-  RefPtr<InsertTextTransaction> transaction =
-    new InsertTextTransaction(aEditorBase, aStringToInsert, aTextNode, aOffset);
+already_AddRefed<InsertTextTransaction> InsertTextTransaction::Create(
+    EditorBase& aEditorBase, const nsAString& aStringToInsert, Text& aTextNode,
+    uint32_t aOffset) {
+  RefPtr<InsertTextTransaction> transaction = new InsertTextTransaction(
+      aEditorBase, aStringToInsert, aTextNode, aOffset);
   return transaction.forget();
 }
 
 InsertTextTransaction::InsertTextTransaction(EditorBase& aEditorBase,
                                              const nsAString& aStringToInsert,
-                                             Text& aTextNode,
-                                             uint32_t aOffset)
-  : mTextNode(&aTextNode)
-  , mOffset(aOffset)
-  , mStringToInsert(aStringToInsert)
-  , mEditorBase(&aEditorBase)
-{
-}
+                                             Text& aTextNode, uint32_t aOffset)
+    : mTextNode(&aTextNode),
+      mOffset(aOffset),
+      mStringToInsert(aStringToInsert),
+      mEditorBase(&aEditorBase) {}
 
-InsertTextTransaction::~InsertTextTransaction()
-{
-}
+InsertTextTransaction::~InsertTextTransaction() {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertTextTransaction, EditTransactionBase,
-                                   mEditorBase,
-                                   mTextNode)
+                                   mEditorBase, mTextNode)
 
 NS_IMPL_ADDREF_INHERITED(InsertTextTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(InsertTextTransaction, EditTransactionBase)
@@ -55,10 +46,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTransaction)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(InsertTextTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-
 NS_IMETHODIMP
-InsertTextTransaction::DoTransaction()
-{
+InsertTextTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -76,7 +65,7 @@ InsertTextTransaction::DoTransaction()
       return NS_ERROR_FAILURE;
     }
     DebugOnly<nsresult> rv =
-      selection->Collapse(mTextNode, mOffset + mStringToInsert.Length());
+        selection->Collapse(mTextNode, mOffset + mStringToInsert.Length());
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Selection could not be collapsed after insert");
   } else {
@@ -84,24 +73,21 @@ InsertTextTransaction::DoTransaction()
   }
   // XXX Other transactions do not do this but its callers do.
   //     Why do this transaction do this by itself?
-  mEditorBase->RangeUpdaterRef().
-                 SelAdjInsertText(*mTextNode, mOffset, mStringToInsert);
+  mEditorBase->RangeUpdaterRef().SelAdjInsertText(*mTextNode, mOffset,
+                                                  mStringToInsert);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-InsertTextTransaction::UndoTransaction()
-{
+InsertTextTransaction::UndoTransaction() {
   ErrorResult rv;
   mTextNode->DeleteData(mOffset, mStringToInsert.Length(), rv);
   return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
-InsertTextTransaction::Merge(nsITransaction* aTransaction,
-                             bool* aDidMerge)
-{
+InsertTextTransaction::Merge(nsITransaction* aTransaction, bool* aDidMerge) {
   if (!aTransaction || !aDidMerge) {
     return NS_OK;
   }
@@ -123,18 +109,14 @@ InsertTextTransaction::Merge(nsITransaction* aTransaction,
 
 /* ============ private methods ================== */
 
-void
-InsertTextTransaction::GetData(nsString& aResult)
-{
+void InsertTextTransaction::GetData(nsString& aResult) {
   aResult = mStringToInsert;
 }
 
-bool
-InsertTextTransaction::IsSequentialInsert(
-                         InsertTextTransaction& aOtherTransaction)
-{
+bool InsertTextTransaction::IsSequentialInsert(
+    InsertTextTransaction& aOtherTransaction) {
   return aOtherTransaction.mTextNode == mTextNode &&
          aOtherTransaction.mOffset == mOffset + mStringToInsert.Length();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

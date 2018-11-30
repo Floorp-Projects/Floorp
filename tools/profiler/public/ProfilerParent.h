@@ -28,14 +28,15 @@ class ProfilerParentTracker;
 // All ProfilerParent instances are registered with a manager class called
 // ProfilerParentTracker, which has the list of living ProfilerParent instances
 // and handles shutdown.
-class ProfilerParent final : public PProfilerParent
-{
-public:
+class ProfilerParent final : public PProfilerParent {
+ public:
   NS_INLINE_DECL_REFCOUNTING(ProfilerParent)
 
-  static mozilla::ipc::Endpoint<PProfilerChild> CreateForProcess(base::ProcessId aOtherPid);
+  static mozilla::ipc::Endpoint<PProfilerChild> CreateForProcess(
+      base::ProcessId aOtherPid);
 
-  typedef MozPromise<Shmem, ResponseRejectReason, true> SingleProcessProfilePromise;
+  typedef MozPromise<Shmem, ResponseRejectReason, true>
+      SingleProcessProfilePromise;
 
   // The following static methods can be called on any thread, but they are
   // no-ops on anything other than the main thread.
@@ -49,7 +50,8 @@ public:
   // forward these calls any further.
 
   // Returns the number of profiles to expect. The gathered profiles will be
-  // provided asynchronously with a call to ProfileGatherer::ReceiveGatheredProfile.
+  // provided asynchronously with a call to
+  // ProfileGatherer::ReceiveGatheredProfile.
   static nsTArray<RefPtr<SingleProcessProfilePromise>> GatherProfiles();
 
   static void ProfilerStarted(nsIProfilerStartParams* aParams);
@@ -57,7 +59,7 @@ public:
   static void ProfilerPaused();
   static void ProfilerResumed();
 
-private:
+ private:
   friend class ProfilerParentTracker;
 
   ProfilerParent();
@@ -68,10 +70,11 @@ private:
   void DeallocPProfilerParent() override;
 
   RefPtr<ProfilerParent> mSelfRef;
-  nsTArray<MozPromiseHolder<SingleProcessProfilePromise>> mPendingRequestedProfiles;
+  nsTArray<MozPromiseHolder<SingleProcessProfilePromise>>
+      mPendingRequestedProfiles;
   bool mDestroyed;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif  // ProfilerParent_h

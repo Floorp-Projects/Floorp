@@ -19,42 +19,35 @@ namespace dom {
 
 class IPCBlobInputStreamParentCallback;
 
-class IPCBlobInputStreamStorage final : public nsIObserver
-{
-public:
+class IPCBlobInputStreamStorage final : public nsIObserver {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   // This initializes the singleton and it must be called on the main-thread.
-  static void
-  Initialize();
+  static void Initialize();
 
-  static IPCBlobInputStreamStorage*
-  Get();
+  static IPCBlobInputStreamStorage* Get();
 
-  void
-  AddStream(nsIInputStream* aInputStream, const nsID& aID, uint64_t aSize,
-            uint64_t aChildID);
+  void AddStream(nsIInputStream* aInputStream, const nsID& aID, uint64_t aSize,
+                 uint64_t aChildID);
 
-  void
-  ForgetStream(const nsID& aID);
+  void ForgetStream(const nsID& aID);
 
-  void
-  GetStream(const nsID& aID, uint64_t aStart, uint64_t aLength,
-            nsIInputStream** aInputStream);
+  void GetStream(const nsID& aID, uint64_t aStart, uint64_t aLength,
+                 nsIInputStream** aInputStream);
 
-  void
-  StoreCallback(const nsID& aID, IPCBlobInputStreamParentCallback* aCallback);
+  void StoreCallback(const nsID& aID,
+                     IPCBlobInputStreamParentCallback* aCallback);
 
-  already_AddRefed<IPCBlobInputStreamParentCallback>
-  TakeCallback(const nsID& aID);
+  already_AddRefed<IPCBlobInputStreamParentCallback> TakeCallback(
+      const nsID& aID);
 
-private:
+ private:
   IPCBlobInputStreamStorage();
   ~IPCBlobInputStreamStorage();
 
-  struct StreamData
-  {
+  struct StreamData {
     nsCOMPtr<nsIInputStream> mInputStream;
     RefPtr<IPCBlobInputStreamParentCallback> mCallback;
 
@@ -68,7 +61,7 @@ private:
   nsClassHashtable<nsIDHashKey, StreamData> mStorage;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ipc_IPCBlobInputStreamStorage_h
+#endif  // mozilla_dom_ipc_IPCBlobInputStreamStorage_h

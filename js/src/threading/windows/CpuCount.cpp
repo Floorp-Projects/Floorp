@@ -7,16 +7,14 @@
 
 #include "util/Windows.h"
 
-uint32_t
-js::GetCPUCount()
-{
-    static uint32_t ncpus = 0;
+uint32_t js::GetCPUCount() {
+  static uint32_t ncpus = 0;
 
-    if (ncpus == 0) {
-        SYSTEM_INFO sysinfo;
-        GetSystemInfo(&sysinfo);
-        ncpus = uint32_t(sysinfo.dwNumberOfProcessors);
-    }
+  if (ncpus == 0) {
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    ncpus = uint32_t(sysinfo.dwNumberOfProcessors);
+  }
 
-    return ncpus;
+  return ncpus;
 }

@@ -23,9 +23,7 @@ StaticRefPtr<WebCryptoThreadPool> gInstance;
 
 NS_IMPL_ISUPPORTS(WebCryptoThreadPool, nsIObserver)
 
-/* static */ void
-WebCryptoThreadPool::Initialize()
-{
+/* static */ void WebCryptoThreadPool::Initialize() {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   MOZ_ASSERT(!gInstance, "More than one instance!");
 
@@ -38,9 +36,7 @@ WebCryptoThreadPool::Initialize()
   }
 }
 
-/* static */ nsresult
-WebCryptoThreadPool::Dispatch(nsIRunnable* aRunnable)
-{
+/* static */ nsresult WebCryptoThreadPool::Dispatch(nsIRunnable* aRunnable) {
   if (gInstance) {
     return gInstance->DispatchInternal(aRunnable);
   }
@@ -49,9 +45,7 @@ WebCryptoThreadPool::Dispatch(nsIRunnable* aRunnable)
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-WebCryptoThreadPool::Init()
-{
+nsresult WebCryptoThreadPool::Init() {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -61,9 +55,7 @@ WebCryptoThreadPool::Init()
   return obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
 }
 
-nsresult
-WebCryptoThreadPool::DispatchInternal(nsIRunnable* aRunnable)
-{
+nsresult WebCryptoThreadPool::DispatchInternal(nsIRunnable* aRunnable) {
   MutexAutoLock lock(mMutex);
 
   if (mShutdown) {
@@ -84,9 +76,7 @@ WebCryptoThreadPool::DispatchInternal(nsIRunnable* aRunnable)
   return mPool->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
 
-void
-WebCryptoThreadPool::Shutdown()
-{
+void WebCryptoThreadPool::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // Limit the scope of locking to avoid deadlocking if DispatchInternal ends
@@ -109,18 +99,16 @@ WebCryptoThreadPool::Shutdown()
   NS_WARNING_ASSERTION(obs, "Failed to retrieve observer service!");
 
   if (obs) {
-    if (NS_FAILED(obs->RemoveObserver(this,
-                                      NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID))) {
+    if (NS_FAILED(
+            obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID))) {
       NS_WARNING("Failed to remove shutdown observer!");
     }
   }
 }
 
 NS_IMETHODIMP
-WebCryptoThreadPool::Observe(nsISupports* aSubject,
-                             const char* aTopic,
-                             const char16_t* aData)
-{
+WebCryptoThreadPool::Observe(nsISupports* aSubject, const char* aTopic,
+                             const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   if (gInstance) {
@@ -131,5 +119,5 @@ WebCryptoThreadPool::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

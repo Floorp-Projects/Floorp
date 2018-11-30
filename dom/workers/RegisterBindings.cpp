@@ -15,9 +15,8 @@
 
 using namespace mozilla::dom;
 
-bool
-WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
-{
+bool WorkerPrivate::RegisterBindings(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGlobal) {
   // Init Web IDL bindings
   if (!RegisterWorkerBindings(aCx, aGlobal)) {
     return false;
@@ -29,7 +28,7 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
     }
 
     RefPtr<OSFileConstantsService> service =
-      OSFileConstantsService::GetOrCreate();
+        OSFileConstantsService::GetOrCreate();
     if (!service->DefineOSFileConstants(aCx, aGlobal)) {
       return false;
     }
@@ -42,10 +41,8 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
   return true;
 }
 
-bool
-WorkerPrivate::RegisterDebuggerBindings(JSContext* aCx,
-                                        JS::Handle<JSObject*> aGlobal)
-{
+bool WorkerPrivate::RegisterDebuggerBindings(JSContext* aCx,
+                                             JS::Handle<JSObject*> aGlobal) {
   // Init Web IDL bindings
   if (!RegisterWorkerDebuggerBindings(aCx, aGlobal)) {
     return false;

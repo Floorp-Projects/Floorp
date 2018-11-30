@@ -18,10 +18,8 @@ class Accessible;
 /**
  * Accessible table interface.
  */
-class TableAccessible
-{
-public:
-
+class TableAccessible {
+ public:
   /**
    * Return the caption accessible if any for this table.
    */
@@ -45,36 +43,40 @@ public:
   /**
    * Return the accessible for the cell at the given row and column indices.
    */
-  virtual Accessible* CellAt(uint32_t aRowIdx, uint32_t aColIdx) { return nullptr; }
+  virtual Accessible* CellAt(uint32_t aRowIdx, uint32_t aColIdx) {
+    return nullptr;
+  }
 
   /**
    * Return the index of the cell at the given row and column.
    */
-  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx)
-    { return ColCount() * aRowIdx + aColIdx; }
+  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) {
+    return ColCount() * aRowIdx + aColIdx;
+  }
 
   /**
    * Return the column index of the cell with the given index.
    */
-  virtual int32_t ColIndexAt(uint32_t aCellIdx)
-    { return aCellIdx % ColCount(); }
+  virtual int32_t ColIndexAt(uint32_t aCellIdx) {
+    return aCellIdx % ColCount();
+  }
 
   /**
    * Return the row index of the cell with the given index.
    */
-  virtual int32_t RowIndexAt(uint32_t aCellIdx)
-    { return aCellIdx / ColCount(); }
+  virtual int32_t RowIndexAt(uint32_t aCellIdx) {
+    return aCellIdx / ColCount();
+  }
 
   /**
    * Get the row and column indices for the cell at the given index.
    */
   virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
-                                  int32_t* aColIdx)
-    {
-      uint32_t colCount = ColCount();
-      *aRowIdx = aCellIdx / colCount;
-      *aColIdx = aCellIdx % colCount;
-    }
+                                  int32_t* aColIdx) {
+    uint32_t colCount = ColCount();
+    *aRowIdx = aCellIdx / colCount;
+    *aColIdx = aCellIdx % colCount;
+  }
 
   /**
    * Return the number of columns occupied by the cell at the given row and
@@ -91,14 +93,16 @@ public:
   /**
    * Get the description of the given column.
    */
-  virtual void ColDescription(uint32_t aColIdx, nsString& aDescription)
-    { aDescription.Truncate(); }
+  virtual void ColDescription(uint32_t aColIdx, nsString& aDescription) {
+    aDescription.Truncate();
+  }
 
   /**
    * Get the description for the given row.
    */
-  virtual void RowDescription(uint32_t aRowIdx, nsString& aDescription)
-    { aDescription.Truncate(); }
+  virtual void RowDescription(uint32_t aRowIdx, nsString& aDescription) {
+    aDescription.Truncate();
+  }
 
   /**
    * Return true if the given column is selected.
@@ -113,7 +117,9 @@ public:
   /**
    * Return true if the given cell is selected.
    */
-  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) { return false; }
+  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) {
+    return false;
+  }
 
   /**
    * Return the number of selected cells.
@@ -180,8 +186,7 @@ public:
    */
   virtual Accessible* AsAccessible() = 0;
 
-protected:
-
+ protected:
   /**
    * Return row accessible at the given row index.
    */
@@ -193,7 +198,7 @@ protected:
   Accessible* CellInRowAt(Accessible* aRow, int32_t aColumn);
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

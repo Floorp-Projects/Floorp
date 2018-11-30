@@ -9,24 +9,20 @@
 namespace mozilla {
 namespace gfx {
 
-class GPUProcessListener
-{
+class GPUProcessListener {
  public:
-  virtual ~GPUProcessListener()
-  {}
+  virtual ~GPUProcessListener() {}
 
   // Called when the compositor has died and the rendering stack must be
   // recreated.
-  virtual void OnCompositorUnexpectedShutdown()
-  {}
+  virtual void OnCompositorUnexpectedShutdown() {}
 
   // Called when devices have been reset and tabs must throw away their
   // layer managers.
-  virtual void OnCompositorDeviceReset()
-  {}
+  virtual void OnCompositorDeviceReset() {}
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // _include_mozilla_gfx_ipc_GPUProcessListener_h_
+#endif  // _include_mozilla_gfx_ipc_GPUProcessListener_h_

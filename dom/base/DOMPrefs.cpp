@@ -12,9 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-void
-DOMPrefs::Initialize()
-{
+void DOMPrefs::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Let's cache all the values on the main-thread.
@@ -29,9 +27,7 @@ DOMPrefs::Initialize()
 #undef DOM_WEBIDL_PREF
 }
 
-/* static */ bool
-DOMPrefs::DumpEnabled()
-{
+/* static */ bool DOMPrefs::DumpEnabled() {
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   return StaticPrefs::browser_dom_window_dump_enabled();
 #else
@@ -39,16 +35,14 @@ DOMPrefs::DumpEnabled()
 #endif
 }
 
-#define DOM_WEBIDL_PREF(name)                    \
-  /* static */ bool                              \
-  DOMPrefs::name(JSContext* aCx, JSObject* aObj) \
-  {                                              \
-    return StaticPrefs::name();                  \
+#define DOM_WEBIDL_PREF(name)                                        \
+  /* static */ bool DOMPrefs::name(JSContext* aCx, JSObject* aObj) { \
+    return StaticPrefs::name();                                      \
   }
 
 #include "DOMPrefsInternal.h"
 
 #undef DOM_WEBIDL_PREF
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

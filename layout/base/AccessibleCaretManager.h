@@ -31,7 +31,7 @@ namespace mozilla {
 namespace dom {
 class Element;
 class Selection;
-} // namespace dom
+}  // namespace dom
 
 // -----------------------------------------------------------------------------
 // AccessibleCaretManager does not deal with events or callbacks directly. It
@@ -46,9 +46,8 @@ class Selection;
 // Please see the wiki page for more information.
 // https://wiki.mozilla.org/AccessibleCaret
 //
-class AccessibleCaretManager
-{
-public:
+class AccessibleCaretManager {
+ public:
   explicit AccessibleCaretManager(nsIPresShell* aPresShell);
   virtual ~AccessibleCaretManager();
 
@@ -61,8 +60,7 @@ public:
   // Press caret on the given point. Return NS_OK if the point is actually on
   // one of the carets.
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult PressCaret(const nsPoint& aPoint,
-                              EventClassID aEventClass);
+  virtual nsresult PressCaret(const nsPoint& aPoint, EventClassID aEventClass);
 
   // Drag caret to the given point. It's required to call PressCaret()
   // beforehand.
@@ -106,8 +104,7 @@ public:
 
   // Handle NotifySelectionChanged event from nsISelectionListener.
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult OnSelectionChanged(nsIDocument* aDoc,
-                                      dom::Selection* aSel,
+  virtual nsresult OnSelectionChanged(nsIDocument* aDoc, dom::Selection* aSel,
                                       int16_t aReason);
   // Handle key event.
   MOZ_CAN_RUN_SCRIPT
@@ -121,7 +118,7 @@ public:
   // is used in part to determine if the carets should be shown or hidden.
   void SetLastInputSource(uint16_t aInputSource);
 
-protected:
+ protected:
   // This enum representing the number of AccessibleCarets on the screen.
   enum class CaretMode : uint8_t {
     // No caret on the screen.
@@ -161,7 +158,7 @@ protected:
   // this method.
   MOZ_CAN_RUN_SCRIPT
   void UpdateCarets(
-    const UpdateCaretsHintSet& aHints = UpdateCaretsHint::Default);
+      const UpdateCaretsHintSet& aHints = UpdateCaretsHint::Default);
 
   // Force hiding all carets regardless of the current selection status.
   MOZ_CAN_RUN_SCRIPT
@@ -204,10 +201,9 @@ protected:
   // well as the range start content and the content offset. Otherwise, get the
   // frame and the offset for the range end in the last range instead.
   nsIFrame* GetFrameForFirstRangeStartOrLastRangeEnd(
-    nsDirection aDirection,
-    int32_t* aOutOffset,
-    nsIContent** aOutContent = nullptr,
-    int32_t* aOutContentOffset = nullptr) const;
+      nsDirection aDirection, int32_t* aOutOffset,
+      nsIContent** aOutContent = nullptr,
+      int32_t* aOutContentOffset = nullptr) const;
 
   nsresult DragCaretInternal(const nsPoint& aPoint);
   nsPoint AdjustDragBoundary(const nsPoint& aPoint) const;
@@ -225,8 +221,7 @@ protected:
   // See the mRefCnt assertions in AccessibleCaretEventHub.
   //
   // Returns whether mPresShell we're holding is still valid.
-  MOZ_MUST_USE MOZ_CAN_RUN_SCRIPT
-  bool FlushLayout();
+  MOZ_MUST_USE MOZ_CAN_RUN_SCRIPT bool FlushLayout();
 
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
@@ -275,8 +270,8 @@ protected:
   // Check whether AccessibleCaret is displayable in cursor mode or not.
   // @param aOutFrame returns frame of the cursor if it's displayable.
   // @param aOutOffset returns frame offset as well.
-  virtual bool IsCaretDisplayableInCursorMode(nsIFrame** aOutFrame = nullptr,
-                                              int32_t* aOutOffset = nullptr) const;
+  virtual bool IsCaretDisplayableInCursorMode(
+      nsIFrame** aOutFrame = nullptr, int32_t* aOutOffset = nullptr) const;
 
   virtual bool HasNonEmptyTextContent(nsINode* aNode) const;
 
@@ -345,9 +340,10 @@ protected:
 std::ostream& operator<<(std::ostream& aStream,
                          const AccessibleCaretManager::CaretMode& aCaretMode);
 
-std::ostream& operator<<(std::ostream& aStream,
-                         const AccessibleCaretManager::UpdateCaretsHint& aResult);
+std::ostream& operator<<(
+    std::ostream& aStream,
+    const AccessibleCaretManager::UpdateCaretsHint& aResult);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // AccessibleCaretManager_h
+#endif  // AccessibleCaretManager_h

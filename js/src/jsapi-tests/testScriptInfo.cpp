@@ -24,30 +24,27 @@ catch (e)          \n\
 }\n\
 //@ sourceMappingURL=http://example.com/path/to/source-map.json";
 
-BEGIN_TEST(testScriptInfo)
-{
-    unsigned startLine = 1000;
+BEGIN_TEST(testScriptInfo) {
+  unsigned startLine = 1000;
 
-    JS::CompileOptions options(cx);
-    options.setFileAndLine(__FILE__, startLine);
+  JS::CompileOptions options(cx);
+  options.setFileAndLine(__FILE__, startLine);
 
-    JS::RootedScript script(cx);
-    CHECK(JS::CompileUtf8(cx, options, code, strlen(code), &script));
-    CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, code, strlen(code), &script));
+  CHECK(script);
 
-    CHECK_EQUAL(JS_GetScriptBaseLineNumber(cx, script), startLine);
-    CHECK(strcmp(JS_GetScriptFilename(script), __FILE__) == 0);
+  CHECK_EQUAL(JS_GetScriptBaseLineNumber(cx, script), startLine);
+  CHECK(strcmp(JS_GetScriptFilename(script), __FILE__) == 0);
 
-    return true;
+  return true;
 }
-static bool
-CharsMatch(const char16_t* p, const char* q)
-{
-    while (*q) {
-        if (*p++ != *q++) {
-            return false;
-        }
+static bool CharsMatch(const char16_t* p, const char* q) {
+  while (*q) {
+    if (*p++ != *q++) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 END_TEST(testScriptInfo)

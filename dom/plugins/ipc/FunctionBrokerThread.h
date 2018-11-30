@@ -12,46 +12,41 @@
 namespace mozilla {
 namespace plugins {
 
-class FunctionBrokerThread
-{
-public:
-  void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable)
-  {
+class FunctionBrokerThread {
+ public:
+  void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
     mThread->Dispatch(std::move(aRunnable), nsIEventTarget::NS_DISPATCH_NORMAL);
   }
 
-  bool IsOnThread()
-  {
+  bool IsOnThread() {
     bool on;
     return NS_SUCCEEDED(mThread->IsOnCurrentThread(&on)) && on;
   }
 
-  static FunctionBrokerThread* Create()
-  {
+  static FunctionBrokerThread* Create() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIThread> thread;
-    if (NS_FAILED(NS_NewNamedThread("Function Broker", getter_AddRefs(thread)))) {
+    if (NS_FAILED(
+            NS_NewNamedThread("Function Broker", getter_AddRefs(thread)))) {
       return nullptr;
     }
     return new FunctionBrokerThread(thread);
   }
 
-  ~FunctionBrokerThread()
-  {
+  ~FunctionBrokerThread() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     mThread->Shutdown();
   }
 
-private:
-  explicit FunctionBrokerThread(nsIThread* aThread) : mThread(aThread)
-  {
+ private:
+  explicit FunctionBrokerThread(nsIThread* aThread) : mThread(aThread) {
     MOZ_ASSERT(mThread);
   }
 
   nsCOMPtr<nsIThread> mThread;
 };
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // mozilla_plugins_functionbrokerthread_h
+#endif  // mozilla_plugins_functionbrokerthread_h

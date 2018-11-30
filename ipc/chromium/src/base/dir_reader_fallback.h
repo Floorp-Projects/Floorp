@@ -14,14 +14,14 @@ class DirReaderFallback {
  public:
   // Open a directory. If |IsValid| is true, then |Next| can be called to start
   // the iteration at the beginning of the directory.
-  explicit DirReaderFallback(const char* directory_path) { }
+  explicit DirReaderFallback(const char* directory_path) {}
   // After construction, IsValid returns true iff the directory was
   // successfully opened.
   bool IsValid() const { return false; }
   // Move to the next entry returning false if the iteration is complete.
   bool Next() { return false; }
   // Return the name of the current directory entry.
-  const char* name() { return 0;}
+  const char* name() { return 0; }
   // Return the file descriptor which is being used.
   int fd() const { return -1; }
   // Returns true if this is a no-op fallback class (for testing).

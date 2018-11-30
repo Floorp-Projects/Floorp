@@ -12,41 +12,37 @@
 namespace mozilla {
 namespace layers {
 
-struct BlobFont
-{
+struct BlobFont {
   wr::FontInstanceKey mFontInstanceKey;
   gfx::ReferencePtr mScaledFontPtr;
 };
 
-class WebRenderDrawEventRecorder final : public gfx::DrawEventRecorderMemory
-{
-public:
+class WebRenderDrawEventRecorder final : public gfx::DrawEventRecorderMemory {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(WebRenderDrawEventRecorder, final)
 
-  explicit WebRenderDrawEventRecorder(const gfx::SerializeResourcesFn &aSerialize)
-    : DrawEventRecorderMemory(aSerialize)
-  { }
+  explicit WebRenderDrawEventRecorder(
+      const gfx::SerializeResourcesFn& aSerialize)
+      : DrawEventRecorderMemory(aSerialize) {}
 
   void StoreSourceSurfaceRecording(gfx::SourceSurface* aSurface,
                                    const char* aReason) final;
 
-private:
-  ~WebRenderDrawEventRecorder() override
-  { }
+ private:
+  ~WebRenderDrawEventRecorder() override {}
 };
 
-class WebRenderTranslator final : public gfx::InlineTranslator
-{
-public:
-  explicit WebRenderTranslator(gfx::DrawTarget* aDT, void* aFontContext = nullptr)
-    : InlineTranslator(aDT, aFontContext)
-  { }
+class WebRenderTranslator final : public gfx::InlineTranslator {
+ public:
+  explicit WebRenderTranslator(gfx::DrawTarget* aDT,
+                               void* aFontContext = nullptr)
+      : InlineTranslator(aDT, aFontContext) {}
 
-  already_AddRefed<gfx::SourceSurface>
-    LookupExternalSurface(uint64_t aKey) final;
+  already_AddRefed<gfx::SourceSurface> LookupExternalSurface(
+      uint64_t aKey) final;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

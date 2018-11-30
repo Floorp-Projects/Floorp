@@ -12,24 +12,20 @@
 namespace mozilla {
 namespace webgpu {
 
-template<typename T>
-ChildOf<T>::ChildOf(T* const parent)
-    : mParent(parent)
-{ }
+template <typename T>
+ChildOf<T>::ChildOf(T* const parent) : mParent(parent) {}
 
-template<typename T>
+template <typename T>
 ChildOf<T>::~ChildOf() = default;
 
-template<typename T>
-nsIGlobalObject*
-ChildOf<T>::GetParentObject() const
-{
-    return mParent->GetParentObject();
+template <typename T>
+nsIGlobalObject* ChildOf<T>::GetParentObject() const {
+  return mParent->GetParentObject();
 }
 
 template class ChildOf<Adapter>;
 template class ChildOf<Device>;
 template class ChildOf<Instance>;
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

@@ -15,13 +15,11 @@
 
 #include <memory>
 
-class AbstractOSKeyStore
-{
-public:
-
+class AbstractOSKeyStore {
+ public:
   // Retrieve a secret with the given label.
   virtual nsresult RetrieveSecret(const nsACString& aLabel,
-                        /* out */ nsACString& aSecret) = 0;
+                                  /* out */ nsACString& aSecret) = 0;
   // Store a new secret with the given label.
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) = 0;
@@ -41,37 +39,38 @@ public:
   // AesGcm class to use NSS for encryption and decryption.
   virtual nsresult EncryptDecrypt(const nsACString& label,
                                   const std::vector<uint8_t>& inBytes,
-                                  std::vector<uint8_t>& outBytes,
-                                  bool encrypt);
+                                  std::vector<uint8_t>& outBytes, bool encrypt);
 
   size_t GetKeyByteLength() { return mKeyByteLength; }
 
-protected:
+ protected:
   /* These helper functions are implemented in OSKeyStore.cpp and implement
    * common functionality of the abstract key store to encrypt and decrypt.
    */
   nsresult DoCipher(const UniquePK11SymKey& aSymKey,
                     const std::vector<uint8_t>& inBytes,
-                    std::vector<uint8_t>& outBytes,
-                    bool aEncrypt);
+                    std::vector<uint8_t>& outBytes, bool aEncrypt);
   nsresult BuildAesGcmKey(std::vector<uint8_t> keyBytes,
                           /* out */ UniquePK11SymKey& aKey);
 
-private:
+ private:
   const size_t mKeyByteLength = 16;
   const size_t mIVLength = 12;
 };
 
 #define NS_OSKEYSTORE_CONTRACTID "@mozilla.org/security/oskeystore;1"
-#define NS_OSKEYSTORE_CID \
-  { 0x57972956, 0x5718, 0x42d2, { 0x80, 0x70, 0xb3, 0xfc, 0x72, 0x21, 0x2e, 0xaf } }
+#define NS_OSKEYSTORE_CID                            \
+  {                                                  \
+    0x57972956, 0x5718, 0x42d2, {                    \
+      0x80, 0x70, 0xb3, 0xfc, 0x72, 0x21, 0x2e, 0xaf \
+    }                                                \
+  }
 
-nsresult GetPromise(JSContext* aCx, /* out */ RefPtr<mozilla::dom::Promise>& aPromise);
+nsresult GetPromise(JSContext* aCx,
+                    /* out */ RefPtr<mozilla::dom::Promise>& aPromise);
 
-class OSKeyStore final : public nsIOSKeyStore
-                       , public nsIObserver
-{
-public:
+class OSKeyStore final : public nsIOSKeyStore, public nsIObserver {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIOSKEYSTORE
@@ -84,8 +83,7 @@ public:
   nsresult RecoverSecret(const nsACString& aLabel,
                          const nsACString& aRecoveryPhrase);
   nsresult DeleteSecret(const nsACString& aLabel);
-  nsresult EncryptBytes(const nsACString& aLabel,
-                        uint32_t inLen,
+  nsresult EncryptBytes(const nsACString& aLabel, uint32_t inLen,
                         uint8_t* inBytes,
                         /*out*/ nsACString& aEncryptedBase64Text);
   nsresult DecryptBytes(const nsACString& aLabel,
@@ -95,7 +93,7 @@ public:
   nsresult Lock();
   nsresult Unlock();
 
-private:
+ private:
   ~OSKeyStore() = default;
 
   // Thread safety for OSKeyStore:
@@ -114,7 +112,7 @@ private:
 
   bool mKsIsNSSKeyStore;
   const nsCString mLabelPrefix =
-    NS_LITERAL_CSTRING("org.mozilla.nss.keystore.");
+      NS_LITERAL_CSTRING("org.mozilla.nss.keystore.");
 };
 
-#endif // OSKeyStore_h
+#endif  // OSKeyStore_h

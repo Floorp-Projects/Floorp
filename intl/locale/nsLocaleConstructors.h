@@ -13,22 +13,18 @@
 #include "LocaleService.h"
 #include "OSPreferences.h"
 
-#define NSLOCALE_MAKE_CTOR(ctor_, iface_, func_)          \
-static nsresult                                           \
-ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
-{                                                         \
-  *aResult = nullptr;                                      \
-  if (aOuter)                                             \
-    return NS_ERROR_NO_AGGREGATION;                       \
-  iface_* inst;                                           \
-  nsresult rv = func_(&inst);                             \
-  if (NS_SUCCEEDED(rv)) {                                 \
-    rv = inst->QueryInterface(aIID, aResult);             \
-    NS_RELEASE(inst);                                     \
-  }                                                       \
-  return rv;                                              \
-}
-
+#define NSLOCALE_MAKE_CTOR(ctor_, iface_, func_)                              \
+  static nsresult ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) { \
+    *aResult = nullptr;                                                       \
+    if (aOuter) return NS_ERROR_NO_AGGREGATION;                               \
+    iface_* inst;                                                             \
+    nsresult rv = func_(&inst);                                               \
+    if (NS_SUCCEEDED(rv)) {                                                   \
+      rv = inst->QueryInterface(aIID, aResult);                               \
+      NS_RELEASE(inst);                                                       \
+    }                                                                         \
+    return rv;                                                                \
+  }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationFactory)
 
@@ -38,7 +34,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(LocaleService,
                                          LocaleService::GetInstanceAddRefed)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(OSPreferences,
                                          OSPreferences::GetInstanceAddRefed)
-}
-}
+}  // namespace intl
+}  // namespace mozilla
 
 #endif

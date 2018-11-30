@@ -17,21 +17,15 @@ namespace mozilla {
 
 PreloadedStyleSheet::PreloadedStyleSheet(nsIURI* aURI,
                                          css::SheetParsingMode aParsingMode)
-  : mLoaded(false)
-  , mURI(aURI)
-  , mParsingMode(aParsingMode)
-{
-}
+    : mLoaded(false), mURI(aURI), mParsingMode(aParsingMode) {}
 
-/* static */ nsresult
-PreloadedStyleSheet::Create(nsIURI* aURI,
-                            css::SheetParsingMode aParsingMode,
-                            PreloadedStyleSheet** aResult)
-{
+/* static */ nsresult PreloadedStyleSheet::Create(
+    nsIURI* aURI, css::SheetParsingMode aParsingMode,
+    PreloadedStyleSheet** aResult) {
   *aResult = nullptr;
 
   RefPtr<PreloadedStyleSheet> preloadedSheet =
-    new PreloadedStyleSheet(aURI, aParsingMode);
+      new PreloadedStyleSheet(aURI, aParsingMode);
 
   preloadedSheet.forget(aResult);
   return NS_OK;
@@ -47,9 +41,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PreloadedStyleSheet)
 
 NS_IMPL_CYCLE_COLLECTION(PreloadedStyleSheet, mSheet)
 
-nsresult
-PreloadedStyleSheet::GetSheet(StyleSheet** aResult)
-{
+nsresult PreloadedStyleSheet::GetSheet(StyleSheet** aResult) {
   *aResult = nullptr;
 
   MOZ_DIAGNOSTIC_ASSERT(mLoaded);
@@ -65,9 +57,7 @@ PreloadedStyleSheet::GetSheet(StyleSheet** aResult)
   return NS_OK;
 }
 
-nsresult
-PreloadedStyleSheet::Preload()
-{
+nsresult PreloadedStyleSheet::Preload() {
   MOZ_DIAGNOSTIC_ASSERT(!mLoaded);
 
   // The nsIStyleSheetService.preloadSheet API doesn't tell us which backend
@@ -93,8 +83,7 @@ NS_IMPL_ISUPPORTS(PreloadedStyleSheet::StylesheetPreloadObserver,
 
 NS_IMETHODIMP
 PreloadedStyleSheet::StylesheetPreloadObserver::StyleSheetLoaded(
-  StyleSheet* aSheet, bool aWasDeferred, nsresult aStatus)
-{
+    StyleSheet* aSheet, bool aWasDeferred, nsresult aStatus) {
   MOZ_DIAGNOSTIC_ASSERT(!mPreloadedSheet->mLoaded);
   mPreloadedSheet->mLoaded = true;
 
@@ -109,17 +98,15 @@ PreloadedStyleSheet::StylesheetPreloadObserver::StyleSheetLoaded(
 
 // Note: After calling this method, the preloaded sheet *must not* be used
 // until the observer is notified that the sheet has finished loading.
-nsresult
-PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise)
-{
+nsresult PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(!mLoaded);
 
   RefPtr<css::Loader> loader = new css::Loader;
 
   RefPtr<StylesheetPreloadObserver> obs =
-    new StylesheetPreloadObserver(aPromise, this);
+      new StylesheetPreloadObserver(aPromise, this);
 
   return loader->LoadSheet(mURI, mParsingMode, false, obs, &mSheet);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

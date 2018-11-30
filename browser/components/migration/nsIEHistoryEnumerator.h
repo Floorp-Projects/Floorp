@@ -12,19 +12,17 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsSimpleEnumerator.h"
 
-class nsIEHistoryEnumerator final : public nsSimpleEnumerator
-{
-public:
+class nsIEHistoryEnumerator final : public nsSimpleEnumerator {
+ public:
   NS_DECL_NSISIMPLEENUMERATOR
 
   nsIEHistoryEnumerator();
 
-  const nsID& DefaultInterface() override
-  {
+  const nsID& DefaultInterface() override {
     return NS_GET_IID(nsIWritablePropertyBag2);
   }
 
-private:
+ private:
   ~nsIEHistoryEnumerator() override;
 
   /**

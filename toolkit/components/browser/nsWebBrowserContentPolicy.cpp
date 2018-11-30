@@ -10,13 +10,9 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIContentViewer.h"
 
-nsWebBrowserContentPolicy::nsWebBrowserContentPolicy()
-{
-}
+nsWebBrowserContentPolicy::nsWebBrowserContentPolicy() {}
 
-nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy()
-{
-}
+nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy() {}
 
 NS_IMPL_ISUPPORTS(nsWebBrowserContentPolicy, nsIContentPolicy)
 
@@ -24,12 +20,12 @@ NS_IMETHODIMP
 nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                       nsILoadInfo* aLoadInfo,
                                       const nsACString& aMimeGuess,
-                                      int16_t* aShouldLoad)
-{
+                                      int16_t* aShouldLoad) {
   MOZ_ASSERT(aShouldLoad, "Null out param");
 
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
-  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
+                                contentType),
              "We should only see external content policy types here.");
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
@@ -75,12 +71,12 @@ NS_IMETHODIMP
 nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                          nsILoadInfo* aLoadInfo,
                                          const nsACString& aMimeGuess,
-                                         int16_t* aShouldProcess)
-{
+                                         int16_t* aShouldProcess) {
   MOZ_ASSERT(aShouldProcess, "Null out param");
 
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
-  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
+                                contentType),
              "We should only see external content policy types here.");
 
   *aShouldProcess = nsIContentPolicy::ACCEPT;

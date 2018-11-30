@@ -12,47 +12,45 @@
 namespace mozilla {
 
 /** \class ScopedGfxFeatureReporter
-  *
-  * On creation, adds "FeatureName?" to AppNotes
-  * On destruction, adds "FeatureName-", or "FeatureName+" if you called SetSuccessful().
-  *
-  * Any such string is added at most once to AppNotes, and is subsequently skipped.
-  *
-  * This ScopedGfxFeatureReporter class is designed to be fool-proof to use in functions that
-  * have many exit points. We don't want to encourage having function with many exit points.
-  * It just happens that our graphics features initialization functions are like that.
-  */
-class ScopedGfxFeatureReporter
-{
-public:
+ *
+ * On creation, adds "FeatureName?" to AppNotes
+ * On destruction, adds "FeatureName-", or "FeatureName+" if you called
+ * SetSuccessful().
+ *
+ * Any such string is added at most once to AppNotes, and is subsequently
+ * skipped.
+ *
+ * This ScopedGfxFeatureReporter class is designed to be fool-proof to use in
+ * functions that have many exit points. We don't want to encourage having
+ * function with many exit points. It just happens that our graphics features
+ * initialization functions are like that.
+ */
+class ScopedGfxFeatureReporter {
+ public:
   explicit ScopedGfxFeatureReporter(const char *aFeature, bool aForce = false)
-    : mFeature(aFeature), mStatusChar('-'), mStatusNumber(0)
-  {
+      : mFeature(aFeature), mStatusChar('-'), mStatusNumber(0) {
     WriteAppNote(aForce ? '!' : '?', 0);
   }
-  ~ScopedGfxFeatureReporter() {
-    WriteAppNote(mStatusChar, mStatusNumber);
-  }
+  ~ScopedGfxFeatureReporter() { WriteAppNote(mStatusChar, mStatusNumber); }
   void SetSuccessful() { mStatusChar = '+'; }
-  void SetSuccessful(int32_t aNumber)
-  {
+  void SetSuccessful(int32_t aNumber) {
     mStatusChar = '+';
     mStatusNumber = aNumber;
   }
 
-  static void AppNote(const nsACString& aMessage);
+  static void AppNote(const nsACString &aMessage);
 
   class AppNoteWritingRunnable;
 
-protected:
+ protected:
   const char *mFeature;
   char mStatusChar;
   int32_t mStatusNumber;
 
-private:
+ private:
   void WriteAppNote(char statusChar, int32_t statusNumber);
 };
 
-} // end namespace mozilla
+}  // end namespace mozilla
 
-#endif // gfxCrashReporterUtils_h__
+#endif  // gfxCrashReporterUtils_h__

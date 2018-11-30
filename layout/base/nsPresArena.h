@@ -14,7 +14,7 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/ArenaRefPtr.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/MemoryChecking.h" // Note: Do not remove this, needed for MOZ_HAVE_MEM_CHECKS below
+#include "mozilla/MemoryChecking.h"  // Note: Do not remove this, needed for MOZ_HAVE_MEM_CHECKS below
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
 #include "nscore.h"
@@ -26,7 +26,7 @@
 class nsWindowSizes;
 
 class nsPresArena {
-public:
+ public:
   nsPresArena();
   ~nsPresArena();
 
@@ -34,12 +34,10 @@ public:
    * Pool allocation with recycler lists indexed by frame-type ID.
    * Every aID must always be used with the same object size, aSize.
    */
-  void* AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize)
-  {
+  void* AllocateByFrameID(nsQueryFrame::FrameIID aID, size_t aSize) {
     return Allocate(aID, aSize);
   }
-  void FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr)
-  {
+  void FreeByFrameID(nsQueryFrame::FrameIID aID, void* aPtr) {
     Free(aID, aPtr);
   }
 
@@ -47,23 +45,17 @@ public:
    * Pool allocation with recycler lists indexed by object-type ID (see above).
    * Every aID must always be used with the same object size, aSize.
    */
-  void* AllocateByObjectID(mozilla::ArenaObjectID aID, size_t aSize)
-  {
+  void* AllocateByObjectID(mozilla::ArenaObjectID aID, size_t aSize) {
     return Allocate(aID, aSize);
   }
-  void FreeByObjectID(mozilla::ArenaObjectID aID, void* aPtr)
-  {
+  void FreeByObjectID(mozilla::ArenaObjectID aID, void* aPtr) {
     Free(aID, aPtr);
   }
 
-  void* AllocateByCustomID(uint32_t aID, size_t aSize)
-  {
+  void* AllocateByCustomID(uint32_t aID, size_t aSize) {
     return Allocate(aID, aSize);
   }
-  void FreeByCustomID(uint32_t aID, void* ptr)
-  {
-    Free(aID, ptr);
-  }
+  void FreeByCustomID(uint32_t aID, void* ptr) { Free(aID, ptr); }
 
   /**
    * Register an ArenaRefPtr to be cleared when this arena is about to
@@ -75,16 +67,15 @@ public:
    * @param aObjectID The ArenaObjectID value that uniquely identifies
    *   the type of object the ArenaRefPtr holds.
    */
-  template<typename T>
+  template <typename T>
   void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr);
 
   /**
    * Deregister an ArenaRefPtr that was previously registered with
    * RegisterArenaRefPtr.
    */
-  template<typename T>
-  void DeregisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr)
-  {
+  template <typename T>
+  void DeregisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
     MOZ_ASSERT(mArenaRefPtrs.Contains(aPtr));
     mArenaRefPtrs.Remove(aPtr);
   }
@@ -110,32 +101,26 @@ public:
    */
   void AddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const;
 
-  void Check() {
-    mPool.Check();
-  }
+  void Check() { mPool.Check(); }
 
-private:
+ private:
   void* Allocate(uint32_t aCode, size_t aSize);
   void Free(uint32_t aCode, void* aPtr);
 
   inline void ClearArenaRefPtrWithoutDeregistering(
-      void* aPtr,
-      mozilla::ArenaObjectID aObjectID);
+      void* aPtr, mozilla::ArenaObjectID aObjectID);
 
-  class FreeList
-  {
-  public:
-    nsTArray<void *> mEntries;
+  class FreeList {
+   public:
+    nsTArray<void*> mEntries;
     size_t mEntrySize;
     size_t mEntriesEverAllocated;
 
-    FreeList()
-      : mEntrySize(0)
-      , mEntriesEverAllocated(0)
-    {}
+    FreeList() : mEntrySize(0), mEntriesEverAllocated(0) {}
 
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-    { return mEntries.ShallowSizeOfExcludingThis(aMallocSizeOf); }
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+      return mEntries.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    }
   };
 
   FreeList mFreeLists[mozilla::eArenaObjectID_COUNT];

@@ -15,8 +15,7 @@ namespace layers {
 // This is a helper class for issuing a clear operation based on either
 // a shader or an API like ClearView. It also works when the depth
 // buffer is enabled.
-struct ClearRegionHelper
-{
+struct ClearRegionHelper {
   // If using ClearView-based clears, we fill mRegions.
   nsTArray<gfx::IntRect> mRects;
 
@@ -25,7 +24,7 @@ struct ClearRegionHelper
   ConstantBufferSection mVSBuffer;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_gfx_layers_mlgpu_ClearRegionHelper_h
+#endif  // mozilla_gfx_layers_mlgpu_ClearRegionHelper_h

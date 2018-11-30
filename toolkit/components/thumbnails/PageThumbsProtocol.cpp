@@ -27,8 +27,7 @@ NS_IMPL_ISUPPORTS(PageThumbsProtocol, nsIProtocolHandler);
 // PageThumbsProtocol::GetScheme
 
 NS_IMETHODIMP
-PageThumbsProtocol::GetScheme(nsACString& aScheme)
-{
+PageThumbsProtocol::GetScheme(nsACString& aScheme) {
   aScheme.AssignLiteral("moz-page-thumb");
   return NS_OK;
 }
@@ -36,8 +35,7 @@ PageThumbsProtocol::GetScheme(nsACString& aScheme)
 // PageThumbsProtocol::GetDefaultPort
 
 NS_IMETHODIMP
-PageThumbsProtocol::GetDefaultPort(int32_t *aDefaultPort)
-{
+PageThumbsProtocol::GetDefaultPort(int32_t* aDefaultPort) {
   *aDefaultPort = -1;
   return NS_OK;
 }
@@ -45,8 +43,7 @@ PageThumbsProtocol::GetDefaultPort(int32_t *aDefaultPort)
 // PageThumbsProtocol::GetProtocolFlags
 
 NS_IMETHODIMP
-PageThumbsProtocol::GetProtocolFlags(uint32_t *aProtocolFlags)
-{
+PageThumbsProtocol::GetProtocolFlags(uint32_t* aProtocolFlags) {
   *aProtocolFlags = (URI_DANGEROUS_TO_LOAD | URI_IS_LOCAL_RESOURCE |
                      URI_NORELATIVE | URI_NOAUTH);
   return NS_OK;
@@ -55,36 +52,33 @@ PageThumbsProtocol::GetProtocolFlags(uint32_t *aProtocolFlags)
 // PageThumbsProtocol::NewURI
 
 NS_IMETHODIMP
-PageThumbsProtocol::NewURI(const nsACString& aSpec,
-                           const char *aOriginCharset,
-                           nsIURI *aBaseURI, nsIURI **_retval)
-{
+PageThumbsProtocol::NewURI(const nsACString& aSpec, const char* aOriginCharset,
+                           nsIURI* aBaseURI, nsIURI** _retval) {
   return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
-           .SetSpec(aSpec)
-           .Finalize(_retval);
+      .SetSpec(aSpec)
+      .Finalize(_retval);
 }
 
 // PageThumbsProtocol::NewChannel
 
 NS_IMETHODIMP
-PageThumbsProtocol::NewChannel2(nsIURI* aURI,
-                                nsILoadInfo *aLoadInfo,
-                                nsIChannel** _retval)
-{
+PageThumbsProtocol::NewChannel2(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                                nsIChannel** _retval) {
   // Get the file path for the URL
-  nsCOMPtr <nsIFile> filePath;
+  nsCOMPtr<nsIFile> filePath;
   nsresult rv = GetFilePathForURL(aURI, getter_AddRefs(filePath));
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   // Get a file URI from the local file path
-  nsCOMPtr <nsIURI> fileURI;
+  nsCOMPtr<nsIURI> fileURI;
   rv = NS_NewFileURI(getter_AddRefs(fileURI), filePath);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   // Create a new channel with the file URI created
-  nsCOMPtr <nsIChannel> channel;
-  nsCOMPtr <nsIIOService> ios = do_GetIOService();
-  rv = ios->NewChannelFromURIWithLoadInfo(fileURI, aLoadInfo, getter_AddRefs(channel));
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  rv = ios->NewChannelFromURIWithLoadInfo(fileURI, aLoadInfo,
+                                          getter_AddRefs(channel));
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   channel->SetOriginalURI(aURI);
@@ -93,28 +87,26 @@ PageThumbsProtocol::NewChannel2(nsIURI* aURI,
 }
 
 NS_IMETHODIMP
-PageThumbsProtocol::NewChannel(nsIURI* aURI, nsIChannel** _retval)
-{
+PageThumbsProtocol::NewChannel(nsIURI* aURI, nsIChannel** _retval) {
   return NewChannel2(aURI, nullptr, _retval);
 }
 
 // PageThumbsProtocol::AllowPort
 
 NS_IMETHODIMP
-PageThumbsProtocol::AllowPort(int32_t aPort, const char *aScheme, bool *_retval)
-{
+PageThumbsProtocol::AllowPort(int32_t aPort, const char* aScheme,
+                              bool* _retval) {
   *_retval = false;
   return NS_OK;
 }
 
 // PageThumbsProtocol::ParseProtocolURL
 //
-//    Extracts the URL from the query parameter. The URI is passed in in the form:
-//    'moz-page-thumb://thumbnail/?url=http%3A%2F%2Fwww.mozilla.org%2F'.
+//    Extracts the URL from the query parameter. The URI is passed in in the
+//    form: 'moz-page-thumb://thumbnail/?url=http%3A%2F%2Fwww.mozilla.org%2F'.
 
-nsresult
-PageThumbsProtocol::ParseProtocolURL(nsIURI* aURI, nsString& aParsedURL)
-{
+nsresult PageThumbsProtocol::ParseProtocolURL(nsIURI* aURI,
+                                              nsString& aParsedURL) {
   nsAutoCString spec;
   aURI->GetSpec(spec);
 
@@ -138,8 +130,7 @@ PageThumbsProtocol::ParseProtocolURL(nsIURI* aURI, nsString& aParsedURL)
     return NS_ERROR_MALFORMED_URI;
   }
 
-  URLParams::Extract(Substring(path, queryBegins + 1),
-                     NS_LITERAL_STRING("url"),
+  URLParams::Extract(Substring(path, queryBegins + 1), NS_LITERAL_STRING("url"),
                      aParsedURL);
 
   // If there's no URL as part of the query params, there will be no thumbnail
@@ -154,16 +145,15 @@ PageThumbsProtocol::ParseProtocolURL(nsIURI* aURI, nsString& aParsedURL)
 //
 //    Returns the thumbnail's file path for a given URL
 
-nsresult
-PageThumbsProtocol::GetFilePathForURL(nsIURI* aURI, nsIFile **_retval)
-{
+nsresult PageThumbsProtocol::GetFilePathForURL(nsIURI* aURI,
+                                               nsIFile** _retval) {
   nsresult rv;
 
   // Use PageThumbsStorageService to get the local file path of the screenshot
   // for the given URL
   nsAutoString filePathForURL;
-  nsCOMPtr <nsIPageThumbsStorageService> pageThumbsStorage =
-            do_GetService("@mozilla.org/thumbnails/pagethumbs-service;1", &rv);
+  nsCOMPtr<nsIPageThumbsStorageService> pageThumbsStorage =
+      do_GetService("@mozilla.org/thumbnails/pagethumbs-service;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   // Parse the protocol URL to extract the thumbnail's URL
@@ -175,11 +165,10 @@ PageThumbsProtocol::GetFilePathForURL(nsIURI* aURI, nsIFile **_retval)
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   // Find the local file containing the screenshot
-  nsCOMPtr <nsIFile> filePath = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+  nsCOMPtr<nsIFile> filePath = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
   rv = filePath->InitWithPath(filePathForURL);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   filePath.forget(_retval);
   return NS_OK;
 }
-

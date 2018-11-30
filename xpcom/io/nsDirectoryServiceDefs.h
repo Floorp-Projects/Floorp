@@ -25,35 +25,35 @@
 
 /* General OS specific locations */
 
-#define NS_OS_HOME_DIR                          "Home"
+#define NS_OS_HOME_DIR "Home"
 
-#define NS_OS_TEMP_DIR                          "TmpD"
-#define NS_OS_CURRENT_WORKING_DIR               "CurWorkD"
+#define NS_OS_TEMP_DIR "TmpD"
+#define NS_OS_CURRENT_WORKING_DIR "CurWorkD"
 /* Files stored in this directory will appear on the user's desktop,
  * if there is one, otherwise it's just the same as "Home"
  */
-#define NS_OS_DESKTOP_DIR                       "Desk"
+#define NS_OS_DESKTOP_DIR "Desk"
 
 /* Property returns the directory in which the procces was started from.
  */
-#define NS_OS_CURRENT_PROCESS_DIR               "CurProcD"
+#define NS_OS_CURRENT_PROCESS_DIR "CurProcD"
 
 /* This location is similar to NS_OS_CURRENT_PROCESS_DIR, however,
  * NS_XPCOM_CURRENT_PROCESS_DIR can be overriden by passing a "bin
  * directory" to NS_InitXPCOM2().
  */
-#define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
+#define NS_XPCOM_CURRENT_PROCESS_DIR "XCurProcD"
 
 /* Property will return the location of the the XPCOM Shared Library.
  */
-#define NS_XPCOM_LIBRARY_FILE                   "XpcomLib"
+#define NS_XPCOM_LIBRARY_FILE "XpcomLib"
 
 /* Property will return the current location of the GRE directory.
  * On OSX, this typically points to Contents/Resources in the app bundle.
  * If no GRE is used, this propery will behave like
  * NS_XPCOM_CURRENT_PROCESS_DIR.
  */
-#define NS_GRE_DIR                              "GreD"
+#define NS_GRE_DIR "GreD"
 
 /* Property will return the current location of the GRE-binaries directory.
  * On OSX, this typically points to Contents/MacOS in the app bundle. On
@@ -61,37 +61,37 @@
  * Since this property is based on the NS_GRE_DIR, if no GRE is used, this
  * propery will behave like NS_XPCOM_CURRENT_PROCESS_DIR.
  */
-#define NS_GRE_BIN_DIR                          "GreBinD"
+#define NS_GRE_BIN_DIR "GreBinD"
 
 /* Platform Specific Locations */
 
-#if !defined (XP_UNIX) || defined(MOZ_WIDGET_COCOA)
-    #define NS_OS_SYSTEM_DIR                    "SysD"
+#if !defined(XP_UNIX) || defined(MOZ_WIDGET_COCOA)
+#define NS_OS_SYSTEM_DIR "SysD"
 #endif
 
-#if defined (MOZ_WIDGET_COCOA)
-  #define NS_MAC_USER_LIB_DIR                 "ULibDir"
-  #define NS_OSX_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
-  #define NS_OSX_LOCAL_APPLICATIONS_DIR       "LocApp"
-  #define NS_OSX_USER_PREFERENCES_DIR         "UsrPrfs"
-  #define NS_OSX_PICTURE_DOCUMENTS_DIR        "Pct"
-#elif defined (XP_WIN)
-  #define NS_WIN_WINDOWS_DIR                  "WinD"
-  #define NS_WIN_PROGRAM_FILES_DIR            "ProgF"
-  #define NS_WIN_HOME_DIR                     NS_OS_HOME_DIR
-  #define NS_WIN_PROGRAMS_DIR                 "Progs" // User start menu programs directory!
-  #define NS_WIN_FAVORITES_DIR                "Favs"
-  #define NS_WIN_APPDATA_DIR                  "AppData"
-  #define NS_WIN_LOCAL_APPDATA_DIR            "LocalAppData"
+#if defined(MOZ_WIDGET_COCOA)
+#define NS_MAC_USER_LIB_DIR "ULibDir"
+#define NS_OSX_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
+#define NS_OSX_LOCAL_APPLICATIONS_DIR "LocApp"
+#define NS_OSX_USER_PREFERENCES_DIR "UsrPrfs"
+#define NS_OSX_PICTURE_DOCUMENTS_DIR "Pct"
+#elif defined(XP_WIN)
+#define NS_WIN_WINDOWS_DIR "WinD"
+#define NS_WIN_PROGRAM_FILES_DIR "ProgF"
+#define NS_WIN_HOME_DIR NS_OS_HOME_DIR
+#define NS_WIN_PROGRAMS_DIR "Progs"  // User start menu programs directory!
+#define NS_WIN_FAVORITES_DIR "Favs"
+#define NS_WIN_APPDATA_DIR "AppData"
+#define NS_WIN_LOCAL_APPDATA_DIR "LocalAppData"
 #if defined(MOZ_SANDBOX)
-  #define NS_WIN_LOCAL_APPDATA_LOW_DIR        "LocalAppDataLow"
-  #define NS_WIN_LOW_INTEGRITY_TEMP_BASE      "LowTmpDBase"
+#define NS_WIN_LOCAL_APPDATA_LOW_DIR "LocalAppDataLow"
+#define NS_WIN_LOW_INTEGRITY_TEMP_BASE "LowTmpDBase"
 #endif
-  #define NS_WIN_COOKIES_DIR                  "CookD"
-  #define NS_WIN_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
-#elif defined (XP_UNIX)
-  #define NS_UNIX_HOME_DIR                    NS_OS_HOME_DIR
-  #define NS_UNIX_DEFAULT_DOWNLOAD_DIR        "DfltDwnld"
+#define NS_WIN_COOKIES_DIR "CookD"
+#define NS_WIN_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
+#elif defined(XP_UNIX)
+#define NS_UNIX_HOME_DIR NS_OS_HOME_DIR
+#define NS_UNIX_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
 #endif
 
 #endif

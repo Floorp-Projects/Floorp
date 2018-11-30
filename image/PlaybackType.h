@@ -17,8 +17,7 @@ namespace image {
  * images may be associated with both types of cache entries, since in some
  * circumstances we may want to treat an animated image as if it were static.
  */
-enum class PlaybackType : uint8_t
-{
+enum class PlaybackType : uint8_t {
   eStatic,   // Calls to DrawableRef() will always return the same surface.
   eAnimated  // An animation; calls to DrawableRef() may return different
              // surfaces at different times.
@@ -28,17 +27,14 @@ enum class PlaybackType : uint8_t
  * Given an imgIContainer FRAME_* value, returns the corresponding PlaybackType
  * for use in surface cache lookups.
  */
-inline PlaybackType
-ToPlaybackType(uint32_t aWhichFrame)
-{
+inline PlaybackType ToPlaybackType(uint32_t aWhichFrame) {
   MOZ_ASSERT(aWhichFrame == imgIContainer::FRAME_FIRST ||
              aWhichFrame == imgIContainer::FRAME_CURRENT);
-  return aWhichFrame == imgIContainer::FRAME_CURRENT
-       ? PlaybackType::eAnimated
-       : PlaybackType::eStatic;
+  return aWhichFrame == imgIContainer::FRAME_CURRENT ? PlaybackType::eAnimated
+                                                     : PlaybackType::eStatic;
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_PlaybackType_h
+#endif  // mozilla_image_PlaybackType_h

@@ -18,30 +18,26 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-}
+}  // namespace mozilla
 
-class nsTreeUtils
-{
-  public:
-    /**
-     * Parse a whitespace separated list of properties into an array
-     * of atoms.
-     */
-    static nsresult
-    TokenizeProperties(const nsAString& aProperties,
-                       mozilla::AtomArray& aPropertiesArray);
+class nsTreeUtils {
+ public:
+  /**
+   * Parse a whitespace separated list of properties into an array
+   * of atoms.
+   */
+  static nsresult TokenizeProperties(const nsAString& aProperties,
+                                     mozilla::AtomArray& aPropertiesArray);
 
-    static nsIContent*
-    GetImmediateChild(nsIContent* aContainer, nsAtom* aTag);
+  static nsIContent* GetImmediateChild(nsIContent* aContainer, nsAtom* aTag);
 
-    static nsIContent*
-    GetDescendantChild(nsIContent* aContainer, nsAtom* aTag);
+  static nsIContent* GetDescendantChild(nsIContent* aContainer, nsAtom* aTag);
 
-    static nsresult
-    UpdateSortIndicators(mozilla::dom::Element* aColumn, const nsAString& aDirection);
+  static nsresult UpdateSortIndicators(mozilla::dom::Element* aColumn,
+                                       const nsAString& aDirection);
 
-    static nsresult
-    GetColumnIndex(mozilla::dom::Element* aColumn, int32_t* aResult);
+  static nsresult GetColumnIndex(mozilla::dom::Element* aColumn,
+                                 int32_t* aResult);
 };
 
-#endif // nsTreeUtils_h__
+#endif  // nsTreeUtils_h__

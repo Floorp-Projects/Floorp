@@ -14,9 +14,9 @@
 namespace mozilla {
 namespace places {
 
-class INativePlacesEventCallback : public SupportsWeakPtr<INativePlacesEventCallback>
-{
-public:
+class INativePlacesEventCallback
+    : public SupportsWeakPtr<INativePlacesEventCallback> {
+ public:
   typedef dom::Sequence<OwningNonNull<dom::PlacesEvent>> PlacesEventSequence;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(INativePlacesEventCallback)
@@ -24,11 +24,11 @@ public:
 
   virtual void HandlePlacesEvent(const PlacesEventSequence& aEvents) = 0;
 
-protected:
-  virtual ~INativePlacesEventCallback() { }
+ protected:
+  virtual ~INativePlacesEventCallback() {}
 };
 
-} // namespace places
-} // namespace mozilla
+}  // namespace places
+}  // namespace mozilla
 
-#endif // mozilla_image_INativePlacesEventCallback_h
+#endif  // mozilla_image_INativePlacesEventCallback_h

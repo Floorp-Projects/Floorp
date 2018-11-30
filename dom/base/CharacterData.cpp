@@ -42,18 +42,16 @@ namespace mozilla {
 namespace dom {
 
 CharacterData::CharacterData(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
-  : nsIContent(std::move(aNodeInfo))
-{
+    : nsIContent(std::move(aNodeInfo)) {
   MOZ_ASSERT(mNodeInfo->NodeType() == TEXT_NODE ||
-             mNodeInfo->NodeType() == CDATA_SECTION_NODE ||
-             mNodeInfo->NodeType() == COMMENT_NODE ||
-             mNodeInfo->NodeType() == PROCESSING_INSTRUCTION_NODE ||
-             mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
+                 mNodeInfo->NodeType() == CDATA_SECTION_NODE ||
+                 mNodeInfo->NodeType() == COMMENT_NODE ||
+                 mNodeInfo->NodeType() == PROCESSING_INSTRUCTION_NODE ||
+                 mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
              "Bad NodeType in aNodeInfo");
 }
 
-CharacterData::~CharacterData()
-{
+CharacterData::~CharacterData() {
   MOZ_ASSERT(!IsInUncomposedDoc(),
              "Please remove this from the document properly");
   if (GetParent()) {
@@ -82,8 +80,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CharacterData)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[40];
-    SprintfLiteral(name, "CharacterData (len=%d)",
-                   tmp->mText.GetLength());
+    SprintfLiteral(name, "CharacterData (len=%d)", tmp->mText.GetLength());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(CharacterData, tmp->mRefCnt.get())
@@ -112,16 +109,12 @@ NS_INTERFACE_MAP_BEGIN(CharacterData)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(CharacterData)
 NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 
-void
-CharacterData::GetNodeValueInternal(nsAString& aNodeValue)
-{
+void CharacterData::GetNodeValueInternal(nsAString& aNodeValue) {
   GetData(aNodeValue);
 }
 
-void
-CharacterData::SetNodeValueInternal(const nsAString& aNodeValue,
-                                           ErrorResult& aError)
-{
+void CharacterData::SetNodeValueInternal(const nsAString& aNodeValue,
+                                         ErrorResult& aError) {
   aError = SetTextInternal(0, mText.GetLength(), aNodeValue.BeginReading(),
                            aNodeValue.Length(), true);
 }
@@ -130,9 +123,7 @@ CharacterData::SetNodeValueInternal(const nsAString& aNodeValue,
 
 // Implementation of CharacterData
 
-void
-CharacterData::GetData(nsAString& aData) const
-{
+void CharacterData::GetData(nsAString& aData) const {
   if (mText.Is2b()) {
     aData.Truncate();
     mText.AppendTo(aData);
@@ -140,7 +131,7 @@ CharacterData::GetData(nsAString& aData) const
     // Must use Substring() since nsDependentCString() requires null
     // terminated strings.
 
-    const char *data = mText.Get1b();
+    const char* data = mText.Get1b();
 
     if (data) {
       CopyASCIItoUTF16(Substring(data, data + mText.GetLength()), aData);
@@ -150,9 +141,7 @@ CharacterData::GetData(nsAString& aData) const
   }
 }
 
-void
-CharacterData::SetData(const nsAString& aData, ErrorResult& aRv)
-{
+void CharacterData::SetData(const nsAString& aData, ErrorResult& aRv) {
   nsresult rv = SetTextInternal(0, mText.GetLength(), aData.BeginReading(),
                                 aData.Length(), true);
   if (NS_FAILED(rv)) {
@@ -160,10 +149,8 @@ CharacterData::SetData(const nsAString& aData, ErrorResult& aRv)
   }
 }
 
-void
-CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
-                             nsAString& aReturn, ErrorResult& rv)
-{
+void CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
+                                  nsAString& aReturn, ErrorResult& rv) {
   aReturn.Truncate();
 
   uint32_t textLength = mText.GetLength();
@@ -183,44 +170,36 @@ CharacterData::SubstringData(uint32_t aStart, uint32_t aCount,
     // Must use Substring() since nsDependentCString() requires null
     // terminated strings.
 
-    const char *data = mText.Get1b() + aStart;
+    const char* data = mText.Get1b() + aStart;
     CopyASCIItoUTF16(Substring(data, data + amount), aReturn);
   }
 }
 
 //----------------------------------------------------------------------
 
-void
-CharacterData::AppendData(const nsAString& aData, ErrorResult& aRv)
-{
+void CharacterData::AppendData(const nsAString& aData, ErrorResult& aRv) {
   InsertData(mText.GetLength(), aData, aRv);
 }
 
-void
-CharacterData::InsertData(uint32_t aOffset,
-                          const nsAString& aData,
-                          ErrorResult& aRv)
-{
-  nsresult rv = SetTextInternal(aOffset, 0, aData.BeginReading(),
-                                aData.Length(), true);
+void CharacterData::InsertData(uint32_t aOffset, const nsAString& aData,
+                               ErrorResult& aRv) {
+  nsresult rv =
+      SetTextInternal(aOffset, 0, aData.BeginReading(), aData.Length(), true);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
 }
 
-void
-CharacterData::DeleteData(uint32_t aOffset, uint32_t aCount, ErrorResult& aRv)
-{
+void CharacterData::DeleteData(uint32_t aOffset, uint32_t aCount,
+                               ErrorResult& aRv) {
   nsresult rv = SetTextInternal(aOffset, aCount, nullptr, 0, true);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
 }
 
-void
-CharacterData::ReplaceData(uint32_t aOffset, uint32_t aCount,
-                           const nsAString& aData, ErrorResult& aRv)
-{
+void CharacterData::ReplaceData(uint32_t aOffset, uint32_t aCount,
+                                const nsAString& aData, ErrorResult& aRv) {
   nsresult rv = SetTextInternal(aOffset, aCount, aData.BeginReading(),
                                 aData.Length(), true);
   if (NS_FAILED(rv)) {
@@ -228,14 +207,11 @@ CharacterData::ReplaceData(uint32_t aOffset, uint32_t aCount,
   }
 }
 
-nsresult
-CharacterData::SetTextInternal(uint32_t aOffset, uint32_t aCount,
-                               const char16_t* aBuffer,
-                               uint32_t aLength, bool aNotify,
-                               CharacterDataChangeInfo::Details* aDetails)
-{
-  MOZ_ASSERT(aBuffer || !aLength,
-             "Null buffer passed to SetTextInternal!");
+nsresult CharacterData::SetTextInternal(
+    uint32_t aOffset, uint32_t aCount, const char16_t* aBuffer,
+    uint32_t aLength, bool aNotify,
+    CharacterDataChangeInfo::Details* aDetails) {
+  MOZ_ASSERT(aBuffer || !aLength, "Null buffer passed to SetTextInternal!");
 
   // sanitize arguments
   uint32_t textLength = mText.GetLength();
@@ -254,13 +230,12 @@ CharacterData::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIDocument *document = GetComposedDoc();
+  nsIDocument* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, aNotify);
 
-  bool haveMutationListeners = aNotify &&
-    nsContentUtils::HasMutationListeners(this,
-      NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED,
-      this);
+  bool haveMutationListeners =
+      aNotify && nsContentUtils::HasMutationListeners(
+                     this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED, this);
 
   RefPtr<nsAtom> oldValue;
   if (haveMutationListeners) {
@@ -268,19 +243,15 @@ CharacterData::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   }
 
   if (aNotify) {
-    CharacterDataChangeInfo info = {
-      aOffset == textLength,
-      aOffset,
-      endOffset,
-      aLength,
-      aDetails
-    };
+    CharacterDataChangeInfo info = {aOffset == textLength, aOffset, endOffset,
+                                    aLength, aDetails};
     nsNodeUtils::CharacterDataWillChange(this, info);
   }
 
   Directionality oldDir = eDir_NotSet;
-  bool dirAffectsAncestor = (NodeType() == TEXT_NODE &&
-                             TextNodeWillChangeDirection(this, &oldDir, aOffset));
+  bool dirAffectsAncestor =
+      (NodeType() == TEXT_NODE &&
+       TextNodeWillChangeDirection(this, &oldDir, aOffset));
 
   if (aOffset == 0 && endOffset == textLength) {
     // Replacing whole text or old text was empty.  Don't bother to check for
@@ -288,18 +259,16 @@ CharacterData::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     // If this is marked as "maybe modified frequently", the text should be
     // stored as char16_t since converting char* to char16_t* is expensive.
     bool ok =
-      mText.SetTo(aBuffer, aLength, !document || !document->GetBidiEnabled(),
-                  HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
+        mText.SetTo(aBuffer, aLength, !document || !document->GetBidiEnabled(),
+                    HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  }
-  else if (aOffset == textLength) {
+  } else if (aOffset == textLength) {
     // Appending to existing
     bool ok =
-      mText.Append(aBuffer, aLength, !document || !document->GetBidiEnabled(),
-                   HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
+        mText.Append(aBuffer, aLength, !document || !document->GetBidiEnabled(),
+                     HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  }
-  else {
+  } else {
     // Merging old and new
 
     bool bidi = mText.IsBidi();
@@ -352,13 +321,8 @@ CharacterData::SetTextInternal(uint32_t aOffset, uint32_t aCount,
 
   // Notify observers
   if (aNotify) {
-    CharacterDataChangeInfo info = {
-      aOffset == textLength,
-      aOffset,
-      endOffset,
-      aLength,
-      aDetails
-    };
+    CharacterDataChangeInfo info = {aOffset == textLength, aOffset, endOffset,
+                                    aLength, aDetails};
     nsNodeUtils::CharacterDataChanged(this, info);
 
     if (haveMutationListeners) {
@@ -384,10 +348,8 @@ CharacterData::SetTextInternal(uint32_t aOffset, uint32_t aCount,
 // Implementation of nsIContent
 
 #ifdef DEBUG
-void
-CharacterData::ToCString(nsAString& aBuf, int32_t aOffset,
-                         int32_t aLen) const
-{
+void CharacterData::ToCString(nsAString& aBuf, int32_t aOffset,
+                              int32_t aLen) const {
   if (mText.Is2b()) {
     const char16_t* cp = mText.Get2b() + aOffset;
     const char16_t* end = cp + aLen;
@@ -428,12 +390,8 @@ CharacterData::ToCString(nsAString& aBuf, int32_t aOffset,
 }
 #endif
 
-
-nsresult
-CharacterData::BindToTree(nsIDocument* aDocument,
-                          nsIContent* aParent,
-                          nsIContent* aBindingParent)
-{
+nsresult CharacterData::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                   nsIContent* aBindingParent) {
   MOZ_ASSERT(aParent || aDocument, "Must have document if no parent!");
   MOZ_ASSERT(NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc(),
              "Must have the same owner document");
@@ -441,21 +399,18 @@ CharacterData::BindToTree(nsIDocument* aDocument,
              "aDocument must be current doc of aParent");
   MOZ_ASSERT(!GetUncomposedDoc() && !IsInUncomposedDoc(),
              "Already have a document.  Unbind first!");
-  MOZ_ASSERT(!IsInComposedDoc(),
-             "Already have a document.  Unbind first!");
+  MOZ_ASSERT(!IsInComposedDoc(), "Already have a document.  Unbind first!");
   // Note that as we recurse into the kids, they'll have a non-null parent.  So
   // only assert if our parent is _changing_ while we have a parent.
   MOZ_ASSERT(!GetParent() || aParent == GetParent(),
              "Already have a parent.  Unbind first!");
-  MOZ_ASSERT(!GetBindingParent() ||
-             aBindingParent == GetBindingParent() ||
-             (!aBindingParent && aParent &&
-              aParent->GetBindingParent() == GetBindingParent()),
+  MOZ_ASSERT(!GetBindingParent() || aBindingParent == GetBindingParent() ||
+                 (!aBindingParent && aParent &&
+                  aParent->GetBindingParent() == GetBindingParent()),
              "Already have a binding parent.  Unbind first!");
   MOZ_ASSERT(aBindingParent != this,
              "Content must not be its own binding parent");
-  MOZ_ASSERT(!IsRootOfNativeAnonymousSubtree() ||
-             aBindingParent == aParent,
+  MOZ_ASSERT(!IsRootOfNativeAnonymousSubtree() || aBindingParent == aParent,
              "Native anonymous content must have its parent as its "
              "own binding parent");
 
@@ -466,11 +421,12 @@ CharacterData::BindToTree(nsIDocument* aDocument,
   // First set the binding parent
   if (aBindingParent) {
     NS_ASSERTION(IsRootOfNativeAnonymousSubtree() ||
-                 !HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE) ||
-                 (aParent && aParent->IsInNativeAnonymousSubtree()),
+                     !HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE) ||
+                     (aParent && aParent->IsInNativeAnonymousSubtree()),
                  "Trying to re-bind content from native anonymous subtree to "
                  "non-native anonymous parent!");
-    ExtendedContentSlots()->mBindingParent = aBindingParent; // Weak, so no addref happens.
+    ExtendedContentSlots()->mBindingParent =
+        aBindingParent;  // Weak, so no addref happens.
     if (aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
     }
@@ -540,9 +496,7 @@ CharacterData::BindToTree(nsIDocument* aDocument,
   return NS_OK;
 }
 
-void
-CharacterData::UnbindFromTree(bool aDeep, bool aNullParent)
-{
+void CharacterData::UnbindFromTree(bool aDeep, bool aNullParent) {
   // Unset frame flags; if we need them again later, they'll get set again.
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE | NS_REFRAME_IF_WHITESPACE);
 
@@ -575,9 +529,8 @@ CharacterData::UnbindFromTree(bool aDeep, bool aNullParent)
     // Unlike XBL, bindings for web components shadow DOM
     // do not get uninstalled.
     if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-      nsContentUtils::AddScriptRunner(
-        new RemoveFromBindingManagerRunnable(document->BindingManager(), this,
-                                             document));
+      nsContentUtils::AddScriptRunner(new RemoveFromBindingManagerRunnable(
+          document->BindingManager(), this, document));
     }
   }
 
@@ -596,26 +549,17 @@ CharacterData::UnbindFromTree(bool aDeep, bool aNullParent)
 
 // Implementation of the nsIContent interface text functions
 
-nsresult
-CharacterData::SetText(const char16_t* aBuffer,
-                       uint32_t aLength,
-                       bool aNotify)
-{
+nsresult CharacterData::SetText(const char16_t* aBuffer, uint32_t aLength,
+                                bool aNotify) {
   return SetTextInternal(0, mText.GetLength(), aBuffer, aLength, aNotify);
 }
 
-nsresult
-CharacterData::AppendText(const char16_t* aBuffer,
-                          uint32_t aLength,
-                          bool aNotify)
-{
+nsresult CharacterData::AppendText(const char16_t* aBuffer, uint32_t aLength,
+                                   bool aNotify) {
   return SetTextInternal(mText.GetLength(), 0, aBuffer, aLength, aNotify);
 }
 
-bool
-CharacterData::TextIsOnlyWhitespace()
-{
-
+bool CharacterData::TextIsOnlyWhitespace() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!ThreadSafeTextIsOnlyWhitespace()) {
     UnsetFlags(NS_TEXT_IS_ONLY_WHITESPACE);
@@ -627,9 +571,7 @@ CharacterData::TextIsOnlyWhitespace()
   return true;
 }
 
-bool
-CharacterData::ThreadSafeTextIsOnlyWhitespace() const
-{
+bool CharacterData::ThreadSafeTextIsOnlyWhitespace() const {
   // FIXME: should this method take content language into account?
   if (mText.Is2b()) {
     // The fragment contains non-8bit characters and such characters
@@ -663,21 +605,17 @@ CharacterData::ThreadSafeTextIsOnlyWhitespace() const
   return true;
 }
 
-already_AddRefed<nsAtom>
-CharacterData::GetCurrentValueAtom()
-{
+already_AddRefed<nsAtom> CharacterData::GetCurrentValueAtom() {
   nsAutoString val;
   GetData(val);
   return NS_Atomize(val);
 }
 
-void
-CharacterData::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
-                                      size_t* aNodeSize) const
-{
+void CharacterData::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
+                                           size_t* aNodeSize) const {
   nsIContent::AddSizeOfExcludingThis(aSizes, aNodeSize);
   *aNodeSize += mText.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

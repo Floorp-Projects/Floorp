@@ -24,11 +24,7 @@ namespace mozilla {
 namespace mscom {
 
 Handler::Handler(IUnknown* aOuter, HRESULT* aResult)
-  : mRefCnt(0)
-  , mOuter(aOuter)
-  , mUnmarshal(nullptr)
-  , mHasPayload(false)
-{
+    : mRefCnt(0), mOuter(aOuter), mUnmarshal(nullptr), mHasPayload(false) {
   MOZ_ASSERT(aResult);
 
   if (!aOuter) {
@@ -38,8 +34,8 @@ Handler::Handler(IUnknown* aOuter, HRESULT* aResult)
 
   StabilizedRefCount<ULONG> stabilizer(mRefCnt);
 
-  *aResult = ::CoGetStdMarshalEx(aOuter, SMEXF_HANDLER,
-                                 getter_AddRefs(mInnerUnk));
+  *aResult =
+      ::CoGetStdMarshalEx(aOuter, SMEXF_HANDLER, getter_AddRefs(mInnerUnk));
   if (FAILED(*aResult)) {
     return;
   }
@@ -54,8 +50,7 @@ Handler::Handler(IUnknown* aOuter, HRESULT* aResult)
 }
 
 HRESULT
-Handler::InternalQueryInterface(REFIID riid, void** ppv)
-{
+Handler::InternalQueryInterface(REFIID riid, void** ppv) {
   if (!ppv) {
     return E_INVALIDARG;
   }
@@ -88,8 +83,7 @@ Handler::InternalQueryInterface(REFIID riid, void** ppv)
 }
 
 ULONG
-Handler::InternalAddRef()
-{
+Handler::InternalAddRef() {
   if (!mRefCnt) {
     Module::Lock();
   }
@@ -97,8 +91,7 @@ Handler::InternalAddRef()
 }
 
 ULONG
-Handler::InternalRelease()
-{
+Handler::InternalRelease() {
   ULONG newRefCnt = --mRefCnt;
   if (newRefCnt == 0) {
     delete this;
@@ -109,18 +102,14 @@ Handler::InternalRelease()
 
 HRESULT
 Handler::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
-                           void* pvDestContext, DWORD mshlflags,
-                           CLSID* pCid)
-{
+                           void* pvDestContext, DWORD mshlflags, CLSID* pCid) {
   return mUnmarshal->GetUnmarshalClass(MarshalAs(riid), pv, dwDestContext,
                                        pvDestContext, mshlflags, pCid);
 }
 
 HRESULT
 Handler::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
-                           void* pvDestContext, DWORD mshlflags,
-                           DWORD* pSize)
-{
+                           void* pvDestContext, DWORD mshlflags, DWORD* pSize) {
   if (!pSize) {
     return E_INVALIDARG;
   }
@@ -144,8 +133,8 @@ Handler::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
   // to marshal a different proxy that is more appropriate to what we're
   // wrapping...
   hr = mUnmarshal->GetMarshalSizeMax(marshalAs, unkToMarshal.get(),
-                                     dwDestContext, pvDestContext,
-                                     mshlflags, pSize);
+                                     dwDestContext, pvDestContext, mshlflags,
+                                     pSize);
 
 #if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
   return hr;
@@ -166,25 +155,23 @@ Handler::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
 
   *pSize += payloadSize;
   return S_OK;
-#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+#endif  // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 }
 
 HRESULT
-Handler::GetMarshalInterface(REFIID aMarshalAsIid,
-                             NotNull<IUnknown*> aProxy,
+Handler::GetMarshalInterface(REFIID aMarshalAsIid, NotNull<IUnknown*> aProxy,
                              NotNull<IID*> aOutIid,
-                             NotNull<IUnknown**> aOutUnk)
-{
+                             NotNull<IUnknown**> aOutUnk) {
   *aOutIid = aMarshalAsIid;
-  return aProxy->QueryInterface(aMarshalAsIid,
+  return aProxy->QueryInterface(
+      aMarshalAsIid,
       reinterpret_cast<void**>(static_cast<IUnknown**>(aOutUnk)));
 }
 
 HRESULT
 Handler::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
                           DWORD dwDestContext, void* pvDestContext,
-                          DWORD mshlflags)
-{
+                          DWORD mshlflags) {
   // We do not necessarily want to use the pv that COM is giving us; we may want
   // to marshal a different proxy that is more appropriate to what we're
   // wrapping...
@@ -203,14 +190,14 @@ Handler::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
   if (FAILED(hr)) {
     return hr;
   }
-#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+#endif  // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
   REFIID marshalAs = MarshalAs(riid);
   IID marshalOutAs;
 
-  hr = GetMarshalInterface(marshalAs, WrapNotNull<IUnknown*>(mInnerUnk),
-                           WrapNotNull(&marshalOutAs),
-                           WrapNotNull<IUnknown**>(getter_AddRefs(unkToMarshal)));
+  hr = GetMarshalInterface(
+      marshalAs, WrapNotNull<IUnknown*>(mInnerUnk), WrapNotNull(&marshalOutAs),
+      WrapNotNull<IUnknown**>(getter_AddRefs(unkToMarshal)));
   if (FAILED(hr)) {
     return hr;
   }
@@ -249,12 +236,11 @@ Handler::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
   // Unfortunately when COM re-marshals a proxy that prevouisly had a payload,
   // we must re-serialize it.
   return WriteHandlerPayload(pStm, marshalAs);
-#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+#endif  // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 }
 
 HRESULT
-Handler::UnmarshalInterface(IStream* pStm, REFIID riid, void** ppv)
-{
+Handler::UnmarshalInterface(IStream* pStm, REFIID riid, void** ppv) {
   REFIID unmarshalAs = MarshalAs(riid);
   HRESULT hr = mUnmarshal->UnmarshalInterface(pStm, unmarshalAs, ppv);
   if (FAILED(hr)) {
@@ -272,21 +258,17 @@ Handler::UnmarshalInterface(IStream* pStm, REFIID riid, void** ppv)
 }
 
 HRESULT
-Handler::ReleaseMarshalData(IStream* pStm)
-{
+Handler::ReleaseMarshalData(IStream* pStm) {
   return mUnmarshal->ReleaseMarshalData(pStm);
 }
 
 HRESULT
-Handler::DisconnectObject(DWORD dwReserved)
-{
+Handler::DisconnectObject(DWORD dwReserved) {
   return mUnmarshal->DisconnectObject(dwReserved);
 }
 
 template <size_t N>
-static HRESULT
-BuildClsidPath(wchar_t (&aPath)[N], REFCLSID aClsid)
-{
+static HRESULT BuildClsidPath(wchar_t (&aPath)[N], REFCLSID aClsid) {
   const wchar_t kSubkey[] = L"SOFTWARE\\Classes\\CLSID\\";
 
   // We exclude kSubkey's null terminator in the length because we include
@@ -300,7 +282,7 @@ BuildClsidPath(wchar_t (&aPath)[N], REFCLSID aClsid)
   }
 
   int guidConversionResult =
-    StringFromGUID2(aClsid, &aPath[kSubkeyLen], N - kSubkeyLen);
+      StringFromGUID2(aClsid, &aPath[kSubkeyLen], N - kSubkeyLen);
   if (!guidConversionResult) {
     return E_INVALIDARG;
   }
@@ -309,8 +291,7 @@ BuildClsidPath(wchar_t (&aPath)[N], REFCLSID aClsid)
 }
 
 HRESULT
-Handler::Unregister(REFCLSID aClsid)
-{
+Handler::Unregister(REFCLSID aClsid) {
   wchar_t path[256] = {};
   HRESULT hr = BuildClsidPath(path, aClsid);
   if (FAILED(hr)) {
@@ -326,8 +307,7 @@ Handler::Unregister(REFCLSID aClsid)
 }
 
 HRESULT
-Handler::Register(REFCLSID aClsid)
-{
+Handler::Register(REFCLSID aClsid) {
   wchar_t path[256] = {};
   HRESULT hr = BuildClsidPath(path, aClsid);
   if (FAILED(hr)) {
@@ -337,8 +317,8 @@ Handler::Register(REFCLSID aClsid)
   HKEY rawClsidKey;
   DWORD disposition;
   LONG result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path, 0, nullptr,
-                               REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-                               nullptr, &rawClsidKey, &disposition);
+                               REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, nullptr,
+                               &rawClsidKey, &disposition);
   if (result != ERROR_SUCCESS) {
     return HRESULT_FROM_WIN32(result);
   }
@@ -350,8 +330,8 @@ Handler::Register(REFCLSID aClsid)
 
   HKEY rawInprocHandlerKey;
   result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path, 0, nullptr,
-                          REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-                          nullptr, &rawInprocHandlerKey, &disposition);
+                          REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, nullptr,
+                          &rawInprocHandlerKey, &disposition);
   if (result != ERROR_SUCCESS) {
     Unregister(aClsid);
     return HRESULT_FROM_WIN32(result);
@@ -361,7 +341,7 @@ Handler::Register(REFCLSID aClsid)
   wchar_t absLibPath[MAX_PATH + 1] = {};
   HMODULE thisModule;
   if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                          reinterpret_cast<LPCTSTR>(&Handler::Register),
                          &thisModule)) {
     return HRESULT_FROM_WIN32(GetLastError());
@@ -370,7 +350,7 @@ Handler::Register(REFCLSID aClsid)
   DWORD size = GetModuleFileName(thisModule, absLibPath,
                                  mozilla::ArrayLength(absLibPath));
   if (!size || (size == mozilla::ArrayLength(absLibPath) &&
-      GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
+                GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
     DWORD lastError = GetLastError();
     Unregister(aClsid);
     return HRESULT_FROM_WIN32(lastError);
@@ -399,6 +379,5 @@ Handler::Register(REFCLSID aClsid)
   return S_OK;
 }
 
-} // namespace mscom
-} // namespace mozilla
-
+}  // namespace mscom
+}  // namespace mozilla

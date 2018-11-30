@@ -31,18 +31,12 @@ static StaticRefPtr<nsPrintingProxy> sPrintingProxyInstance;
 
 NS_IMPL_ISUPPORTS(nsPrintingProxy, nsIPrintingPromptService)
 
-nsPrintingProxy::nsPrintingProxy()
-{
-}
+nsPrintingProxy::nsPrintingProxy() {}
 
-nsPrintingProxy::~nsPrintingProxy()
-{
-}
+nsPrintingProxy::~nsPrintingProxy() {}
 
 /* static */
-already_AddRefed<nsPrintingProxy>
-nsPrintingProxy::GetInstance()
-{
+already_AddRefed<nsPrintingProxy> nsPrintingProxy::GetInstance() {
   if (!sPrintingProxyInstance) {
     sPrintingProxyInstance = new nsPrintingProxy();
     if (!sPrintingProxyInstance) {
@@ -60,23 +54,21 @@ nsPrintingProxy::GetInstance()
   return inst.forget();
 }
 
-nsresult
-nsPrintingProxy::Init()
-{
+nsresult nsPrintingProxy::Init() {
   // Don't create a printing proxy in middleman processes, to avoid conflicts
   // with the one created in the child recording process.
   if (recordreplay::IsMiddleman()) {
     return NS_ERROR_FAILURE;
   }
-  mozilla::Unused << ContentChild::GetSingleton()->SendPPrintingConstructor(this);
+  mozilla::Unused << ContentChild::GetSingleton()->SendPPrintingConstructor(
+      this);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
-                                 nsIWebBrowserPrint *webBrowserPrint,
-                                 nsIPrintSettings *printSettings)
-{
+nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy* parent,
+                                 nsIWebBrowserPrint* webBrowserPrint,
+                                 nsIPrintSettings* printSettings) {
   NS_ENSURE_ARG(webBrowserPrint);
   NS_ENSURE_ARG(printSettings);
 
@@ -100,7 +92,7 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
   // Next, serialize the nsIWebBrowserPrint and nsIPrintSettings we were given.
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
-    do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
+      do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PrintData inSettings;
@@ -129,15 +121,13 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
-                              nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
-                              nsIPrintSettings*        printSettings,      // ok to be null
-                              nsIObserver*             openDialogObserver, // ok to be null
-                              bool                     isForPrinting,
-                              nsIWebProgressListener** webProgressListener,
-                              nsIPrintProgressParams** printProgressParams,
-                              bool*                  notifyOnOpen)
-{
+nsPrintingProxy::ShowProgress(
+    mozIDOMWindowProxy* parent,
+    nsIWebBrowserPrint* webBrowserPrint,  // ok to be null
+    nsIPrintSettings* printSettings,      // ok to be null
+    nsIObserver* openDialogObserver,      // ok to be null
+    bool isForPrinting, nsIWebProgressListener** webProgressListener,
+    nsIPrintProgressParams** printProgressParams, bool* notifyOnOpen) {
   NS_ENSURE_ARG(parent);
   NS_ENSURE_ARG(webProgressListener);
   NS_ENSURE_ARG(printProgressParams);
@@ -153,7 +143,7 @@ nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
   TabChild* pBrowser = static_cast<TabChild*>(tabchild.get());
 
   RefPtr<PrintProgressDialogChild> dialogChild =
-    new PrintProgressDialogChild(openDialogObserver, printSettings);
+      new PrintProgressDialogChild(openDialogObserver, printSettings);
 
   SendPPrintProgressDialogConstructor(dialogChild);
 
@@ -186,78 +176,68 @@ nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPageSetup(mozIDOMWindowProxy *parent,
-                               nsIPrintSettings *printSettings)
-{
+nsPrintingProxy::ShowPageSetup(mozIDOMWindowProxy* parent,
+                               nsIPrintSettings* printSettings) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
-                                   bool aUsePrinterNamePrefix,
-                                   uint32_t aFlags)
-{
+nsresult nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
+                                            bool aUsePrinterNamePrefix,
+                                            uint32_t aFlags) {
   nsresult rv;
   nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
-    do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
+      do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PrintData settings;
   rv = printSettingsSvc->SerializeToPrintData(aPS, nullptr, &settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags,
-                                  &rv);
+  Unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags, &rv);
   return rv;
 }
 
-PPrintProgressDialogChild*
-nsPrintingProxy::AllocPPrintProgressDialogChild()
-{
+PPrintProgressDialogChild* nsPrintingProxy::AllocPPrintProgressDialogChild() {
   // The parent process will never initiate the PPrintProgressDialog
   // protocol connection, so no need to provide an allocator here.
-  MOZ_ASSERT_UNREACHABLE("Allocator for PPrintProgressDialogChild should not "
-                         "be called on nsPrintingProxy.");
+  MOZ_ASSERT_UNREACHABLE(
+      "Allocator for PPrintProgressDialogChild should not "
+      "be called on nsPrintingProxy.");
   return nullptr;
 }
 
-bool
-nsPrintingProxy::DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor)
-{
+bool nsPrintingProxy::DeallocPPrintProgressDialogChild(
+    PPrintProgressDialogChild* aActor) {
   // The PrintProgressDialogChild implements refcounting, and
   // will take itself out.
   return true;
 }
 
-PPrintSettingsDialogChild*
-nsPrintingProxy::AllocPPrintSettingsDialogChild()
-{
+PPrintSettingsDialogChild* nsPrintingProxy::AllocPPrintSettingsDialogChild() {
   // The parent process will never initiate the PPrintSettingsDialog
   // protocol connection, so no need to provide an allocator here.
-  MOZ_ASSERT_UNREACHABLE("Allocator for PPrintSettingsDialogChild should not "
-                         "be called on nsPrintingProxy.");
+  MOZ_ASSERT_UNREACHABLE(
+      "Allocator for PPrintSettingsDialogChild should not "
+      "be called on nsPrintingProxy.");
   return nullptr;
 }
 
-bool
-nsPrintingProxy::DeallocPPrintSettingsDialogChild(PPrintSettingsDialogChild* aActor)
-{
+bool nsPrintingProxy::DeallocPPrintSettingsDialogChild(
+    PPrintSettingsDialogChild* aActor) {
   // The PrintSettingsDialogChild implements refcounting, and
   // will take itself out.
   return true;
 }
 
-PRemotePrintJobChild*
-nsPrintingProxy::AllocPRemotePrintJobChild()
-{
+PRemotePrintJobChild* nsPrintingProxy::AllocPRemotePrintJobChild() {
   RefPtr<RemotePrintJobChild> remotePrintJob = new RemotePrintJobChild();
   return remotePrintJob.forget().take();
 }
 
-bool
-nsPrintingProxy::DeallocPRemotePrintJobChild(PRemotePrintJobChild* aDoomed)
-{
-  RemotePrintJobChild* remotePrintJob = static_cast<RemotePrintJobChild*>(aDoomed);
+bool nsPrintingProxy::DeallocPRemotePrintJobChild(
+    PRemotePrintJobChild* aDoomed) {
+  RemotePrintJobChild* remotePrintJob =
+      static_cast<RemotePrintJobChild*>(aDoomed);
   NS_RELEASE(remotePrintJob);
   return true;
 }

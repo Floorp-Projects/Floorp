@@ -11,20 +11,19 @@
 
 namespace mozilla {
 
-int64_t RelativeTimeline::GetRandomTimelineSeed()
-{
-  if (mRandomTimelineSeed == 0)
-  {
+int64_t RelativeTimeline::GetRandomTimelineSeed() {
+  if (mRandomTimelineSeed == 0) {
     nsresult rv;
     nsCOMPtr<nsIRandomGenerator> randomGenerator =
-      do_GetService("@mozilla.org/security/random-generator;1", &rv);
+        do_GetService("@mozilla.org/security/random-generator;1", &rv);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mRandomTimelineSeed = rand();
       return mRandomTimelineSeed;
     }
 
     uint8_t* buffer = nullptr;
-    rv = randomGenerator->GenerateRandomBytes(sizeof(mRandomTimelineSeed), &buffer);
+    rv = randomGenerator->GenerateRandomBytes(sizeof(mRandomTimelineSeed),
+                                              &buffer);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mRandomTimelineSeed = rand();
       return mRandomTimelineSeed;
@@ -37,4 +36,4 @@ int64_t RelativeTimeline::GetRandomTimelineSeed()
   return mRandomTimelineSeed;
 }
 
-} // mozilla namespace
+}  // namespace mozilla

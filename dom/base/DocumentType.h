@@ -25,12 +25,10 @@ namespace dom {
 // data. This is done simply for convenience and should be changed if
 // this restricts what should be done for character data.
 
-class DocumentType final : public CharacterData
-{
-public:
+class DocumentType final : public CharacterData {
+ public:
   DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-               const nsAString& aPublicId,
-               const nsAString& aSystemId,
+               const nsAString& aPublicId, const nsAString& aSystemId,
                const nsAString& aInternalSubset);
 
   // nsISupports
@@ -38,21 +36,17 @@ public:
 
   // nsINode
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual void GetNodeValueInternal(nsAString& aNodeValue) override
-  {
+  virtual void GetNodeValueInternal(nsAString& aNodeValue) override {
     SetDOMStringToNull(aNodeValue);
   }
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    mozilla::ErrorResult& aError) override
-  {
-  }
+                                    mozilla::ErrorResult& aError) override {}
 
   // nsIContent overrides
   virtual const nsTextFragment* GetText() override;
 
-  virtual already_AddRefed<CharacterData>
-    CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                  bool aCloneText) const override;
+  virtual already_AddRefed<CharacterData> CloneDataNode(
+      mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const override;
 
   // WebIDL API
   void GetName(nsAString& aName) const;
@@ -60,24 +54,23 @@ public:
   void GetSystemId(nsAString& aSystemId) const;
   void GetInternalSubset(nsAString& aInternalSubset) const;
 
-protected:
+ protected:
   virtual ~DocumentType();
 
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* cx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
   nsString mPublicId;
   nsString mSystemId;
   nsString mInternalSubset;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::DocumentType>
-NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
-                      nsAtom *aName,
-                      const nsAString& aPublicId,
-                      const nsAString& aSystemId,
-                      const nsAString& aInternalSubset);
+already_AddRefed<mozilla::dom::DocumentType> NS_NewDOMDocumentType(
+    nsNodeInfoManager* aNodeInfoManager, nsAtom* aName,
+    const nsAString& aPublicId, const nsAString& aSystemId,
+    const nsAString& aInternalSubset);
 
-#endif // DocumentType_h
+#endif  // DocumentType_h

@@ -13,26 +13,21 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS(PresentationSessionRequest, nsIPresentationSessionRequest)
 
-PresentationSessionRequest::PresentationSessionRequest(nsIPresentationDevice* aDevice,
-                                                       const nsAString& aUrl,
-                                                       const nsAString& aPresentationId,
-                                                       nsIPresentationControlChannel* aControlChannel)
-  : mUrl(aUrl)
-  , mPresentationId(aPresentationId)
-  , mDevice(aDevice)
-  , mControlChannel(aControlChannel)
-{
-}
+PresentationSessionRequest::PresentationSessionRequest(
+    nsIPresentationDevice* aDevice, const nsAString& aUrl,
+    const nsAString& aPresentationId,
+    nsIPresentationControlChannel* aControlChannel)
+    : mUrl(aUrl),
+      mPresentationId(aPresentationId),
+      mDevice(aDevice),
+      mControlChannel(aControlChannel) {}
 
-PresentationSessionRequest::~PresentationSessionRequest()
-{
-}
+PresentationSessionRequest::~PresentationSessionRequest() {}
 
 // nsIPresentationSessionRequest
 
 NS_IMETHODIMP
-PresentationSessionRequest::GetDevice(nsIPresentationDevice** aRetVal)
-{
+PresentationSessionRequest::GetDevice(nsIPresentationDevice** aRetVal) {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
   nsCOMPtr<nsIPresentationDevice> device = mDevice;
@@ -42,24 +37,22 @@ PresentationSessionRequest::GetDevice(nsIPresentationDevice** aRetVal)
 }
 
 NS_IMETHODIMP
-PresentationSessionRequest::GetUrl(nsAString& aRetVal)
-{
+PresentationSessionRequest::GetUrl(nsAString& aRetVal) {
   aRetVal = mUrl;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationSessionRequest::GetPresentationId(nsAString& aRetVal)
-{
+PresentationSessionRequest::GetPresentationId(nsAString& aRetVal) {
   aRetVal = mPresentationId;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationSessionRequest::GetControlChannel(nsIPresentationControlChannel** aRetVal)
-{
+PresentationSessionRequest::GetControlChannel(
+    nsIPresentationControlChannel** aRetVal) {
   NS_ENSURE_ARG_POINTER(aRetVal);
 
   nsCOMPtr<nsIPresentationControlChannel> controlChannel = mControlChannel;
@@ -68,5 +61,5 @@ PresentationSessionRequest::GetControlChannel(nsIPresentationControlChannel** aR
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

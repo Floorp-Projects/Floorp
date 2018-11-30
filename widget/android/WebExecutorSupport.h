@@ -12,19 +12,19 @@ namespace mozilla {
 namespace widget {
 
 class WebExecutorSupport final
-  : public java::GeckoWebExecutor::Natives<WebExecutorSupport>
-{
-public:
-  static void Fetch(jni::Object::Param request, int32_t flags, jni::Object::Param result);
+    : public java::GeckoWebExecutor::Natives<WebExecutorSupport> {
+ public:
+  static void Fetch(jni::Object::Param request, int32_t flags,
+                    jni::Object::Param result);
   static void Resolve(jni::String::Param aUri, jni::Object::Param result);
 
-protected:
+ protected:
   static nsresult CreateStreamLoader(java::WebRequest::Param aRequest,
                                      int32_t aFlags,
                                      java::GeckoResult::Param aResult);
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // WebExecutorSupport_h__
+#endif  // WebExecutorSupport_h__

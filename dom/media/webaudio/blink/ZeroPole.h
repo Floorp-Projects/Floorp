@@ -34,33 +34,30 @@ namespace WebCore {
 // ZeroPole is a simple filter with one zero and one pole.
 
 class ZeroPole {
-public:
-    ZeroPole()
-        : m_zero(0)
-        , m_pole(0)
-        , m_lastX(0)
-        , m_lastY(0)
-    {
-    }
+ public:
+  ZeroPole() : m_zero(0), m_pole(0), m_lastX(0), m_lastY(0) {}
 
-    void process(const float *source, float *destination, int framesToProcess);
+  void process(const float *source, float *destination, int framesToProcess);
 
-    // Reset filter state.
-    void reset() { m_lastX = 0; m_lastY = 0; }
+  // Reset filter state.
+  void reset() {
+    m_lastX = 0;
+    m_lastY = 0;
+  }
 
-    void setZero(float zero) { m_zero = zero; }
-    void setPole(float pole) { m_pole = pole; }
+  void setZero(float zero) { m_zero = zero; }
+  void setPole(float pole) { m_pole = pole; }
 
-    float zero() const { return m_zero; }
-    float pole() const { return m_pole; }
+  float zero() const { return m_zero; }
+  float pole() const { return m_pole; }
 
-private:
-    float m_zero;
-    float m_pole;
-    float m_lastX;
-    float m_lastY;
+ private:
+  float m_zero;
+  float m_pole;
+  float m_lastX;
+  float m_lastY;
 };
 
-} // namespace WebCore
+}  // namespace WebCore
 
-#endif // ZeroPole_h
+#endif  // ZeroPole_h

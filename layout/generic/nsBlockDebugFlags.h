@@ -7,16 +7,23 @@
 #ifndef nsBlockDebugFlags_h__
 #define nsBlockDebugFlags_h__
 
-#undef NOISY_FIRST_LETTER         // enables debug output for first-letter specific layout
-#undef NOISY_FLOAT                // enables debug output for float reflow (the in/out metrics for the floated block)
+#undef NOISY_FIRST_LETTER  // enables debug output for first-letter specific
+                           // layout
+#undef NOISY_FLOAT  // enables debug output for float reflow (the in/out metrics
+                    // for the floated block)
 #undef NOISY_FLOAT_CLEARING
-#undef NOISY_FINAL_SIZE           // enables debug output for desired width/height computation, once all children have been reflowed
+#undef NOISY_FINAL_SIZE  // enables debug output for desired width/height
+                         // computation, once all children have been reflowed
 #undef NOISY_REMOVE_FRAME
-#undef NOISY_COMBINED_AREA        // enables debug output for combined area computation
+#undef NOISY_COMBINED_AREA  // enables debug output for combined area
+                            // computation
 #undef NOISY_BLOCK_DIR_MARGINS
-#undef NOISY_REFLOW_REASON        // gives a little info about why each reflow was requested
-#undef REFLOW_STATUS_COVERAGE     // I think this is most useful for printing, to see which frames return "incomplete"
-#undef NOISY_BLOCK_INVALIDATE     // enables debug output for all calls to invalidate
-#undef REALLY_NOISY_REFLOW        // some extra debug info
+#undef NOISY_REFLOW_REASON     // gives a little info about why each reflow was
+                               // requested
+#undef REFLOW_STATUS_COVERAGE  // I think this is most useful for printing, to
+                               // see which frames return "incomplete"
+#undef NOISY_BLOCK_INVALIDATE  // enables debug output for all calls to
+                               // invalidate
+#undef REALLY_NOISY_REFLOW     // some extra debug info
 
-#endif // nsBlockDebugFlags_h__
+#endif  // nsBlockDebugFlags_h__

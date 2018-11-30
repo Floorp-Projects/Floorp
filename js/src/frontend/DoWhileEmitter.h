@@ -31,54 +31,53 @@ struct BytecodeEmitter;
 //     emit(cond);
 //     doWhile.emitEnd();
 //
-class MOZ_STACK_CLASS DoWhileEmitter
-{
-    BytecodeEmitter* bce_;
+class MOZ_STACK_CLASS DoWhileEmitter {
+  BytecodeEmitter* bce_;
 
-    // The source note index for SRC_DO_WHILE.
-    unsigned noteIndex_ = 0;
+  // The source note index for SRC_DO_WHILE.
+  unsigned noteIndex_ = 0;
 
-    mozilla::Maybe<LoopControl> loopInfo_;
+  mozilla::Maybe<LoopControl> loopInfo_;
 
 #ifdef DEBUG
-    // The state of this emitter.
-    //
-    // +-------+ emitBody +------+ emitCond +------+ emitEnd  +-----+
-    // | Start |--------->| Body |--------->| Cond |--------->| End |
-    // +-------+          +------+          +------+          +-----+
-    enum class State {
-        // The initial state.
-        Start,
+  // The state of this emitter.
+  //
+  // +-------+ emitBody +------+ emitCond +------+ emitEnd  +-----+
+  // | Start |--------->| Body |--------->| Cond |--------->| End |
+  // +-------+          +------+          +------+          +-----+
+  enum class State {
+    // The initial state.
+    Start,
 
-        // After calling emitBody.
-        Body,
+    // After calling emitBody.
+    Body,
 
-        // After calling emitCond.
-        Cond,
+    // After calling emitCond.
+    Cond,
 
-        // After calling emitEnd.
-        End
-    };
-    State state_ = State::Start;
+    // After calling emitEnd.
+    End
+  };
+  State state_ = State::Start;
 #endif
 
-  public:
-    explicit DoWhileEmitter(BytecodeEmitter* bce);
+ public:
+  explicit DoWhileEmitter(BytecodeEmitter* bce);
 
-    // Parameters are the offset in the source code for each character below:
-    //
-    //   do { ... } while ( x < 20 );
-    //   ^  ^
-    //   |  |
-    //   |  bodyPos
-    //   |
-    //   doPos
-    //
-    // Can be Nothing() if not available.
-    MOZ_MUST_USE bool emitBody(const mozilla::Maybe<uint32_t>& doPos,
-                               const mozilla::Maybe<uint32_t>& bodyPos);
-    MOZ_MUST_USE bool emitCond();
-    MOZ_MUST_USE bool emitEnd();
+  // Parameters are the offset in the source code for each character below:
+  //
+  //   do { ... } while ( x < 20 );
+  //   ^  ^
+  //   |  |
+  //   |  bodyPos
+  //   |
+  //   doPos
+  //
+  // Can be Nothing() if not available.
+  MOZ_MUST_USE bool emitBody(const mozilla::Maybe<uint32_t>& doPos,
+                             const mozilla::Maybe<uint32_t>& bodyPos);
+  MOZ_MUST_USE bool emitCond();
+  MOZ_MUST_USE bool emitEnd();
 };
 
 } /* namespace frontend */

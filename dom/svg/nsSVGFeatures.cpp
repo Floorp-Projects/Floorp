@@ -20,10 +20,10 @@
 
 using namespace mozilla;
 
-/*static*/ bool
-nsSVGFeatures::HasExtension(const nsAString& aExtension, const bool aIsInChrome)
-{
-#define SVG_SUPPORTED_EXTENSION(str) if (aExtension.EqualsLiteral(str)) return true;
+/*static*/ bool nsSVGFeatures::HasExtension(const nsAString& aExtension,
+                                            const bool aIsInChrome) {
+#define SVG_SUPPORTED_EXTENSION(str) \
+  if (aExtension.EqualsLiteral(str)) return true;
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
   nsNameSpaceManager* nameSpaceManager = nsNameSpaceManager::GetInstance();
   if (aIsInChrome || !nameSpaceManager->mMathMLDisabled) {

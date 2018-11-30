@@ -25,9 +25,8 @@ bool operator==(const Triangle& lhs, const Triangle& rhs);
 bool operator==(const Polygon& lhs, const Polygon& rhs);
 
 // Compares two arrays with the equality operator.
-template<typename T>
-void AssertArrayEQ(const nsTArray<T>& rhs, const nsTArray<T>& lhs)
-{
+template <typename T>
+void AssertArrayEQ(const nsTArray<T>& rhs, const nsTArray<T>& lhs) {
   ASSERT_EQ(lhs.Length(), rhs.Length());
 
   for (size_t i = 0; i < lhs.Length(); ++i) {
@@ -35,7 +34,7 @@ void AssertArrayEQ(const nsTArray<T>& rhs, const nsTArray<T>& lhs)
   }
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* GFX_TEST_POLYGONUTILS_H */

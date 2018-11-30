@@ -12,31 +12,23 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 VisualViewport::VisualViewport(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
-{
-}
+    : DOMEventTargetHelper(aWindow) {}
 
-VisualViewport::~VisualViewport()
-{
-}
+VisualViewport::~VisualViewport() {}
 
 /* virtual */
-JSObject*
-VisualViewport::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* VisualViewport::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return VisualViewport_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-CSSSize
-VisualViewport::VisualViewportSize() const
-{
-  CSSSize size = CSSSize(0,0);
+CSSSize VisualViewport::VisualViewportSize() const {
+  CSSSize size = CSSSize(0, 0);
 
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
     if (presShell->IsVisualViewportSizeSet()) {
-      size = CSSRect::FromAppUnits(
-        presShell->GetVisualViewportSize());
+      size = CSSRect::FromAppUnits(presShell->GetVisualViewportSize());
     } else {
       nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
       if (sf) {
@@ -47,23 +39,17 @@ VisualViewport::VisualViewportSize() const
   return size;
 }
 
-double
-VisualViewport::Width() const
-{
+double VisualViewport::Width() const {
   CSSSize size = VisualViewportSize();
   return size.width;
 }
 
-double
-VisualViewport::Height() const
-{
+double VisualViewport::Height() const {
   CSSSize size = VisualViewportSize();
   return size.height;
 }
 
-double
-VisualViewport::Scale() const
-{
+double VisualViewport::Scale() const {
   double scale = 1;
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
@@ -72,22 +58,18 @@ VisualViewport::Scale() const
   return scale;
 }
 
-CSSPoint
-VisualViewport::VisualViewportOffset() const
-{
-  CSSPoint offset = CSSPoint(0,0);
+CSSPoint VisualViewport::VisualViewportOffset() const {
+  CSSPoint offset = CSSPoint(0, 0);
 
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
-      offset = CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset());
+    offset = CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset());
   }
   return offset;
 }
 
-CSSPoint
-VisualViewport::LayoutViewportOffset() const
-{
-  CSSPoint offset = CSSPoint(0,0);
+CSSPoint VisualViewport::LayoutViewportOffset() const {
+  CSSPoint offset = CSSPoint(0, 0);
 
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
@@ -99,33 +81,19 @@ VisualViewport::LayoutViewportOffset() const
   return offset;
 }
 
-double
-VisualViewport::PageLeft() const
-{
-  return VisualViewportOffset().X();
-}
+double VisualViewport::PageLeft() const { return VisualViewportOffset().X(); }
 
-double
-VisualViewport::PageTop() const
-{
-  return VisualViewportOffset().Y();
-}
+double VisualViewport::PageTop() const { return VisualViewportOffset().Y(); }
 
-double
-VisualViewport::OffsetLeft() const
-{
+double VisualViewport::OffsetLeft() const {
   return PageLeft() - LayoutViewportOffset().X();
 }
 
-double
-VisualViewport::OffsetTop() const
-{
+double VisualViewport::OffsetTop() const {
   return PageTop() - LayoutViewportOffset().Y();
 }
 
-nsIPresShell*
-VisualViewport::GetPresShell() const
-{
+nsIPresShell* VisualViewport::GetPresShell() const {
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (!window) {
     return nullptr;

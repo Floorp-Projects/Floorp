@@ -8,7 +8,8 @@
 #define GFX_MACIOSURFACEHELPERS_H
 
 class MacIOSurface;
-template<class T> struct already_AddRefed;
+template <class T>
+struct already_AddRefed;
 
 namespace mozilla {
 
@@ -20,10 +21,10 @@ namespace layers {
 
 // Unlike MacIOSurface::GetAsSurface, this also handles IOSurface formats
 // with multiple planes and does YCbCr to RGB conversion, if necessary.
-already_AddRefed<gfx::SourceSurface>
-CreateSourceSurfaceFromMacIOSurface(MacIOSurface* aSurface);
+already_AddRefed<gfx::SourceSurface> CreateSourceSurfaceFromMacIOSurface(
+    MacIOSurface* aSurface);
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // GFX_MACIOSURFACEHELPERS_H
+#endif  // GFX_MACIOSURFACEHELPERS_H

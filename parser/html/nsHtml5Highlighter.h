@@ -16,9 +16,8 @@
  * A state machine for generating HTML for display in View Source based on
  * the transitions the tokenizer makes on the source being viewed.
  */
-class nsHtml5Highlighter
-{
-public:
+class nsHtml5Highlighter {
+ public:
   /**
    * The constructor.
    *
@@ -147,7 +146,7 @@ public:
    */
   void AddBase(nsHtml5String aValue);
 
-private:
+ private:
   /**
    * Starts a span with no class.
    */
@@ -227,8 +226,7 @@ private:
    * @param aCreator the content creator function
    * @return the handle for the element that will be created
    */
-  nsIContent** CreateElement(nsAtom* aName,
-                             nsHtml5HtmlAttributes* aAttributes,
+  nsIContent** CreateElement(nsAtom* aName, nsHtml5HtmlAttributes* aAttributes,
                              nsIContent** aIntendedParent,
                              mozilla::dom::HTMLContentCreatorFunction aCreator);
 
@@ -248,8 +246,7 @@ private:
    *        nullptr for no attributes
    * @param aCreator the content creator function
    */
-  void Push(nsAtom* aName,
-            nsHtml5HtmlAttributes* aAttributes,
+  void Push(nsAtom* aName, nsHtml5HtmlAttributes* aAttributes,
             mozilla::dom::HTMLContentCreatorFunction aCreator);
 
   /**
@@ -264,8 +261,7 @@ private:
    * @param aStart the index of the first code unit to copy
    * @param aLength the number of code units to copy
    */
-  void AppendCharacters(const char16_t* aBuffer,
-                        int32_t aStart,
+  void AppendCharacters(const char16_t* aBuffer, int32_t aStart,
                         int32_t aLength);
 
   /**
@@ -344,7 +340,7 @@ private:
   /**
    * Memory for element handles.
    */
-  mozilla::UniquePtr<nsIContent* []> mHandles;
+  mozilla::UniquePtr<nsIContent*[]> mHandles;
 
   /**
    * Number of handles used in mHandles
@@ -354,7 +350,7 @@ private:
   /**
    * A holder for old contents of mHandles
    */
-  nsTArray<mozilla::UniquePtr<nsIContent* []>> mOldHandles;
+  nsTArray<mozilla::UniquePtr<nsIContent*[]>> mOldHandles;
 
   /**
    * The element stack.
@@ -412,4 +408,4 @@ private:
   bool mSeenBase;
 };
 
-#endif // nsHtml5Highlighter_h
+#endif  // nsHtml5Highlighter_h

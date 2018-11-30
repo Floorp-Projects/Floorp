@@ -21,45 +21,42 @@ namespace widget {
 
 class ToastNotification;
 
-class ToastNotificationHandler final : public nsIAlertNotificationImageListener
-{
-public:
+class ToastNotificationHandler final
+    : public nsIAlertNotificationImageListener {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTNOTIFICATIONIMAGELISTENER
 
-  ToastNotificationHandler(ToastNotification* backend, nsIObserver* aAlertListener,
-                           const nsAString& aName, const nsAString& aCookie,
-                           const nsAString& aTitle, const nsAString& aMsg,
-                           const nsAString& aHostPort,
+  ToastNotificationHandler(ToastNotification* backend,
+                           nsIObserver* aAlertListener, const nsAString& aName,
+                           const nsAString& aCookie, const nsAString& aTitle,
+                           const nsAString& aMsg, const nsAString& aHostPort,
                            bool aClickable)
-    : mBackend(backend)
-    , mHasImage(false)
-    , mAlertListener(aAlertListener)
-    , mName(aName)
-    , mCookie(aCookie)
-    , mTitle(aTitle)
-    , mMsg(aMsg)
-    , mHostPort(aHostPort)
-    , mClickable(aClickable)
-  {
-  }
+      : mBackend(backend),
+        mHasImage(false),
+        mAlertListener(aAlertListener),
+        mName(aName),
+        mCookie(aCookie),
+        mTitle(aTitle),
+        mMsg(aMsg),
+        mHostPort(aHostPort),
+        mClickable(aClickable) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
 
   void OnWriteBitmapFinished(nsresult rv);
 
-protected:
+ protected:
   virtual ~ToastNotificationHandler();
 
   typedef ABI::Windows::Data::Xml::Dom::IXmlDocument IXmlDocument;
-  typedef ABI::Windows::UI::Notifications::IToastNotifier
-          IToastNotifier;
+  typedef ABI::Windows::UI::Notifications::IToastNotifier IToastNotifier;
   typedef ABI::Windows::UI::Notifications::IToastNotification
-          IToastNotification;
+      IToastNotification;
   typedef ABI::Windows::UI::Notifications::IToastDismissedEventArgs
-          IToastDismissedEventArgs;
+      IToastDismissedEventArgs;
   typedef ABI::Windows::UI::Notifications::IToastFailedEventArgs
-          IToastFailedEventArgs;
+      IToastFailedEventArgs;
   typedef ABI::Windows::UI::Notifications::ToastTemplateType ToastTemplateType;
 
   Microsoft::WRL::ComPtr<IToastNotification> mNotification;
@@ -91,17 +88,17 @@ protected:
 
   bool CreateWindowsNotificationFromXml(IXmlDocument* aToastXml);
   Microsoft::WRL::ComPtr<IXmlDocument> InitializeXmlForTemplate(
-                         ToastTemplateType templateType);
+      ToastTemplateType templateType);
 
-  HRESULT OnActivate(IToastNotification *notification,
-                     IInspectable *inspectable);
-  HRESULT OnDismiss(IToastNotification *notification,
+  HRESULT OnActivate(IToastNotification* notification,
+                     IInspectable* inspectable);
+  HRESULT OnDismiss(IToastNotification* notification,
                     IToastDismissedEventArgs* aArgs);
-  HRESULT OnFail(IToastNotification *notification,
+  HRESULT OnFail(IToastNotification* notification,
                  IToastFailedEventArgs* aArgs);
 };
 
-} // widget
-} // mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif

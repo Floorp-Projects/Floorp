@@ -17,78 +17,64 @@
 namespace js {
 namespace gc {
 
-inline /* static */ size_t
-ArenaCellSet::getCellIndex(const TenuredCell* cell)
-{
-    uintptr_t cellOffset = uintptr_t(cell) & ArenaMask;
-    MOZ_ASSERT(cellOffset % ArenaCellIndexBytes == 0);
-    return cellOffset / ArenaCellIndexBytes;
+inline /* static */ size_t ArenaCellSet::getCellIndex(const TenuredCell* cell) {
+  uintptr_t cellOffset = uintptr_t(cell) & ArenaMask;
+  MOZ_ASSERT(cellOffset % ArenaCellIndexBytes == 0);
+  return cellOffset / ArenaCellIndexBytes;
 }
 
-inline /* static */ void
-ArenaCellSet::getWordIndexAndMask(size_t cellIndex, size_t* wordp, uint32_t* maskp)
-{
-    BitArray<MaxArenaCellIndex>::getIndexAndMask(cellIndex, wordp, maskp);
+inline /* static */ void ArenaCellSet::getWordIndexAndMask(size_t cellIndex,
+                                                           size_t* wordp,
+                                                           uint32_t* maskp) {
+  BitArray<MaxArenaCellIndex>::getIndexAndMask(cellIndex, wordp, maskp);
 }
 
-inline bool
-ArenaCellSet::hasCell(size_t cellIndex) const
-{
-    MOZ_ASSERT(cellIndex < MaxArenaCellIndex);
-    return bits.get(cellIndex);
+inline bool ArenaCellSet::hasCell(size_t cellIndex) const {
+  MOZ_ASSERT(cellIndex < MaxArenaCellIndex);
+  return bits.get(cellIndex);
 }
 
-inline void
-ArenaCellSet::putCell(size_t cellIndex)
-{
-    MOZ_ASSERT(cellIndex < MaxArenaCellIndex);
-    MOZ_ASSERT(arena);
+inline void ArenaCellSet::putCell(size_t cellIndex) {
+  MOZ_ASSERT(cellIndex < MaxArenaCellIndex);
+  MOZ_ASSERT(arena);
 
-    bits.set(cellIndex);
-    check();
+  bits.set(cellIndex);
+  check();
 }
 
-inline void
-ArenaCellSet::check() const
-{
+inline void ArenaCellSet::check() const {
 #ifdef DEBUG
-    bool bitsZero = bits.isAllClear();
-    MOZ_ASSERT(isEmpty() == bitsZero);
-    MOZ_ASSERT(isEmpty() == !arena);
-    if (!isEmpty()) {
-        MOZ_ASSERT(IsCellPointerValid(arena));
-        MOZ_ASSERT(arena->bufferedCells() == this);
-        JSRuntime* runtime = arena->zone->runtimeFromMainThread();
-        MOZ_ASSERT(runtime->gc.minorGCCount() == minorGCNumberAtCreation);
-    }
+  bool bitsZero = bits.isAllClear();
+  MOZ_ASSERT(isEmpty() == bitsZero);
+  MOZ_ASSERT(isEmpty() == !arena);
+  if (!isEmpty()) {
+    MOZ_ASSERT(IsCellPointerValid(arena));
+    MOZ_ASSERT(arena->bufferedCells() == this);
+    JSRuntime* runtime = arena->zone->runtimeFromMainThread();
+    MOZ_ASSERT(runtime->gc.minorGCCount() == minorGCNumberAtCreation);
+  }
 #endif
 }
 
-inline void
-StoreBuffer::WholeCellBuffer::put(const Cell* cell)
-{
-    MOZ_ASSERT(cell->isTenured());
+inline void StoreBuffer::WholeCellBuffer::put(const Cell* cell) {
+  MOZ_ASSERT(cell->isTenured());
 
-    Arena* arena = cell->asTenured().arena();
-    ArenaCellSet* cells = arena->bufferedCells();
-    if (cells->isEmpty()) {
-        cells = allocateCellSet(arena);
-        if (!cells) {
-            return;
-        }
+  Arena* arena = cell->asTenured().arena();
+  ArenaCellSet* cells = arena->bufferedCells();
+  if (cells->isEmpty()) {
+    cells = allocateCellSet(arena);
+    if (!cells) {
+      return;
     }
+  }
 
-    cells->putCell(&cell->asTenured());
-    cells->check();
+  cells->putCell(&cell->asTenured());
+  cells->check();
 }
 
-inline void
-StoreBuffer::putWholeCell(Cell* cell)
-{
-    bufferWholeCell.put(cell);
-}
+inline void StoreBuffer::putWholeCell(Cell* cell) { bufferWholeCell.put(cell); }
 
-} // namespace gc
-} // namespace js
+}  // namespace gc
+}  // namespace js
 
-#endif // gc_StoreBuffer_inl_h
+#endif  // gc_StoreBuffer_inl_h

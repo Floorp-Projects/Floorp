@@ -27,7 +27,7 @@ class MIRGraph;
 
 bool EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph);
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_wasmbce_h */

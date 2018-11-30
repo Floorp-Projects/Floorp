@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /**
  * MODULE NOTES:
  * @created  kmcclusk 10/19/99
@@ -22,27 +21,34 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-}
+}  // namespace mozilla
 
 // {0ae53c0f-8ea2-4916-bedc-717443c3e185}
-#define NS_FORMPROCESSOR_CID \
-{ 0x0ae53c0f, 0x8ea2, 0x4916, { 0xbe, 0xdc, 0x71, 0x74, 0x43, 0xc3, 0xe1, 0x85 } }
+#define NS_FORMPROCESSOR_CID                         \
+  {                                                  \
+    0x0ae53c0f, 0x8ea2, 0x4916, {                    \
+      0xbe, 0xdc, 0x71, 0x74, 0x43, 0xc3, 0xe1, 0x85 \
+    }                                                \
+  }
 
 #define NS_FORMPROCESSOR_CONTRACTID "@mozilla.org/layout/form-processor;1"
 
 // bf8b1986-8800-424b-b1e5-7a2ca8b9e76c
-#define NS_IFORMPROCESSOR_IID      \
-{ 0xbf8b1986, 0x8800, 0x424b, \
-  { 0xb1, 0xe5, 0x7a, 0x2c, 0xa8, 0xb9, 0xe7, 0x6c } }
+#define NS_IFORMPROCESSOR_IID                        \
+  {                                                  \
+    0xbf8b1986, 0x8800, 0x424b, {                    \
+      0xb1, 0xe5, 0x7a, 0x2c, 0xa8, 0xb9, 0xe7, 0x6c \
+    }                                                \
+  }
 
-// XXX:In the future, we should examine combining this interface with nsIFormSubmitObserver.
-// nsIFormSubmitObserver could have a before, during, and after form submission methods.
-// The before and after methods would be passed a nsISupports interface. The During would
-// Have the same method signature as ProcessValue.
-
+// XXX:In the future, we should examine combining this interface with
+// nsIFormSubmitObserver. nsIFormSubmitObserver could have a before, during, and
+// after form submission methods. The before and after methods would be passed a
+// nsISupports interface. The During would Have the same method signature as
+// ProcessValue.
 
 class nsIFormProcessor : public nsISupports {
-public:
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMPROCESSOR_IID)
 
   /* ProcessValue is called for each name value pair that is
@@ -61,8 +67,7 @@ public:
    *
    */
   virtual nsresult ProcessValue(mozilla::dom::Element* aElement,
-                                const nsAString& aName,
-                                nsAString& aValue) = 0;
+                                const nsAString& aName, nsAString& aValue) = 0;
 
   /**
    * The same as above, but with the element unpacked so that this can be
@@ -74,8 +79,9 @@ public:
                                    const nsAString& aKeyParams,
                                    nsAString& newValue) = 0;
 
-  /* Provide content for a form element. This method provides a mechanism to provide
-   * content which comes from a source other than the document (i.e. a local database)
+  /* Provide content for a form element. This method provides a mechanism to
+   * provide content which comes from a source other than the document (i.e. a
+   * local database)
    *
    *   @param aFormType   Type of form to get content for.
    *   @param aOptions    List of nsStrings which define the contents for the
@@ -88,10 +94,8 @@ public:
   virtual nsresult ProvideContent(const nsAString& aFormType,
                                   nsTArray<nsString>& aContent,
                                   nsAString& aAttribute) = 0;
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormProcessor, NS_IFORMPROCESSOR_IID)
 
 #endif /* nsIFormProcessor_h__ */
-

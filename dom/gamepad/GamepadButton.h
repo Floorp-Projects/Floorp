@@ -14,68 +14,42 @@
 namespace mozilla {
 namespace dom {
 
-class GamepadButton : public nsISupports,
-                      public nsWrapperCache
-{
-public:
-  explicit GamepadButton(nsISupports* aParent) : mParent(aParent),
-                                                 mValue(0),
-                                                 mPressed(false),
-                                                 mTouched(false)
-  {
-  }
+class GamepadButton : public nsISupports, public nsWrapperCache {
+ public:
+  explicit GamepadButton(nsISupports* aParent)
+      : mParent(aParent), mValue(0), mPressed(false), mTouched(false) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GamepadButton)
 
-  nsISupports* GetParentObject() const
-  {
-    return mParent;
-  }
+  nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  void SetPressed(bool aPressed)
-  {
-    mPressed = aPressed;
-  }
+  void SetPressed(bool aPressed) { mPressed = aPressed; }
 
-  void SetTouched(bool aTouched)
-  {
-    mTouched = aTouched;
-  }
+  void SetTouched(bool aTouched) { mTouched = aTouched; }
 
-  void SetValue(double aValue)
-  {
-    mValue = aValue;
-  }
+  void SetValue(double aValue) { mValue = aValue; }
 
-  bool Pressed() const
-  {
-    return mPressed;
-  }
+  bool Pressed() const { return mPressed; }
 
-  bool Touched() const
-  {
-    return mTouched;
-  }
+  bool Touched() const { return mTouched; }
 
-  double Value() const
-  {
-    return mValue;
-  }
+  double Value() const { return mValue; }
 
-private:
+ private:
   virtual ~GamepadButton() {}
 
-protected:
+ protected:
   nsCOMPtr<nsISupports> mParent;
   double mValue;
   bool mPressed;
   bool mTouched;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_gamepad_GamepadButton_h
+#endif  // mozilla_dom_gamepad_GamepadButton_h

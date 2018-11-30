@@ -14,16 +14,10 @@
 namespace mozilla {
 namespace dom {
 
-bool
-CSSCounterStyleRule::IsCCLeaf() const
-{
-  return Rule::IsCCLeaf();
-}
+bool CSSCounterStyleRule::IsCCLeaf() const { return Rule::IsCCLeaf(); }
 
 #ifdef DEBUG
-void
-CSSCounterStyleRule::List(FILE* out, int32_t aIndent) const
-{
+void CSSCounterStyleRule::List(FILE* out, int32_t aIndent) const {
   nsAutoCString str;
   for (int32_t i = 0; i < aIndent; i++) {
     str.AppendLiteral("  ");
@@ -33,30 +27,22 @@ CSSCounterStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-uint16_t
-CSSCounterStyleRule::Type() const
-{
+uint16_t CSSCounterStyleRule::Type() const {
   return CSSRule_Binding::COUNTER_STYLE_RULE;
 }
 
-void
-CSSCounterStyleRule::GetCssText(nsAString& aCssText) const
-{
+void CSSCounterStyleRule::GetCssText(nsAString& aCssText) const {
   Servo_CounterStyleRule_GetCssText(mRawRule, &aCssText);
 }
 
-void
-CSSCounterStyleRule::GetName(nsAString& aName)
-{
+void CSSCounterStyleRule::GetName(nsAString& aName) {
   aName.Truncate();
   nsAtom* name = Servo_CounterStyleRule_GetName(mRawRule);
   nsDependentAtomString nameStr(name);
   nsStyleUtil::AppendEscapedCSSIdent(nameStr, aName);
 }
 
-void
-CSSCounterStyleRule::SetName(const nsAString& aName)
-{
+void CSSCounterStyleRule::SetName(const nsAString& aName) {
   NS_ConvertUTF16toUTF8 name(aName);
   if (Servo_CounterStyleRule_SetName(mRawRule, &name)) {
     if (StyleSheet* sheet = GetStyleSheet()) {
@@ -65,40 +51,33 @@ CSSCounterStyleRule::SetName(const nsAString& aName)
   }
 }
 
-#define CSS_COUNTER_DESC(name_, method_)                        \
-  void                                                          \
-  CSSCounterStyleRule::Get##method_(nsAString& aValue)          \
-  {                                                             \
-    aValue.Truncate();                                          \
-    Servo_CounterStyleRule_GetDescriptorCssText(                \
-      mRawRule, eCSSCounterDesc_##method_, &aValue);            \
-  }                                                             \
-  void                                                          \
-  CSSCounterStyleRule::Set##method_(const nsAString& aValue)    \
-  {                                                             \
-    NS_ConvertUTF16toUTF8 value(aValue);                        \
-    if (Servo_CounterStyleRule_SetDescriptor(                   \
-          mRawRule, eCSSCounterDesc_##method_, &value)) {       \
-      if (StyleSheet* sheet = GetStyleSheet()) {                \
-        sheet->RuleChanged(this);                               \
-      }                                                         \
-    }                                                           \
+#define CSS_COUNTER_DESC(name_, method_)                            \
+  void CSSCounterStyleRule::Get##method_(nsAString& aValue) {       \
+    aValue.Truncate();                                              \
+    Servo_CounterStyleRule_GetDescriptorCssText(                    \
+        mRawRule, eCSSCounterDesc_##method_, &aValue);              \
+  }                                                                 \
+  void CSSCounterStyleRule::Set##method_(const nsAString& aValue) { \
+    NS_ConvertUTF16toUTF8 value(aValue);                            \
+    if (Servo_CounterStyleRule_SetDescriptor(                       \
+            mRawRule, eCSSCounterDesc_##method_, &value)) {         \
+      if (StyleSheet* sheet = GetStyleSheet()) {                    \
+        sheet->RuleChanged(this);                                   \
+      }                                                             \
+    }                                                               \
   }
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC
 
-/* virtual */ size_t
-CSSCounterStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+/* virtual */ size_t CSSCounterStyleRule::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-/* virtual */ JSObject*
-CSSCounterStyleRule::WrapObject(JSContext* aCx,
-                                JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* CSSCounterStyleRule::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CSSCounterStyleRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

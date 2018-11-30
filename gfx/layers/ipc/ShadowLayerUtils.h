@@ -17,14 +17,15 @@
 #endif
 
 #if defined(MOZ_X11)
-# include "mozilla/layers/ShadowLayerUtilsX11.h"
+#include "mozilla/layers/ShadowLayerUtilsX11.h"
 #else
-namespace mozilla { namespace layers {
+namespace mozilla {
+namespace layers {
 struct SurfaceDescriptorX11 {
   bool operator==(const SurfaceDescriptorX11&) const { return false; }
 };
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 #endif
 
 namespace IPC {
@@ -34,18 +35,18 @@ template <>
 struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
   typedef mozilla::layers::SurfaceDescriptorX11 paramType;
   static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, PickleIterator*, paramType*) { return false; }
+  static bool Read(const Message*, PickleIterator*, paramType*) {
+    return false;
+  }
 };
 #endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORX11)
 
 template <>
 struct ParamTraits<mozilla::ScreenRotation>
-  : public ContiguousEnumSerializer<
-             mozilla::ScreenRotation,
-             mozilla::ROTATION_0,
-             mozilla::ROTATION_COUNT>
-{};
+    : public ContiguousEnumSerializer<mozilla::ScreenRotation,
+                                      mozilla::ROTATION_0,
+                                      mozilla::ROTATION_COUNT> {};
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // IPC_ShadowLayerUtils_h
+#endif  // IPC_ShadowLayerUtils_h

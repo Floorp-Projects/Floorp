@@ -188,8 +188,8 @@ void AudioContext::NotifyScheduledSourceNodeStarted() {
   }
 
   const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
-  AUTOPLAY_LOG("Trying to start AudioContext %p, IsAllowedToPlay=%d",
-               this, isAllowedToPlay);
+  AUTOPLAY_LOG("Trying to start AudioContext %p, IsAllowedToPlay=%d", this,
+               isAllowedToPlay);
   if (isAllowedToPlay) {
     ResumeInternal();
   } else {
@@ -209,8 +209,8 @@ void AudioContext::EnsureAutoplayRequested() {
     return;
   }
 
-  AUTOPLAY_LOG("AudioContext %p EnsureAutoplayRequested %p",
-               this, request.get());
+  AUTOPLAY_LOG("AudioContext %p EnsureAutoplayRequested %p", this,
+               request.get());
   RefPtr<AudioContext> self = this;
   request->RequestWithPrompt()->Then(
       parent->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other), __func__,
@@ -225,13 +225,12 @@ void AudioContext::EnsureAutoplayRequested() {
                      request.get());
         self->mWasAllowedToStart = false;
         self->DispatchBlockedEvent();
-        nsIDocument* doc = self->GetParentObject() ?
-            self->GetParentObject()->GetExtantDoc() : nullptr;
-        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                        NS_LITERAL_CSTRING("Media"),
-                                        doc,
-                                        nsContentUtils::eDOM_PROPERTIES,
-                                        "BlockAutoplayError");
+        nsIDocument* doc = self->GetParentObject()
+                               ? self->GetParentObject()->GetExtantDoc()
+                               : nullptr;
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Media"), doc,
+            nsContentUtils::eDOM_PROPERTIES, "BlockAutoplayError");
       });
 }
 
@@ -976,8 +975,8 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
   mPendingResumePromises.AppendElement(promise);
 
   const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
-  AUTOPLAY_LOG("Trying to resume AudioContext %p, IsAllowedToPlay=%d",
-               this, isAllowedToPlay);
+  AUTOPLAY_LOG("Trying to resume AudioContext %p, IsAllowedToPlay=%d", this,
+               isAllowedToPlay);
   if (isAllowedToPlay) {
     mWasAllowedToStart = true;
     ResumeInternal();

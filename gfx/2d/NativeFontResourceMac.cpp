@@ -20,9 +20,8 @@ namespace mozilla {
 namespace gfx {
 
 /* static */
-already_AddRefed<NativeFontResourceMac>
-NativeFontResourceMac::Create(uint8_t *aFontData, uint32_t aDataLength, bool aNeedsCairo)
-{
+already_AddRefed<NativeFontResourceMac> NativeFontResourceMac::Create(
+    uint8_t* aFontData, uint32_t aDataLength, bool aNeedsCairo) {
   // copy font data
   CFDataRef data = CFDataCreate(kCFAllocatorDefault, aFontData, aDataLength);
   if (!data) {
@@ -47,20 +46,19 @@ NativeFontResourceMac::Create(uint8_t *aFontData, uint32_t aDataLength, bool aNe
 
   // passes ownership of fontRef to the NativeFontResourceMac instance
   RefPtr<NativeFontResourceMac> fontResource =
-    new NativeFontResourceMac(fontRef, aNeedsCairo);
+      new NativeFontResourceMac(fontRef, aNeedsCairo);
 
   return fontResource.forget();
 }
 
-already_AddRefed<UnscaledFont>
-NativeFontResourceMac::CreateUnscaledFont(uint32_t aIndex,
-                                          const uint8_t* aInstanceData,
-                                          uint32_t aInstanceDataLength)
-{
-  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontMac(mFontRef, true, mNeedsCairo);
+already_AddRefed<UnscaledFont> NativeFontResourceMac::CreateUnscaledFont(
+    uint32_t aIndex, const uint8_t* aInstanceData,
+    uint32_t aInstanceDataLength) {
+  RefPtr<UnscaledFont> unscaledFont =
+      new UnscaledFontMac(mFontRef, true, mNeedsCairo);
 
   return unscaledFont.forget();
 }
 
-} // gfx
-} // mozilla
+}  // namespace gfx
+}  // namespace mozilla

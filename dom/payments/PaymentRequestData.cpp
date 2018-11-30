@@ -18,42 +18,34 @@ namespace payments {
 
 /* PaymentMethodData */
 
-NS_IMPL_ISUPPORTS(PaymentMethodData,
-                  nsIPaymentMethodData)
+NS_IMPL_ISUPPORTS(PaymentMethodData, nsIPaymentMethodData)
 
 PaymentMethodData::PaymentMethodData(const nsAString& aSupportedMethods,
                                      const nsAString& aData)
-  : mSupportedMethods(aSupportedMethods)
-  , mData(aData)
-{
-}
+    : mSupportedMethods(aSupportedMethods), mData(aData) {}
 
-nsresult
-PaymentMethodData::Create(const IPCPaymentMethodData& aIPCMethodData,
-                          nsIPaymentMethodData** aMethodData)
-{
+nsresult PaymentMethodData::Create(const IPCPaymentMethodData& aIPCMethodData,
+                                   nsIPaymentMethodData** aMethodData) {
   NS_ENSURE_ARG_POINTER(aMethodData);
-  nsCOMPtr<nsIPaymentMethodData> methodData =
-    new PaymentMethodData(aIPCMethodData.supportedMethods(), aIPCMethodData.data());
+  nsCOMPtr<nsIPaymentMethodData> methodData = new PaymentMethodData(
+      aIPCMethodData.supportedMethods(), aIPCMethodData.data());
   methodData.forget(aMethodData);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentMethodData::GetSupportedMethods(nsAString& aSupportedMethods)
-{
+PaymentMethodData::GetSupportedMethods(nsAString& aSupportedMethods) {
   aSupportedMethods = mSupportedMethods;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentMethodData::GetData(JSContext* aCx, JS::MutableHandleValue aData)
-{
+PaymentMethodData::GetData(JSContext* aCx, JS::MutableHandleValue aData) {
   if (mData.IsEmpty()) {
     aData.set(JS::NullValue());
     return NS_OK;
   }
-  nsresult rv = DeserializeToJSValue(mData, aCx ,aData);
+  nsresult rv = DeserializeToJSValue(mData, aCx, aData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -62,13 +54,11 @@ PaymentMethodData::GetData(JSContext* aCx, JS::MutableHandleValue aData)
 
 /* PaymentCurrencyAmount */
 
-NS_IMPL_ISUPPORTS(PaymentCurrencyAmount,
-                  nsIPaymentCurrencyAmount)
+NS_IMPL_ISUPPORTS(PaymentCurrencyAmount, nsIPaymentCurrencyAmount)
 
 PaymentCurrencyAmount::PaymentCurrencyAmount(const nsAString& aCurrency,
                                              const nsAString& aValue)
-  : mValue(aValue)
-{
+    : mValue(aValue) {
   /*
    *  According to the spec
    *  https://w3c.github.io/payment-request/#validity-checkers
@@ -77,71 +67,59 @@ PaymentCurrencyAmount::PaymentCurrencyAmount(const nsAString& aCurrency,
   ToUpperCase(aCurrency, mCurrency);
 }
 
-nsresult
-PaymentCurrencyAmount::Create(const IPCPaymentCurrencyAmount& aIPCAmount,
-                              nsIPaymentCurrencyAmount** aAmount)
-{
+nsresult PaymentCurrencyAmount::Create(
+    const IPCPaymentCurrencyAmount& aIPCAmount,
+    nsIPaymentCurrencyAmount** aAmount) {
   NS_ENSURE_ARG_POINTER(aAmount);
   nsCOMPtr<nsIPaymentCurrencyAmount> amount =
-    new PaymentCurrencyAmount(aIPCAmount.currency(), aIPCAmount.value());
+      new PaymentCurrencyAmount(aIPCAmount.currency(), aIPCAmount.value());
   amount.forget(aAmount);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentCurrencyAmount::GetCurrency(nsAString& aCurrency)
-{
+PaymentCurrencyAmount::GetCurrency(nsAString& aCurrency) {
   aCurrency = mCurrency;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentCurrencyAmount::GetValue(nsAString& aValue)
-{
+PaymentCurrencyAmount::GetValue(nsAString& aValue) {
   aValue = mValue;
   return NS_OK;
 }
 
 /* PaymentItem */
 
-NS_IMPL_ISUPPORTS(PaymentItem,
-                  nsIPaymentItem)
+NS_IMPL_ISUPPORTS(PaymentItem, nsIPaymentItem)
 
 PaymentItem::PaymentItem(const nsAString& aLabel,
-                         nsIPaymentCurrencyAmount* aAmount,
-                         const bool aPending)
-  : mLabel(aLabel)
-  , mAmount(aAmount)
-  , mPending(aPending)
-{
-}
+                         nsIPaymentCurrencyAmount* aAmount, const bool aPending)
+    : mLabel(aLabel), mAmount(aAmount), mPending(aPending) {}
 
-nsresult
-PaymentItem::Create(const IPCPaymentItem& aIPCItem, nsIPaymentItem** aItem)
-{
+nsresult PaymentItem::Create(const IPCPaymentItem& aIPCItem,
+                             nsIPaymentItem** aItem) {
   NS_ENSURE_ARG_POINTER(aItem);
   nsCOMPtr<nsIPaymentCurrencyAmount> amount;
-  nsresult rv = PaymentCurrencyAmount::Create(aIPCItem.amount(),
-                                              getter_AddRefs(amount));
+  nsresult rv =
+      PaymentCurrencyAmount::Create(aIPCItem.amount(), getter_AddRefs(amount));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   nsCOMPtr<nsIPaymentItem> item =
-    new PaymentItem(aIPCItem.label(), amount, aIPCItem.pending());
+      new PaymentItem(aIPCItem.label(), amount, aIPCItem.pending());
   item.forget(aItem);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentItem::GetLabel(nsAString& aLabel)
-{
+PaymentItem::GetLabel(nsAString& aLabel) {
   aLabel = mLabel;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentItem::GetAmount(nsIPaymentCurrencyAmount** aAmount)
-{
+PaymentItem::GetAmount(nsIPaymentCurrencyAmount** aAmount) {
   NS_ENSURE_ARG_POINTER(aAmount);
   MOZ_ASSERT(mAmount);
   nsCOMPtr<nsIPaymentCurrencyAmount> amount = mAmount;
@@ -150,8 +128,7 @@ PaymentItem::GetAmount(nsIPaymentCurrencyAmount** aAmount)
 }
 
 NS_IMETHODIMP
-PaymentItem::GetPending(bool* aPending)
-{
+PaymentItem::GetPending(bool* aPending) {
   NS_ENSURE_ARG_POINTER(aPending);
   *aPending = mPending;
   return NS_OK;
@@ -159,27 +136,23 @@ PaymentItem::GetPending(bool* aPending)
 
 /* PaymentDetailsModifier */
 
-NS_IMPL_ISUPPORTS(PaymentDetailsModifier,
-                  nsIPaymentDetailsModifier)
+NS_IMPL_ISUPPORTS(PaymentDetailsModifier, nsIPaymentDetailsModifier)
 
-PaymentDetailsModifier::PaymentDetailsModifier(const nsAString& aSupportedMethods,
-                                               nsIPaymentItem* aTotal,
-                                               nsIArray* aAdditionalDisplayItems,
-                                               const nsAString& aData)
-  : mSupportedMethods(aSupportedMethods)
-  , mTotal(aTotal)
-  , mAdditionalDisplayItems(aAdditionalDisplayItems)
-  , mData(aData)
-{
-}
+PaymentDetailsModifier::PaymentDetailsModifier(
+    const nsAString& aSupportedMethods, nsIPaymentItem* aTotal,
+    nsIArray* aAdditionalDisplayItems, const nsAString& aData)
+    : mSupportedMethods(aSupportedMethods),
+      mTotal(aTotal),
+      mAdditionalDisplayItems(aAdditionalDisplayItems),
+      mData(aData) {}
 
-nsresult
-PaymentDetailsModifier::Create(const IPCPaymentDetailsModifier& aIPCModifier,
-                               nsIPaymentDetailsModifier** aModifier)
-{
+nsresult PaymentDetailsModifier::Create(
+    const IPCPaymentDetailsModifier& aIPCModifier,
+    nsIPaymentDetailsModifier** aModifier) {
   NS_ENSURE_ARG_POINTER(aModifier);
   nsCOMPtr<nsIPaymentItem> total;
-  nsresult rv = PaymentItem::Create(aIPCModifier.total(), getter_AddRefs(total));
+  nsresult rv =
+      PaymentItem::Create(aIPCModifier.total(), getter_AddRefs(total));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -202,24 +175,20 @@ PaymentDetailsModifier::Create(const IPCPaymentDetailsModifier& aIPCModifier,
     displayItems = items.forget();
   }
   nsCOMPtr<nsIPaymentDetailsModifier> modifier =
-    new PaymentDetailsModifier(aIPCModifier.supportedMethods(),
-                               total,
-                               displayItems,
-                               aIPCModifier.data());
+      new PaymentDetailsModifier(aIPCModifier.supportedMethods(), total,
+                                 displayItems, aIPCModifier.data());
   modifier.forget(aModifier);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentDetailsModifier::GetSupportedMethods(nsAString& aSupportedMethods)
-{
+PaymentDetailsModifier::GetSupportedMethods(nsAString& aSupportedMethods) {
   aSupportedMethods = mSupportedMethods;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentDetailsModifier::GetTotal(nsIPaymentItem** aTotal)
-{
+PaymentDetailsModifier::GetTotal(nsIPaymentItem** aTotal) {
   NS_ENSURE_ARG_POINTER(aTotal);
   MOZ_ASSERT(mTotal);
   nsCOMPtr<nsIPaymentItem> total = mTotal;
@@ -228,8 +197,8 @@ PaymentDetailsModifier::GetTotal(nsIPaymentItem** aTotal)
 }
 
 NS_IMETHODIMP
-PaymentDetailsModifier::GetAdditionalDisplayItems(nsIArray** aAdditionalDisplayItems)
-{
+PaymentDetailsModifier::GetAdditionalDisplayItems(
+    nsIArray** aAdditionalDisplayItems) {
   NS_ENSURE_ARG_POINTER(aAdditionalDisplayItems);
   nsCOMPtr<nsIArray> additionalItems = mAdditionalDisplayItems;
   additionalItems.forget(aAdditionalDisplayItems);
@@ -237,13 +206,12 @@ PaymentDetailsModifier::GetAdditionalDisplayItems(nsIArray** aAdditionalDisplayI
 }
 
 NS_IMETHODIMP
-PaymentDetailsModifier::GetData(JSContext* aCx, JS::MutableHandleValue aData)
-{
+PaymentDetailsModifier::GetData(JSContext* aCx, JS::MutableHandleValue aData) {
   if (mData.IsEmpty()) {
     aData.set(JS::NullValue());
     return NS_OK;
   }
-  nsresult rv = DeserializeToJSValue(mData, aCx ,aData);
+  nsresult rv = DeserializeToJSValue(mData, aCx, aData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -252,53 +220,44 @@ PaymentDetailsModifier::GetData(JSContext* aCx, JS::MutableHandleValue aData)
 
 /* PaymentShippingOption */
 
-NS_IMPL_ISUPPORTS(PaymentShippingOption,
-                  nsIPaymentShippingOption)
+NS_IMPL_ISUPPORTS(PaymentShippingOption, nsIPaymentShippingOption)
 
 PaymentShippingOption::PaymentShippingOption(const nsAString& aId,
                                              const nsAString& aLabel,
                                              nsIPaymentCurrencyAmount* aAmount,
                                              const bool aSelected)
-  : mId(aId)
-  , mLabel(aLabel)
-  , mAmount(aAmount)
-  , mSelected(aSelected)
-{
-}
+    : mId(aId), mLabel(aLabel), mAmount(aAmount), mSelected(aSelected) {}
 
-nsresult
-PaymentShippingOption::Create(const IPCPaymentShippingOption& aIPCOption,
-                              nsIPaymentShippingOption** aOption)
-{
+nsresult PaymentShippingOption::Create(
+    const IPCPaymentShippingOption& aIPCOption,
+    nsIPaymentShippingOption** aOption) {
   NS_ENSURE_ARG_POINTER(aOption);
   nsCOMPtr<nsIPaymentCurrencyAmount> amount;
-  nsresult rv = PaymentCurrencyAmount::Create(aIPCOption.amount(), getter_AddRefs(amount));
+  nsresult rv = PaymentCurrencyAmount::Create(aIPCOption.amount(),
+                                              getter_AddRefs(amount));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  nsCOMPtr<nsIPaymentShippingOption> option =
-    new PaymentShippingOption(aIPCOption.id(), aIPCOption.label(), amount, aIPCOption.selected());
+  nsCOMPtr<nsIPaymentShippingOption> option = new PaymentShippingOption(
+      aIPCOption.id(), aIPCOption.label(), amount, aIPCOption.selected());
   option.forget(aOption);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShippingOption::GetId(nsAString& aId)
-{
+PaymentShippingOption::GetId(nsAString& aId) {
   aId = mId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShippingOption::GetLabel(nsAString& aLabel)
-{
+PaymentShippingOption::GetLabel(nsAString& aLabel) {
   aLabel = mLabel;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShippingOption::GetAmount(nsIPaymentCurrencyAmount** aAmount)
-{
+PaymentShippingOption::GetAmount(nsIPaymentCurrencyAmount** aAmount) {
   NS_ENSURE_ARG_POINTER(aAmount);
   MOZ_ASSERT(mAmount);
   nsCOMPtr<nsIPaymentCurrencyAmount> amount = mAmount;
@@ -307,50 +266,41 @@ PaymentShippingOption::GetAmount(nsIPaymentCurrencyAmount** aAmount)
 }
 
 NS_IMETHODIMP
-PaymentShippingOption::GetSelected(bool* aSelected)
-{
+PaymentShippingOption::GetSelected(bool* aSelected) {
   NS_ENSURE_ARG_POINTER(aSelected);
   *aSelected = mSelected;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentShippingOption::SetSelected(bool aSelected)
-{
+PaymentShippingOption::SetSelected(bool aSelected) {
   mSelected = aSelected;
   return NS_OK;
 }
 
 /* PaymentDetails */
 
-NS_IMPL_ISUPPORTS(PaymentDetails,
-                  nsIPaymentDetails)
+NS_IMPL_ISUPPORTS(PaymentDetails, nsIPaymentDetails)
 
-PaymentDetails::PaymentDetails(const nsAString& aId,
-                               nsIPaymentItem* aTotalItem,
+PaymentDetails::PaymentDetails(const nsAString& aId, nsIPaymentItem* aTotalItem,
                                nsIArray* aDisplayItems,
-                               nsIArray* aShippingOptions,
-                               nsIArray* aModifiers,
+                               nsIArray* aShippingOptions, nsIArray* aModifiers,
                                const nsAString& aError,
                                const nsAString& aShippingAddressErrors,
                                const nsAString& aPayerErrors,
                                const nsAString& aPaymentMethodErrors)
-  : mId(aId)
-  , mTotalItem(aTotalItem)
-  , mDisplayItems(aDisplayItems)
-  , mShippingOptions(aShippingOptions)
-  , mModifiers(aModifiers)
-  , mError(aError)
-  , mShippingAddressErrors(aShippingAddressErrors)
-  , mPayerErrors(aPayerErrors)
-  , mPaymentMethodErrors(aPaymentMethodErrors)
-{
-}
+    : mId(aId),
+      mTotalItem(aTotalItem),
+      mDisplayItems(aDisplayItems),
+      mShippingOptions(aShippingOptions),
+      mModifiers(aModifiers),
+      mError(aError),
+      mShippingAddressErrors(aShippingAddressErrors),
+      mPayerErrors(aPayerErrors),
+      mPaymentMethodErrors(aPaymentMethodErrors) {}
 
-nsresult
-PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
-                       nsIPaymentDetails** aDetails)
-{
+nsresult PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
+                                nsIPaymentDetails** aDetails) {
   NS_ENSURE_ARG_POINTER(aDetails);
 
   nsCOMPtr<nsIPaymentItem> total;
@@ -378,7 +328,8 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
   nsCOMPtr<nsIArray> shippingOptions;
   nsCOMPtr<nsIMutableArray> options = do_CreateInstance(NS_ARRAY_CONTRACTID);
   MOZ_ASSERT(options);
-  for (const IPCPaymentShippingOption& shippingOption : aIPCDetails.shippingOptions()) {
+  for (const IPCPaymentShippingOption& shippingOption :
+       aIPCDetails.shippingOptions()) {
     nsCOMPtr<nsIPaymentShippingOption> option;
     rv = PaymentShippingOption::Create(shippingOption, getter_AddRefs(option));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -392,11 +343,13 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
   shippingOptions = options.forget();
 
   nsCOMPtr<nsIArray> modifiers;
-  nsCOMPtr<nsIMutableArray> detailsModifiers = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  nsCOMPtr<nsIMutableArray> detailsModifiers =
+      do_CreateInstance(NS_ARRAY_CONTRACTID);
   MOZ_ASSERT(detailsModifiers);
   for (const IPCPaymentDetailsModifier& modifier : aIPCDetails.modifiers()) {
     nsCOMPtr<nsIPaymentDetailsModifier> detailsModifier;
-    rv = PaymentDetailsModifier::Create(modifier, getter_AddRefs(detailsModifier));
+    rv = PaymentDetailsModifier::Create(modifier,
+                                        getter_AddRefs(detailsModifier));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -407,27 +360,23 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
   }
   modifiers = detailsModifiers.forget();
 
-  nsCOMPtr<nsIPaymentDetails> details =
-    new PaymentDetails(aIPCDetails.id(), total, displayItems, shippingOptions,
-                       modifiers, aIPCDetails.error(),
-                       aIPCDetails.shippingAddressErrors(),
-                       aIPCDetails.payerErrors(),
-                       aIPCDetails.paymentMethodErrors());
+  nsCOMPtr<nsIPaymentDetails> details = new PaymentDetails(
+      aIPCDetails.id(), total, displayItems, shippingOptions, modifiers,
+      aIPCDetails.error(), aIPCDetails.shippingAddressErrors(),
+      aIPCDetails.payerErrors(), aIPCDetails.paymentMethodErrors());
 
   details.forget(aDetails);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetId(nsAString& aId)
-{
+PaymentDetails::GetId(nsAString& aId) {
   aId = mId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetTotalItem(nsIPaymentItem** aTotalItem)
-{
+PaymentDetails::GetTotalItem(nsIPaymentItem** aTotalItem) {
   NS_ENSURE_ARG_POINTER(aTotalItem);
   MOZ_ASSERT(mTotalItem);
   nsCOMPtr<nsIPaymentItem> total = mTotalItem;
@@ -436,8 +385,7 @@ PaymentDetails::GetTotalItem(nsIPaymentItem** aTotalItem)
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetDisplayItems(nsIArray** aDisplayItems)
-{
+PaymentDetails::GetDisplayItems(nsIArray** aDisplayItems) {
   NS_ENSURE_ARG_POINTER(aDisplayItems);
   nsCOMPtr<nsIArray> displayItems = mDisplayItems;
   displayItems.forget(aDisplayItems);
@@ -445,8 +393,7 @@ PaymentDetails::GetDisplayItems(nsIArray** aDisplayItems)
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetShippingOptions(nsIArray** aShippingOptions)
-{
+PaymentDetails::GetShippingOptions(nsIArray** aShippingOptions) {
   NS_ENSURE_ARG_POINTER(aShippingOptions);
   nsCOMPtr<nsIArray> options = mShippingOptions;
   options.forget(aShippingOptions);
@@ -454,8 +401,7 @@ PaymentDetails::GetShippingOptions(nsIArray** aShippingOptions)
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetModifiers(nsIArray** aModifiers)
-{
+PaymentDetails::GetModifiers(nsIArray** aModifiers) {
   NS_ENSURE_ARG_POINTER(aModifiers);
   nsCOMPtr<nsIArray> modifiers = mModifiers;
   modifiers.forget(aModifiers);
@@ -463,15 +409,14 @@ PaymentDetails::GetModifiers(nsIArray** aModifiers)
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetError(nsAString& aError)
-{
+PaymentDetails::GetError(nsAString& aError) {
   aError = mError;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetShippingAddressErrors(JSContext* aCx, JS::MutableHandleValue aErrors)
-{
+PaymentDetails::GetShippingAddressErrors(JSContext* aCx,
+                                         JS::MutableHandleValue aErrors) {
   AddressErrors errors;
   errors.Init(mShippingAddressErrors);
   if (!ToJSValue(aCx, errors, aErrors)) {
@@ -481,8 +426,7 @@ PaymentDetails::GetShippingAddressErrors(JSContext* aCx, JS::MutableHandleValue 
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetPayerErrors(JSContext* aCx, JS::MutableHandleValue aErrors)
-{
+PaymentDetails::GetPayerErrors(JSContext* aCx, JS::MutableHandleValue aErrors) {
   PayerErrors errors;
   errors.Init(mPayerErrors);
   if (!ToJSValue(aCx, errors, aErrors)) {
@@ -492,22 +436,21 @@ PaymentDetails::GetPayerErrors(JSContext* aCx, JS::MutableHandleValue aErrors)
 }
 
 NS_IMETHODIMP
-PaymentDetails::GetPaymentMethodErrors(JSContext* aCx, JS::MutableHandleValue aErrors)
-{
+PaymentDetails::GetPaymentMethodErrors(JSContext* aCx,
+                                       JS::MutableHandleValue aErrors) {
   if (mPaymentMethodErrors.IsEmpty()) {
     aErrors.set(JS::NullValue());
     return NS_OK;
   }
-  nsresult rv = DeserializeToJSValue(mPaymentMethodErrors, aCx ,aErrors);
+  nsresult rv = DeserializeToJSValue(mPaymentMethodErrors, aCx, aErrors);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   return NS_OK;
 }
 
-nsresult
-PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
-{
+nsresult PaymentDetails::Update(nsIPaymentDetails* aDetails,
+                                const bool aRequestShipping) {
   MOZ_ASSERT(aDetails);
   /*
    * According to the spec [1], update the attributes if they present in new
@@ -562,33 +505,22 @@ PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
   mPaymentMethodErrors = rowDetails->GetPaymentMethodErrors();
 
   return NS_OK;
-
 }
 
-const nsString&
-PaymentDetails::GetShippingAddressErrors() const
-{
+const nsString& PaymentDetails::GetShippingAddressErrors() const {
   return mShippingAddressErrors;
 }
 
-const nsString&
-PaymentDetails::GetPayerErrors() const
-{
-  return mPayerErrors;
-}
+const nsString& PaymentDetails::GetPayerErrors() const { return mPayerErrors; }
 
-const nsString&
-PaymentDetails::GetPaymentMethodErrors() const
-{
+const nsString& PaymentDetails::GetPaymentMethodErrors() const {
   return mPaymentMethodErrors;
 }
 
-nsresult
-PaymentDetails::UpdateErrors(const nsAString& aError,
-                             const nsAString& aPayerErrors,
-                             const nsAString& aPaymentMethodErrors,
-                             const nsAString& aShippingAddressErrors)
-{
+nsresult PaymentDetails::UpdateErrors(const nsAString& aError,
+                                      const nsAString& aPayerErrors,
+                                      const nsAString& aPaymentMethodErrors,
+                                      const nsAString& aShippingAddressErrors) {
   mError = aError;
   mPayerErrors = aPayerErrors;
   mPaymentMethodErrors = aPaymentMethodErrors;
@@ -598,8 +530,7 @@ PaymentDetails::UpdateErrors(const nsAString& aError,
 
 /* PaymentOptions */
 
-NS_IMPL_ISUPPORTS(PaymentOptions,
-                  nsIPaymentOptions)
+NS_IMPL_ISUPPORTS(PaymentOptions, nsIPaymentOptions)
 
 PaymentOptions::PaymentOptions(const bool aRequestPayerName,
                                const bool aRequestPayerEmail,
@@ -607,83 +538,69 @@ PaymentOptions::PaymentOptions(const bool aRequestPayerName,
                                const bool aRequestShipping,
                                const bool aRequestBillingAddress,
                                const nsAString& aShippingType)
-  : mRequestPayerName(aRequestPayerName)
-  , mRequestPayerEmail(aRequestPayerEmail)
-  , mRequestPayerPhone(aRequestPayerPhone)
-  , mRequestShipping(aRequestShipping)
-  , mRequestBillingAddress(aRequestBillingAddress)
-  , mShippingType(aShippingType)
-{
-}
+    : mRequestPayerName(aRequestPayerName),
+      mRequestPayerEmail(aRequestPayerEmail),
+      mRequestPayerPhone(aRequestPayerPhone),
+      mRequestShipping(aRequestShipping),
+      mRequestBillingAddress(aRequestBillingAddress),
+      mShippingType(aShippingType) {}
 
-nsresult
-PaymentOptions::Create(const IPCPaymentOptions& aIPCOptions,
-                       nsIPaymentOptions** aOptions)
-{
+nsresult PaymentOptions::Create(const IPCPaymentOptions& aIPCOptions,
+                                nsIPaymentOptions** aOptions) {
   NS_ENSURE_ARG_POINTER(aOptions);
 
-  nsCOMPtr<nsIPaymentOptions> options =
-    new PaymentOptions(aIPCOptions.requestPayerName(),
-                       aIPCOptions.requestPayerEmail(),
-                       aIPCOptions.requestPayerPhone(),
-                       aIPCOptions.requestShipping(),
-                       aIPCOptions.requestBillingAddress(),
-                       aIPCOptions.shippingType());
+  nsCOMPtr<nsIPaymentOptions> options = new PaymentOptions(
+      aIPCOptions.requestPayerName(), aIPCOptions.requestPayerEmail(),
+      aIPCOptions.requestPayerPhone(), aIPCOptions.requestShipping(),
+      aIPCOptions.requestBillingAddress(), aIPCOptions.shippingType());
   options.forget(aOptions);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentOptions::GetRequestPayerName(bool* aRequestPayerName)
-{
+PaymentOptions::GetRequestPayerName(bool* aRequestPayerName) {
   NS_ENSURE_ARG_POINTER(aRequestPayerName);
   *aRequestPayerName = mRequestPayerName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentOptions::GetRequestPayerEmail(bool* aRequestPayerEmail)
-{
+PaymentOptions::GetRequestPayerEmail(bool* aRequestPayerEmail) {
   NS_ENSURE_ARG_POINTER(aRequestPayerEmail);
   *aRequestPayerEmail = mRequestPayerEmail;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentOptions::GetRequestPayerPhone(bool* aRequestPayerPhone)
-{
+PaymentOptions::GetRequestPayerPhone(bool* aRequestPayerPhone) {
   NS_ENSURE_ARG_POINTER(aRequestPayerPhone);
   *aRequestPayerPhone = mRequestPayerPhone;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentOptions::GetRequestShipping(bool* aRequestShipping)
-{
+PaymentOptions::GetRequestShipping(bool* aRequestShipping) {
   NS_ENSURE_ARG_POINTER(aRequestShipping);
   *aRequestShipping = mRequestShipping;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentOptions::GetRequestBillingAddress(bool* aRequestBillingAddress)
-{
+PaymentOptions::GetRequestBillingAddress(bool* aRequestBillingAddress) {
   NS_ENSURE_ARG_POINTER(aRequestBillingAddress);
   *aRequestBillingAddress = mRequestBillingAddress;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentOptions::GetShippingType(nsAString& aShippingType)
-{
+PaymentOptions::GetShippingType(nsAString& aShippingType) {
   aShippingType = mShippingType;
   return NS_OK;
 }
 
 /* PaymentReqeust */
 
-NS_IMPL_ISUPPORTS(PaymentRequest,
-                  nsIPaymentRequest)
+NS_IMPL_ISUPPORTS(PaymentRequest, nsIPaymentRequest)
 
 PaymentRequest::PaymentRequest(const uint64_t aTopOuterWindowId,
                                const nsAString& aRequestId,
@@ -692,28 +609,24 @@ PaymentRequest::PaymentRequest(const uint64_t aTopOuterWindowId,
                                nsIPaymentDetails* aPaymentDetails,
                                nsIPaymentOptions* aPaymentOptions,
                                const nsAString& aShippingOption)
-  : mTopOuterWindowId(aTopOuterWindowId)
-  , mRequestId(aRequestId)
-  , mTopLevelPrincipal(aTopLevelPrincipal)
-  , mPaymentMethods(aPaymentMethods)
-  , mPaymentDetails(aPaymentDetails)
-  , mPaymentOptions(aPaymentOptions)
-  , mShippingOption(aShippingOption)
-  , mState(eCreated)
-{
-}
+    : mTopOuterWindowId(aTopOuterWindowId),
+      mRequestId(aRequestId),
+      mTopLevelPrincipal(aTopLevelPrincipal),
+      mPaymentMethods(aPaymentMethods),
+      mPaymentDetails(aPaymentDetails),
+      mPaymentOptions(aPaymentOptions),
+      mShippingOption(aShippingOption),
+      mState(eCreated) {}
 
 NS_IMETHODIMP
-PaymentRequest::GetTopOuterWindowId(uint64_t* aTopOuterWindowId)
-{
+PaymentRequest::GetTopOuterWindowId(uint64_t* aTopOuterWindowId) {
   NS_ENSURE_ARG_POINTER(aTopOuterWindowId);
   *aTopOuterWindowId = mTopOuterWindowId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetTopLevelPrincipal(nsIPrincipal** aTopLevelPrincipal)
-{
+PaymentRequest::GetTopLevelPrincipal(nsIPrincipal** aTopLevelPrincipal) {
   NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
   MOZ_ASSERT(mTopLevelPrincipal);
   nsCOMPtr<nsIPrincipal> principal = mTopLevelPrincipal;
@@ -722,15 +635,13 @@ PaymentRequest::GetTopLevelPrincipal(nsIPrincipal** aTopLevelPrincipal)
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetRequestId(nsAString& aRequestId)
-{
+PaymentRequest::GetRequestId(nsAString& aRequestId) {
   aRequestId = mRequestId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetPaymentMethods(nsIArray** aPaymentMethods)
-{
+PaymentRequest::GetPaymentMethods(nsIArray** aPaymentMethods) {
   NS_ENSURE_ARG_POINTER(aPaymentMethods);
   MOZ_ASSERT(mPaymentMethods);
   nsCOMPtr<nsIArray> methods = mPaymentMethods;
@@ -739,8 +650,7 @@ PaymentRequest::GetPaymentMethods(nsIArray** aPaymentMethods)
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetPaymentDetails(nsIPaymentDetails** aPaymentDetails)
-{
+PaymentRequest::GetPaymentDetails(nsIPaymentDetails** aPaymentDetails) {
   NS_ENSURE_ARG_POINTER(aPaymentDetails);
   MOZ_ASSERT(mPaymentDetails);
   nsCOMPtr<nsIPaymentDetails> details = mPaymentDetails;
@@ -749,8 +659,7 @@ PaymentRequest::GetPaymentDetails(nsIPaymentDetails** aPaymentDetails)
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetPaymentOptions(nsIPaymentOptions** aPaymentOptions)
-{
+PaymentRequest::GetPaymentOptions(nsIPaymentOptions** aPaymentOptions) {
   NS_ENSURE_ARG_POINTER(aPaymentOptions);
   MOZ_ASSERT(mPaymentOptions);
   nsCOMPtr<nsIPaymentOptions> options = mPaymentOptions;
@@ -759,16 +668,13 @@ PaymentRequest::GetPaymentOptions(nsIPaymentOptions** aPaymentOptions)
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetShippingOption(nsAString& aShippingOption)
-{
+PaymentRequest::GetShippingOption(nsAString& aShippingOption) {
   aShippingOption = mShippingOption;
   return NS_OK;
 }
 
-nsresult
-PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
-                                     const nsAString& aShippingOption)
-{
+nsresult PaymentRequest::UpdatePaymentDetails(
+    nsIPaymentDetails* aPaymentDetails, const nsAString& aShippingOption) {
   MOZ_ASSERT(aPaymentDetails);
   bool requestShipping;
   nsresult rv = mPaymentOptions->GetRequestShipping(&requestShipping);
@@ -777,34 +683,29 @@ PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
   }
   mShippingOption = aShippingOption;
 
-  PaymentDetails* rowDetails = static_cast<PaymentDetails*>(mPaymentDetails.get());
+  PaymentDetails* rowDetails =
+      static_cast<PaymentDetails*>(mPaymentDetails.get());
   MOZ_ASSERT(rowDetails);
   return rowDetails->Update(aPaymentDetails, requestShipping);
 }
 
-void
-PaymentRequest::SetCompleteStatus(const nsAString& aCompleteStatus)
-{
+void PaymentRequest::SetCompleteStatus(const nsAString& aCompleteStatus) {
   mCompleteStatus = aCompleteStatus;
 }
 
-nsresult
-PaymentRequest::UpdateErrors(const nsAString& aError,
-                             const nsAString& aPayerErrors,
-                             const nsAString& aPaymentMethodErrors,
-                             const nsAString& aShippingAddressErrors)
-{
-  PaymentDetails* rowDetails = static_cast<PaymentDetails*>(mPaymentDetails.get());
+nsresult PaymentRequest::UpdateErrors(const nsAString& aError,
+                                      const nsAString& aPayerErrors,
+                                      const nsAString& aPaymentMethodErrors,
+                                      const nsAString& aShippingAddressErrors) {
+  PaymentDetails* rowDetails =
+      static_cast<PaymentDetails*>(mPaymentDetails.get());
   MOZ_ASSERT(rowDetails);
-  return rowDetails->UpdateErrors(aError,
-                                  aPayerErrors,
-                                  aPaymentMethodErrors,
+  return rowDetails->UpdateErrors(aError, aPayerErrors, aPaymentMethodErrors,
                                   aShippingAddressErrors);
 }
 
 NS_IMETHODIMP
-PaymentRequest::GetCompleteStatus(nsAString& aCompleteStatus)
-{
+PaymentRequest::GetCompleteStatus(nsAString& aCompleteStatus) {
   aCompleteStatus = mCompleteStatus;
   return NS_OK;
 }
@@ -814,18 +715,14 @@ PaymentRequest::GetCompleteStatus(nsAString& aCompleteStatus)
 NS_IMPL_ISUPPORTS(PaymentAddress, nsIPaymentAddress)
 
 NS_IMETHODIMP
-PaymentAddress::Init(const nsAString& aCountry,
-                     nsIArray* aAddressLine,
-                     const nsAString& aRegion,
-                     const nsAString& aRegionCode,
+PaymentAddress::Init(const nsAString& aCountry, nsIArray* aAddressLine,
+                     const nsAString& aRegion, const nsAString& aRegionCode,
                      const nsAString& aCity,
                      const nsAString& aDependentLocality,
                      const nsAString& aPostalCode,
                      const nsAString& aSortingCode,
                      const nsAString& aOrganization,
-                     const nsAString& aRecipient,
-                     const nsAString& aPhone)
-{
+                     const nsAString& aRecipient, const nsAString& aPhone) {
   mCountry = aCountry;
   mAddressLine = aAddressLine;
   mRegion = aRegion;
@@ -841,15 +738,13 @@ PaymentAddress::Init(const nsAString& aCountry,
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetCountry(nsAString& aCountry)
-{
+PaymentAddress::GetCountry(nsAString& aCountry) {
   aCountry = mCountry;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetAddressLine(nsIArray** aAddressLine)
-{
+PaymentAddress::GetAddressLine(nsIArray** aAddressLine) {
   NS_ENSURE_ARG_POINTER(aAddressLine);
   nsCOMPtr<nsIArray> addressLine = mAddressLine;
   addressLine.forget(aAddressLine);
@@ -857,68 +752,59 @@ PaymentAddress::GetAddressLine(nsIArray** aAddressLine)
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetRegion(nsAString& aRegion)
-{
+PaymentAddress::GetRegion(nsAString& aRegion) {
   aRegion = mRegion;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetRegionCode(nsAString& aRegionCode)
-{
+PaymentAddress::GetRegionCode(nsAString& aRegionCode) {
   aRegionCode = mRegionCode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetCity(nsAString& aCity)
-{
+PaymentAddress::GetCity(nsAString& aCity) {
   aCity = mCity;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetDependentLocality(nsAString& aDependentLocality)
-{
+PaymentAddress::GetDependentLocality(nsAString& aDependentLocality) {
   aDependentLocality = mDependentLocality;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetPostalCode(nsAString& aPostalCode)
-{
+PaymentAddress::GetPostalCode(nsAString& aPostalCode) {
   aPostalCode = mPostalCode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetSortingCode(nsAString& aSortingCode)
-{
+PaymentAddress::GetSortingCode(nsAString& aSortingCode) {
   aSortingCode = mSortingCode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetOrganization(nsAString& aOrganization)
-{
+PaymentAddress::GetOrganization(nsAString& aOrganization) {
   aOrganization = mOrganization;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetRecipient(nsAString& aRecipient)
-{
+PaymentAddress::GetRecipient(nsAString& aRecipient) {
   aRecipient = mRecipient;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentAddress::GetPhone(nsAString& aPhone)
-{
+PaymentAddress::GetPhone(nsAString& aPhone) {
   aPhone = mPhone;
   return NS_OK;
 }
 
-} // end of namespace payment
-} // end of namespace dom
-} // end of namespace mozilla
+}  // namespace payments
+}  // end of namespace dom
+}  // end of namespace mozilla

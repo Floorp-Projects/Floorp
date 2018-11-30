@@ -27,36 +27,28 @@
 
 // The target dimension in pixels for favicons we store, in reverse order.
 // When adding/removing sizes from here, make sure to update the vector size.
-static uint16_t sFaviconSizes[7] = {
-  192, 144, 96, 64, 48, 32, 16
-};
+static uint16_t sFaviconSizes[7] = {192, 144, 96, 64, 48, 32, 16};
 
 // forward class definitions
 class mozIStorageStatementCallback;
 
-class UnassociatedIconHashKey : public nsURIHashKey
-{
-public:
-  explicit UnassociatedIconHashKey(const nsIURI* aURI)
-    : nsURIHashKey(aURI)
-  {
-  }
+class UnassociatedIconHashKey : public nsURIHashKey {
+ public:
+  explicit UnassociatedIconHashKey(const nsIURI* aURI) : nsURIHashKey(aURI) {}
   UnassociatedIconHashKey(UnassociatedIconHashKey&& aOther)
-    : nsURIHashKey(std::move(aOther))
-    , iconData(std::move(aOther.iconData))
-    , created(std::move(aOther.created))
-  {
+      : nsURIHashKey(std::move(aOther)),
+        iconData(std::move(aOther.iconData)),
+        created(std::move(aOther.created)) {
     MOZ_ASSERT_UNREACHABLE("Do not call me!");
   }
   mozilla::places::IconData iconData;
   PRTime created;
 };
 
-class nsFaviconService final : public nsIFaviconService
-                             , public nsITimerCallback
-                             , public nsINamed
-{
-public:
+class nsFaviconService final : public nsIFaviconService,
+                               public nsITimerCallback,
+                               public nsINamed {
+ public:
   nsFaviconService();
 
   /**
@@ -73,11 +65,10 @@ public:
    * Returns a cached pointer to the favicon service for consumers in the
    * places directory.
    */
-  static nsFaviconService* GetFaviconService()
-  {
+  static nsFaviconService* GetFaviconService() {
     if (!gFaviconService) {
       nsCOMPtr<nsIFaviconService> serv =
-        do_GetService(NS_FAVICONSERVICE_CONTRACTID);
+          do_GetService(NS_FAVICONSERVICE_CONTRACTID);
       NS_ENSURE_TRUE(serv, nullptr);
       NS_ASSERTION(gFaviconService, "Should have static instance pointer now");
     }
@@ -90,7 +81,8 @@ public:
   static void ConvertUnsupportedPayloads(mozIStorageConnection* aDBConn);
 
   // addition to API for strings to prevent excessive parsing of URIs
-  nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);
+  nsresult GetFaviconLinkForIconString(const nsCString& aIcon,
+                                       nsIURI** aOutput);
 
   nsresult OptimizeIconSizes(mozilla::places::IconData& aIcon);
 
@@ -129,7 +121,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
-private:
+ private:
   imgITools* GetImgTools() {
     if (!mImgTools) {
       mImgTools = do_CreateInstance("@mozilla.org/image/tools;1");
@@ -163,4 +155,4 @@ private:
 
 #define FAVICON_ANNOTATION_NAME "favicon"
 
-#endif // nsFaviconService_h_
+#endif  // nsFaviconService_h_

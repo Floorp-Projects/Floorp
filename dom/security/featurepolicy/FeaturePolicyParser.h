@@ -17,20 +17,16 @@ namespace dom {
 
 class Feature;
 
-class FeaturePolicyParser final
-{
-public:
+class FeaturePolicyParser final {
+ public:
   // aSelfOrigin must not be null. if aSrcOrigin is null, the parsing will not
   // support 'src' as valid allow directive value.
-  static bool
-  ParseString(const nsAString& aPolicy,
-              nsIDocument* aDocument,
-              nsIPrincipal* aSelfOrigin,
-              nsIPrincipal* aSrcOrigin,
-              nsTArray<Feature>& aParsedFeatures);
+  static bool ParseString(const nsAString& aPolicy, nsIDocument* aDocument,
+                          nsIPrincipal* aSelfOrigin, nsIPrincipal* aSrcOrigin,
+                          nsTArray<Feature>& aParsedFeatures);
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FeaturePolicyParser_h
+#endif  // mozilla_dom_FeaturePolicyParser_h

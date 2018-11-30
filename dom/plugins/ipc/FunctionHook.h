@@ -21,14 +21,15 @@ namespace plugins {
 // "PluginHooks" logging helpers
 extern mozilla::LazyLogModule sPluginHooksLog;
 #define HOOK_LOG(lvl, msg) MOZ_LOG(mozilla::plugins::sPluginHooksLog, lvl, msg);
-inline const char *SuccessMsg(bool aVal) { return aVal ? "succeeded" : "failed";  }
+inline const char* SuccessMsg(bool aVal) {
+  return aVal ? "succeeded" : "failed";
+}
 
 class FunctionHook;
 class FunctionHookArray;
 
-class FunctionHook
-{
-public:
+class FunctionHook {
+ public:
   virtual ~FunctionHook() {}
 
   virtual FunctionHookId FunctionId() const = 0;
@@ -44,8 +45,8 @@ public:
    * This is only supported on server-side and for auto-brokered methods.
    */
   virtual bool RunOriginalFunction(base::ProcessId aClientId,
-                                   const IPC::IpdlTuple &aInTuple,
-                                   IPC::IpdlTuple *aOutTuple) const = 0;
+                                   const IPC::IpdlTuple& aInTuple,
+                                   IPC::IpdlTuple* aOutTuple) const = 0;
 
   /**
    * Hook the Win32 methods needed by the plugin process.
@@ -71,18 +72,17 @@ public:
    * Must be called to clear the cache created by calls to GetDllInterceptorFor.
    */
   static void ClearDllInterceptorCache();
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
-private:
+ private:
   static StaticAutoPtr<FunctionHookArray> sFunctionHooks;
   static void AddFunctionHooks(FunctionHookArray& aHooks);
 };
 
 // The FunctionHookArray deletes its FunctionHook objects when freed.
 class FunctionHookArray : public nsTArray<FunctionHook*> {
-public:
-  ~FunctionHookArray()
-  {
+ public:
+  ~FunctionHookArray() {
     for (uint32_t idx = 0; idx < Length(); ++idx) {
       FunctionHook* elt = ElementAt(idx);
       MOZ_ASSERT(elt);
@@ -91,26 +91,24 @@ public:
   }
 };
 
-// Type of function that returns true if a function should be hooked according to quirks.
+// Type of function that returns true if a function should be hooked according
+// to quirks.
 typedef bool(ShouldHookFunc)(int aQuirks);
 
-template<FunctionHookId functionId, typename FunctionType>
-class BasicFunctionHook : public FunctionHook
-{
+template <FunctionHookId functionId, typename FunctionType>
+class BasicFunctionHook : public FunctionHook {
 #if defined(XP_WIN)
   using FuncHookType = WindowsDllInterceptor::FuncHookType<FunctionType*>;
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
-public:
-  BasicFunctionHook(const char* aModuleName,
-                    const char* aFunctionName, FunctionType* aOldFunction,
-                    FunctionType* aNewFunction)
-    : mOldFunction(aOldFunction)
-    , mRegistration(UNREGISTERED)
-    , mModuleName(aModuleName)
-    , mFunctionName(aFunctionName)
-    , mNewFunction(aNewFunction)
-  {
+ public:
+  BasicFunctionHook(const char* aModuleName, const char* aFunctionName,
+                    FunctionType* aOldFunction, FunctionType* aNewFunction)
+      : mOldFunction(aOldFunction),
+        mRegistration(UNREGISTERED),
+        mModuleName(aModuleName),
+        mFunctionName(aFunctionName),
+        mNewFunction(aNewFunction) {
     MOZ_ASSERT(mOldFunction);
     MOZ_ASSERT(mNewFunction);
   }
@@ -125,21 +123,23 @@ public:
    * function on the server side.
    */
   bool RunOriginalFunction(base::ProcessId aClientId,
-                           const IPC::IpdlTuple &aInTuple,
-                           IPC::IpdlTuple *aOutTuple) const override { return false; }
+                           const IPC::IpdlTuple& aInTuple,
+                           IPC::IpdlTuple* aOutTuple) const override {
+    return false;
+  }
 
   FunctionHookId FunctionId() const override { return functionId; }
 
   FunctionType* OriginalFunction() const { return mOldFunction; }
 
-protected:
+ protected:
   // Once the function is hooked, this field will take the value of a pointer to
   // a function that performs the old behavior.  Before that, it is a pointer to
   // the original function.
   Atomic<FunctionType*> mOldFunction;
 #if defined(XP_WIN)
   FuncHookType mStub;
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)
 
   enum RegistrationStatus { UNREGISTERED, FAILED, SUCCEEDED };
   RegistrationStatus mRegistration;
@@ -156,13 +156,12 @@ protected:
 
 // Default behavior is to hook every registered function.
 extern bool AlwaysHook(int);
-template<FunctionHookId functionId, typename FunctionType>
-ShouldHookFunc* const BasicFunctionHook<functionId, FunctionType>::mShouldHook = AlwaysHook;
+template <FunctionHookId functionId, typename FunctionType>
+ShouldHookFunc* const BasicFunctionHook<functionId, FunctionType>::mShouldHook =
+    AlwaysHook;
 
 template <FunctionHookId functionId, typename FunctionType>
-bool
-BasicFunctionHook<functionId, FunctionType>::Register(int aQuirks)
-{
+bool BasicFunctionHook<functionId, FunctionType>::Register(int aQuirks) {
   MOZ_RELEASE_ASSERT(XRE_IsPluginProcess());
 
   // If we have already attempted to hook this function or if quirks tell us
@@ -176,7 +175,7 @@ BasicFunctionHook<functionId, FunctionType>::Register(int aQuirks)
 
 #if defined(XP_WIN)
   WindowsDllInterceptor* dllInterceptor =
-    FunctionHook::GetDllInterceptorFor(mModuleName.Data());
+      FunctionHook::GetDllInterceptorFor(mModuleName.Data());
   if (!dllInterceptor) {
     return false;
   }
@@ -191,14 +190,13 @@ BasicFunctionHook<functionId, FunctionType>::Register(int aQuirks)
     mRegistration = SUCCEEDED;
   }
 
-  HOOK_LOG(LogLevel::Debug,
-           ("Registering to intercept function '%s' : '%s'", mFunctionName.Data(),
-            SuccessMsg(isHooked)));
+  HOOK_LOG(LogLevel::Debug, ("Registering to intercept function '%s' : '%s'",
+                             mFunctionName.Data(), SuccessMsg(isHooked)));
 
   return isHooked;
 }
 
-}
-}
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // dom_plugins_ipc_functionhook_h
+#endif  // dom_plugins_ipc_functionhook_h

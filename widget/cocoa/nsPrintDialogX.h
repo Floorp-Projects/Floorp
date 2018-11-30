@@ -15,25 +15,22 @@
 class nsIPrintSettings;
 class nsIStringBundle;
 
-class nsPrintDialogServiceX : public nsIPrintDialogService
-{
-public:
+class nsPrintDialogServiceX : public nsIPrintDialogService {
+ public:
   nsPrintDialogServiceX();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() override;
-  NS_IMETHOD Show(nsPIDOMWindowOuter *aParent, nsIPrintSettings *aSettings,
-                  nsIWebBrowserPrint *aWebBrowserPrint) override;
-  NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter *aParent,
-                           nsIPrintSettings *aSettings) override;
+  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings,
+                  nsIWebBrowserPrint* aWebBrowserPrint) override;
+  NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings) override;
 
-protected:
+ protected:
   virtual ~nsPrintDialogServiceX();
 };
 
-@interface PrintPanelAccessoryView : NSView
-{
+@interface PrintPanelAccessoryView : NSView {
   nsIPrintSettings* mSettings;
   nsIStringBundle* mPrintBundle;
   NSButton* mPrintSelectionOnlyCheckbox;
@@ -65,4 +62,4 @@ protected:
 
 @end
 
-#endif // nsPrintDialog_h_
+#endif  // nsPrintDialog_h_

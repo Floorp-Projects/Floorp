@@ -19,20 +19,16 @@ class Promise;
 class PresentationAvailability;
 class PresentationConnection;
 
-class PresentationRequest final : public DOMEventTargetHelper
-{
-public:
+class PresentationRequest final : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   static already_AddRefed<PresentationRequest> Constructor(
-    const GlobalObject& aGlobal,
-    const nsAString& aUrl,
-    ErrorResult& aRv);
+      const GlobalObject& aGlobal, const nsAString& aUrl, ErrorResult& aRv);
 
   static already_AddRefed<PresentationRequest> Constructor(
-    const GlobalObject& aGlobal,
-    const Sequence<nsString>& aUrls,
-    ErrorResult& aRv);
+      const GlobalObject& aGlobal, const Sequence<nsString>& aUrls,
+      ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -50,13 +46,13 @@ public:
 
   IMPL_EVENT_HANDLER(connectionavailable);
 
-  nsresult DispatchConnectionAvailableEvent(PresentationConnection* aConnection);
+  nsresult DispatchConnectionAvailableEvent(
+      PresentationConnection* aConnection);
 
   void NotifyPromiseSettled();
 
-private:
-  PresentationRequest(nsPIDOMWindowInner* aWindow,
-                      nsTArray<nsString>&& aUrls);
+ private:
+  PresentationRequest(nsPIDOMWindowInner* aWindow, nsTArray<nsString>&& aUrls);
 
   ~PresentationRequest();
 
@@ -67,10 +63,12 @@ private:
 
   void FindOrCreatePresentationAvailability(RefPtr<Promise>& aPromise);
 
-  // Implement https://w3c.github.io/webappsec-mixed-content/#categorize-settings-object
+  // Implement
+  // https://w3c.github.io/webappsec-mixed-content/#categorize-settings-object
   bool IsProhibitMixedSecurityContexts(nsIDocument* aDocument);
 
-  // Implement https://w3c.github.io/webappsec-mixed-content/#a-priori-authenticated-url
+  // Implement
+  // https://w3c.github.io/webappsec-mixed-content/#a-priori-authenticated-url
   bool IsPrioriAuthenticatedURL(const nsAString& aUrl);
 
   bool IsAllURLAuthenticated();
@@ -78,7 +76,7 @@ private:
   nsTArray<nsString> mUrls;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PresentationRequest_h
+#endif  // mozilla_dom_PresentationRequest_h

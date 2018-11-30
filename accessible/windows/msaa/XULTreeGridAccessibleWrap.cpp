@@ -11,16 +11,12 @@ using namespace mozilla::a11y;
 // XULTreeGridAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridAccessibleWrap,
-                             XULTreeGridAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridAccessibleWrap, XULTreeGridAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(XULTreeGridAccessibleWrap,
-                         AccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(XULTreeGridAccessibleWrap, AccessibleWrap,
                          ia2AccessibleTable)
 
-void
-XULTreeGridAccessibleWrap::Shutdown()
-{
+void XULTreeGridAccessibleWrap::Shutdown() {
   ia2AccessibleTable::mTable = nullptr;
   XULTreeGridAccessible::Shutdown();
 }
@@ -32,13 +28,10 @@ XULTreeGridAccessibleWrap::Shutdown()
 NS_IMPL_ISUPPORTS_INHERITED0(XULTreeGridCellAccessibleWrap,
                              XULTreeGridCellAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(XULTreeGridCellAccessibleWrap,
-                         AccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(XULTreeGridCellAccessibleWrap, AccessibleWrap,
                          ia2AccessibleTableCell)
 
-void
-XULTreeGridCellAccessibleWrap::Shutdown()
-{
+void XULTreeGridCellAccessibleWrap::Shutdown() {
   ia2AccessibleTableCell::mTableCell = nullptr;
   XULTreeGridCellAccessible::Shutdown();
 }

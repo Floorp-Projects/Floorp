@@ -17,4 +17,4 @@ void ShutdownModule();
 } /* namespace image */
 } /* namespace mozilla */
 
-#endif // mozilla_image_build_nsImageModule_h
+#endif  // mozilla_image_build_nsImageModule_h

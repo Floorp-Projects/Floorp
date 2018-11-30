@@ -9,8 +9,8 @@
 #include "nsIDOMEventListener.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/Event.h" // for Event
-#include "mozilla/dom/EventBinding.h" // for Event
+#include "mozilla/dom/Event.h"         // for Event
+#include "mozilla/dom/EventBinding.h"  // for Event
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/TextEvents.h"
@@ -19,21 +19,15 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsXBLEventHandler::nsXBLEventHandler(nsXBLPrototypeHandler* aHandler)
-  : mProtoHandler(aHandler)
-{
-}
+    : mProtoHandler(aHandler) {}
 
-nsXBLEventHandler::~nsXBLEventHandler()
-{
-}
+nsXBLEventHandler::~nsXBLEventHandler() {}
 
 NS_IMPL_ISUPPORTS(nsXBLEventHandler, nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsXBLEventHandler::HandleEvent(Event* aEvent)
-{
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
+nsXBLEventHandler::HandleEvent(Event* aEvent) {
+  if (!mProtoHandler) return NS_ERROR_FAILURE;
 
   uint8_t phase = mProtoHandler->GetPhase();
   if (phase == NS_PHASE_TARGET) {
@@ -42,8 +36,7 @@ nsXBLEventHandler::HandleEvent(Event* aEvent)
     }
   }
 
-  if (!EventMatched(aEvent))
-    return NS_OK;
+  if (!EventMatched(aEvent)) return NS_OK;
 
   mProtoHandler->ExecuteHandler(aEvent->GetCurrentTarget(), aEvent);
 
@@ -51,43 +44,30 @@ nsXBLEventHandler::HandleEvent(Event* aEvent)
 }
 
 nsXBLMouseEventHandler::nsXBLMouseEventHandler(nsXBLPrototypeHandler* aHandler)
-  : nsXBLEventHandler(aHandler)
-{
-}
+    : nsXBLEventHandler(aHandler) {}
 
-nsXBLMouseEventHandler::~nsXBLMouseEventHandler()
-{
-}
+nsXBLMouseEventHandler::~nsXBLMouseEventHandler() {}
 
-bool
-nsXBLMouseEventHandler::EventMatched(Event* aEvent)
-{
+bool nsXBLMouseEventHandler::EventMatched(Event* aEvent) {
   MouseEvent* mouse = aEvent->AsMouseEvent();
   return mouse && mProtoHandler->MouseEventMatched(mouse);
 }
 
 nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsAtom* aEventType, uint8_t aPhase,
                                            uint8_t aType)
-  : mEventType(aEventType),
-    mPhase(aPhase),
-    mType(aType),
-    mIsBoundToChrome(false),
-    mUsingContentXBLScope(false)
-{
-}
+    : mEventType(aEventType),
+      mPhase(aPhase),
+      mType(aType),
+      mIsBoundToChrome(false),
+      mUsingContentXBLScope(false) {}
 
-nsXBLKeyEventHandler::~nsXBLKeyEventHandler()
-{
-}
+nsXBLKeyEventHandler::~nsXBLKeyEventHandler() {}
 
 NS_IMPL_ISUPPORTS(nsXBLKeyEventHandler, nsIDOMEventListener)
 
-bool
-nsXBLKeyEventHandler::ExecuteMatchedHandlers(
-                        KeyboardEvent* aKeyEvent,
-                        uint32_t aCharCode,
-                        const IgnoreModifierState& aIgnoreModifierState)
-{
+bool nsXBLKeyEventHandler::ExecuteMatchedHandlers(
+    KeyboardEvent* aKeyEvent, uint32_t aCharCode,
+    const IgnoreModifierState& aIgnoreModifierState) {
   WidgetEvent* event = aKeyEvent->WidgetEventPtr();
   nsCOMPtr<EventTarget> target = aKeyEvent->GetCurrentTarget();
 
@@ -96,8 +76,9 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
     nsXBLPrototypeHandler* handler = mProtoHandlers[i];
     bool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
     if ((event->IsTrusted() ||
-        (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
-        (!hasAllowUntrustedAttr && !mIsBoundToChrome && !mUsingContentXBLScope)) &&
+         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
+         (!hasAllowUntrustedAttr && !mIsBoundToChrome &&
+          !mUsingContentXBLScope)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreModifierState)) {
       handler->ExecuteHandler(target, aKeyEvent);
       executed = true;
@@ -121,11 +102,9 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
 }
 
 NS_IMETHODIMP
-nsXBLKeyEventHandler::HandleEvent(Event* aEvent)
-{
+nsXBLKeyEventHandler::HandleEvent(Event* aEvent) {
   uint32_t count = mProtoHandlers.Length();
-  if (count == 0)
-    return NS_ERROR_FAILURE;
+  if (count == 0) return NS_ERROR_FAILURE;
 
   if (mPhase == NS_PHASE_TARGET) {
     if (aEvent->EventPhase() != Event_Binding::AT_TARGET) {
@@ -139,7 +118,7 @@ nsXBLKeyEventHandler::HandleEvent(Event* aEvent)
   }
 
   WidgetKeyboardEvent* nativeKeyboardEvent =
-    aEvent->WidgetEventPtr()->AsKeyboardEvent();
+      aEvent->WidgetEventPtr()->AsKeyboardEvent();
   MOZ_ASSERT(nativeKeyboardEvent);
   AutoShortcutKeyCandidateArray shortcutKeys;
   nativeKeyboardEvent->GetShortcutKeyCandidates(shortcutKeys);
@@ -162,10 +141,8 @@ nsXBLKeyEventHandler::HandleEvent(Event* aEvent)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-already_AddRefed<nsXBLEventHandler>
-NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
-                      nsAtom* aEventType)
-{
+already_AddRefed<nsXBLEventHandler> NS_NewXBLEventHandler(
+    nsXBLPrototypeHandler* aHandler, nsAtom* aEventType) {
   RefPtr<nsXBLEventHandler> handler;
 
   switch (nsContentUtils::GetEventClassID(nsDependentAtomString(aEventType))) {

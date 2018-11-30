@@ -34,14 +34,11 @@ namespace dom {
 //----------------------------------------------------------------------
 bool Attr::sInitialized;
 
-Attr::Attr(nsDOMAttributeMap *aAttrMap,
-           already_AddRefed<dom::NodeInfo>&& aNodeInfo,
-           const nsAString& aValue)
-  : nsINode(std::move(aNodeInfo)), mAttrMap(aAttrMap), mValue(aValue)
-{
+Attr::Attr(nsDOMAttributeMap* aAttrMap,
+           already_AddRefed<dom::NodeInfo>&& aNodeInfo, const nsAString& aValue)
+    : nsINode(std::move(aNodeInfo)), mAttrMap(aAttrMap), mValue(aValue) {
   MOZ_ASSERT(mNodeInfo, "We must get a nodeinfo here!");
-  MOZ_ASSERT(mNodeInfo->NodeType() == ATTRIBUTE_NODE,
-             "Wrong nodeType");
+  MOZ_ASSERT(mNodeInfo->NodeType() == ATTRIBUTE_NODE, "Wrong nodeType");
 
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.
@@ -97,12 +94,10 @@ NS_INTERFACE_TABLE_HEAD(Attr)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Attr)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(Attr,
-                                                   nsNodeUtils::LastRelease(this))
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
+    Attr, nsNodeUtils::LastRelease(this))
 
-void
-Attr::SetMap(nsDOMAttributeMap *aMap)
-{
+void Attr::SetMap(nsDOMAttributeMap* aMap) {
   if (mAttrMap && !aMap && sInitialized) {
     // We're breaking a relationship with content and not getting a new one,
     // need to locally cache value. GetValue() does that.
@@ -112,9 +107,7 @@ Attr::SetMap(nsDOMAttributeMap *aMap)
   mAttrMap = aMap;
 }
 
-Element*
-Attr::GetElement() const
-{
+Element* Attr::GetElement() const {
   if (!mAttrMap) {
     return nullptr;
   }
@@ -122,47 +115,36 @@ Attr::GetElement() const
   return content ? content->AsElement() : nullptr;
 }
 
-nsresult
-Attr::SetOwnerDocument(nsIDocument* aDocument)
-{
+nsresult Attr::SetOwnerDocument(nsIDocument* aDocument) {
   NS_ASSERTION(aDocument, "Missing document");
 
-  nsIDocument *doc = OwnerDoc();
+  nsIDocument* doc = OwnerDoc();
   NS_ASSERTION(doc != aDocument, "bad call to Attr::SetOwnerDocument");
   doc->DeleteAllPropertiesFor(this);
 
-  RefPtr<dom::NodeInfo> newNodeInfo =
-    aDocument->NodeInfoManager()->
-      GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
-                  mNodeInfo->NamespaceID(), ATTRIBUTE_NODE);
+  RefPtr<dom::NodeInfo> newNodeInfo = aDocument->NodeInfoManager()->GetNodeInfo(
+      mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
+      mNodeInfo->NamespaceID(), ATTRIBUTE_NODE);
   NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
   mNodeInfo.swap(newNodeInfo);
 
   return NS_OK;
 }
 
-void
-Attr::GetName(nsAString& aName)
-{
-  aName = NodeName();
-}
+void Attr::GetName(nsAString& aName) { aName = NodeName(); }
 
-void
-Attr::GetValue(nsAString& aValue)
-{
+void Attr::GetValue(nsAString& aValue) {
   Element* element = GetElement();
   if (element) {
     RefPtr<nsAtom> nameAtom = mNodeInfo->NameAtom();
     element->GetAttr(mNodeInfo->NamespaceID(), nameAtom, aValue);
-  }
-  else {
+  } else {
     aValue = mValue;
   }
 }
 
-void
-Attr::SetValue(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
-{
+void Attr::SetValue(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal,
+                    ErrorResult& aRv) {
   Element* element = GetElement();
   if (!element) {
     mValue = aValue;
@@ -170,47 +152,27 @@ Attr::SetValue(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, Erro
   }
 
   RefPtr<nsAtom> nameAtom = mNodeInfo->NameAtom();
-  aRv = element->SetAttr(mNodeInfo->NamespaceID(),
-                         nameAtom,
-                         mNodeInfo->GetPrefixAtom(),
-                         aValue,
-                         aTriggeringPrincipal,
-                         true);
+  aRv = element->SetAttr(mNodeInfo->NamespaceID(), nameAtom,
+                         mNodeInfo->GetPrefixAtom(), aValue,
+                         aTriggeringPrincipal, true);
 }
 
-void
-Attr::SetValue(const nsAString& aValue, ErrorResult& aRv)
-{
+void Attr::SetValue(const nsAString& aValue, ErrorResult& aRv) {
   SetValue(aValue, nullptr, aRv);
 }
 
-bool
-Attr::Specified() const
-{
-  return true;
-}
+bool Attr::Specified() const { return true; }
 
-Element*
-Attr::GetOwnerElement(ErrorResult& aRv)
-{
-  return GetElement();
-}
+Element* Attr::GetOwnerElement(ErrorResult& aRv) { return GetElement(); }
 
-void
-Attr::GetNodeValueInternal(nsAString& aNodeValue)
-{
-  GetValue(aNodeValue);
-}
+void Attr::GetNodeValueInternal(nsAString& aNodeValue) { GetValue(aNodeValue); }
 
-void
-Attr::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& aError)
-{
+void Attr::SetNodeValueInternal(const nsAString& aNodeValue,
+                                ErrorResult& aError) {
   SetValue(aNodeValue, nullptr, aError);
 }
 
-nsresult
-Attr::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
-{
+nsresult Attr::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
   nsAutoString value;
   const_cast<Attr*>(this)->GetValue(value);
 
@@ -224,64 +186,40 @@ Attr::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
   return NS_OK;
 }
 
-already_AddRefed<nsIURI>
-Attr::GetBaseURI(bool aTryUseXHRDocBaseURI) const
-{
+already_AddRefed<nsIURI> Attr::GetBaseURI(bool aTryUseXHRDocBaseURI) const {
   Element* parent = GetElement();
 
   return parent ? parent->GetBaseURI(aTryUseXHRDocBaseURI) : nullptr;
 }
 
-void
-Attr::GetTextContentInternal(nsAString& aTextContent,
-                             OOMReporter& aError)
-{
+void Attr::GetTextContentInternal(nsAString& aTextContent,
+                                  OOMReporter& aError) {
   GetValue(aTextContent);
 }
 
-void
-Attr::SetTextContentInternal(const nsAString& aTextContent,
-                             nsIPrincipal* aSubjectPrincipal,
-                             ErrorResult& aError)
-{
+void Attr::SetTextContentInternal(const nsAString& aTextContent,
+                                  nsIPrincipal* aSubjectPrincipal,
+                                  ErrorResult& aError) {
   SetNodeValueInternal(aTextContent, aError);
 }
 
-bool
-Attr::IsNodeOfType(uint32_t aFlags) const
-{
-    return false;
-}
+bool Attr::IsNodeOfType(uint32_t aFlags) const { return false; }
 
-void
-Attr::GetEventTargetParent(EventChainPreVisitor& aVisitor)
-{
+void Attr::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.mCanHandle = true;
 }
 
-void
-Attr::Initialize()
-{
-  sInitialized = true;
-}
+void Attr::Initialize() { sInitialized = true; }
 
-void
-Attr::Shutdown()
-{
-  sInitialized = false;
-}
+void Attr::Shutdown() { sInitialized = false; }
 
-JSObject*
-Attr::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* Attr::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Attr_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Attr::ConstructUbiNode(void* storage)
-{
+void Attr::ConstructUbiNode(void* storage) {
   JS::ubi::Concrete<Attr>::construct(storage, this);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

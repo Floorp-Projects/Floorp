@@ -11,60 +11,47 @@
 namespace mozilla {
 namespace gfx {
 
-Point
-GetBezierPoint(const Bezier& aBezier, Float t)
-{
+Point GetBezierPoint(const Bezier& aBezier, Float t) {
   Float s = 1.0f - t;
 
-  return Point(
-    aBezier.mPoints[0].x * s * s * s +
-    3.0f * aBezier.mPoints[1].x * t * s * s +
-    3.0f * aBezier.mPoints[2].x * t * t * s +
-    aBezier.mPoints[3].x * t * t * t,
-    aBezier.mPoints[0].y * s * s * s +
-    3.0f * aBezier.mPoints[1].y * t * s * s +
-    3.0f * aBezier.mPoints[2].y * t * t * s +
-    aBezier.mPoints[3].y * t * t * t
-    );
+  return Point(aBezier.mPoints[0].x * s * s * s +
+                   3.0f * aBezier.mPoints[1].x * t * s * s +
+                   3.0f * aBezier.mPoints[2].x * t * t * s +
+                   aBezier.mPoints[3].x * t * t * t,
+               aBezier.mPoints[0].y * s * s * s +
+                   3.0f * aBezier.mPoints[1].y * t * s * s +
+                   3.0f * aBezier.mPoints[2].y * t * t * s +
+                   aBezier.mPoints[3].y * t * t * t);
 }
 
-Point
-GetBezierDifferential(const Bezier& aBezier, Float t)
-{
+Point GetBezierDifferential(const Bezier& aBezier, Float t) {
   // Return P'(t).
 
   Float s = 1.0f - t;
 
   return Point(
-    -3.0f * ((aBezier.mPoints[0].x - aBezier.mPoints[1].x) * s * s +
-             2.0f * (aBezier.mPoints[1].x - aBezier.mPoints[2].x) * t * s +
-             (aBezier.mPoints[2].x - aBezier.mPoints[3].x) * t * t),
-    -3.0f * ((aBezier.mPoints[0].y - aBezier.mPoints[1].y) * s * s +
-             2.0f * (aBezier.mPoints[1].y - aBezier.mPoints[2].y) * t * s+
-             (aBezier.mPoints[2].y - aBezier.mPoints[3].y) * t * t)
-    );
+      -3.0f * ((aBezier.mPoints[0].x - aBezier.mPoints[1].x) * s * s +
+               2.0f * (aBezier.mPoints[1].x - aBezier.mPoints[2].x) * t * s +
+               (aBezier.mPoints[2].x - aBezier.mPoints[3].x) * t * t),
+      -3.0f * ((aBezier.mPoints[0].y - aBezier.mPoints[1].y) * s * s +
+               2.0f * (aBezier.mPoints[1].y - aBezier.mPoints[2].y) * t * s +
+               (aBezier.mPoints[2].y - aBezier.mPoints[3].y) * t * t));
 }
 
-Point
-GetBezierDifferential2(const Bezier& aBezier, Float t)
-{
+Point GetBezierDifferential2(const Bezier& aBezier, Float t) {
   // Return P''(t).
 
   Float s = 1.0f - t;
 
-  return Point(
-    6.0f * ((aBezier.mPoints[0].x - aBezier.mPoints[1].x) * s -
-            (aBezier.mPoints[1].x - aBezier.mPoints[2].x) * (s - t) -
-            (aBezier.mPoints[2].x - aBezier.mPoints[3].x) * t),
-    6.0f * ((aBezier.mPoints[0].y - aBezier.mPoints[1].y) * s -
-            (aBezier.mPoints[1].y - aBezier.mPoints[2].y) * (s - t) -
-            (aBezier.mPoints[2].y - aBezier.mPoints[3].y) * t)
-    );
+  return Point(6.0f * ((aBezier.mPoints[0].x - aBezier.mPoints[1].x) * s -
+                       (aBezier.mPoints[1].x - aBezier.mPoints[2].x) * (s - t) -
+                       (aBezier.mPoints[2].x - aBezier.mPoints[3].x) * t),
+               6.0f * ((aBezier.mPoints[0].y - aBezier.mPoints[1].y) * s -
+                       (aBezier.mPoints[1].y - aBezier.mPoints[2].y) * (s - t) -
+                       (aBezier.mPoints[2].y - aBezier.mPoints[3].y) * t));
 }
 
-Float
-GetBezierLength(const Bezier& aBezier, Float a, Float b)
-{
+Float GetBezierLength(const Bezier& aBezier, Float a, Float b) {
   if (a < 0.5f && b > 0.5f) {
     // To increase the accuracy, split into two parts.
     return GetBezierLength(aBezier, a, 0.5f) +
@@ -88,9 +75,7 @@ GetBezierLength(const Bezier& aBezier, Float a, Float b)
   return (b - a) / 6.0f * (fa + 4.0f * fab + fb);
 }
 
-static void
-SplitBezierA(Bezier* aSubBezier, const Bezier& aBezier, Float t)
-{
+static void SplitBezierA(Bezier* aSubBezier, const Bezier& aBezier, Float t) {
   // Split bezier curve into [0,t] and [t,1] parts, and return [0,t] part.
 
   Float s = 1.0f - t;
@@ -110,9 +95,7 @@ SplitBezierA(Bezier* aSubBezier, const Bezier& aBezier, Float t)
   aSubBezier->mPoints[3] = aSubBezier->mPoints[2] * s + tmp1 * t;
 }
 
-static void
-SplitBezierB(Bezier* aSubBezier, const Bezier& aBezier, Float t)
-{
+static void SplitBezierB(Bezier* aSubBezier, const Bezier& aBezier, Float t) {
   // Split bezier curve into [0,t] and [t,1] parts, and return [t,1] part.
 
   Float s = 1.0f - t;
@@ -132,9 +115,8 @@ SplitBezierB(Bezier* aSubBezier, const Bezier& aBezier, Float t)
   aSubBezier->mPoints[0] = tmp1 * s + aSubBezier->mPoints[1] * t;
 }
 
-void
-GetSubBezier(Bezier* aSubBezier, const Bezier& aBezier, Float t1, Float t2)
-{
+void GetSubBezier(Bezier* aSubBezier, const Bezier& aBezier, Float t1,
+                  Float t2) {
   Bezier tmp;
   SplitBezierB(&tmp, aBezier, t1);
 
@@ -146,10 +128,8 @@ GetSubBezier(Bezier* aSubBezier, const Bezier& aBezier, Float t1, Float t2)
   }
 }
 
-static Point
-BisectBezierNearestPoint(const Bezier& aBezier, const Point& aTarget,
-                         Float* aT)
-{
+static Point BisectBezierNearestPoint(const Bezier& aBezier,
+                                      const Point& aTarget, Float* aT) {
   // Find a nearest point on bezier curve with Binary search.
   // Called from FindBezierNearestPoint.
 
@@ -192,10 +172,8 @@ BisectBezierNearestPoint(const Bezier& aBezier, const Point& aTarget,
   return P;
 }
 
-Point
-FindBezierNearestPoint(const Bezier& aBezier, const Point& aTarget,
-                       Float aInitialT, Float* aT)
-{
+Point FindBezierNearestPoint(const Bezier& aBezier, const Point& aTarget,
+                             Float aInitialT, Float* aT) {
   // Find a nearest point on bezier curve with Newton's method.
   // It converges within 4 iterations in most cases.
   //
@@ -241,19 +219,14 @@ FindBezierNearestPoint(const Bezier& aBezier, const Point& aTarget,
   return P;
 }
 
-void
-GetBezierPointsForCorner(Bezier* aBezier, Corner aCorner,
-                         const Point& aCornerPoint, const Size& aCornerSize)
-{
+void GetBezierPointsForCorner(Bezier* aBezier, Corner aCorner,
+                              const Point& aCornerPoint,
+                              const Size& aCornerSize) {
   // Calculate bezier control points for elliptic arc.
 
   const Float signsList[4][2] = {
-    { +1.0f, +1.0f },
-    { -1.0f, +1.0f },
-    { -1.0f, -1.0f },
-    { +1.0f, -1.0f }
-  };
-  const Float (& signs)[2] = signsList[aCorner];
+      {+1.0f, +1.0f}, {-1.0f, +1.0f}, {-1.0f, -1.0f}, {+1.0f, -1.0f}};
+  const Float(&signs)[2] = signsList[aCorner];
 
   aBezier->mPoints[0] = aCornerPoint;
   aBezier->mPoints[0].x += signs[0] * aCornerSize.width;
@@ -268,9 +241,7 @@ GetBezierPointsForCorner(Bezier* aBezier, Corner aCorner,
   aBezier->mPoints[2].y -= signs[1] * aCornerSize.height * kKappaFactor;
 }
 
-Float
-GetQuarterEllipticArcLength(Float a, Float b)
-{
+Float GetQuarterEllipticArcLength(Float a, Float b) {
   // Calculate the approximate length of a quarter elliptic arc formed by radii
   // (a, b), by Ramanujan's approximation of the perimeter p of an ellipse.
   //           _                                                     _
@@ -302,10 +273,9 @@ GetQuarterEllipticArcLength(Float a, Float b)
   return p / 4.0f;
 }
 
-Float
-CalculateDistanceToEllipticArc(const Point& P, const Point& normal,
-                               const Point& origin, Float width, Float height)
-{
+Float CalculateDistanceToEllipticArc(const Point& P, const Point& normal,
+                                     const Point& origin, Float width,
+                                     Float height) {
   // Solve following equations with n and return smaller n.
   //
   // /  (x, y) = P + n * normal
@@ -326,17 +296,17 @@ CalculateDistanceToEllipticArc(const Point& P, const Point& normal,
 
   Float S = sqrt(B * B - A * C);
 
-  Float n1 = - B + S;
-  Float n2 = - B - S;
+  Float n1 = -B + S;
+  Float n2 = -B - S;
 
 #ifdef DEBUG
-  Float epsilon = (Float) 0.001;
+  Float epsilon = (Float)0.001;
   MOZ_ASSERT(n1 >= -epsilon);
   MOZ_ASSERT(n2 >= -epsilon);
 #endif
 
-  return std::max((n1 < n2 ? n1 : n2) / A, (Float) 0.0);
+  return std::max((n1 < n2 ? n1 : n2) / A, (Float)0.0);
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

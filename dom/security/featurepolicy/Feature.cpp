@@ -10,16 +10,12 @@
 namespace mozilla {
 namespace dom {
 
-void
-Feature::GetAllowList(nsTArray<nsCOMPtr<nsIPrincipal>>& aList) const
-{
+void Feature::GetAllowList(nsTArray<nsCOMPtr<nsIPrincipal>>& aList) const {
   MOZ_ASSERT(mPolicy == eAllowList);
   aList.AppendElements(mAllowList);
 }
 
-bool
-Feature::Allows(nsIPrincipal* aPrincipal) const
-{
+bool Feature::Allows(nsIPrincipal* aPrincipal) const {
   if (mPolicy == eNone) {
     return false;
   }
@@ -32,56 +28,34 @@ Feature::Allows(nsIPrincipal* aPrincipal) const
 }
 
 Feature::Feature(const nsAString& aFeatureName)
-  : mFeatureName(aFeatureName)
-  , mPolicy(eAllowList)
-{}
+    : mFeatureName(aFeatureName), mPolicy(eAllowList) {}
 
 Feature::~Feature() = default;
 
-const nsAString&
-Feature::Name() const
-{
-  return mFeatureName;
-}
+const nsAString& Feature::Name() const { return mFeatureName; }
 
-void
-Feature::SetAllowsNone()
-{
+void Feature::SetAllowsNone() {
   mPolicy = eNone;
   mAllowList.Clear();
 }
 
-bool
-Feature::AllowsNone() const
-{
-  return mPolicy == eNone;
-}
+bool Feature::AllowsNone() const { return mPolicy == eNone; }
 
-void
-Feature::SetAllowsAll()
-{
+void Feature::SetAllowsAll() {
   mPolicy = eAll;
   mAllowList.Clear();
 }
 
-bool
-Feature::AllowsAll() const
-{
-  return mPolicy == eAll;
-}
+bool Feature::AllowsAll() const { return mPolicy == eAll; }
 
-void
-Feature::AppendToAllowList(nsIPrincipal* aPrincipal)
-{
+void Feature::AppendToAllowList(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aPrincipal);
 
   mPolicy = eAllowList;
   mAllowList.AppendElement(aPrincipal);
 }
 
-bool
-Feature::AllowListContains(nsIPrincipal* aPrincipal) const
-{
+bool Feature::AllowListContains(nsIPrincipal* aPrincipal) const {
   MOZ_ASSERT(aPrincipal);
 
   if (!HasAllowList()) {
@@ -89,8 +63,8 @@ Feature::AllowListContains(nsIPrincipal* aPrincipal) const
   }
 
   for (nsIPrincipal* principal : mAllowList) {
-    if (BasePrincipal::Cast(principal)->Subsumes(aPrincipal,
-                                                 BasePrincipal::ConsiderDocumentDomain)) {
+    if (BasePrincipal::Cast(principal)->Subsumes(
+            aPrincipal, BasePrincipal::ConsiderDocumentDomain)) {
       return true;
     }
   }
@@ -98,11 +72,7 @@ Feature::AllowListContains(nsIPrincipal* aPrincipal) const
   return false;
 }
 
-bool
-Feature::HasAllowList() const
-{
-  return mPolicy == eAllowList;
-}
+bool Feature::HasAllowList() const { return mPolicy == eAllowList; }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

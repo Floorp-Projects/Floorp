@@ -20,8 +20,8 @@ namespace PluginUtilsWin {
 nsresult RegisterForAudioDeviceChanges(PluginModuleParent* aModuleParent,
                                        bool aShouldRegister);
 
-} // namespace PluginUtilsWin
-} // namespace plugins
-} // namespace mozilla
+}  // namespace PluginUtilsWin
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif //dom_plugins_PluginUtilsWin_h
+#endif  // dom_plugins_PluginUtilsWin_h

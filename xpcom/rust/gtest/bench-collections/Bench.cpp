@@ -46,7 +46,7 @@
 // get separate output files for each process, with a PID suffix.)
 
 #include "gtest/gtest.h"
-#include "gtest/MozGTestBench.h" // For MOZ_GTEST_BENCH
+#include "gtest/MozGTestBench.h"  // For MOZ_GTEST_BENCH
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
@@ -62,32 +62,27 @@ using namespace mozilla;
 // - No duplicates in the first VALS_LEN results, which is useful for ensuring
 //   the tables get to a particular size, and also for guaranteeing lookups
 //   that fail.
-uintptr_t
-MyRand()
-{
+uintptr_t MyRand() {
   static uintptr_t s = 0;
   s = s * 1103515245 + 12345;
   return s;
 }
 
 // Keep this in sync with Params in bench.rs.
-struct Params
-{
+struct Params {
   const char* mConfigName;
-  size_t mNumInserts;           // Insert this many unique keys
-  size_t mNumSuccessfulLookups; // Does mNumInserts lookups each time
-  size_t mNumFailingLookups;    // Does mNumInserts lookups each time
-  size_t mNumIterations;        // Iterates the full table each time
-  bool mRemoveInserts;          // Remove all entries at end?
+  size_t mNumInserts;            // Insert this many unique keys
+  size_t mNumSuccessfulLookups;  // Does mNumInserts lookups each time
+  size_t mNumFailingLookups;     // Does mNumInserts lookups each time
+  size_t mNumIterations;         // Iterates the full table each time
+  bool mRemoveInserts;           // Remove all entries at end?
 };
 
 // We don't use std::unordered_{set,map}, but it's an interesting thing to
 // benchmark against.
 //
 // Keep this in sync with all the other Bench_*() functions.
-void
-Bench_Cpp_unordered_set(const Params* aParams, void** aVals, size_t aLen)
-{
+void Bench_Cpp_unordered_set(const Params* aParams, void** aVals, size_t aLen) {
   std::unordered_set<void*> hs;
 
   for (size_t j = 0; j < aParams->mNumInserts; j++) {
@@ -101,7 +96,7 @@ Bench_Cpp_unordered_set(const Params* aParams, void** aVals, size_t aLen)
   }
 
   for (size_t i = 0; i < aParams->mNumFailingLookups; i++) {
-    for (size_t j = aParams->mNumInserts; j < aParams->mNumInserts*2; j++) {
+    for (size_t j = aParams->mNumInserts; j < aParams->mNumInserts * 2; j++) {
       MOZ_RELEASE_ASSERT(hs.find(aVals[j]) == hs.end());
     }
   }
@@ -127,9 +122,7 @@ Bench_Cpp_unordered_set(const Params* aParams, void** aVals, size_t aLen)
 }
 
 // Keep this in sync with all the other Bench_*() functions.
-void
-Bench_Cpp_PLDHashTable(const Params* aParams, void** aVals, size_t aLen)
-{
+void Bench_Cpp_PLDHashTable(const Params* aParams, void** aVals, size_t aLen) {
   PLDHashTable hs(PLDHashTable::StubOps(), sizeof(PLDHashEntryStub));
 
   for (size_t j = 0; j < aParams->mNumInserts; j++) {
@@ -145,7 +138,7 @@ Bench_Cpp_PLDHashTable(const Params* aParams, void** aVals, size_t aLen)
   }
 
   for (size_t i = 0; i < aParams->mNumFailingLookups; i++) {
-    for (size_t j = aParams->mNumInserts; j < aParams->mNumInserts*2; j++) {
+    for (size_t j = aParams->mNumInserts; j < aParams->mNumInserts * 2; j++) {
       MOZ_RELEASE_ASSERT(!hs.Search(aVals[j]));
     }
   }
@@ -170,9 +163,7 @@ Bench_Cpp_PLDHashTable(const Params* aParams, void** aVals, size_t aLen)
 }
 
 // Keep this in sync with all the other Bench_*() functions.
-void
-Bench_Cpp_MozHashSet(const Params* aParams, void** aVals, size_t aLen)
-{
+void Bench_Cpp_MozHashSet(const Params* aParams, void** aVals, size_t aLen) {
   mozilla::HashSet<void*, mozilla::DefaultHasher<void*>, MallocAllocPolicy> hs;
 
   for (size_t j = 0; j < aParams->mNumInserts; j++) {
@@ -186,7 +177,7 @@ Bench_Cpp_MozHashSet(const Params* aParams, void** aVals, size_t aLen)
   }
 
   for (size_t i = 0; i < aParams->mNumFailingLookups; i++) {
-    for (size_t j = aParams->mNumInserts; j < aParams->mNumInserts*2; j++) {
+    for (size_t j = aParams->mNumInserts; j < aParams->mNumInserts * 2; j++) {
       MOZ_RELEASE_ASSERT(!hs.has(aVals[j]));
     }
   }
@@ -222,21 +213,19 @@ static const size_t VALS_LEN = 131072;
 // Note that no "Inserts" value can exceed VALS_LEN.
 // Also, if any failing lookups are done, Inserts must be <= VALS_LEN/2.
 const Params gParamsList[] = {
-  // clang-format off
+    // clang-format off
   //                           Successful Failing              Remove
   //                 Inserts   lookups    lookups  Iterations  inserts
   { "succ_lookups",  1024,     5000,      0,       0,          false },
   { "fail_lookups",  1024,     0,         5000,    0,          false },
   { "insert_remove", VALS_LEN, 0,         0,       0,          true  },
   { "iterate",       1024,     0,         0,       5000,       false },
-  // clang-format on
+    // clang-format on
 };
 
-class BenchCollections : public ::testing::Test
-{
-protected:
-  void SetUp() override
-  {
+class BenchCollections : public ::testing::Test {
+ protected:
+  void SetUp() override {
     StaticMutexAutoLock lock(sValsMutex);
 
     if (!sVals) {
@@ -256,9 +245,8 @@ protected:
     printf("%14s\n", "total");
   }
 
-public:
-  void BenchImpl(void(*aBench)(const Params*, void**, size_t))
-  {
+ public:
+  void BenchImpl(void (*aBench)(const Params*, void**, size_t)) {
     StaticMutexAutoLock lock(sValsMutex);
 
     double total = 0;
@@ -274,7 +262,7 @@ public:
     printf("%11.1f ms\n", total);
   }
 
-private:
+ private:
   // Random values used in the benchmarks.
   static void** sVals;
 
@@ -286,27 +274,20 @@ private:
 void** BenchCollections::sVals;
 StaticMutex BenchCollections::sValsMutex;
 
-MOZ_GTEST_BENCH_F(BenchCollections, unordered_set, [this] {
-  BenchImpl(Bench_Cpp_unordered_set);
-});
+MOZ_GTEST_BENCH_F(BenchCollections, unordered_set,
+                  [this] { BenchImpl(Bench_Cpp_unordered_set); });
 
-MOZ_GTEST_BENCH_F(BenchCollections, PLDHash, [this] {
-  BenchImpl(Bench_Cpp_PLDHashTable);
-});
+MOZ_GTEST_BENCH_F(BenchCollections, PLDHash,
+                  [this] { BenchImpl(Bench_Cpp_PLDHashTable); });
 
-MOZ_GTEST_BENCH_F(BenchCollections, MozHash, [this] {
-  BenchImpl(Bench_Cpp_MozHashSet);
-});
+MOZ_GTEST_BENCH_F(BenchCollections, MozHash,
+                  [this] { BenchImpl(Bench_Cpp_MozHashSet); });
 
-MOZ_GTEST_BENCH_F(BenchCollections, RustHash, [this] {
-  BenchImpl(Bench_Rust_HashSet);
-});
+MOZ_GTEST_BENCH_F(BenchCollections, RustHash,
+                  [this] { BenchImpl(Bench_Rust_HashSet); });
 
-MOZ_GTEST_BENCH_F(BenchCollections, RustFnvHash, [this] {
-  BenchImpl(Bench_Rust_FnvHashSet);
-});
+MOZ_GTEST_BENCH_F(BenchCollections, RustFnvHash,
+                  [this] { BenchImpl(Bench_Rust_FnvHashSet); });
 
-MOZ_GTEST_BENCH_F(BenchCollections, RustFxHash, [this] {
-  BenchImpl(Bench_Rust_FxHashSet);
-});
-
+MOZ_GTEST_BENCH_F(BenchCollections, RustFxHash,
+                  [this] { BenchImpl(Bench_Rust_FxHashSet); });

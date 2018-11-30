@@ -28,38 +28,26 @@ class WorkerThread;
 
 namespace workerinternals {
 
-class RuntimeService final : public nsIObserver
-{
-  struct WorkerDomainInfo
-  {
+class RuntimeService final : public nsIObserver {
+  struct WorkerDomainInfo {
     nsCString mDomain;
     nsTArray<WorkerPrivate*> mActiveWorkers;
     nsTArray<WorkerPrivate*> mActiveServiceWorkers;
     nsTArray<WorkerPrivate*> mQueuedWorkers;
     uint32_t mChildWorkerCount;
 
-    WorkerDomainInfo()
-    : mActiveWorkers(1), mChildWorkerCount(0)
-    { }
+    WorkerDomainInfo() : mActiveWorkers(1), mChildWorkerCount(0) {}
 
-    uint32_t
-    ActiveWorkerCount() const
-    {
-      return mActiveWorkers.Length() +
-             mChildWorkerCount;
+    uint32_t ActiveWorkerCount() const {
+      return mActiveWorkers.Length() + mChildWorkerCount;
     }
 
-    uint32_t
-    ActiveServiceWorkerCount() const
-    {
+    uint32_t ActiveServiceWorkerCount() const {
       return mActiveServiceWorkers.Length();
     }
 
-    bool
-    HasNoWorkers() const
-    {
-      return ActiveWorkerCount() == 0 &&
-             ActiveServiceWorkerCount() == 0;
+    bool HasNoWorkers() const {
+      return ActiveWorkerCount() == 0 && ActiveServiceWorkerCount() == 0;
     }
   };
 
@@ -74,17 +62,16 @@ class RuntimeService final : public nsIObserver
   nsTArray<IdleThreadInfo> mIdleThreadArray;
 
   // *Not* protected by mMutex.
-  nsClassHashtable<nsPtrHashKey<nsPIDOMWindowInner>,
-                   nsTArray<WorkerPrivate*> > mWindowMap;
+  nsClassHashtable<nsPtrHashKey<nsPIDOMWindowInner>, nsTArray<WorkerPrivate*> >
+      mWindowMap;
 
   // Only used on the main thread.
   nsCOMPtr<nsITimer> mIdleThreadTimer;
 
   static workerinternals::JSSettings sDefaultJSSettings;
 
-public:
-  struct NavigatorProperties
-  {
+ public:
+  struct NavigatorProperties {
     nsString mAppName;
     nsString mAppNameOverridden;
     nsString mAppVersion;
@@ -94,7 +81,7 @@ public:
     nsTArray<nsString> mLanguages;
   };
 
-private:
+ private:
   NavigatorProperties mNavigatorProperties;
 
   // True when the observer service holds a reference to this object.
@@ -102,146 +89,108 @@ private:
   bool mShuttingDown;
   bool mNavigatorPropertiesLoaded;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static RuntimeService*
-  GetOrCreateService();
+  static RuntimeService* GetOrCreateService();
 
-  static RuntimeService*
-  GetService();
+  static RuntimeService* GetService();
 
-  bool
-  RegisterWorker(WorkerPrivate* aWorkerPrivate);
+  bool RegisterWorker(WorkerPrivate* aWorkerPrivate);
 
-  void
-  UnregisterWorker(WorkerPrivate* aWorkerPrivate);
+  void UnregisterWorker(WorkerPrivate* aWorkerPrivate);
 
-  void
-  CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-  void
-  FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-  void
-  ThawWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void ThawWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-  void
-  SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-  void
-  ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-  void
-  PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow);
+  void PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow);
 
-  const NavigatorProperties&
-  GetNavigatorProperties() const
-  {
+  const NavigatorProperties& GetNavigatorProperties() const {
     return mNavigatorProperties;
   }
 
-  void
-  NoteIdleThread(WorkerThread* aThread);
+  void NoteIdleThread(WorkerThread* aThread);
 
-  static void
-  GetDefaultJSSettings(workerinternals::JSSettings& aSettings)
-  {
+  static void GetDefaultJSSettings(workerinternals::JSSettings& aSettings) {
     AssertIsOnMainThread();
     aSettings = sDefaultJSSettings;
   }
 
-  static void
-  SetDefaultContextOptions(const JS::ContextOptions& aContextOptions)
-  {
+  static void SetDefaultContextOptions(
+      const JS::ContextOptions& aContextOptions) {
     AssertIsOnMainThread();
     sDefaultJSSettings.contextOptions = aContextOptions;
   }
 
-  void
-  UpdateAppNameOverridePreference(const nsAString& aValue);
+  void UpdateAppNameOverridePreference(const nsAString& aValue);
 
-  void
-  UpdateAppVersionOverridePreference(const nsAString& aValue);
+  void UpdateAppVersionOverridePreference(const nsAString& aValue);
 
-  void
-  UpdatePlatformOverridePreference(const nsAString& aValue);
+  void UpdatePlatformOverridePreference(const nsAString& aValue);
 
-  void
-  UpdateAllWorkerContextOptions();
+  void UpdateAllWorkerContextOptions();
 
-  void
-  UpdateAllWorkerLanguages(const nsTArray<nsString>& aLanguages);
+  void UpdateAllWorkerLanguages(const nsTArray<nsString>& aLanguages);
 
-  static void
-  SetDefaultJSGCSettings(JSGCParamKey aKey, uint32_t aValue)
-  {
+  static void SetDefaultJSGCSettings(JSGCParamKey aKey, uint32_t aValue) {
     AssertIsOnMainThread();
     sDefaultJSSettings.ApplyGCSetting(aKey, aValue);
   }
 
-  void
-  UpdateAllWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue);
+  void UpdateAllWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue);
 
 #ifdef JS_GC_ZEAL
-  static void
-  SetDefaultGCZeal(uint8_t aGCZeal, uint32_t aFrequency)
-  {
+  static void SetDefaultGCZeal(uint8_t aGCZeal, uint32_t aFrequency) {
     AssertIsOnMainThread();
     sDefaultJSSettings.gcZeal = aGCZeal;
     sDefaultJSSettings.gcZealFrequency = aFrequency;
   }
 
-  void
-  UpdateAllWorkerGCZeal();
+  void UpdateAllWorkerGCZeal();
 #endif
 
-  void
-  GarbageCollectAllWorkers(bool aShrinking);
+  void GarbageCollectAllWorkers(bool aShrinking);
 
-  void
-  CycleCollectAllWorkers();
+  void CycleCollectAllWorkers();
 
-  void
-  SendOfflineStatusChangeEventToAllWorkers(bool aIsOffline);
+  void SendOfflineStatusChangeEventToAllWorkers(bool aIsOffline);
 
-  void
-  MemoryPressureAllWorkers();
+  void MemoryPressureAllWorkers();
 
   uint32_t ClampedHardwareConcurrency() const;
 
   void CrashIfHanging();
 
-private:
+ private:
   RuntimeService();
   ~RuntimeService();
 
-  nsresult
-  Init();
+  nsresult Init();
 
-  void
-  Shutdown();
+  void Shutdown();
 
-  void
-  Cleanup();
+  void Cleanup();
 
-  void
-  AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers);
+  void AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers);
 
-  void
-  GetWorkersForWindow(nsPIDOMWindowInner* aWindow,
-                      nsTArray<WorkerPrivate*>& aWorkers);
+  void GetWorkersForWindow(nsPIDOMWindowInner* aWindow,
+                           nsTArray<WorkerPrivate*>& aWorkers);
 
-  bool
-  ScheduleWorker(WorkerPrivate* aWorkerPrivate);
+  bool ScheduleWorker(WorkerPrivate* aWorkerPrivate);
 
-  static void
-  ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
+  static void ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
 };
 
-} // workerinternals namespace
-} // dom namespace
-} // mozilla namespace
+}  // namespace workerinternals
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_workers_runtimeservice_h__ */

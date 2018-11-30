@@ -25,25 +25,21 @@ class RangeUpdater;
 /**
  * A transaction that deletes an entire range in the content tree
  */
-class DeleteRangeTransaction final : public EditAggregateTransaction
-{
-protected:
-  DeleteRangeTransaction(EditorBase& aEditorBase,
-                         nsRange& aRangeToDelete);
+class DeleteRangeTransaction final : public EditAggregateTransaction {
+ protected:
+  DeleteRangeTransaction(EditorBase& aEditorBase, nsRange& aRangeToDelete);
 
-public:
+ public:
   /**
    * Creates a delete range transaction.  This never returns nullptr.
    *
    * @param aEditorBase         The object providing basic editing operations.
    * @param aRangeToDelete      The range to delete.
    */
-  static already_AddRefed<DeleteRangeTransaction>
-  Create(EditorBase& aEditorBase,
-         nsRange& aRangeToDelete)
-  {
+  static already_AddRefed<DeleteRangeTransaction> Create(
+      EditorBase& aEditorBase, nsRange& aRangeToDelete) {
     RefPtr<DeleteRangeTransaction> transaction =
-      new DeleteRangeTransaction(aEditorBase, aRangeToDelete);
+        new DeleteRangeTransaction(aEditorBase, aRangeToDelete);
     return transaction.forget();
   }
 
@@ -55,7 +51,7 @@ public:
 
   NS_IMETHOD RedoTransaction() override;
 
-protected:
+ protected:
   /**
    * CreateTxnsToDeleteBetween() creates a DeleteTextTransaction or some
    * DeleteNodeTransactions to remove text or nodes between aStart and aEnd
@@ -113,6 +109,6 @@ protected:
   RefPtr<nsRange> mRangeToDelete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef DeleteRangeTransaction_h
+#endif  // #ifndef DeleteRangeTransaction_h

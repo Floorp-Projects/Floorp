@@ -24,9 +24,9 @@
  * the transaction will be completed even if you have an exception or
  * return early.
  *
- * A common use is to create an instance with aCommitOnComplete = false (rollback),
- * then call Commit() on this object manually when your function completes
- * successfully.
+ * A common use is to create an instance with aCommitOnComplete = false
+ * (rollback), then call Commit() on this object manually when your function
+ * completes successfully.
  *
  * @note nested transactions are not supported by Sqlite, so if a transaction
  * is already in progress, this object does nothing.  Note that in this case,
@@ -58,19 +58,17 @@
  *        For all of the above reasons, this should only be used as an interim
  *        solution and avoided completely if possible.
  */
-class mozStorageTransaction
-{
-public:
-  mozStorageTransaction(mozIStorageConnection* aConnection,
-                        bool aCommitOnComplete,
-                        int32_t aType = mozIStorageConnection::TRANSACTION_DEFAULT,
-                        bool aAsyncCommit = false)
-    : mConnection(aConnection),
-      mHasTransaction(false),
-      mCommitOnComplete(aCommitOnComplete),
-      mCompleted(false),
-      mAsyncCommit(aAsyncCommit)
-  {
+class mozStorageTransaction {
+ public:
+  mozStorageTransaction(
+      mozIStorageConnection* aConnection, bool aCommitOnComplete,
+      int32_t aType = mozIStorageConnection::TRANSACTION_DEFAULT,
+      bool aAsyncCommit = false)
+      : mConnection(aConnection),
+        mHasTransaction(false),
+        mCommitOnComplete(aCommitOnComplete),
+        mCompleted(false),
+        mAsyncCommit(aAsyncCommit) {
     if (mConnection) {
       nsAutoCString query("BEGIN");
       int32_t type = aType;
@@ -96,15 +94,13 @@ public:
     }
   }
 
-  ~mozStorageTransaction()
-  {
+  ~mozStorageTransaction() {
     if (mConnection && mHasTransaction && !mCompleted) {
       if (mCommitOnComplete) {
         mozilla::DebugOnly<nsresult> rv = Commit();
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "A transaction didn't commit correctly");
-      }
-      else {
+      } else {
         mozilla::DebugOnly<nsresult> rv = Rollback();
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "A transaction didn't rollback correctly");
@@ -117,10 +113,8 @@ public:
    * this is a NOP since the actual owner of the transaction outside of our
    * scope is in charge of finally committing or rolling back the transaction.
    */
-  nsresult Commit()
-  {
-    if (!mConnection || mCompleted || !mHasTransaction)
-      return NS_OK;
+  nsresult Commit() {
+    if (!mConnection || mCompleted || !mHasTransaction) return NS_OK;
     mCompleted = true;
 
     // TODO (bug 559659): this might fail with SQLITE_BUSY, but we don't handle
@@ -130,26 +124,22 @@ public:
       nsCOMPtr<mozIStoragePendingStatement> ps;
       rv = mConnection->ExecuteSimpleSQLAsync(NS_LITERAL_CSTRING("COMMIT"),
                                               nullptr, getter_AddRefs(ps));
-    }
-    else {
+    } else {
       rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("COMMIT"));
     }
 
-    if (NS_SUCCEEDED(rv))
-      mHasTransaction = false;
+    if (NS_SUCCEEDED(rv)) mHasTransaction = false;
 
     return rv;
   }
 
   /**
-   * Rolls back the transaction if one is in progress. If one is not in progress,
-   * this is a NOP since the actual owner of the transaction outside of our
-   * scope is in charge of finally rolling back the transaction.
+   * Rolls back the transaction if one is in progress. If one is not in
+   * progress, this is a NOP since the actual owner of the transaction outside
+   * of our scope is in charge of finally rolling back the transaction.
    */
-  nsresult Rollback()
-  {
-    if (!mConnection || mCompleted || !mHasTransaction)
-      return NS_OK;
+  nsresult Rollback() {
+    if (!mConnection || mCompleted || !mHasTransaction) return NS_OK;
     mCompleted = true;
 
     // TODO (bug 1062823): from Sqlite 3.7.11 on, rollback won't ever return
@@ -157,17 +147,15 @@ public:
     nsresult rv;
     do {
       rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ROLLBACK"));
-      if (rv == NS_ERROR_STORAGE_BUSY)
-        (void)PR_Sleep(PR_INTERVAL_NO_WAIT);
+      if (rv == NS_ERROR_STORAGE_BUSY) (void)PR_Sleep(PR_INTERVAL_NO_WAIT);
     } while (rv == NS_ERROR_STORAGE_BUSY);
 
-    if (NS_SUCCEEDED(rv))
-      mHasTransaction = false;
+    if (NS_SUCCEEDED(rv)) mHasTransaction = false;
 
     return rv;
   }
 
-protected:
+ protected:
   nsCOMPtr<mozIStorageConnection> mConnection;
   bool mHasTransaction;
   bool mCommitOnComplete;
@@ -182,29 +170,21 @@ protected:
  * Note that this always just resets the statement. If the statement doesn't
  * need resetting, the reset operation is inexpensive.
  */
-class MOZ_STACK_CLASS mozStorageStatementScoper
-{
-public:
+class MOZ_STACK_CLASS mozStorageStatementScoper {
+ public:
   explicit mozStorageStatementScoper(mozIStorageStatement* aStatement)
-      : mStatement(aStatement)
-  {
-  }
-  ~mozStorageStatementScoper()
-  {
-    if (mStatement)
-      mStatement->Reset();
+      : mStatement(aStatement) {}
+  ~mozStorageStatementScoper() {
+    if (mStatement) mStatement->Reset();
   }
 
   /**
    * Call this to make the statement not reset. You might do this if you know
    * that the statement has been reset.
    */
-  void Abandon()
-  {
-    mStatement = nullptr;
-  }
+  void Abandon() { mStatement = nullptr; }
 
-protected:
+ protected:
   nsCOMPtr<mozIStorageStatement> mStatement;
 };
 

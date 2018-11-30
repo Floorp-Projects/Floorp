@@ -17,8 +17,7 @@
 
 namespace {
 
-class ScriptErrorRunnable final : public mozilla::Runnable
-{
+class ScriptErrorRunnable final : public mozilla::Runnable {
   nsString mMessage;
   nsCString mMessageName;
   nsString mFilename;
@@ -28,85 +27,62 @@ class ScriptErrorRunnable final : public mozilla::Runnable
   uint64_t mInnerWindowID;
   bool mIsChrome;
 
-public:
-  ScriptErrorRunnable(const nsAString& aMessage,
-                      const nsAString& aFilename,
-                      uint32_t aLineNumber,
-                      uint32_t aColumnNumber,
-                      uint32_t aSeverityFlag,
-                      bool aIsChrome,
+ public:
+  ScriptErrorRunnable(const nsAString& aMessage, const nsAString& aFilename,
+                      uint32_t aLineNumber, uint32_t aColumnNumber,
+                      uint32_t aSeverityFlag, bool aIsChrome,
                       uint64_t aInnerWindowID)
-    : mozilla::Runnable("ScriptErrorRunnable")
-    , mMessage(aMessage)
-    , mFilename(aFilename)
-    , mLineNumber(aLineNumber)
-    , mColumnNumber(aColumnNumber)
-    , mSeverityFlag(aSeverityFlag)
-    , mInnerWindowID(aInnerWindowID)
-    , mIsChrome(aIsChrome)
-  {
+      : mozilla::Runnable("ScriptErrorRunnable"),
+        mMessage(aMessage),
+        mFilename(aFilename),
+        mLineNumber(aLineNumber),
+        mColumnNumber(aColumnNumber),
+        mSeverityFlag(aSeverityFlag),
+        mInnerWindowID(aInnerWindowID),
+        mIsChrome(aIsChrome) {
     MOZ_ASSERT(!NS_IsMainThread());
     mMessageName.SetIsVoid(true);
   }
 
   ScriptErrorRunnable(const nsACString& aMessageName,
-                      const nsAString& aFilename,
-                      uint32_t aLineNumber,
-                      uint32_t aColumnNumber,
-                      uint32_t aSeverityFlag,
-                      bool aIsChrome,
-                      uint64_t aInnerWindowID)
-    : mozilla::Runnable("ScriptErrorRunnable")
-    , mMessageName(aMessageName)
-    , mFilename(aFilename)
-    , mLineNumber(aLineNumber)
-    , mColumnNumber(aColumnNumber)
-    , mSeverityFlag(aSeverityFlag)
-    , mInnerWindowID(aInnerWindowID)
-    , mIsChrome(aIsChrome)
-  {
+                      const nsAString& aFilename, uint32_t aLineNumber,
+                      uint32_t aColumnNumber, uint32_t aSeverityFlag,
+                      bool aIsChrome, uint64_t aInnerWindowID)
+      : mozilla::Runnable("ScriptErrorRunnable"),
+        mMessageName(aMessageName),
+        mFilename(aFilename),
+        mLineNumber(aLineNumber),
+        mColumnNumber(aColumnNumber),
+        mSeverityFlag(aSeverityFlag),
+        mInnerWindowID(aInnerWindowID),
+        mIsChrome(aIsChrome) {
     MOZ_ASSERT(!NS_IsMainThread());
     mMessage.SetIsVoid(true);
   }
 
-  static void
-  DumpLocalizedMessage(const nsACString& aMessageName,
-                       const nsAString& aFilename,
-                       uint32_t aLineNumber,
-                       uint32_t aColumnNumber,
-                       uint32_t aSeverityFlag,
-                       bool aIsChrome,
-                       uint64_t aInnerWindowID)
-  {
+  static void DumpLocalizedMessage(const nsACString& aMessageName,
+                                   const nsAString& aFilename,
+                                   uint32_t aLineNumber, uint32_t aColumnNumber,
+                                   uint32_t aSeverityFlag, bool aIsChrome,
+                                   uint64_t aInnerWindowID) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!aMessageName.IsEmpty());
 
     nsAutoString localizedMessage;
-    if (NS_WARN_IF(NS_FAILED(
-      nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                         aMessageName.BeginReading(),
-                                         localizedMessage)))) {
+    if (NS_WARN_IF(NS_FAILED(nsContentUtils::GetLocalizedString(
+            nsContentUtils::eDOM_PROPERTIES, aMessageName.BeginReading(),
+            localizedMessage)))) {
       return;
     }
 
-    Dump(localizedMessage,
-         aFilename,
-         aLineNumber,
-         aColumnNumber,
-         aSeverityFlag,
-         aIsChrome,
-         aInnerWindowID);
+    Dump(localizedMessage, aFilename, aLineNumber, aColumnNumber, aSeverityFlag,
+         aIsChrome, aInnerWindowID);
   }
 
-  static void
-  Dump(const nsAString& aMessage,
-       const nsAString& aFilename,
-       uint32_t aLineNumber,
-       uint32_t aColumnNumber,
-       uint32_t aSeverityFlag,
-       bool aIsChrome,
-       uint64_t aInnerWindowID)
-  {
+  static void Dump(const nsAString& aMessage, const nsAString& aFilename,
+                   uint32_t aLineNumber, uint32_t aColumnNumber,
+                   uint32_t aSeverityFlag, bool aIsChrome,
+                   uint64_t aInnerWindowID) {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsAutoCString category;
@@ -118,138 +94,91 @@ public:
     category.AppendLiteral("javascript");
 
     nsCOMPtr<nsIConsoleService> consoleService =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     MOZ_ASSERT(consoleService);
 
     nsCOMPtr<nsIScriptError> scriptError =
-      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
     MOZ_ASSERT(scriptError);
 
     if (aInnerWindowID) {
-      MOZ_ALWAYS_SUCCEEDS(
-        scriptError->InitWithWindowID(aMessage,
-                                      aFilename,
-                                      /* aSourceLine */ EmptyString(),
-                                      aLineNumber,
-                                      aColumnNumber,
-                                      aSeverityFlag,
-                                      category,
-                                      aInnerWindowID));
+      MOZ_ALWAYS_SUCCEEDS(scriptError->InitWithWindowID(
+          aMessage, aFilename,
+          /* aSourceLine */ EmptyString(), aLineNumber, aColumnNumber,
+          aSeverityFlag, category, aInnerWindowID));
     } else {
-      MOZ_ALWAYS_SUCCEEDS(
-        scriptError->Init(aMessage,
-                          aFilename,
-                          /* aSourceLine */ EmptyString(),
-                          aLineNumber,
-                          aColumnNumber,
-                          aSeverityFlag,
-                          category.get(),
-                          /* IDB doesn't run on Private browsing mode */ false));
+      MOZ_ALWAYS_SUCCEEDS(scriptError->Init(
+          aMessage, aFilename,
+          /* aSourceLine */ EmptyString(), aLineNumber, aColumnNumber,
+          aSeverityFlag, category.get(),
+          /* IDB doesn't run on Private browsing mode */ false));
     }
 
     MOZ_ALWAYS_SUCCEEDS(consoleService->LogMessage(scriptError));
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mMessage.IsVoid() != mMessageName.IsVoid());
 
     if (!mMessage.IsVoid()) {
-      Dump(mMessage,
-           mFilename,
-           mLineNumber,
-           mColumnNumber,
-           mSeverityFlag,
-           mIsChrome,
-           mInnerWindowID);
+      Dump(mMessage, mFilename, mLineNumber, mColumnNumber, mSeverityFlag,
+           mIsChrome, mInnerWindowID);
       return NS_OK;
     }
 
-    DumpLocalizedMessage(mMessageName,
-                         mFilename,
-                         mLineNumber,
-                         mColumnNumber,
-                         mSeverityFlag,
-                         mIsChrome,
-                         mInnerWindowID);
+    DumpLocalizedMessage(mMessageName, mFilename, mLineNumber, mColumnNumber,
+                         mSeverityFlag, mIsChrome, mInnerWindowID);
 
     return NS_OK;
   }
 
-private:
+ private:
   virtual ~ScriptErrorRunnable() {}
 };
 
-} // namespace
+}  // namespace
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-/*static*/ void
-ScriptErrorHelper::Dump(const nsAString& aMessage,
-                        const nsAString& aFilename,
-                        uint32_t aLineNumber,
-                        uint32_t aColumnNumber,
-                        uint32_t aSeverityFlag,
-                        bool aIsChrome,
-                        uint64_t aInnerWindowID)
-{
-  if (NS_IsMainThread()) {
-    ScriptErrorRunnable::Dump(aMessage,
-                              aFilename,
-                              aLineNumber,
-                              aColumnNumber,
-                              aSeverityFlag,
-                              aIsChrome,
-                              aInnerWindowID);
-  } else {
-    RefPtr<ScriptErrorRunnable> runnable =
-      new ScriptErrorRunnable(aMessage,
-                              aFilename,
-                              aLineNumber,
-                              aColumnNumber,
-                              aSeverityFlag,
-                              aIsChrome,
-                              aInnerWindowID);
-    MOZ_ALWAYS_SUCCEEDS(
-      SystemGroup::Dispatch(TaskCategory::Other, runnable.forget()));
-  }
-}
-
-/*static*/ void
-ScriptErrorHelper::DumpLocalizedMessage(const nsACString& aMessageName,
+/*static*/ void ScriptErrorHelper::Dump(const nsAString& aMessage,
                                         const nsAString& aFilename,
                                         uint32_t aLineNumber,
                                         uint32_t aColumnNumber,
-                                        uint32_t aSeverityFlag,
-                                        bool aIsChrome,
-                                        uint64_t aInnerWindowID)
-{
+                                        uint32_t aSeverityFlag, bool aIsChrome,
+                                        uint64_t aInnerWindowID) {
   if (NS_IsMainThread()) {
-    ScriptErrorRunnable::DumpLocalizedMessage(aMessageName,
-                                              aFilename,
-                                              aLineNumber,
-                                              aColumnNumber,
-                                              aSeverityFlag,
-                                              aIsChrome,
-                                              aInnerWindowID);
+    ScriptErrorRunnable::Dump(aMessage, aFilename, aLineNumber, aColumnNumber,
+                              aSeverityFlag, aIsChrome, aInnerWindowID);
   } else {
     RefPtr<ScriptErrorRunnable> runnable =
-      new ScriptErrorRunnable(aMessageName,
-                              aFilename,
-                              aLineNumber,
-                              aColumnNumber,
-                              aSeverityFlag,
-                              aIsChrome,
-                              aInnerWindowID);
+        new ScriptErrorRunnable(aMessage, aFilename, aLineNumber, aColumnNumber,
+                                aSeverityFlag, aIsChrome, aInnerWindowID);
     MOZ_ALWAYS_SUCCEEDS(
-      SystemGroup::Dispatch(TaskCategory::Other, runnable.forget()));
+        SystemGroup::Dispatch(TaskCategory::Other, runnable.forget()));
   }
 }
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+/*static*/ void ScriptErrorHelper::DumpLocalizedMessage(
+    const nsACString& aMessageName, const nsAString& aFilename,
+    uint32_t aLineNumber, uint32_t aColumnNumber, uint32_t aSeverityFlag,
+    bool aIsChrome, uint64_t aInnerWindowID) {
+  if (NS_IsMainThread()) {
+    ScriptErrorRunnable::DumpLocalizedMessage(
+        aMessageName, aFilename, aLineNumber, aColumnNumber, aSeverityFlag,
+        aIsChrome, aInnerWindowID);
+  } else {
+    RefPtr<ScriptErrorRunnable> runnable = new ScriptErrorRunnable(
+        aMessageName, aFilename, aLineNumber, aColumnNumber, aSeverityFlag,
+        aIsChrome, aInnerWindowID);
+    MOZ_ALWAYS_SUCCEEDS(
+        SystemGroup::Dispatch(TaskCategory::Other, runnable.forget()));
+  }
+}
+
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

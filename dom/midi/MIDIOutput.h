@@ -24,11 +24,12 @@ class MIDIMessage;
  * Represents a MIDI Output Port, handles sending message to devices.
  *
  */
-class MIDIOutput final : public MIDIPort
-{
-public:
-  static MIDIOutput* Create(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent,
-                            const MIDIPortInfo& aPortInfo, const bool aSysexEnabled);
+class MIDIOutput final : public MIDIPort {
+ public:
+  static MIDIOutput* Create(nsPIDOMWindowInner* aWindow,
+                            MIDIAccess* aMIDIAccessParent,
+                            const MIDIPortInfo& aPortInfo,
+                            const bool aSysexEnabled);
   ~MIDIOutput() = default;
 
   JSObject* WrapObject(JSContext* aCx,
@@ -39,11 +40,12 @@ public:
             ErrorResult& aRv);
   // Clear any partially sent messages from the send queue
   void Clear();
-private:
+
+ private:
   MIDIOutput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIOutput_h
+#endif  // mozilla_dom_MIDIOutput_h

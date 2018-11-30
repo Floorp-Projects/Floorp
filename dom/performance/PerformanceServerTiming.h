@@ -18,26 +18,20 @@ namespace mozilla {
 namespace dom {
 
 class PerformanceServerTiming final : public nsISupports,
-                                      public nsWrapperCache
-{
-public:
+                                      public nsWrapperCache {
+ public:
   PerformanceServerTiming(nsISupports* aParent, nsIServerTiming* aServerTiming)
-    : mParent(aParent)
-    , mServerTiming(aServerTiming)
-  {
+      : mParent(aParent), mServerTiming(aServerTiming) {
     MOZ_ASSERT(mServerTiming);
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceServerTiming)
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  nsISupports* GetParentObject() const
-  {
-    return mParent;
-  }
+  nsISupports* GetParentObject() const { return mParent; }
 
   void GetName(nsAString& aName) const;
 
@@ -45,14 +39,14 @@ public:
 
   void GetDescription(nsAString& aDescription) const;
 
-private:
+ private:
   ~PerformanceServerTiming() = default;
 
   nsCOMPtr<nsISupports> mParent;
   nsCOMPtr<nsIServerTiming> mServerTiming;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PerformanceServerTiming_h
+#endif  // mozilla_dom_PerformanceServerTiming_h

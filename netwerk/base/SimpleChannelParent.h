@@ -18,10 +18,9 @@ namespace net {
 // In order to support HTTP redirects, we need to implement the HTTP
 // redirection API, which requires a class that implements nsIParentChannel
 // and which calls NS_LinkRedirectChannels.
-class SimpleChannelParent : public nsIParentChannel
-                          , public PSimpleChannelParent
-{
-public:
+class SimpleChannelParent : public nsIParentChannel,
+                            public PSimpleChannelParent {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPARENTCHANNEL
   NS_DECL_NSIREQUESTOBSERVER
@@ -29,13 +28,13 @@ public:
 
   MOZ_MUST_USE bool Init(const uint32_t& aArgs);
 
-private:
+ private:
   ~SimpleChannelParent() = default;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif /* NS_SIMPLECHANNELPARENT_H */

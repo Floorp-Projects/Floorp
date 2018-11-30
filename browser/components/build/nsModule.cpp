@@ -126,15 +126,12 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kBrowserCategories[] = {
-    { XPCOM_DIRECTORY_PROVIDER_CATEGORY, "browser-directory-provider", NS_BROWSERDIRECTORYPROVIDER_CONTRACTID },
-    { nullptr }
-};
+    {XPCOM_DIRECTORY_PROVIDER_CATEGORY, "browser-directory-provider",
+     NS_BROWSERDIRECTORYPROVIDER_CONTRACTID},
+    {nullptr}};
 
-static const mozilla::Module kBrowserModule = {
-    mozilla::Module::kVersion,
-    kBrowserCIDs,
-    kBrowserContracts,
-    kBrowserCategories
-};
+static const mozilla::Module kBrowserModule = {mozilla::Module::kVersion,
+                                               kBrowserCIDs, kBrowserContracts,
+                                               kBrowserCategories};
 
 NSMODULE_DEFN(nsBrowserCompsModule) = &kBrowserModule;

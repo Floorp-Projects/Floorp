@@ -26,8 +26,7 @@
  * files are purged at some time after application startup.
  *
  */
-nsresult
-NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc);
+nsresult NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc);
 
 /**
  * OpenAnonymousTemporaryNsIFile
@@ -36,5 +35,4 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc);
  * will not be deleted automagically. The callee has to call aFile->Remove() in
  * order to remove the temporary file.
  */
-nsresult
-NS_OpenAnonymousTemporaryNsIFile(nsIFile** aFile);
+nsresult NS_OpenAnonymousTemporaryNsIFile(nsIFile** aFile);

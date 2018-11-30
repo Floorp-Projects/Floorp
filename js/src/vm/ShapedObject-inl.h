@@ -13,11 +13,9 @@
 
 #include "js/Proxy.h"
 
-template<>
-inline bool
-JSObject::is<js::ShapedObject>() const
-{
-    return isNative() || is<js::ProxyObject>() || is<js::TypedObject>();
+template <>
+inline bool JSObject::is<js::ShapedObject>() const {
+  return isNative() || is<js::ProxyObject>() || is<js::TypedObject>();
 }
 
 #endif /* vm_ShapedObject_inl_h */

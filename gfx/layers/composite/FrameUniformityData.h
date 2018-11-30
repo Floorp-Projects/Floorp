@@ -18,10 +18,10 @@ class Layer;
 class FrameUniformityData {
   friend struct IPC::ParamTraits<FrameUniformityData>;
 
-public:
+ public:
   bool ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext);
   // Contains the calculated frame uniformities
-  std::map<uintptr_t,float> mUniformities;
+  std::map<uintptr_t, float> mUniformities;
 };
 
 struct LayerTransforms {
@@ -35,7 +35,7 @@ struct LayerTransforms {
 };
 
 class LayerTransformRecorder {
-public:
+ public:
   LayerTransformRecorder() {}
   ~LayerTransformRecorder();
 
@@ -43,32 +43,31 @@ public:
   void Reset();
   void EndTest(FrameUniformityData* aOutData);
 
-private:
+ private:
   float CalculateFrameUniformity(uintptr_t aLayer);
   LayerTransforms* GetLayerTransforms(uintptr_t aLayer);
-  std::map<uintptr_t,LayerTransforms*> mFrameTransforms;
+  std::map<uintptr_t, LayerTransforms*> mFrameTransforms;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 namespace IPC {
-template<>
-struct ParamTraits<mozilla::layers::FrameUniformityData>
-{
+template <>
+struct ParamTraits<mozilla::layers::FrameUniformityData> {
   typedef mozilla::layers::FrameUniformityData paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mUniformities);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
-    return ParamTraitsStd<std::map<uintptr_t,float>>::Read(aMsg, aIter, &aResult->mUniformities);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ParamTraitsStd<std::map<uintptr_t, float>>::Read(
+        aMsg, aIter, &aResult->mUniformities);
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // mozilla_layers_FrameUniformityData_h_
+#endif  // mozilla_layers_FrameUniformityData_h_

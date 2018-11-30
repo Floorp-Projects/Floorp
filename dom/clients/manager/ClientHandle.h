@@ -35,8 +35,7 @@ class StructuredCloneData;
 // destroyed then the ClientHandle will simply begin to reject operations.
 // We do not currently provide a way to be notified when the ClientSource
 // is destroyed, but this could be added in the future.
-class ClientHandle final : public ClientThing<ClientHandleChild>
-{
+class ClientHandle final : public ClientThing<ClientHandleChild> {
   friend class ClientManager;
   friend class ClientHandleChild;
 
@@ -47,45 +46,37 @@ class ClientHandle final : public ClientThing<ClientHandleChild>
 
   ~ClientHandle();
 
-  void
-  Shutdown();
+  void Shutdown();
 
-  void
-  StartOp(const ClientOpConstructorArgs& aArgs,
-          const ClientOpCallback&& aResolveCallback,
-          const ClientOpCallback&& aRejectCallback);
+  void StartOp(const ClientOpConstructorArgs& aArgs,
+               const ClientOpCallback&& aResolveCallback,
+               const ClientOpCallback&& aRejectCallback);
 
   // ClientThing interface
-  void
-  OnShutdownThing() override;
+  void OnShutdownThing() override;
 
   // Private methods called by ClientHandleChild
-  void
-  ExecutionReady(const ClientInfo& aClientInfo);
+  void ExecutionReady(const ClientInfo& aClientInfo);
 
   // Private methods called by ClientManager
   ClientHandle(ClientManager* aManager,
                nsISerialEventTarget* aSerialEventTarget,
                const ClientInfo& aClientInfo);
 
-  void
-  Activate(PClientManagerChild* aActor);
+  void Activate(PClientManagerChild* aActor);
 
-public:
-  const ClientInfo&
-  Info() const;
+ public:
+  const ClientInfo& Info() const;
 
   // Mark the ClientSource attached to this handle as controlled by the
   // given service worker.  The promise will resolve true if the ClientSource
   // is successfully marked or reject if the operation could not be completed.
-  RefPtr<GenericPromise>
-  Control(const ServiceWorkerDescriptor& aServiceWorker);
+  RefPtr<GenericPromise> Control(const ServiceWorkerDescriptor& aServiceWorker);
 
   // Focus the Client if possible.  If successful the promise will resolve with
   // a new ClientState snapshot after focus has completed.  If focusing fails
   // for any reason then the promise will reject.
-  RefPtr<ClientStatePromise>
-  Focus();
+  RefPtr<ClientStatePromise> Focus();
 
   // Send a postMessage() call to the target Client.  Currently this only
   // supports sending from a ServiceWorker source and the MessageEvent is
@@ -93,9 +84,8 @@ public:
   // returned promise will resolve if the MessageEvent is dispatched or if
   // it triggers an error handled in the Client's context.  Other errors
   // will result in the promise rejecting.
-  RefPtr<GenericPromise>
-  PostMessage(ipc::StructuredCloneData& aData,
-              const ServiceWorkerDescriptor& aSource);
+  RefPtr<GenericPromise> PostMessage(ipc::StructuredCloneData& aData,
+                                     const ServiceWorkerDescriptor& aSource);
 
   // Return a Promise that resolves when the ClientHandle object is detached
   // from its remote actors.  This will happen if the ClientSource is destroyed
@@ -105,13 +95,12 @@ public:
   //
   // Note: This method can only be called on the ClientHandle owning thread,
   //       but the MozPromise lets you Then() to another thread.
-  RefPtr<GenericPromise>
-  OnDetach();
+  RefPtr<GenericPromise> OnDetach();
 
   NS_INLINE_DECL_REFCOUNTING(ClientHandle);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // _mozilla_dom_ClientHandle_h
+#endif  // _mozilla_dom_ClientHandle_h

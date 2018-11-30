@@ -34,7 +34,7 @@ typedef struct {
   guint8 backdrop;
   gint32 curpos; /* curpos and maxpos are used for scrollbars */
   gint32 maxpos;
-  gint32 scale;  /* actual widget scale */
+  gint32 scale; /* actual widget scale */
 } GtkWidgetState;
 
 /**
@@ -44,29 +44,24 @@ struct MozGtkSize {
   gint width;
   gint height;
 
-  MozGtkSize& operator+=(const GtkBorder& aBorder)
-  {
+  MozGtkSize& operator+=(const GtkBorder& aBorder) {
     width += aBorder.left + aBorder.right;
     height += aBorder.top + aBorder.bottom;
     return *this;
   }
-  MozGtkSize operator+(const GtkBorder& aBorder) const
-  {
+  MozGtkSize operator+(const GtkBorder& aBorder) const {
     MozGtkSize result = *this;
     return result += aBorder;
   }
-  bool operator<(const MozGtkSize &aOther) const
-  {
+  bool operator<(const MozGtkSize& aOther) const {
     return (width < aOther.width && height <= aOther.height) ||
            (width <= aOther.width && height < aOther.height);
   }
-  void Include(MozGtkSize aOther)
-  {
+  void Include(MozGtkSize aOther) {
     width = std::max(width, aOther.width);
     height = std::max(height, aOther.height);
   }
-  void Rotate()
-  {
+  void Rotate() {
     gint tmp = width;
     width = height;
     height = tmp;
@@ -97,7 +92,7 @@ typedef struct {
 
 typedef struct {
   MozGtkSize minSizeWithBorderMargin;
-  GtkBorder  buttonMargin;
+  GtkBorder buttonMargin;
   gint iconXPosition;
   gint iconYPosition;
   bool visible;
@@ -112,23 +107,21 @@ typedef struct {
 } ToolbarGTKMetrics;
 
 typedef enum {
-  MOZ_GTK_STEPPER_DOWN        = 1 << 0,
-  MOZ_GTK_STEPPER_BOTTOM      = 1 << 1,
-  MOZ_GTK_STEPPER_VERTICAL    = 1 << 2
+  MOZ_GTK_STEPPER_DOWN = 1 << 0,
+  MOZ_GTK_STEPPER_BOTTOM = 1 << 1,
+  MOZ_GTK_STEPPER_VERTICAL = 1 << 2
 } GtkScrollbarButtonFlags;
 
-typedef enum {
-  MOZ_GTK_TRACK_OPAQUE        = 1 << 0
-} GtkScrollbarTrackFlags;
+typedef enum { MOZ_GTK_TRACK_OPAQUE = 1 << 0 } GtkScrollbarTrackFlags;
 
 /** flags for tab state **/
 typedef enum {
   /* first eight bits are used to pass a margin */
-  MOZ_GTK_TAB_MARGIN_MASK     = 0xFF,
+  MOZ_GTK_TAB_MARGIN_MASK = 0xFF,
   /* the first tab in the group */
-  MOZ_GTK_TAB_FIRST           = 1 << 9,
+  MOZ_GTK_TAB_FIRST = 1 << 9,
   /* the selected tab */
-  MOZ_GTK_TAB_SELECTED        = 1 << 10
+  MOZ_GTK_TAB_SELECTED = 1 << 10
 } GtkTabFlags;
 
 /*** result/error codes ***/
@@ -247,7 +240,8 @@ typedef enum {
   MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE,
   /* Used as root style of whole GtkNotebook widget */
   MOZ_GTK_NOTEBOOK,
-  /* Used as root style of active GtkNotebook area which contains tabs and arrows. */
+  /* Used as root style of active GtkNotebook area which contains tabs and
+     arrows. */
   MOZ_GTK_NOTEBOOK_HEADER,
   /* Paints a tab of a GtkNotebook. flags is a GtkTabFlags, defined above. */
   MOZ_GTK_TAB_TOP,
@@ -382,12 +376,9 @@ gint moz_gtk_shutdown();
  * flags:     widget-dependant flags; see the WidgetNodeType definition.
  * direction: the text direction, to draw the widget correctly LTR and RTL.
  */
-gint
-moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
-                     GdkRectangle* rect,
-                     GtkWidgetState* state, gint flags,
-                     GtkTextDirection direction);
-
+gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
+                          GdkRectangle* rect, GtkWidgetState* state, gint flags,
+                          GtkTextDirection direction);
 
 /*** Widget metrics ***/
 /**
@@ -401,7 +392,8 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
-                               gint* right, gint* bottom, GtkTextDirection direction);
+                               gint* right, gint* bottom,
+                               GtkTextDirection direction);
 
 /**
  * Get the border size of a notebook tab
@@ -413,10 +405,9 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint
-moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom,
-                       GtkTextDirection direction, GtkTabFlags flags,
-                       WidgetNodeType widget);
+gint moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom,
+                            GtkTextDirection direction, GtkTabFlags flags,
+                            WidgetNodeType widget);
 
 /**
  * Get the desired size of a GtkCheckButton
@@ -426,16 +417,15 @@ moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom,
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint
-moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
+gint moz_gtk_checkbox_get_metrics(gint* indicator_size,
+                                  gint* indicator_spacing);
 
 /**
  * Get metrics of the toggle (radio or checkbox)
  * isRadio:            [IN] true when requesting metrics for the radio button
  * returns:    pointer to ToggleGTKMetrics struct
  */
-const ToggleGTKMetrics*
-GetToggleMetrics(bool isRadio);
+const ToggleGTKMetrics* GetToggleMetrics(bool isRadio);
 
 /**
  * Get the desired size of a GtkRadioButton
@@ -445,8 +435,7 @@ GetToggleMetrics(bool isRadio);
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint
-moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
+gint moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
 /** Get the extra size for the focus ring for outline:auto.
  * widget:             [IN]  the widget to get the focus metrics for
@@ -455,19 +444,17 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
  *
  * returns:    MOZ_GTK_SUCCESS
  */
-gint
-moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width);
+gint moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width);
 
 /** Get the horizontal padding for the menuitem widget or checkmenuitem widget.
- * horizontal_padding: [OUT] The left and right padding of the menuitem or checkmenuitem
+ * horizontal_padding: [OUT] The left and right padding of the menuitem or
+ * checkmenuitem
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint
-moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding);
+gint moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding);
 
-gint
-moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding);
+gint moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding);
 
 /**
  * Some GTK themes draw their indication for the default button outside
@@ -480,9 +467,9 @@ moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding);
  *
  * returns:   MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint
-moz_gtk_button_get_default_overflow(gint* border_top, gint* border_left,
-                                    gint* border_bottom, gint* border_right);
+gint moz_gtk_button_get_default_overflow(gint* border_top, gint* border_left,
+                                         gint* border_bottom,
+                                         gint* border_right);
 
 /**
  * Gets the minimum size of a GtkScale.
@@ -490,9 +477,8 @@ moz_gtk_button_get_default_overflow(gint* border_top, gint* border_left,
  * scale_width:      [OUT] the width of the scale
  * scale_height:     [OUT] the height of the scale
  */
-void
-moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
-                          gint* scale_height);
+void moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
+                               gint* scale_height);
 
 /**
  * Get the desired size of a GtkScale thumb
@@ -502,23 +488,22 @@ moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-gint
-moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* thumb_height);
+gint moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length,
+                                    gint* thumb_height);
 
 /**
  * Get the metrics in GTK pixels for a scrollbar.
  * aOrientation:     [IN] the scrollbar orientation
  */
-const ScrollbarGTKMetrics*
-GetScrollbarMetrics(GtkOrientation aOrientation);
+const ScrollbarGTKMetrics* GetScrollbarMetrics(GtkOrientation aOrientation);
 
 /**
  * Get the metrics in GTK pixels for a scrollbar which is active
  * (selected by mouse pointer).
  * aOrientation:     [IN] the scrollbar orientation
  */
-const ScrollbarGTKMetrics*
-GetActiveScrollbarMetrics(GtkOrientation aOrientation);
+const ScrollbarGTKMetrics* GetActiveScrollbarMetrics(
+    GtkOrientation aOrientation);
 
 /**
  * Get the desired size of a dropdown arrow button
@@ -545,9 +530,8 @@ gint moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height);
  * width:      [OUT] the desired width
  * height:     [OUT] the desired height
  */
-void
-moz_gtk_get_arrow_size(WidgetNodeType widgetType,
-                       gint* width, gint* height);
+void moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width,
+                            gint* height);
 
 /**
  * Get the minimum height of a entry widget
@@ -600,15 +584,13 @@ gint moz_gtk_splitter_get_metrics(gint orientation, gint* size);
 /**
  * Get the YTHICKNESS of a tab (notebook extension).
  */
-gint
-moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
-
+gint moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
 
 /**
  * Get ToolbarButtonGTKMetrics for recent theme.
  */
-const ToolbarButtonGTKMetrics*
-GetToolbarButtonMetrics(WidgetNodeType aAppearance);
+const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics(
+    WidgetNodeType aAppearance);
 
 /**
  * Get toolbar button layout.
@@ -620,8 +602,8 @@ GetToolbarButtonMetrics(WidgetNodeType aAppearance);
  *
  * returns:    Number of returned entries at aButtonLayout.
  */
-int
-GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout, int aMaxButtonNums);
+int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
+                                int aMaxButtonNums);
 
 /**
  * Get size of CSD window extents of given GtkWindow.
@@ -633,7 +615,6 @@ GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout, int aMaxButtonNums);
  * returns:    True if we have extract decoration size (for GTK 3.20+)
  *             False if we have only an estimation (for GTK+ before  3.20+)
  */
-bool
-GetCSDDecorationSize(GtkWindow *aGtkWindow, GtkBorder* aDecorationSize);
+bool GetCSDDecorationSize(GtkWindow* aGtkWindow, GtkBorder* aDecorationSize);
 
 #endif

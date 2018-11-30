@@ -10,16 +10,14 @@
 
 namespace mozilla {
 
-struct TableArea
-{
-  TableArea()
-    : mStartCol(0), mStartRow(0), mColCount(0), mRowCount(0) { }
-  TableArea(int32_t aStartCol, int32_t aStartRow,
-            int32_t aColCount, int32_t aRowCount)
-    : mStartCol(aStartCol),
-      mStartRow(aStartRow),
-      mColCount(aColCount),
-      mRowCount(aRowCount) { }
+struct TableArea {
+  TableArea() : mStartCol(0), mStartRow(0), mColCount(0), mRowCount(0) {}
+  TableArea(int32_t aStartCol, int32_t aStartRow, int32_t aColCount,
+            int32_t aRowCount)
+      : mStartCol(aStartCol),
+        mStartRow(aStartRow),
+        mColCount(aColCount),
+        mRowCount(aRowCount) {}
 
   int32_t& StartCol() { return mStartCol; }
   int32_t& StartRow() { return mStartRow; }
@@ -33,19 +31,18 @@ struct TableArea
   int32_t EndCol() const { return mStartCol + mColCount; }
   int32_t EndRow() const { return mStartRow + mRowCount; }
 
-  void UnionArea(const TableArea& aArea1, const TableArea& aArea2)
-    {
-      nsIntRect rect(aArea1.mStartCol, aArea1.mStartRow,
-                     aArea1.mColCount, aArea1.mRowCount);
-      rect.UnionRect(rect, nsIntRect(aArea2.mStartCol, aArea2.mStartRow,
-                                     aArea2.mColCount, aArea2.mRowCount));
-      rect.GetRect(&mStartCol, &mStartRow, &mColCount, &mRowCount);
-    }
+  void UnionArea(const TableArea& aArea1, const TableArea& aArea2) {
+    nsIntRect rect(aArea1.mStartCol, aArea1.mStartRow, aArea1.mColCount,
+                   aArea1.mRowCount);
+    rect.UnionRect(rect, nsIntRect(aArea2.mStartCol, aArea2.mStartRow,
+                                   aArea2.mColCount, aArea2.mRowCount));
+    rect.GetRect(&mStartCol, &mStartRow, &mColCount, &mRowCount);
+  }
 
-private:
+ private:
   int32_t mStartCol, mStartRow, mColCount, mRowCount;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_TableArea_h_
+#endif  // mozilla_TableArea_h_

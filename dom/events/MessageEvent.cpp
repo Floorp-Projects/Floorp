@@ -12,7 +12,7 @@
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"
-#include "nsGlobalWindow.h" // So we can assign an nsGlobalWindow* to mWindowSource
+#include "nsGlobalWindow.h"  // So we can assign an nsGlobalWindow* to mWindowSource
 
 namespace mozilla {
 namespace dom {
@@ -44,51 +44,36 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 NS_IMPL_ADDREF_INHERITED(MessageEvent, Event)
 NS_IMPL_RELEASE_INHERITED(MessageEvent, Event)
 
-MessageEvent::MessageEvent(EventTarget* aOwner,
-                           nsPresContext* aPresContext,
+MessageEvent::MessageEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                            WidgetEvent* aEvent)
-  : Event(aOwner, aPresContext, aEvent)
-  , mData(JS::UndefinedValue())
-{
-}
+    : Event(aOwner, aPresContext, aEvent), mData(JS::UndefinedValue()) {}
 
-MessageEvent::~MessageEvent()
-{
+MessageEvent::~MessageEvent() {
   mData.setUndefined();
   DropJSObjects(this);
 }
 
-JSObject*
-MessageEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MessageEvent::WrapObjectInternal(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return mozilla::dom::MessageEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-MessageEvent::GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
-                      ErrorResult& aRv)
-{
+void MessageEvent::GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
+                           ErrorResult& aRv) {
   aData.set(mData);
   if (!JS_WrapValue(aCx, aData)) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
 }
 
-void
-MessageEvent::GetOrigin(nsAString& aOrigin) const
-{
-  aOrigin = mOrigin;
-}
+void MessageEvent::GetOrigin(nsAString& aOrigin) const { aOrigin = mOrigin; }
 
-void
-MessageEvent::GetLastEventId(nsAString& aLastEventId) const
-{
+void MessageEvent::GetLastEventId(nsAString& aLastEventId) const {
   aLastEventId = mLastEventId;
 }
 
-void
-MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePortOrServiceWorker>& aValue) const
-{
+void MessageEvent::GetSource(
+    Nullable<OwningWindowProxyOrMessagePortOrServiceWorker>& aValue) const {
   if (mWindowSource) {
     aValue.SetValue().SetAsWindowProxy() = mWindowSource;
   } else if (mPortSource) {
@@ -98,21 +83,16 @@ MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePortOrServiceWorker>&
   }
 }
 
-/* static */ already_AddRefed<MessageEvent>
-MessageEvent::Constructor(const GlobalObject& aGlobal,
-                          const nsAString& aType,
-                          const MessageEventInit& aParam,
-                          ErrorResult& aRv)
-{
+/* static */ already_AddRefed<MessageEvent> MessageEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const MessageEventInit& aParam, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(t, aType, aParam);
 }
 
-/* static */ already_AddRefed<MessageEvent>
-MessageEvent::Constructor(EventTarget* aEventTarget,
-                          const nsAString& aType,
-                          const MessageEventInit& aParam)
-{
+/* static */ already_AddRefed<MessageEvent> MessageEvent::Constructor(
+    EventTarget* aEventTarget, const nsAString& aType,
+    const MessageEventInit& aParam) {
   RefPtr<MessageEvent> event = new MessageEvent(aEventTarget, nullptr, nullptr);
 
   event->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
@@ -135,7 +115,8 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
       event->mServiceWorkerSource = aParam.mSource.Value().GetAsServiceWorker();
     }
 
-    MOZ_ASSERT(event->mWindowSource || event->mPortSource || event->mServiceWorkerSource);
+    MOZ_ASSERT(event->mWindowSource || event->mPortSource ||
+               event->mServiceWorkerSource);
   }
 
   event->mPorts.AppendElements(aParam.mPorts);
@@ -143,16 +124,12 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
   return event.forget();
 }
 
-void
-MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
-                               mozilla::CanBubble aCanBubble,
-                               mozilla::Cancelable aCancelable,
-                               JS::Handle<JS::Value> aData,
-                               const nsAString& aOrigin,
-                               const nsAString& aLastEventId,
-                               const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
-                               const Sequence<OwningNonNull<MessagePort>>& aPorts)
-{
+void MessageEvent::InitMessageEvent(
+    JSContext* aCx, const nsAString& aType, mozilla::CanBubble aCanBubble,
+    mozilla::Cancelable aCancelable, JS::Handle<JS::Value> aData,
+    const nsAString& aOrigin, const nsAString& aLastEventId,
+    const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
+    const Sequence<OwningNonNull<MessagePort>>& aPorts) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   Event::InitEvent(aType, aCanBubble, aCancelable);
@@ -180,11 +157,9 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
   MessageEvent_Binding::ClearCachedPortsValue(this);
 }
 
-void
-MessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts)
-{
+void MessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts) {
   aPorts = mPorts;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

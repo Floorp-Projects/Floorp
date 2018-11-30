@@ -20,31 +20,25 @@ class ErrorResult;
 
 namespace dom {
 
-class PushSubscriptionOptions final : public nsISupports
-                                    , public nsWrapperCache
-{
-public:
+class PushSubscriptionOptions final : public nsISupports,
+                                      public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushSubscriptionOptions)
 
   PushSubscriptionOptions(nsIGlobalObject* aGlobal,
                           nsTArray<uint8_t>&& aRawAppServerKey);
 
-  nsIGlobalObject*
-  GetParentObject() const
-  {
-    return mGlobal;
-  }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  void
-  GetApplicationServerKey(JSContext* aCx,
-                          JS::MutableHandle<JSObject*> aKey,
-                          ErrorResult& aRv);
+  void GetApplicationServerKey(JSContext* aCx,
+                               JS::MutableHandle<JSObject*> aKey,
+                               ErrorResult& aRv);
 
-private:
+ private:
   ~PushSubscriptionOptions();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -52,7 +46,7 @@ private:
   JS::Heap<JSObject*> mAppServerKey;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PushSubscriptionOptions_h
+#endif  // mozilla_dom_PushSubscriptionOptions_h

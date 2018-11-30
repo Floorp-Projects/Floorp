@@ -11,31 +11,22 @@
 
 namespace mozilla {
 
-/*static*/ WebGL1Context*
-WebGL1Context::Create()
-{
-    return new WebGL1Context();
+/*static*/ WebGL1Context* WebGL1Context::Create() {
+  return new WebGL1Context();
 }
 
-WebGL1Context::WebGL1Context()
-    : WebGLContext()
-{
+WebGL1Context::WebGL1Context() : WebGLContext() {}
+
+WebGL1Context::~WebGL1Context() {}
+
+UniquePtr<webgl::FormatUsageAuthority> WebGL1Context::CreateFormatUsage(
+    gl::GLContext* gl) const {
+  return webgl::FormatUsageAuthority::CreateForWebGL1(gl);
 }
 
-WebGL1Context::~WebGL1Context()
-{
+JSObject* WebGL1Context::WrapObject(JSContext* cx,
+                                    JS::Handle<JSObject*> givenProto) {
+  return dom::WebGLRenderingContext_Binding::Wrap(cx, this, givenProto);
 }
 
-UniquePtr<webgl::FormatUsageAuthority>
-WebGL1Context::CreateFormatUsage(gl::GLContext* gl) const
-{
-    return webgl::FormatUsageAuthority::CreateForWebGL1(gl);
-}
-
-JSObject*
-WebGL1Context::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
-{
-    return dom::WebGLRenderingContext_Binding::Wrap(cx, this, givenProto);
-}
-
-} // namespace mozilla
+}  // namespace mozilla

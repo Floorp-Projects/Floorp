@@ -15,24 +15,22 @@ namespace webgpu {
 
 class Device;
 
-class Buffer final
-    : public ChildOf<Device>
-{
-public:
-    JS::Heap<JSObject*> mMapping;
+class Buffer final : public ChildOf<Device> {
+ public:
+  JS::Heap<JSObject*> mMapping;
 
-    WEBGPU_DECL_GOOP(Buffer)
+  WEBGPU_DECL_GOOP(Buffer)
 
-private:
-    explicit Buffer(Device* parent);
-    virtual ~Buffer();
+ private:
+  explicit Buffer(Device* parent);
+  virtual ~Buffer();
 
-public:
-    void GetMapping(JSContext* cx, JS::MutableHandle<JSObject*> out) const;
-    void Unmap() const;
+ public:
+  void GetMapping(JSContext* cx, JS::MutableHandle<JSObject*> out) const;
+  void Unmap() const;
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_BUFFER_H_
+#endif  // WEBGPU_BUFFER_H_

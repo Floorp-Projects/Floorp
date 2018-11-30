@@ -29,8 +29,8 @@ typedef mozilla::Vector<RefPtr<nsPerformanceGroup>, 8> GroupVector;
  * Additionally, the service owns instances designed to observe the
  * performance alerts in all webpages.
  */
-class nsPerformanceObservationTarget final: public nsIPerformanceObservable {
-public:
+class nsPerformanceObservationTarget final : public nsIPerformanceObservable {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERFORMANCEOBSERVABLE
 
@@ -43,14 +43,15 @@ public:
   /**
    * Notify all the observers that jank has happened.
    */
-  void NotifyJankObservers(nsIPerformanceGroupDetails* source, nsIPerformanceAlert* gravity);
+  void NotifyJankObservers(nsIPerformanceGroupDetails* source,
+                           nsIPerformanceAlert* gravity);
 
   /**
    * Set the details on the group being observed.
    */
   void SetTarget(nsPerformanceGroupDetails* details);
 
-private:
+ private:
   ~nsPerformanceObservationTarget() {}
 
   // The observers for this target. We hold them as a vector, despite
@@ -74,11 +75,8 @@ private:
  * associate the observation target and the performance group.
  */
 class nsGroupHolder {
-public:
-  nsGroupHolder()
-    : mGroup(nullptr)
-    , mPendingObservationTarget(nullptr)
-  { }
+ public:
+  nsGroupHolder() : mGroup(nullptr), mPendingObservationTarget(nullptr) {}
 
   /**
    * Get the observation target, creating it if necessary.
@@ -101,7 +99,8 @@ public:
    * Must only be called once.
    */
   void SetGroup(class nsPerformanceGroup*);
-private:
+
+ private:
   // The group. Initially `nullptr`, until we have called `SetGroup`.
   class nsPerformanceGroup* mGroup;
 
@@ -116,9 +115,8 @@ private:
  * Note that this implementation is not thread-safe.
  */
 class nsPerformanceStatsService final : public nsIPerformanceStatsService,
-                                        public nsIObserver
-{
-public:
+                                        public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERFORMANCESTATSSERVICE
   NS_DECL_NSIOBSERVER
@@ -126,12 +124,12 @@ public:
   nsPerformanceStatsService();
   nsresult Init();
 
-private:
+ private:
   nsresult InitInternal();
   void Dispose();
   ~nsPerformanceStatsService();
 
-protected:
+ protected:
   friend nsPerformanceGroup;
 
   /**
@@ -157,15 +155,12 @@ protected:
   uint64_t GetNextId();
   uint64_t mUIdCounter;
 
-
-
   /**
    * Extract a snapshot of performance statistics from a performance group.
    */
-  static nsIPerformanceStats* GetStatsForGroup(const js::PerformanceGroup* group);
+  static nsIPerformanceStats* GetStatsForGroup(
+      const js::PerformanceGroup* group);
   static nsIPerformanceStats* GetStatsForGroup(const nsPerformanceGroup* group);
-
-
 
   /**
    * Get the performance groups associated to a given JS compartment.
@@ -183,9 +178,9 @@ protected:
    * performance groups.
    */
   bool GetPerformanceGroups(JSContext* cx, js::PerformanceGroupVector&);
-  static bool GetPerformanceGroupsCallback(JSContext* cx, js::PerformanceGroupVector&, void* closure);
-
-
+  static bool GetPerformanceGroupsCallback(JSContext* cx,
+                                           js::PerformanceGroupVector&,
+                                           void* closure);
 
   /**********************************************************
    *
@@ -207,21 +202,17 @@ protected:
    * window id. Each item is shared by all the compartments that
    * belong to the window.
    */
-  struct WindowIdToGroup: public nsUint64HashKey,
-                          public nsGroupHolder {
-    explicit WindowIdToGroup(const uint64_t* key)
-      : nsUint64HashKey(key)
-    {}
+  struct WindowIdToGroup : public nsUint64HashKey, public nsGroupHolder {
+    explicit WindowIdToGroup(const uint64_t* key) : nsUint64HashKey(key) {}
   };
   nsTHashtable<WindowIdToGroup> mWindowIdToGroup;
 
   /**
    * Set of all performance groups.
    */
-  struct Groups: public nsPtrHashKey<nsPerformanceGroup> {
+  struct Groups : public nsPtrHashKey<nsPerformanceGroup> {
     explicit Groups(const nsPerformanceGroup* key)
-      : nsPtrHashKey<nsPerformanceGroup>(key)
-    {}
+        : nsPtrHashKey<nsPerformanceGroup>(key) {}
   };
   nsTHashtable<Groups> mGroups;
 
@@ -309,7 +300,8 @@ protected:
   static bool StopwatchCommitCallback(uint64_t iteration,
                                       js::PerformanceGroupVector& recentGroups,
                                       void* closure);
-  bool StopwatchCommit(uint64_t iteration, js::PerformanceGroupVector& recentGroups);
+  bool StopwatchCommit(uint64_t iteration,
+                       js::PerformanceGroupVector& recentGroups);
 
   /**
    * The number of times we have started executing JavaScript code.
@@ -335,13 +327,9 @@ protected:
    *   any slowdown.
    * @param group The group containing the data to commit.
    */
-  void CommitGroup(uint64_t iteration,
-                   uint64_t userTime, uint64_t systemTime,  uint64_t cycles,
-                   bool isJankVisible,
+  void CommitGroup(uint64_t iteration, uint64_t userTime, uint64_t systemTime,
+                   uint64_t cycles, bool isJankVisible,
                    nsPerformanceGroup* group);
-
-
-
 
   /**********************************************************
    *
@@ -368,7 +356,6 @@ protected:
    */
   bool mIsMonitoringPerCompartment;
 
-
   /**********************************************************
    *
    * Determining whether jank is user-visible.
@@ -385,8 +372,7 @@ protected:
    */
   bool IsHandlingUserInput();
 
-
-public:
+ public:
   /**********************************************************
    *
    * Letting observers register themselves to watch for performance
@@ -407,7 +393,7 @@ public:
    */
   void NotifyJankObservers(const mozilla::Vector<uint64_t>& previousJankLevels);
 
-private:
+ private:
   /**
    * The set of groups for which we know that an alert should be
    * raised. This set is cleared once `mPendingAlertsCollector`
@@ -423,7 +409,6 @@ private:
    * performance alerts.
    */
   RefPtr<class PendingAlertsCollector> mPendingAlertsCollector;
-
 
   /**
    * Observation targets that are not attached to a specific group.
@@ -474,8 +459,6 @@ private:
   uint64_t mMaxExpectedDurationOfInteractionUS;
 };
 
-
-
 /**
  * Container for performance data.
  *
@@ -515,29 +498,25 @@ struct PerformanceData {
   PerformanceData& operator=(const PerformanceData& from) = default;
 };
 
-
-
 /**
  * Identification information for an item that can hold performance
  * data.
  */
-class nsPerformanceGroupDetails final: public nsIPerformanceGroupDetails {
-public:
+class nsPerformanceGroupDetails final : public nsIPerformanceGroupDetails {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERFORMANCEGROUPDETAILS
 
-  nsPerformanceGroupDetails(const nsAString& aName,
-                            const nsAString& aGroupId,
-                            const uint64_t aWindowId,
-                            const uint64_t aProcessId,
+  nsPerformanceGroupDetails(const nsAString& aName, const nsAString& aGroupId,
+                            const uint64_t aWindowId, const uint64_t aProcessId,
                             const bool aIsSystem)
-    : mName(aName)
-    , mGroupId(aGroupId)
-    , mWindowId(aWindowId)
-    , mProcessId(aProcessId)
-    , mIsSystem(aIsSystem)
-  { }
-public:
+      : mName(aName),
+        mGroupId(aGroupId),
+        mWindowId(aWindowId),
+        mProcessId(aProcessId),
+        mIsSystem(aIsSystem) {}
+
+ public:
   const nsAString& Name() const;
   const nsAString& GroupId() const;
   uint64_t WindowId() const;
@@ -545,7 +524,8 @@ public:
   bool IsWindow() const;
   bool IsSystem() const;
   bool IsContentProcess() const;
-private:
+
+ private:
   ~nsPerformanceGroupDetails() {}
 
   const nsString mName;
@@ -583,9 +563,8 @@ enum class PerformanceGroupScope {
  * This class is intended to be the sole implementation of
  * `js::PerformanceGroup`.
  */
-class nsPerformanceGroup final: public js::PerformanceGroup {
-public:
-
+class nsPerformanceGroup final : public js::PerformanceGroup {
+ public:
   // Ideally, we would define the enum class in nsPerformanceGroup,
   // but this seems to choke some versions of gcc.
   typedef PerformanceGroupScope GroupScope;
@@ -605,21 +584,20 @@ public:
    *   system credentials, `false` otherwise.
    * @param scope the scope of this group.
    */
-  static nsPerformanceGroup*
-    Make(nsPerformanceStatsService* service,
-         const nsAString& name,
-         uint64_t windowId,
-         uint64_t processId,
-         bool isSystem,
-         GroupScope scope);
+  static nsPerformanceGroup* Make(nsPerformanceStatsService* service,
+                                  const nsAString& name, uint64_t windowId,
+                                  uint64_t processId, bool isSystem,
+                                  GroupScope scope);
 
   /**
-   * Utility: type-safer conversion from js::PerformanceGroup to nsPerformanceGroup.
+   * Utility: type-safer conversion from js::PerformanceGroup to
+   * nsPerformanceGroup.
    */
   static inline nsPerformanceGroup* Get(js::PerformanceGroup* self) {
     return static_cast<nsPerformanceGroup*>(self);
   }
-  static inline const nsPerformanceGroup* Get(const js::PerformanceGroup* self) {
+  static inline const nsPerformanceGroup* Get(
+      const js::PerformanceGroup* self) {
     return static_cast<const nsPerformanceGroup*>(self);
   }
 
@@ -652,7 +630,6 @@ public:
    */
   void SetObservationTarget(nsPerformanceObservationTarget*);
 
-
   /**
    * `true` if we have already noticed that a performance alert should
    * be raised for this group but we have not dispatched it yet,
@@ -661,15 +638,10 @@ public:
   bool HasPendingAlert() const;
   void SetHasPendingAlert(bool value);
 
-protected:
-  nsPerformanceGroup(nsPerformanceStatsService* service,
-                     const nsAString& name,
-                     const nsAString& groupId,
-                     uint64_t windowId,
-                     uint64_t processId,
-                     bool isSystem,
-                     GroupScope scope);
-
+ protected:
+  nsPerformanceGroup(nsPerformanceStatsService* service, const nsAString& name,
+                     const nsAString& groupId, uint64_t windowId,
+                     uint64_t processId, bool isSystem, GroupScope scope);
 
   /**
    * Virtual implementation of `delete`, to make sure that objects are
@@ -678,12 +650,10 @@ protected:
    *
    * Called by SpiderMonkey.
    */
-  virtual void Delete() override {
-    delete this;
-  }
+  virtual void Delete() override { delete this; }
   ~nsPerformanceGroup();
 
-private:
+ private:
   /**
    * Identification details for this group.
    */
@@ -700,9 +670,9 @@ private:
    */
   const GroupScope mScope;
 
-// Observing performance alerts.
+  // Observing performance alerts.
 
-public:
+ public:
   /**
    * The observation target, used to register observers.
    */
@@ -737,7 +707,8 @@ public:
    * user input).
    */
   void ResetRecent();
-private:
+
+ private:
   /**
    * The target used by observers to register for watching slow
    * performance alerts caused by this group.

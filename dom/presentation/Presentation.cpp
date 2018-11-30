@@ -25,9 +25,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Presentation,
-                                      mWindow,
-                                      mDefaultRequest, mReceiver)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Presentation, mWindow, mDefaultRequest,
+                                      mReceiver)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Presentation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Presentation)
@@ -37,32 +36,22 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Presentation)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<Presentation>
-Presentation::Create(nsPIDOMWindowInner* aWindow)
-{
+/* static */ already_AddRefed<Presentation> Presentation::Create(
+    nsPIDOMWindowInner* aWindow) {
   RefPtr<Presentation> presentation = new Presentation(aWindow);
   return presentation.forget();
 }
 
-Presentation::Presentation(nsPIDOMWindowInner* aWindow)
-  : mWindow(aWindow)
-{
-}
+Presentation::Presentation(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
 
-Presentation::~Presentation()
-{
-}
+Presentation::~Presentation() {}
 
-/* virtual */ JSObject*
-Presentation::WrapObject(JSContext* aCx,
-                         JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* Presentation::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Presentation_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-Presentation::SetDefaultRequest(PresentationRequest* aRequest)
-{
+void Presentation::SetDefaultRequest(PresentationRequest* aRequest) {
   if (nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
@@ -79,9 +68,7 @@ Presentation::SetDefaultRequest(PresentationRequest* aRequest)
   mDefaultRequest = aRequest;
 }
 
-already_AddRefed<PresentationRequest>
-Presentation::GetDefaultRequest() const
-{
+already_AddRefed<PresentationRequest> Presentation::GetDefaultRequest() const {
   if (nsContentUtils::ShouldResistFingerprinting()) {
     return nullptr;
   }
@@ -90,9 +77,7 @@ Presentation::GetDefaultRequest() const
   return request.forget();
 }
 
-already_AddRefed<PresentationReceiver>
-Presentation::GetReceiver()
-{
+already_AddRefed<PresentationReceiver> Presentation::GetReceiver() {
   if (nsContentUtils::ShouldResistFingerprinting()) {
     return nullptr;
   }
@@ -117,21 +102,15 @@ Presentation::GetReceiver()
   return receiver.forget();
 }
 
-void
-Presentation::SetStartSessionUnsettled(bool aIsUnsettled)
-{
+void Presentation::SetStartSessionUnsettled(bool aIsUnsettled) {
   mStartSessionUnsettled = aIsUnsettled;
 }
 
-bool
-Presentation::IsStartSessionUnsettled() const
-{
+bool Presentation::IsStartSessionUnsettled() const {
   return mStartSessionUnsettled;
 }
 
-bool
-Presentation::HasReceiverSupport() const
-{
+bool Presentation::HasReceiverSupport() const {
   if (!mWindow) {
     return false;
   }
@@ -157,7 +136,7 @@ Presentation::HasReceiverSupport() const
   }
 
   nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    nsContentUtils::GetSecurityManager();
+      nsContentUtils::GetSecurityManager();
   if (!securityManager) {
     return false;
   }
@@ -172,19 +151,15 @@ Presentation::HasReceiverSupport() const
   nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
   if (doc) {
     isPrivateWin =
-      doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
+        doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
   }
 
   nsCOMPtr<nsIURI> docURI = mWindow->GetDocumentURI();
-  return NS_SUCCEEDED(securityManager->CheckSameOriginURI(presentationURI,
-                                                          docURI,
-                                                          false,
-                                                          isPrivateWin));
+  return NS_SUCCEEDED(securityManager->CheckSameOriginURI(
+      presentationURI, docURI, false, isPrivateWin));
 }
 
-bool
-Presentation::IsInPresentedContent() const
-{
+bool Presentation::IsInPresentedContent() const {
   if (!mWindow) {
     return false;
   }
@@ -198,5 +173,5 @@ Presentation::IsInPresentedContent() const
   return !presentationURL.IsEmpty();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

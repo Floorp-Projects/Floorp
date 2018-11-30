@@ -21,10 +21,10 @@ class nsRegion;
 class nsDeviceContext;
 class nsIPresShell;
 
-class nsViewManager final
-{
+class nsViewManager final {
   ~nsViewManager();
-public:
+
+ public:
   friend class nsView;
 
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
@@ -56,8 +56,7 @@ public:
    *        CreateView
    * @result The new view.  Never null.
    */
-  nsView* CreateView(const nsRect& aBounds,
-                     nsView* aParent,
+  nsView* CreateView(const nsRect& aBounds, nsView* aParent,
                      nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   /**
@@ -72,7 +71,7 @@ public:
    * aView may have a widget (anything but printing) or may not (printing).
    * @param aView view to set as root
    */
-  void SetRootView(nsView *aView);
+  void SetRootView(nsView* aView);
 
   /**
    * Get the dimensions of the root window. The dimensions are in
@@ -80,7 +79,7 @@ public:
    * @param aWidth out parameter for width of window in twips
    * @param aHeight out parameter for height of window in twips
    */
-  void GetWindowDimensions(nscoord *aWidth, nscoord *aHeight);
+  void GetWindowDimensions(nscoord* aWidth, nscoord* aHeight);
 
   /**
    * Set the dimensions of the root window.
@@ -102,7 +101,7 @@ public:
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
    */
-  void InvalidateView(nsView *aView);
+  void InvalidateView(nsView* aView);
 
   /**
    * Called to inform the view manager that some portion of a view is dirty and
@@ -111,7 +110,7 @@ public:
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
    */
-  void InvalidateViewNoSuppression(nsView *aView, const nsRect &aRect);
+  void InvalidateViewNoSuppression(nsView* aView, const nsRect& aRect);
 
   /**
    * Called to inform the view manager that it should invalidate all views.
@@ -126,8 +125,7 @@ public:
    * @param aViewTarget dispatch the event to this view
    * @param aStatus event handling status
    */
-  void DispatchEvent(mozilla::WidgetGUIEvent *aEvent,
-                     nsView* aViewTarget,
+  void DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsView* aViewTarget,
                      nsEventStatus* aStatus);
 
   /**
@@ -145,17 +143,17 @@ public:
    * @param aSibling sibling view
    * @param aAfter after or before in the document order
    */
-  void InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
+  void InsertChild(nsView* aParent, nsView* aChild, nsView* aSibling,
                    bool aAfter);
 
   /**
-   * Remove a specific child view from its parent. This will NOT remove its placeholder
-   * if there is one.
-   * The view manager generates the appropriate dirty regions.
+   * Remove a specific child view from its parent. This will NOT remove its
+   * placeholder if there is one. The view manager generates the appropriate
+   * dirty regions.
    * @param aParent parent view
    * @param aChild child view
    */
-  void RemoveChild(nsView *aChild);
+  void RemoveChild(nsView* aChild);
 
   /**
    * Move a view to the specified position, provided in parent coordinates.
@@ -166,7 +164,7 @@ public:
    * @param aX x value for new view position
    * @param aY y value for new view position
    */
-  void MoveViewTo(nsView *aView, nscoord aX, nscoord aY);
+  void MoveViewTo(nsView* aView, nscoord aX, nscoord aY);
 
   /**
    * Resize a view. In addition to setting the width and height, you can
@@ -180,7 +178,7 @@ public:
    *     if true Repaint only the expanded or contracted region,
    *     if false Repaint the union of the old and new rectangles.
    */
-  void ResizeView(nsView *aView, const nsRect &aRect,
+  void ResizeView(nsView* aView, const nsRect& aRect,
                   bool aRepaintExposedAreaOnly = false);
 
   /**
@@ -194,7 +192,7 @@ public:
    * @param aView view to change visibility state of
    * @param visible new visibility state
    */
-  void SetViewVisibility(nsView *aView, nsViewVisibility aVisible);
+  void SetViewVisibility(nsView* aView, nsViewVisibility aVisible);
 
   /**
    * Set the z-index of a view. Positive z-indices mean that a view
@@ -208,7 +206,7 @@ public:
    * @param aView view to change z depth of
    * @param aZindex explicit z depth
    */
-  void SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZindex);
+  void SetViewZIndex(nsView* aView, bool aAutoZIndex, int32_t aZindex);
 
   /**
    * Set whether the view "floats" above all other views,
@@ -217,13 +215,13 @@ public:
    * this view. This is a hack, but it fixes some problems with
    * views that need to be drawn in front of all other views.
    */
-  void SetViewFloating(nsView *aView, bool aFloatingView);
+  void SetViewFloating(nsView* aView, bool aFloatingView);
 
   /**
    * Set the presshell associated with this manager
    * @param aPresShell - new presshell
    */
-  void SetPresShell(nsIPresShell *aPresShell) { mPresShell = aPresShell; }
+  void SetPresShell(nsIPresShell* aPresShell) { mPresShell = aPresShell; }
 
   /**
    * Get the pres shell associated with this manager
@@ -233,10 +231,7 @@ public:
   /**
    * Get the device context associated with this manager
    */
-  nsDeviceContext* GetDeviceContext() const
-  {
-    return mContext;
-  }
+  nsDeviceContext* GetDeviceContext() const { return mContext; }
 
   /**
    * A stack class for disallowing changes that would enter painting. For
@@ -251,7 +246,7 @@ public:
    * update synchronously.
    */
   class MOZ_STACK_CLASS AutoDisableRefresh {
-  public:
+   public:
     explicit AutoDisableRefresh(nsViewManager* aVM) {
       if (aVM) {
         mRootVM = aVM->IncrementDisableRefreshCount();
@@ -262,25 +257,26 @@ public:
         mRootVM->DecrementDisableRefreshCount();
       }
     }
-  private:
+
+   private:
     AutoDisableRefresh(const AutoDisableRefresh& aOther);
     const AutoDisableRefresh& operator=(const AutoDisableRefresh& aOther);
 
     RefPtr<nsViewManager> mRootVM;
   };
 
-private:
+ private:
   friend class AutoDisableRefresh;
 
   nsViewManager* IncrementDisableRefreshCount();
   void DecrementDisableRefreshCount();
 
-public:
+ public:
   /**
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
    */
-  void GetRootWidget(nsIWidget **aWidget);
+  void GetRootWidget(nsIWidget** aWidget);
 
   /**
    * Indicate whether the viewmanager is currently painting
@@ -316,22 +312,21 @@ public:
    */
   void UpdateWidgetGeometry();
 
-  int32_t AppUnitsPerDevPixel() const
-  {
+  int32_t AppUnitsPerDevPixel() const {
     return mContext->AppUnitsPerDevPixel();
   }
 
-private:
+ private:
   static uint32_t gLastUserEventTime;
 
   /* Update the cached RootViewManager pointer on this view manager. */
   void InvalidateHierarchy();
   void FlushPendingInvalidates();
 
-  void ProcessPendingUpdatesForView(nsView *aView,
+  void ProcessPendingUpdatesForView(nsView* aView,
                                     bool aFlushDirtyRegion = true);
-  void ProcessPendingUpdatesRecurse(nsView* aView,
-                                    AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets);
+  void ProcessPendingUpdatesRecurse(
+      nsView* aView, AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets);
   void ProcessPendingUpdatesPaint(nsIWidget* aWidget);
 
   void FlushDirtyRegionToWidget(nsView* aView);
@@ -339,18 +334,19 @@ private:
    * Call WillPaint() on all view observers under this vm root.
    */
   void CallWillPaintOnObservers();
-  void ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget);
-  void ReparentWidgets(nsView* aView, nsView *aParent);
-  void InvalidateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
+  void ReparentChildWidgets(nsView* aView, nsIWidget* aNewWidget);
+  void ReparentWidgets(nsView* aView, nsView* aParent);
+  void InvalidateWidgetArea(nsView* aWidgetView,
+                            const nsRegion& aDamagedRegion);
 
-  void InvalidateViews(nsView *aView);
+  void InvalidateViews(nsView* aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
   void Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion);
 
   // Utilities
 
-  bool IsViewInserted(nsView *aView);
+  bool IsViewInserted(nsView* aView);
 
   /**
    * Intersects aRect with aView's bounds and then transforms it from aView's
@@ -362,15 +358,11 @@ private:
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
   bool ShouldDelayResize() const;
 
-  bool IsPainting() const {
-    return RootViewManager()->mPainting;
-  }
+  bool IsPainting() const { return RootViewManager()->mPainting; }
 
-  void SetPainting(bool aPainting) {
-    RootViewManager()->mPainting = aPainting;
-  }
+  void SetPainting(bool aPainting) { RootViewManager()->mPainting = aPainting; }
 
-  void InvalidateView(nsView *aView, const nsRect &aRect);
+  void InvalidateView(nsView* aView, const nsRect& aRect);
 
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }
@@ -378,7 +370,9 @@ private:
   // Whether synchronous painting is allowed at the moment. For example,
   // widget geometry changes can cause synchronous painting, so they need to
   // be deferred while refresh is disabled.
-  bool IsPaintingAllowed() { return RootViewManager()->mRefreshDisableCount == 0; }
+  bool IsPaintingAllowed() {
+    return RootViewManager()->mRefreshDisableCount == 0;
+  }
 
   void WillPaintWindow(nsIWidget* aWidget);
   bool PaintWindow(nsIWidget* aWidget, const LayoutDeviceIntRegion& aRegion);
@@ -389,31 +383,31 @@ private:
   void PostPendingUpdate();
 
   RefPtr<nsDeviceContext> mContext;
-  nsIPresShell   *mPresShell;
+  nsIPresShell* mPresShell;
 
   // The size for a resize that we delayed until the root view becomes
   // visible again.
-  nsSize            mDelayedResize;
+  nsSize mDelayedResize;
 
-  nsView           *mRootView;
+  nsView* mRootView;
   // mRootViewManager is a strong ref unless it equals |this|.  It's
   // never null (if we have no ancestors, it will be |this|).
-  nsViewManager   *mRootViewManager;
+  nsViewManager* mRootViewManager;
 
   // The following members should not be accessed directly except by
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
 
-  int32_t           mRefreshDisableCount;
+  int32_t mRefreshDisableCount;
   // Use IsPainting() and SetPainting() to access mPainting.
-  bool              mPainting;
-  bool              mRecursiveRefreshPending;
-  bool              mHasPendingWidgetGeometryChanges;
+  bool mPainting;
+  bool mRecursiveRefreshPending;
+  bool mHasPendingWidgetGeometryChanges;
 
-  //from here to public should be static and locked... MMP
+  // from here to public should be static and locked... MMP
 
-  //list of view managers
-  static nsTArray<nsViewManager*> *gViewManagers;
+  // list of view managers
+  static nsTArray<nsViewManager*>* gViewManagers;
 };
 
 /**

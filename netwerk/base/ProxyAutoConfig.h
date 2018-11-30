@@ -14,9 +14,10 @@ class nsIEventTarget;
 class nsITimer;
 namespace JS {
 class CallArgs;
-} // namespace JS
+}  // namespace JS
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 class JSContextWrapper;
 union NetAddr;
@@ -25,22 +26,20 @@ union NetAddr;
 // non main thread. It synchronously resolves PAC files by blocking that
 // thread and running nested event loops. GetProxyForURI is not re-entrant.
 
-class ProxyAutoConfig  {
-public:
+class ProxyAutoConfig {
+ public:
   ProxyAutoConfig();
   ~ProxyAutoConfig();
 
-  nsresult Init(const nsCString &aPACURI,
-                const nsCString &aPACScript,
-                bool aIncludePath,
-                uint32_t aExtraHeapSize,
+  nsresult Init(const nsCString &aPACURI, const nsCString &aPACScript,
+                bool aIncludePath, uint32_t aExtraHeapSize,
                 nsIEventTarget *aEventTarget);
-  void     SetThreadLocalIndex(uint32_t index);
-  void     Shutdown();
-  void     GC();
-  bool     MyIPAddress(const JS::CallArgs &aArgs);
-  bool     ResolveAddress(const nsCString &aHostName,
-                          NetAddr *aNetAddr, unsigned int aTimeout);
+  void SetThreadLocalIndex(uint32_t index);
+  void Shutdown();
+  void GC();
+  bool MyIPAddress(const JS::CallArgs &aArgs);
+  bool ResolveAddress(const nsCString &aHostName, NetAddr *aNetAddr,
+                      unsigned int aTimeout);
 
   /**
    * Get the proxy string for the specified URI.  The proxy string is
@@ -76,11 +75,10 @@ public:
    * @param result
    *        result string as defined above.
    */
-  nsresult GetProxyForURI(const nsCString &aTestURI,
-                          const nsCString &aTestHost,
+  nsresult GetProxyForURI(const nsCString &aTestURI, const nsCString &aTestHost,
                           nsACString &result);
 
-private:
+ private:
   // allow 665ms for myipaddress dns queries. That's 95th percentile.
   const static unsigned int kTimeout = 665;
 
@@ -89,21 +87,21 @@ private:
 
   bool SrcAddress(const NetAddr *remoteAddress, nsCString &localAddress);
   bool MyIPAddressTryHost(const nsCString &hostName, unsigned int timeout,
-                          const JS::CallArgs &aArgs, bool* aResult);
+                          const JS::CallArgs &aArgs, bool *aResult);
 
   JSContextWrapper *mJSContext;
-  bool              mJSNeedsSetup;
-  bool              mShutdown;
-  nsCString         mPACScript;
-  nsCString         mPACURI;
-  bool              mIncludePath;
-  uint32_t          mExtraHeapSize;
-  nsCString         mRunningHost;
+  bool mJSNeedsSetup;
+  bool mShutdown;
+  nsCString mPACScript;
+  nsCString mPACURI;
+  bool mIncludePath;
+  uint32_t mExtraHeapSize;
+  nsCString mRunningHost;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
 #endif  // ProxyAutoConfig_h__

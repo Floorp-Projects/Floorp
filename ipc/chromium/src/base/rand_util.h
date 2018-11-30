@@ -29,4 +29,4 @@ void RandBytes(void* output, size_t output_length);
 
 }  // namespace base
 
-#endif // BASE_RAND_UTIL_H_
+#endif  // BASE_RAND_UTIL_H_

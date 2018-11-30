@@ -15,14 +15,12 @@ namespace layers {
 
 template <typename T>
 class DirectedGraph {
-public:
-
+ public:
   class Edge {
-    public:
+   public:
     Edge(T aFrom, T aTo) : mFrom(aFrom), mTo(aTo) {}
 
-    bool operator==(const Edge& aOther) const
-    {
+    bool operator==(const Edge& aOther) const {
       return mFrom == aOther.mFrom && mTo == aOther.mTo;
     }
 
@@ -30,56 +28,44 @@ public:
     T mTo;
   };
 
-  class RemoveEdgesToComparator 
-  {
-  public:
+  class RemoveEdgesToComparator {
+   public:
     bool Equals(const Edge& a, T const& b) const { return a.mTo == b; }
   };
 
   /**
    * Add a new edge to the graph.
    */
-  void AddEdge(Edge aEdge)
-  {
+  void AddEdge(Edge aEdge) {
     NS_ASSERTION(!mEdges.Contains(aEdge), "Adding a duplicate edge!");
     mEdges.AppendElement(aEdge);
   }
 
-  void AddEdge(T aFrom, T aTo)
-  {
-    AddEdge(Edge(aFrom, aTo));
-  }
+  void AddEdge(T aFrom, T aTo) { AddEdge(Edge(aFrom, aTo)); }
 
   /**
    * Get the list of edges.
    */
-  const nsTArray<Edge>& GetEdgeList() const
-  {
-    return mEdges; 
-  }
+  const nsTArray<Edge>& GetEdgeList() const { return mEdges; }
 
   /**
    * Remove the given edge from the graph.
    */
-  void RemoveEdge(Edge aEdge)
-  {
-    mEdges.RemoveElement(aEdge);
-  }
+  void RemoveEdge(Edge aEdge) { mEdges.RemoveElement(aEdge); }
 
   /**
    * Remove all edges going into aNode.
    */
-  void RemoveEdgesTo(T aNode)
-  {
+  void RemoveEdgesTo(T aNode) {
     RemoveEdgesToComparator c;
-    while (mEdges.RemoveElement(aNode, c)) {}
+    while (mEdges.RemoveElement(aNode, c)) {
+    }
   }
-  
+
   /**
    * Get the number of edges going into aNode.
    */
-  unsigned int NumEdgesTo(T aNode)
-  {
+  unsigned int NumEdgesTo(T aNode) {
     unsigned int count = 0;
     for (unsigned int i = 0; i < mEdges.Length(); i++) {
       if (mEdges.ElementAt(i).mTo == aNode) {
@@ -92,8 +78,7 @@ public:
   /**
    * Get the list of all edges going from aNode
    */
-  void GetEdgesFrom(T aNode, nsTArray<Edge>& aResult)
-  {
+  void GetEdgesFrom(T aNode, nsTArray<Edge>& aResult) {
     for (unsigned int i = 0; i < mEdges.Length(); i++) {
       if (mEdges.ElementAt(i).mFrom == aNode) {
         aResult.AppendElement(mEdges.ElementAt(i));
@@ -106,12 +91,11 @@ public:
    */
   unsigned int GetEdgeCount() { return mEdges.Length(); }
 
-private:
-
+ private:
   nsTArray<Edge> mEdges;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // GFX_DIRECTEDGRAPH_H
+#endif  // GFX_DIRECTEDGRAPH_H

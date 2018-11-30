@@ -26,38 +26,34 @@ namespace js {
 // declaration or expression.
 
 // Returns a wrapped async function from an unwrapped async function.
-JSFunction*
-GetWrappedAsyncFunction(JSFunction* unwrapped);
+JSFunction* GetWrappedAsyncFunction(JSFunction* unwrapped);
 
 // Returns an unwrapped async function from a wrapped async function.
-JSFunction*
-GetUnwrappedAsyncFunction(JSFunction* wrapped);
+JSFunction* GetUnwrappedAsyncFunction(JSFunction* wrapped);
 
 // Returns true if the given function is a wrapped async function.
-bool
-IsWrappedAsyncFunction(JSFunction* fun);
+bool IsWrappedAsyncFunction(JSFunction* fun);
 
 // Create a wrapped async function from unwrapped async function with given
 // prototype object.
-JSObject*
-WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleObject proto);
+JSObject* WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped,
+                                     HandleObject proto);
 
 // Create a wrapped async function from unwrapped async function with default
 // prototype object.
-JSObject*
-WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
+JSObject* WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
 // Resume the async function when the `await` operand resolves.
 // Split into two functions depending on whether the awaited value was
 // fulfilled or rejected.
-MOZ_MUST_USE bool
-AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPromise,
-                              HandleValue generatorVal, HandleValue value);
+MOZ_MUST_USE bool AsyncFunctionAwaitedFulfilled(
+    JSContext* cx, Handle<PromiseObject*> resultPromise,
+    HandleValue generatorVal, HandleValue value);
 
-MOZ_MUST_USE bool
-AsyncFunctionAwaitedRejected(JSContext* cx, Handle<PromiseObject*> resultPromise,
-                             HandleValue generatorVal, HandleValue reason);
+MOZ_MUST_USE bool AsyncFunctionAwaitedRejected(
+    JSContext* cx, Handle<PromiseObject*> resultPromise,
+    HandleValue generatorVal, HandleValue reason);
 
-} // namespace js
+}  // namespace js
 
 #endif /* vm_AsyncFunction_h */

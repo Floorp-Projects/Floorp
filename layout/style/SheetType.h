@@ -19,12 +19,12 @@ namespace mozilla {
 // Be sure to update NS_RULE_NODE_LEVEL_MASK when changing the number
 // of sheet types; static assertions enforce this.
 enum class SheetType : uint8_t {
-  Agent, // CSS
-  User, // CSS
+  Agent,  // CSS
+  User,   // CSS
   PresHint,
-  Doc, // CSS
+  Doc,  // CSS
   StyleAttr,
-  Override, // CSS
+  Override,  // CSS
   Animation,
   Transition,
 
@@ -34,9 +34,7 @@ enum class SheetType : uint8_t {
 
 // Returns whether aSheetType represents a level of the cascade that uses
 // a StyleSheet object.
-inline bool
-IsCSSSheetType(SheetType aSheetType)
-{
+inline bool IsCSSSheetType(SheetType aSheetType) {
   switch (aSheetType) {
     case SheetType::Agent:
     case SheetType::User:
@@ -48,6 +46,6 @@ IsCSSSheetType(SheetType aSheetType)
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SheetType_h
+#endif  // mozilla_SheetType_h

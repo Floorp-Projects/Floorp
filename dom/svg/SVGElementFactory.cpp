@@ -18,20 +18,20 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 // Hash table that maps nsAtom* SVG tags to a SVGContentCreatorFunction.
-using TagAtomTable = nsDataHashtable<nsPtrHashKey<nsAtom>, SVGContentCreatorFunction>;
+using TagAtomTable =
+    nsDataHashtable<nsPtrHashKey<nsAtom>, SVGContentCreatorFunction>;
 StaticAutoPtr<TagAtomTable> sTagAtomTable;
 
-#define SVG_TAG(_tag, _classname)                                              \
-  nsresult NS_NewSVG##_classname##Element(                                     \
-    nsIContent** aResult,                                                      \
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);                     \
-                                                                               \
-  nsresult NS_NewSVG##_classname##Element(                                     \
-    nsIContent** aResult,                                                      \
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,                      \
-    FromParser aFromParser)                                                    \
-  {                                                                            \
-    return NS_NewSVG##_classname##Element(aResult, std::move(aNodeInfo));  \
+#define SVG_TAG(_tag, _classname)                                         \
+  nsresult NS_NewSVG##_classname##Element(                                \
+      nsIContent** aResult,                                               \
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);              \
+                                                                          \
+  nsresult NS_NewSVG##_classname##Element(                                \
+      nsIContent** aResult,                                               \
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,               \
+      FromParser aFromParser) {                                           \
+    return NS_NewSVG##_classname##Element(aResult, std::move(aNodeInfo)); \
   }
 
 #define SVG_FROM_PARSER_TAG(_tag, _classname)
@@ -40,9 +40,8 @@ StaticAutoPtr<TagAtomTable> sTagAtomTable;
 #undef SVG_TAG
 #undef SVG_FROM_PARSER_TAG
 
-nsresult
-NS_NewSVGElement(Element** aResult,
-                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGElement(Element** aResult,
+                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 enum SVGTag {
 #define SVG_TAG(_tag, _classname) eSVGTag_##_tag,
@@ -53,9 +52,7 @@ enum SVGTag {
   eSVGTag_Count
 };
 
-void
-SVGElementFactory::Init()
-{
+void SVGElementFactory::Init() {
   sTagAtomTable = new TagAtomTable(64);
 
 #define SVG_TAG(_tag, _classname) \
@@ -67,23 +64,19 @@ SVGElementFactory::Init()
 #undef SVG_FROM_PARSER_TAG
 }
 
-void
-SVGElementFactory::Shutdown()
-{
-  sTagAtomTable = nullptr;
-}
+void SVGElementFactory::Shutdown() { sTagAtomTable = nullptr; }
 
-nsresult
-NS_NewSVGElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                 FromParser aFromParser)
-{
+nsresult NS_NewSVGElement(Element** aResult,
+                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                          FromParser aFromParser) {
   NS_ASSERTION(sTagAtomTable, "no lookup table, needs SVGElementFactory::Init");
 
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   nsAtom* name = ni->NameAtom();
 
-  NS_ASSERTION(ni->NamespaceEquals(kNameSpaceID_SVG),
-               "Trying to create SVG elements that aren't in the SVG namespace");
+  NS_ASSERTION(
+      ni->NamespaceEquals(kNameSpaceID_SVG),
+      "Trying to create SVG elements that aren't in the SVG namespace");
 
   SVGContentCreatorFunction cb = sTagAtomTable->Get(name);
   if (cb) {
@@ -97,11 +90,9 @@ NS_NewSVGElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
   return NS_NewSVGElement(aResult, ni.forget());
 }
 
-nsresult
-NS_NewSVGUnknownElement(nsIContent** aResult,
-                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                        FromParser aFromParser)
-{
+nsresult NS_NewSVGUnknownElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+    FromParser aFromParser) {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   nsCOMPtr<Element> element;
   nsresult rv = NS_NewSVGElement(getter_AddRefs(element), ni.forget());

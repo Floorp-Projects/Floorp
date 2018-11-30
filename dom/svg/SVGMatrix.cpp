@@ -20,21 +20,14 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGMatrix, mTransform)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGMatrix, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGMatrix, Release)
 
-SVGTransform*
-SVGMatrix::GetParentObject() const
-{
-  return mTransform;
-}
+SVGTransform* SVGMatrix::GetParentObject() const { return mTransform; }
 
-JSObject*
-SVGMatrix::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGMatrix::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   return SVGMatrix_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-SVGMatrix::SetA(float aA, ErrorResult& rv)
-{
+void SVGMatrix::SetA(float aA, ErrorResult& rv) {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -45,9 +38,7 @@ SVGMatrix::SetA(float aA, ErrorResult& rv)
   SetMatrix(mx);
 }
 
-void
-SVGMatrix::SetB(float aB, ErrorResult& rv)
-{
+void SVGMatrix::SetB(float aB, ErrorResult& rv) {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -58,9 +49,7 @@ SVGMatrix::SetB(float aB, ErrorResult& rv)
   SetMatrix(mx);
 }
 
-void
-SVGMatrix::SetC(float aC, ErrorResult& rv)
-{
+void SVGMatrix::SetC(float aC, ErrorResult& rv) {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -71,9 +60,7 @@ SVGMatrix::SetC(float aC, ErrorResult& rv)
   SetMatrix(mx);
 }
 
-void
-SVGMatrix::SetD(float aD, ErrorResult& rv)
-{
+void SVGMatrix::SetD(float aD, ErrorResult& rv) {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -84,9 +71,7 @@ SVGMatrix::SetD(float aD, ErrorResult& rv)
   SetMatrix(mx);
 }
 
-void
-SVGMatrix::SetE(float aE, ErrorResult& rv)
-{
+void SVGMatrix::SetE(float aE, ErrorResult& rv) {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -97,9 +82,7 @@ SVGMatrix::SetE(float aE, ErrorResult& rv)
   SetMatrix(mx);
 }
 
-void
-SVGMatrix::SetF(float aF, ErrorResult& rv)
-{
+void SVGMatrix::SetF(float aF, ErrorResult& rv) {
   if (IsAnimVal()) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
@@ -110,16 +93,12 @@ SVGMatrix::SetF(float aF, ErrorResult& rv)
   SetMatrix(mx);
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::Multiply(SVGMatrix& aMatrix)
-{
+already_AddRefed<SVGMatrix> SVGMatrix::Multiply(SVGMatrix& aMatrix) {
   RefPtr<SVGMatrix> matrix = new SVGMatrix(aMatrix.GetMatrix() * GetMatrix());
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::Inverse(ErrorResult& rv)
-{
+already_AddRefed<SVGMatrix> SVGMatrix::Inverse(ErrorResult& rv) {
   gfxMatrix mat = GetMatrix();
   if (!mat.Invert()) {
     rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -129,102 +108,83 @@ SVGMatrix::Inverse(ErrorResult& rv)
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::Translate(float x, float y)
-{
+already_AddRefed<SVGMatrix> SVGMatrix::Translate(float x, float y) {
   RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).PreTranslate(gfxPoint(x, y)));
+      new SVGMatrix(gfxMatrix(GetMatrix()).PreTranslate(gfxPoint(x, y)));
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::Scale(float scaleFactor)
-{
+already_AddRefed<SVGMatrix> SVGMatrix::Scale(float scaleFactor) {
   return ScaleNonUniform(scaleFactor, scaleFactor);
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::ScaleNonUniform(float scaleFactorX,
-                           float scaleFactorY)
-{
-  RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).PreScale(scaleFactorX, scaleFactorY));
+already_AddRefed<SVGMatrix> SVGMatrix::ScaleNonUniform(float scaleFactorX,
+                                                       float scaleFactorY) {
+  RefPtr<SVGMatrix> matrix = new SVGMatrix(
+      gfxMatrix(GetMatrix()).PreScale(scaleFactorX, scaleFactorY));
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::Rotate(float angle)
-{
+already_AddRefed<SVGMatrix> SVGMatrix::Rotate(float angle) {
   RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).PreRotate(angle*radPerDegree));
+      new SVGMatrix(gfxMatrix(GetMatrix()).PreRotate(angle * radPerDegree));
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::RotateFromVector(float x, float y, ErrorResult& rv)
-{
+already_AddRefed<SVGMatrix> SVGMatrix::RotateFromVector(float x, float y,
+                                                        ErrorResult& rv) {
   if (x == 0.0 || y == 0.0) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
 
   RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).PreRotate(atan2(y, x)));
+      new SVGMatrix(gfxMatrix(GetMatrix()).PreRotate(atan2(y, x)));
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::FlipX()
-{
+already_AddRefed<SVGMatrix> SVGMatrix::FlipX() {
   const gfxMatrix& mx = GetMatrix();
-  RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(-mx._11, -mx._12, mx._21, mx._22, mx._31, mx._32));
+  RefPtr<SVGMatrix> matrix = new SVGMatrix(
+      gfxMatrix(-mx._11, -mx._12, mx._21, mx._22, mx._31, mx._32));
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::FlipY()
-{
+already_AddRefed<SVGMatrix> SVGMatrix::FlipY() {
   const gfxMatrix& mx = GetMatrix();
-  RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(mx._11, mx._12, -mx._21, -mx._22, mx._31, mx._32));
+  RefPtr<SVGMatrix> matrix = new SVGMatrix(
+      gfxMatrix(mx._11, mx._12, -mx._21, -mx._22, mx._31, mx._32));
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::SkewX(float angle, ErrorResult& rv)
-{
-  double ta = tan( angle*radPerDegree );
+already_AddRefed<SVGMatrix> SVGMatrix::SkewX(float angle, ErrorResult& rv) {
+  double ta = tan(angle * radPerDegree);
   if (!IsFinite(ta)) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
 
   const gfxMatrix& mx = GetMatrix();
-  gfxMatrix skewMx(mx._11, mx._12,
-                   (float) (mx._21 + mx._11*ta), (float) (mx._22 + mx._12*ta),
-                   mx._31, mx._32);
+  gfxMatrix skewMx(mx._11, mx._12, (float)(mx._21 + mx._11 * ta),
+                   (float)(mx._22 + mx._12 * ta), mx._31, mx._32);
   RefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
   return matrix.forget();
 }
 
-already_AddRefed<SVGMatrix>
-SVGMatrix::SkewY(float angle, ErrorResult& rv)
-{
-  double ta = tan( angle*radPerDegree );
+already_AddRefed<SVGMatrix> SVGMatrix::SkewY(float angle, ErrorResult& rv) {
+  double ta = tan(angle * radPerDegree);
   if (!IsFinite(ta)) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
 
   const gfxMatrix& mx = GetMatrix();
-  gfxMatrix skewMx((float) (mx._11 + mx._21*ta), (float) (mx._12 + mx._22*ta),
-                   mx._21, mx._22,
-                   mx._31, mx._32);
+  gfxMatrix skewMx((float)(mx._11 + mx._21 * ta), (float)(mx._12 + mx._22 * ta),
+                   mx._21, mx._22, mx._31, mx._32);
 
   RefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
   return matrix.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

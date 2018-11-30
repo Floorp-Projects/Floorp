@@ -27,50 +27,41 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsXBLProtoImplField::nsXBLProtoImplField(const char16_t* aName, const char16_t* aReadOnly)
-  : mNext(nullptr),
-    mFieldText(nullptr),
-    mFieldTextLength(0),
-    mLineNumber(0)
-{
+nsXBLProtoImplField::nsXBLProtoImplField(const char16_t* aName,
+                                         const char16_t* aReadOnly)
+    : mNext(nullptr), mFieldText(nullptr), mFieldTextLength(0), mLineNumber(0) {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
   mName = NS_xstrdup(aName);  // XXXbz make more sense to use a stringbuffer?
 
   mJSAttributes = JSPROP_ENUMERATE;
   if (aReadOnly) {
-    nsAutoString readOnly; readOnly.Assign(aReadOnly);
+    nsAutoString readOnly;
+    readOnly.Assign(aReadOnly);
     if (readOnly.LowerCaseEqualsLiteral("true"))
       mJSAttributes |= JSPROP_READONLY;
   }
 }
 
-
 nsXBLProtoImplField::nsXBLProtoImplField(const bool aIsReadOnly)
-  : mNext(nullptr),
-    mName(nullptr),
-    mFieldText(nullptr),
-    mFieldTextLength(0),
-    mLineNumber(0)
-{
+    : mNext(nullptr),
+      mName(nullptr),
+      mFieldText(nullptr),
+      mFieldTextLength(0),
+      mLineNumber(0) {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
 
   mJSAttributes = JSPROP_ENUMERATE;
-  if (aIsReadOnly)
-    mJSAttributes |= JSPROP_READONLY;
+  if (aIsReadOnly) mJSAttributes |= JSPROP_READONLY;
 }
 
-nsXBLProtoImplField::~nsXBLProtoImplField()
-{
+nsXBLProtoImplField::~nsXBLProtoImplField() {
   MOZ_COUNT_DTOR(nsXBLProtoImplField);
-  if (mFieldText)
-    free(mFieldText);
+  if (mFieldText) free(mFieldText);
   free(mName);
   NS_CONTENT_DELETE_LIST_MEMBER(nsXBLProtoImplField, this, mNext);
 }
 
-void
-nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
-{
+void nsXBLProtoImplField::AppendFieldText(const nsAString& aText) {
   if (mFieldText) {
     nsDependentString fieldTextStr(mFieldText, mFieldTextLength);
     nsAutoString newFieldText = fieldTextStr + aText;
@@ -78,8 +69,7 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
     mFieldText = ToNewUnicode(newFieldText);
     mFieldTextLength = newFieldText.Length();
     free(temp);
-  }
-  else {
+  } else {
     mFieldText = ToNewUnicode(aText);
     mFieldTextLength = aText.Length();
   }
@@ -88,15 +78,16 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 // XBL fields are represented on elements inheriting that field a bit trickily.
 // When setting up the XBL prototype object, we install accessors for the fields
 // on the prototype object. Those accessors, when used, will then (via
-// InstallXBLField below) reify a property for the field onto the actual XBL-backed
-// element.
+// InstallXBLField below) reify a property for the field onto the actual
+// XBL-backed element.
 //
 // The accessor property is a plain old property backed by a getter function and
 // a setter function.  These properties are backed by the FieldGetter and
-// FieldSetter natives; they're created by InstallAccessors.  The precise field to be
-// reified is identified using two extra slots on the getter/setter functions.
-// XBLPROTO_SLOT stores the XBL prototype object that provides the field.
-// FIELD_SLOT stores the name of the field, i.e. its JavaScript property name.
+// FieldSetter natives; they're created by InstallAccessors.  The precise field
+// to be reified is identified using two extra slots on the getter/setter
+// functions. XBLPROTO_SLOT stores the XBL prototype object that provides the
+// field. FIELD_SLOT stores the name of the field, i.e. its JavaScript property
+// name.
 //
 // This two-step field installation process -- creating an accessor on the
 // prototype, then have that reify an own property on the actual element -- is
@@ -108,9 +99,7 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 static const uint32_t XBLPROTO_SLOT = 0;
 static const uint32_t FIELD_SLOT = 1;
 
-bool
-ValueHasISupportsPrivate(JS::Handle<JS::Value> v)
-{
+bool ValueHasISupportsPrivate(JS::Handle<JS::Value> v) {
   if (!v.isObject()) {
     return false;
   }
@@ -122,16 +111,14 @@ ValueHasISupportsPrivate(JS::Handle<JS::Value> v)
 
   const JSClass* clasp = ::JS_GetClass(&v.toObject());
   const uint32_t HAS_PRIVATE_NSISUPPORTS =
-    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS;
+      JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS;
   return (clasp->flags & HAS_PRIVATE_NSISUPPORTS) == HAS_PRIVATE_NSISUPPORTS;
 }
 
 #ifdef DEBUG
-static bool
-ValueHasISupportsPrivate(JSContext* cx, const JS::Value& aVal)
-{
-    JS::Rooted<JS::Value> v(cx, aVal);
-    return ValueHasISupportsPrivate(v);
+static bool ValueHasISupportsPrivate(JSContext* cx, const JS::Value& aVal) {
+  JS::Rooted<JS::Value> v(cx, aVal);
+  return ValueHasISupportsPrivate(v);
 }
 #endif
 
@@ -139,11 +126,9 @@ ValueHasISupportsPrivate(JSContext* cx, const JS::Value& aVal)
 // contents of the callee's reserved slots.  If the property was defined,
 // *installed will be true, and idp will be set to the property name that was
 // defined.
-static bool
-InstallXBLField(JSContext* cx,
-                JS::Handle<JSObject*> callee, JS::Handle<JSObject*> thisObj,
-                JS::MutableHandle<jsid> idp, bool* installed)
-{
+static bool InstallXBLField(JSContext* cx, JS::Handle<JSObject*> callee,
+                            JS::Handle<JSObject*> thisObj,
+                            JS::MutableHandle<jsid> idp, bool* installed) {
   *installed = false;
 
   // First ensure |this| is a reasonable XBL bound node.
@@ -189,7 +174,8 @@ InstallXBLField(JSContext* cx,
     JS::Rooted<JSObject*> xblProto(cx);
     xblProto = &js::GetFunctionNativeReserved(callee, XBLPROTO_SLOT).toObject();
 
-    JS::Rooted<JS::Value> name(cx, js::GetFunctionNativeReserved(callee, FIELD_SLOT));
+    JS::Rooted<JS::Value> name(
+        cx, js::GetFunctionNativeReserved(callee, FIELD_SLOT));
     if (!fieldName.init(cx, name.toString())) {
       return false;
     }
@@ -219,9 +205,7 @@ InstallXBLField(JSContext* cx,
   return false;
 }
 
-bool
-FieldGetterImpl(JSContext *cx, const JS::CallArgs& args)
-{
+bool FieldGetterImpl(JSContext* cx, const JS::CallArgs& args) {
   JS::Handle<JS::Value> thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
@@ -233,7 +217,8 @@ FieldGetterImpl(JSContext *cx, const JS::CallArgs& args)
   // wrapper. In this case, we know we want to do an unsafe unwrap, and
   // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, js::UncheckedUnwrap(&args.calleev().toObject()));
+  JS::Rooted<JSObject*> callee(cx,
+                               js::UncheckedUnwrap(&args.calleev().toObject()));
   JS::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, &id, &installed)) {
     return false;
@@ -247,17 +232,13 @@ FieldGetterImpl(JSContext *cx, const JS::CallArgs& args)
   return JS_GetPropertyById(cx, thisObj, id, args.rval());
 }
 
-static bool
-FieldGetter(JSContext *cx, unsigned argc, JS::Value *vp)
-{
+static bool FieldGetter(JSContext* cx, unsigned argc, JS::Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldGetterImpl>
-                                 (cx, args);
+  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldGetterImpl>(
+      cx, args);
 }
 
-bool
-FieldSetterImpl(JSContext *cx, const JS::CallArgs& args)
-{
+bool FieldSetterImpl(JSContext* cx, const JS::CallArgs& args) {
   JS::Handle<JS::Value> thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
@@ -269,7 +250,8 @@ FieldSetterImpl(JSContext *cx, const JS::CallArgs& args)
   // wrapper. In this case, we know we want to do an unsafe unwrap, and
   // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, js::UncheckedUnwrap(&args.calleev().toObject()));
+  JS::Rooted<JSObject*> callee(cx,
+                               js::UncheckedUnwrap(&args.calleev().toObject()));
   JS::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, &id, &installed)) {
     return false;
@@ -284,25 +266,23 @@ FieldSetterImpl(JSContext *cx, const JS::CallArgs& args)
   return true;
 }
 
-static bool
-FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
-{
+static bool FieldSetter(JSContext* cx, unsigned argc, JS::Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldSetterImpl>
-                                 (cx, args);
+  return JS::CallNonGenericMethod<ValueHasISupportsPrivate, FieldSetterImpl>(
+      cx, args);
 }
 
-nsresult
-nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
-                                      JS::Handle<JSObject*> aTargetClassObject)
-{
+nsresult nsXBLProtoImplField::InstallAccessors(
+    JSContext* aCx, JS::Handle<JSObject*> aTargetClassObject) {
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
-  JS::Rooted<JSObject*> globalObject(aCx, JS::GetNonCCWObjectGlobal(aTargetClassObject));
-  JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScopeOrGlobal(aCx, globalObject));
+  JS::Rooted<JSObject*> globalObject(
+      aCx, JS::GetNonCCWObjectGlobal(aTargetClassObject));
+  JS::Rooted<JSObject*> scopeObject(
+      aCx, xpc::GetXBLScopeOrGlobal(aCx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
-  // Don't install it if the field is empty; see also InstallField which also must
-  // implement the not-empty requirement.
+  // Don't install it if the field is empty; see also InstallField which also
+  // must implement the not-empty requirement.
   if (IsEmpty()) {
     return NS_OK;
   }
@@ -313,8 +293,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   // Get the field name as an id.
   JS::Rooted<jsid> id(aCx);
   JS::TwoByteChars chars(mName, NS_strlen(mName));
-  if (!JS_CharsToId(aCx, chars, &id))
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!JS_CharsToId(aCx, chars, &id)) return NS_ERROR_OUT_OF_MEMORY;
 
   // Properties/Methods have historically taken precendence over fields. We
   // install members first, so just bounce here if the property is already
@@ -322,21 +301,20 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   bool found = false;
   if (!JS_AlreadyHasOwnPropertyById(aCx, aTargetClassObject, id, &found))
     return NS_ERROR_FAILURE;
-  if (found)
-    return NS_OK;
+  if (found) return NS_OK;
 
   // FieldGetter and FieldSetter need to run in the XBL scope so that they can
   // see through any SOWs on their targets.
 
   // First, enter the XBL scope, and compile the functions there.
   JSAutoRealm ar(aCx, scopeObject);
-  JS::Rooted<JS::Value> wrappedClassObj(aCx, JS::ObjectValue(*aTargetClassObject));
-  if (!JS_WrapValue(aCx, &wrappedClassObj))
-    return NS_ERROR_OUT_OF_MEMORY;
+  JS::Rooted<JS::Value> wrappedClassObj(aCx,
+                                        JS::ObjectValue(*aTargetClassObject));
+  if (!JS_WrapValue(aCx, &wrappedClassObj)) return NS_ERROR_OUT_OF_MEMORY;
 
-  JS::Rooted<JSObject*> get(aCx,
-    JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldGetter,
-                                                         0, 0, id)));
+  JS::Rooted<JSObject*> get(
+      aCx, JS_GetFunctionObject(
+               js::NewFunctionByIdWithReserved(aCx, FieldGetter, 0, 0, id)));
   if (!get) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -344,9 +322,9 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   js::SetFunctionNativeReserved(get, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
-  JS::Rooted<JSObject*> set(aCx,
-    JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldSetter,
-                                                          1, 0, id)));
+  JS::Rooted<JSObject*> set(
+      aCx, JS_GetFunctionObject(
+               js::NewFunctionByIdWithReserved(aCx, FieldSetter, 1, 0, id)));
   if (!set) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -354,8 +332,8 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   js::SetFunctionNativeReserved(set, FIELD_SLOT,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
-  // Now, re-enter the class object's scope, wrap the getters/setters, and define
-  // them there.
+  // Now, re-enter the class object's scope, wrap the getters/setters, and
+  // define them there.
   JSAutoRealm ar2(aCx, aTargetClassObject);
   if (!JS_WrapObject(aCx, &get) || !JS_WrapObject(aCx, &set)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -369,11 +347,9 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult
-nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
-                                  const nsXBLPrototypeBinding& aProtoBinding,
-                                  bool* aDidInstall) const
-{
+nsresult nsXBLProtoImplField::InstallField(
+    JS::Handle<JSObject*> aBoundNode,
+    const nsXBLPrototypeBinding& aProtoBinding, bool* aDidInstall) const {
   MOZ_ASSERT(aBoundNode,
              "uh-oh, bound node should NOT be null or bad things will happen");
 
@@ -419,8 +395,8 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
 
   // First, enter the xbl scope, build the element's scope chain, and use
   // that as the scope chain for the evaluation.
-  JS::Rooted<JSObject*> scopeObject(jsapi.cx(),
-    xpc::GetXBLScopeOrGlobal(jsapi.cx(), aBoundNode));
+  JS::Rooted<JSObject*> scopeObject(
+      jsapi.cx(), xpc::GetXBLScopeOrGlobal(jsapi.cx(), aBoundNode));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
   AutoEntryScript aes(scopeObject, "XBL <field> initialization", true);
@@ -430,15 +406,16 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber);
   JS::AutoObjectVector scopeChain(cx);
-  if (!nsJSUtils::GetScopeChainForXBL(cx, boundElement, aProtoBinding, scopeChain)) {
+  if (!nsJSUtils::GetScopeChainForXBL(cx, boundElement, aProtoBinding,
+                                      scopeChain)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   rv = NS_OK;
   {
     nsJSUtils::ExecutionContext exec(cx, scopeObject);
     exec.SetScopeChain(scopeChain);
-    exec.CompileAndExec(options, nsDependentString(mFieldText,
-                                                   mFieldTextLength));
+    exec.CompileAndExec(options,
+                        nsDependentString(mFieldText, mFieldTextLength));
     rv = exec.ExtractReturnValue(&result);
   }
 
@@ -468,9 +445,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   return NS_OK;
 }
 
-nsresult
-nsXBLProtoImplField::Read(nsIObjectInputStream* aStream)
-{
+nsresult nsXBLProtoImplField::Read(nsIObjectInputStream* aStream) {
   nsAutoString name;
   nsresult rv = aStream->ReadString(name);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -483,15 +458,12 @@ nsXBLProtoImplField::Read(nsIObjectInputStream* aStream)
   rv = aStream->ReadString(fieldText);
   NS_ENSURE_SUCCESS(rv, rv);
   mFieldTextLength = fieldText.Length();
-  if (mFieldTextLength)
-    mFieldText = ToNewUnicode(fieldText);
+  if (mFieldTextLength) mFieldText = ToNewUnicode(fieldText);
 
   return NS_OK;
 }
 
-nsresult
-nsXBLProtoImplField::Write(nsIObjectOutputStream* aStream)
-{
+nsresult nsXBLProtoImplField::Write(nsIObjectOutputStream* aStream) {
   XBLBindingSerializeDetails type = XBLBinding_Serialize_Field;
 
   if (mJSAttributes & JSPROP_READONLY) {

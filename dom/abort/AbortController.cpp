@@ -22,9 +22,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortController)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<AbortController>
-AbortController::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<AbortController> AbortController::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -36,25 +35,16 @@ AbortController::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 }
 
 AbortController::AbortController(nsIGlobalObject* aGlobal)
-  : mGlobal(aGlobal)
-  , mAborted(false)
-{}
+    : mGlobal(aGlobal), mAborted(false) {}
 
-JSObject*
-AbortController::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AbortController::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return AbortController_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsIGlobalObject*
-AbortController::GetParentObject() const
-{
-  return mGlobal;
-}
+nsIGlobalObject* AbortController::GetParentObject() const { return mGlobal; }
 
-AbortSignal*
-AbortController::Signal()
-{
+AbortSignal* AbortController::Signal() {
   if (!mSignal) {
     mSignal = new AbortSignal(mGlobal, mAborted);
   }
@@ -62,9 +52,7 @@ AbortController::Signal()
   return mSignal;
 }
 
-void
-AbortController::Abort()
-{
+void AbortController::Abort() {
   if (mAborted) {
     return;
   }
@@ -76,5 +64,5 @@ AbortController::Abort()
   }
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

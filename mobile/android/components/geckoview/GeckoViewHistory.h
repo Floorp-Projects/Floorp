@@ -18,24 +18,21 @@
 class nsIDocument;
 class nsIWidget;
 
-struct VisitedURI
-{
+struct VisitedURI {
   nsCOMPtr<nsIURI> mURI;
   bool mVisited = false;
 };
 
-struct TrackedURI
-{
+struct TrackedURI {
   // Per `IHistory`, these are not owning references.
   nsTObserverArray<mozilla::dom::Link*> mLinks;
   bool mVisited = false;
 };
 
-class GeckoViewHistory final : public mozilla::IHistory
-                             , public nsITimerCallback
-                             , public nsINamed
-{
-public:
+class GeckoViewHistory final : public mozilla::IHistory,
+                               public nsITimerCallback,
+                               public nsINamed {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_IHISTORY
   NS_DECL_NSITIMERCALLBACK
@@ -49,7 +46,7 @@ public:
                          const nsTArray<nsCOMPtr<nsIURI>>& aURIs);
   void HandleVisitedState(const nsTArray<VisitedURI>& aVisitedURIs);
 
-private:
+ private:
   virtual ~GeckoViewHistory();
 
   void QueryVisitedStateInContentProcess();

@@ -20,12 +20,11 @@ namespace dom {
 /**
  * These URIs refer to host objects with "blob" scheme.
  */
-class BlobURL final : public mozilla::net::nsSimpleURI
-{
-private:
+class BlobURL final : public mozilla::net::nsSimpleURI {
+ private:
   BlobURL();
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
@@ -40,54 +39,44 @@ public:
                                   bool* aResult) override;
 
   // Override StartClone to hand back a BlobURL
-  virtual mozilla::net::nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
-                                                const nsACString& newRef) override
-  {
+  virtual mozilla::net::nsSimpleURI* StartClone(
+      RefHandlingEnum refHandlingMode, const nsACString& newRef) override {
     BlobURL* url = new BlobURL();
     SetRefOnClone(url, refHandlingMode, newRef);
     return url;
   }
 
-  bool
-  Revoked() const
-  {
-    return mRevoked;
-  }
+  bool Revoked() const { return mRevoked; }
 
-  NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
+  NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
 
-private:
+ private:
   virtual ~BlobURL() = default;
 
-  nsresult SetScheme(const nsACString &aProtocol) override;
+  nsresult SetScheme(const nsACString& aProtocol) override;
   bool Deserialize(const mozilla::ipc::URIParams&);
-  nsresult ReadPrivate(nsIObjectInputStream *stream);
+  nsresult ReadPrivate(nsIObjectInputStream* stream);
 
-public:
-  class Mutator final
-    : public nsIURIMutator
-    , public BaseURIMutator<BlobURL>
-    , public nsISerializable
-  {
+ public:
+  class Mutator final : public nsIURIMutator,
+                        public BaseURIMutator<BlobURL>,
+                        public nsISerializable {
     NS_DECL_ISUPPORTS
     NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
     NS_DEFINE_NSIMUTATOR_COMMON
 
     NS_IMETHOD
-    Write(nsIObjectOutputStream *aOutputStream) override
-    {
+    Write(nsIObjectOutputStream* aOutputStream) override {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    MOZ_MUST_USE NS_IMETHOD
-    Read(nsIObjectInputStream* aStream) override
-    {
+    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
       return InitFromInputStream(aStream);
     }
 
     Mutator() = default;
 
-  private:
+   private:
     ~Mutator() = default;
 
     friend class BlobURL;
@@ -98,15 +87,21 @@ public:
   bool mRevoked;
 };
 
-#define NS_HOSTOBJECTURI_CID \
-{ 0xf5475c51, 0x59a7, 0x4757, \
-  { 0xb3, 0xd9, 0xe2, 0x11, 0xa9, 0x41, 0x08, 0x72 } }
+#define NS_HOSTOBJECTURI_CID                         \
+  {                                                  \
+    0xf5475c51, 0x59a7, 0x4757, {                    \
+      0xb3, 0xd9, 0xe2, 0x11, 0xa9, 0x41, 0x08, 0x72 \
+    }                                                \
+  }
 
-#define NS_HOSTOBJECTURIMUTATOR_CID \
-{ 0xbbe50ef2, 0x80eb, 0x469d, \
-  { 0xb7, 0x0d, 0x02, 0x85, 0x82, 0x75, 0x38, 0x9f } }
+#define NS_HOSTOBJECTURIMUTATOR_CID                  \
+  {                                                  \
+    0xbbe50ef2, 0x80eb, 0x469d, {                    \
+      0xb7, 0x0d, 0x02, 0x85, 0x82, 0x75, 0x38, 0x9f \
+    }                                                \
+  }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_BlobURL_h */

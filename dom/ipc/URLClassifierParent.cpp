@@ -12,21 +12,18 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 /////////////////////////////////////////////////////////////////////
-//URLClassifierParent.
+// URLClassifierParent.
 
 NS_IMPL_ISUPPORTS(URLClassifierParent, nsIURIClassifierCallback)
 
-mozilla::ipc::IPCResult
-URLClassifierParent::StartClassify(nsIPrincipal* aPrincipal,
-                                   bool aUseTrackingProtection,
-                                   bool* aSuccess)
-{
+mozilla::ipc::IPCResult URLClassifierParent::StartClassify(
+    nsIPrincipal* aPrincipal, bool aUseTrackingProtection, bool* aSuccess) {
   *aSuccess = false;
   nsresult rv = NS_OK;
   // Note that in safe mode, the URL classifier service isn't available, so we
   // should handle the service not being present gracefully.
   nsCOMPtr<nsIURIClassifier> uriClassifier =
-    do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
+      do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = uriClassifier->Classify(aPrincipal, nullptr, aUseTrackingProtection,
                                  this, aSuccess);
@@ -44,31 +41,26 @@ URLClassifierParent::StartClassify(nsIPrincipal* aPrincipal,
   return IPC_OK();
 }
 
-void
-URLClassifierParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void URLClassifierParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }
 
 /////////////////////////////////////////////////////////////////////
-//URLClassifierLocalParent.
+// URLClassifierLocalParent.
 
 NS_IMPL_ISUPPORTS(URLClassifierLocalParent, nsIURIClassifierCallback)
 
-mozilla::ipc::IPCResult
-URLClassifierLocalParent::StartClassify(nsIURI* aURI, const nsACString& aTables)
-{
+mozilla::ipc::IPCResult URLClassifierLocalParent::StartClassify(
+    nsIURI* aURI, const nsACString& aTables) {
   nsresult rv = NS_OK;
   // Note that in safe mode, the URL classifier service isn't available, so we
   // should handle the service not being present gracefully.
   nsCOMPtr<nsIURIClassifier> uriClassifier =
-    do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
+      do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     MOZ_ASSERT(aURI);
-    rv = uriClassifier->AsyncClassifyLocalWithTables(aURI, aTables,
-                                                     nsTArray<nsCString>(),
-                                                     nsTArray<nsCString>(),
-                                                     this);
+    rv = uriClassifier->AsyncClassifyLocalWithTables(
+        aURI, aTables, nsTArray<nsCString>(), nsTArray<nsCString>(), this);
   }
   if (NS_FAILED(rv)) {
     // Cannot do ClassificationFailed() because the child side
@@ -80,8 +72,6 @@ URLClassifierLocalParent::StartClassify(nsIURI* aURI, const nsACString& aTables)
   return IPC_OK();
 }
 
-void
-URLClassifierLocalParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void URLClassifierLocalParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }

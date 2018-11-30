@@ -58,7 +58,6 @@
 ** recognize all the possible strerror() messages in the world.
 */
 
-
 /* #undef anything you don't want to support */
 #define SUPPORT_LSL  /* /bin/ls -l and dozens of variations therof */
 #define SUPPORT_DLS  /* /bin/dls format (very, Very, VERY rare) */
@@ -69,38 +68,33 @@
 #define SUPPORT_OS2  /* IBM TCP/IP for OS/2 - FTP Server */
 #define SUPPORT_W16  /* win16 hosts: SuperTCP or NetManage Chameleon */
 
-struct list_state
-{
-  list_state() {
-    memset(this, 0, sizeof(*this));
-  }
+struct list_state {
+  list_state() { memset(this, 0, sizeof(*this)); }
 
-  PRTime         now_time;      /* needed for year determination */
-  PRExplodedTime now_tm;        /* needed for year determination */
-  int32_t        lstyle;        /* LISTing style */
-  int32_t        parsed_one;    /* returned anything yet? */
-  char           carry_buf[84]; /* for VMS multiline */
-  uint32_t       carry_buf_len; /* length of name in carry_buf */
-  uint32_t       numlines;      /* number of lines seen */
+  PRTime now_time;        /* needed for year determination */
+  PRExplodedTime now_tm;  /* needed for year determination */
+  int32_t lstyle;         /* LISTing style */
+  int32_t parsed_one;     /* returned anything yet? */
+  char carry_buf[84];     /* for VMS multiline */
+  uint32_t carry_buf_len; /* length of name in carry_buf */
+  uint32_t numlines;      /* number of lines seen */
 };
 
-struct list_result
-{
-  int32_t           fe_type;      /* 'd'(dir) or 'l'(link) or 'f'(file) */
-  const char *      fe_fname;     /* pointer to filename */
-  uint32_t          fe_fnlen;     /* length of filename */
-  const char *      fe_lname;     /* pointer to symlink name */
-  uint32_t          fe_lnlen;     /* length of symlink name */
-  char              fe_size[40];  /* size of file in bytes (<= (2^128 - 1)) */
-  PRExplodedTime    fe_time;      /* last-modified time */
-  int32_t           fe_cinfs;     /* file system is definitely case insensitive */
-                                  /* (converting all-upcase names may be desirable) */
+struct list_result {
+  int32_t fe_type;        /* 'd'(dir) or 'l'(link) or 'f'(file) */
+  const char *fe_fname;   /* pointer to filename */
+  uint32_t fe_fnlen;      /* length of filename */
+  const char *fe_lname;   /* pointer to symlink name */
+  uint32_t fe_lnlen;      /* length of symlink name */
+  char fe_size[40];       /* size of file in bytes (<= (2^128 - 1)) */
+  PRExplodedTime fe_time; /* last-modified time */
+  int32_t fe_cinfs;       /* file system is definitely case insensitive */
+                          /* (converting all-upcase names may be desirable) */
 };
 
 typedef PRTime (*NowTimeFn)();
 
-int ParseFTPList(const char *line,
-                 struct list_state *state,
+int ParseFTPList(const char *line, struct list_state *state,
                  struct list_result *result,
                  PRTimeParamFn timeParam = PR_LocalTimeParameters,
                  NowTimeFn nowTimeFn = PR_Now);

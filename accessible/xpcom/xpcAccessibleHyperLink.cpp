@@ -11,13 +11,11 @@
 using namespace mozilla::a11y;
 
 NS_IMETHODIMP
-xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex)
-{
+xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex) {
   NS_ENSURE_ARG_POINTER(aStartIndex);
   *aStartIndex = 0;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible()) {
     *aStartIndex = Intl().AsAccessible()->StartOffset();
@@ -27,8 +25,7 @@ xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex)
 #else
     bool isIndexValid = false;
     uint32_t startOffset = Intl().AsProxy()->StartOffset(&isIndexValid);
-    if (!isIndexValid)
-      return NS_ERROR_FAILURE;
+    if (!isIndexValid) return NS_ERROR_FAILURE;
 
     *aStartIndex = startOffset;
 #endif
@@ -38,13 +35,11 @@ xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex)
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex)
-{
+xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex) {
   NS_ENSURE_ARG_POINTER(aEndIndex);
   *aEndIndex = 0;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible()) {
     *aEndIndex = Intl().AsAccessible()->EndOffset();
@@ -54,8 +49,7 @@ xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex)
 #else
     bool isIndexValid = false;
     uint32_t endOffset = Intl().AsProxy()->EndOffset(&isIndexValid);
-    if (!isIndexValid)
-      return NS_ERROR_FAILURE;
+    if (!isIndexValid) return NS_ERROR_FAILURE;
 
     *aEndIndex = endOffset;
 #endif
@@ -65,13 +59,11 @@ xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex)
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperLink::GetAnchorCount(int32_t* aAnchorCount)
-{
+xpcAccessibleHyperLink::GetAnchorCount(int32_t* aAnchorCount) {
   NS_ENSURE_ARG_POINTER(aAnchorCount);
   *aAnchorCount = 0;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible()) {
     *aAnchorCount = Intl().AsAccessible()->AnchorCount();
@@ -81,8 +73,7 @@ xpcAccessibleHyperLink::GetAnchorCount(int32_t* aAnchorCount)
 #else
     bool isCountValid = false;
     uint32_t anchorCount = Intl().AsProxy()->AnchorCount(&isCountValid);
-    if (!isCountValid)
-      return NS_ERROR_FAILURE;
+    if (!isCountValid) return NS_ERROR_FAILURE;
 
     *aAnchorCount = anchorCount;
 #endif
@@ -92,15 +83,12 @@ xpcAccessibleHyperLink::GetAnchorCount(int32_t* aAnchorCount)
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI)
-{
+xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
-  if (aIndex < 0)
-    return NS_ERROR_INVALID_ARG;
+  if (aIndex < 0) return NS_ERROR_INVALID_ARG;
 
   if (Intl().IsAccessible()) {
     if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount()))
@@ -114,8 +102,7 @@ xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI)
     nsCString spec;
     bool isURIValid = false;
     Intl().AsProxy()->AnchorURIAt(aIndex, spec, &isURIValid);
-    if (!isURIValid)
-      return NS_ERROR_FAILURE;
+    if (!isURIValid) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
@@ -128,18 +115,14 @@ xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible)
-{
+xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible) {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nullptr;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
-  if (aIndex < 0)
-    return NS_ERROR_INVALID_ARG;
+  if (aIndex < 0) return NS_ERROR_INVALID_ARG;
 
   if (Intl().IsAccessible()) {
     if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount()))
@@ -158,13 +141,11 @@ xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible)
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperLink::GetValid(bool* aValid)
-{
+xpcAccessibleHyperLink::GetValid(bool* aValid) {
   NS_ENSURE_ARG_POINTER(aValid);
   *aValid = false;
 
-  if (Intl().IsNull())
-    return NS_ERROR_FAILURE;
+  if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
   if (Intl().IsAccessible()) {
     *aValid = Intl().AsAccessible()->IsLinkValid();

@@ -10,77 +10,66 @@ namespace mozilla {
 namespace devtools {
 
 /* static */ already_AddRefed<FileDescriptorOutputStream>
-FileDescriptorOutputStream::Create(const ipc::FileDescriptor& fileDescriptor)
-{
-  if (NS_WARN_IF(!fileDescriptor.IsValid()))
-    return nullptr;
+FileDescriptorOutputStream::Create(const ipc::FileDescriptor& fileDescriptor) {
+  if (NS_WARN_IF(!fileDescriptor.IsValid())) return nullptr;
 
   auto rawFD = fileDescriptor.ClonePlatformHandle();
   PRFileDesc* prfd = PR_ImportFile(PROsfd(rawFD.release()));
-  if (NS_WARN_IF(!prfd))
-    return nullptr;
+  if (NS_WARN_IF(!prfd)) return nullptr;
 
-  RefPtr<FileDescriptorOutputStream> stream = new FileDescriptorOutputStream(prfd);
+  RefPtr<FileDescriptorOutputStream> stream =
+      new FileDescriptorOutputStream(prfd);
   return stream.forget();
 }
 
 NS_IMPL_ISUPPORTS(FileDescriptorOutputStream, nsIOutputStream);
 
 NS_IMETHODIMP
-FileDescriptorOutputStream::Close()
-{
+FileDescriptorOutputStream::Close() {
   // Repeatedly closing is idempotent.
-  if (!fd)
-    return NS_OK;
+  if (!fd) return NS_OK;
 
-  if (PR_Close(fd) != PR_SUCCESS)
-    return NS_ERROR_FAILURE;
+  if (PR_Close(fd) != PR_SUCCESS) return NS_ERROR_FAILURE;
   fd = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FileDescriptorOutputStream::Write(const char* buf, uint32_t count, uint32_t* retval)
-{
-  if (NS_WARN_IF(!fd))
-    return NS_ERROR_FAILURE;
+FileDescriptorOutputStream::Write(const char* buf, uint32_t count,
+                                  uint32_t* retval) {
+  if (NS_WARN_IF(!fd)) return NS_ERROR_FAILURE;
 
   auto written = PR_Write(fd, buf, count);
-  if (written < 0)
-    return NS_ERROR_FAILURE;
+  if (written < 0) return NS_ERROR_FAILURE;
   *retval = written;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FileDescriptorOutputStream::Flush()
-{
-  if (NS_WARN_IF(!fd))
-    return NS_ERROR_FAILURE;
+FileDescriptorOutputStream::Flush() {
+  if (NS_WARN_IF(!fd)) return NS_ERROR_FAILURE;
 
   return PR_Sync(fd) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-FileDescriptorOutputStream::WriteFrom(nsIInputStream* fromStream, uint32_t count,
-                                      uint32_t* retval)
-{
+FileDescriptorOutputStream::WriteFrom(nsIInputStream* fromStream,
+                                      uint32_t count, uint32_t* retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorOutputStream::WriteSegments(nsReadSegmentFun reader, void* closure,
-                                          uint32_t count, uint32_t* retval)
-{
+FileDescriptorOutputStream::WriteSegments(nsReadSegmentFun reader,
+                                          void* closure, uint32_t count,
+                                          uint32_t* retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorOutputStream::IsNonBlocking(bool* retval)
-{
+FileDescriptorOutputStream::IsNonBlocking(bool* retval) {
   *retval = false;
   return NS_OK;
 }
 
-} // namespace devtools
-} // namespace mozilla
+}  // namespace devtools
+}  // namespace mozilla

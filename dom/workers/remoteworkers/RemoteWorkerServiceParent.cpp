@@ -14,25 +14,19 @@ using namespace ipc;
 namespace dom {
 
 RemoteWorkerServiceParent::RemoteWorkerServiceParent()
-  : mManager(RemoteWorkerManager::GetOrCreate())
-{}
+    : mManager(RemoteWorkerManager::GetOrCreate()) {}
 
-RemoteWorkerServiceParent::~RemoteWorkerServiceParent()
-{}
+RemoteWorkerServiceParent::~RemoteWorkerServiceParent() {}
 
-void
-RemoteWorkerServiceParent::Initialize()
-{
+void RemoteWorkerServiceParent::Initialize() {
   AssertIsOnBackgroundThread();
   mManager->RegisterActor(this);
 }
 
-void
-RemoteWorkerServiceParent::ActorDestroy(IProtocol::ActorDestroyReason)
-{
+void RemoteWorkerServiceParent::ActorDestroy(IProtocol::ActorDestroyReason) {
   AssertIsOnBackgroundThread();
   mManager->UnregisterActor(this);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

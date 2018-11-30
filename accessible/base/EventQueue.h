@@ -16,10 +16,9 @@ class DocAccessible;
 /**
  * Used to organize and coalesce pending events.
  */
-class EventQueue
-{
-protected:
-  explicit EventQueue(DocAccessible* aDocument) : mDocument(aDocument) { }
+class EventQueue {
+ protected:
+  explicit EventQueue(DocAccessible* aDocument) : mDocument(aDocument) {}
 
   /**
    * Put an accessible event into the queue to process it later.
@@ -36,9 +35,9 @@ protected:
    */
   void ProcessEventQueue();
 
-private:
+ private:
   EventQueue(const EventQueue&) = delete;
-  EventQueue& operator = (const EventQueue&) = delete;
+  EventQueue& operator=(const EventQueue&) = delete;
 
   // Event queue processing
   /**
@@ -58,7 +57,7 @@ private:
                                AccSelChangeEvent* aThisEvent,
                                uint32_t aThisIndex);
 
-protected:
+ protected:
   /**
    * The document accessible reference owning this queue.
    */
@@ -71,7 +70,7 @@ protected:
   nsTArray<RefPtr<AccEvent>> mEvents;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
-#endif // mozilla_a11y_EventQueue_h_
+#endif  // mozilla_a11y_EventQueue_h_

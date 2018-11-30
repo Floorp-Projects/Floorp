@@ -9,73 +9,56 @@
 #include "mozilla/Attributes.h"
 #include "txIXPathContext.h"
 
-class txSingleNodeContext : public txIEvalContext
-{
-public:
-    txSingleNodeContext(const txXPathNode& aContextNode,
-                        txIMatchContext* aContext)
-        : mNode(aContextNode),
-          mInner(aContext)
-    {
-        NS_ASSERTION(aContext, "txIMatchContext must be given");
-    }
+class txSingleNodeContext : public txIEvalContext {
+ public:
+  txSingleNodeContext(const txXPathNode& aContextNode,
+                      txIMatchContext* aContext)
+      : mNode(aContextNode), mInner(aContext) {
+    NS_ASSERTION(aContext, "txIMatchContext must be given");
+  }
 
-    nsresult getVariable(int32_t aNamespace, nsAtom* aLName,
-                         txAExprResult*& aResult) override
-    {
-        NS_ASSERTION(mInner, "mInner is null!!!");
-        return mInner->getVariable(aNamespace, aLName, aResult);
-    }
+  nsresult getVariable(int32_t aNamespace, nsAtom* aLName,
+                       txAExprResult*& aResult) override {
+    NS_ASSERTION(mInner, "mInner is null!!!");
+    return mInner->getVariable(aNamespace, aLName, aResult);
+  }
 
-    nsresult isStripSpaceAllowed(const txXPathNode& aNode,
-                                 bool& aAllowed) override
-    {
-        NS_ASSERTION(mInner, "mInner is null!!!");
-        return mInner->isStripSpaceAllowed(aNode, aAllowed);
-    }
+  nsresult isStripSpaceAllowed(const txXPathNode& aNode,
+                               bool& aAllowed) override {
+    NS_ASSERTION(mInner, "mInner is null!!!");
+    return mInner->isStripSpaceAllowed(aNode, aAllowed);
+  }
 
-    void* getPrivateContext() override
-    {
-        NS_ASSERTION(mInner, "mInner is null!!!");
-        return mInner->getPrivateContext();
-    }
+  void* getPrivateContext() override {
+    NS_ASSERTION(mInner, "mInner is null!!!");
+    return mInner->getPrivateContext();
+  }
 
-    txResultRecycler* recycler() override
-    {
-        NS_ASSERTION(mInner, "mInner is null!!!");
-        return mInner->recycler();
-    }
+  txResultRecycler* recycler() override {
+    NS_ASSERTION(mInner, "mInner is null!!!");
+    return mInner->recycler();
+  }
 
-    void receiveError(const nsAString& aMsg, nsresult aRes) override
-    {
-        NS_ASSERTION(mInner, "mInner is null!!!");
+  void receiveError(const nsAString& aMsg, nsresult aRes) override {
+    NS_ASSERTION(mInner, "mInner is null!!!");
 #ifdef DEBUG
-        nsAutoString error(NS_LITERAL_STRING("forwarded error: "));
-        error.Append(aMsg);
-        mInner->receiveError(error, aRes);
+    nsAutoString error(NS_LITERAL_STRING("forwarded error: "));
+    error.Append(aMsg);
+    mInner->receiveError(error, aRes);
 #else
-        mInner->receiveError(aMsg, aRes);
+    mInner->receiveError(aMsg, aRes);
 #endif
-    }
+  }
 
-    const txXPathNode& getContextNode() override
-    {
-        return mNode;
-    }
+  const txXPathNode& getContextNode() override { return mNode; }
 
-    uint32_t size() override
-    {
-        return 1;
-    }
+  uint32_t size() override { return 1; }
 
-    uint32_t position() override
-    {
-        return 1;
-    }
+  uint32_t position() override { return 1; }
 
-private:
-    const txXPathNode& mNode;
-    txIMatchContext* mInner;
+ private:
+  const txXPathNode& mNode;
+  txIMatchContext* mInner;
 };
 
-#endif // __TX_XPATH_SINGLENODE_CONTEXT
+#endif  // __TX_XPATH_SINGLENODE_CONTEXT

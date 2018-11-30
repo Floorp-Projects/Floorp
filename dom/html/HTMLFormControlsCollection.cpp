@@ -11,7 +11,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFormControlsCollectionBinding.h"
 #include "mozilla/dom/HTMLFormElement.h"
-#include "nsGenericHTMLElement.h" // nsGenericHTMLFormElement
+#include "nsGenericHTMLElement.h"  // nsGenericHTMLFormElement
 #include "nsIDocument.h"
 #include "nsIFormControl.h"
 #include "RadioNodeList.h"
@@ -20,44 +20,43 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ bool
-HTMLFormControlsCollection::ShouldBeInElements(nsIFormControl* aFormControl)
-{
+/* static */ bool HTMLFormControlsCollection::ShouldBeInElements(
+    nsIFormControl* aFormControl) {
   // For backwards compatibility (with 4.x and IE) we must not add
   // <input type=image> elements to the list of form controls in a
   // form.
 
   switch (aFormControl->ControlType()) {
-  case NS_FORM_BUTTON_BUTTON :
-  case NS_FORM_BUTTON_RESET :
-  case NS_FORM_BUTTON_SUBMIT :
-  case NS_FORM_INPUT_BUTTON :
-  case NS_FORM_INPUT_CHECKBOX :
-  case NS_FORM_INPUT_COLOR :
-  case NS_FORM_INPUT_EMAIL :
-  case NS_FORM_INPUT_FILE :
-  case NS_FORM_INPUT_HIDDEN :
-  case NS_FORM_INPUT_RESET :
-  case NS_FORM_INPUT_PASSWORD :
-  case NS_FORM_INPUT_RADIO :
-  case NS_FORM_INPUT_SEARCH :
-  case NS_FORM_INPUT_SUBMIT :
-  case NS_FORM_INPUT_TEXT :
-  case NS_FORM_INPUT_TEL :
-  case NS_FORM_INPUT_URL :
-  case NS_FORM_INPUT_NUMBER :
-  case NS_FORM_INPUT_RANGE :
-  case NS_FORM_INPUT_DATE :
-  case NS_FORM_INPUT_TIME :
-  case NS_FORM_INPUT_MONTH :
-  case NS_FORM_INPUT_WEEK :
-  case NS_FORM_INPUT_DATETIME_LOCAL :
-  case NS_FORM_SELECT :
-  case NS_FORM_TEXTAREA :
-  case NS_FORM_FIELDSET :
-  case NS_FORM_OBJECT :
-  case NS_FORM_OUTPUT :
-    return true;
+    case NS_FORM_BUTTON_BUTTON:
+    case NS_FORM_BUTTON_RESET:
+    case NS_FORM_BUTTON_SUBMIT:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_COLOR:
+    case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_RANGE:
+    case NS_FORM_INPUT_DATE:
+    case NS_FORM_INPUT_TIME:
+    case NS_FORM_INPUT_MONTH:
+    case NS_FORM_INPUT_WEEK:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
+    case NS_FORM_SELECT:
+    case NS_FORM_TEXTAREA:
+    case NS_FORM_FIELDSET:
+    case NS_FORM_OBJECT:
+    case NS_FORM_OUTPUT:
+      return true;
   }
 
   // These form control types are not supposed to end up in the
@@ -72,30 +71,24 @@ HTMLFormControlsCollection::ShouldBeInElements(nsIFormControl* aFormControl)
 }
 
 HTMLFormControlsCollection::HTMLFormControlsCollection(HTMLFormElement* aForm)
-  : mForm(aForm)
-  // Initialize the elements list to have an initial capacity
-  // of 8 to reduce allocations on small forms.
-  , mElements(8)
-  , mNameLookupTable(HTMLFormElement::FORM_CONTROL_LIST_HASHTABLE_LENGTH)
-{
-}
+    : mForm(aForm)
+      // Initialize the elements list to have an initial capacity
+      // of 8 to reduce allocations on small forms.
+      ,
+      mElements(8),
+      mNameLookupTable(HTMLFormElement::FORM_CONTROL_LIST_HASHTABLE_LENGTH) {}
 
-HTMLFormControlsCollection::~HTMLFormControlsCollection()
-{
+HTMLFormControlsCollection::~HTMLFormControlsCollection() {
   mForm = nullptr;
   Clear();
 }
 
-void
-HTMLFormControlsCollection::DropFormReference()
-{
+void HTMLFormControlsCollection::DropFormReference() {
   mForm = nullptr;
   Clear();
 }
 
-void
-HTMLFormControlsCollection::Clear()
-{
+void HTMLFormControlsCollection::Clear() {
   // Null out childrens' pointer to me.  No refcounting here
   for (int32_t i = mElements.Length() - 1; i >= 0; i--) {
     mElements[i]->ClearForm(false, false);
@@ -110,9 +103,7 @@ HTMLFormControlsCollection::Clear()
   mNameLookupTable.Clear();
 }
 
-void
-HTMLFormControlsCollection::FlushPendingNotifications()
-{
+void HTMLFormControlsCollection::FlushPendingNotifications() {
   if (mForm) {
     nsIDocument* doc = mForm->GetUncomposedDoc();
     if (doc) {
@@ -140,29 +131,22 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 // XPConnect interface list for HTMLFormControlsCollection
 NS_INTERFACE_TABLE_HEAD(HTMLFormControlsCollection)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(HTMLFormControlsCollection,
-                     nsIHTMLCollection)
+  NS_INTERFACE_TABLE(HTMLFormControlsCollection, nsIHTMLCollection)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(HTMLFormControlsCollection)
 NS_INTERFACE_MAP_END
-
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(HTMLFormControlsCollection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLFormControlsCollection)
 
-
 // nsIHTMLCollection interface
 
-uint32_t
-HTMLFormControlsCollection::Length()
-{
+uint32_t HTMLFormControlsCollection::Length() {
   FlushPendingNotifications();
   return mElements.Length();
 }
 
-nsISupports*
-HTMLFormControlsCollection::NamedItemInternal(const nsAString& aName,
-                                              bool aFlushContent)
-{
+nsISupports* HTMLFormControlsCollection::NamedItemInternal(
+    const nsAString& aName, bool aFlushContent) {
   if (aFlushContent) {
     FlushPendingNotifications();
   }
@@ -170,10 +154,8 @@ HTMLFormControlsCollection::NamedItemInternal(const nsAString& aName,
   return mNameLookupTable.GetWeak(aName);
 }
 
-nsresult
-HTMLFormControlsCollection::AddElementToTable(nsGenericHTMLFormElement* aChild,
-                                              const nsAString& aName)
-{
+nsresult HTMLFormControlsCollection::AddElementToTable(
+    nsGenericHTMLFormElement* aChild, const nsAString& aName) {
   if (!ShouldBeInElements(aChild)) {
     return NS_OK;
   }
@@ -181,10 +163,8 @@ HTMLFormControlsCollection::AddElementToTable(nsGenericHTMLFormElement* aChild,
   return mForm->AddElementToTableInternal(mNameLookupTable, aChild, aName);
 }
 
-nsresult
-HTMLFormControlsCollection::IndexOfControl(nsIFormControl* aControl,
-                                           int32_t* aIndex)
-{
+nsresult HTMLFormControlsCollection::IndexOfControl(nsIFormControl* aControl,
+                                                    int32_t* aIndex) {
   // Note -- not a DOM method; callers should handle flushing themselves
 
   NS_ENSURE_ARG_POINTER(aIndex);
@@ -194,10 +174,8 @@ HTMLFormControlsCollection::IndexOfControl(nsIFormControl* aControl,
   return NS_OK;
 }
 
-nsresult
-HTMLFormControlsCollection::RemoveElementFromTable(
-  nsGenericHTMLFormElement* aChild, const nsAString& aName)
-{
+nsresult HTMLFormControlsCollection::RemoveElementFromTable(
+    nsGenericHTMLFormElement* aChild, const nsAString& aName) {
   if (!ShouldBeInElements(aChild)) {
     return NS_OK;
   }
@@ -205,10 +183,8 @@ HTMLFormControlsCollection::RemoveElementFromTable(
   return mForm->RemoveElementFromTableInternal(mNameLookupTable, aChild, aName);
 }
 
-nsresult
-HTMLFormControlsCollection::GetSortedControls(
-  nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls) const
-{
+nsresult HTMLFormControlsCollection::GetSortedControls(
+    nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls) const {
 #ifdef DEBUG
   HTMLFormElement::AssertDocumentOrder(mElements, mForm);
   HTMLFormElement::AssertDocumentOrder(mNotInElements, mForm);
@@ -231,10 +207,9 @@ HTMLFormControlsCollection::GetSortedControls(
       NS_ASSERTION(notInElementsIdx < notInElementsLen,
                    "Should have remaining not-in-elements");
       // Append the remaining mNotInElements elements
-      if (!aControls.AppendElements(mNotInElements.Elements() +
-                                      notInElementsIdx,
-                                    notInElementsLen -
-                                      notInElementsIdx)) {
+      if (!aControls.AppendElements(
+              mNotInElements.Elements() + notInElementsIdx,
+              notInElementsLen - notInElementsIdx)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       break;
@@ -244,23 +219,21 @@ HTMLFormControlsCollection::GetSortedControls(
       NS_ASSERTION(elementsIdx < elementsLen,
                    "Should have remaining in-elements");
       // Append the remaining mElements elements
-      if (!aControls.AppendElements(mElements.Elements() +
-                                      elementsIdx,
-                                    elementsLen -
-                                      elementsIdx)) {
+      if (!aControls.AppendElements(mElements.Elements() + elementsIdx,
+                                    elementsLen - elementsIdx)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       break;
     }
     // Both lists have elements left.
-    NS_ASSERTION(mElements[elementsIdx] &&
-                 mNotInElements[notInElementsIdx],
+    NS_ASSERTION(mElements[elementsIdx] && mNotInElements[notInElementsIdx],
                  "Should have remaining elements");
     // Determine which of the two elements should be ordered
     // first and add it to the end of the list.
     nsGenericHTMLFormElement* elementToAdd;
     if (HTMLFormElement::CompareFormControlPosition(
-          mElements[elementsIdx], mNotInElements[notInElementsIdx], mForm) < 0) {
+            mElements[elementsIdx], mNotInElements[notInElementsIdx], mForm) <
+        0) {
       elementToAdd = mElements[elementsIdx];
       ++elementsIdx;
     } else {
@@ -282,23 +255,18 @@ HTMLFormControlsCollection::GetSortedControls(
   return NS_OK;
 }
 
-Element*
-HTMLFormControlsCollection::GetElementAt(uint32_t aIndex)
-{
+Element* HTMLFormControlsCollection::GetElementAt(uint32_t aIndex) {
   FlushPendingNotifications();
 
   return mElements.SafeElementAt(aIndex, nullptr);
 }
 
-/* virtual */ nsINode*
-HTMLFormControlsCollection::GetParentObject()
-{
+/* virtual */ nsINode* HTMLFormControlsCollection::GetParentObject() {
   return mForm;
 }
 
-/* virtual */ Element*
-HTMLFormControlsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
-{
+/* virtual */ Element* HTMLFormControlsCollection::GetFirstNamedElement(
+    const nsAString& aName, bool& aFound) {
   Nullable<OwningRadioNodeListOrElement> maybeResult;
   NamedGetter(aName, aFound, maybeResult);
   if (!aFound) {
@@ -317,11 +285,9 @@ HTMLFormControlsCollection::GetFirstNamedElement(const nsAString& aName, bool& a
   return nullptr;
 }
 
-void
-HTMLFormControlsCollection::NamedGetter(const nsAString& aName,
-                                        bool& aFound,
-                                        Nullable<OwningRadioNodeListOrElement>& aResult)
-{
+void HTMLFormControlsCollection::NamedGetter(
+    const nsAString& aName, bool& aFound,
+    Nullable<OwningRadioNodeListOrElement>& aResult) {
   nsISupports* item = NamedItemInternal(aName, true);
   if (!item) {
     aFound = false;
@@ -339,9 +305,7 @@ HTMLFormControlsCollection::NamedGetter(const nsAString& aName,
   MOZ_ASSERT_UNREACHABLE("Should only have Elements and NodeLists here.");
 }
 
-void
-HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
-{
+void HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames) {
   FlushPendingNotifications();
   // Just enumerate mNameLookupTable.  This won't guarantee order, but
   // that's OK, because the HTML5 spec doesn't define an order for
@@ -351,11 +315,10 @@ HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
   }
 }
 
-/* virtual */ JSObject*
-HTMLFormControlsCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+/* virtual */ JSObject* HTMLFormControlsCollection::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return HTMLFormControlsCollection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

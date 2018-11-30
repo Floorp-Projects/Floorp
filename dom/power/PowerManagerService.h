@@ -23,11 +23,9 @@ class ContentParent;
 
 namespace power {
 
-class PowerManagerService
-  : public nsIPowerManagerService
-  , public hal::WakeLockObserver
-{
-public:
+class PowerManagerService : public nsIPowerManagerService,
+                            public hal::WakeLockObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPOWERMANAGERSERVICE
 
@@ -52,28 +50,26 @@ public:
    *  - The /given/ process shows up in WakeLockInfo::lockingProcesses.
    *
    */
-  already_AddRefed<WakeLock>
-  NewWakeLockOnBehalfOfProcess(const nsAString& aTopic,
-                               ContentParent* aContentParent);
+  already_AddRefed<WakeLock> NewWakeLockOnBehalfOfProcess(
+      const nsAString& aTopic, ContentParent* aContentParent);
 
-  already_AddRefed<WakeLock>
-  NewWakeLock(const nsAString& aTopic, nsPIDOMWindowInner* aWindow,
-              mozilla::ErrorResult& aRv);
+  already_AddRefed<WakeLock> NewWakeLock(const nsAString& aTopic,
+                                         nsPIDOMWindowInner* aWindow,
+                                         mozilla::ErrorResult& aRv);
 
-private:
-
+ private:
   ~PowerManagerService();
 
   void ComputeWakeLockState(const hal::WakeLockInformation& aWakeLockInfo,
-                            nsAString &aState);
+                            nsAString& aState);
 
   static StaticRefPtr<PowerManagerService> sSingleton;
 
   nsTArray<nsCOMPtr<nsIDOMMozWakeLockListener>> mWakeLockListeners;
 };
 
-} // namespace power
-} // namespace dom
-} // namespace mozilla
+}  // namespace power
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_power_PowerManagerService_h
+#endif  // mozilla_dom_power_PowerManagerService_h

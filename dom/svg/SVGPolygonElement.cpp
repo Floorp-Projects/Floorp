@@ -17,19 +17,17 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Polygon)
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGPolygonElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject *SVGPolygonElement::WrapNode(JSContext *aCx,
+                                      JS::Handle<JSObject *> aGivenProto) {
   return SVGPolygonElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGPolygonElement::SVGPolygonElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGPolygonElementBase(std::move(aNodeInfo))
-{
-}
+SVGPolygonElement::SVGPolygonElement(
+    already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo)
+    : SVGPolygonElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -39,9 +37,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPolygonElement)
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
 
-void
-SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
-{
+void SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
   SVGPolyElement::GetMarkPoints(aMarks);
 
   if (aMarks->IsEmpty() || aMarks->LastElement().type != nsSVGMark::eEnd) {
@@ -58,13 +54,11 @@ SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   // for a polygon (as opposed to a polyline) there's an implicit extra point
   // co-located with the start point that SVGPolyElement::GetMarkPoints
   // doesn't return
-  aMarks->AppendElement(nsSVGMark(startMark->x, startMark->y, startMark->angle,
-                                  nsSVGMark::eEnd));
+  aMarks->AppendElement(
+      nsSVGMark(startMark->x, startMark->y, startMark->angle, nsSVGMark::eEnd));
 }
 
-already_AddRefed<Path>
-SVGPolygonElement::BuildPath(PathBuilder* aBuilder)
-{
+already_AddRefed<Path> SVGPolygonElement::BuildPath(PathBuilder *aBuilder) {
   const SVGPointList &points = mPoints.GetAnimValue();
 
   if (points.IsEmpty()) {
@@ -81,5 +75,5 @@ SVGPolygonElement::BuildPath(PathBuilder* aBuilder)
   return aBuilder->Finish();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

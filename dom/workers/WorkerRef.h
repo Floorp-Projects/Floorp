@@ -85,20 +85,18 @@ class WorkerPrivate;
 class StrongWorkerRef;
 class ThreadSafeWorkerRef;
 
-class WorkerRef
-{
-public:
+class WorkerRef {
+ public:
   NS_INLINE_DECL_REFCOUNTING(WorkerRef)
 
-protected:
+ protected:
   class Holder;
   friend class Holder;
 
   explicit WorkerRef(WorkerPrivate* aWorkerPrivate);
   virtual ~WorkerRef();
 
-  virtual void
-  Notify();
+  virtual void Notify();
 
   WorkerPrivate* mWorkerPrivate;
   UniquePtr<WorkerHolder> mHolder;
@@ -106,41 +104,34 @@ protected:
   std::function<void()> mCallback;
 };
 
-class WeakWorkerRef final : public WorkerRef
-{
-public:
-  static already_AddRefed<WeakWorkerRef>
-  Create(WorkerPrivate* aWorkerPrivate,
-         const std::function<void()>& aCallback = nullptr);
+class WeakWorkerRef final : public WorkerRef {
+ public:
+  static already_AddRefed<WeakWorkerRef> Create(
+      WorkerPrivate* aWorkerPrivate,
+      const std::function<void()>& aCallback = nullptr);
 
-  WorkerPrivate*
-  GetPrivate() const;
+  WorkerPrivate* GetPrivate() const;
 
   // This can be called on any thread. It's racy and, in general, the wrong
   // choice.
-  WorkerPrivate*
-  GetUnsafePrivate() const;
+  WorkerPrivate* GetUnsafePrivate() const;
 
-private:
+ private:
   explicit WeakWorkerRef(WorkerPrivate* aWorkerPrivate);
   ~WeakWorkerRef();
 
-  void
-  Notify() override;
+  void Notify() override;
 };
 
-class StrongWorkerRef final : public WorkerRef
-{
-public:
-  static already_AddRefed<StrongWorkerRef>
-  Create(WorkerPrivate* aWorkerPrivate,
-         const char* aName,
-         const std::function<void()>& aCallback = nullptr);
+class StrongWorkerRef final : public WorkerRef {
+ public:
+  static already_AddRefed<StrongWorkerRef> Create(
+      WorkerPrivate* aWorkerPrivate, const char* aName,
+      const std::function<void()>& aCallback = nullptr);
 
-  WorkerPrivate*
-  Private() const;
+  WorkerPrivate* Private() const;
 
-private:
+ private:
   friend class WeakWorkerRef;
   friend class ThreadSafeWorkerRef;
 
@@ -148,17 +139,15 @@ private:
   ~StrongWorkerRef();
 };
 
-class ThreadSafeWorkerRef final
-{
-public:
+class ThreadSafeWorkerRef final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadSafeWorkerRef)
 
   explicit ThreadSafeWorkerRef(StrongWorkerRef* aRef);
 
-  WorkerPrivate*
-  Private() const;
+  WorkerPrivate* Private() const;
 
-private:
+ private:
   friend class StrongWorkerRef;
 
   ~ThreadSafeWorkerRef();
@@ -166,7 +155,7 @@ private:
   RefPtr<StrongWorkerRef> mRef;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_workers_WorkerRef_h */

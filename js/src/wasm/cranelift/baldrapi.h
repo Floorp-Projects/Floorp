@@ -20,8 +20,8 @@
 // allowing Rust to access constant metadata and produce output.
 //
 // This file is input to Rust's bindgen, so as to create primitive APIs for the
-// Cranelift pipeline to access compilation metadata. The actual Rust API then wraps these primitive
-// APIs.  See src/baldrdash.rs.
+// Cranelift pipeline to access compilation metadata. The actual Rust API then
+// wraps these primitive APIs.  See src/baldrdash.rs.
 //
 // This file can be included in SpiderMonkey's C++ code, where all the prefixes
 // must be obeyed.  The purpose of the prefixes is to avoid type confusion.  See
@@ -48,8 +48,8 @@ struct FuncTypeWithId;
 struct TableDesc;
 // wasm/WasmValidate.h
 struct ModuleEnvironment;
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
 // This struct contains all the information that can be computed once for the
 // entire process and then should never change. It contains a mix of CPU
@@ -57,51 +57,51 @@ struct ModuleEnvironment;
 // to, but which can't be automatically provided to Rust.
 
 struct CraneliftStaticEnvironment {
-    bool hasSse2;
-    bool hasSse3;
-    bool hasSse41;
-    bool hasSse42;
-    bool hasPopcnt;
-    bool hasAvx;
-    bool hasBmi1;
-    bool hasBmi2;
-    bool hasLzcnt;
-    size_t staticMemoryBound;
-    size_t memoryGuardSize;
-    size_t instanceTlsOffset;
-    size_t interruptTlsOffset;
-    size_t cxTlsOffset;
-    size_t realmCxOffset;
-    size_t realmTlsOffset;
-    size_t realmFuncImportTlsOffset;
+  bool hasSse2;
+  bool hasSse3;
+  bool hasSse41;
+  bool hasSse42;
+  bool hasPopcnt;
+  bool hasAvx;
+  bool hasBmi1;
+  bool hasBmi2;
+  bool hasLzcnt;
+  size_t staticMemoryBound;
+  size_t memoryGuardSize;
+  size_t instanceTlsOffset;
+  size_t interruptTlsOffset;
+  size_t cxTlsOffset;
+  size_t realmCxOffset;
+  size_t realmTlsOffset;
+  size_t realmFuncImportTlsOffset;
 
-    // Not bindgen'd because it's inlined.
-    inline CraneliftStaticEnvironment();
+  // Not bindgen'd because it's inlined.
+  inline CraneliftStaticEnvironment();
 };
 
 // This structure proxies the C++ ModuleEnvironment and the information it
 // contains.
 
 struct CraneliftModuleEnvironment {
-    const js::wasm::ModuleEnvironment& env;
-    uint32_t min_memory_length;
+  const js::wasm::ModuleEnvironment& env;
+  uint32_t min_memory_length;
 
-    // Not bindgen'd because it's inlined.
-    explicit inline CraneliftModuleEnvironment(const js::wasm::ModuleEnvironment& env);
+  // Not bindgen'd because it's inlined.
+  explicit inline CraneliftModuleEnvironment(
+      const js::wasm::ModuleEnvironment& env);
 };
 
 // Data for a single wasm function to be compiled by Cranelift.
 // This information is all from the corresponding `js::wasm::FuncCompileInput`
 // struct, but formatted in a Rust-friendly way.
 
-struct CraneliftFuncCompileInput
-{
-    const uint8_t* bytecode;
-    size_t bytecodeSize;
-    uint32_t index;
+struct CraneliftFuncCompileInput {
+  const uint8_t* bytecode;
+  size_t bytecodeSize;
+  uint32_t index;
 
-    // Not bindgen'd because it's inlined.
-    explicit inline CraneliftFuncCompileInput(const js::wasm::FuncCompileInput&);
+  // Not bindgen'd because it's inlined.
+  explicit inline CraneliftFuncCompileInput(const js::wasm::FuncCompileInput&);
 };
 
 // A single entry in all the metadata array provided after the compilation of a
@@ -112,16 +112,16 @@ struct CraneliftFuncCompileInput
 // handle them, with a lot of unsafe'ing.
 
 struct CraneliftMetadataEntry {
-    enum Which {
-        DirectCall,
-        IndirectCall,
-        Trap,
-        MemoryAccess,
-        SymbolicAccess
-    } which;
-    uint32_t offset;
-    uint32_t srcLoc;
-    size_t extra;
+  enum Which {
+    DirectCall,
+    IndirectCall,
+    Trap,
+    MemoryAccess,
+    SymbolicAccess
+  } which;
+  uint32_t offset;
+  uint32_t srcLoc;
+  size_t extra;
 };
 
 // The result of a single function compilation, containing the machine code
@@ -129,83 +129,80 @@ struct CraneliftMetadataEntry {
 // prologue/epilogue etc.
 
 struct CraneliftCompiledFunc {
-    size_t numMetadata;
-    const CraneliftMetadataEntry* metadatas;
+  size_t numMetadata;
+  const CraneliftMetadataEntry* metadatas;
 
-    size_t framePushed;
-    bool containsCalls;
+  size_t framePushed;
+  bool containsCalls;
 
-    size_t codeSize;
-    const uint8_t* code;
+  size_t codeSize;
+  const uint8_t* code;
 };
 
 // Possible constant values for initializing globals.
 
-struct BD_ConstantValue
-{
-    js::wasm::TypeCode t;
-    union
-    {
-        int32_t i32;
-        int64_t i64;
-        float f32;
-        double f64;
-    } u;
+struct BD_ConstantValue {
+  js::wasm::TypeCode t;
+  union {
+    int32_t i32;
+    int64_t i64;
+    float f32;
+    double f64;
+  } u;
 };
 
-struct BD_ValType
-{
-    uint32_t packed;
+struct BD_ValType {
+  uint32_t packed;
 };
-
 
 // A subset of the wasm SymbolicAddress enum.
 // XXX this is not quite maintenable, because the number of values in this
 // enum is hardcoded in wasm2clif.rs.
 
-enum class BD_SymbolicAddress
-{
-    GrowMemory,
-    CurrentMemory,
-    FloorF32,
-    FloorF64,
-    CeilF32,
-    CeilF64,
-    NearestF32,
-    NearestF64,
-    TruncF32,
-    TruncF64,
-    Limit
+enum class BD_SymbolicAddress {
+  GrowMemory,
+  CurrentMemory,
+  FloorF32,
+  FloorF64,
+  CeilF32,
+  CeilF64,
+  NearestF32,
+  NearestF64,
+  TruncF32,
+  TruncF64,
+  Limit
 };
 
-extern "C"
-{
-    js::wasm::TypeCode env_unpack(BD_ValType type);
+extern "C" {
+js::wasm::TypeCode env_unpack(BD_ValType type);
 
-    const js::wasm::FuncTypeWithId* env_function_signature(const CraneliftModuleEnvironment* env,
-                                                           size_t funcIndex);
-    size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env, size_t funcIndex);
-    bool env_func_is_import(const CraneliftModuleEnvironment* env, size_t funcIndex);
-    const js::wasm::FuncTypeWithId* env_signature(const CraneliftModuleEnvironment* env,
-                                                  size_t sigIndex);
-    const js::wasm::TableDesc* env_table(const CraneliftModuleEnvironment* env, size_t tableIndex);
-    const js::wasm::GlobalDesc* env_global(const CraneliftModuleEnvironment* env,
-                                           size_t globalIndex);
+const js::wasm::FuncTypeWithId* env_function_signature(
+    const CraneliftModuleEnvironment* env, size_t funcIndex);
+size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
+                                  size_t funcIndex);
+bool env_func_is_import(const CraneliftModuleEnvironment* env,
+                        size_t funcIndex);
+const js::wasm::FuncTypeWithId* env_signature(
+    const CraneliftModuleEnvironment* env, size_t sigIndex);
+const js::wasm::TableDesc* env_table(const CraneliftModuleEnvironment* env,
+                                     size_t tableIndex);
+const js::wasm::GlobalDesc* env_global(const CraneliftModuleEnvironment* env,
+                                       size_t globalIndex);
 
-    bool global_isConstant(const js::wasm::GlobalDesc*);
-    bool global_isIndirect(const js::wasm::GlobalDesc*);
-    BD_ConstantValue global_constantValue(const js::wasm::GlobalDesc*);
-    js::wasm::TypeCode global_type(const js::wasm::GlobalDesc*);
-    size_t global_tlsOffset(const js::wasm::GlobalDesc*);
+bool global_isConstant(const js::wasm::GlobalDesc*);
+bool global_isIndirect(const js::wasm::GlobalDesc*);
+BD_ConstantValue global_constantValue(const js::wasm::GlobalDesc*);
+js::wasm::TypeCode global_type(const js::wasm::GlobalDesc*);
+size_t global_tlsOffset(const js::wasm::GlobalDesc*);
 
-    size_t table_tlsOffset(const js::wasm::TableDesc*);
+size_t table_tlsOffset(const js::wasm::TableDesc*);
 
-    size_t funcType_numArgs(const js::wasm::FuncTypeWithId*);
-    const BD_ValType* funcType_args(const js::wasm::FuncTypeWithId*);
-    js::wasm::TypeCode funcType_retType(const js::wasm::FuncTypeWithId*);
-    js::wasm::FuncTypeIdDescKind funcType_idKind(const js::wasm::FuncTypeWithId*);
-    size_t funcType_idImmediate(const js::wasm::FuncTypeWithId*);
-    size_t funcType_idTlsOffset(const js::wasm::FuncTypeWithId*);
-} // extern "C"
+size_t funcType_numArgs(const js::wasm::FuncTypeWithId*);
+const BD_ValType* funcType_args(const js::wasm::FuncTypeWithId*);
+js::wasm::TypeCode funcType_retType(const js::wasm::FuncTypeWithId*);
+js::wasm::FuncTypeIdDescKind funcType_idKind(const js::wasm::FuncTypeWithId*);
+size_t funcType_idImmediate(const js::wasm::FuncTypeWithId*);
+size_t funcType_idTlsOffset(const js::wasm::FuncTypeWithId*);
+}  // extern "C"
 
-#endif // wasm_cranelift_baldrapi_h
+#endif  // wasm_cranelift_baldrapi_h

@@ -10,20 +10,23 @@
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 
-#define NS_SESSIONSTOREUTILS_CID \
-  {0xd713b4be, 0x8285, 0x4cab, {0x9c, 0x0e, 0x0b, 0xbc, 0x38, 0xbf, 0xb9, 0x3c}}
+#define NS_SESSIONSTOREUTILS_CID                     \
+  {                                                  \
+    0xd713b4be, 0x8285, 0x4cab, {                    \
+      0x9c, 0x0e, 0x0b, 0xbc, 0x38, 0xbf, 0xb9, 0x3c \
+    }                                                \
+  }
 
 #define NS_SESSIONSTOREUTILS_CONTRACTID \
   "@mozilla.org/browser/sessionstore/utils;1"
 
-class nsSessionStoreUtils final : public nsISessionStoreUtils
-{
-public:
+class nsSessionStoreUtils final : public nsISessionStoreUtils {
+ public:
   NS_DECL_NSISESSIONSTOREUTILS
   NS_DECL_ISUPPORTS
 
-private:
-  ~nsSessionStoreUtils() { }
+ private:
+  ~nsSessionStoreUtils() {}
 };
 
-#endif // nsSessionStoreUtils_h
+#endif  // nsSessionStoreUtils_h

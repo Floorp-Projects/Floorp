@@ -14,24 +14,19 @@
 namespace mozilla {
 namespace dom {
 
-class DeviceRotationRate final : public nsWrapperCache
-{
-public:
+class DeviceRotationRate final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DeviceRotationRate)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DeviceRotationRate)
 
-  DeviceRotationRate(DeviceMotionEvent* aOwner,
-                     const Nullable<double>& aAlpha,
+  DeviceRotationRate(DeviceMotionEvent* aOwner, const Nullable<double>& aAlpha,
                      const Nullable<double>& aBeta,
                      const Nullable<double>& aGamma);
 
-  DeviceMotionEvent* GetParentObject() const
-  {
-    return mOwner;
-  }
+  DeviceMotionEvent* GetParentObject() const { return mOwner; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
     return DeviceRotationRate_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -39,32 +34,26 @@ public:
   Nullable<double> GetBeta() const { return mBeta; }
   Nullable<double> GetGamma() const { return mGamma; }
 
-private:
+ private:
   ~DeviceRotationRate();
 
-protected:
+ protected:
   RefPtr<DeviceMotionEvent> mOwner;
   Nullable<double> mAlpha, mBeta, mGamma;
 };
 
-class DeviceAcceleration final : public nsWrapperCache
-{
-public:
+class DeviceAcceleration final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DeviceAcceleration)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DeviceAcceleration)
 
-  DeviceAcceleration(DeviceMotionEvent* aOwner,
-                     const Nullable<double>& aX,
-                     const Nullable<double>& aY,
-                     const Nullable<double>& aZ);
+  DeviceAcceleration(DeviceMotionEvent* aOwner, const Nullable<double>& aX,
+                     const Nullable<double>& aY, const Nullable<double>& aZ);
 
-  DeviceMotionEvent* GetParentObject() const
-  {
-    return mOwner;
-  }
+  DeviceMotionEvent* GetParentObject() const { return mOwner; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
     return DeviceAcceleration_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -72,80 +61,58 @@ public:
   Nullable<double> GetY() const { return mY; }
   Nullable<double> GetZ() const { return mZ; }
 
-private:
+ private:
   ~DeviceAcceleration();
 
-protected:
+ protected:
   RefPtr<DeviceMotionEvent> mOwner;
   Nullable<double> mX, mY, mZ;
 };
 
-class DeviceMotionEvent final : public Event
-{
-public:
-
-  DeviceMotionEvent(EventTarget* aOwner,
-                    nsPresContext* aPresContext,
+class DeviceMotionEvent final : public Event {
+ public:
+  DeviceMotionEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                     WidgetEvent* aEvent)
-    : Event(aOwner, aPresContext, aEvent)
-  {
-  }
+      : Event(aOwner, aPresContext, aEvent) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeviceMotionEvent, Event)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
     return DeviceMotionEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  DeviceAcceleration* GetAcceleration() const
-  {
-    return mAcceleration;
-  }
+  DeviceAcceleration* GetAcceleration() const { return mAcceleration; }
 
-  DeviceAcceleration* GetAccelerationIncludingGravity() const
-  {
+  DeviceAcceleration* GetAccelerationIncludingGravity() const {
     return mAccelerationIncludingGravity;
   }
 
-  DeviceRotationRate* GetRotationRate() const
-  {
-    return mRotationRate;
-  }
+  DeviceRotationRate* GetRotationRate() const { return mRotationRate; }
 
-  Nullable<double> GetInterval() const
-  {
-    return mInterval;
-  }
+  Nullable<double> GetInterval() const { return mInterval; }
 
   void InitDeviceMotionEvent(
-         const nsAString& aType,
-         bool aCanBubble,
-         bool aCancelable,
-         const DeviceAccelerationInit& aAcceleration,
-         const DeviceAccelerationInit& aAccelerationIncludingGravity,
-         const DeviceRotationRateInit& aRotationRate,
-         const Nullable<double>& aInterval);
+      const nsAString& aType, bool aCanBubble, bool aCancelable,
+      const DeviceAccelerationInit& aAcceleration,
+      const DeviceAccelerationInit& aAccelerationIncludingGravity,
+      const DeviceRotationRateInit& aRotationRate,
+      const Nullable<double>& aInterval);
 
   void InitDeviceMotionEvent(
-         const nsAString& aType,
-         bool aCanBubble,
-         bool aCancelable,
-         const DeviceAccelerationInit& aAcceleration,
-         const DeviceAccelerationInit& aAccelerationIncludingGravity,
-         const DeviceRotationRateInit& aRotationRate,
-         const Nullable<double>& aInterval,
-         const Nullable<uint64_t>& aTimeStamp);
+      const nsAString& aType, bool aCanBubble, bool aCancelable,
+      const DeviceAccelerationInit& aAcceleration,
+      const DeviceAccelerationInit& aAccelerationIncludingGravity,
+      const DeviceRotationRateInit& aRotationRate,
+      const Nullable<double>& aInterval, const Nullable<uint64_t>& aTimeStamp);
 
-  static already_AddRefed<DeviceMotionEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const DeviceMotionEventInit& aEventInitDict,
-              ErrorResult& aRv);
+  static already_AddRefed<DeviceMotionEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const DeviceMotionEventInit& aEventInitDict, ErrorResult& aRv);
 
-protected:
+ protected:
   ~DeviceMotionEvent() {}
 
   RefPtr<DeviceAcceleration> mAcceleration;
@@ -154,12 +121,11 @@ protected:
   Nullable<double> mInterval;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::DeviceMotionEvent>
-NS_NewDOMDeviceMotionEvent(mozilla::dom::EventTarget* aOwner,
-                           nsPresContext* aPresContext,
-                           mozilla::WidgetEvent* aEvent);
+already_AddRefed<mozilla::dom::DeviceMotionEvent> NS_NewDOMDeviceMotionEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetEvent* aEvent);
 
-#endif // mozilla_dom_DeviceMotionEvent_h_
+#endif  // mozilla_dom_DeviceMotionEvent_h_

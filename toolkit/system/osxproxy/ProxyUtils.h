@@ -14,8 +14,8 @@ namespace system {
 
 bool IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride);
 
-} // namespace system
-} // namespace toolkit
-} // namespace mozilla
+}  // namespace system
+}  // namespace toolkit
+}  // namespace mozilla
 
-#endif // mozilla_toolkit_system_osxproxy_ProxyUtils_h
+#endif  // mozilla_toolkit_system_osxproxy_ProxyUtils_h

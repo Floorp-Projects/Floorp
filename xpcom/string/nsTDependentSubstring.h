@@ -23,17 +23,16 @@
  *   nsDependentCSubstring for narrow characters
  */
 template <typename T>
-class nsTDependentSubstring : public nsTSubstring<T>
-{
-public:
-
+class nsTDependentSubstring : public nsTSubstring<T> {
+ public:
   typedef nsTDependentSubstring<T> self_type;
   typedef nsTSubstring<T> substring_type;
   typedef typename substring_type::fallible_t fallible_t;
 
   typedef typename substring_type::char_type char_type;
   typedef typename substring_type::char_traits char_traits;
-  typedef typename substring_type::incompatible_char_type incompatible_char_type;
+  typedef
+      typename substring_type::incompatible_char_type incompatible_char_type;
 
   typedef typename substring_type::substring_tuple_type substring_tuple_type;
 
@@ -51,8 +50,7 @@ public:
   typedef typename substring_type::DataFlags DataFlags;
   typedef typename substring_type::ClassFlags ClassFlags;
 
-public:
-
+ public:
   void Rebind(const substring_type&, uint32_t aStartPos,
               uint32_t aLength = size_type(-1));
 
@@ -62,25 +60,20 @@ public:
 
   nsTDependentSubstring(const substring_type& aStr, uint32_t aStartPos,
                         uint32_t aLength = size_type(-1))
-    : substring_type()
-  {
+      : substring_type() {
     Rebind(aStr, aStartPos, aLength);
   }
 
   nsTDependentSubstring(const char_type* aData, size_type aLength)
-    : substring_type(const_cast<char_type*>(aData), aLength,
-                     DataFlags(0), ClassFlags(0))
-  {
-  }
+      : substring_type(const_cast<char_type*>(aData), aLength, DataFlags(0),
+                       ClassFlags(0)) {}
 
   nsTDependentSubstring(const char_type* aStart, const char_type* aEnd);
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   nsTDependentSubstring(char16ptr_t aData, size_type aLength)
-    : nsTDependentSubstring(static_cast<const char16_t*>(aData), aLength)
-  {
-  }
+      : nsTDependentSubstring(static_cast<const char16_t*>(aData), aLength) {}
 
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   nsTDependentSubstring(char16ptr_t aStart, char16ptr_t aEnd);
@@ -90,75 +83,66 @@ public:
                         const const_iterator& aEnd);
 
   // Create a nsTDependentSubstring to be bound later
-  nsTDependentSubstring()
-    : substring_type()
-  {
-  }
+  nsTDependentSubstring() : substring_type() {}
 
-  // auto-generated copy-constructor OK (XXX really?? what about base class copy-ctor?)
+  // auto-generated copy-constructor OK (XXX really?? what about base class
+  // copy-ctor?)
 
-private:
+ private:
   // NOT USED
-  void operator=(const self_type&);  // we're immutable, you can't assign into a substring
+  void operator=(
+      const self_type&);  // we're immutable, you can't assign into a substring
 };
 
 extern template class nsTDependentSubstring<char>;
 extern template class nsTDependentSubstring<char16_t>;
 
 template <typename T>
-inline const nsTDependentSubstring<T>
-Substring(const nsTSubstring<T>& aStr, uint32_t aStartPos,
-          uint32_t aLength = uint32_t(-1))
-{
+inline const nsTDependentSubstring<T> Substring(
+    const nsTSubstring<T>& aStr, uint32_t aStartPos,
+    uint32_t aLength = uint32_t(-1)) {
   return nsTDependentSubstring<T>(aStr, aStartPos, aLength);
 }
 
 template <typename T>
-inline const nsTDependentSubstring<T>
-Substring(const nsTLiteralString<T>& aStr, uint32_t aStartPos,
-          uint32_t aLength = uint32_t(-1))
-{
+inline const nsTDependentSubstring<T> Substring(
+    const nsTLiteralString<T>& aStr, uint32_t aStartPos,
+    uint32_t aLength = uint32_t(-1)) {
   return nsTDependentSubstring<T>(aStr, aStartPos, aLength);
 }
 
 template <typename T>
-inline const nsTDependentSubstring<T>
-Substring(const nsReadingIterator<T>& aStart,
-          const nsReadingIterator<T>& aEnd)
-{
+inline const nsTDependentSubstring<T> Substring(
+    const nsReadingIterator<T>& aStart, const nsReadingIterator<T>& aEnd) {
   return nsTDependentSubstring<T>(aStart.get(), aEnd.get());
 }
 
 template <typename T>
-inline const nsTDependentSubstring<T>
-Substring(const T* aData, uint32_t aLength)
-{
+inline const nsTDependentSubstring<T> Substring(const T* aData,
+                                                uint32_t aLength) {
   return nsTDependentSubstring<T>(aData, aLength);
 }
 
 template <typename T>
-const nsTDependentSubstring<T>
-Substring(const T* aStart, const T* aEnd);
+const nsTDependentSubstring<T> Substring(const T* aStart, const T* aEnd);
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-inline const nsTDependentSubstring<char16_t>
-Substring(char16ptr_t aData, uint32_t aLength);
+inline const nsTDependentSubstring<char16_t> Substring(char16ptr_t aData,
+                                                       uint32_t aLength);
 
-const nsTDependentSubstring<char16_t>
-Substring(char16ptr_t aStart, char16ptr_t aEnd);
+const nsTDependentSubstring<char16_t> Substring(char16ptr_t aStart,
+                                                char16ptr_t aEnd);
 #endif
 
 template <typename T>
-inline const nsTDependentSubstring<T>
-StringHead(const nsTSubstring<T>& aStr, uint32_t aCount)
-{
+inline const nsTDependentSubstring<T> StringHead(const nsTSubstring<T>& aStr,
+                                                 uint32_t aCount) {
   return nsTDependentSubstring<T>(aStr, 0, aCount);
 }
 
 template <typename T>
-inline const nsTDependentSubstring<T>
-StringTail(const nsTSubstring<T>& aStr, uint32_t aCount)
-{
+inline const nsTDependentSubstring<T> StringTail(const nsTSubstring<T>& aStr,
+                                                 uint32_t aCount) {
   return nsTDependentSubstring<T>(aStr, aStr.Length() - aCount, aCount);
 }
 

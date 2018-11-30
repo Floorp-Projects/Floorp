@@ -13,17 +13,15 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS_INHERITED(nsPagePrintTimer, mozilla::Runnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED(nsPagePrintTimer, mozilla::Runnable,
+                            nsITimerCallback)
 
-nsPagePrintTimer::~nsPagePrintTimer()
-{
+nsPagePrintTimer::~nsPagePrintTimer() {
   // This matches the IncrementDestroyBlockedCount call in the constructor.
   mDocViewerPrint->DecrementDestroyBlockedCount();
 }
 
-nsresult
-nsPagePrintTimer::StartTimer(bool aUseDelay)
-{
+nsresult nsPagePrintTimer::StartTimer(bool aUseDelay) {
   uint32_t delay = 0;
   if (aUseDelay) {
     if (mFiringCount < 10) {
@@ -33,38 +31,32 @@ nsPagePrintTimer::StartTimer(bool aUseDelay)
       delay = mDelay;
     }
   }
-  return NS_NewTimerWithCallback(getter_AddRefs(mTimer),
-                                 this, delay, nsITimer::TYPE_ONE_SHOT,
-                                 mDocument->EventTargetFor(TaskCategory::Other));
+  return NS_NewTimerWithCallback(
+      getter_AddRefs(mTimer), this, delay, nsITimer::TYPE_ONE_SHOT,
+      mDocument->EventTargetFor(TaskCategory::Other));
 }
 
-nsresult
-nsPagePrintTimer::StartWatchDogTimer()
-{
+nsresult nsPagePrintTimer::StartWatchDogTimer() {
   if (mWatchDogTimer) {
     mWatchDogTimer->Cancel();
   }
   // Instead of just doing one timer for a long period do multiple so we
   // can check if the user cancelled the printing.
-  return NS_NewTimerWithCallback(getter_AddRefs(mWatchDogTimer),
-                                 this, WATCH_DOG_INTERVAL,
-                                 nsITimer::TYPE_ONE_SHOT,
-                                 mDocument->EventTargetFor(TaskCategory::Other));
+  return NS_NewTimerWithCallback(
+      getter_AddRefs(mWatchDogTimer), this, WATCH_DOG_INTERVAL,
+      nsITimer::TYPE_ONE_SHOT, mDocument->EventTargetFor(TaskCategory::Other));
 }
 
-void
-nsPagePrintTimer::StopWatchDogTimer()
-{
+void nsPagePrintTimer::StopWatchDogTimer() {
   if (mWatchDogTimer) {
     mWatchDogTimer->Cancel();
     mWatchDogTimer = nullptr;
   }
 }
 
-//nsRunnable
+// nsRunnable
 NS_IMETHODIMP
-nsPagePrintTimer::Run()
-{
+nsPagePrintTimer::Run() {
   bool initNewTimer = true;
   // Check to see if we are done
   // inRange will be true if a page is actually printed
@@ -75,7 +67,6 @@ nsPagePrintTimer::Run()
   // if the printing was cancelled
   donePrinting = !mPrintJob || mPrintJob->PrintPage(mPrintObj, inRange);
   if (donePrinting) {
-
     if (mWaitingForRemotePrint ||
         // If we are not waiting for the remote printing, it is the time to
         // end printing task by calling DonePrintingPages.
@@ -93,7 +84,7 @@ nsPagePrintTimer::Run()
     ++mFiringCount;
     nsresult result = StartTimer(inRange);
     if (NS_FAILED(result)) {
-      mDone = true;     // had a failure.. we are finished..
+      mDone = true;  // had a failure.. we are finished..
       if (mPrintJob) {
         mPrintJob->SetIsPrinting(false);
       }
@@ -104,8 +95,7 @@ nsPagePrintTimer::Run()
 
 // nsITimerCallback
 NS_IMETHODIMP
-nsPagePrintTimer::Notify(nsITimer *timer)
-{
+nsPagePrintTimer::Notify(nsITimer* timer) {
   // When finished there may be still pending notifications, which we can just
   // ignore.
   if (mDone) {
@@ -159,19 +149,14 @@ nsPagePrintTimer::Notify(nsITimer *timer)
   return NS_OK;
 }
 
-
-void
-nsPagePrintTimer::WaitForRemotePrint()
-{
+void nsPagePrintTimer::WaitForRemotePrint() {
   mWaitingForRemotePrint = NS_NewTimer();
   if (!mWaitingForRemotePrint) {
     NS_WARNING("Failed to wait for remote print, we might time-out.");
   }
 }
 
-void
-nsPagePrintTimer::RemotePrintFinished()
-{
+void nsPagePrintTimer::RemotePrintFinished() {
   if (!mWaitingForRemotePrint) {
     return;
   }
@@ -182,23 +167,18 @@ nsPagePrintTimer::RemotePrintFinished()
   }
 
   mWaitingForRemotePrint->SetTarget(
-    mDocument->EventTargetFor(mozilla::TaskCategory::Other));
-  mozilla::Unused <<
-    mWaitingForRemotePrint->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);
+      mDocument->EventTargetFor(mozilla::TaskCategory::Other));
+  mozilla::Unused << mWaitingForRemotePrint->InitWithCallback(
+      this, 0, nsITimer::TYPE_ONE_SHOT);
 }
 
-nsresult
-nsPagePrintTimer::Start(nsPrintObject* aPO)
-{
+nsresult nsPagePrintTimer::Start(nsPrintObject* aPO) {
   mPrintObj = aPO;
   mDone = false;
   return StartTimer(false);
 }
 
-
-void
-nsPagePrintTimer::Stop()
-{
+void nsPagePrintTimer::Stop() {
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
@@ -206,9 +186,7 @@ nsPagePrintTimer::Stop()
   StopWatchDogTimer();
 }
 
-void
-nsPagePrintTimer::Fail()
-{
+void nsPagePrintTimer::Fail() {
   NS_WARNING("nsPagePrintTimer::Fail called");
 
   mDone = true;

@@ -19,37 +19,30 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 IMPL_IUNKNOWN_QUERY_HEAD(sdnDocAccessible)
-  IMPL_IUNKNOWN_QUERY_IFACE(ISimpleDOMDocument)
+IMPL_IUNKNOWN_QUERY_IFACE(ISimpleDOMDocument)
 IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAccessible)
 
 STDMETHODIMP
-sdnDocAccessible::get_URL(BSTR __RPC_FAR* aURL)
-{
-  if (!aURL)
-    return E_INVALIDARG;
+sdnDocAccessible::get_URL(BSTR __RPC_FAR* aURL) {
+  if (!aURL) return E_INVALIDARG;
   *aURL = nullptr;
 
-  if (mAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString URL;
   mAccessible->URL(URL);
-  if (URL.IsEmpty())
-    return S_FALSE;
+  if (URL.IsEmpty()) return S_FALSE;
 
   *aURL = ::SysAllocStringLen(URL.get(), URL.Length());
   return *aURL ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
-sdnDocAccessible::get_title(BSTR __RPC_FAR* aTitle)
-{
-  if (!aTitle)
-    return E_INVALIDARG;
+sdnDocAccessible::get_title(BSTR __RPC_FAR* aTitle) {
+  if (!aTitle) return E_INVALIDARG;
   *aTitle = nullptr;
 
-  if (mAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString title;
   mAccessible->Title(title);
@@ -58,38 +51,30 @@ sdnDocAccessible::get_title(BSTR __RPC_FAR* aTitle)
 }
 
 STDMETHODIMP
-sdnDocAccessible::get_mimeType(BSTR __RPC_FAR* aMimeType)
-{
-  if (!aMimeType)
-    return E_INVALIDARG;
+sdnDocAccessible::get_mimeType(BSTR __RPC_FAR* aMimeType) {
+  if (!aMimeType) return E_INVALIDARG;
   *aMimeType = nullptr;
 
-  if (mAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString mimeType;
   mAccessible->MimeType(mimeType);
-  if (mimeType.IsEmpty())
-    return S_FALSE;
+  if (mimeType.IsEmpty()) return S_FALSE;
 
   *aMimeType = ::SysAllocStringLen(mimeType.get(), mimeType.Length());
   return *aMimeType ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
-sdnDocAccessible::get_docType(BSTR __RPC_FAR* aDocType)
-{
-  if (!aDocType)
-    return E_INVALIDARG;
+sdnDocAccessible::get_docType(BSTR __RPC_FAR* aDocType) {
+  if (!aDocType) return E_INVALIDARG;
   *aDocType = nullptr;
 
-  if (mAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString docType;
   mAccessible->DocType(docType);
-  if (docType.IsEmpty())
-    return S_FALSE;
+  if (docType.IsEmpty()) return S_FALSE;
 
   *aDocType = ::SysAllocStringLen(docType.get(), docType.Length());
   return *aDocType ? S_OK : E_OUTOFMEMORY;
@@ -97,37 +82,31 @@ sdnDocAccessible::get_docType(BSTR __RPC_FAR* aDocType)
 
 STDMETHODIMP
 sdnDocAccessible::get_nameSpaceURIForID(short aNameSpaceID,
-                                        BSTR __RPC_FAR* aNameSpaceURI)
-{
-  if (!aNameSpaceURI)
-    return E_INVALIDARG;
+                                        BSTR __RPC_FAR* aNameSpaceURI) {
+  if (!aNameSpaceURI) return E_INVALIDARG;
   *aNameSpaceURI = nullptr;
 
-  if (mAccessible->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  if (mAccessible->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  if (aNameSpaceID < 0)
-    return E_INVALIDARG;  // -1 is kNameSpaceID_Unknown
+  if (aNameSpaceID < 0) return E_INVALIDARG;  // -1 is kNameSpaceID_Unknown
 
   nsAutoString nameSpaceURI;
   nsNameSpaceManager* nameSpaceManager = nsNameSpaceManager::GetInstance();
   if (nameSpaceManager)
     nameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpaceURI);
 
-  if (nameSpaceURI.IsEmpty())
-    return S_FALSE;
+  if (nameSpaceURI.IsEmpty()) return S_FALSE;
 
-  *aNameSpaceURI = ::SysAllocStringLen(nameSpaceURI.get(),
-                                       nameSpaceURI.Length());
+  *aNameSpaceURI =
+      ::SysAllocStringLen(nameSpaceURI.get(), nameSpaceURI.Length());
 
   return *aNameSpaceURI ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
-sdnDocAccessible::put_alternateViewMediaTypes(BSTR __RPC_FAR* aCommaSeparatedMediaTypes)
-{
-  if (!aCommaSeparatedMediaTypes)
-    return E_INVALIDARG;
+sdnDocAccessible::put_alternateViewMediaTypes(
+    BSTR __RPC_FAR* aCommaSeparatedMediaTypes) {
+  if (!aCommaSeparatedMediaTypes) return E_INVALIDARG;
   *aCommaSeparatedMediaTypes = nullptr;
 
   return mAccessible->IsDefunct() ? CO_E_OBJNOTCONNECTED : E_NOTIMPL;

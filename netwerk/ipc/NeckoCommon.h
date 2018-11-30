@@ -13,51 +13,52 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
 
-namespace mozilla { namespace dom {
+namespace mozilla {
+namespace dom {
 class TabChild;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #if defined(DEBUG)
-# define NECKO_ERRORS_ARE_FATAL_DEFAULT true
+#define NECKO_ERRORS_ARE_FATAL_DEFAULT true
 #else
-# define NECKO_ERRORS_ARE_FATAL_DEFAULT false
+#define NECKO_ERRORS_ARE_FATAL_DEFAULT false
 #endif
 
 // TODO: Eventually remove NECKO_MAYBE_ABORT and DROP_DEAD (bug 575494).
 // Still useful for catching listener interfaces we don't yet support across
 // processes, etc.
 
-#define NECKO_MAYBE_ABORT(msg)                                                 \
-  do {                                                                         \
-    bool abort = NECKO_ERRORS_ARE_FATAL_DEFAULT;                               \
-    const char *e = PR_GetEnv("NECKO_ERRORS_ARE_FATAL");                       \
-    if (e)                                                                     \
-      abort = (*e == '0') ? false : true;                                      \
-    if (abort) {                                                               \
-      msg.AppendLiteral(" (set NECKO_ERRORS_ARE_FATAL=0 in your environment "  \
-                        "to convert this error into a warning.)");             \
-      MOZ_CRASH_UNSAFE_OOL(msg.get());                                         \
-    } else {                                                                   \
-      msg.AppendLiteral(" (set NECKO_ERRORS_ARE_FATAL=1 in your environment "  \
-                        "to convert this warning into a fatal error.)");       \
-      NS_WARNING(msg.get());                                                   \
-    }                                                                          \
+#define NECKO_MAYBE_ABORT(msg)                                  \
+  do {                                                          \
+    bool abort = NECKO_ERRORS_ARE_FATAL_DEFAULT;                \
+    const char* e = PR_GetEnv("NECKO_ERRORS_ARE_FATAL");        \
+    if (e) abort = (*e == '0') ? false : true;                  \
+    if (abort) {                                                \
+      msg.AppendLiteral(                                        \
+          " (set NECKO_ERRORS_ARE_FATAL=0 in your environment " \
+          "to convert this error into a warning.)");            \
+      MOZ_CRASH_UNSAFE_OOL(msg.get());                          \
+    } else {                                                    \
+      msg.AppendLiteral(                                        \
+          " (set NECKO_ERRORS_ARE_FATAL=1 in your environment " \
+          "to convert this warning into a fatal error.)");      \
+      NS_WARNING(msg.get());                                    \
+    }                                                           \
   } while (0)
 
-#define DROP_DEAD()                                                            \
-  do {                                                                         \
-    nsPrintfCString msg("NECKO ERROR: '%s' UNIMPLEMENTED",                     \
-                        __FUNCTION__);                                         \
-    NECKO_MAYBE_ABORT(msg);                                                    \
-    return NS_ERROR_NOT_IMPLEMENTED;                                           \
+#define DROP_DEAD()                                                       \
+  do {                                                                    \
+    nsPrintfCString msg("NECKO ERROR: '%s' UNIMPLEMENTED", __FUNCTION__); \
+    NECKO_MAYBE_ABORT(msg);                                               \
+    return NS_ERROR_NOT_IMPLEMENTED;                                      \
   } while (0)
 
 #define ENSURE_CALLED_BEFORE_ASYNC_OPEN()                                      \
   do {                                                                         \
     if (mIsPending || mWasOpened) {                                            \
-      nsPrintfCString msg("'%s' called after AsyncOpen: %s +%d",               \
-                          __FUNCTION__, __FILE__, __LINE__);                   \
+      nsPrintfCString msg("'%s' called after AsyncOpen: %s +%d", __FUNCTION__, \
+                          __FILE__, __LINE__);                                 \
       NECKO_MAYBE_ABORT(msg);                                                  \
     }                                                                          \
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);                         \
@@ -67,62 +68,58 @@ class TabChild;
 // Fails call if made after request observers (on-modify-request, etc) have been
 // called
 
-#define ENSURE_CALLED_BEFORE_CONNECT()                                         \
-  do {                                                                         \
-    if (mRequestObserversCalled) {                                             \
-      nsPrintfCString msg("'%s' called too late: %s +%d",                      \
-                          __FUNCTION__, __FILE__, __LINE__);                   \
-      NECKO_MAYBE_ABORT(msg);                                                  \
-      if (mIsPending)                                                          \
-        return NS_ERROR_IN_PROGRESS;                                           \
-      MOZ_ASSERT(mWasOpened);                                                  \
-      return NS_ERROR_ALREADY_OPENED;                                          \
-    }                                                                          \
+#define ENSURE_CALLED_BEFORE_CONNECT()                                  \
+  do {                                                                  \
+    if (mRequestObserversCalled) {                                      \
+      nsPrintfCString msg("'%s' called too late: %s +%d", __FUNCTION__, \
+                          __FILE__, __LINE__);                          \
+      NECKO_MAYBE_ABORT(msg);                                           \
+      if (mIsPending) return NS_ERROR_IN_PROGRESS;                      \
+      MOZ_ASSERT(mWasOpened);                                           \
+      return NS_ERROR_ALREADY_OPENED;                                   \
+    }                                                                   \
   } while (0)
 
 namespace mozilla {
 namespace net {
 
-inline bool
-IsNeckoChild()
-{
+inline bool IsNeckoChild() {
   static bool didCheck = false;
   static bool amChild = false;
 
   if (!didCheck) {
     didCheck = true;
-    amChild = (XRE_GetProcessType() == GeckoProcessType_Content) && !recordreplay::IsMiddleman();
+    amChild = (XRE_GetProcessType() == GeckoProcessType_Content) &&
+              !recordreplay::IsMiddleman();
   }
   return amChild;
 }
 
 namespace NeckoCommonInternal {
-  extern bool gSecurityDisabled;
-  extern bool gRegisteredBool;
-} // namespace NeckoCommonInternal
+extern bool gSecurityDisabled;
+extern bool gRegisteredBool;
+}  // namespace NeckoCommonInternal
 
 // This should always return true unless xpcshell tests are being used
-inline bool
-UsingNeckoIPCSecurity()
-{
+inline bool UsingNeckoIPCSecurity() {
   return !NeckoCommonInternal::gSecurityDisabled;
 }
 
-inline bool
-MissingRequiredTabChild(mozilla::dom::TabChild* tabChild,
-                        const char* context)
-{
+inline bool MissingRequiredTabChild(mozilla::dom::TabChild* tabChild,
+                                    const char* context) {
   if (UsingNeckoIPCSecurity()) {
     if (!tabChild) {
-      printf_stderr("WARNING: child tried to open %s IPDL channel w/o "
-                    "security info\n", context);
+      printf_stderr(
+          "WARNING: child tried to open %s IPDL channel w/o "
+          "security info\n",
+          context);
       return true;
     }
   }
   return false;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_NeckoCommon_h
+#endif  // mozilla_net_NeckoCommon_h

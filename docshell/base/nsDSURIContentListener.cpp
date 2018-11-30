@@ -28,27 +28,20 @@ NS_INTERFACE_MAP_BEGIN(MaybeCloseWindowHelper)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MaybeCloseWindowHelper::MaybeCloseWindowHelper(nsIInterfaceRequestor* aContentContext)
-  : mContentContext(aContentContext)
-  , mWindowToClose(nullptr)
-  , mTimer(nullptr)
-  , mShouldCloseWindow(false)
-{
-}
+MaybeCloseWindowHelper::MaybeCloseWindowHelper(
+    nsIInterfaceRequestor* aContentContext)
+    : mContentContext(aContentContext),
+      mWindowToClose(nullptr),
+      mTimer(nullptr),
+      mShouldCloseWindow(false) {}
 
-MaybeCloseWindowHelper::~MaybeCloseWindowHelper()
-{
-}
+MaybeCloseWindowHelper::~MaybeCloseWindowHelper() {}
 
-void
-MaybeCloseWindowHelper::SetShouldCloseWindow(bool aShouldCloseWindow)
-{
+void MaybeCloseWindowHelper::SetShouldCloseWindow(bool aShouldCloseWindow) {
   mShouldCloseWindow = aShouldCloseWindow;
 }
 
-nsIInterfaceRequestor*
-MaybeCloseWindowHelper::MaybeCloseWindow()
-{
+nsIInterfaceRequestor* MaybeCloseWindowHelper::MaybeCloseWindow() {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(mContentContext);
   NS_ENSURE_TRUE(window, mContentContext);
 
@@ -63,7 +56,8 @@ MaybeCloseWindowHelper::MaybeCloseWindow()
       // Now close the old window.  Do it on a timer so that we don't run
       // into issues trying to close the window before it has fully opened.
       NS_ASSERTION(!mTimer, "mTimer was already initialized once!");
-      NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, 0, nsITimer::TYPE_ONE_SHOT);
+      NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, 0,
+                              nsITimer::TYPE_ONE_SHOT);
       mWindowToClose = window;
     }
   }
@@ -71,8 +65,7 @@ MaybeCloseWindowHelper::MaybeCloseWindow()
 }
 
 NS_IMETHODIMP
-MaybeCloseWindowHelper::Notify(nsITimer* timer)
-{
+MaybeCloseWindowHelper::Notify(nsITimer* timer) {
   NS_ASSERTION(mWindowToClose, "No window to close after timer fired");
 
   mWindowToClose->Close();
@@ -83,19 +76,13 @@ MaybeCloseWindowHelper::Notify(nsITimer* timer)
 }
 
 nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
-  : mDocShell(aDocShell)
-  , mExistingJPEGRequest(nullptr)
-  , mParentContentListener(nullptr)
-{
-}
+    : mDocShell(aDocShell),
+      mExistingJPEGRequest(nullptr),
+      mParentContentListener(nullptr) {}
 
-nsDSURIContentListener::~nsDSURIContentListener()
-{
-}
+nsDSURIContentListener::~nsDSURIContentListener() {}
 
-nsresult
-nsDSURIContentListener::Init()
-{
+nsresult nsDSURIContentListener::Init() {
   nsresult rv;
   mNavInfo = do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get webnav info");
@@ -112,8 +99,7 @@ NS_INTERFACE_MAP_BEGIN(nsDSURIContentListener)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, bool* aAbortOpen)
-{
+nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, bool* aAbortOpen) {
   // If mDocShell is null here, that means someone's starting a load in our
   // docshell after it's already been destroyed.  Don't let that happen.
   if (!mDocShell) {
@@ -135,8 +121,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
                                   bool aIsContentPreferred,
                                   nsIRequest* aRequest,
                                   nsIStreamListener** aContentHandler,
-                                  bool* aAbortProcess)
-{
+                                  bool* aAbortProcess) {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aContentHandler);
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
@@ -151,17 +136,18 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
     aOpenedChannel->GetLoadFlags(&loadFlags);
 
     // block top-level data URI navigations if triggered by the web
-    if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(aOpenedChannel)) {
+    if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
+            aOpenedChannel)) {
       // logging to console happens within AllowTopLevelNavigationToDataURI
       aRequest->Cancel(NS_ERROR_DOM_BAD_URI);
       *aAbortProcess = true;
       // close the window since the navigation to a data URI was blocked
       if (mDocShell) {
         nsCOMPtr<nsIInterfaceRequestor> contentContext =
-          do_QueryInterface(mDocShell->GetWindow());
+            do_QueryInterface(mDocShell->GetWindow());
         if (contentContext) {
           RefPtr<MaybeCloseWindowHelper> maybeCloseWindowHelper =
-            new MaybeCloseWindowHelper(contentContext);
+              new MaybeCloseWindowHelper(contentContext);
           maybeCloseWindowHelper->SetShouldCloseWindow(true);
           maybeCloseWindowHelper->MaybeCloseWindow();
         }
@@ -193,7 +179,8 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
     copy.forget(aContentHandler);
     rv = NS_OK;
   } else {
-    rv = mDocShell->CreateContentViewer(aContentType, aRequest, aContentHandler);
+    rv =
+        mDocShell->CreateContentViewer(aContentType, aRequest, aContentHandler);
     if (NS_SUCCEEDED(rv) && reuseCV) {
       mExistingJPEGStreamListener = *aContentHandler;
     } else {
@@ -216,7 +203,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
 
   if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
     nsCOMPtr<nsPIDOMWindowOuter> domWindow =
-      mDocShell ? mDocShell->GetWindow() : nullptr;
+        mDocShell ? mDocShell->GetWindow() : nullptr;
     NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
     domWindow->Focus();
   }
@@ -227,8 +214,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
 NS_IMETHODIMP
 nsDSURIContentListener::IsPreferred(const char* aContentType,
                                     char** aDesiredContentType,
-                                    bool* aCanHandle)
-{
+                                    bool* aCanHandle) {
   NS_ENSURE_ARG_POINTER(aCanHandle);
   NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
@@ -238,8 +224,7 @@ nsDSURIContentListener::IsPreferred(const char* aContentType,
   nsCOMPtr<nsIURIContentListener> parentListener;
   GetParentContentListener(getter_AddRefs(parentListener));
   if (parentListener) {
-    return parentListener->IsPreferred(aContentType,
-                                       aDesiredContentType,
+    return parentListener->IsPreferred(aContentType, aDesiredContentType,
                                        aCanHandle);
   }
   // we used to return false here if we didn't have a parent properly registered
@@ -259,8 +244,7 @@ NS_IMETHODIMP
 nsDSURIContentListener::CanHandleContent(const char* aContentType,
                                          bool aIsContentPreferred,
                                          char** aDesiredContentType,
-                                         bool* aCanHandleContent)
-{
+                                         bool* aCanHandleContent) {
   MOZ_ASSERT(aCanHandleContent, "Null out param?");
   NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
@@ -270,8 +254,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
   nsresult rv = NS_OK;
   if (aContentType) {
     uint32_t canHandle = nsIWebNavigationInfo::UNSUPPORTED;
-    rv = mNavInfo->IsTypeSupported(nsDependentCString(aContentType),
-                                   mDocShell,
+    rv = mNavInfo->IsTypeSupported(nsDependentCString(aContentType), mDocShell,
                                    &canHandle);
     *aCanHandleContent = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
   }
@@ -280,18 +263,16 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 }
 
 NS_IMETHODIMP
-nsDSURIContentListener::GetLoadCookie(nsISupports** aLoadCookie)
-{
+nsDSURIContentListener::GetLoadCookie(nsISupports** aLoadCookie) {
   NS_IF_ADDREF(*aLoadCookie = nsDocShell::GetAsSupports(mDocShell));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDSURIContentListener::SetLoadCookie(nsISupports* aLoadCookie)
-{
+nsDSURIContentListener::SetLoadCookie(nsISupports* aLoadCookie) {
 #ifdef DEBUG
   RefPtr<nsDocLoader> cookieAsDocLoader =
-    nsDocLoader::GetAsDocLoader(aLoadCookie);
+      nsDocLoader::GetAsDocLoader(aLoadCookie);
   NS_ASSERTION(cookieAsDocLoader && cookieAsDocLoader == mDocShell,
                "Invalid load cookie being set!");
 #endif
@@ -300,11 +281,10 @@ nsDSURIContentListener::SetLoadCookie(nsISupports* aLoadCookie)
 
 NS_IMETHODIMP
 nsDSURIContentListener::GetParentContentListener(
-    nsIURIContentListener** aParentListener)
-{
+    nsIURIContentListener** aParentListener) {
   if (mWeakParentContentListener) {
     nsCOMPtr<nsIURIContentListener> tempListener =
-      do_QueryReferent(mWeakParentContentListener);
+        do_QueryReferent(mWeakParentContentListener);
     *aParentListener = tempListener;
     NS_IF_ADDREF(*aParentListener);
   } else {
@@ -316,8 +296,7 @@ nsDSURIContentListener::GetParentContentListener(
 
 NS_IMETHODIMP
 nsDSURIContentListener::SetParentContentListener(
-    nsIURIContentListener* aParentListener)
-{
+    nsIURIContentListener* aParentListener) {
   if (aParentListener) {
     // Store the parent listener as a weak ref. Parents not supporting
     // nsISupportsWeakReference assert but may still be used.

@@ -5,18 +5,13 @@
 
 #include "nsDirIndex.h"
 
-NS_IMPL_ISUPPORTS(nsDirIndex,
-                  nsIDirIndex)
+NS_IMPL_ISUPPORTS(nsDirIndex, nsIDirIndex)
 
-nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
-                           mSize(UINT64_MAX),
-                           mLastModified(-1LL)
-{
-}
+nsDirIndex::nsDirIndex()
+    : mType(TYPE_UNKNOWN), mSize(UINT64_MAX), mLastModified(-1LL) {}
 
 NS_IMETHODIMP
-nsDirIndex::GetType(uint32_t* aType)
-{
+nsDirIndex::GetType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);
 
   *aType = mType;
@@ -24,57 +19,49 @@ nsDirIndex::GetType(uint32_t* aType)
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetType(uint32_t aType)
-{
+nsDirIndex::SetType(uint32_t aType) {
   mType = aType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetContentType(nsACString& aContentType)
-{
+nsDirIndex::GetContentType(nsACString& aContentType) {
   aContentType = mContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetContentType(const nsACString& aContentType)
-{
+nsDirIndex::SetContentType(const nsACString& aContentType) {
   mContentType = aContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetLocation(nsACString& aLocation)
-{
+nsDirIndex::GetLocation(nsACString& aLocation) {
   aLocation = mLocation;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetLocation(const nsACString& aLocation)
-{
+nsDirIndex::SetLocation(const nsACString& aLocation) {
   mLocation = aLocation;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetDescription(nsAString& aDescription)
-{
+nsDirIndex::GetDescription(nsAString& aDescription) {
   aDescription = mDescription;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetDescription(const nsAString& aDescription)
-{
+nsDirIndex::SetDescription(const nsAString& aDescription) {
   mDescription = aDescription;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetSize(int64_t* aSize)
-{
+nsDirIndex::GetSize(int64_t* aSize) {
   NS_ENSURE_ARG_POINTER(aSize);
 
   *aSize = mSize;
@@ -82,15 +69,13 @@ nsDirIndex::GetSize(int64_t* aSize)
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetSize(int64_t aSize)
-{
+nsDirIndex::SetSize(int64_t aSize) {
   mSize = aSize;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetLastModified(PRTime* aLastModified)
-{
+nsDirIndex::GetLastModified(PRTime* aLastModified) {
   NS_ENSURE_ARG_POINTER(aLastModified);
 
   *aLastModified = mLastModified;
@@ -98,8 +83,7 @@ nsDirIndex::GetLastModified(PRTime* aLastModified)
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetLastModified(PRTime aLastModified)
-{
+nsDirIndex::SetLastModified(PRTime aLastModified) {
   mLastModified = aLastModified;
   return NS_OK;
 }

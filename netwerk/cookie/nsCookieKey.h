@@ -10,40 +10,31 @@
 
 namespace mozilla {
 namespace net {
-class nsCookieKey : public PLDHashEntryHdr
-{
-public:
+class nsCookieKey : public PLDHashEntryHdr {
+ public:
   typedef const nsCookieKey& KeyType;
   typedef const nsCookieKey* KeyTypePointer;
 
   nsCookieKey() = default;
 
-  nsCookieKey(const nsCString &baseDomain, const OriginAttributes &attrs)
-    : mBaseDomain(baseDomain)
-    , mOriginAttributes(attrs)
-  {}
+  nsCookieKey(const nsCString& baseDomain, const OriginAttributes& attrs)
+      : mBaseDomain(baseDomain), mOriginAttributes(attrs) {}
 
   explicit nsCookieKey(KeyTypePointer other)
-    : mBaseDomain(other->mBaseDomain)
-    , mOriginAttributes(other->mOriginAttributes)
-  {}
+      : mBaseDomain(other->mBaseDomain),
+        mOriginAttributes(other->mOriginAttributes) {}
 
   nsCookieKey(nsCookieKey&& other) = default;
   nsCookieKey& operator=(nsCookieKey&&) = default;
 
-  bool KeyEquals(KeyTypePointer other) const
-  {
+  bool KeyEquals(KeyTypePointer other) const {
     return mBaseDomain == other->mBaseDomain &&
            mOriginAttributes == other->mOriginAttributes;
   }
 
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  {
-    return &aKey;
-  }
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
     nsAutoCString temp(aKey->mBaseDomain);
     temp.Append('#');
     nsAutoCString suffix;
@@ -52,17 +43,16 @@ public:
     return mozilla::HashString(temp);
   }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return mBaseDomain.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
   enum { ALLOW_MEMMOVE = true };
 
-  nsCString        mBaseDomain;
+  nsCString mBaseDomain;
   OriginAttributes mOriginAttributes;
 };
 
-} // net
-} // mozilla
-#endif // mozilla_net_nsCookieKey_h
+}  // namespace net
+}  // namespace mozilla
+#endif  // mozilla_net_nsCookieKey_h

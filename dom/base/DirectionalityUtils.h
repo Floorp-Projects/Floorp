@@ -18,17 +18,12 @@ namespace mozilla {
 namespace dom {
 class Element;
 class HTMLSlotElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 namespace mozilla {
 
-enum Directionality : uint8_t {
-  eDir_NotSet,
-  eDir_RTL,
-  eDir_LTR,
-  eDir_Auto
-};
+enum Directionality : uint8_t { eDir_NotSet, eDir_RTL, eDir_LTR, eDir_Auto };
 
 /**
  * Various methods for returning the directionality of a string using the
@@ -39,9 +34,9 @@ enum Directionality : uint8_t {
                value is eDir_NotSet).
  * @return the directionality of the string
  */
-Directionality
-GetDirectionFromText(const char16_t* aText, const uint32_t aLength,
-                     uint32_t* aFirstStrong = nullptr);
+Directionality GetDirectionFromText(const char16_t* aText,
+                                    const uint32_t aLength,
+                                    uint32_t* aFirstStrong = nullptr);
 
 /**
  * Set the directionality of an element according to the algorithm defined at
@@ -61,15 +56,14 @@ Directionality RecomputeDirectionality(mozilla::dom::Element* aElement,
  * the much more common case of getting the element's directionality.
  */
 void SetDirectionalityOnDescendants(mozilla::dom::Element* aElement,
-                                    Directionality aDir,
-                                    bool aNotify = true);
+                                    Directionality aDir, bool aNotify = true);
 
 /**
  * Walk the descendants of a node in tree order and, for any text node
  * descendant that determines the directionality of some element and is not a
  * descendant of another descendant of the original node with dir=auto,
  * redetermine that element's directionality
-  */
+ */
 void WalkDescendantsResetAutoDirection(mozilla::dom::Element* aElement);
 
 /**
@@ -131,8 +125,7 @@ void ResetDirectionSetByTextNode(nsTextNode* aTextNode);
  * text in aValue
  */
 void SetDirectionalityFromValue(mozilla::dom::Element* aElement,
-                                const nsAString& aValue,
-                                bool aNotify);
+                                const nsAString& aValue, bool aNotify);
 
 /**
  * Called when setting the dir attribute on an element, immediately after
@@ -142,11 +135,8 @@ void SetDirectionalityFromValue(mozilla::dom::Element* aElement,
  * and in BeforeSetAttr we can't do the walk because this element hasn't had the
  * value set yet so the results will be wrong.
  */
-void OnSetDirAttr(mozilla::dom::Element* aElement,
-                  const nsAttrValue* aNewValue,
-                  bool hadValidDir,
-                  bool hadDirAuto,
-                  bool aNotify);
+void OnSetDirAttr(mozilla::dom::Element* aElement, const nsAttrValue* aNewValue,
+                  bool hadValidDir, bool hadDirAuto, bool aNotify);
 
 /**
  * Called when binding a new element to the tree, to set the
@@ -161,6 +151,6 @@ void SetDirOnBind(mozilla::dom::Element* aElement, nsIContent* aParent);
  * clean up any entries in nsTextDirectionalityMap that refer to it.
  */
 void ResetDir(mozilla::dom::Element* aElement);
-} // end namespace mozilla
+}  // end namespace mozilla
 
 #endif /* DirectionalityUtils_h___ */

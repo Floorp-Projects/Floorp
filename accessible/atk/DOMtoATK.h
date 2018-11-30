@@ -41,123 +41,122 @@
 namespace mozilla {
 namespace a11y {
 
-namespace DOMtoATK
-{
+namespace DOMtoATK {
 
-  /**
-   * Converts a string of accessible text into ATK gchar* string (by adding
-   * BOMs). This can be used when offsets do not need to be adjusted because
-   * ends of the string can not fall between surrogates.
-   */
-  gchar* Convert(const nsAString& aStr);
+/**
+ * Converts a string of accessible text into ATK gchar* string (by adding
+ * BOMs). This can be used when offsets do not need to be adjusted because
+ * ends of the string can not fall between surrogates.
+ */
+gchar* Convert(const nsAString& aStr);
 
-  /**
-   * Add a BOM after each non-BMP character.
-   */
-  void AddBOMs(nsACString& aDest, const nsACString& aSource);
+/**
+ * Add a BOM after each non-BMP character.
+ */
+void AddBOMs(nsACString& aDest, const nsACString& aSource);
 
-  /**
-   * Replace all characters with asterisks (e.g. for password fields).
-   */
-  void ConvertTexttoAsterisks(nsAString& aString);
+/**
+ * Replace all characters with asterisks (e.g. for password fields).
+ */
+void ConvertTexttoAsterisks(nsAString& aString);
 
-  /**
-   * Parameterize conversion.
-   */
-  enum class AtkStringConvertFlags : uint32_t {
-    None                   = 0,
-    ConvertTextToAsterisks = 1 << 0,
-  };
+/**
+ * Parameterize conversion.
+ */
+enum class AtkStringConvertFlags : uint32_t {
+  None = 0,
+  ConvertTextToAsterisks = 1 << 0,
+};
 
-  MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AtkStringConvertFlags)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AtkStringConvertFlags)
 
-  class ATKStringConverterHelper {
-  public:
-    ATKStringConverterHelper(void) :
+class ATKStringConverterHelper {
+ public:
+  ATKStringConverterHelper(void)
+      :
 #ifdef DEBUG
-      mAdjusted (false),
+        mAdjusted(false),
 #endif
-      mStartShifted (false),
-      mEndShifted (false) { }
-
-    /**
-     * In order to properly get non-BMP values, offsets need to be changed
-     * to get one character more on each end, so that ConvertUTF16toUTF8 can
-     * convert surrogates even if the originally requested offsets fall between
-     * them.
-     */
-    void AdjustOffsets(gint* aStartOffset, gint* aEndOffset, gint count);
-
-    /**
-     * Converts a string of accessible text with adjusted offsets into ATK
-     * gchar* string (by adding BOMs).  Note, AdjustOffsets has to be called
-     * before getting the text passed to this.
-     */
-    gchar* ConvertAdjusted(const nsAString& aStr);
-
-  private:
-    /**
-     * Remove the additional characters requested by PrepareUTF16toUTF8.
-     */
-    gchar* FinishUTF16toUTF8(nsCString& aStr);
-
-#ifdef DEBUG
-    bool mAdjusted;
-#endif
-    bool mStartShifted;
-    bool mEndShifted;
-  };
-
-  /**
-   * Get text from aAccessible, using ATKStringConverterHelper to properly
-   * introduce appropriate BOMs.
-   */
-  template <class AccessibleOrProxy>
-  gchar* NewATKString(AccessibleOrProxy* aAccessible,
-                      gint aStartOffset, gint aEndOffset,
-                      AtkStringConvertFlags aFlags)
-  {
-    gint startOffset = aStartOffset, endOffset = aEndOffset;
-    ATKStringConverterHelper converter;
-    converter.AdjustOffsets(&startOffset, &endOffset,
-                            gint(aAccessible->CharacterCount()));
-    nsAutoString str;
-    aAccessible->TextSubstring(startOffset, endOffset, str);
-    if (aFlags & AtkStringConvertFlags::ConvertTextToAsterisks)
-      ConvertTexttoAsterisks(str);
-    return converter.ConvertAdjusted(str);
+        mStartShifted(false),
+        mEndShifted(false) {
   }
 
   /**
-   * Get a character from aAccessible, fetching more data as appropriate to
-   * properly get non-BMP characters or a BOM as appropriate.
+   * In order to properly get non-BMP values, offsets need to be changed
+   * to get one character more on each end, so that ConvertUTF16toUTF8 can
+   * convert surrogates even if the originally requested offsets fall between
+   * them.
    */
-  template <class AccessibleCharAt>
-  gunichar ATKCharacter(AccessibleCharAt* aAccessible, gint aOffset)
-  {
-    // char16_t is unsigned short in Mozilla, gnuichar is guint32 in glib.
-    gunichar character = static_cast<gunichar>(aAccessible->CharAt(aOffset));
+  void AdjustOffsets(gint* aStartOffset, gint* aEndOffset, gint count);
 
-    if (NS_IS_LOW_SURROGATE(character)) {
-      // Trailing surrogate, return BOM instead.
-      return 0xFEFF;
-    }
+  /**
+   * Converts a string of accessible text with adjusted offsets into ATK
+   * gchar* string (by adding BOMs).  Note, AdjustOffsets has to be called
+   * before getting the text passed to this.
+   */
+  gchar* ConvertAdjusted(const nsAString& aStr);
 
-    if (NS_IS_HIGH_SURROGATE(character)) {
-      // Heading surrogate, get the trailing surrogate and combine them.
-      gunichar characterLow = static_cast<gunichar>(aAccessible->CharAt(aOffset + 1));
+ private:
+  /**
+   * Remove the additional characters requested by PrepareUTF16toUTF8.
+   */
+  gchar* FinishUTF16toUTF8(nsCString& aStr);
 
-      if (!NS_IS_LOW_SURROGATE(characterLow)) {
-        // It should have been a trailing surrogate... Flag the error.
-        return 0xFFFD;
-      }
-      return SURROGATE_TO_UCS4(character, characterLow);
-    }
+#ifdef DEBUG
+  bool mAdjusted;
+#endif
+  bool mStartShifted;
+  bool mEndShifted;
+};
 
-    return character;
-  }
-
+/**
+ * Get text from aAccessible, using ATKStringConverterHelper to properly
+ * introduce appropriate BOMs.
+ */
+template <class AccessibleOrProxy>
+gchar* NewATKString(AccessibleOrProxy* aAccessible, gint aStartOffset,
+                    gint aEndOffset, AtkStringConvertFlags aFlags) {
+  gint startOffset = aStartOffset, endOffset = aEndOffset;
+  ATKStringConverterHelper converter;
+  converter.AdjustOffsets(&startOffset, &endOffset,
+                          gint(aAccessible->CharacterCount()));
+  nsAutoString str;
+  aAccessible->TextSubstring(startOffset, endOffset, str);
+  if (aFlags & AtkStringConvertFlags::ConvertTextToAsterisks)
+    ConvertTexttoAsterisks(str);
+  return converter.ConvertAdjusted(str);
 }
 
-} // namespace a11y
-} // namespace mozilla
+/**
+ * Get a character from aAccessible, fetching more data as appropriate to
+ * properly get non-BMP characters or a BOM as appropriate.
+ */
+template <class AccessibleCharAt>
+gunichar ATKCharacter(AccessibleCharAt* aAccessible, gint aOffset) {
+  // char16_t is unsigned short in Mozilla, gnuichar is guint32 in glib.
+  gunichar character = static_cast<gunichar>(aAccessible->CharAt(aOffset));
+
+  if (NS_IS_LOW_SURROGATE(character)) {
+    // Trailing surrogate, return BOM instead.
+    return 0xFEFF;
+  }
+
+  if (NS_IS_HIGH_SURROGATE(character)) {
+    // Heading surrogate, get the trailing surrogate and combine them.
+    gunichar characterLow =
+        static_cast<gunichar>(aAccessible->CharAt(aOffset + 1));
+
+    if (!NS_IS_LOW_SURROGATE(characterLow)) {
+      // It should have been a trailing surrogate... Flag the error.
+      return 0xFFFD;
+    }
+    return SURROGATE_TO_UCS4(character, characterLow);
+  }
+
+  return character;
+}
+
+}  // namespace DOMtoATK
+
+}  // namespace a11y
+}  // namespace mozilla

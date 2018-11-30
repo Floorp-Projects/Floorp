@@ -15,9 +15,7 @@
 namespace mozilla {
 namespace net {
 
-ChannelEvent*
-ChannelEventQueue::TakeEvent()
-{
+ChannelEvent* ChannelEventQueue::TakeEvent() {
   mMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFlushing);
 
@@ -31,21 +29,19 @@ ChannelEventQueue::TakeEvent()
   return event.release();
 }
 
-void
-ChannelEventQueue::FlushQueue()
-{
+void ChannelEventQueue::FlushQueue() {
   // Events flushed could include destruction of channel (and our own
   // destructor) unless we make sure its refcount doesn't drop to 0 while this
   // method is running.
   nsCOMPtr<nsISupports> kungFuDeathGrip(mOwner);
-  mozilla::Unused << kungFuDeathGrip; // Not used in this function
+  mozilla::Unused << kungFuDeathGrip;  // Not used in this function
 
 #ifdef DEBUG
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mFlushing);
   }
-#endif // DEBUG
+#endif  // DEBUG
 
   bool needResumeOnOtherThread = false;
 
@@ -91,7 +87,7 @@ ChannelEventQueue::FlushQueue()
     }
 
     event->Run();
-  } // end of while(true)
+  }  // end of while(true)
 
   // The flush procedure is aborted because next event cannot be run on current
   // thread. We need to resume the event processing right after flush procedure
@@ -103,31 +99,24 @@ ChannelEventQueue::FlushQueue()
   }
 }
 
-void
-ChannelEventQueue::Suspend()
-{
+void ChannelEventQueue::Suspend() {
   MutexAutoLock lock(mMutex);
   SuspendInternal();
 }
 
-void
-ChannelEventQueue::SuspendInternal()
-{
+void ChannelEventQueue::SuspendInternal() {
   mMutex.AssertCurrentThreadOwns();
 
   mSuspended = true;
   mSuspendCount++;
 }
 
-void ChannelEventQueue::Resume()
-{
+void ChannelEventQueue::Resume() {
   MutexAutoLock lock(mMutex);
   ResumeInternal();
 }
 
-void
-ChannelEventQueue::ResumeInternal()
-{
+void ChannelEventQueue::ResumeInternal() {
   mMutex.AssertCurrentThreadOwns();
 
   // Resuming w/o suspend: error in debug mode, ignore in build
@@ -146,23 +135,20 @@ ChannelEventQueue::ResumeInternal()
 
     // Hold a strong reference of mOwner to avoid the channel release
     // before CompleteResume was executed.
-    class CompleteResumeRunnable : public CancelableRunnable
-    {
-    public:
-      explicit CompleteResumeRunnable(ChannelEventQueue* aQueue, nsISupports* aOwner)
-        : CancelableRunnable("CompleteResumeRunnable")
-        , mQueue(aQueue)
-        , mOwner(aOwner)
-      {
-      }
+    class CompleteResumeRunnable : public CancelableRunnable {
+     public:
+      explicit CompleteResumeRunnable(ChannelEventQueue* aQueue,
+                                      nsISupports* aOwner)
+          : CancelableRunnable("CompleteResumeRunnable"),
+            mQueue(aQueue),
+            mOwner(aOwner) {}
 
-      NS_IMETHOD Run() override
-      {
+      NS_IMETHOD Run() override {
         mQueue->CompleteResume();
         return NS_OK;
       }
 
-    private:
+     private:
       virtual ~CompleteResumeRunnable() = default;
 
       RefPtr<ChannelEventQueue> mQueue;
@@ -173,13 +159,13 @@ ChannelEventQueue::ResumeInternal()
     RefPtr<Runnable> event = new CompleteResumeRunnable(this, mOwner);
 
     nsCOMPtr<nsIEventTarget> target;
-      target = mEventQueue[0]->GetEventTarget();
+    target = mEventQueue[0]->GetEventTarget();
     MOZ_ASSERT(target);
 
-    Unused << NS_WARN_IF(NS_FAILED(target->Dispatch(event.forget(),
-                                                    NS_DISPATCH_NORMAL)));
+    Unused << NS_WARN_IF(
+        NS_FAILED(target->Dispatch(event.forget(), NS_DISPATCH_NORMAL)));
   }
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

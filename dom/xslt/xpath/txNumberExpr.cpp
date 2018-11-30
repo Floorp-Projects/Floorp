@@ -9,108 +9,100 @@
 #include <math.h>
 #include "txIXPathContext.h"
 
-nsresult
-txNumberExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
-{
-    *aResult = nullptr;
+nsresult txNumberExpr::evaluate(txIEvalContext* aContext,
+                                txAExprResult** aResult) {
+  *aResult = nullptr;
 
-    RefPtr<txAExprResult> exprRes;
-    nsresult rv = mRightExpr->evaluate(aContext, getter_AddRefs(exprRes));
-    NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<txAExprResult> exprRes;
+  nsresult rv = mRightExpr->evaluate(aContext, getter_AddRefs(exprRes));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    double rightDbl = exprRes->numberValue();
+  double rightDbl = exprRes->numberValue();
 
-    rv = mLeftExpr->evaluate(aContext, getter_AddRefs(exprRes));
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mLeftExpr->evaluate(aContext, getter_AddRefs(exprRes));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    double leftDbl = exprRes->numberValue();
-    double result = 0;
+  double leftDbl = exprRes->numberValue();
+  double result = 0;
 
-    switch (mOp) {
-        case ADD:
-            result = leftDbl + rightDbl;
-            break;
+  switch (mOp) {
+    case ADD:
+      result = leftDbl + rightDbl;
+      break;
 
-        case SUBTRACT:
-            result = leftDbl - rightDbl;
-            break;
+    case SUBTRACT:
+      result = leftDbl - rightDbl;
+      break;
 
-        case DIVIDE:
-            if (rightDbl == 0) {
+    case DIVIDE:
+      if (rightDbl == 0) {
 #if defined(XP_WIN)
-                /* XXX MSVC miscompiles such that (NaN == 0) */
-                if (mozilla::IsNaN(rightDbl))
-                    result = mozilla::UnspecifiedNaN<double>();
-                else
+        /* XXX MSVC miscompiles such that (NaN == 0) */
+        if (mozilla::IsNaN(rightDbl))
+          result = mozilla::UnspecifiedNaN<double>();
+        else
 #endif
-                if (leftDbl == 0 || mozilla::IsNaN(leftDbl))
-                    result = mozilla::UnspecifiedNaN<double>();
-                else if (mozilla::IsNegative(leftDbl) != mozilla::IsNegative(rightDbl))
-                    result = mozilla::NegativeInfinity<double>();
-                else
-                    result = mozilla::PositiveInfinity<double>();
-            }
-            else
-                result = leftDbl / rightDbl;
-            break;
+            if (leftDbl == 0 || mozilla::IsNaN(leftDbl))
+          result = mozilla::UnspecifiedNaN<double>();
+        else if (mozilla::IsNegative(leftDbl) != mozilla::IsNegative(rightDbl))
+          result = mozilla::NegativeInfinity<double>();
+        else
+          result = mozilla::PositiveInfinity<double>();
+      } else
+        result = leftDbl / rightDbl;
+      break;
 
-        case MODULUS:
-            if (rightDbl == 0) {
-                result = mozilla::UnspecifiedNaN<double>();
-            }
-            else {
+    case MODULUS:
+      if (rightDbl == 0) {
+        result = mozilla::UnspecifiedNaN<double>();
+      } else {
 #if defined(XP_WIN)
-                /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-                if (!mozilla::IsInfinite(leftDbl) && mozilla::IsInfinite(rightDbl))
-                    result = leftDbl;
-                else
+        /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+        if (!mozilla::IsInfinite(leftDbl) && mozilla::IsInfinite(rightDbl))
+          result = leftDbl;
+        else
 #endif
-                result = fmod(leftDbl, rightDbl);
-            }
-            break;
+          result = fmod(leftDbl, rightDbl);
+      }
+      break;
 
-        case MULTIPLY:
-            result = leftDbl * rightDbl;
-            break;
-    }
+    case MULTIPLY:
+      result = leftDbl * rightDbl;
+      break;
+  }
 
-    return aContext->recycler()->getNumberResult(result, aResult);
-} //-- evaluate
+  return aContext->recycler()->getNumberResult(result, aResult);
+}  //-- evaluate
 
 TX_IMPL_EXPR_STUBS_2(txNumberExpr, NUMBER_RESULT, mLeftExpr, mRightExpr)
 
-bool
-txNumberExpr::isSensitiveTo(ContextSensitivity aContext)
-{
-    return mLeftExpr->isSensitiveTo(aContext) ||
-           mRightExpr->isSensitiveTo(aContext);
+bool txNumberExpr::isSensitiveTo(ContextSensitivity aContext) {
+  return mLeftExpr->isSensitiveTo(aContext) ||
+         mRightExpr->isSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING
-void
-txNumberExpr::toString(nsAString& str)
-{
-    mLeftExpr->toString(str);
+void txNumberExpr::toString(nsAString& str) {
+  mLeftExpr->toString(str);
 
-    switch (mOp) {
-        case ADD:
-            str.AppendLiteral(" + ");
-            break;
-        case SUBTRACT:
-            str.AppendLiteral(" - ");
-            break;
-        case DIVIDE:
-            str.AppendLiteral(" div ");
-            break;
-        case MODULUS:
-            str.AppendLiteral(" mod ");
-            break;
-        case MULTIPLY:
-            str.AppendLiteral(" * ");
-            break;
-    }
+  switch (mOp) {
+    case ADD:
+      str.AppendLiteral(" + ");
+      break;
+    case SUBTRACT:
+      str.AppendLiteral(" - ");
+      break;
+    case DIVIDE:
+      str.AppendLiteral(" div ");
+      break;
+    case MODULUS:
+      str.AppendLiteral(" mod ");
+      break;
+    case MULTIPLY:
+      str.AppendLiteral(" * ");
+      break;
+  }
 
-    mRightExpr->toString(str);
-
+  mRightExpr->toString(str);
 }
 #endif

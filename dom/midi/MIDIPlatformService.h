@@ -26,9 +26,8 @@ class MIDIMessageQueue;
  * connection events and messages.
  *
  */
-class MIDIPlatformService
-{
-public:
+class MIDIPlatformService {
+ public:
   NS_INLINE_DECL_REFCOUNTING(MIDIPlatformService);
   // Adds info about MIDI Port that has been connected.
   void AddPortInfo(MIDIPortInfo& aPortInfo);
@@ -93,7 +92,8 @@ public:
   // Clears all messages later than now, sends all outgoing message scheduled
   // before/at now, and schedules MIDI Port connection closing.
   void Close(MIDIPortParent* aPort);
-protected:
+
+ protected:
   MIDIPlatformService();
   virtual ~MIDIPlatformService();
   // Platform specific MIDI service shutdown method.
@@ -120,11 +120,10 @@ protected:
 
   // Allows platform specific IO Threads to retrieve all messages to be sent
   // before a certain timestamp. Handles mutex locking.
-  void GetMessagesBefore(const nsAString& aPortId,
-                         const TimeStamp& aTimeStamp,
+  void GetMessagesBefore(const nsAString& aPortId, const TimeStamp& aTimeStamp,
                          nsTArray<MIDIMessage>& aMsgs);
 
-private:
+ private:
   // When the MIDIPlatformService is created, we need to know whether or not the
   // corresponding IPC MIDIManager objects have received the MIDIPort list after
   // it is populated. This is set to True when that is done, so we don't
@@ -152,7 +151,7 @@ private:
   Mutex mMessageQueueMutex;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIPlatformService_h
+#endif  // mozilla_dom_MIDIPlatformService_h

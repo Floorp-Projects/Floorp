@@ -16,17 +16,15 @@
 
 namespace mozilla {
 
-JS::Value
-WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
-{
+JS::Value WebGL2Context::GetParameter(JSContext* cx, GLenum pname,
+                                      ErrorResult& rv) {
   const FuncScope funcScope(*this, "getParameter");
   // The following cases are handled in WebGLContext::GetParameter():
   //     case LOCAL_GL_MAX_COLOR_ATTACHMENTS:
   //     case LOCAL_GL_MAX_DRAW_BUFFERS:
   //     case LOCAL_GL_DRAW_BUFFERi:
 
-  if (IsContextLost())
-    return JS::NullValue();
+  if (IsContextLost()) return JS::NullValue();
 
   switch (pname) {
     /* GLboolean */
@@ -45,13 +43,13 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
     /* GLenum */
     case LOCAL_GL_READ_BUFFER: {
-      if (!mBoundReadFramebuffer)
-        return JS::Int32Value(mDefaultFB_ReadBuffer);
+      if (!mBoundReadFramebuffer) return JS::Int32Value(mDefaultFB_ReadBuffer);
 
       if (!mBoundReadFramebuffer->ColorReadBuffer())
         return JS::Int32Value(LOCAL_GL_NONE);
 
-      return JS::Int32Value(mBoundReadFramebuffer->ColorReadBuffer()->mAttachmentPoint);
+      return JS::Int32Value(
+          mBoundReadFramebuffer->ColorReadBuffer()->mAttachmentPoint);
     }
 
     case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
@@ -106,7 +104,7 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       // value is 4 * GL_MAX_VARYING_VECTORS
       GLint val;
       gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &val);
-      return JS::Int32Value(4*val);
+      return JS::Int32Value(4 * val);
     }
 
     /* GLint64 */
@@ -130,11 +128,10 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       return JS::DoubleValue(static_cast<double>(val));
     }
 
-
     /* GLuint64 */
     case LOCAL_GL_MAX_SERVER_WAIT_TIMEOUT: {
       GLuint64 val;
-      gl->fGetInteger64v(pname, (GLint64*) &val);
+      gl->fGetInteger64v(pname, (GLint64*)&val);
       return JS::DoubleValue(static_cast<double>(val));
     }
 
@@ -164,23 +161,25 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       return WebGLObjectAsJSValue(cx, mBoundSamplers[mActiveTexture].get(), rv);
 
     case LOCAL_GL_TEXTURE_BINDING_2D_ARRAY:
-      return WebGLObjectAsJSValue(cx, mBound2DArrayTextures[mActiveTexture].get(), rv);
+      return WebGLObjectAsJSValue(
+          cx, mBound2DArrayTextures[mActiveTexture].get(), rv);
 
     case LOCAL_GL_TEXTURE_BINDING_3D:
-      return WebGLObjectAsJSValue(cx, mBound3DTextures[mActiveTexture].get(), rv);
+      return WebGLObjectAsJSValue(cx, mBound3DTextures[mActiveTexture].get(),
+                                  rv);
 
-    case LOCAL_GL_TRANSFORM_FEEDBACK_BINDING:
-      {
-        const WebGLTransformFeedback* tf = mBoundTransformFeedback;
-        if (tf == mDefaultTransformFeedback) {
-          tf = nullptr;
-        }
-        return WebGLObjectAsJSValue(cx, tf, rv);
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BINDING: {
+      const WebGLTransformFeedback* tf = mBoundTransformFeedback;
+      if (tf == mDefaultTransformFeedback) {
+        tf = nullptr;
       }
+      return WebGLObjectAsJSValue(cx, tf, rv);
+    }
 
     case LOCAL_GL_VERTEX_ARRAY_BINDING: {
-      WebGLVertexArray* vao =
-        (mBoundVertexArray != mDefaultVertexArray) ? mBoundVertexArray.get() : nullptr;
+      WebGLVertexArray* vao = (mBoundVertexArray != mDefaultVertexArray)
+                                  ? mBoundVertexArray.get()
+                                  : nullptr;
       return WebGLObjectAsJSValue(cx, vao, rv);
     }
 
@@ -195,4 +194,4 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

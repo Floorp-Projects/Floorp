@@ -22,39 +22,24 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GridTracks)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-GridTracks::GridTracks(GridDimension *aParent)
-  : mParent(aParent)
-{
-  MOZ_ASSERT(aParent,
-    "Should never be instantiated with a null GridDimension");
+GridTracks::GridTracks(GridDimension* aParent) : mParent(aParent) {
+  MOZ_ASSERT(aParent, "Should never be instantiated with a null GridDimension");
 }
 
-GridTracks::~GridTracks()
-{
-}
+GridTracks::~GridTracks() {}
 
-JSObject*
-GridTracks::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* GridTracks::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return GridTracks_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-uint32_t
-GridTracks::Length() const
-{
-  return mTracks.Length();
-}
+uint32_t GridTracks::Length() const { return mTracks.Length(); }
 
-GridTrack*
-GridTracks::Item(uint32_t aIndex)
-{
+GridTrack* GridTracks::Item(uint32_t aIndex) {
   return mTracks.SafeElementAt(aIndex);
 }
 
-GridTrack*
-GridTracks::IndexedGetter(uint32_t aIndex,
-                          bool& aFound)
-{
+GridTrack* GridTracks::IndexedGetter(uint32_t aIndex, bool& aFound) {
   aFound = aIndex < mTracks.Length();
   if (!aFound) {
     return nullptr;
@@ -62,9 +47,7 @@ GridTracks::IndexedGetter(uint32_t aIndex,
   return mTracks[aIndex];
 }
 
-void
-GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
-{
+void GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo) {
   // rebuild the tracks based on aTrackInfo
   mTracks.Clear();
 
@@ -75,29 +58,24 @@ GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
   nscoord lastTrackEdge = 0;
   uint32_t repeatIndex = 0;
   auto AppendRemovedAutoFits = [this, &aTrackInfo, &lastTrackEdge,
-                                &repeatIndex]()
-  {
+                                &repeatIndex]() {
     uint32_t numRepeatTracks = aTrackInfo->mRemovedRepeatTracks.Length();
     // Add in removed auto-fit tracks
     while (repeatIndex < numRepeatTracks &&
-         aTrackInfo->mRemovedRepeatTracks[repeatIndex]) {
-
+           aTrackInfo->mRemovedRepeatTracks[repeatIndex]) {
       RefPtr<GridTrack> track = new GridTrack(this);
       mTracks.AppendElement(track);
       track->SetTrackValues(
-        nsPresContext::AppUnitsToDoubleCSSPixels(lastTrackEdge),
-        nsPresContext::AppUnitsToDoubleCSSPixels(0),
-        GridDeclaration::Explicit,
-        GridTrackState::Removed
-      );
+          nsPresContext::AppUnitsToDoubleCSSPixels(lastTrackEdge),
+          nsPresContext::AppUnitsToDoubleCSSPixels(0),
+          GridDeclaration::Explicit, GridTrackState::Removed);
       repeatIndex++;
     }
     repeatIndex++;
   };
 
   for (size_t i = aTrackInfo->mStartFragmentTrack;
-       i < aTrackInfo->mEndFragmentTrack;
-       i++) {
+       i < aTrackInfo->mEndFragmentTrack; i++) {
     if (i >= aTrackInfo->mRepeatFirstTrack) {
       // Append removed auto-fit tracks, if appropriate. The
       // AppendRemovedAutoFits function exits early once it has been called
@@ -109,19 +87,17 @@ GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
     RefPtr<GridTrack> track = new GridTrack(this);
     mTracks.AppendElement(track);
     track->SetTrackValues(
-      nsPresContext::AppUnitsToDoubleCSSPixels(aTrackInfo->mPositions[i]),
-      nsPresContext::AppUnitsToDoubleCSSPixels(aTrackInfo->mSizes[i]),
-      (
-        // Implicit if index is before the first explicit track, or after
-        // the last explicit track.
-        (i < aTrackInfo->mNumLeadingImplicitTracks) ||
-        (i >= aTrackInfo->mNumLeadingImplicitTracks +
-              aTrackInfo->mNumExplicitTracks) ?
-          GridDeclaration::Implicit :
-          GridDeclaration::Explicit
-      ),
-      GridTrackState(aTrackInfo->mStates[i])
-    );
+        nsPresContext::AppUnitsToDoubleCSSPixels(aTrackInfo->mPositions[i]),
+        nsPresContext::AppUnitsToDoubleCSSPixels(aTrackInfo->mSizes[i]),
+        (
+            // Implicit if index is before the first explicit track, or after
+            // the last explicit track.
+            (i < aTrackInfo->mNumLeadingImplicitTracks) ||
+                    (i >= aTrackInfo->mNumLeadingImplicitTracks +
+                              aTrackInfo->mNumExplicitTracks)
+                ? GridDeclaration::Implicit
+                : GridDeclaration::Explicit),
+        GridTrackState(aTrackInfo->mStates[i]));
 
     lastTrackEdge = aTrackInfo->mPositions[i] + aTrackInfo->mSizes[i];
   }
@@ -130,5 +106,5 @@ GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
   AppendRemovedAutoFits();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

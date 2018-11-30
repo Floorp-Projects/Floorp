@@ -20,42 +20,41 @@ struct IDirect3DSurface9;
 class gfxContext;
 
 class gfxWindowsSurface : public gfxASurface {
-public:
-    enum {
-        FLAG_IS_TRANSPARENT = (1 << 2)
-    };
+ public:
+  enum { FLAG_IS_TRANSPARENT = (1 << 2) };
 
-    explicit gfxWindowsSurface(HDC dc, uint32_t flags = 0);
+  explicit gfxWindowsSurface(HDC dc, uint32_t flags = 0);
 
-    // Create from a shared d3d9surface
-    explicit gfxWindowsSurface(IDirect3DSurface9 *surface, uint32_t flags = 0);
+  // Create from a shared d3d9surface
+  explicit gfxWindowsSurface(IDirect3DSurface9* surface, uint32_t flags = 0);
 
-    // Create a DIB surface
-    explicit gfxWindowsSurface(const mozilla::gfx::IntSize& size,
-                               gfxImageFormat imageFormat = mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32);
+  // Create a DIB surface
+  explicit gfxWindowsSurface(const mozilla::gfx::IntSize& size,
+                             gfxImageFormat imageFormat =
+                                 mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32);
 
-    explicit gfxWindowsSurface(cairo_surface_t *csurf);
+  explicit gfxWindowsSurface(cairo_surface_t* csurf);
 
-    virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
-                                                               const mozilla::gfx::IntSize& aSize);
+  virtual already_AddRefed<gfxASurface> CreateSimilarSurface(
+      gfxContentType aType, const mozilla::gfx::IntSize& aSize);
 
-    void InitWithDC(uint32_t flags);
+  void InitWithDC(uint32_t flags);
 
-    virtual ~gfxWindowsSurface();
+  virtual ~gfxWindowsSurface();
 
-    HDC GetDC();
+  HDC GetDC();
 
-    already_AddRefed<gfxImageSurface> GetAsImageSurface();
+  already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
-    const mozilla::gfx::IntSize GetSize() const;
+  const mozilla::gfx::IntSize GetSize() const;
 
-private:
-    void MakeInvalid(mozilla::gfx::IntSize& size);
+ private:
+  void MakeInvalid(mozilla::gfx::IntSize& size);
 
-    bool mOwnsDC;
+  bool mOwnsDC;
 
-    HDC mDC;
-    HWND mWnd;
+  HDC mDC;
+  HWND mWnd;
 };
 
 #endif /* GFX_WINDOWSSURFACE_H */

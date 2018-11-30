@@ -16,35 +16,29 @@ class nsIURI;
 
 namespace mozilla {
 
-class ClearSiteData final : public nsIObserver
-{
-public:
+class ClearSiteData final : public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static void
-  Initialize();
+  static void Initialize();
 
-private:
+ private:
   ClearSiteData();
   ~ClearSiteData();
 
-  static void
-  Shutdown();
+  static void Shutdown();
 
   class PendingCleanupHolder;
 
   // Starts the cleanup if the channel contains the Clear-Site-Data header and
   // if the URI is secure.
-  void
-  ClearDataFromChannel(nsIHttpChannel* aChannel);
+  void ClearDataFromChannel(nsIHttpChannel* aChannel);
 
   // From the Clear-Site-Data header, it returns a bitmap with Type values.
-  uint32_t
-  ParseHeader(nsIHttpChannel* aChannel, nsIURI* aURI) const;
+  uint32_t ParseHeader(nsIHttpChannel* aChannel, nsIURI* aURI) const;
 
-  enum Type
-  {
+  enum Type {
     eCache = 0x01,
     eCookies = 0x02,
     eStorage = 0x04,
@@ -53,30 +47,25 @@ private:
 
   // This method writes a console message when a cleanup operation is going to
   // be executed.
-  void
-  LogOpToConsole(nsIHttpChannel* aChannel, nsIURI* aURI, Type aType) const;
+  void LogOpToConsole(nsIHttpChannel* aChannel, nsIURI* aURI, Type aType) const;
 
   // Logging of an unknown type value.
-  void
-  LogErrorToConsole(nsIHttpChannel* aChannel, nsIURI* aURI,
-                    const nsACString& aUnknownType) const;
+  void LogErrorToConsole(nsIHttpChannel* aChannel, nsIURI* aURI,
+                         const nsACString& aUnknownType) const;
 
-  void
-  LogToConsoleInternal(nsIHttpChannel* aChannel, nsIURI* aURI,
-                       const char* aMsg,
-                       const nsTArray<nsString>& aParams) const;
+  void LogToConsoleInternal(nsIHttpChannel* aChannel, nsIURI* aURI,
+                            const char* aMsg,
+                            const nsTArray<nsString>& aParams) const;
 
   // This method converts a Type to the corrisponding string format.
-  void
-  TypeToString(Type aType, nsAString& aStr) const;
+  void TypeToString(Type aType, nsAString& aStr) const;
 
   // When called, after the cleanup, PendingCleanupHolder will reload all the
   // browsing contexts.
-  void
-  BrowsingContextsReload(PendingCleanupHolder* aHolder,
-                         nsIPrincipal* aPrincipal) const;
+  void BrowsingContextsReload(PendingCleanupHolder* aHolder,
+                              nsIPrincipal* aPrincipal) const;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_clearsitedata_h
+#endif  // mozilla_clearsitedata_h

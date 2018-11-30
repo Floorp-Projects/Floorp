@@ -13,9 +13,8 @@ class nsINode;
 
 namespace mozilla {
 
-class HTMLEditUtils final
-{
-public:
+class HTMLEditUtils final {
+ public:
   static bool IsInlineStyle(nsINode* aNode);
   static bool IsFormatNode(nsINode* aNode);
   static bool IsNodeThatCanOutdent(nsINode* aNode);
@@ -56,7 +55,6 @@ public:
   static EditAction GetEditActionForAlignment(const nsAString& aAlignType);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef HTMLEditUtils_h
-
+#endif  // #ifndef HTMLEditUtils_h

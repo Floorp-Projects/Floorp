@@ -20,20 +20,15 @@ using namespace mozilla;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-EventStateManager*
-inLayoutUtils::GetEventStateManagerFor(Element& aElement)
-{
+EventStateManager* inLayoutUtils::GetEventStateManagerFor(Element& aElement) {
   nsIDocument* doc = aElement.OwnerDoc();
   nsPresContext* presContext = doc->GetPresContext();
-  if (!presContext)
-    return nullptr;
+  if (!presContext) return nullptr;
 
   return presContext->EventStateManager();
 }
 
-nsIDocument*
-inLayoutUtils::GetSubDocumentFor(nsINode* aNode)
-{
+nsIDocument* inLayoutUtils::GetSubDocumentFor(nsINode* aNode) {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content) {
     nsCOMPtr<nsIDocument> doc = content->GetComposedDoc();
@@ -45,9 +40,7 @@ inLayoutUtils::GetSubDocumentFor(nsINode* aNode)
   return nullptr;
 }
 
-nsINode*
-inLayoutUtils::GetContainerFor(const nsIDocument& aDoc)
-{
+nsINode* inLayoutUtils::GetContainerFor(const nsIDocument& aDoc) {
   nsPIDOMWindowOuter* pwin = aDoc.GetWindow();
   if (!pwin) {
     return nullptr;
@@ -55,4 +48,3 @@ inLayoutUtils::GetContainerFor(const nsIDocument& aDoc)
 
   return pwin->GetFrameElementInternal();
 }
-

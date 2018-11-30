@@ -35,7 +35,7 @@ struct malloc_log_entry {
 // name data.
 struct malloc_map_entry {
   u_long nameLen;
-  u_long address;		// base address
+  u_long address;  // base address
 };
 
 #ifdef __cplusplus

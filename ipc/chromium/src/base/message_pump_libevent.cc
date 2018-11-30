@@ -23,24 +23,24 @@
 // This macro checks that the _EVENT_SIZEOF_* constants defined in
 // ipc/chromiume/src/third_party/<platform>/event2/event-config.h are correct.
 #if defined(_EVENT_SIZEOF_SHORT)
-#define CHECK_EVENT_SIZEOF(TYPE, type) \
-    static_assert(_EVENT_SIZEOF_##TYPE == sizeof(type), \
-    "bad _EVENT_SIZEOF_"#TYPE);
+#define CHECK_EVENT_SIZEOF(TYPE, type)                \
+  static_assert(_EVENT_SIZEOF_##TYPE == sizeof(type), \
+                "bad _EVENT_SIZEOF_" #TYPE);
 #elif defined(EVENT__SIZEOF_SHORT)
-#define CHECK_EVENT_SIZEOF(TYPE, type) \
-    static_assert(EVENT__SIZEOF_##TYPE == sizeof(type), \
-    "bad EVENT__SIZEOF_"#TYPE);
+#define CHECK_EVENT_SIZEOF(TYPE, type)                \
+  static_assert(EVENT__SIZEOF_##TYPE == sizeof(type), \
+                "bad EVENT__SIZEOF_" #TYPE);
 #else
 #error Cannot find libevent type sizes
 #endif
 
-CHECK_EVENT_SIZEOF(LONG,      long);
+CHECK_EVENT_SIZEOF(LONG, long);
 CHECK_EVENT_SIZEOF(LONG_LONG, long long);
-CHECK_EVENT_SIZEOF(OFF_T,     ev_off_t);
+CHECK_EVENT_SIZEOF(OFF_T, ev_off_t);
 CHECK_EVENT_SIZEOF(PTHREAD_T, pthread_t);
-CHECK_EVENT_SIZEOF(SHORT,     short);
-CHECK_EVENT_SIZEOF(SIZE_T,    size_t);
-CHECK_EVENT_SIZEOF(VOID_P,    void*);
+CHECK_EVENT_SIZEOF(SHORT, short);
+CHECK_EVENT_SIZEOF(SIZE_T, size_t);
+CHECK_EVENT_SIZEOF(VOID_P, void*);
 
 // Lifecycle of struct event
 // Libevent uses two main data structures:
@@ -66,15 +66,12 @@ namespace base {
 // Too small a function to bother putting in a library?
 static int SetNonBlocking(int fd) {
   int flags = fcntl(fd, F_GETFL, 0);
-  if (flags == -1)
-    flags = 0;
+  if (flags == -1) flags = 0;
   return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
 MessagePumpLibevent::FileDescriptorWatcher::FileDescriptorWatcher()
-    : is_persistent_(false),
-      event_(NULL) {
-}
+    : is_persistent_(false), event_(NULL) {}
 
 MessagePumpLibevent::FileDescriptorWatcher::~FileDescriptorWatcher() {
   if (event_) {
@@ -82,7 +79,7 @@ MessagePumpLibevent::FileDescriptorWatcher::~FileDescriptorWatcher() {
   }
 }
 
-void MessagePumpLibevent::FileDescriptorWatcher::Init(event *e,
+void MessagePumpLibevent::FileDescriptorWatcher::Init(event* e,
                                                       bool is_persistent) {
   DCHECK(e);
   DCHECK(event_ == NULL);
@@ -91,16 +88,15 @@ void MessagePumpLibevent::FileDescriptorWatcher::Init(event *e,
   event_ = e;
 }
 
-event *MessagePumpLibevent::FileDescriptorWatcher::ReleaseEvent() {
-  struct event *e = event_;
+event* MessagePumpLibevent::FileDescriptorWatcher::ReleaseEvent() {
+  struct event* e = event_;
   event_ = NULL;
   return e;
 }
 
 bool MessagePumpLibevent::FileDescriptorWatcher::StopWatchingFileDescriptor() {
   event* e = ReleaseEvent();
-  if (e == NULL)
-    return true;
+  if (e == NULL) return true;
 
   // event_del() is a no-op if the event isn't active.
   int rv = event_del(e);
@@ -111,7 +107,7 @@ bool MessagePumpLibevent::FileDescriptorWatcher::StopWatchingFileDescriptor() {
 // Called if a byte is received on the wakeup pipe.
 void MessagePumpLibevent::OnWakeup(int socket, short flags, void* context) {
   base::MessagePumpLibevent* that =
-              static_cast<base::MessagePumpLibevent*>(context);
+      static_cast<base::MessagePumpLibevent*>(context);
   DCHECK(that->wakeup_pipe_out_ == socket);
 
   // Remove and discard the wakeup byte.
@@ -128,8 +124,7 @@ MessagePumpLibevent::MessagePumpLibevent()
       event_base_(event_base_new()),
       wakeup_pipe_in_(-1),
       wakeup_pipe_out_(-1) {
-  if (!Init())
-     NOTREACHED();
+  if (!Init()) NOTREACHED();
 }
 
 bool MessagePumpLibevent::Init() {
@@ -150,12 +145,11 @@ bool MessagePumpLibevent::Init() {
   wakeup_pipe_in_ = fds[1];
 
   wakeup_event_ = new event;
-  event_set(wakeup_event_, wakeup_pipe_out_, EV_READ | EV_PERSIST,
-            OnWakeup, this);
+  event_set(wakeup_event_, wakeup_pipe_out_, EV_READ | EV_PERSIST, OnWakeup,
+            this);
   event_base_set(event_base_, wakeup_event_);
 
-  if (event_add(wakeup_event_, 0))
-    return false;
+  if (event_add(wakeup_event_, 0)) return false;
   return true;
 }
 
@@ -164,18 +158,15 @@ MessagePumpLibevent::~MessagePumpLibevent() {
   DCHECK(event_base_);
   event_del(wakeup_event_);
   delete wakeup_event_;
-  if (wakeup_pipe_in_ >= 0)
-    close(wakeup_pipe_in_);
-  if (wakeup_pipe_out_ >= 0)
-    close(wakeup_pipe_out_);
+  if (wakeup_pipe_in_ >= 0) close(wakeup_pipe_in_);
+  if (wakeup_pipe_out_ >= 0) close(wakeup_pipe_out_);
   event_base_free(event_base_);
 }
 
-bool MessagePumpLibevent::WatchFileDescriptor(int fd,
-                                              bool persistent,
+bool MessagePumpLibevent::WatchFileDescriptor(int fd, bool persistent,
                                               Mode mode,
-                                              FileDescriptorWatcher *controller,
-                                              Watcher *delegate) {
+                                              FileDescriptorWatcher* controller,
+                                              Watcher* delegate) {
   DCHECK(fd > 0);
   DCHECK(controller);
   DCHECK(delegate);
@@ -208,8 +199,8 @@ bool MessagePumpLibevent::WatchFileDescriptor(int fd,
     }
 
     // Make sure we don't pick up any funky internal libevent masks.
-    int old_interest_mask = evt.get()->ev_events &
-      (EV_READ | EV_WRITE | EV_PERSIST);
+    int old_interest_mask =
+        evt.get()->ev_events & (EV_READ | EV_WRITE | EV_PERSIST);
 
     // Combine old/new event masks.
     event_mask |= old_interest_mask;
@@ -219,8 +210,7 @@ bool MessagePumpLibevent::WatchFileDescriptor(int fd,
   }
 
   // Set current interest mask and message pump for this event.
-  event_set(evt.get(), fd, event_mask, OnLibeventNotification,
-            delegate);
+  event_set(evt.get(), fd, event_mask, OnLibeventNotification, delegate);
 
   // Tell libevent which message pump this socket will belong to when we add it.
   if (event_base_set(event_base_, evt.get()) != 0) {
@@ -243,7 +233,6 @@ bool MessagePumpLibevent::WatchFileDescriptor(int fd,
   return true;
 }
 
-
 void MessagePumpLibevent::OnLibeventNotification(int fd, short flags,
                                                  void* context) {
   Watcher* watcher = static_cast<Watcher*>(context);
@@ -256,36 +245,26 @@ void MessagePumpLibevent::OnLibeventNotification(int fd, short flags,
   }
 }
 
+MessagePumpLibevent::SignalEvent::SignalEvent() : event_(NULL) {}
 
-MessagePumpLibevent::SignalEvent::SignalEvent() :
-  event_(NULL)
-{
-}
-
-MessagePumpLibevent::SignalEvent::~SignalEvent()
-{
+MessagePumpLibevent::SignalEvent::~SignalEvent() {
   if (event_) {
     StopCatching();
   }
 }
 
-void
-MessagePumpLibevent::SignalEvent::Init(event *e)
-{
+void MessagePumpLibevent::SignalEvent::Init(event* e) {
   DCHECK(e);
   DCHECK(event_ == NULL);
   event_ = e;
 }
 
-bool
-MessagePumpLibevent::SignalEvent::StopCatching()
-{
+bool MessagePumpLibevent::SignalEvent::StopCatching() {
   // XXX/cjones: this code could be shared with
   // FileDescriptorWatcher. ironic that libevent is "more"
   // object-oriented than this C++
   event* e = ReleaseEvent();
-  if (e == NULL)
-    return true;
+  if (e == NULL) return true;
 
   // event_del() is a no-op if the event isn't active.
   int rv = event_del(e);
@@ -293,19 +272,14 @@ MessagePumpLibevent::SignalEvent::StopCatching()
   return (rv == 0);
 }
 
-event *
-MessagePumpLibevent::SignalEvent::ReleaseEvent()
-{
-  event *e = event_;
+event* MessagePumpLibevent::SignalEvent::ReleaseEvent() {
+  event* e = event_;
   event_ = NULL;
   return e;
 }
 
-bool
-MessagePumpLibevent::CatchSignal(int sig,
-                                 SignalEvent* sigevent,
-                                 SignalWatcher* delegate)
-{
+bool MessagePumpLibevent::CatchSignal(int sig, SignalEvent* sigevent,
+                                      SignalWatcher* delegate) {
   DCHECK(sig > 0);
   DCHECK(sigevent);
   DCHECK(delegate);
@@ -317,27 +291,22 @@ MessagePumpLibevent::CatchSignal(int sig,
   mozilla::UniquePtr<event> evt = mozilla::MakeUnique<event>();
   signal_set(evt.get(), sig, OnLibeventSignalNotification, delegate);
 
-  if (event_base_set(event_base_, evt.get()))
-    return false;
+  if (event_base_set(event_base_, evt.get())) return false;
 
-  if (signal_add(evt.get(), NULL))
-    return false;
+  if (signal_add(evt.get(), NULL)) return false;
 
   // Transfer ownership of evt to controller.
   sigevent->Init(evt.release());
   return true;
 }
 
-void
-MessagePumpLibevent::OnLibeventSignalNotification(int sig, short flags,
-                                                  void* context)
-{
+void MessagePumpLibevent::OnLibeventSignalNotification(int sig, short flags,
+                                                       void* context) {
   DCHECK(sig > 0);
   DCHECK(EV_SIGNAL == flags);
   DCHECK(context);
   reinterpret_cast<SignalWatcher*>(context)->OnSignal(sig);
 }
-
 
 // Reentrant!
 void MessagePumpLibevent::Run(Delegate* delegate) {
@@ -350,22 +319,17 @@ void MessagePumpLibevent::Run(Delegate* delegate) {
     ScopedNSAutoreleasePool autorelease_pool;
 
     bool did_work = delegate->DoWork();
-    if (!keep_running_)
-      break;
+    if (!keep_running_) break;
 
     did_work |= delegate->DoDelayedWork(&delayed_work_time_);
-    if (!keep_running_)
-      break;
+    if (!keep_running_) break;
 
-    if (did_work)
-      continue;
+    if (did_work) continue;
 
     did_work = delegate->DoIdleWork();
-    if (!keep_running_)
-      break;
+    if (!keep_running_) break;
 
-    if (did_work)
-      continue;
+    if (did_work) continue;
 
     // EVLOOP_ONCE tells libevent to only block once,
     // but to service all pending events when it wakes up.
@@ -414,8 +378,7 @@ void MessagePumpLibevent::ScheduleDelayedWork(
   delayed_work_time_ = delayed_work_time;
 }
 
-void LineWatcher::OnFileCanReadWithoutBlocking(int aFd)
-{
+void LineWatcher::OnFileCanReadWithoutBlocking(int aFd) {
   ssize_t length = 0;
 
   while (true) {
@@ -424,10 +387,10 @@ void LineWatcher::OnFileCanReadWithoutBlocking(int aFd)
     if (length <= 0) {
       if (length < 0) {
         if (errno == EINTR) {
-          continue; // retry system call when interrupted
+          continue;  // retry system call when interrupted
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-          return; // no data available: return and re-poll
+          return;  // no data available: return and re-poll
         }
         DLOG(ERROR) << "Can't read from fd, error " << errno;
       } else {
@@ -447,7 +410,8 @@ void LineWatcher::OnFileCanReadWithoutBlocking(int aFd)
         OnLineRead(aFd, message);
         if (length > 0) {
           DCHECK(mReceivedIndex < (mBufferSize - 1));
-          memmove(&mReceiveBuffer[0], &mReceiveBuffer[mReceivedIndex + 1], length);
+          memmove(&mReceiveBuffer[0], &mReceiveBuffer[mReceivedIndex + 1],
+                  length);
         }
         mReceivedIndex = 0;
       } else {

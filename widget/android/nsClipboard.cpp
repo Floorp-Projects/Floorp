@@ -21,19 +21,16 @@ NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard)
  * releases.
  */
 
-nsClipboard::nsClipboard()
-{
-}
+nsClipboard::nsClipboard() {}
 
 NS_IMETHODIMP
-nsClipboard::SetData(nsITransferable *aTransferable,
-                     nsIClipboardOwner *anOwner, int32_t aWhichClipboard)
-{
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
+nsClipboard::SetData(nsITransferable *aTransferable, nsIClipboardOwner *anOwner,
+                     int32_t aWhichClipboard) {
+  if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
 
   nsCOMPtr<nsISupports> tmp;
-  nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp));
+  nsresult rv =
+      aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(tmp);
   // No support for non-text data
@@ -47,30 +44,27 @@ nsClipboard::SetData(nsITransferable *aTransferable,
 }
 
 NS_IMETHODIMP
-nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
-{
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
+nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard) {
+  if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
 
   nsAutoString buffer;
-  if (!AndroidBridge::Bridge())
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!AndroidBridge::Bridge()) return NS_ERROR_NOT_IMPLEMENTED;
   if (!AndroidBridge::Bridge()->GetClipboardText(buffer))
     return NS_ERROR_UNEXPECTED;
 
   nsresult rv;
   nsCOMPtr<nsISupportsString> dataWrapper =
-    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = dataWrapper->SetData(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If our data flavor has already been added, this will fail. But we don't care
+  // If our data flavor has already been added, this will fail. But we don't
+  // care
   aTransferable->AddDataFlavor(kUnicodeMime);
 
-  nsCOMPtr<nsISupports> nsisupportsDataWrapper =
-    do_QueryInterface(dataWrapper);
+  nsCOMPtr<nsISupports> nsisupportsDataWrapper = do_QueryInterface(dataWrapper);
   rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -78,23 +72,18 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 }
 
 NS_IMETHODIMP
-nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
-{
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
+nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
+  if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
   java::Clipboard::ClearText(java::GeckoAppShell::GetApplicationContext());
-  
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
-                                    uint32_t aLength, int32_t aWhichClipboard,
-                                    bool *aHasText)
-{
+nsClipboard::HasDataMatchingFlavors(const char **aFlavorList, uint32_t aLength,
+                                    int32_t aWhichClipboard, bool *aHasText) {
   *aHasText = false;
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
 
   for (uint32_t k = 0; k < aLength; k++) {
     if (strcmp(aFlavorList[k], kUnicodeMime) == 0) {
@@ -108,15 +97,13 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsSelectionClipboard(bool *aIsSupported)
-{
+nsClipboard::SupportsSelectionClipboard(bool *aIsSupported) {
   *aIsSupported = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsFindClipboard(bool* _retval)
-{
+nsClipboard::SupportsFindClipboard(bool *_retval) {
   *_retval = false;
   return NS_OK;
 }

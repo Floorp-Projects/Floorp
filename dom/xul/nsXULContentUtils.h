@@ -23,30 +23,24 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-}
+}  // namespace mozilla
 
-class nsXULContentUtils
-{
-protected:
-    static nsICollation *gCollation;
+class nsXULContentUtils {
+ protected:
+  static nsICollation* gCollation;
 
-    static bool gDisableXULCache;
+  static bool gDisableXULCache;
 
-    static int
-    DisableXULCacheChangedCallback(const char* aPrefName, void* aClosure);
+  static int DisableXULCacheChangedCallback(const char* aPrefName,
+                                            void* aClosure);
 
-public:
-    static nsresult
-    Finish();
+ public:
+  static nsresult Finish();
 
-    static nsresult
-    FindChildByTag(nsIContent *aElement,
-                   int32_t aNameSpaceID,
-                   nsAtom* aTag,
-                   mozilla::dom::Element** aResult);
+  static nsresult FindChildByTag(nsIContent* aElement, int32_t aNameSpaceID,
+                                 nsAtom* aTag, mozilla::dom::Element** aResult);
 
-    static nsICollation*
-    GetCollation();
+  static nsICollation* GetCollation();
 };
 
-#endif // nsXULContentUtils_h__
+#endif  // nsXULContentUtils_h__

@@ -25,24 +25,24 @@ struct FeatureMap {
  * DOM Security peer!
  */
 static FeatureMap sSupportedFeatures[] = {
-  { "autoplay", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "camera", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
-  { "encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
-  { "midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
-  { "payment", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  { "document-domain", FeaturePolicyUtils::FeaturePolicyValue::eAll },
-  // TODO: not supported yet!!!
-  { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
-  { "vr", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+    {"autoplay", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"camera", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
+    {"encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"microphone", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
+    {"midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
+    {"payment", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"document-domain", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    // TODO: not supported yet!!!
+    {"speaker", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
+    {"vr", FeaturePolicyUtils::FeaturePolicyValue::eAll},
 };
 
-/* static */ bool
-FeaturePolicyUtils::IsSupportedFeature(const nsAString& aFeatureName)
-{
-  uint32_t numFeatures = (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
+/* static */ bool FeaturePolicyUtils::IsSupportedFeature(
+    const nsAString& aFeatureName) {
+  uint32_t numFeatures =
+      (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
     if (aFeatureName.LowerCaseEqualsASCII(sSupportedFeatures[i].mFeatureName)) {
       return true;
@@ -51,19 +51,19 @@ FeaturePolicyUtils::IsSupportedFeature(const nsAString& aFeatureName)
   return false;
 }
 
-/* static */ void
-FeaturePolicyUtils::ForEachFeature(const std::function<void(const char*)>& aCallback)
-{
-  uint32_t numFeatures = (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
+/* static */ void FeaturePolicyUtils::ForEachFeature(
+    const std::function<void(const char*)>& aCallback) {
+  uint32_t numFeatures =
+      (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
     aCallback(sSupportedFeatures[i].mFeatureName);
   }
 }
 
 /* static */ FeaturePolicyUtils::FeaturePolicyValue
-FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName)
-{
-  uint32_t numFeatures = (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
+FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName) {
+  uint32_t numFeatures =
+      (sizeof(sSupportedFeatures) / sizeof(sSupportedFeatures[0]));
   for (uint32_t i = 0; i < numFeatures; ++i) {
     if (aFeatureName.LowerCaseEqualsASCII(sSupportedFeatures[i].mFeatureName)) {
       return sSupportedFeatures[i].mDefaultAllowList;
@@ -73,10 +73,8 @@ FeaturePolicyUtils::DefaultAllowListFeature(const nsAString& aFeatureName)
   return FeaturePolicyValue::eNone;
 }
 
-/* static */ bool
-FeaturePolicyUtils::IsFeatureAllowed(nsIDocument* aDocument,
-                                     const nsAString& aFeatureName)
-{
+/* static */ bool FeaturePolicyUtils::IsFeatureAllowed(
+    nsIDocument* aDocument, const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
 
   if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
@@ -98,10 +96,8 @@ FeaturePolicyUtils::IsFeatureAllowed(nsIDocument* aDocument,
   return false;
 }
 
-/* static */ void
-FeaturePolicyUtils::ReportViolation(nsIDocument* aDocument,
-                                    const nsAString& aFeatureName)
-{
+/* static */ void FeaturePolicyUtils::ReportViolation(
+    nsIDocument* aDocument, const nsAString& aFeatureName) {
   MOZ_ASSERT(aDocument);
 
   nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();
@@ -148,15 +144,13 @@ FeaturePolicyUtils::ReportViolation(nsIDocument* aDocument,
   }
 
   RefPtr<FeaturePolicyViolationReportBody> body =
-    new FeaturePolicyViolationReportBody(window, aFeatureName,
-                                         NS_ConvertUTF8toUTF16(fileName),
-                                         lineNumber, columnNumber,
-                                         NS_LITERAL_STRING("enforce"));
+      new FeaturePolicyViolationReportBody(
+          window, aFeatureName, NS_ConvertUTF8toUTF16(fileName), lineNumber,
+          columnNumber, NS_LITERAL_STRING("enforce"));
 
-  ReportingUtils::Report(window,
-                         nsGkAtoms::featurePolicyViolation,
+  ReportingUtils::Report(window, nsGkAtoms::featurePolicyViolation,
                          NS_ConvertUTF8toUTF16(spec), body);
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

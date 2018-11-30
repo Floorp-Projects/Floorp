@@ -18,8 +18,7 @@
 #include <android/log.h>
 #endif
 
-static void DebugDump(const char* fmt, ...)
-{
+static void DebugDump(const char* fmt, ...) {
   char buffer[2048];
   va_list ap;
   va_start(ap, fmt);
@@ -35,29 +34,27 @@ static void DebugDump(const char* fmt, ...)
   printf("%s", buffer);
 }
 
-bool
-xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps)
-{
-    JSContext* cx = nsContentUtils::GetCurrentJSContext();
-    if (!cx) {
-        printf("there is no JSContext on the stack!\n");
-    } else if (JS::UniqueChars buf = xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps)) {
-        DebugDump("%s\n", buf.get());
-    }
-    return true;
+bool xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps) {
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx) {
+    printf("there is no JSContext on the stack!\n");
+  } else if (JS::UniqueChars buf =
+                 xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps)) {
+    DebugDump("%s\n", buf.get());
+  }
+  return true;
 }
 
-JS::UniqueChars
-xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
-                 bool showThisProps)
-{
-    JS::AutoSaveExceptionState state(cx);
+JS::UniqueChars xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
+                                 bool showThisProps) {
+  JS::AutoSaveExceptionState state(cx);
 
-    JS::UniqueChars buf = JS::FormatStackDump(cx, showArgs, showLocals, showThisProps);
-    if (!buf) {
-        DebugDump("%s", "Failed to format JavaScript stack for dump\n");
-    }
+  JS::UniqueChars buf =
+      JS::FormatStackDump(cx, showArgs, showLocals, showThisProps);
+  if (!buf) {
+    DebugDump("%s", "Failed to format JavaScript stack for dump\n");
+  }
 
-    state.restore();
-    return buf;
+  state.restore();
+  return buf;
 }

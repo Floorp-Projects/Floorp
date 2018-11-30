@@ -26,11 +26,11 @@ NS_IMETHODIMP
 nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
                                           nsILoadInfo *aLoadInfo,
                                           const nsACString &aMimeGuess,
-                                          int16_t *aDecision)
-{
+                                          int16_t *aDecision) {
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
 
-  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(contentType),
+  MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
+                                contentType),
              "We should only see external content policy types here.");
 
   *aDecision = nsIContentPolicy::ACCEPT;
@@ -39,27 +39,22 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
   // plugin, so they don't necessarily open external apps
   // TYPE_WEBSOCKET loads can only go to ws:// or wss://, so we don't need to
   // concern ourselves with them.
-  if (contentType != TYPE_DOCUMENT &&
-      contentType != TYPE_SUBDOCUMENT &&
-      contentType != TYPE_OBJECT &&
-      contentType != TYPE_WEBSOCKET) {
-
+  if (contentType != TYPE_DOCUMENT && contentType != TYPE_SUBDOCUMENT &&
+      contentType != TYPE_OBJECT && contentType != TYPE_WEBSOCKET) {
     // The following are just quick-escapes for the most common cases
     // where we would allow the content to be loaded anyway.
     nsAutoCString scheme;
     aContentLocation->GetScheme(scheme);
-    if (scheme.EqualsLiteral("http") ||
-        scheme.EqualsLiteral("https") ||
-        scheme.EqualsLiteral("ftp") ||
-        scheme.EqualsLiteral("file") ||
+    if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https") ||
+        scheme.EqualsLiteral("ftp") || scheme.EqualsLiteral("file") ||
         scheme.EqualsLiteral("chrome")) {
       return NS_OK;
     }
 
     bool shouldBlock;
-    nsresult rv = NS_URIChainHasFlags(aContentLocation,
-                                      nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-                                      &shouldBlock);
+    nsresult rv = NS_URIChainHasFlags(
+        aContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+        &shouldBlock);
     if (NS_SUCCEEDED(rv) && shouldBlock) {
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
     }
@@ -70,9 +65,8 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
 
 NS_IMETHODIMP
 nsNoDataProtocolContentPolicy::ShouldProcess(nsIURI *aContentLocation,
-                                             nsILoadInfo* aLoadInfo,
+                                             nsILoadInfo *aLoadInfo,
                                              const nsACString &aMimeGuess,
-                                             int16_t *aDecision)
-{
+                                             int16_t *aDecision) {
   return ShouldLoad(aContentLocation, aLoadInfo, aMimeGuess, aDecision);
 }

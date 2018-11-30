@@ -10,16 +10,11 @@
 namespace mozilla {
 
 WebGLContextBoundObject::WebGLContextBoundObject(WebGLContext* webgl)
-    : mContext(webgl)
-    , mContextGeneration(webgl->Generation())
-{
+    : mContext(webgl), mContextGeneration(webgl->Generation()) {}
+
+bool WebGLContextBoundObject::IsCompatibleWithContext(
+    const WebGLContext* other) const {
+  return (mContext == other && mContextGeneration == other->Generation());
 }
 
-bool
-WebGLContextBoundObject::IsCompatibleWithContext(const WebGLContext* other) const
-{
-    return (mContext == other &&
-            mContextGeneration == other->Generation());
-}
-
-} // namespace mozilla
+}  // namespace mozilla

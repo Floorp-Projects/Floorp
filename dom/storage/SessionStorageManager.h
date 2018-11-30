@@ -17,39 +17,37 @@ namespace dom {
 
 class SessionStorageCache;
 
-class SessionStorageManager final : public nsIDOMStorageManager
-                                  , public StorageObserverSink
-{
-public:
+class SessionStorageManager final : public nsIDOMStorageManager,
+                                    public StorageObserverSink {
+ public:
   SessionStorageManager();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEMANAGER
 
-private:
+ private:
   ~SessionStorageManager();
 
   // StorageObserverSink, handler to various chrome clearing notification
-  nsresult
-  Observe(const char* aTopic,
-          const nsAString& aOriginAttributesPattern,
-          const nsACString& aOriginScope) override;
+  nsresult Observe(const char* aTopic,
+                   const nsAString& aOriginAttributesPattern,
+                   const nsACString& aOriginScope) override;
 
   enum ClearStorageType {
     eAll,
     eSessionOnly,
   };
 
-  void
-  ClearStorages(ClearStorageType aType,
-                const OriginAttributesPattern& aPattern,
-                const nsACString& aOriginScope);
+  void ClearStorages(ClearStorageType aType,
+                     const OriginAttributesPattern& aPattern,
+                     const nsACString& aOriginScope);
 
-  typedef nsRefPtrHashtable<nsCStringHashKey, SessionStorageCache> OriginKeyHashTable;
+  typedef nsRefPtrHashtable<nsCStringHashKey, SessionStorageCache>
+      OriginKeyHashTable;
   nsClassHashtable<nsCStringHashKey, OriginKeyHashTable> mOATable;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SessionStorageManager_h
+#endif  // mozilla_dom_SessionStorageManager_h

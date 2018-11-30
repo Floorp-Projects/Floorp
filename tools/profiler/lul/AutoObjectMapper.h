@@ -17,13 +17,13 @@
 // functions: open, fstat, close, mmap, munmap.
 
 class MOZ_STACK_CLASS AutoObjectMapperPOSIX {
-public:
+ public:
   // The constructor does not attempt to map the file, because that
   // might fail.  Instead, once the object has been constructed,
   // call Map() to attempt the mapping.  There is no corresponding
   // Unmap() since the unmapping is done in the destructor.  Failure
   // messages are sent to |aLog|.
-  explicit AutoObjectMapperPOSIX(void(*aLog)(const char*));
+  explicit AutoObjectMapperPOSIX(void (*aLog)(const char*));
 
   // Unmap the file on destruction of this object.
   ~AutoObjectMapperPOSIX();
@@ -34,18 +34,18 @@ public:
   // succeeded, in which case *start and *length hold its extent.
   // Once a call to Map succeeds, all subsequent calls to it will
   // fail.
-  bool Map(/*OUT*/void** start, /*OUT*/size_t* length, std::string fileName);
+  bool Map(/*OUT*/ void** start, /*OUT*/ size_t* length, std::string fileName);
 
-protected:
+ protected:
   // If we are currently holding a mapped object, these record the
   // mapped address range.
-  void*  mImage;
+  void* mImage;
   size_t mSize;
 
   // A logging sink, for complaining about mapping failures.
   void (*mLog)(const char*);
 
-private:
+ private:
   // Are we currently holding a mapped object?  This is private to
   // the base class.  Derived classes need to have their own way to
   // track whether they are holding a mapped object.
@@ -57,8 +57,8 @@ private:
   // Disable heap allocation of this class.
   void* operator new(size_t);
   void* operator new[](size_t);
-  void  operator delete(void*);
-  void  operator delete[](void*);
+  void operator delete(void*);
+  void operator delete[](void*);
 };
 
 #if defined(GP_OS_android)
@@ -85,14 +85,14 @@ private:
 // hands the problem to the parent class.
 
 class MOZ_STACK_CLASS AutoObjectMapperFaultyLib : public AutoObjectMapperPOSIX {
-public:
-  explicit AutoObjectMapperFaultyLib(void(*aLog)(const char*));
+ public:
+  explicit AutoObjectMapperFaultyLib(void (*aLog)(const char*));
 
   ~AutoObjectMapperFaultyLib();
 
-  bool Map(/*OUT*/void** start, /*OUT*/size_t* length, std::string fileName);
+  bool Map(/*OUT*/ void** start, /*OUT*/ size_t* length, std::string fileName);
 
-private:
+ private:
   // faulty.lib requires us to maintain an abstract handle that can be
   // used later to unmap the area.  If this is non-NULL, it is assumed
   // that unmapping is to be done by faulty.lib.  Otherwise it goes
@@ -105,10 +105,10 @@ private:
   // Disable heap allocation of this class.
   void* operator new(size_t);
   void* operator new[](size_t);
-  void  operator delete(void*);
-  void  operator delete[](void*);
+  void operator delete(void*);
+  void operator delete[](void*);
 };
 
-#endif // defined(GP_OS_android)
+#endif  // defined(GP_OS_android)
 
-#endif // AutoObjectMapper_h
+#endif  // AutoObjectMapper_h

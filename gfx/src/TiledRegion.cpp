@@ -31,16 +31,11 @@ static const size_t kMaxTiles = 1000;
  * them.
  */
 
-static pixman_box32_t
-IntersectionOfNonEmptyBoxes(const pixman_box32_t& aBox1,
-                            const pixman_box32_t& aBox2)
-{
-  return pixman_box32_t {
-    std::max(aBox1.x1, aBox2.x1),
-    std::max(aBox1.y1, aBox2.y1),
-    std::min(aBox1.x2, aBox2.x2),
-    std::min(aBox1.y2, aBox2.y2)
-  };
+static pixman_box32_t IntersectionOfNonEmptyBoxes(const pixman_box32_t& aBox1,
+                                                  const pixman_box32_t& aBox2) {
+  return pixman_box32_t{
+      std::max(aBox1.x1, aBox2.x1), std::max(aBox1.y1, aBox2.y1),
+      std::min(aBox1.x2, aBox2.x2), std::min(aBox1.y2, aBox2.y2)};
 }
 
 // A TileIterator points to a specific tile inside a certain tile range, or to
@@ -49,11 +44,9 @@ IntersectionOfNonEmptyBoxes(const pixman_box32_t& aBox1,
 // tile to the right of the current one, or the first tile of the next tile
 // row if the current tile is already the last tile in the row.
 class TileIterator {
-public:
+ public:
   TileIterator(const pixman_box32_t& aTileBounds, const IntPoint& aPosition)
-    : mTileBounds(aTileBounds)
-    , mPos(aPosition)
-  {}
+      : mTileBounds(aTileBounds), mPos(aPosition) {}
 
   bool operator!=(const TileIterator& aOther) { return mPos != aOther.mPos; }
   bool operator==(const TileIterator& aOther) { return mPos == aOther.mPos; }
@@ -69,33 +62,28 @@ public:
     return *this;
   }
 
-  TileIterator& operator=(const IntPoint& aPosition)
-  {
+  TileIterator& operator=(const IntPoint& aPosition) {
     mPos = aPosition;
     return *this;
   }
 
-  bool IsBeforeTileContainingPoint(const IntPoint& aPoint) const
-  {
-    return (mPos.y + kTileSize) <= aPoint.y  ||
-      (mPos.y <= aPoint.y && (mPos.x + kTileSize) <= aPoint.x);
+  bool IsBeforeTileContainingPoint(const IntPoint& aPoint) const {
+    return (mPos.y + kTileSize) <= aPoint.y ||
+           (mPos.y <= aPoint.y && (mPos.x + kTileSize) <= aPoint.x);
   }
 
-  bool IsAtTileContainingPoint(const IntPoint& aPoint) const
-  {
+  bool IsAtTileContainingPoint(const IntPoint& aPoint) const {
     return mPos.y <= aPoint.y && aPoint.y < (mPos.y + kTileSize) &&
            mPos.x <= aPoint.x && aPoint.x < (mPos.x + kTileSize);
-
   }
 
-  pixman_box32_t IntersectionWith(const pixman_box32_t& aRect) const
-  {
-    pixman_box32_t tile = { mPos.x, mPos.y,
-                            mPos.x + kTileSize, mPos.y + kTileSize };
+  pixman_box32_t IntersectionWith(const pixman_box32_t& aRect) const {
+    pixman_box32_t tile = {mPos.x, mPos.y, mPos.x + kTileSize,
+                           mPos.y + kTileSize};
     return IntersectionOfNonEmptyBoxes(tile, aRect);
   }
 
-private:
+ private:
   const pixman_box32_t& mTileBounds;
   IntPoint mPos;
 };
@@ -108,42 +96,42 @@ private:
 // left corner of the tile bounds, i.e. the first tile under the tile
 // bounds.
 class TileRange {
-public:
+ public:
   // aTileBounds, aStart and aEnd need to be aligned with the tile grid.
-  TileRange(const pixman_box32_t& aTileBounds,
-            const IntPoint& aStart, const IntPoint& aEnd)
-    : mTileBounds(aTileBounds)
-    , mStart(aStart)
-    , mEnd(aEnd)
-  {}
+  TileRange(const pixman_box32_t& aTileBounds, const IntPoint& aStart,
+            const IntPoint& aEnd)
+      : mTileBounds(aTileBounds), mStart(aStart), mEnd(aEnd) {}
   // aTileBounds needs to be aligned with the tile grid.
   explicit TileRange(const pixman_box32_t& aTileBounds)
-    : mTileBounds(aTileBounds)
-    , mStart(mTileBounds.x1, mTileBounds.y1)
-    , mEnd(mTileBounds.x1, mTileBounds.y2)
-  {}
+      : mTileBounds(aTileBounds),
+        mStart(mTileBounds.x1, mTileBounds.y1),
+        mEnd(mTileBounds.x1, mTileBounds.y2) {}
 
   TileIterator Begin() const { return TileIterator(mTileBounds, mStart); }
   TileIterator End() const { return TileIterator(mTileBounds, mEnd); }
 
   // The number of tiles in this tile range.
-  size_t Length() const
-  {
+  size_t Length() const {
     if (mEnd.y == mStart.y) {
       return (mEnd.x - mStart.x) / kTileSize;
     }
-    int64_t numberOfFullRows = (((int64_t)mEnd.y - (int64_t)mStart.y) / kTileSize) - 1;
-    int64_t tilesInFirstRow = ((int64_t)mTileBounds.x2 - (int64_t)mStart.x) / kTileSize;
-    int64_t tilesInLastRow = ((int64_t)mEnd.x - (int64_t)mTileBounds.x1) / kTileSize;
-    int64_t tilesInFullRow = ((int64_t)mTileBounds.x2 - (int64_t)mTileBounds.x1) / kTileSize;
-    int64_t total = tilesInFirstRow + (tilesInFullRow * numberOfFullRows) + tilesInLastRow;
+    int64_t numberOfFullRows =
+        (((int64_t)mEnd.y - (int64_t)mStart.y) / kTileSize) - 1;
+    int64_t tilesInFirstRow =
+        ((int64_t)mTileBounds.x2 - (int64_t)mStart.x) / kTileSize;
+    int64_t tilesInLastRow =
+        ((int64_t)mEnd.x - (int64_t)mTileBounds.x1) / kTileSize;
+    int64_t tilesInFullRow =
+        ((int64_t)mTileBounds.x2 - (int64_t)mTileBounds.x1) / kTileSize;
+    int64_t total =
+        tilesInFirstRow + (tilesInFullRow * numberOfFullRows) + tilesInLastRow;
     MOZ_ASSERT(total > 0);
-    // On 32bit systems the total may be larger than what fits in a size_t (4 bytes),
-    // so clamp it to size_t's max value in that case.
+    // On 32bit systems the total may be larger than what fits in a size_t (4
+    // bytes), so clamp it to size_t's max value in that case.
     return static_cast<uint64_t>(total) >=
-               static_cast<uint64_t>(std::numeric_limits<size_t>::max())
-             ? std::numeric_limits<size_t>::max()
-             : static_cast<size_t>(total);
+                   static_cast<uint64_t>(std::numeric_limits<size_t>::max())
+               ? std::numeric_limits<size_t>::max()
+               : static_cast<size_t>(total);
   }
 
   // If aTileOrigin does not describe a tile inside our tile bounds, move it
@@ -152,8 +140,7 @@ public:
   // our tile bounds, move it to the range end tile.
   // The result of this method is a valid end tile for a tile range with our
   // tile bounds.
-  IntPoint MoveIntoBounds(const IntPoint& aTileOrigin) const
-  {
+  IntPoint MoveIntoBounds(const IntPoint& aTileOrigin) const {
     IntPoint p = aTileOrigin;
     if (p.x < mTileBounds.x1) {
       p.x = mTileBounds.x1;
@@ -165,52 +152,39 @@ public:
       p.y = mTileBounds.y1;
       p.x = mTileBounds.x1;
     } else if (p.y >= mTileBounds.y2) {
-      // There's only one valid state after the end of the tile range, and that's
-      // the bottom left point of the tile bounds.
+      // There's only one valid state after the end of the tile range, and
+      // that's the bottom left point of the tile bounds.
       p.x = mTileBounds.x1;
       p.y = mTileBounds.y2;
     }
     return p;
   }
 
-private:
+ private:
   const pixman_box32_t& mTileBounds;
   const IntPoint mStart;
   const IntPoint mEnd;
 };
 
-static IntPoint
-TileContainingPoint(const IntPoint& aPoint)
-{
+static IntPoint TileContainingPoint(const IntPoint& aPoint) {
   return IntPoint(RoundDownToMultiple(aPoint.x, kTileSize),
                   RoundDownToMultiple(aPoint.y, kTileSize));
 }
 
-enum class IterationAction : uint8_t {
-  CONTINUE,
-  STOP
-};
+enum class IterationAction : uint8_t { CONTINUE, STOP };
 
-enum class IterationEndReason : uint8_t {
-  NOT_STOPPED,
-  STOPPED
-};
+enum class IterationEndReason : uint8_t { NOT_STOPPED, STOPPED };
 
-template<
-  typename HandleEmptyTilesFunction,
-  typename HandleNonEmptyTileFunction,
-  typename RectArrayT>
-IterationEndReason ProcessIntersectedTiles(const pixman_box32_t& aRect,
-                                           RectArrayT& aRectArray,
-                                           HandleEmptyTilesFunction aHandleEmptyTiles,
-                                           HandleNonEmptyTileFunction aHandleNonEmptyTile)
-{
-  pixman_box32_t tileBounds = {
-    RoundDownToMultiple(aRect.x1, kTileSize),
-    RoundDownToMultiple(aRect.y1, kTileSize),
-    RoundUpToMultiple(aRect.x2, kTileSize),
-    RoundUpToMultiple(aRect.y2, kTileSize)
-  };
+template <typename HandleEmptyTilesFunction,
+          typename HandleNonEmptyTileFunction, typename RectArrayT>
+IterationEndReason ProcessIntersectedTiles(
+    const pixman_box32_t& aRect, RectArrayT& aRectArray,
+    HandleEmptyTilesFunction aHandleEmptyTiles,
+    HandleNonEmptyTileFunction aHandleNonEmptyTile) {
+  pixman_box32_t tileBounds = {RoundDownToMultiple(aRect.x1, kTileSize),
+                               RoundDownToMultiple(aRect.y1, kTileSize),
+                               RoundUpToMultiple(aRect.x2, kTileSize),
+                               RoundUpToMultiple(aRect.y2, kTileSize)};
   if (tileBounds.x2 < tileBounds.x1 || tileBounds.y2 < tileBounds.y1) {
     // RoundUpToMultiple probably overflowed. Bail out.
     return IterationEndReason::STOPPED;
@@ -235,13 +209,16 @@ IterationEndReason ProcessIntersectedTiles(const pixman_box32_t& aRect,
   //    at least one empty tile between the last rectangle we encountered and
   //    the current one.
   for (size_t i = 0; i < aRectArray.Length() && tileIterator != rangeEnd; i++) {
-    MOZ_ASSERT(aRectArray[i].x1 < aRectArray[i].x2 && aRectArray[i].y1 < aRectArray[i].y2, "empty rect");
+    MOZ_ASSERT(aRectArray[i].x1 < aRectArray[i].x2 &&
+                   aRectArray[i].y1 < aRectArray[i].y2,
+               "empty rect");
     IntPoint rectOrigin(aRectArray[i].x1, aRectArray[i].y1);
     if (tileIterator.IsBeforeTileContainingPoint(rectOrigin)) {
       IntPoint tileOrigin = TileContainingPoint(rectOrigin);
       IntPoint afterEmptyTiles = tileRange.MoveIntoBounds(tileOrigin);
       TileRange emptyTiles(tileBounds, *tileIterator, afterEmptyTiles);
-      if (aHandleEmptyTiles(aRectArray, i, emptyTiles) == IterationAction::STOP) {
+      if (aHandleEmptyTiles(aRectArray, i, emptyTiles) ==
+          IterationAction::STOP) {
         return IterationEndReason::STOPPED;
       }
       tileIterator = afterEmptyTiles;
@@ -251,7 +228,8 @@ IterationEndReason ProcessIntersectedTiles(const pixman_box32_t& aRect,
     }
     if (tileIterator.IsAtTileContainingPoint(rectOrigin)) {
       pixman_box32_t rectIntersection = tileIterator.IntersectionWith(aRect);
-      if (aHandleNonEmptyTile(aRectArray, i, rectIntersection) == IterationAction::STOP) {
+      if (aHandleNonEmptyTile(aRectArray, i, rectIntersection) ==
+          IterationAction::STOP) {
         return IterationEndReason::STOPPED;
       }
       ++tileIterator;
@@ -264,110 +242,112 @@ IterationEndReason ProcessIntersectedTiles(const pixman_box32_t& aRect,
     // remaining tiles now.
     size_t endIndex = aRectArray.Length();
     TileRange emptyTiles(tileBounds, *tileIterator, *rangeEnd);
-    if (aHandleEmptyTiles(aRectArray, endIndex, emptyTiles) == IterationAction::STOP) {
+    if (aHandleEmptyTiles(aRectArray, endIndex, emptyTiles) ==
+        IterationAction::STOP) {
       return IterationEndReason::STOPPED;
     }
   }
   return IterationEndReason::NOT_STOPPED;
 }
 
-static pixman_box32_t
-UnionBoundsOfNonEmptyBoxes(const pixman_box32_t& aBox1,
-                           const pixman_box32_t& aBox2)
-{
-  return { std::min(aBox1.x1, aBox2.x1),
-           std::min(aBox1.y1, aBox2.y1),
-           std::max(aBox1.x2, aBox2.x2),
-           std::max(aBox1.y2, aBox2.y2) };
+static pixman_box32_t UnionBoundsOfNonEmptyBoxes(const pixman_box32_t& aBox1,
+                                                 const pixman_box32_t& aBox2) {
+  return {std::min(aBox1.x1, aBox2.x1), std::min(aBox1.y1, aBox2.y1),
+          std::max(aBox1.x2, aBox2.x2), std::max(aBox1.y2, aBox2.y2)};
 }
 
 // Returns true when adding the rectangle was successful, and false if
 // allocation failed.
 // When this returns false, our internal state might not be consistent and we
 // need to be cleared.
-bool
-TiledRegionImpl::AddRect(const pixman_box32_t& aRect)
-{
+bool TiledRegionImpl::AddRect(const pixman_box32_t& aRect) {
   // We are adding a rectangle that can span multiple tiles.
   // For each empty tile that aRect intersects, we need to add the intersection
   // of aRect with that tile to mRects, respecting the order of mRects.
   // For each tile that already has a rectangle, we need to enlarge that
   // existing rectangle to include the intersection of aRect with the tile.
-  return ProcessIntersectedTiles(aRect, mRects,
-    [&aRect](nsTArray<pixman_box32_t>& rects, size_t& rectIndex, TileRange emptyTiles) {
-      CheckedInt<size_t> newLength(rects.Length());
-      newLength += emptyTiles.Length();
-      if (!newLength.isValid() || newLength.value() >= kMaxTiles ||
-          !rects.InsertElementsAt(rectIndex, emptyTiles.Length(), fallible)) {
-        return IterationAction::STOP;
-      }
-      for (TileIterator tileIt = emptyTiles.Begin();
-           tileIt != emptyTiles.End();
-           ++tileIt, ++rectIndex) {
-        rects[rectIndex] = tileIt.IntersectionWith(aRect);
-      }
-      return IterationAction::CONTINUE;
-    },
-    [](nsTArray<pixman_box32_t>& rects, size_t rectIndex, const pixman_box32_t& rectIntersectionWithTile) {
-      rects[rectIndex] =
-        UnionBoundsOfNonEmptyBoxes(rects[rectIndex], rectIntersectionWithTile);
-      return IterationAction::CONTINUE;
-    }) == IterationEndReason::NOT_STOPPED;
+  return ProcessIntersectedTiles(
+             aRect, mRects,
+             [&aRect](nsTArray<pixman_box32_t>& rects, size_t& rectIndex,
+                      TileRange emptyTiles) {
+               CheckedInt<size_t> newLength(rects.Length());
+               newLength += emptyTiles.Length();
+               if (!newLength.isValid() || newLength.value() >= kMaxTiles ||
+                   !rects.InsertElementsAt(rectIndex, emptyTiles.Length(),
+                                           fallible)) {
+                 return IterationAction::STOP;
+               }
+               for (TileIterator tileIt = emptyTiles.Begin();
+                    tileIt != emptyTiles.End(); ++tileIt, ++rectIndex) {
+                 rects[rectIndex] = tileIt.IntersectionWith(aRect);
+               }
+               return IterationAction::CONTINUE;
+             },
+             [](nsTArray<pixman_box32_t>& rects, size_t rectIndex,
+                const pixman_box32_t& rectIntersectionWithTile) {
+               rects[rectIndex] = UnionBoundsOfNonEmptyBoxes(
+                   rects[rectIndex], rectIntersectionWithTile);
+               return IterationAction::CONTINUE;
+             }) == IterationEndReason::NOT_STOPPED;
 }
 
-static bool
-NonEmptyBoxesIntersect(const pixman_box32_t& aBox1, const pixman_box32_t& aBox2)
-{
-  return aBox1.x1 < aBox2.x2 && aBox2.x1 < aBox1.x2 &&
-         aBox1.y1 < aBox2.y2 && aBox2.y1 < aBox1.y2;
+static bool NonEmptyBoxesIntersect(const pixman_box32_t& aBox1,
+                                   const pixman_box32_t& aBox2) {
+  return aBox1.x1 < aBox2.x2 && aBox2.x1 < aBox1.x2 && aBox1.y1 < aBox2.y2 &&
+         aBox2.y1 < aBox1.y2;
 }
 
-bool
-TiledRegionImpl::Intersects(const pixman_box32_t& aRect) const
-{
+bool TiledRegionImpl::Intersects(const pixman_box32_t& aRect) const {
   // aRect intersects this region if it intersects any of our rectangles.
-  return ProcessIntersectedTiles(aRect, mRects,
-    [](const nsTArray<pixman_box32_t>& rects, size_t& rectIndex, TileRange emptyTiles) {
-      // Ignore empty tiles and keep on iterating.
-      return IterationAction::CONTINUE;
-    },
-    [](const nsTArray<pixman_box32_t>& rects, size_t rectIndex, const pixman_box32_t& rectIntersectionWithTile) {
-      if (NonEmptyBoxesIntersect(rects[rectIndex], rectIntersectionWithTile)) {
-        // Found an intersecting rectangle, so aRect intersects this region.
-        return IterationAction::STOP;
-      }
-      return IterationAction::CONTINUE;
-    }) == IterationEndReason::STOPPED;
+  return ProcessIntersectedTiles(
+             aRect, mRects,
+             [](const nsTArray<pixman_box32_t>& rects, size_t& rectIndex,
+                TileRange emptyTiles) {
+               // Ignore empty tiles and keep on iterating.
+               return IterationAction::CONTINUE;
+             },
+             [](const nsTArray<pixman_box32_t>& rects, size_t rectIndex,
+                const pixman_box32_t& rectIntersectionWithTile) {
+               if (NonEmptyBoxesIntersect(rects[rectIndex],
+                                          rectIntersectionWithTile)) {
+                 // Found an intersecting rectangle, so aRect intersects this
+                 // region.
+                 return IterationAction::STOP;
+               }
+               return IterationAction::CONTINUE;
+             }) == IterationEndReason::STOPPED;
 }
 
-static bool
-NonEmptyBoxContainsNonEmptyBox(const pixman_box32_t& aBox1, const pixman_box32_t& aBox2)
-{
-  return aBox1.x1 <= aBox2.x1 && aBox2.x2 <= aBox1.x2 &&
-         aBox1.y1 <= aBox2.y1 && aBox2.y2 <= aBox1.y2;
+static bool NonEmptyBoxContainsNonEmptyBox(const pixman_box32_t& aBox1,
+                                           const pixman_box32_t& aBox2) {
+  return aBox1.x1 <= aBox2.x1 && aBox2.x2 <= aBox1.x2 && aBox1.y1 <= aBox2.y1 &&
+         aBox2.y2 <= aBox1.y2;
 }
 
-bool
-TiledRegionImpl::Contains(const pixman_box32_t& aRect) const
-{
+bool TiledRegionImpl::Contains(const pixman_box32_t& aRect) const {
   // aRect is contained in this region if aRect does not intersect any empty
   // tiles and, for each non-empty tile, if the intersection of aRect with that
   // tile is contained in the existing rectangle we have in that tile.
-  return ProcessIntersectedTiles(aRect, mRects,
-    [](const nsTArray<pixman_box32_t>& rects, size_t& rectIndex, TileRange emptyTiles) {
-      // Found an empty tile that intersects aRect, so aRect is not contained
-      // in this region.
-      return IterationAction::STOP;
-    },
-    [](const nsTArray<pixman_box32_t>& rects, size_t rectIndex, const pixman_box32_t& rectIntersectionWithTile) {
-      if (!NonEmptyBoxContainsNonEmptyBox(rects[rectIndex], rectIntersectionWithTile)) {
-        // Our existing rectangle in this tile does not cover the part of aRect that
-        // intersects this tile, so aRect is not contained in this region.
-        return IterationAction::STOP;
-      }
-      return IterationAction::CONTINUE;
-    }) == IterationEndReason::NOT_STOPPED;
+  return ProcessIntersectedTiles(
+             aRect, mRects,
+             [](const nsTArray<pixman_box32_t>& rects, size_t& rectIndex,
+                TileRange emptyTiles) {
+               // Found an empty tile that intersects aRect, so aRect is not
+               // contained in this region.
+               return IterationAction::STOP;
+             },
+             [](const nsTArray<pixman_box32_t>& rects, size_t rectIndex,
+                const pixman_box32_t& rectIntersectionWithTile) {
+               if (!NonEmptyBoxContainsNonEmptyBox(rects[rectIndex],
+                                                   rectIntersectionWithTile)) {
+                 // Our existing rectangle in this tile does not cover the part
+                 // of aRect that intersects this tile, so aRect is not
+                 // contained in this region.
+                 return IterationAction::STOP;
+               }
+               return IterationAction::CONTINUE;
+             }) == IterationEndReason::NOT_STOPPED;
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

@@ -37,22 +37,20 @@ class SensorAccuracy;
 
 typedef Observer<SensorAccuracy> ISensorAccuracyObserver;
 
-} // namespace hal
-} // namespace mozilla
+}  // namespace hal
+}  // namespace mozilla
 
 #include "ipc/IPCMessageUtils.h"
 
 namespace IPC {
-  /**
-   * Serializer for SensorType
-   */
-  template <>
-  struct ParamTraits<mozilla::hal::SensorType>:
-    public ContiguousEnumSerializer<
-             mozilla::hal::SensorType,
-             mozilla::hal::SENSOR_ORIENTATION,
-             mozilla::hal::NUM_SENSOR_TYPE> {
-  };
-} // namespace IPC
+/**
+ * Serializer for SensorType
+ */
+template <>
+struct ParamTraits<mozilla::hal::SensorType>
+    : public ContiguousEnumSerializer<mozilla::hal::SensorType,
+                                      mozilla::hal::SENSOR_ORIENTATION,
+                                      mozilla::hal::NUM_SENSOR_TYPE> {};
+}  // namespace IPC
 
 #endif /* __HAL_SENSOR_H_ */

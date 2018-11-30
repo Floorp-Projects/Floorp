@@ -17,8 +17,7 @@ using namespace mozilla::a11y::aria;
 /**
  * Used to store state map rule data for ARIA attribute of enum type.
  */
-struct EnumTypeData
-{
+struct EnumTypeData {
   // ARIA attribute name.
   nsStaticAtom* const mAttrName;
 
@@ -33,26 +32,24 @@ struct EnumTypeData
   const uint64_t mClearState;
 };
 
-enum ETokenType
-{
+enum ETokenType {
   eBoolType = 0,
-  eMixedType = 1, // can take 'mixed' value
-  eDefinedIfAbsent = 2 // permanent and false state are applied if absent
+  eMixedType = 1,       // can take 'mixed' value
+  eDefinedIfAbsent = 2  // permanent and false state are applied if absent
 };
 
 /**
  * Used to store state map rule data for ARIA attribute of token type (including
  * mixed value).
  */
-struct TokenTypeData
-{
-  TokenTypeData(nsAtom* aAttrName, uint32_t aType,
-                uint64_t aPermanentState,
-                uint64_t aTrueState,
-                uint64_t aFalseState = 0) :
-  mAttrName(aAttrName), mType(aType), mPermanentState(aPermanentState),
-  mTrueState(aTrueState), mFalseState(aFalseState)
-  { }
+struct TokenTypeData {
+  TokenTypeData(nsAtom* aAttrName, uint32_t aType, uint64_t aPermanentState,
+                uint64_t aTrueState, uint64_t aFalseState = 0)
+      : mAttrName(aAttrName),
+        mType(aType),
+        mPermanentState(aPermanentState),
+        mTrueState(aTrueState),
+        mFalseState(aFalseState) {}
 
   // ARIA attribute name.
   nsAtom* const mAttrName;
@@ -81,245 +78,201 @@ static void MapEnumType(dom::Element* aElement, uint64_t* aState,
 static void MapTokenType(dom::Element* aContent, uint64_t* aState,
                          const TokenTypeData& aData);
 
-bool
-aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
-{
+bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
+                      uint64_t* aState) {
   switch (aRule) {
-    case eARIAAutoComplete:
-    {
+    case eARIAAutoComplete: {
       static const EnumTypeData data = {
-        nsGkAtoms::aria_autocomplete,
-        { nsGkAtoms::inlinevalue,
-          nsGkAtoms::list_,
-          nsGkAtoms::both, nullptr },
-        { states::SUPPORTS_AUTOCOMPLETION,
-          states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION,
-          states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION }, 0
-      };
+          nsGkAtoms::aria_autocomplete,
+          {nsGkAtoms::inlinevalue, nsGkAtoms::list_, nsGkAtoms::both, nullptr},
+          {states::SUPPORTS_AUTOCOMPLETION,
+           states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION,
+           states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION},
+          0};
 
       MapEnumType(aElement, aState, data);
       return true;
     }
 
-    case eARIABusy:
-    {
+    case eARIABusy: {
       static const EnumTypeData data = {
-        nsGkAtoms::aria_busy,
-        { nsGkAtoms::_true,
-          nsGkAtoms::error, nullptr },
-        { states::BUSY,
-          states::INVALID }, 0
-      };
+          nsGkAtoms::aria_busy,
+          {nsGkAtoms::_true, nsGkAtoms::error, nullptr},
+          {states::BUSY, states::INVALID},
+          0};
 
       MapEnumType(aElement, aState, data);
       return true;
     }
 
-    case eARIACheckableBool:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_checked, eBoolType | eDefinedIfAbsent,
-        states::CHECKABLE, states::CHECKED);
+    case eARIACheckableBool: {
+      static const TokenTypeData data(nsGkAtoms::aria_checked,
+                                      eBoolType | eDefinedIfAbsent,
+                                      states::CHECKABLE, states::CHECKED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIACheckableMixed:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_checked, eMixedType | eDefinedIfAbsent,
-        states::CHECKABLE, states::CHECKED);
+    case eARIACheckableMixed: {
+      static const TokenTypeData data(nsGkAtoms::aria_checked,
+                                      eMixedType | eDefinedIfAbsent,
+                                      states::CHECKABLE, states::CHECKED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIACheckedMixed:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_checked, eMixedType,
-        states::CHECKABLE, states::CHECKED);
+    case eARIACheckedMixed: {
+      static const TokenTypeData data(nsGkAtoms::aria_checked, eMixedType,
+                                      states::CHECKABLE, states::CHECKED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIACurrent:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_current, eBoolType,
-        0, states::CURRENT);
+    case eARIACurrent: {
+      static const TokenTypeData data(nsGkAtoms::aria_current, eBoolType, 0,
+                                      states::CURRENT);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIADisabled:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_disabled, eBoolType,
-        0, states::UNAVAILABLE);
+    case eARIADisabled: {
+      static const TokenTypeData data(nsGkAtoms::aria_disabled, eBoolType, 0,
+                                      states::UNAVAILABLE);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAExpanded:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_expanded, eBoolType,
-        0, states::EXPANDED, states::COLLAPSED);
+    case eARIAExpanded: {
+      static const TokenTypeData data(nsGkAtoms::aria_expanded, eBoolType, 0,
+                                      states::EXPANDED, states::COLLAPSED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAHasPopup:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_haspopup, eBoolType,
-        0, states::HASPOPUP);
+    case eARIAHasPopup: {
+      static const TokenTypeData data(nsGkAtoms::aria_haspopup, eBoolType, 0,
+                                      states::HASPOPUP);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAInvalid:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_invalid, eBoolType,
-        0, states::INVALID);
+    case eARIAInvalid: {
+      static const TokenTypeData data(nsGkAtoms::aria_invalid, eBoolType, 0,
+                                      states::INVALID);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAModal:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_modal, eBoolType,
-        0, states::MODAL);
+    case eARIAModal: {
+      static const TokenTypeData data(nsGkAtoms::aria_modal, eBoolType, 0,
+                                      states::MODAL);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAMultiline:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_multiline, eBoolType | eDefinedIfAbsent,
-        0, states::MULTI_LINE, states::SINGLE_LINE);
+    case eARIAMultiline: {
+      static const TokenTypeData data(nsGkAtoms::aria_multiline,
+                                      eBoolType | eDefinedIfAbsent, 0,
+                                      states::MULTI_LINE, states::SINGLE_LINE);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAMultiSelectable:
-    {
+    case eARIAMultiSelectable: {
       static const TokenTypeData data(
-        nsGkAtoms::aria_multiselectable, eBoolType,
-        0, states::MULTISELECTABLE | states::EXTSELECTABLE);
+          nsGkAtoms::aria_multiselectable, eBoolType, 0,
+          states::MULTISELECTABLE | states::EXTSELECTABLE);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAOrientation:
-    {
+    case eARIAOrientation: {
       static const EnumTypeData data = {
-        nsGkAtoms::aria_orientation,
-        { nsGkAtoms::horizontal,
-          nsGkAtoms::vertical, nullptr },
-        { states::HORIZONTAL,
-          states::VERTICAL },
-        states::HORIZONTAL | states::VERTICAL
-      };
+          nsGkAtoms::aria_orientation,
+          {nsGkAtoms::horizontal, nsGkAtoms::vertical, nullptr},
+          {states::HORIZONTAL, states::VERTICAL},
+          states::HORIZONTAL | states::VERTICAL};
 
       MapEnumType(aElement, aState, data);
       return true;
     }
 
-    case eARIAPressed:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_pressed, eMixedType,
-        0, states::PRESSED);
+    case eARIAPressed: {
+      static const TokenTypeData data(nsGkAtoms::aria_pressed, eMixedType, 0,
+                                      states::PRESSED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAReadonly:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_readonly, eBoolType,
-        0, states::READONLY);
+    case eARIAReadonly: {
+      static const TokenTypeData data(nsGkAtoms::aria_readonly, eBoolType, 0,
+                                      states::READONLY);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAReadonlyOrEditable:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_readonly, eBoolType | eDefinedIfAbsent,
-        0, states::READONLY, states::EDITABLE);
+    case eARIAReadonlyOrEditable: {
+      static const TokenTypeData data(nsGkAtoms::aria_readonly,
+                                      eBoolType | eDefinedIfAbsent, 0,
+                                      states::READONLY, states::EDITABLE);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIAReadonlyOrEditableIfDefined:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_readonly, eBoolType,
-        0, states::READONLY, states::EDITABLE);
+    case eARIAReadonlyOrEditableIfDefined: {
+      static const TokenTypeData data(nsGkAtoms::aria_readonly, eBoolType, 0,
+                                      states::READONLY, states::EDITABLE);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIARequired:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_required, eBoolType,
-        0, states::REQUIRED);
+    case eARIARequired: {
+      static const TokenTypeData data(nsGkAtoms::aria_required, eBoolType, 0,
+                                      states::REQUIRED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIASelectable:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_selected, eBoolType | eDefinedIfAbsent,
-        states::SELECTABLE, states::SELECTED);
+    case eARIASelectable: {
+      static const TokenTypeData data(nsGkAtoms::aria_selected,
+                                      eBoolType | eDefinedIfAbsent,
+                                      states::SELECTABLE, states::SELECTED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eARIASelectableIfDefined:
-    {
-      static const TokenTypeData data(
-        nsGkAtoms::aria_selected, eBoolType,
-        states::SELECTABLE, states::SELECTED);
+    case eARIASelectableIfDefined: {
+      static const TokenTypeData data(nsGkAtoms::aria_selected, eBoolType,
+                                      states::SELECTABLE, states::SELECTED);
 
       MapTokenType(aElement, aState, data);
       return true;
     }
 
-    case eReadonlyUntilEditable:
-    {
-      if (!(*aState & states::EDITABLE))
-        *aState |= states::READONLY;
+    case eReadonlyUntilEditable: {
+      if (!(*aState & states::EDITABLE)) *aState |= states::READONLY;
 
       return true;
     }
 
-    case eIndeterminateIfNoValue:
-    {
+    case eIndeterminateIfNoValue: {
       if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow) &&
           !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuetext))
         *aState |= states::MIXED;
@@ -327,9 +280,9 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
       return true;
     }
 
-    case eFocusableUntilDisabled:
-    {
-      if (!nsAccUtils::HasDefinedARIAToken(aElement, nsGkAtoms::aria_disabled) ||
+    case eFocusableUntilDisabled: {
+      if (!nsAccUtils::HasDefinedARIAToken(aElement,
+                                           nsGkAtoms::aria_disabled) ||
           aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
                                 nsGkAtoms::_false, eCaseMatters))
         *aState |= states::FOCUSABLE;
@@ -342,9 +295,8 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
   }
 }
 
-static void
-MapEnumType(dom::Element* aElement, uint64_t* aState, const EnumTypeData& aData)
-{
+static void MapEnumType(dom::Element* aElement, uint64_t* aState,
+                        const EnumTypeData& aData) {
   switch (aElement->FindAttrValueIn(kNameSpaceID_None, aData.mAttrName,
                                     aData.mValues, eCaseMatters)) {
     case 0:
@@ -359,16 +311,14 @@ MapEnumType(dom::Element* aElement, uint64_t* aState, const EnumTypeData& aData)
   }
 }
 
-static void
-MapTokenType(dom::Element* aElement, uint64_t* aState,
-             const TokenTypeData& aData)
-{
+static void MapTokenType(dom::Element* aElement, uint64_t* aState,
+                         const TokenTypeData& aData) {
   if (nsAccUtils::HasDefinedARIAToken(aElement, aData.mAttrName)) {
     if (aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
                               nsGkAtoms::mixed, eCaseMatters)) {
       if (aData.mType & eMixedType)
         *aState |= aData.mPermanentState | states::MIXED;
-      else // unsupported use of 'mixed' is an authoring error
+      else  // unsupported use of 'mixed' is an authoring error
         *aState |= aData.mPermanentState | aData.mFalseState;
       return;
     }

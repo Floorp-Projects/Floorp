@@ -19,17 +19,16 @@ namespace mozilla {
 class ComputedStyle;
 namespace dom {
 class Element;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 /**
  * nsSMILCSSProperty: Implements the nsISMILAttr interface for SMIL animations
  * that target CSS properties.  Represents a particular animation-targeted CSS
  * property on a particular element.
  */
-class nsSMILCSSProperty : public nsISMILAttr
-{
-public:
+class nsSMILCSSProperty : public nsISMILAttr {
+ public:
   /**
    * Constructs a new nsSMILCSSProperty.
    * @param  aPropID   The CSS property we're interested in animating.
@@ -39,18 +38,17 @@ public:
    *                             called, an empty nsSMILValue initialized with
    *                             the nsSMILCSSValueType will be returned.
    */
-  nsSMILCSSProperty(nsCSSPropertyID aPropID,
-                    mozilla::dom::Element* aElement,
+  nsSMILCSSProperty(nsCSSPropertyID aPropID, mozilla::dom::Element* aElement,
                     mozilla::ComputedStyle* aBaseComputedStyle);
 
   // nsISMILAttr methods
-  virtual nsresult ValueFromString(const nsAString& aStr,
-                                   const mozilla::dom::SVGAnimationElement* aSrcElement,
-                                   nsSMILValue& aValue,
-                                   bool& aPreventCachingOfSandwich) const override;
+  virtual nsresult ValueFromString(
+      const nsAString& aStr,
+      const mozilla::dom::SVGAnimationElement* aSrcElement, nsSMILValue& aValue,
+      bool& aPreventCachingOfSandwich) const override;
   virtual nsSMILValue GetBaseValue() const override;
-  virtual nsresult    SetAnimValue(const nsSMILValue& aValue) override;
-  virtual void        ClearAnimValue() override;
+  virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
+  virtual void ClearAnimValue() override;
 
   /**
    * Utility method - returns true if the given property is supported for
@@ -65,13 +63,13 @@ public:
    */
   static bool IsPropertyAnimatable(nsCSSPropertyID aPropID);
 
-protected:
+ protected:
   nsCSSPropertyID mPropID;
   // Using non-refcounted pointer for mElement -- we know mElement will stay
   // alive for my lifetime because a nsISMILAttr (like me) only lives as long
   // as the Compositing step, and DOM elements don't get a chance to die during
   // that time.
-  mozilla::dom::Element*   mElement;
+  mozilla::dom::Element* mElement;
 
   // The style to use when fetching base styles.
   //
@@ -81,4 +79,4 @@ protected:
   mozilla::ComputedStyle* mBaseComputedStyle;
 };
 
-#endif // NS_SMILCSSPROPERTY_H_
+#endif  // NS_SMILCSSPROPERTY_H_

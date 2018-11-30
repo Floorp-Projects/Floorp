@@ -11,28 +11,28 @@
 
 namespace mozilla {
 
-WebGLExtensionTextureFloatLinear::WebGLExtensionTextureFloatLinear(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-    auto& fua = webgl->mFormatUsage;
+WebGLExtensionTextureFloatLinear::WebGLExtensionTextureFloatLinear(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {
+  auto& fua = webgl->mFormatUsage;
 
-    fua->EditUsage(webgl::EffectiveFormat::RGBA32F)->isFilterable = true;
-    fua->EditUsage(webgl::EffectiveFormat::RGB32F)->isFilterable = true;
+  fua->EditUsage(webgl::EffectiveFormat::RGBA32F)->isFilterable = true;
+  fua->EditUsage(webgl::EffectiveFormat::RGB32F)->isFilterable = true;
 
-    if (webgl->IsWebGL2()) {
-        fua->EditUsage(webgl::EffectiveFormat::R32F)->isFilterable = true;
-        fua->EditUsage(webgl::EffectiveFormat::RG32F)->isFilterable = true;
-    } else {
-        fua->EditUsage(webgl::EffectiveFormat::Luminance32FAlpha32F)->isFilterable = true;
-        fua->EditUsage(webgl::EffectiveFormat::Luminance32F)->isFilterable = true;
-        fua->EditUsage(webgl::EffectiveFormat::Alpha32F)->isFilterable = true;
-    }
+  if (webgl->IsWebGL2()) {
+    fua->EditUsage(webgl::EffectiveFormat::R32F)->isFilterable = true;
+    fua->EditUsage(webgl::EffectiveFormat::RG32F)->isFilterable = true;
+  } else {
+    fua->EditUsage(webgl::EffectiveFormat::Luminance32FAlpha32F)->isFilterable =
+        true;
+    fua->EditUsage(webgl::EffectiveFormat::Luminance32F)->isFilterable = true;
+    fua->EditUsage(webgl::EffectiveFormat::Alpha32F)->isFilterable = true;
+  }
 }
 
-WebGLExtensionTextureFloatLinear::~WebGLExtensionTextureFloatLinear()
-{
-}
+WebGLExtensionTextureFloatLinear::~WebGLExtensionTextureFloatLinear() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFloatLinear, OES_texture_float_linear)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFloatLinear,
+                          OES_texture_float_linear)
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -14,9 +14,7 @@
 
 using namespace mozilla;
 
-nsresult
-nsINIParser::Init(nsIFile* aFile)
-{
+nsresult nsINIParser::Init(nsIFile* aFile) {
   nsCString result;
   MOZ_TRY_VAR(result, URLPreloader::ReadFile(aFile));
 
@@ -28,9 +26,7 @@ static const char kEquals[] = "=";
 static const char kWhitespace[] = " \t";
 static const char kRBracket[] = "]";
 
-nsresult
-nsINIParser::InitFromString(const nsCString& aStr)
-{
+nsresult nsINIParser::InitFromString(const nsCString& aStr) {
   nsCString fileContents;
   char* buffer;
 
@@ -58,16 +54,16 @@ nsINIParser::InitFromString(const nsCString& aStr)
 
   // outer loop tokenizes into lines
   while (char* token = NS_strtok(kNL, &buffer)) {
-    if (token[0] == '#' || token[0] == ';') { // it's a comment
+    if (token[0] == '#' || token[0] == ';') {  // it's a comment
       continue;
     }
 
     token = (char*)NS_strspnp(kWhitespace, token);
-    if (!*token) { // empty line
+    if (!*token) {  // empty line
       continue;
     }
 
-    if (token[0] == '[') { // section header!
+    if (token[0] == '[') {  // section header!
       ++token;
       currSection = token;
 
@@ -101,9 +97,7 @@ nsINIParser::InitFromString(const nsCString& aStr)
   return NS_OK;
 }
 
-bool
-nsINIParser::IsValidSection(const char* aSection)
-{
+bool nsINIParser::IsValidSection(const char* aSection) {
   if (aSection[0] == '\0') {
     return false;
   }
@@ -112,9 +106,7 @@ nsINIParser::IsValidSection(const char* aSection)
   return found == nullptr;
 }
 
-bool
-nsINIParser::IsValidKey(const char* aKey)
-{
+bool nsINIParser::IsValidKey(const char* aKey) {
   if (aKey[0] == '\0') {
     return false;
   }
@@ -123,17 +115,13 @@ nsINIParser::IsValidKey(const char* aKey)
   return found == nullptr;
 }
 
-bool
-nsINIParser::IsValidValue(const char* aValue)
-{
+bool nsINIParser::IsValidValue(const char* aValue) {
   const char* found = strpbrk(aValue, "\r\n");
   return found == nullptr;
 }
 
-nsresult
-nsINIParser::GetString(const char* aSection, const char* aKey,
-                       nsACString& aResult)
-{
+nsresult nsINIParser::GetString(const char* aSection, const char* aKey,
+                                nsACString& aResult) {
   if (!IsValidSection(aSection) || !IsValidKey(aKey)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -153,10 +141,8 @@ nsINIParser::GetString(const char* aSection, const char* aKey,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsINIParser::GetString(const char* aSection, const char* aKey,
-                       char* aResult, uint32_t aResultLen)
-{
+nsresult nsINIParser::GetString(const char* aSection, const char* aKey,
+                                char* aResult, uint32_t aResultLen) {
   if (!IsValidSection(aSection) || !IsValidKey(aKey)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -181,9 +167,7 @@ nsINIParser::GetString(const char* aSection, const char* aKey,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsINIParser::GetSections(INISectionCallback aCB, void* aClosure)
-{
+nsresult nsINIParser::GetSections(INISectionCallback aCB, void* aClosure) {
   for (auto iter = mSections.Iter(); !iter.Done(); iter.Next()) {
     if (!aCB(iter.Key(), aClosure)) {
       break;
@@ -192,20 +176,15 @@ nsINIParser::GetSections(INISectionCallback aCB, void* aClosure)
   return NS_OK;
 }
 
-nsresult
-nsINIParser::GetStrings(const char* aSection,
-                        INIStringCallback aCB, void* aClosure)
-{
+nsresult nsINIParser::GetStrings(const char* aSection, INIStringCallback aCB,
+                                 void* aClosure) {
   if (!IsValidSection(aSection)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   INIValue* val;
 
-  for (mSections.Get(aSection, &val);
-       val;
-       val = val->next.get()) {
-
+  for (mSections.Get(aSection, &val); val; val = val->next.get()) {
     if (!aCB(val->key, val->value, aClosure)) {
       return NS_OK;
     }
@@ -214,9 +193,8 @@ nsINIParser::GetStrings(const char* aSection,
   return NS_OK;
 }
 
-nsresult
-nsINIParser::SetString(const char* aSection, const char* aKey, const char* aValue)
-{
+nsresult nsINIParser::SetString(const char* aSection, const char* aKey,
+                                const char* aValue) {
   if (!IsValidSection(aSection) || !IsValidKey(aKey) || !IsValidValue(aValue)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -247,9 +225,7 @@ nsINIParser::SetString(const char* aSection, const char* aKey, const char* aValu
   return NS_OK;
 }
 
-nsresult
-nsINIParser::DeleteString(const char* aSection, const char* aKey)
-{
+nsresult nsINIParser::DeleteString(const char* aSection, const char* aKey) {
   if (!IsValidSection(aSection) || !IsValidKey(aKey)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -283,9 +259,7 @@ nsINIParser::DeleteString(const char* aSection, const char* aKey)
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsINIParser::DeleteSection(const char* aSection)
-{
+nsresult nsINIParser::DeleteSection(const char* aSection) {
   if (!IsValidSection(aSection)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -296,8 +270,7 @@ nsINIParser::DeleteSection(const char* aSection)
   return NS_OK;
 }
 
-nsresult
-nsINIParser::WriteToFile(nsIFile *aFile) {
+nsresult nsINIParser::WriteToFile(nsIFile* aFile) {
   nsCString buffer;
 
   for (auto iter = mSections.Iter(); !iter.Done(); iter.Next()) {
@@ -317,8 +290,8 @@ nsINIParser::WriteToFile(nsIFile *aFile) {
   unsigned int length = buffer.Length();
 
   if (fwrite(buffer.get(), sizeof(char), length, writeFile) != length) {
-      fclose(writeFile);
-      return NS_ERROR_UNEXPECTED;
+    fclose(writeFile);
+    return NS_ERROR_UNEXPECTED;
   }
 
   fclose(writeFile);

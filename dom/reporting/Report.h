@@ -17,40 +17,28 @@ namespace dom {
 
 class ReportBody;
 
-class Report final : public nsISupports
-                   , public nsWrapperCache
-{
-public:
+class Report final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Report)
 
-  Report(nsPIDOMWindowInner* aWindow,
-         const nsAString& aType,
-         const nsAString& aURL,
-         ReportBody* aBody);
+  Report(nsPIDOMWindowInner* aWindow, const nsAString& aType,
+         const nsAString& aURL, ReportBody* aBody);
 
-  already_AddRefed<Report>
-  Clone();
+  already_AddRefed<Report> Clone();
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner*
-  GetParentObject() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
-  void
-  GetType(nsAString& aType) const;
+  void GetType(nsAString& aType) const;
 
-  void
-  GetUrl(nsAString& aURL) const;
+  void GetUrl(nsAString& aURL) const;
 
-  ReportBody*
-  GetBody() const;
+  ReportBody* GetBody() const;
 
-private:
+ private:
   ~Report();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
@@ -60,7 +48,7 @@ private:
   RefPtr<ReportBody> mBody;
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Report_h
+#endif  // mozilla_dom_Report_h

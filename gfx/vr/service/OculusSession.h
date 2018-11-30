@@ -14,7 +14,7 @@
 #include "nsTArray.h"
 #include "oculus/ovr_capi_dynamic.h"
 #include "prlink.h"
-#include "ShaderDefinitionsD3D11.h" // for VertexShaderConstants and PixelShaderConstants
+#include "ShaderDefinitionsD3D11.h"  // for VertexShaderConstants and PixelShaderConstants
 
 struct ID3D11Device;
 
@@ -22,12 +22,11 @@ namespace mozilla {
 namespace layers {
 struct VertexShaderConstants;
 struct PixelShaderConstants;
-}
+}  // namespace layers
 namespace gfx {
 
-class OculusSession : public VRSession
-{
-public:
+class OculusSession : public VRSession {
+ public:
   OculusSession();
   virtual ~OculusSession();
 
@@ -40,11 +39,11 @@ public:
   bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                    ID3D11Texture2D* aTexture) override;
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                    float aIntensity, float aDuration) override;
+                     float aIntensity, float aDuration) override;
   void StopVibrateHaptic(uint32_t aControllerIdx) override;
   void StopAllHaptics() override;
 
-private:
+ private:
   bool LoadOvrLib();
   void UnloadOvrLib();
   bool StartLib(ovrInitFlags aFlags);
@@ -108,7 +107,7 @@ private:
   bool mIsPresenting;
 };
 
-} // namespace mozilla
-} // namespace gfx
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // GFX_VR_SERVICE_OCULUSSESSION_H
+#endif  // GFX_VR_SERVICE_OCULUSSESSION_H

@@ -21,21 +21,19 @@ class nsSubDocumentFrame;
 
 namespace mozilla {
 
-
 namespace layers {
 struct TextureFactoryIdentifier;
-} // namespace layers
+}  // namespace layers
 
 namespace layout {
 
-class RenderFrame final
-{
+class RenderFrame final {
   typedef mozilla::layers::CompositorOptions CompositorOptions;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::LayersId LayersId;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
-public:
 
+ public:
   RenderFrame();
   virtual ~RenderFrame();
 
@@ -50,20 +48,21 @@ public:
   LayersId GetLayersId() const { return mLayersId; }
   CompositorOptions GetCompositorOptions() const { return mCompositorOptions; }
 
-  void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier) const;
+  void GetTextureFactoryIdentifier(
+      TextureFactoryIdentifier* aTextureFactoryIdentifier) const;
 
   bool IsInitialized() const { return mInitialized; }
   bool IsLayersConnected() const { return mLayersConnected; }
 
-private:
+ private:
   base::ProcessId mTabProcessId;
   // When our child frame is pushing transactions directly to the
   // compositor, this is the ID of its layer tree in the compositor's
   // context.
   LayersId mLayersId;
   // The compositor options for this layers id. This is only meaningful if
-  // the compositor actually knows about this layers id (i.e. when mLayersConnected
-  // is true).
+  // the compositor actually knows about this layers id (i.e. when
+  // mLayersConnected is true).
   CompositorOptions mCompositorOptions;
 
   RefPtr<nsFrameLoader> mFrameLoader;
@@ -76,16 +75,15 @@ private:
   bool mLayersConnected;
 };
 
-} // namespace layout
-} // namespace mozilla
+}  // namespace layout
+}  // namespace mozilla
 
 /**
  * A DisplayRemote exists solely to graft a child process's shadow
  * layer tree (for a given RenderFrame) into its parent
  * process's layer tree.
  */
-class nsDisplayRemote final : public nsDisplayItem
-{
+class nsDisplayRemote final : public nsDisplayItem {
   typedef mozilla::dom::TabId TabId;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
@@ -96,33 +94,34 @@ class nsDisplayRemote final : public nsDisplayItem
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
 
-public:
-  nsDisplayRemote(nsDisplayListBuilder* aBuilder,
-                  nsSubDocumentFrame* aFrame);
+ public:
+  nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsSubDocumentFrame* aFrame);
 
   bool HasDeletedFrame() const override;
 
-  LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                           LayerManager* aManager,
-                           const ContainerLayerParameters& aParameters) override;
+  LayerState GetLayerState(
+      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+      const ContainerLayerParameters& aParameters) override;
 
-  already_AddRefed<Layer>
-  BuildLayer(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-             const ContainerLayerParameters& aContainerParameters) override;
+  already_AddRefed<Layer> BuildLayer(
+      nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+      const ContainerLayerParameters& aContainerParameters) override;
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                               mozilla::wr::IpcResourceUpdateQueue& aResources,
-                               const StackingContextHelper& aSc,
-                               mozilla::layers::WebRenderLayerManager* aManager,
-                               nsDisplayListBuilder* aDisplayListBuilder) override;
-  bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
-                        mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
+  bool CreateWebRenderCommands(
+      mozilla::wr::DisplayListBuilder& aBuilder,
+      mozilla::wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::WebRenderLayerManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
+  bool UpdateScrollData(
+      mozilla::layers::WebRenderScrollData* aData,
+      mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
 
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 
-private:
+ private:
   LayersId GetRemoteLayersId() const;
   RenderFrame* GetRenderFrame() const;
 

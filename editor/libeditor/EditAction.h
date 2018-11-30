@@ -12,8 +12,7 @@ namespace mozilla {
  * EditAction indicates which operation or command causes running the methods
  * of editors.
  */
-enum class EditAction
-{
+enum class EditAction {
   // eNone indicates no edit action is being handled.
   eNone,
 
@@ -348,8 +347,7 @@ enum class EditAction
 // spellCheckAfterEditorChange is defined to take it as a long.
 // TODO: Make each name eFoo and investigate whether the numeric values
 //       still have some meaning.
-enum class EditSubAction : int32_t
-{
+enum class EditSubAction : int32_t {
   // eNone indicates not edit sub-action is being handled.  This is useful
   // of initial value of member variables.
   eNone,
@@ -465,11 +463,10 @@ enum class EditSubAction : int32_t
   eCreateBogusNode,
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-inline bool operator!(const mozilla::EditSubAction& aEditSubAction)
-{
+inline bool operator!(const mozilla::EditSubAction& aEditSubAction) {
   return aEditSubAction == mozilla::EditSubAction::eNone;
 }
 
-#endif // #ifdef mozilla_EditAction_h
+#endif  // #ifdef mozilla_EditAction_h

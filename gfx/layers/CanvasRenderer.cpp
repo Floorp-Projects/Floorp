@@ -10,24 +10,20 @@ namespace mozilla {
 namespace layers {
 
 CanvasRenderer::CanvasRenderer()
-  : mPreTransCallback(nullptr)
-  , mPreTransCallbackData(nullptr)
-  , mDidTransCallback(nullptr)
-  , mDidTransCallbackData(nullptr)
-  , mDirty(false)
-{
+    : mPreTransCallback(nullptr),
+      mPreTransCallbackData(nullptr),
+      mDidTransCallback(nullptr),
+      mDidTransCallbackData(nullptr),
+      mDirty(false) {
   MOZ_COUNT_CTOR(CanvasRenderer);
 }
 
-CanvasRenderer::~CanvasRenderer()
-{
+CanvasRenderer::~CanvasRenderer() {
   Destroy();
   MOZ_COUNT_DTOR(CanvasRenderer);
 }
 
-void
-CanvasRenderer::Initialize(const CanvasInitializeData& aData)
-{
+void CanvasRenderer::Initialize(const CanvasInitializeData& aData) {
   mPreTransCallback = aData.mPreTransCallback;
   mPreTransCallbackData = aData.mPreTransCallbackData;
   mDidTransCallback = aData.mDidTransCallback;
@@ -36,5 +32,5 @@ CanvasRenderer::Initialize(const CanvasInitializeData& aData)
   mSize = aData.mSize;
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

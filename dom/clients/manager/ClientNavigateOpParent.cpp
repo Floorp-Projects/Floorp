@@ -11,18 +11,15 @@ namespace dom {
 
 using mozilla::ipc::IPCResult;
 
-void
-ClientNavigateOpParent::ActorDestroy(ActorDestroyReason aReason)
-{
+void ClientNavigateOpParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mPromise) {
     mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
     mPromise = nullptr;
   }
 }
 
-IPCResult
-ClientNavigateOpParent::Recv__delete__(const ClientOpResult& aResult)
-{
+IPCResult ClientNavigateOpParent::Recv__delete__(
+    const ClientOpResult& aResult) {
   if (aResult.type() == ClientOpResult::Tnsresult &&
       NS_FAILED(aResult.get_nsresult())) {
     mPromise->Reject(aResult.get_nsresult(), __func__);
@@ -34,17 +31,16 @@ ClientNavigateOpParent::Recv__delete__(const ClientOpResult& aResult)
   return IPC_OK();
 }
 
-ClientNavigateOpParent::ClientNavigateOpParent(const ClientNavigateOpConstructorArgs& aArgs,
-                                               ClientOpPromise::Private* aPromise)
-  : mPromise(aPromise)
-{
+ClientNavigateOpParent::ClientNavigateOpParent(
+    const ClientNavigateOpConstructorArgs& aArgs,
+    ClientOpPromise::Private* aPromise)
+    : mPromise(aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
 }
 
-ClientNavigateOpParent::~ClientNavigateOpParent()
-{
+ClientNavigateOpParent::~ClientNavigateOpParent() {
   MOZ_DIAGNOSTIC_ASSERT(!mPromise);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

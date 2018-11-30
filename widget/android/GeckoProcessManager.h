@@ -17,44 +17,38 @@
 namespace mozilla {
 
 class GeckoProcessManager final
-    : public java::GeckoProcessManager::Natives<GeckoProcessManager>
-{
-    GeckoProcessManager() = delete;
+    : public java::GeckoProcessManager::Natives<GeckoProcessManager> {
+  GeckoProcessManager() = delete;
 
-    static already_AddRefed<nsIWidget>
-    GetWidget(int64_t aContentId, int64_t aTabId)
-    {
-        using namespace dom;
-        MOZ_ASSERT(NS_IsMainThread());
+  static already_AddRefed<nsIWidget> GetWidget(int64_t aContentId,
+                                               int64_t aTabId) {
+    using namespace dom;
+    MOZ_ASSERT(NS_IsMainThread());
 
-        ContentProcessManager* const cpm =
-            ContentProcessManager::GetSingleton();
-        NS_ENSURE_TRUE(cpm, nullptr);
+    ContentProcessManager* const cpm = ContentProcessManager::GetSingleton();
+    NS_ENSURE_TRUE(cpm, nullptr);
 
-        RefPtr<TabParent> tab = cpm->GetTopLevelTabParentByProcessAndTabId(
-                ContentParentId(aContentId), TabId(aTabId));
-        NS_ENSURE_TRUE(tab, nullptr);
+    RefPtr<TabParent> tab = cpm->GetTopLevelTabParentByProcessAndTabId(
+        ContentParentId(aContentId), TabId(aTabId));
+    NS_ENSURE_TRUE(tab, nullptr);
 
-        nsCOMPtr<nsPIDOMWindowOuter> domWin = tab->GetParentWindowOuter();
-        NS_ENSURE_TRUE(domWin, nullptr);
+    nsCOMPtr<nsPIDOMWindowOuter> domWin = tab->GetParentWindowOuter();
+    NS_ENSURE_TRUE(domWin, nullptr);
 
-        return widget::WidgetUtils::DOMWindowToWidget(domWin);
+    return widget::WidgetUtils::DOMWindowToWidget(domWin);
+  }
+
+ public:
+  static void GetEditableParent(jni::Object::Param aEditableChild,
+                                int64_t aContentId, int64_t aTabId) {
+    nsCOMPtr<nsIWidget> widget = GetWidget(aContentId, aTabId);
+    if (RefPtr<nsWindow> window = nsWindow::From(widget)) {
+      java::GeckoProcessManager::SetEditableChildParent(
+          aEditableChild, window->GetEditableParent());
     }
-
-public:
-    static void
-    GetEditableParent(jni::Object::Param aEditableChild,
-                      int64_t aContentId, int64_t aTabId)
-    {
-        nsCOMPtr<nsIWidget> widget = GetWidget(aContentId, aTabId);
-        if (RefPtr<nsWindow> window = nsWindow::From(widget)) {
-            java::GeckoProcessManager::SetEditableChildParent(
-                    aEditableChild,
-                    window->GetEditableParent());
-        }
-    }
+  }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // GeckoProcessManager_h
+#endif  // GeckoProcessManager_h

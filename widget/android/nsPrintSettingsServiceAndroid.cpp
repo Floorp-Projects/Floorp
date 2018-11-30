@@ -7,19 +7,17 @@
 #include "nsPrintSettingsImpl.h"
 
 class nsPrintSettingsAndroid : public nsPrintSettings {
-public:
-  nsPrintSettingsAndroid()
-  {
+ public:
+  nsPrintSettingsAndroid() {
     // The aim here is to set up the objects enough that silent printing works
     SetOutputFormat(nsIPrintSettings::kOutputFormatPDF);
     SetPrinterName(NS_LITERAL_STRING("PDF printer"));
   }
 };
 
-nsresult
-nsPrintSettingsServiceAndroid::_CreatePrintSettings(nsIPrintSettings** _retval)
-{
-  nsPrintSettings * printSettings = new nsPrintSettingsAndroid();
+nsresult nsPrintSettingsServiceAndroid::_CreatePrintSettings(
+    nsIPrintSettings** _retval) {
+  nsPrintSettings* printSettings = new nsPrintSettingsAndroid();
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*_retval = printSettings);
   (void)InitPrintSettingsFromPrefs(*_retval, false,

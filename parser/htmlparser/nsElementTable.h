@@ -13,10 +13,9 @@
 void CheckElementTable();
 #endif
 
-struct nsHTMLElement
-{
+struct nsHTMLElement {
   static bool IsContainer(nsHTMLTag aTag);
   static bool IsBlock(nsHTMLTag aTag);
 };
 
-#endif // nsElementTable_h
+#endif  // nsElementTable_h

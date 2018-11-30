@@ -27,25 +27,21 @@ class MutableBlobStorage;
 class TemporaryIPCBlobChild;
 class TemporaryIPCBlobChildCallback;
 
-class MutableBlobStorageCallback
-{
-public:
+class MutableBlobStorageCallback {
+ public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
-                                  Blob* aBlob,
+  virtual void BlobStoreCompleted(MutableBlobStorage* aBlobStorage, Blob* aBlob,
                                   nsresult aRv) = 0;
 };
 
 // This class is must be created and used on main-thread, except for Append()
 // that can be called on any thread.
-class MutableBlobStorage final
-{
-public:
+class MutableBlobStorage final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MutableBlobStorage)
 
-  enum MutableBlobStorageType
-  {
+  enum MutableBlobStorageType {
     eOnlyInMemory,
     eCouldBeInTemporaryFile,
   };
@@ -58,8 +54,7 @@ public:
 
   // This method can be called just once.
   // The callback will be called when the Blob is ready.
-  void GetBlobWhenReady(nsISupports* aParent,
-                        const nsACString& aContentType,
+  void GetBlobWhenReady(nsISupports* aParent, const nsACString& aContentType,
                         MutableBlobStorageCallback* aCallback);
 
   void TemporaryFileCreated(PRFileDesc* aFD);
@@ -69,8 +64,7 @@ public:
 
   void ErrorPropagated(nsresult aRv);
 
-  nsIEventTarget* EventTarget()
-  {
+  nsIEventTarget* EventTarget() {
     MOZ_ASSERT(mEventTarget);
     return mEventTarget;
   }
@@ -83,11 +77,10 @@ public:
 
   void CloseFD();
 
-private:
+ private:
   ~MutableBlobStorage();
 
-  bool ExpandBufferSize(const MutexAutoLock& aProofOfLock,
-                        uint64_t aSize);
+  bool ExpandBufferSize(const MutexAutoLock& aProofOfLock, uint64_t aSize);
 
   bool ShouldBeTemporaryStorage(const MutexAutoLock& aProofOfLock,
                                 uint64_t aSize) const;
@@ -137,7 +130,7 @@ private:
   uint32_t mMaxMemory;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MutableBlobStorage_h
+#endif  // mozilla_dom_MutableBlobStorage_h

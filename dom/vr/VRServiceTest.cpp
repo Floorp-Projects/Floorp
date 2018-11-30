@@ -27,11 +27,10 @@ NS_IMPL_ADDREF_INHERITED(VRMockDisplay, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(VRMockDisplay, DOMEventTargetHelper)
 
 VRMockDisplay::VRMockDisplay(const nsCString& aID, uint32_t aDeviceID)
- : mDeviceID(aDeviceID)
- , mDisplayInfo{}
- , mSensorState{}
- , mTimestamp(TimeStamp::Now())
-{
+    : mDeviceID(aDeviceID),
+      mDisplayInfo{},
+      mSensorState{},
+      mTimestamp(TimeStamp::Now()) {
   VRDisplayState& state = mDisplayInfo.mDisplayState;
   strncpy(state.mDisplayName, aID.BeginReading(), kVRDisplayNameMaxLen);
   mDisplayInfo.mType = VRDeviceType::Puppet;
@@ -48,39 +47,36 @@ VRMockDisplay::VRMockDisplay(const nsCString& aID, uint32_t aDeviceID)
                            VRDisplayCapabilityFlags::Cap_MountDetection;
 }
 
-JSObject*
-VRMockDisplay::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* VRMockDisplay::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return VRMockDisplay_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void VRMockDisplay::SetEyeResolution(unsigned long aRenderWidth, unsigned long aRenderHeight)
-{
+void VRMockDisplay::SetEyeResolution(unsigned long aRenderWidth,
+                                     unsigned long aRenderHeight) {
   mDisplayInfo.mDisplayState.mEyeResolution.width = aRenderWidth;
   mDisplayInfo.mDisplayState.mEyeResolution.height = aRenderHeight;
 }
 
-void
-VRMockDisplay::SetEyeParameter(VREye aEye, double aOffsetX, double aOffsetY,
-                               double aOffsetZ, double aUpDegree, double aRightDegree,
-                               double aDownDegree, double aLeftDegree)
-{
+void VRMockDisplay::SetEyeParameter(VREye aEye, double aOffsetX,
+                                    double aOffsetY, double aOffsetZ,
+                                    double aUpDegree, double aRightDegree,
+                                    double aDownDegree, double aLeftDegree) {
   uint32_t eye = static_cast<uint32_t>(aEye);
-  mDisplayInfo.mDisplayState.mEyeFOV[eye] = gfx ::VRFieldOfView(aUpDegree, aRightDegree,
-                                                                aRightDegree, aLeftDegree);
+  mDisplayInfo.mDisplayState.mEyeFOV[eye] =
+      gfx ::VRFieldOfView(aUpDegree, aRightDegree, aRightDegree, aLeftDegree);
   mDisplayInfo.mDisplayState.mEyeTranslation[eye].x = aOffsetX;
   mDisplayInfo.mDisplayState.mEyeTranslation[eye].y = aOffsetY;
   mDisplayInfo.mDisplayState.mEyeTranslation[eye].z = aOffsetZ;
 }
 
-void
-VRMockDisplay::SetPose(const Nullable<Float32Array>& aPosition,
-                       const Nullable<Float32Array>& aLinearVelocity,
-                       const Nullable<Float32Array>& aLinearAcceleration,
-                       const Nullable<Float32Array>& aOrientation,
-                       const Nullable<Float32Array>& aAngularVelocity,
-                       const Nullable<Float32Array>& aAngularAcceleration)
-{
+void VRMockDisplay::SetPose(
+    const Nullable<Float32Array>& aPosition,
+    const Nullable<Float32Array>& aLinearVelocity,
+    const Nullable<Float32Array>& aLinearAcceleration,
+    const Nullable<Float32Array>& aOrientation,
+    const Nullable<Float32Array>& aAngularVelocity,
+    const Nullable<Float32Array>& aAngularAcceleration) {
   mSensorState.Clear();
   mSensorState.timestamp = (TimeStamp::Now() - mTimestamp).ToSeconds();
   mSensorState.flags = VRDisplayCapabilityFlags::Cap_Orientation |
@@ -142,9 +138,7 @@ VRMockDisplay::SetPose(const Nullable<Float32Array>& aPosition,
   }
 }
 
-void
-VRMockDisplay::Update()
-{
+void VRMockDisplay::Update() {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
 
   vm->SendSetSensorStateToMockDisplay(mDeviceID, mSensorState);
@@ -168,38 +162,30 @@ NS_IMPL_ADDREF_INHERITED(VRMockController, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(VRMockController, DOMEventTargetHelper)
 
 VRMockController::VRMockController(const nsCString& aID, uint32_t aDeviceID)
- : mID(aID), mDeviceID(aDeviceID)
-{
-}
+    : mID(aID), mDeviceID(aDeviceID) {}
 
-JSObject*
-VRMockController::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* VRMockController::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return VRMockController_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-VRMockController::NewButtonEvent(unsigned long aButton, bool aPressed)
-{
+void VRMockController::NewButtonEvent(unsigned long aButton, bool aPressed) {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
   vm->SendNewButtonEventToMockController(mDeviceID, aButton, aPressed);
 }
 
-void
-VRMockController::NewAxisMoveEvent(unsigned long aAxis, double aValue)
-{
+void VRMockController::NewAxisMoveEvent(unsigned long aAxis, double aValue) {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
   vm->SendNewAxisMoveEventToMockController(mDeviceID, aAxis, aValue);
 }
 
-void
-VRMockController::NewPoseMove(const Nullable<Float32Array>& aPosition,
-                              const Nullable<Float32Array>& aLinearVelocity,
-                              const Nullable<Float32Array>& aLinearAcceleration,
-                              const Nullable<Float32Array>& aOrientation,
-                              const Nullable<Float32Array>& aAngularVelocity,
-                              const Nullable<Float32Array>& aAngularAcceleration)
-{
+void VRMockController::NewPoseMove(
+    const Nullable<Float32Array>& aPosition,
+    const Nullable<Float32Array>& aLinearVelocity,
+    const Nullable<Float32Array>& aLinearAcceleration,
+    const Nullable<Float32Array>& aOrientation,
+    const Nullable<Float32Array>& aAngularVelocity,
+    const Nullable<Float32Array>& aAngularAcceleration) {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
   GamepadPoseState poseState;
 
@@ -277,41 +263,33 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(VRServiceTest, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(VRServiceTest, DOMEventTargetHelper)
 
-
-JSObject*
-VRServiceTest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* VRServiceTest::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return VRServiceTest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 // static
-already_AddRefed<VRServiceTest>
-VRServiceTest::CreateTestService(nsPIDOMWindowInner* aWindow)
-{
+already_AddRefed<VRServiceTest> VRServiceTest::CreateTestService(
+    nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
   RefPtr<VRServiceTest> service = new VRServiceTest(aWindow);
   return service.forget();
 }
 
 VRServiceTest::VRServiceTest(nsPIDOMWindowInner* aWindow)
-  : mWindow(aWindow),
-    mShuttingDown(false)
-{
+    : mWindow(aWindow), mShuttingDown(false) {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
   vm->SendCreateVRTestSystem();
 }
 
-void
-VRServiceTest::Shutdown()
-{
+void VRServiceTest::Shutdown() {
   MOZ_ASSERT(!mShuttingDown);
   mShuttingDown = true;
   mWindow = nullptr;
 }
 
-already_AddRefed<Promise>
-VRServiceTest::AttachVRDisplay(const nsAString& aID, ErrorResult& aRv)
-{
+already_AddRefed<Promise> VRServiceTest::AttachVRDisplay(const nsAString& aID,
+                                                         ErrorResult& aRv) {
   if (mShuttingDown) {
     return nullptr;
   }
@@ -327,9 +305,8 @@ VRServiceTest::AttachVRDisplay(const nsAString& aID, ErrorResult& aRv)
   return p.forget();
 }
 
-already_AddRefed<Promise>
-VRServiceTest::AttachVRController(const nsAString& aID, ErrorResult& aRv)
-{
+already_AddRefed<Promise> VRServiceTest::AttachVRController(
+    const nsAString& aID, ErrorResult& aRv) {
   if (mShuttingDown) {
     return nullptr;
   }
@@ -345,5 +322,5 @@ VRServiceTest::AttachVRController(const nsAString& aID, ErrorResult& aRv)
   return p.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

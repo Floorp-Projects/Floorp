@@ -9,9 +9,8 @@
 namespace mozilla {
 namespace layout {
 
-void
-DrawEventRecorderPRFileDesc::RecordEvent(const gfx::RecordedEvent& aEvent)
-{
+void DrawEventRecorderPRFileDesc::RecordEvent(
+    const gfx::RecordedEvent& aEvent) {
   WriteElement(mOutputStream, aEvent.GetType());
 
   aEvent.RecordToStream(mOutputStream);
@@ -19,41 +18,28 @@ DrawEventRecorderPRFileDesc::RecordEvent(const gfx::RecordedEvent& aEvent)
   Flush();
 }
 
-DrawEventRecorderPRFileDesc::~DrawEventRecorderPRFileDesc()
-{
+DrawEventRecorderPRFileDesc::~DrawEventRecorderPRFileDesc() {
   if (IsOpen()) {
     Close();
   }
 }
 
-void
-DrawEventRecorderPRFileDesc::Flush()
-{
-  mOutputStream.Flush();
-}
+void DrawEventRecorderPRFileDesc::Flush() { mOutputStream.Flush(); }
 
-bool
-DrawEventRecorderPRFileDesc::IsOpen()
-{
-  return mOutputStream.IsOpen();
-}
+bool DrawEventRecorderPRFileDesc::IsOpen() { return mOutputStream.IsOpen(); }
 
-void
-DrawEventRecorderPRFileDesc::OpenFD(PRFileDesc* aFd)
-{
+void DrawEventRecorderPRFileDesc::OpenFD(PRFileDesc* aFd) {
   MOZ_DIAGNOSTIC_ASSERT(!IsOpen());
 
   mOutputStream.OpenFD(aFd);
   WriteHeader(mOutputStream);
 }
 
-void
-DrawEventRecorderPRFileDesc::Close()
-{
+void DrawEventRecorderPRFileDesc::Close() {
   MOZ_DIAGNOSTIC_ASSERT(IsOpen());
 
   mOutputStream.Close();
 }
 
-}
-}
+}  // namespace layout
+}  // namespace mozilla

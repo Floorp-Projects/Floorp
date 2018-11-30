@@ -16,30 +16,25 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(FontFaceSetIterator, Release)
 
 FontFaceSetIterator::FontFaceSetIterator(FontFaceSet* aFontFaceSet,
                                          bool aIsKeyAndValue)
-  : mFontFaceSet(aFontFaceSet)
-  , mNextIndex(0)
-  , mIsKeyAndValue(aIsKeyAndValue)
-{
+    : mFontFaceSet(aFontFaceSet),
+      mNextIndex(0),
+      mIsKeyAndValue(aIsKeyAndValue) {
   MOZ_COUNT_CTOR(FontFaceSetIterator);
 }
 
-FontFaceSetIterator::~FontFaceSetIterator()
-{
+FontFaceSetIterator::~FontFaceSetIterator() {
   MOZ_COUNT_DTOR(FontFaceSetIterator);
 }
 
-bool
-FontFaceSetIterator::WrapObject(JSContext* aCx,
-                                JS::Handle<JSObject*> aGivenProto,
-                                JS::MutableHandle<JSObject*> aReflector)
-{
+bool FontFaceSetIterator::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto,
+                                     JS::MutableHandle<JSObject*> aReflector) {
   return FontFaceSetIterator_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
-void
-FontFaceSetIterator::Next(JSContext* aCx, FontFaceSetIteratorResult& aResult,
-                          ErrorResult& aRv)
-{
+void FontFaceSetIterator::Next(JSContext* aCx,
+                               FontFaceSetIteratorResult& aResult,
+                               ErrorResult& aRv) {
   if (!mFontFaceSet) {
     aResult.mDone = true;
     return;
@@ -77,5 +72,5 @@ FontFaceSetIterator::Next(JSContext* aCx, FontFaceSetIteratorResult& aResult,
   aResult.mDone = false;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

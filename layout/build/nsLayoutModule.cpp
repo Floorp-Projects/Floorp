@@ -82,11 +82,15 @@
 
 #include "mozilla/dom/PushNotifier.h"
 using mozilla::dom::PushNotifier;
-#define PUSHNOTIFIER_CID \
-{ 0x2fc2d3e3, 0x020f, 0x404e, { 0xb0, 0x6a, 0x6e, 0xcf, 0x3e, 0xa2, 0x33, 0x4a } }
+#define PUSHNOTIFIER_CID                             \
+  {                                                  \
+    0x2fc2d3e3, 0x020f, 0x404e, {                    \
+      0xb0, 0x6a, 0x6e, 0xcf, 0x3e, 0xa2, 0x33, 0x4a \
+    }                                                \
+  }
 
 // Editor stuff
-#include "mozilla/EditorController.h" //CID
+#include "mozilla/EditorController.h"  //CID
 
 #include "nsScriptSecurityManager.h"
 #include "ExpandedPrincipal.h"
@@ -106,8 +110,12 @@ class nsIDocumentLoaderFactory;
 #define PRODUCT_NAME "Gecko"
 
 /* 0ddf4df8-4dbb-4133-8b79-9afb966514f5 */
-#define NS_PLUGINDOCLOADERFACTORY_CID \
-{ 0x0ddf4df8, 0x4dbb, 0x4133, { 0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 } }
+#define NS_PLUGINDOCLOADERFACTORY_CID                \
+  {                                                  \
+    0x0ddf4df8, 0x4dbb, 0x4133, {                    \
+      0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 \
+    }                                                \
+  }
 
 #include "inDeepTreeWalker.h"
 
@@ -148,19 +156,30 @@ using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::quota::QuotaManagerService;
 using mozilla::gmp::GeckoMediaPluginService;
 
-#define NS_HAPTICFEEDBACK_CID \
-{ 0x1f15dbc8, 0xbfaa, 0x45de, \
-  { 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
+#define NS_HAPTICFEEDBACK_CID                        \
+  {                                                  \
+    0x1f15dbc8, 0xbfaa, 0x45de, {                    \
+      0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 \
+    }                                                \
+  }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
 
 // PresentationDeviceManager
 /* e1e79dec-4085-4994-ac5b-744b016697e6 */
-#define PRESENTATION_DEVICE_MANAGER_CID \
-{ 0xe1e79dec, 0x4085, 0x4994, { 0xac, 0x5b, 0x74, 0x4b, 0x01, 0x66, 0x97, 0xe6 } }
+#define PRESENTATION_DEVICE_MANAGER_CID              \
+  {                                                  \
+    0xe1e79dec, 0x4085, 0x4994, {                    \
+      0xac, 0x5b, 0x74, 0x4b, 0x01, 0x66, 0x97, 0xe6 \
+    }                                                \
+  }
 
-#define PRESENTATION_TCP_SESSION_TRANSPORT_CID \
-{ 0xc9d023f4, 0x6228, 0x4c07, { 0x8b, 0x1d, 0x9c, 0x19, 0x57, 0x3f, 0xaa, 0x27 } }
+#define PRESENTATION_TCP_SESSION_TRANSPORT_CID       \
+  {                                                  \
+    0xc9d023f4, 0x6228, 0x4c07, {                    \
+      0x8b, 0x1d, 0x9c, 0x19, 0x57, 0x3f, 0xaa, 0x27 \
+    }                                                \
+  }
 
 already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 
@@ -179,8 +198,8 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(StorageActivityService,
                                          StorageActivityService::GetOrCreate)
 
 #ifdef MOZ_WEBSPEECH
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSynthVoiceRegistry,
-                                         nsSynthVoiceRegistry::GetInstanceForService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
+    nsSynthVoiceRegistry, nsSynthVoiceRegistry::GetInstanceForService)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceSensors)
@@ -208,9 +227,7 @@ static bool gInitialized = false;
 
 // Perform our one-time intialization for this module
 
-void
-nsLayoutModuleInitialize()
-{
+void nsLayoutModuleInitialize() {
   if (gInitialized) {
     MOZ_CRASH("Recursive layout module initialization");
   }
@@ -248,12 +265,9 @@ nsLayoutModuleInitialize()
 // Shutdown this module, releasing all of the module resources
 
 // static
-void
-Shutdown()
-{
+void Shutdown() {
   MOZ_ASSERT(gInitialized, "module not initialized");
-  if (!gInitialized)
-    return;
+  if (!gInitialized) return;
 
   gInitialized = false;
 
@@ -275,61 +289,64 @@ nsresult NS_NewGlobalMessageManager(nsISupports** aResult);
 nsresult NS_NewParentProcessMessageManager(nsISupports** aResult);
 nsresult NS_NewChildProcessMessageManager(nsISupports** aResult);
 
-#define MAKE_CTOR(ctor_, iface_, func_)                   \
-static nsresult                                           \
-ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
-{                                                         \
-  *aResult = nullptr;                                      \
-  if (aOuter)                                             \
-    return NS_ERROR_NO_AGGREGATION;                       \
-  iface_* inst;                                           \
-  nsresult rv = func_(&inst);                             \
-  if (NS_SUCCEEDED(rv)) {                                 \
-    rv = inst->QueryInterface(aIID, aResult);             \
-    NS_RELEASE(inst);                                     \
-  }                                                       \
-  return rv;                                              \
-}
+#define MAKE_CTOR(ctor_, iface_, func_)                                       \
+  static nsresult ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) { \
+    *aResult = nullptr;                                                       \
+    if (aOuter) return NS_ERROR_NO_AGGREGATION;                               \
+    iface_* inst;                                                             \
+    nsresult rv = func_(&inst);                                               \
+    if (NS_SUCCEEDED(rv)) {                                                   \
+      rv = inst->QueryInterface(aIID, aResult);                               \
+      NS_RELEASE(inst);                                                       \
+    }                                                                         \
+    return rv;                                                                \
+  }
 
 // As above, but expects
 //   already_AddRefed<nsIFoo> NS_NewFoo();
 // instead of
 //   nsresult NS_NewFoo(nsIFoo**);
-#define MAKE_CTOR2(ctor_, iface_, func_)                  \
-static nsresult                                           \
-ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
-{                                                         \
-  *aResult = nullptr;                                      \
-  if (aOuter) {                                           \
-    return NS_ERROR_NO_AGGREGATION;                       \
-  }                                                       \
-  nsCOMPtr<iface_> inst = func_();                        \
-  inst.forget(aResult);                                   \
-  return NS_OK;                                           \
-}
+#define MAKE_CTOR2(ctor_, iface_, func_)                                      \
+  static nsresult ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) { \
+    *aResult = nullptr;                                                       \
+    if (aOuter) {                                                             \
+      return NS_ERROR_NO_AGGREGATION;                                         \
+    }                                                                         \
+    nsCOMPtr<iface_> inst = func_();                                          \
+    inst.forget(aResult);                                                     \
+    return NS_OK;                                                             \
+  }
 
 #ifdef DEBUG
-MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLayoutDebugger)
+MAKE_CTOR(CreateNewLayoutDebugger, nsILayoutDebugger, NS_NewLayoutDebugger)
 #endif
 
-MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
+MAKE_CTOR(CreateNewFrameTraversal, nsIFrameTraversal, NS_CreateFrameTraversal)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 
-MAKE_CTOR2(CreateContentViewer,           nsIContentViewer,            NS_NewContentViewer)
-MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
-MAKE_CTOR(CreateHTMLContentSerializer,    nsIContentSerializer,        NS_NewHTMLContentSerializer)
-MAKE_CTOR(CreateXHTMLContentSerializer,   nsIContentSerializer,        NS_NewXHTMLContentSerializer)
-MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPlainTextSerializer)
-MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
-MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
-MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
-MAKE_CTOR(CreateGlobalMessageManager,     nsISupports,                 NS_NewGlobalMessageManager)
-MAKE_CTOR(CreateParentMessageManager,     nsISupports,                 NS_NewParentProcessMessageManager)
-MAKE_CTOR(CreateChildMessageManager,      nsISupports,                 NS_NewChildProcessMessageManager)
+MAKE_CTOR2(CreateContentViewer, nsIContentViewer, NS_NewContentViewer)
+MAKE_CTOR(CreateXMLContentSerializer, nsIContentSerializer,
+          NS_NewXMLContentSerializer)
+MAKE_CTOR(CreateHTMLContentSerializer, nsIContentSerializer,
+          NS_NewHTMLContentSerializer)
+MAKE_CTOR(CreateXHTMLContentSerializer, nsIContentSerializer,
+          NS_NewXHTMLContentSerializer)
+MAKE_CTOR(CreatePlainTextSerializer, nsIContentSerializer,
+          NS_NewPlainTextSerializer)
+MAKE_CTOR(CreateContentPolicy, nsIContentPolicy, NS_NewContentPolicy)
+MAKE_CTOR(CreateContentDLF, nsIDocumentLoaderFactory,
+          NS_NewContentDocumentLoaderFactory)
+MAKE_CTOR(CreateEventListenerService, nsIEventListenerService,
+          NS_NewEventListenerService)
+MAKE_CTOR(CreateGlobalMessageManager, nsISupports, NS_NewGlobalMessageManager)
+MAKE_CTOR(CreateParentMessageManager, nsISupports,
+          NS_NewParentProcessMessageManager)
+MAKE_CTOR(CreateChildMessageManager, nsISupports,
+          NS_NewChildProcessMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
-MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
+MAKE_CTOR(CreateFocusManager, nsIFocusManager, NS_NewFocusManager)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
 
@@ -338,38 +355,46 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSURIMutator)
 
 // views are not refcounted, so this is the same as
 // NS_GENERIC_FACTORY_CONSTRUCTOR without the NS_ADDREF/NS_RELEASE
-#define NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(_InstanceClass)                 \
-static nsresult                                                               \
-_InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
-                            void **aResult)                                   \
-{                                                                             \
-    nsresult rv;                                                              \
-                                                                              \
-    *aResult = nullptr;                                                       \
-    if (nullptr != aOuter) {                                                  \
-        rv = NS_ERROR_NO_AGGREGATION;                                         \
-        return rv;                                                            \
-    }                                                                         \
-                                                                              \
-    _InstanceClass * inst = new _InstanceClass();                             \
-    if (nullptr == inst) {                                                    \
-        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
-        return rv;                                                            \
-    }                                                                         \
-    rv = inst->QueryInterface(aIID, aResult);                                 \
-                                                                              \
-    return rv;                                                                \
-}                                                                             \
+#define NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(_InstanceClass)                  \
+  static nsresult _InstanceClass##Constructor(nsISupports* aOuter,             \
+                                              REFNSIID aIID, void** aResult) { \
+    nsresult rv;                                                               \
+                                                                               \
+    *aResult = nullptr;                                                        \
+    if (nullptr != aOuter) {                                                   \
+      rv = NS_ERROR_NO_AGGREGATION;                                            \
+      return rv;                                                               \
+    }                                                                          \
+                                                                               \
+    _InstanceClass* inst = new _InstanceClass();                               \
+    if (nullptr == inst) {                                                     \
+      rv = NS_ERROR_OUT_OF_MEMORY;                                             \
+      return rv;                                                               \
+    }                                                                          \
+    rv = inst->QueryInterface(aIID, aResult);                                  \
+                                                                               \
+    return rv;                                                                 \
+  }
 
-#define NS_GEOLOCATION_CID \
-  { 0x1E1C3FF, 0x94A, 0xD048, { 0x44, 0xB4, 0x62, 0xD2, 0x9C, 0x7B, 0x4F, 0x39 } }
+#define NS_GEOLOCATION_CID                           \
+  {                                                  \
+    0x1E1C3FF, 0x94A, 0xD048, {                      \
+      0x44, 0xB4, 0x62, 0xD2, 0x9C, 0x7B, 0x4F, 0x39 \
+    }                                                \
+  }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Geolocation, Geolocation::NonWindowSingleton)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Geolocation,
+                                         Geolocation::NonWindowSingleton)
 
-#define NS_WEBSOCKETEVENT_SERVICE_CID \
-  { 0x31689828, 0xda66, 0x49a6, { 0x87, 0x0c, 0xdf, 0x62, 0xb8, 0x3f, 0xe7, 0x89 }}
+#define NS_WEBSOCKETEVENT_SERVICE_CID                \
+  {                                                  \
+    0x31689828, 0xda66, 0x49a6, {                    \
+      0x87, 0x0c, 0xdf, 0x62, 0xb8, 0x3f, 0xe7, 0x89 \
+    }                                                \
+  }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WebSocketEventService, WebSocketEventService::GetOrCreate)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WebSocketEventService,
+                                         WebSocketEventService::GetOrCreate)
 
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
 NS_GENERIC_FACTORY_CONSTRUCTOR(FakeSpeechRecognitionService)
@@ -382,7 +407,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMixedContentBlocker)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(ContentPrincipal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ExpandedPrincipal)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemPrincipal,
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
+    SystemPrincipal,
     nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NullPrincipal, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStructuredCloneContainer)
@@ -390,31 +416,30 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStructuredCloneContainer)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(OSFileConstantsService,
                                          OSFileConstantsService::GetOrCreate);
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(GeckoMediaPluginService, GeckoMediaPluginService::GetGeckoMediaPluginService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
+    GeckoMediaPluginService,
+    GeckoMediaPluginService::GetGeckoMediaPluginService)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
 #ifdef ACCESSIBILITY
 #include "xpcAccessibilityService.h"
 
-  MAKE_CTOR(CreateA11yService, nsIAccessibilityService, NS_GetAccessibilityService)
+MAKE_CTOR(CreateA11yService, nsIAccessibilityService,
+          NS_GetAccessibilityService)
 #endif
 
-static nsresult
-Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
-                                   void **aResult)
-{
-    if (!aResult)
-        return NS_ERROR_NULL_POINTER;
-    *aResult = nullptr;
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-    nsScriptSecurityManager *obj = nsScriptSecurityManager::GetScriptSecurityManager();
-    if (!obj)
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (NS_FAILED(obj->QueryInterface(aIID, aResult)))
-        return NS_ERROR_FAILURE;
-    return NS_OK;
+static nsresult Construct_nsIScriptSecurityManager(nsISupports* aOuter,
+                                                   REFNSIID aIID,
+                                                   void** aResult) {
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  *aResult = nullptr;
+  if (aOuter) return NS_ERROR_NO_AGGREGATION;
+  nsScriptSecurityManager* obj =
+      nsScriptSecurityManager::GetScriptSecurityManager();
+  if (!obj) return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(obj->QueryInterface(aIID, aResult))) return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 #ifdef DEBUG
@@ -495,10 +520,8 @@ NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 
 NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 
-static nsresult
-LocalStorageManagerConstructor(nsISupports *aOuter, REFNSIID aIID,
-                               void **aResult)
-{
+static nsresult LocalStorageManagerConstructor(nsISupports* aOuter,
+                                               REFNSIID aIID, void** aResult) {
   if (NextGenLocalStorageEnabled()) {
     RefPtr<LocalStorageManager2> manager = new LocalStorageManager2();
     return manager->QueryInterface(aIID, aResult);
@@ -509,7 +532,7 @@ LocalStorageManagerConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
-  // clang-format off
+    // clang-format off
   XPCONNECT_CIDENTRIES
 #ifdef DEBUG
   { &kNS_LAYOUT_DEBUGGER_CID, false, nullptr, CreateNewLayoutDebugger },
@@ -584,11 +607,11 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTEXT_INPUT_PROCESSOR_CID, false, nullptr, TextInputProcessorConstructor },
   { &kNS_SCRIPTERROR_CID, false, nullptr, nsScriptErrorConstructor },
   { nullptr }
-  // clang-format on
+    // clang-format on
 };
 
 static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
-  // clang-format off
+    // clang-format off
   XPCONNECT_CONTRACTS
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
   { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xml", &kNS_XMLCONTENTSERIALIZER_CID },
@@ -675,20 +698,16 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   { "profile-after-change", "PresentationService", PRESENTATION_SERVICE_CONTRACTID },
   { "profile-after-change", "Notification Telemetry Service", NOTIFICATIONTELEMETRYSERVICE_CONTRACTID },
   { nullptr }
-  // clang-format on
+    // clang-format on
 };
 
-static nsresult
-Initialize()
-{
+static nsresult Initialize() {
   // nsLayoutModuleInitialize should be called first.
   MOZ_RELEASE_ASSERT(gInitialized);
   return NS_OK;
 }
 
-static void
-LayoutModuleDtor()
-{
+static void LayoutModuleDtor() {
   if (XRE_GetProcessType() == GeckoProcessType_GPU ||
       XRE_GetProcessType() == GeckoProcessType_VR ||
       XRE_GetProcessType() == GeckoProcessType_RDD) {
@@ -708,15 +727,13 @@ LayoutModuleDtor()
   xpcModuleDtor();
 }
 
-static const mozilla::Module kLayoutModule = {
-  mozilla::Module::kVersion,
-  kLayoutCIDs,
-  kLayoutContracts,
-  kLayoutCategories,
-  nullptr,
-  Initialize,
-  LayoutModuleDtor,
-  Module::ALLOW_IN_GPU_PROCESS
-};
+static const mozilla::Module kLayoutModule = {mozilla::Module::kVersion,
+                                              kLayoutCIDs,
+                                              kLayoutContracts,
+                                              kLayoutCategories,
+                                              nullptr,
+                                              Initialize,
+                                              LayoutModuleDtor,
+                                              Module::ALLOW_IN_GPU_PROCESS};
 
 NSMODULE_DEFN(nsLayoutModule) = &kLayoutModule;

@@ -20,12 +20,12 @@ namespace mozilla {
  * (fixed in C++14), so in the interests of easing a switch to <type_traits>,
  * this trait lives elsewhere.
  */
-template<typename T>
+template <typename T>
 struct IsNullPointer : FalseType {};
 
-template<>
+template <>
 struct IsNullPointer<decltype(nullptr)> : TrueType {};
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_NullPtr_h */

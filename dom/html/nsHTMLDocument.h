@@ -29,15 +29,13 @@ class nsILoadGroup;
 namespace mozilla {
 namespace dom {
 class HTMLAllCollection;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsHTMLDocument : public nsDocument,
-                       public nsIHTMLDocument
-{
-public:
-  using nsDocument::SetDocumentURI;
+class nsHTMLDocument : public nsDocument, public nsIHTMLDocument {
+ public:
   using nsDocument::GetPlugins;
+  using nsDocument::SetDocumentURI;
 
   nsHTMLDocument();
   virtual nsresult Init() override;
@@ -50,11 +48,10 @@ public:
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                           nsIPrincipal* aPrincipal) override;
 
-  virtual nsresult StartDocumentLoad(const char* aCommand,
-                                     nsIChannel* aChannel,
+  virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
-                                     nsIStreamListener **aDocListener,
+                                     nsIStreamListener** aDocListener,
                                      bool aReset = true,
                                      nsIContentSink* aSink = nullptr) override;
   virtual void StopDocumentLoad() override;
@@ -65,63 +62,49 @@ public:
   // nsIHTMLDocument
   virtual void SetCompatibilityMode(nsCompatibility aMode) override;
 
-  virtual bool IsWriting() override
-  {
-    return mWriteLevel != uint32_t(0);
-  }
+  virtual bool IsWriting() override { return mWriteLevel != uint32_t(0); }
 
   virtual nsIContent* GetUnfocusedKeyEventTarget() override;
 
-  nsContentList* GetExistingForms() const
-  {
-    return mForms;
-  }
+  nsContentList* GetExistingForms() const { return mForms; }
 
   mozilla::dom::HTMLAllCollection* All();
 
   // Returns whether an object was found for aName.
   bool ResolveName(JSContext* aCx, const nsAString& aName,
-                   JS::MutableHandle<JS::Value> aRetval, mozilla::ErrorResult& aError);
+                   JS::MutableHandle<JS::Value> aRetval,
+                   mozilla::ErrorResult& aError);
 
   virtual void AddedForm() override;
   virtual void RemovedForm() override;
   virtual int32_t GetNumFormsSynchronous() override;
   virtual void TearingDownEditor() override;
-  virtual void SetIsXHTML(bool aXHTML) override
-  {
+  virtual void SetIsXHTML(bool aXHTML) override {
     mType = (aXHTML ? eXHTML : eHTML);
   }
-  virtual void SetDocWriteDisabled(bool aDisabled) override
-  {
+  virtual void SetDocWriteDisabled(bool aDisabled) override {
     mDisableDocWrite = aDisabled;
   }
 
-  nsresult ChangeContentEditableCount(nsIContent *aElement, int32_t aChange) override;
-  void DeferredContentEditableCountChange(nsIContent *aElement);
+  nsresult ChangeContentEditableCount(nsIContent* aElement,
+                                      int32_t aChange) override;
+  void DeferredContentEditableCountChange(nsIContent* aElement);
 
-  virtual EditingState GetEditingState() override
-  {
-    return mEditingState;
-  }
+  virtual EditingState GetEditingState() override { return mEditingState; }
 
-  virtual void DisableCookieAccess() override
-  {
-    mDisableCookieAccess = true;
-  }
+  virtual void DisableCookieAccess() override { mDisableCookieAccess = true; }
 
   class nsAutoEditingState {
-  public:
+   public:
     nsAutoEditingState(nsHTMLDocument* aDoc, EditingState aState)
-      : mDoc(aDoc), mSavedState(aDoc->mEditingState)
-    {
+        : mDoc(aDoc), mSavedState(aDoc->mEditingState) {
       aDoc->mEditingState = aState;
     }
-    ~nsAutoEditingState() {
-      mDoc->mEditingState = mSavedState;
-    }
-  private:
+    ~nsAutoEditingState() { mDoc->mEditingState = mSavedState; }
+
+   private:
     nsHTMLDocument* mDoc;
-    EditingState    mSavedState;
+    EditingState mSavedState;
   };
   friend class nsAutoEditingState;
 
@@ -131,19 +114,21 @@ public:
 
   virtual nsresult SetEditingState(EditingState aState) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo*,
+                         nsINode** aResult) const override;
 
   virtual void RemovedFromDocShell() override;
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
 
-  virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
+  virtual void DocAddSizeOfExcludingThis(
+      nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
   virtual bool WillIgnoreCharsetOverride() override;
 
   // WebIDL API
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-    override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
   void GetDomain(nsAString& aDomain);
   void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
   bool IsRegistrableDomainSuffixOfOrEqualTo(const nsAString& aHostSuffixString,
@@ -152,25 +137,19 @@ public:
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
   void NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
                    JS::MutableHandle<JSObject*> aRetval,
-                   mozilla::ErrorResult& rv)
-  {
+                   mozilla::ErrorResult& rv) {
     JS::Rooted<JS::Value> v(cx);
     if ((aFound = ResolveName(cx, aName, &v, rv))) {
       aRetval.set(v.toObjectOrNull());
     }
   }
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  already_AddRefed<nsIDocument> Open(JSContext* cx,
-                                     const mozilla::dom::Optional<nsAString>& /* unused */,
-                                     const nsAString& aReplace,
-                                     mozilla::ErrorResult& aError);
-  already_AddRefed<nsPIDOMWindowOuter>
-  Open(JSContext* cx,
-       const nsAString& aURL,
-       const nsAString& aName,
-       const nsAString& aFeatures,
-       bool aReplace,
-       mozilla::ErrorResult& rv);
+  already_AddRefed<nsIDocument> Open(
+      JSContext* cx, const mozilla::dom::Optional<nsAString>& /* unused */,
+      const nsAString& aReplace, mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> Open(
+      JSContext* cx, const nsAString& aURL, const nsAString& aName,
+      const nsAString& aFeatures, bool aReplace, mozilla::ErrorResult& rv);
   void Close(mozilla::ErrorResult& rv);
   void Write(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
              mozilla::ErrorResult& rv);
@@ -178,14 +157,12 @@ public:
                mozilla::ErrorResult& rv);
   void GetDesignMode(nsAString& aDesignMode);
   void SetDesignMode(const nsAString& aDesignMode,
-                     nsIPrincipal& aSubjectPrincipal,
-                     mozilla::ErrorResult& rv);
+                     nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& rv);
   void SetDesignMode(const nsAString& aDesignMode,
                      const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
                      mozilla::ErrorResult& rv);
   bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
-                   const nsAString& aValue,
-                   nsIPrincipal& aSubjectPrincipal,
+                   const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,
                    mozilla::ErrorResult& rv);
   bool QueryCommandEnabled(const nsAString& aCommandID,
                            nsIPrincipal& aSubjectPrincipal,
@@ -207,15 +184,13 @@ public:
   void SetAlinkColor(const nsAString& aAlinkColor);
   void GetBgColor(nsAString& aBgColor);
   void SetBgColor(const nsAString& aBgColor);
-  void Clear() const
-  {
+  void Clear() const {
     // Deprecated
   }
   void CaptureEvents();
   void ReleaseEvents();
   // We're picking up GetLocation from Document
-  already_AddRefed<mozilla::dom::Location> GetLocation() const
-  {
+  already_AddRefed<mozilla::dom::Location> GetLocation() const {
     return nsIDocument::GetLocation();
   }
 
@@ -227,61 +202,54 @@ public:
 
   void UserInteractionForTesting();
 
-protected:
+ protected:
   ~nsHTMLDocument();
 
-  nsresult GetBodySize(int32_t* aWidth,
-                       int32_t* aHeight);
+  nsresult GetBodySize(int32_t* aWidth, int32_t* aHeight);
 
-  nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
+  nsIContent* MatchId(nsIContent* aContent, const nsAString& aId);
 
-  static void DocumentWriteTerminationFunc(nsISupports *aRef);
+  static void DocumentWriteTerminationFunc(nsISupports* aRef);
 
   already_AddRefed<nsIURI> GetDomainURI();
-  already_AddRefed<nsIURI> CreateInheritingURIForHost(const nsACString& aHostString);
-  already_AddRefed<nsIURI> RegistrableDomainSuffixOfInternal(const nsAString& aHostSuffixString,
-                                                             nsIURI* aOrigHost);
+  already_AddRefed<nsIURI> CreateInheritingURIForHost(
+      const nsACString& aHostString);
+  already_AddRefed<nsIURI> RegistrableDomainSuffixOfInternal(
+      const nsAString& aHostSuffixString, nsIURI* aOrigHost);
 
-
-  void WriteCommon(JSContext *cx, const nsAString& aText,
+  void WriteCommon(JSContext* cx, const nsAString& aText,
                    bool aNewlineTerminate, mozilla::ErrorResult& aRv);
   // A version of WriteCommon used by WebIDL bindings
-  void WriteCommon(JSContext *cx,
-                   const mozilla::dom::Sequence<nsString>& aText,
-                   bool aNewlineTerminate,
-                   mozilla::ErrorResult& rv);
+  void WriteCommon(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
+                   bool aNewlineTerminate, mozilla::ErrorResult& rv);
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
 
   // This should *ONLY* be used in GetCookie/SetCookie.
-  already_AddRefed<nsIChannel> CreateDummyChannelForCookies(nsIURI* aCodebaseURI);
+  already_AddRefed<nsIChannel> CreateDummyChannelForCookies(
+      nsIURI* aCodebaseURI);
 
   /**
    * Like IsEditingOn(), but will flush as needed first.
    */
   bool IsEditingOnAfterFlush();
 
-  void *GenerateParserKey(void);
+  void* GenerateParserKey(void);
 
   // A helper class to keep nsContentList objects alive for a short period of
   // time. Note, when the final Release is called on an nsContentList object, it
   // removes itself from MutationObserver list.
-  class ContentListHolder : public mozilla::Runnable
-  {
-  public:
-    ContentListHolder(nsHTMLDocument* aDocument,
-                      nsContentList* aFormList,
+  class ContentListHolder : public mozilla::Runnable {
+   public:
+    ContentListHolder(nsHTMLDocument* aDocument, nsContentList* aFormList,
                       nsContentList* aFormControlList)
-      : mozilla::Runnable("ContentListHolder")
-      , mDocument(aDocument)
-      , mFormList(aFormList)
-      , mFormControlList(aFormControlList)
-    {
-    }
+        : mozilla::Runnable("ContentListHolder"),
+          mDocument(aDocument),
+          mFormList(aFormList),
+          mFormControlList(aFormControlList) {}
 
-    ~ContentListHolder()
-    {
+    ~ContentListHolder() {
       MOZ_ASSERT(!mDocument->mContentListHolder ||
                  mDocument->mContentListHolder == this);
       mDocument->mContentListHolder = nullptr;
@@ -305,23 +273,21 @@ protected:
   static void TryHintCharset(nsIContentViewer* aContentViewer,
                              int32_t& aCharsetSource,
                              NotNull<const Encoding*>& aEncoding);
-  void TryUserForcedCharset(nsIContentViewer* aCv,
-                            nsIDocShell*  aDocShell,
+  void TryUserForcedCharset(nsIContentViewer* aCv, nsIDocShell* aDocShell,
                             int32_t& aCharsetSource,
                             NotNull<const Encoding*>& aEncoding);
   static void TryCacheCharset(nsICachingChannel* aCachingChannel,
                               int32_t& aCharsetSource,
                               NotNull<const Encoding*>& aEncoding);
-  void TryParentCharset(nsIDocShell*  aDocShell,
-                        int32_t& charsetSource,
+  void TryParentCharset(nsIDocShell* aDocShell, int32_t& charsetSource,
                         NotNull<const Encoding*>& aEncoding);
   void TryTLD(int32_t& aCharsetSource, NotNull<const Encoding*>& aCharset);
   void TryFallback(int32_t& aCharsetSource,
                    NotNull<const Encoding*>& aEncoding);
 
   // Override so we can munge the charset on our wyciwyg channel as needed.
-  virtual void
-    SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
+  virtual void SetDocumentCharacterSet(
+      NotNull<const Encoding*> aEncoding) override;
 
   // Tracks if we are currently processing any document.write calls (either
   // implicit or explicit). Note that if a write call writes out something which
@@ -341,7 +307,7 @@ protected:
   nsCOMPtr<nsIWyciwygChannel> mWyciwygChannel;
 
   /* Midas implementation */
-  nsresult   GetMidasCommandManager(nsICommandManager** aCommandManager);
+  nsresult GetMidasCommandManager(nsICommandManager** aCommandManager);
 
   nsCOMPtr<nsICommandManager> mMidasCommandManager;
 
@@ -362,15 +328,13 @@ protected:
   bool mPendingMaybeEditingStateChanged;
 };
 
-inline nsHTMLDocument*
-nsIDocument::AsHTMLDocument()
-{
+inline nsHTMLDocument* nsIDocument::AsHTMLDocument() {
   MOZ_ASSERT(IsHTMLOrXHTML());
   return static_cast<nsHTMLDocument*>(this);
 }
 
-#define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                        \
-    NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                                 \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsIHTMLDocument)
+#define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class) \
+  NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)            \
+  NS_INTERFACE_TABLE_ENTRY(_class, nsIHTMLDocument)
 
 #endif /* nsHTMLDocument_h___ */

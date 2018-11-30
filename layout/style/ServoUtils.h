@@ -22,8 +22,7 @@ void AssertIsMainThreadOrServoFontMetricsLocked();
 
 class ServoStyleSet;
 extern ServoStyleSet* sInServoTraversal;
-inline bool IsInServoTraversal()
-{
+inline bool IsInServoTraversal() {
   // The callers of this function are generally main-thread-only _except_
   // for potentially running during the Servo traversal, in which case they may
   // take special paths that avoid writing to caches and the like. In order
@@ -35,6 +34,6 @@ inline bool IsInServoTraversal()
   MOZ_ASSERT(sInServoTraversal || NS_IsMainThread());
   return sInServoTraversal;
 }
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ServoUtils_h
+#endif  // mozilla_ServoUtils_h

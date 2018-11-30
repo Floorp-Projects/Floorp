@@ -6,18 +6,21 @@
 #ifndef InsertTextTransaction_h
 #define InsertTextTransaction_h
 
-#include "mozilla/EditTransactionBase.h"  // base class
-#include "nsCycleCollectionParticipant.h" // various macros
-#include "nsID.h"                       // NS_DECLARE_STATIC_IID_ACCESSOR
-#include "nsISupportsImpl.h"            // NS_DECL_ISUPPORTS_INHERITED
-#include "nsString.h"                   // nsString members
-#include "nscore.h"                     // NS_IMETHOD, nsAString
+#include "mozilla/EditTransactionBase.h"   // base class
+#include "nsCycleCollectionParticipant.h"  // various macros
+#include "nsID.h"                          // NS_DECLARE_STATIC_IID_ACCESSOR
+#include "nsISupportsImpl.h"               // NS_DECL_ISUPPORTS_INHERITED
+#include "nsString.h"                      // nsString members
+#include "nscore.h"                        // NS_IMETHOD, nsAString
 
 class nsITransaction;
 
-#define NS_INSERTTEXTTXN_IID \
-{ 0x8c9ad77f, 0x22a7, 0x4d01, \
-  { 0xb1, 0x59, 0x8a, 0x0f, 0xdb, 0x1d, 0x08, 0xe9 } }
+#define NS_INSERTTEXTTXN_IID                         \
+  {                                                  \
+    0x8c9ad77f, 0x22a7, 0x4d01, {                    \
+      0xb1, 0x59, 0x8a, 0x0f, 0xdb, 0x1d, 0x08, 0xe9 \
+    }                                                \
+  }
 
 namespace mozilla {
 
@@ -25,20 +28,18 @@ class EditorBase;
 
 namespace dom {
 class Text;
-} // namespace dom
+}  // namespace dom
 
 /**
  * A transaction that inserts text into a content node.
  */
-class InsertTextTransaction final : public EditTransactionBase
-{
-protected:
+class InsertTextTransaction final : public EditTransactionBase {
+ protected:
   InsertTextTransaction(EditorBase& aEditorBase,
-                        const nsAString& aStringToInsert,
-                        dom::Text& aTextNode,
+                        const nsAString& aStringToInsert, dom::Text& aTextNode,
                         uint32_t aOffset);
 
-public:
+ public:
   /**
    * Creates new InsertTextTransaction instance.  This never returns nullptr.
    *
@@ -48,11 +49,9 @@ public:
    * @param aOffset         The offset in aTextNode to do the insertion.
    * @param aStringToInsert The new string to insert.
    */
-  static already_AddRefed<InsertTextTransaction>
-  Create(EditorBase& aEditorBase,
-         const nsAString& aStringToInsert,
-         dom::Text& aTextNode,
-         uint32_t aOffset);
+  static already_AddRefed<InsertTextTransaction> Create(
+      EditorBase& aEditorBase, const nsAString& aStringToInsert,
+      dom::Text& aTextNode, uint32_t aOffset);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSERTTEXTTXN_IID)
 
@@ -69,7 +68,7 @@ public:
    */
   void GetData(nsString& aResult);
 
-private:
+ private:
   virtual ~InsertTextTransaction();
 
   // Return true if aOtherTransaction immediately follows this transaction.
@@ -90,6 +89,6 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InsertTextTransaction, NS_INSERTTEXTTXN_IID)
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // #ifndef InsertTextTransaction_h
+#endif  // #ifndef InsertTextTransaction_h

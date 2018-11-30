@@ -17,16 +17,14 @@ static_assert(std::is_standard_layout<NotNull<const Encoding*>>::value,
 // reach the Rust code. More thorough testing of the back
 // end is done in Rust.
 
-ENCODING_TEST(ForLabel)
-{
+ENCODING_TEST(ForLabel) {
   nsAutoCString label("  uTf-8   ");
   ASSERT_EQ(Encoding::ForLabel(label), UTF_8_ENCODING);
   label.AssignLiteral("   cseucpkdfmTjapanese  ");
   ASSERT_EQ(Encoding::ForLabel(label), EUC_JP_ENCODING);
 }
 
-ENCODING_TEST(ForBOM)
-{
+ENCODING_TEST(ForBOM) {
   nsAutoCString data("\xEF\xBB\xBF\x61");
   const Encoding* encoding;
   size_t bomLength;
@@ -47,8 +45,7 @@ ENCODING_TEST(ForBOM)
   ASSERT_EQ(bomLength, 0U);
 }
 
-ENCODING_TEST(Name)
-{
+ENCODING_TEST(Name) {
   nsAutoCString name;
   UTF_8_ENCODING->Name(name);
   ASSERT_TRUE(name.EqualsLiteral("UTF-8"));
@@ -56,14 +53,12 @@ ENCODING_TEST(Name)
   ASSERT_TRUE(name.EqualsLiteral("GBK"));
 }
 
-ENCODING_TEST(CanEncodeEverything)
-{
+ENCODING_TEST(CanEncodeEverything) {
   ASSERT_TRUE(UTF_8_ENCODING->CanEncodeEverything());
   ASSERT_FALSE(GB18030_ENCODING->CanEncodeEverything());
 }
 
-ENCODING_TEST(IsAsciiCompatible)
-{
+ENCODING_TEST(IsAsciiCompatible) {
   ASSERT_TRUE(UTF_8_ENCODING->IsAsciiCompatible());
   ASSERT_FALSE(ISO_2022_JP_ENCODING->IsAsciiCompatible());
 }

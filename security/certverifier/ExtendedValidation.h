@@ -9,9 +9,14 @@
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 
-namespace mozilla { namespace pkix { struct CertPolicyId; } }
+namespace mozilla {
+namespace pkix {
+struct CertPolicyId;
+}
+}  // namespace mozilla
 
-namespace mozilla { namespace psm {
+namespace mozilla {
+namespace psm {
 
 nsresult LoadExtendedValidationInfo();
 
@@ -36,6 +41,7 @@ bool GetFirstEVPolicy(CERTCertificate& cert,
 bool CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
                                     const mozilla::pkix::CertPolicyId& policy);
 
-} } // namespace mozilla::psm
+}  // namespace psm
+}  // namespace mozilla
 
-#endif // ExtendedValidation_h
+#endif  // ExtendedValidation_h

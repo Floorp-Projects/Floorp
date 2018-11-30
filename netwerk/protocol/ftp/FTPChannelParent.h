@@ -23,19 +23,18 @@ namespace mozilla {
 namespace dom {
 class TabParent;
 class PBrowserOrId;
-} // namespace dom
+}  // namespace dom
 
 namespace net {
 class ChannelEventQueue;
 
-class FTPChannelParent final : public PFTPChannelParent
-                             , public nsIParentChannel
-                             , public nsIInterfaceRequestor
-                             , public ADivertableParentChannel
-                             , public nsIChannelEventSink
-                             , public nsIFTPChannelParentInternal
-{
-public:
+class FTPChannelParent final : public PFTPChannelParent,
+                               public nsIParentChannel,
+                               public nsIInterfaceRequestor,
+                               public ADivertableParentChannel,
+                               public nsIChannelEventSink,
+                               public nsIFTPChannelParentInternal {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
@@ -50,12 +49,11 @@ public:
   bool Init(const FTPChannelCreationArgs& aOpenArgs);
 
   // ADivertableParentChannel functions.
-  void DivertTo(nsIStreamListener *aListener) override;
+  void DivertTo(nsIStreamListener* aListener) override;
   nsresult SuspendForDiversion() override;
   nsresult SuspendMessageDiversion() override;
   nsresult ResumeMessageDiversion() override;
   nsresult CancelDiversion() override;
-
 
   // Calls OnStartRequest for "DivertTo" listener, then notifies child channel
   // that it should divert OnDataAvailable and OnStopRequest calls to this
@@ -66,9 +64,9 @@ public:
   // Called asynchronously from FailDiversion.
   void NotifyDiversionFailed(nsresult aErrorCode, bool aSkipResume = true);
 
-  NS_IMETHOD SetErrorMsg(const char *aMsg, bool aUseUTF8) override;
+  NS_IMETHOD SetErrorMsg(const char* aMsg, bool aUseUTF8) override;
 
-protected:
+ protected:
   virtual ~FTPChannelParent();
 
   // private, supporting function for ADivertableParentChannel.
@@ -87,8 +85,7 @@ protected:
   // ChildChannel.  Used during HTTP->FTP redirects.
   bool ConnectChannel(const uint32_t& channelId);
 
-  void DivertOnDataAvailable(const nsCString& data,
-                             const uint64_t& offset,
+  void DivertOnDataAvailable(const nsCString& data, const uint64_t& offset,
                              const uint32_t& count);
   void DivertOnStopRequest(const nsresult& statusCode);
   void DivertComplete();
@@ -100,10 +97,11 @@ protected:
   virtual mozilla::ipc::IPCResult RecvCancel(const nsresult& status) override;
   virtual mozilla::ipc::IPCResult RecvSuspend() override;
   virtual mozilla::ipc::IPCResult RecvResume() override;
-  virtual mozilla::ipc::IPCResult RecvDivertOnDataAvailable(const nsCString& data,
-                                                            const uint64_t& offset,
-                                                            const uint32_t& count) override;
-  virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(const nsresult& statusCode) override;
+  virtual mozilla::ipc::IPCResult RecvDivertOnDataAvailable(
+      const nsCString& data, const uint64_t& offset,
+      const uint32_t& count) override;
+  virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(
+      const nsresult& statusCode) override;
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
 
   nsresult ResumeChannelInternalIfPossible();
@@ -142,7 +140,7 @@ protected:
   bool mUseUTF8;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 
-#endif // mozilla_net_FTPChannelParent_h
+#endif  // mozilla_net_FTPChannelParent_h

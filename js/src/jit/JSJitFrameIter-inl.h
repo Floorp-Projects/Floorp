@@ -16,65 +16,50 @@
 namespace js {
 namespace jit {
 
-inline uint8_t*
-JSJitFrameIter::returnAddress() const
-{
-    CommonFrameLayout* current = (CommonFrameLayout*) current_;
-    return current->returnAddress();
+inline uint8_t* JSJitFrameIter::returnAddress() const {
+  CommonFrameLayout* current = (CommonFrameLayout*)current_;
+  return current->returnAddress();
 }
 
-inline FrameType
-JSJitFrameIter::prevType() const
-{
-    CommonFrameLayout* current = (CommonFrameLayout*) current_;
-    return current->prevType();
+inline FrameType JSJitFrameIter::prevType() const {
+  CommonFrameLayout* current = (CommonFrameLayout*)current_;
+  return current->prevType();
 }
 
-inline ExitFrameLayout*
-JSJitFrameIter::exitFrame() const
-{
-    MOZ_ASSERT(isExitFrame());
-    return (ExitFrameLayout*) fp();
+inline ExitFrameLayout* JSJitFrameIter::exitFrame() const {
+  MOZ_ASSERT(isExitFrame());
+  return (ExitFrameLayout*)fp();
 }
 
-inline size_t
-JSJitFrameIter::prevFrameLocalSize() const
-{
-    CommonFrameLayout* current = (CommonFrameLayout*) current_;
-    return current->prevFrameLocalSize();
+inline size_t JSJitFrameIter::prevFrameLocalSize() const {
+  CommonFrameLayout* current = (CommonFrameLayout*)current_;
+  return current->prevFrameLocalSize();
 }
 
-inline JitFrameLayout*
-JSJitProfilingFrameIterator::framePtr()
-{
-    MOZ_ASSERT(!done());
-    return (JitFrameLayout*) fp_;
+inline JitFrameLayout* JSJitProfilingFrameIterator::framePtr() {
+  MOZ_ASSERT(!done());
+  return (JitFrameLayout*)fp_;
 }
 
-inline JSScript*
-JSJitProfilingFrameIterator::frameScript()
-{
-    return ScriptFromCalleeToken(framePtr()->calleeToken());
+inline JSScript* JSJitProfilingFrameIterator::frameScript() {
+  return ScriptFromCalleeToken(framePtr()->calleeToken());
 }
 
-inline BaselineFrame*
-JSJitFrameIter::baselineFrame() const
-{
-    MOZ_ASSERT(isBaselineJS());
-    return (BaselineFrame*)(fp() - BaselineFrame::FramePointerOffset - BaselineFrame::Size());
+inline BaselineFrame* JSJitFrameIter::baselineFrame() const {
+  MOZ_ASSERT(isBaselineJS());
+  return (BaselineFrame*)(fp() - BaselineFrame::FramePointerOffset -
+                          BaselineFrame::Size());
 }
 
 template <typename T>
-bool
-JSJitFrameIter::isExitFrameLayout() const
-{
-    if (!isExitFrame()) {
-        return false;
-    }
-    return exitFrame()->is<T>();
+bool JSJitFrameIter::isExitFrameLayout() const {
+  if (!isExitFrame()) {
+    return false;
+  }
+  return exitFrame()->is<T>();
 }
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_JSJitFrameIter_inl_h */

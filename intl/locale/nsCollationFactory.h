@@ -7,7 +7,6 @@
 #ifndef nsCollationFactory_h__
 #define nsCollationFactory_h__
 
-
 #include "nsICollation.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
@@ -15,14 +14,13 @@
 // Create a collation interface for the current app's locale.
 //
 class nsCollationFactory final : public nsICollationFactory {
-
   ~nsCollationFactory() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOLLATIONFACTORY
 
   nsCollationFactory() {}
 };
 
-#endif  /* nsCollationFactory_h__ */
+#endif /* nsCollationFactory_h__ */

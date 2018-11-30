@@ -36,7 +36,7 @@ enum UiCompositorControllerMessageTypes {
 };
 // clang-format on
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // include_gfx_ipc_UiCompositorControllerMessageTypes_h
+#endif  // include_gfx_ipc_UiCompositorControllerMessageTypes_h

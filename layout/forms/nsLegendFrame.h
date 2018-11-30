@@ -10,22 +10,20 @@
 #include "mozilla/Attributes.h"
 #include "nsBlockFrame.h"
 
-class nsLegendFrame final : public nsBlockFrame
-{
-public:
+class nsLegendFrame final : public nsBlockFrame {
+ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsLegendFrame)
 
   explicit nsLegendFrame(ComputedStyle* aStyle)
-    : nsBlockFrame(aStyle, kClassID)
-  {}
+      : nsBlockFrame(aStyle, kClassID) {}
 
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -34,5 +32,4 @@ public:
   int32_t GetLogicalAlign(mozilla::WritingMode aCBWM);
 };
 
-
-#endif // guard
+#endif  // guard

@@ -18,15 +18,11 @@ using namespace mozilla::dom;
 
 namespace {
 
-nsresult
-CheckInternal(nsIContentSecurityPolicy* aCSP,
-              nsICSPEventListener* aCSPEventListener,
-              const nsAString& aExpression,
-              const nsAString& aFileNameString,
-              uint32_t aLineNum,
-              uint32_t aColumnNum,
-              bool* aAllowed)
-{
+nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
+                       nsICSPEventListener* aCSPEventListener,
+                       const nsAString& aExpression,
+                       const nsAString& aFileNameString, uint32_t aLineNum,
+                       uint32_t aColumnNum, bool* aAllowed) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aAllowed);
 
@@ -47,51 +43,43 @@ CheckInternal(nsIContentSecurityPolicy* aCSP,
 
   if (reportViolation) {
     aCSP->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
-                              nullptr, // triggering element
-                              aCSPEventListener,
-                              aFileNameString, aExpression, aLineNum,
-                              aColumnNum, EmptyString(), EmptyString());
+                              nullptr,  // triggering element
+                              aCSPEventListener, aFileNameString, aExpression,
+                              aLineNum, aColumnNum, EmptyString(),
+                              EmptyString());
   }
 
   return NS_OK;
 }
 
-class WorkerCSPCheckRunnable final : public WorkerMainThreadRunnable
-{
-public:
+class WorkerCSPCheckRunnable final : public WorkerMainThreadRunnable {
+ public:
   WorkerCSPCheckRunnable(WorkerPrivate* aWorkerPrivate,
                          const nsAString& aExpression,
-                         const nsAString& aFileNameString,
-                         uint32_t aLineNum,
+                         const nsAString& aFileNameString, uint32_t aLineNum,
                          uint32_t aColumnNum)
-    : WorkerMainThreadRunnable(aWorkerPrivate,
-                               NS_LITERAL_CSTRING("CSP Eval Check"))
-    , mExpression(aExpression)
-    , mFileNameString(aFileNameString)
-    , mLineNum(aLineNum)
-    , mColumnNum(aColumnNum)
-    , mEvalAllowed(false)
-  {}
+      : WorkerMainThreadRunnable(aWorkerPrivate,
+                                 NS_LITERAL_CSTRING("CSP Eval Check")),
+        mExpression(aExpression),
+        mFileNameString(aFileNameString),
+        mLineNum(aLineNum),
+        mColumnNum(aColumnNum),
+        mEvalAllowed(false) {}
 
-  bool
-  MainThreadRun() override
-  {
-    mResult = CheckInternal(mWorkerPrivate->GetCSP(),
-                            mWorkerPrivate->CSPEventListener(),
-                            mExpression, mFileNameString, mLineNum, mColumnNum,
-                            &mEvalAllowed);
+  bool MainThreadRun() override {
+    mResult = CheckInternal(
+        mWorkerPrivate->GetCSP(), mWorkerPrivate->CSPEventListener(),
+        mExpression, mFileNameString, mLineNum, mColumnNum, &mEvalAllowed);
     return true;
   }
 
-  nsresult
-  GetResult(bool* aAllowed)
-  {
+  nsresult GetResult(bool* aAllowed) {
     MOZ_ASSERT(aAllowed);
     *aAllowed = mEvalAllowed;
     return mResult;
   }
 
-private:
+ private:
   const nsString mExpression;
   const nsString mFileNameString;
   const uint32_t mLineNum;
@@ -100,12 +88,11 @@ private:
   nsresult mResult;
 };
 
-} // anonymous
+}  // namespace
 
-/* static */ nsresult
-CSPEvalChecker::CheckForWindow(JSContext* aCx, nsGlobalWindowInner* aWindow,
-                               const nsAString& aExpression, bool* aAllowEval)
-{
+/* static */ nsresult CSPEvalChecker::CheckForWindow(
+    JSContext* aCx, nsGlobalWindowInner* aWindow, const nsAString& aExpression,
+    bool* aAllowEval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aAllowEval);
@@ -149,10 +136,9 @@ CSPEvalChecker::CheckForWindow(JSContext* aCx, nsGlobalWindowInner* aWindow,
   return NS_OK;
 }
 
-/* static */ nsresult
-CSPEvalChecker::CheckForWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                               const nsAString& aExpression, bool* aAllowEval)
-{
+/* static */ nsresult CSPEvalChecker::CheckForWorker(
+    JSContext* aCx, WorkerPrivate* aWorkerPrivate, const nsAString& aExpression,
+    bool* aAllowEval) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aAllowEval);
@@ -169,9 +155,8 @@ CSPEvalChecker::CheckForWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
     fileNameString.AssignLiteral("unknown");
   }
 
-  RefPtr<WorkerCSPCheckRunnable> r =
-    new WorkerCSPCheckRunnable(aWorkerPrivate, aExpression, fileNameString,
-                               lineNum, columnNum);
+  RefPtr<WorkerCSPCheckRunnable> r = new WorkerCSPCheckRunnable(
+      aWorkerPrivate, aExpression, fileNameString, lineNum, columnNum);
   ErrorResult error;
   r->Dispatch(Canceling, error);
   if (NS_WARN_IF(error.Failed())) {

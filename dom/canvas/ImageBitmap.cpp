@@ -28,8 +28,8 @@
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
-using mozilla::dom::HTMLMediaElement_Binding::NETWORK_EMPTY;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_METADATA;
+using mozilla::dom::HTMLMediaElement_Binding::NETWORK_EMPTY;
 
 namespace mozilla {
 namespace dom {
@@ -45,12 +45,10 @@ NS_INTERFACE_MAP_END
 /* This class observes shutdown notifications and sends that notification
  * to the worker thread if the image bitmap is on a worker thread.
  */
-class ImageBitmapShutdownObserver final : public nsIObserver
-{
-public:
+class ImageBitmapShutdownObserver final : public nsIObserver {
+ public:
   explicit ImageBitmapShutdownObserver(ImageBitmap* aImageBitmap)
-  : mImageBitmap(nullptr)
-  {
+      : mImageBitmap(nullptr) {
     if (NS_IsMainThread()) {
       mImageBitmap = aImageBitmap;
     } else {
@@ -69,11 +67,9 @@ public:
 
     MOZ_ASSERT(mMainThreadEventTarget);
     RefPtr<ImageBitmapShutdownObserver> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ImageBitmapShutdownObserver::RegisterObserver",
-      [self]() {
-        self->RegisterObserver();
-      });
+    nsCOMPtr<nsIRunnable> r =
+        NS_NewRunnableFunction("ImageBitmapShutdownObserver::RegisterObserver",
+                               [self]() { self->RegisterObserver(); });
 
     mMainThreadEventTarget->Dispatch(r.forget());
   }
@@ -86,11 +82,9 @@ public:
 
     MOZ_ASSERT(mMainThreadEventTarget);
     RefPtr<ImageBitmapShutdownObserver> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ImageBitmapShutdownObserver::RegisterObserver",
-      [self]() {
-        self->UnregisterObserver();
-      });
+    nsCOMPtr<nsIRunnable> r =
+        NS_NewRunnableFunction("ImageBitmapShutdownObserver::RegisterObserver",
+                               [self]() { self->UnregisterObserver(); });
 
     mMainThreadEventTarget->Dispatch(r.forget());
   }
@@ -104,19 +98,16 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
-private:
+ private:
   ~ImageBitmapShutdownObserver() {}
 
-  class SendShutdownToWorkerThread : public MainThreadWorkerControlRunnable
-  {
-  public:
+  class SendShutdownToWorkerThread : public MainThreadWorkerControlRunnable {
+   public:
     explicit SendShutdownToWorkerThread(ImageBitmap* aImageBitmap)
-    : MainThreadWorkerControlRunnable(GetCurrentThreadWorkerPrivate())
-    , mImageBitmap(aImageBitmap)
-    {}
+        : MainThreadWorkerControlRunnable(GetCurrentThreadWorkerPrivate()),
+          mImageBitmap(aImageBitmap) {}
 
-    bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-    {
+    bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
       if (mImageBitmap) {
         mImageBitmap->OnShutdown();
         mImageBitmap = nullptr;
@@ -135,10 +126,8 @@ private:
 NS_IMPL_ISUPPORTS(ImageBitmapShutdownObserver, nsIObserver)
 
 NS_IMETHODIMP
-ImageBitmapShutdownObserver::Observe(nsISupports* aSubject,
-                                     const char* aTopic,
-                                     const char16_t* aData)
-{
+ImageBitmapShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                     const char16_t* aData) {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     if (mSendToWorkerTask) {
       mSendToWorkerTask->Dispatch();
@@ -154,15 +143,12 @@ ImageBitmapShutdownObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-
 /*
  * If either aRect.width or aRect.height are negative, then return a new IntRect
  * which represents the same rectangle as the aRect does but with positive width
  * and height.
  */
-static IntRect
-FixUpNegativeDimension(const IntRect& aRect, ErrorResult& aRv)
-{
+static IntRect FixUpNegativeDimension(const IntRect& aRect, ErrorResult& aRv) {
   gfx::IntRect rect = aRect;
 
   // fix up negative dimensions
@@ -203,9 +189,8 @@ FixUpNegativeDimension(const IntRect& aRect, ErrorResult& aRv)
  *          _aSurface_, this function still copy data into a new
  *          DataSourceSurface.
  */
-static already_AddRefed<DataSourceSurface>
-CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRect)
-{
+static already_AddRefed<DataSourceSurface> CropAndCopyDataSourceSurface(
+    DataSourceSurface* aSurface, const IntRect& aCropRect) {
   MOZ_ASSERT(aSurface);
 
   // Check the aCropRect
@@ -225,13 +210,14 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
   // So, instead, we force the output format to be SurfaceFormat::B8G8R8A8.
   const SurfaceFormat format = SurfaceFormat::B8G8R8A8;
   const int bytesPerPixel = BytesPerPixel(format);
-  const IntSize dstSize = IntSize(positiveCropRect.width,
-                                  positiveCropRect.height);
+  const IntSize dstSize =
+      IntSize(positiveCropRect.width, positiveCropRect.height);
   const uint32_t dstStride = dstSize.width * bytesPerPixel;
 
   // Create a new SourceSurface.
   RefPtr<DataSourceSurface> dstDataSurface =
-    Factory::CreateDataSourceSurfaceWithStride(dstSize, format, dstStride, true);
+      Factory::CreateDataSourceSurfaceWithStride(dstSize, format, dstStride,
+                                                 true);
 
   if (NS_WARN_IF(!dstDataSurface)) {
     return nullptr;
@@ -247,18 +233,19 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
 
     // Copy the raw data into the newly created DataSourceSurface.
     DataSourceSurface::ScopedMap srcMap(aSurface, DataSourceSurface::READ);
-    DataSourceSurface::ScopedMap dstMap(dstDataSurface, DataSourceSurface::WRITE);
-    if (NS_WARN_IF(!srcMap.IsMapped()) ||
-        NS_WARN_IF(!dstMap.IsMapped())) {
+    DataSourceSurface::ScopedMap dstMap(dstDataSurface,
+                                        DataSourceSurface::WRITE);
+    if (NS_WARN_IF(!srcMap.IsMapped()) || NS_WARN_IF(!dstMap.IsMapped())) {
       return nullptr;
     }
 
-    uint8_t* srcBufferPtr = srcMap.GetData() + surfPortion.y * srcMap.GetStride()
-                                             + surfPortion.x * bytesPerPixel;
-    uint8_t* dstBufferPtr = dstMap.GetData() + dest.y * dstMap.GetStride()
-                                             + dest.x * bytesPerPixel;
+    uint8_t* srcBufferPtr = srcMap.GetData() +
+                            surfPortion.y * srcMap.GetStride() +
+                            surfPortion.x * bytesPerPixel;
+    uint8_t* dstBufferPtr =
+        dstMap.GetData() + dest.y * dstMap.GetStride() + dest.x * bytesPerPixel;
     CheckedInt<uint32_t> copiedBytesPerRaw =
-      CheckedInt<uint32_t>(surfPortion.width) * bytesPerPixel;
+        CheckedInt<uint32_t>(surfPortion.width) * bytesPerPixel;
     if (!copiedBytesPerRaw.isValid()) {
       return nullptr;
     }
@@ -276,12 +263,11 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
 /*
  * Encapsulate the given _aSurface_ into a layers::SourceSurfaceImage.
  */
-static already_AddRefed<layers::Image>
-CreateImageFromSurface(SourceSurface* aSurface)
-{
+static already_AddRefed<layers::Image> CreateImageFromSurface(
+    SourceSurface* aSurface) {
   MOZ_ASSERT(aSurface);
   RefPtr<layers::SourceSurfaceImage> image =
-    new layers::SourceSurfaceImage(aSurface->GetSize(), aSurface);
+      new layers::SourceSurfaceImage(aSurface->GetSize(), aSurface);
   return image.forget();
 }
 
@@ -290,20 +276,16 @@ CreateImageFromSurface(SourceSurface* aSurface)
  * CreateImageFromRawDataInMainThreadSyncTask are helpers for
  * create-from-ImageData case
  */
-static already_AddRefed<SourceSurface>
-CreateSurfaceFromRawData(const gfx::IntSize& aSize,
-                         uint32_t aStride,
-                         gfx::SurfaceFormat aFormat,
-                         uint8_t* aBuffer,
-                         uint32_t aBufferLength,
-                         const Maybe<IntRect>& aCropRect)
-{
+static already_AddRefed<SourceSurface> CreateSurfaceFromRawData(
+    const gfx::IntSize& aSize, uint32_t aStride, gfx::SurfaceFormat aFormat,
+    uint8_t* aBuffer, uint32_t aBufferLength, const Maybe<IntRect>& aCropRect) {
   MOZ_ASSERT(!aSize.IsEmpty());
   MOZ_ASSERT(aBuffer);
 
   // Wrap the source buffer into a SourceSurface.
   RefPtr<DataSourceSurface> dataSurface =
-    Factory::CreateWrappingDataSourceSurface(aBuffer, aStride, aSize, aFormat);
+      Factory::CreateWrappingDataSourceSurface(aBuffer, aStride, aSize,
+                                               aFormat);
 
   if (NS_WARN_IF(!dataSurface)) {
     return nullptr;
@@ -311,10 +293,12 @@ CreateSurfaceFromRawData(const gfx::IntSize& aSize,
 
   // The temporary cropRect variable is equal to the size of source buffer if we
   // do not need to crop, or it equals to the given cropping size.
-  const IntRect cropRect = aCropRect.valueOr(IntRect(0, 0, aSize.width, aSize.height));
+  const IntRect cropRect =
+      aCropRect.valueOr(IntRect(0, 0, aSize.width, aSize.height));
 
   // Copy the source buffer in the _cropRect_ area into a new SourceSurface.
-  RefPtr<DataSourceSurface> result = CropAndCopyDataSourceSurface(dataSurface, cropRect);
+  RefPtr<DataSourceSurface> result =
+      CropAndCopyDataSourceSurface(dataSurface, cropRect);
 
   if (NS_WARN_IF(!result)) {
     return nullptr;
@@ -323,21 +307,14 @@ CreateSurfaceFromRawData(const gfx::IntSize& aSize,
   return result.forget();
 }
 
-static already_AddRefed<layers::Image>
-CreateImageFromRawData(const gfx::IntSize& aSize,
-                       uint32_t aStride,
-                       gfx::SurfaceFormat aFormat,
-                       uint8_t* aBuffer,
-                       uint32_t aBufferLength,
-                       const Maybe<IntRect>& aCropRect)
-{
+static already_AddRefed<layers::Image> CreateImageFromRawData(
+    const gfx::IntSize& aSize, uint32_t aStride, gfx::SurfaceFormat aFormat,
+    uint8_t* aBuffer, uint32_t aBufferLength, const Maybe<IntRect>& aCropRect) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Copy and crop the source buffer into a SourceSurface.
-  RefPtr<SourceSurface> rgbaSurface =
-    CreateSurfaceFromRawData(aSize, aStride, aFormat,
-                             aBuffer, aBufferLength,
-                             aCropRect);
+  RefPtr<SourceSurface> rgbaSurface = CreateSurfaceFromRawData(
+      aSize, aStride, aFormat, aBuffer, aBufferLength, aCropRect);
 
   if (NS_WARN_IF(!rgbaSurface)) {
     return nullptr;
@@ -345,20 +322,22 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
 
   // Convert RGBA to BGRA
   RefPtr<DataSourceSurface> rgbaDataSurface = rgbaSurface->GetDataSurface();
-  DataSourceSurface::ScopedMap rgbaMap(rgbaDataSurface, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap rgbaMap(rgbaDataSurface,
+                                       DataSourceSurface::READ);
   if (NS_WARN_IF(!rgbaMap.IsMapped())) {
     return nullptr;
   }
 
   RefPtr<DataSourceSurface> bgraDataSurface =
-    Factory::CreateDataSourceSurfaceWithStride(rgbaDataSurface->GetSize(),
-                                               SurfaceFormat::B8G8R8A8,
-                                               rgbaMap.GetStride());
+      Factory::CreateDataSourceSurfaceWithStride(rgbaDataSurface->GetSize(),
+                                                 SurfaceFormat::B8G8R8A8,
+                                                 rgbaMap.GetStride());
   if (NS_WARN_IF(!bgraDataSurface)) {
     return nullptr;
   }
 
-  DataSourceSurface::ScopedMap bgraMap(bgraDataSurface, DataSourceSurface::WRITE);
+  DataSourceSurface::ScopedMap bgraMap(bgraDataSurface,
+                                       DataSourceSurface::WRITE);
   if (NS_WARN_IF(!bgraMap.IsMapped())) {
     return nullptr;
   }
@@ -379,44 +358,40 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
 
 /*
  * This is a synchronous task.
- * This class is used to create a layers::SourceSurfaceImage from raw data in the main
- * thread. While creating an ImageBitmap from an ImageData, we need to create
- * a SouceSurface from the ImageData's raw data and then set the SourceSurface
- * into a layers::SourceSurfaceImage. However, the layers::SourceSurfaceImage asserts the
- * setting operation in the main thread, so if we are going to create an
- * ImageBitmap from an ImageData off the main thread, we post an event to the
- * main thread to create a layers::SourceSurfaceImage from an ImageData's raw data.
+ * This class is used to create a layers::SourceSurfaceImage from raw data in
+ * the main thread. While creating an ImageBitmap from an ImageData, we need to
+ * create a SouceSurface from the ImageData's raw data and then set the
+ * SourceSurface into a layers::SourceSurfaceImage. However, the
+ * layers::SourceSurfaceImage asserts the setting operation in the main thread,
+ * so if we are going to create an ImageBitmap from an ImageData off the main
+ * thread, we post an event to the main thread to create a
+ * layers::SourceSurfaceImage from an ImageData's raw data.
  */
-class CreateImageFromRawDataInMainThreadSyncTask final :
-  public WorkerMainThreadRunnable
-{
-public:
-  CreateImageFromRawDataInMainThreadSyncTask(uint8_t* aBuffer,
-                                             uint32_t aBufferLength,
-                                             uint32_t aStride,
-                                             gfx::SurfaceFormat aFormat,
-                                             const gfx::IntSize& aSize,
-                                             const Maybe<IntRect>& aCropRect,
-                                             layers::Image** aImage)
-  : WorkerMainThreadRunnable(GetCurrentThreadWorkerPrivate(),
-                               NS_LITERAL_CSTRING("ImageBitmap :: Create Image from Raw Data"))
-  , mImage(aImage)
-  , mBuffer(aBuffer)
-  , mBufferLength(aBufferLength)
-  , mStride(aStride)
-  , mFormat(aFormat)
-  , mSize(aSize)
-  , mCropRect(aCropRect)
-  {
-    MOZ_ASSERT(!(*aImage), "Don't pass an existing Image into CreateImageFromRawDataInMainThreadSyncTask.");
+class CreateImageFromRawDataInMainThreadSyncTask final
+    : public WorkerMainThreadRunnable {
+ public:
+  CreateImageFromRawDataInMainThreadSyncTask(
+      uint8_t* aBuffer, uint32_t aBufferLength, uint32_t aStride,
+      gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize,
+      const Maybe<IntRect>& aCropRect, layers::Image** aImage)
+      : WorkerMainThreadRunnable(
+            GetCurrentThreadWorkerPrivate(),
+            NS_LITERAL_CSTRING("ImageBitmap :: Create Image from Raw Data")),
+        mImage(aImage),
+        mBuffer(aBuffer),
+        mBufferLength(aBufferLength),
+        mStride(aStride),
+        mFormat(aFormat),
+        mSize(aSize),
+        mCropRect(aCropRect) {
+    MOZ_ASSERT(!(*aImage),
+               "Don't pass an existing Image into "
+               "CreateImageFromRawDataInMainThreadSyncTask.");
   }
 
-  bool MainThreadRun() override
-  {
-    RefPtr<layers::Image> image =
-      CreateImageFromRawData(mSize, mStride, mFormat,
-                             mBuffer, mBufferLength,
-                             mCropRect);
+  bool MainThreadRun() override {
+    RefPtr<layers::Image> image = CreateImageFromRawData(
+        mSize, mStride, mFormat, mBuffer, mBufferLength, mCropRect);
 
     if (NS_WARN_IF(!image)) {
       return false;
@@ -427,7 +402,7 @@ public:
     return true;
   }
 
-private:
+ private:
   layers::Image** mImage;
   uint8_t* mBuffer;
   uint32_t mBufferLength;
@@ -437,9 +412,8 @@ private:
   const Maybe<IntRect>& mCropRect;
 };
 
-static bool
-CheckSecurityForElements(bool aIsWriteOnly, bool aCORSUsed, nsIPrincipal* aPrincipal)
-{
+static bool CheckSecurityForElements(bool aIsWriteOnly, bool aCORSUsed,
+                                     nsIPrincipal* aPrincipal) {
   if (aIsWriteOnly || !aPrincipal) {
     return false;
   }
@@ -459,30 +433,29 @@ CheckSecurityForElements(bool aIsWriteOnly, bool aCORSUsed, nsIPrincipal* aPrinc
   return true;
 }
 
-static bool
-CheckSecurityForElements(const nsLayoutUtils::SurfaceFromElementResult& aRes)
-{
-  return CheckSecurityForElements(aRes.mIsWriteOnly, aRes.mCORSUsed, aRes.mPrincipal);
+static bool CheckSecurityForElements(
+    const nsLayoutUtils::SurfaceFromElementResult& aRes) {
+  return CheckSecurityForElements(aRes.mIsWriteOnly, aRes.mCORSUsed,
+                                  aRes.mPrincipal);
 }
 
 /*
  * A wrapper to the nsLayoutUtils::SurfaceFromElement() function followed by the
  * security checking.
  */
-template<class ElementType>
-static already_AddRefed<SourceSurface>
-GetSurfaceFromElement(nsIGlobalObject* aGlobal, ElementType& aElement,
-                      bool* aWriteOnly, ErrorResult& aRv)
-{
+template <class ElementType>
+static already_AddRefed<SourceSurface> GetSurfaceFromElement(
+    nsIGlobalObject* aGlobal, ElementType& aElement, bool* aWriteOnly,
+    ErrorResult& aRv) {
   nsLayoutUtils::SurfaceFromElementResult res =
-    nsLayoutUtils::SurfaceFromElement(&aElement, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
+      nsLayoutUtils::SurfaceFromElement(
+          &aElement, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
 
   RefPtr<SourceSurface> surface = res.GetSourceSurface();
   if (NS_WARN_IF(!surface)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-
 
   // check write-only mode
   *aWriteOnly = !CheckSecurityForElements(res);
@@ -492,23 +465,21 @@ GetSurfaceFromElement(nsIGlobalObject* aGlobal, ElementType& aElement,
 
 ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
                          bool aWriteOnly, gfxAlphaType aAlphaType)
-  : mParent(aGlobal)
-  , mData(aData)
-  , mSurface(nullptr)
-  , mDataWrapper(new ImageUtils(mData))
-  , mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height)
-  , mAlphaType(aAlphaType)
-  , mAllocatedImageData(false)
-  , mWriteOnly(aWriteOnly)
-{
+    : mParent(aGlobal),
+      mData(aData),
+      mSurface(nullptr),
+      mDataWrapper(new ImageUtils(mData)),
+      mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height),
+      mAlphaType(aAlphaType),
+      mAllocatedImageData(false),
+      mWriteOnly(aWriteOnly) {
   MOZ_ASSERT(aData, "aData is null in ImageBitmap constructor.");
 
   mShutdownObserver = new ImageBitmapShutdownObserver(this);
   mShutdownObserver->RegisterObserver();
 }
 
-ImageBitmap::~ImageBitmap()
-{
+ImageBitmap::~ImageBitmap() {
   if (mShutdownObserver) {
     mShutdownObserver->Clear();
     mShutdownObserver->UnregisterObserver();
@@ -516,38 +487,30 @@ ImageBitmap::~ImageBitmap()
   }
 }
 
-JSObject*
-ImageBitmap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ImageBitmap::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto) {
   return ImageBitmap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-ImageBitmap::Close()
-{
+void ImageBitmap::Close() {
   mData = nullptr;
   mSurface = nullptr;
   mDataWrapper = nullptr;
   mPictureRect.SetEmpty();
 }
 
-void
-ImageBitmap::OnShutdown()
-{
+void ImageBitmap::OnShutdown() {
   mShutdownObserver = nullptr;
 
   Close();
 }
 
-void
-ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv)
-{
+void ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv) {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
 }
 
-static already_AddRefed<SourceSurface>
-ConvertColorFormatIfNeeded(RefPtr<SourceSurface> aSurface)
-{
+static already_AddRefed<SourceSurface> ConvertColorFormatIfNeeded(
+    RefPtr<SourceSurface> aSurface) {
   const SurfaceFormat srcFormat = aSurface->GetFormat();
   if (srcFormat == SurfaceFormat::R8G8B8A8 ||
       srcFormat == SurfaceFormat::B8G8R8A8 ||
@@ -558,8 +521,7 @@ ConvertColorFormatIfNeeded(RefPtr<SourceSurface> aSurface)
     return aSurface.forget();
   }
 
-  if (srcFormat == SurfaceFormat::A8 ||
-      srcFormat == SurfaceFormat::Depth) {
+  if (srcFormat == SurfaceFormat::A8 || srcFormat == SurfaceFormat::Depth) {
     return nullptr;
   }
 
@@ -568,9 +530,8 @@ ConvertColorFormatIfNeeded(RefPtr<SourceSurface> aSurface)
   const uint32_t dstStride = dstSize.width * bytesPerPixel;
 
   RefPtr<DataSourceSurface> dstDataSurface =
-    Factory::CreateDataSourceSurfaceWithStride(dstSize,
-                                               SurfaceFormat::B8G8R8A8,
-                                               dstStride);
+      Factory::CreateDataSourceSurfaceWithStride(
+          dstSize, SurfaceFormat::B8G8R8A8, dstStride);
   if (NS_WARN_IF(!dstDataSurface)) {
     return nullptr;
   }
@@ -588,21 +549,19 @@ ConvertColorFormatIfNeeded(RefPtr<SourceSurface> aSurface)
 
   int rv = 0;
   if (srcFormat == SurfaceFormat::R8G8B8) {
-    rv = RGB24ToBGRA32(srcMap.GetData(), srcMap.GetStride(),
-                       dstMap.GetData(), dstMap.GetStride(),
-                       dstSize.width, dstSize.height);
+    rv = RGB24ToBGRA32(srcMap.GetData(), srcMap.GetStride(), dstMap.GetData(),
+                       dstMap.GetStride(), dstSize.width, dstSize.height);
   } else if (srcFormat == SurfaceFormat::B8G8R8) {
-    rv = BGR24ToBGRA32(srcMap.GetData(), srcMap.GetStride(),
-                       dstMap.GetData(), dstMap.GetStride(),
-                       dstSize.width, dstSize.height);
+    rv = BGR24ToBGRA32(srcMap.GetData(), srcMap.GetStride(), dstMap.GetData(),
+                       dstMap.GetStride(), dstSize.width, dstSize.height);
   } else if (srcFormat == SurfaceFormat::HSV) {
     rv = HSVToBGRA32((const float*)srcMap.GetData(), srcMap.GetStride(),
-                     dstMap.GetData(), dstMap.GetStride(),
-                     dstSize.width, dstSize.height);
+                     dstMap.GetData(), dstMap.GetStride(), dstSize.width,
+                     dstSize.height);
   } else if (srcFormat == SurfaceFormat::Lab) {
     rv = LabToBGRA32((const float*)srcMap.GetData(), srcMap.GetStride(),
-                     dstMap.GetData(), dstMap.GetStride(),
-                     dstSize.width, dstSize.height);
+                     dstMap.GetData(), dstMap.GetStride(), dstSize.width,
+                     dstSize.height);
   }
 
   if (NS_WARN_IF(rv != 0)) {
@@ -622,9 +581,8 @@ ConvertColorFormatIfNeeded(RefPtr<SourceSurface> aSurface)
  *     mPictureRect.
  * (4) Pre-multiply alpha if needed.
  */
-already_AddRefed<SourceSurface>
-ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
-{
+already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
+    gfx::DrawTarget* aTarget) {
   MOZ_ASSERT(aTarget);
 
   if (!mData) {
@@ -652,7 +610,6 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
 
   // Check if we still need to crop our surface
   if (!mPictureRect.IsEqualEdges(surfRect)) {
-
     IntRect surfPortion = surfRect.Intersect(mPictureRect);
 
     // the crop lies entirely outside the surface area, nothing to draw
@@ -688,8 +645,7 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   // Ignore this step if the source surface does not have alpha channel; this
   // kind of source surfaces might come form layers::PlanarYCbCrImage.
   if (mAlphaType == gfxAlphaType::NonPremult &&
-      !IsOpaque(mSurface->GetFormat()))
-  {
+      !IsOpaque(mSurface->GetFormat())) {
     MOZ_ASSERT(mSurface->GetFormat() == SurfaceFormat::R8G8B8A8 ||
                mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
@@ -706,14 +662,18 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
     } else {
       srcSurface = dstSurface;
       if (!srcSurface->Map(DataSourceSurface::READ, &srcMap)) {
-        gfxCriticalError() << "Failed to map source surface for premultiplying alpha.";
+        gfxCriticalError()
+            << "Failed to map source surface for premultiplying alpha.";
         return nullptr;
       }
 
-      dstSurface = Factory::CreateDataSourceSurface(srcSurface->GetSize(), srcSurface->GetFormat());
+      dstSurface = Factory::CreateDataSourceSurface(srcSurface->GetSize(),
+                                                    srcSurface->GetFormat());
 
-      if (!dstSurface || !dstSurface->Map(DataSourceSurface::MapType::WRITE, &dstMap)) {
-        gfxCriticalError() << "Failed to map destination surface for premultiplying alpha.";
+      if (!dstSurface ||
+          !dstSurface->Map(DataSourceSurface::MapType::WRITE, &dstMap)) {
+        gfxCriticalError()
+            << "Failed to map destination surface for premultiplying alpha.";
         srcSurface->Unmap();
         return nullptr;
       }
@@ -740,17 +700,13 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   return surface.forget();
 }
 
-already_AddRefed<layers::Image>
-ImageBitmap::TransferAsImage()
-{
+already_AddRefed<layers::Image> ImageBitmap::TransferAsImage() {
   RefPtr<layers::Image> image = mData;
   Close();
   return image.forget();
 }
 
-UniquePtr<ImageBitmapCloneData>
-ImageBitmap::ToCloneData() const
-{
+UniquePtr<ImageBitmapCloneData> ImageBitmap::ToCloneData() const {
   if (!mData) {
     // A closed image cannot be cloned.
     return nullptr;
@@ -767,26 +723,21 @@ ImageBitmap::ToCloneData() const
   return result;
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateFromSourceSurface(nsIGlobalObject* aGlobal,
-                                     gfx::SourceSurface* aSource,
-                                     ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateFromSourceSurface(
+    nsIGlobalObject* aGlobal, gfx::SourceSurface* aSource, ErrorResult& aRv) {
   RefPtr<layers::Image> data = CreateImageFromSurface(aSource);
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data,
-                                            false /* writeOnly */);
+  RefPtr<ImageBitmap> ret =
+      new ImageBitmap(aGlobal, data, false /* writeOnly */);
   ret->mAllocatedImageData = true;
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
-                                 ImageBitmapCloneData* aData)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateFromCloneData(
+    nsIGlobalObject* aGlobal, ImageBitmapCloneData* aData) {
   RefPtr<layers::Image> data = CreateImageFromSurface(aData->mSurface);
 
   RefPtr<ImageBitmap> ret =
-    new ImageBitmap(aGlobal, data, aData->mWriteOnly, aData->mAlphaType);
+      new ImageBitmap(aGlobal, data, aData->mWriteOnly, aData->mAlphaType);
 
   ret->mAllocatedImageData = true;
 
@@ -798,14 +749,13 @@ ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
 /* static */ already_AddRefed<ImageBitmap>
 ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
                                        OffscreenCanvas& aOffscreenCanvas,
-                                       ErrorResult& aRv)
-{
+                                       ErrorResult& aRv) {
   // Check write-only mode.
   bool writeOnly = aOffscreenCanvas.IsWriteOnly();
 
   nsLayoutUtils::SurfaceFromElementResult res =
-    nsLayoutUtils::SurfaceFromOffscreenCanvas(&aOffscreenCanvas,
-                                              nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
+      nsLayoutUtils::SurfaceFromOffscreenCanvas(
+          &aOffscreenCanvas, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
 
   RefPtr<SourceSurface> surface = res.GetSourceSurface();
 
@@ -814,8 +764,7 @@ ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
     return nullptr;
   }
 
-  RefPtr<layers::Image> data =
-    CreateImageFromSurface(surface);
+  RefPtr<layers::Image> data = CreateImageFromSurface(surface);
 
   RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, writeOnly);
 
@@ -824,10 +773,9 @@ ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl,
-                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl,
+    const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
   // Check if the image element is completely available or not.
   if (!aImageEl.Complete()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -838,8 +786,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
 
   // Get the SourceSurface out from the image element and then do security
   // checking.
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl,
-                                                        &writeOnly, aRv);
+  RefPtr<SourceSurface> surface =
+      GetSurfaceFromElement(aGlobal, aImageEl, &writeOnly, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -863,16 +811,15 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, SVGImageElement& aImageEl,
-                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, SVGImageElement& aImageEl,
+    const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
   bool writeOnly = true;
 
   // Get the SourceSurface out from the image element and then do security
   // checking.
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl,
-                                                        &writeOnly, aRv);
+  RefPtr<SourceSurface> surface =
+      GetSurfaceFromElement(aGlobal, aImageEl, &writeOnly, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -896,11 +843,11 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, SVGImageElement& aImageEl,
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl,
-                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
-{
-  aVideoEl.MarkAsContentSource(mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_IMAGEBITMAP);
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl,
+    const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
+  aVideoEl.MarkAsContentSource(
+      mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_IMAGEBITMAP);
 
   // Check network state.
   if (aVideoEl.NetworkState() == NETWORK_EMPTY) {
@@ -909,7 +856,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   }
 
   // Check ready state.
-  // Cannot be HTMLMediaElement::HAVE_NOTHING or HTMLMediaElement::HAVE_METADATA.
+  // Cannot be HTMLMediaElement::HAVE_NOTHING or
+  // HTMLMediaElement::HAVE_METADATA.
   if (aVideoEl.ReadyState() <= HAVE_METADATA) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -936,18 +884,17 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvasEl,
-                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvasEl,
+    const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
   if (aCanvasEl.Width() == 0 || aCanvasEl.Height() == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
   bool writeOnly = true;
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aCanvasEl,
-                                                        &writeOnly, aRv);
+  RefPtr<SourceSurface> surface =
+      GetSurfaceFromElement(aGlobal, aCanvasEl, &writeOnly, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -972,8 +919,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
     croppedSurface = CropAndCopyDataSourceSurface(dataSurface, cropRect);
     cropRect.MoveTo(0, 0);
     needToReportMemoryAllocation = true;
-  }
-  else {
+  } else {
     croppedSurface = surface;
   }
 
@@ -1004,10 +950,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
-                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, ImageData& aImageData,
+    const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
   // Copy data into SourceSurface.
   dom::Uint8ClampedArray array;
   DebugOnly<bool> inited = array.Init(aImageData.GetDataObject());
@@ -1034,18 +979,13 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   // Create and Crop the raw data into a layers::Image
   RefPtr<layers::Image> data;
   if (NS_IsMainThread()) {
-    data = CreateImageFromRawData(imageSize, imageStride, FORMAT,
-                                  array.Data(), dataLength,
-                                  aCropRect);
+    data = CreateImageFromRawData(imageSize, imageStride, FORMAT, array.Data(),
+                                  dataLength, aCropRect);
   } else {
-    RefPtr<CreateImageFromRawDataInMainThreadSyncTask> task
-      = new CreateImageFromRawDataInMainThreadSyncTask(array.Data(),
-                                                       dataLength,
-                                                       imageStride,
-                                                       FORMAT,
-                                                       imageSize,
-                                                       aCropRect,
-                                                       getter_AddRefs(data));
+    RefPtr<CreateImageFromRawDataInMainThreadSyncTask> task =
+        new CreateImageFromRawDataInMainThreadSyncTask(
+            array.Data(), dataLength, imageStride, FORMAT, imageSize, aCropRect,
+            getter_AddRefs(data));
     task->Dispatch(Canceling, aRv);
   }
 
@@ -1056,7 +996,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
 
   // Create an ImageBimtap.
   RefPtr<ImageBitmap> ret =
-    new ImageBitmap(aGlobal, data, false /* write-only */, alphaType);
+      new ImageBitmap(aGlobal, data, false /* write-only */, alphaType);
 
   ret->mAllocatedImageData = true;
 
@@ -1066,10 +1006,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& aCanvasCtx,
-                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, CanvasRenderingContext2D& aCanvasCtx,
+    const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal);
   nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(win);
   if (NS_WARN_IF(!window) || !window->GetExtantDoc()) {
@@ -1077,10 +1016,12 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
     return nullptr;
   }
 
-  window->GetExtantDoc()->WarnOnceAbout(nsIDocument::eCreateImageBitmapCanvasRenderingContext2D);
+  window->GetExtantDoc()->WarnOnceAbout(
+      nsIDocument::eCreateImageBitmapCanvasRenderingContext2D);
 
   // Check write-only mode.
-  bool writeOnly = aCanvasCtx.GetCanvas()->IsWriteOnly() || aCanvasCtx.IsWriteOnly();
+  bool writeOnly =
+      aCanvasCtx.GetCanvas()->IsWriteOnly() || aCanvasCtx.IsWriteOnly();
 
   RefPtr<SourceSurface> surface = aCanvasCtx.GetSurfaceSnapshot();
 
@@ -1102,8 +1043,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
     return nullptr;
   }
 
-  RefPtr<ImageBitmap> ret =
-    new ImageBitmap(aGlobal, data, writeOnly);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, writeOnly);
 
   ret->mAllocatedImageData = true;
 
@@ -1115,19 +1055,17 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
   return ret.forget();
 }
 
-/* static */ already_AddRefed<ImageBitmap>
-ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
-                            const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
+    const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
   if (!aImageBitmap.mData) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
   RefPtr<layers::Image> data = aImageBitmap.mData;
-  RefPtr<ImageBitmap> ret =
-    new ImageBitmap(aGlobal, data, aImageBitmap.mWriteOnly,
-                    aImageBitmap.mAlphaType);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(
+      aGlobal, data, aImageBitmap.mWriteOnly, aImageBitmap.mAlphaType);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -1137,96 +1075,78 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
   return ret.forget();
 }
 
-class FulfillImageBitmapPromise
-{
-protected:
+class FulfillImageBitmapPromise {
+ protected:
   FulfillImageBitmapPromise(Promise* aPromise, ImageBitmap* aImageBitmap)
-  : mPromise(aPromise)
-  , mImageBitmap(aImageBitmap)
-  {
+      : mPromise(aPromise), mImageBitmap(aImageBitmap) {
     MOZ_ASSERT(aPromise);
   }
 
-  void DoFulfillImageBitmapPromise()
-  {
-    mPromise->MaybeResolve(mImageBitmap);
-  }
+  void DoFulfillImageBitmapPromise() { mPromise->MaybeResolve(mImageBitmap); }
 
-private:
+ private:
   RefPtr<Promise> mPromise;
   RefPtr<ImageBitmap> mImageBitmap;
 };
 
 class FulfillImageBitmapPromiseTask final : public Runnable,
-                                            public FulfillImageBitmapPromise
-{
-public:
+                                            public FulfillImageBitmapPromise {
+ public:
   FulfillImageBitmapPromiseTask(Promise* aPromise, ImageBitmap* aImageBitmap)
-    : Runnable("dom::FulfillImageBitmapPromiseTask")
-    , FulfillImageBitmapPromise(aPromise, aImageBitmap)
-  {
-  }
+      : Runnable("dom::FulfillImageBitmapPromiseTask"),
+        FulfillImageBitmapPromise(aPromise, aImageBitmap) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     DoFulfillImageBitmapPromise();
     return NS_OK;
   }
 };
 
-class FulfillImageBitmapPromiseWorkerTask final : public WorkerSameThreadRunnable,
-                                                  public FulfillImageBitmapPromise
-{
-public:
-  FulfillImageBitmapPromiseWorkerTask(Promise* aPromise, ImageBitmap* aImageBitmap)
-  : WorkerSameThreadRunnable(GetCurrentThreadWorkerPrivate()),
-    FulfillImageBitmapPromise(aPromise, aImageBitmap)
-  {
-  }
+class FulfillImageBitmapPromiseWorkerTask final
+    : public WorkerSameThreadRunnable,
+      public FulfillImageBitmapPromise {
+ public:
+  FulfillImageBitmapPromiseWorkerTask(Promise* aPromise,
+                                      ImageBitmap* aImageBitmap)
+      : WorkerSameThreadRunnable(GetCurrentThreadWorkerPrivate()),
+        FulfillImageBitmapPromise(aPromise, aImageBitmap) {}
 
-  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     DoFulfillImageBitmapPromise();
     return true;
   }
 };
 
-static void
-AsyncFulfillImageBitmapPromise(Promise* aPromise, ImageBitmap* aImageBitmap)
-{
+static void AsyncFulfillImageBitmapPromise(Promise* aPromise,
+                                           ImageBitmap* aImageBitmap) {
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> task =
-      new FulfillImageBitmapPromiseTask(aPromise, aImageBitmap);
-    NS_DispatchToCurrentThread(task); // Actually, to the main-thread.
+        new FulfillImageBitmapPromiseTask(aPromise, aImageBitmap);
+    NS_DispatchToCurrentThread(task);  // Actually, to the main-thread.
   } else {
     RefPtr<FulfillImageBitmapPromiseWorkerTask> task =
-      new FulfillImageBitmapPromiseWorkerTask(aPromise, aImageBitmap);
-    task->Dispatch(); // Actually, to the current worker-thread.
+        new FulfillImageBitmapPromiseWorkerTask(aPromise, aImageBitmap);
+    task->Dispatch();  // Actually, to the current worker-thread.
   }
 }
 
 class CreateImageBitmapFromBlobRunnable;
 
-class CreateImageBitmapFromBlob final : public CancelableRunnable
-                                      , public imgIContainerCallback
-                                      , public nsIInputStreamCallback
-{
+class CreateImageBitmapFromBlob final : public CancelableRunnable,
+                                        public imgIContainerCallback,
+                                        public nsIInputStreamCallback {
   friend class CreateImageBitmapFromBlobRunnable;
 
-public:
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_IMGICONTAINERCALLBACK
   NS_DECL_NSIINPUTSTREAMCALLBACK
 
-  static already_AddRefed<CreateImageBitmapFromBlob>
-  Create(Promise* aPromise,
-         nsIGlobalObject* aGlobal,
-         Blob& aBlob,
-         const Maybe<IntRect>& aCropRect,
-         nsIEventTarget* aMainThreadEventTarget);
+  static already_AddRefed<CreateImageBitmapFromBlob> Create(
+      Promise* aPromise, nsIGlobalObject* aGlobal, Blob& aBlob,
+      const Maybe<IntRect>& aCropRect, nsIEventTarget* aMainThreadEventTarget);
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(IsCurrentThread());
 
     nsresult rv = StartMimeTypeAndDecodeAndCropBlob();
@@ -1240,32 +1160,24 @@ public:
   // Called by the WorkerRef.
   void WorkerShuttingDown();
 
-private:
-  CreateImageBitmapFromBlob(Promise* aPromise,
-                            nsIGlobalObject* aGlobal,
+ private:
+  CreateImageBitmapFromBlob(Promise* aPromise, nsIGlobalObject* aGlobal,
                             already_AddRefed<nsIInputStream> aInputStream,
                             const Maybe<IntRect>& aCropRect,
                             nsIEventTarget* aMainThreadEventTarget)
-    : CancelableRunnable("dom::CreateImageBitmapFromBlob")
-    , mMutex("dom::CreateImageBitmapFromBlob::mMutex")
-    , mPromise(aPromise)
-    , mGlobalObject(aGlobal)
-    , mInputStream(std::move(aInputStream))
-    , mCropRect(aCropRect)
-    , mOriginalCropRect(aCropRect)
-    , mMainThreadEventTarget(aMainThreadEventTarget)
-    , mThread(GetCurrentVirtualThread())
-  {
-  }
+      : CancelableRunnable("dom::CreateImageBitmapFromBlob"),
+        mMutex("dom::CreateImageBitmapFromBlob::mMutex"),
+        mPromise(aPromise),
+        mGlobalObject(aGlobal),
+        mInputStream(std::move(aInputStream)),
+        mCropRect(aCropRect),
+        mOriginalCropRect(aCropRect),
+        mMainThreadEventTarget(aMainThreadEventTarget),
+        mThread(GetCurrentVirtualThread()) {}
 
-  virtual ~CreateImageBitmapFromBlob()
-  {
-  }
+  virtual ~CreateImageBitmapFromBlob() {}
 
-  bool IsCurrentThread() const
-  {
-    return mThread == GetCurrentVirtualThread();
-  }
+  bool IsCurrentThread() const { return mThread == GetCurrentVirtualThread(); }
 
   // Called on the owning thread.
   nsresult StartMimeTypeAndDecodeAndCropBlob();
@@ -1316,49 +1228,44 @@ private:
 NS_IMPL_ISUPPORTS_INHERITED(CreateImageBitmapFromBlob, CancelableRunnable,
                             imgIContainerCallback, nsIInputStreamCallback)
 
-class CreateImageBitmapFromBlobRunnable : public WorkerRunnable
-{
-public:
+class CreateImageBitmapFromBlobRunnable : public WorkerRunnable {
+ public:
   explicit CreateImageBitmapFromBlobRunnable(WorkerPrivate* aWorkerPrivate,
                                              CreateImageBitmapFromBlob* aTask,
                                              layers::Image* aImage,
                                              nsresult aStatus)
-    : WorkerRunnable(aWorkerPrivate)
-    , mTask(aTask)
-    , mImage(aImage)
-    , mStatus(aStatus)
-  {}
+      : WorkerRunnable(aWorkerPrivate),
+        mTask(aTask),
+        mImage(aImage),
+        mStatus(aStatus) {}
 
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     mTask->MimeTypeAndDecodeAndCropBlobCompletedOwningThread(mImage, mStatus);
     return true;
   }
 
-private:
+ private:
   RefPtr<CreateImageBitmapFromBlob> mTask;
   RefPtr<layers::Image> mImage;
   nsresult mStatus;
 };
 
-static void
-AsyncCreateImageBitmapFromBlob(Promise* aPromise, nsIGlobalObject* aGlobal,
-                               Blob& aBlob, const Maybe<IntRect>& aCropRect)
-{
+static void AsyncCreateImageBitmapFromBlob(Promise* aPromise,
+                                           nsIGlobalObject* aGlobal,
+                                           Blob& aBlob,
+                                           const Maybe<IntRect>& aCropRect) {
   // Let's identify the main-thread event target.
   nsCOMPtr<nsIEventTarget> mainThreadEventTarget;
   if (NS_IsMainThread()) {
-     mainThreadEventTarget = aGlobal->EventTargetFor(TaskCategory::Other);
+    mainThreadEventTarget = aGlobal->EventTargetFor(TaskCategory::Other);
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
     mainThreadEventTarget = workerPrivate->MainThreadEventTarget();
   }
 
-  RefPtr<CreateImageBitmapFromBlob> task =
-    CreateImageBitmapFromBlob::Create(aPromise, aGlobal, aBlob, aCropRect,
-                                      mainThreadEventTarget);
+  RefPtr<CreateImageBitmapFromBlob> task = CreateImageBitmapFromBlob::Create(
+      aPromise, aGlobal, aBlob, aCropRect, mainThreadEventTarget);
   if (NS_WARN_IF(!task)) {
     aPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -1367,10 +1274,9 @@ AsyncCreateImageBitmapFromBlob(Promise* aPromise, nsIGlobalObject* aGlobal,
   NS_DispatchToCurrentThread(task);
 }
 
-/* static */ already_AddRefed<Promise>
-ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
-                    const Maybe<gfx::IntRect>& aCropRect, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<Promise> ImageBitmap::Create(
+    nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
+    const Maybe<gfx::IntRect>& aCropRect, ErrorResult& aRv) {
   MOZ_ASSERT(aGlobal);
 
   RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
@@ -1379,7 +1285,8 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
     return nullptr;
   }
 
-  if (aCropRect.isSome() && (aCropRect->Width() == 0 || aCropRect->Height() == 0)) {
+  if (aCropRect.isSome() &&
+      (aCropRect->Width() == 0 || aCropRect->Height() == 0)) {
     aRv.Throw(NS_ERROR_RANGE_ERR);
     return promise.forget();
   }
@@ -1387,31 +1294,44 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
   RefPtr<ImageBitmap> imageBitmap;
 
   if (aSrc.IsHTMLImageElement()) {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "Creating ImageBitmap from HTMLImageElement off the main thread.");
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsHTMLImageElement(), aCropRect, aRv);
+    MOZ_ASSERT(
+        NS_IsMainThread(),
+        "Creating ImageBitmap from HTMLImageElement off the main thread.");
+    imageBitmap =
+        CreateInternal(aGlobal, aSrc.GetAsHTMLImageElement(), aCropRect, aRv);
   } else if (aSrc.IsSVGImageElement()) {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "Creating ImageBitmap from SVGImageElement off the main thread.");
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsSVGImageElement(), aCropRect, aRv);
+    MOZ_ASSERT(
+        NS_IsMainThread(),
+        "Creating ImageBitmap from SVGImageElement off the main thread.");
+    imageBitmap =
+        CreateInternal(aGlobal, aSrc.GetAsSVGImageElement(), aCropRect, aRv);
   } else if (aSrc.IsHTMLVideoElement()) {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "Creating ImageBitmap from HTMLVideoElement off the main thread.");
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsHTMLVideoElement(), aCropRect, aRv);
+    MOZ_ASSERT(
+        NS_IsMainThread(),
+        "Creating ImageBitmap from HTMLVideoElement off the main thread.");
+    imageBitmap =
+        CreateInternal(aGlobal, aSrc.GetAsHTMLVideoElement(), aCropRect, aRv);
   } else if (aSrc.IsHTMLCanvasElement()) {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "Creating ImageBitmap from HTMLCanvasElement off the main thread.");
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsHTMLCanvasElement(), aCropRect, aRv);
+    MOZ_ASSERT(
+        NS_IsMainThread(),
+        "Creating ImageBitmap from HTMLCanvasElement off the main thread.");
+    imageBitmap =
+        CreateInternal(aGlobal, aSrc.GetAsHTMLCanvasElement(), aCropRect, aRv);
   } else if (aSrc.IsImageData()) {
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsImageData(), aCropRect, aRv);
+    imageBitmap =
+        CreateInternal(aGlobal, aSrc.GetAsImageData(), aCropRect, aRv);
   } else if (aSrc.IsCanvasRenderingContext2D()) {
     MOZ_ASSERT(NS_IsMainThread(),
-               "Creating ImageBitmap from CanvasRenderingContext2D off the main thread.");
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsCanvasRenderingContext2D(), aCropRect, aRv);
+               "Creating ImageBitmap from CanvasRenderingContext2D off the "
+               "main thread.");
+    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsCanvasRenderingContext2D(),
+                                 aCropRect, aRv);
   } else if (aSrc.IsImageBitmap()) {
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsImageBitmap(), aCropRect, aRv);
+    imageBitmap =
+        CreateInternal(aGlobal, aSrc.GetAsImageBitmap(), aCropRect, aRv);
   } else if (aSrc.IsBlob()) {
-    AsyncCreateImageBitmapFromBlob(promise, aGlobal, aSrc.GetAsBlob(), aCropRect);
+    AsyncCreateImageBitmapFromBlob(promise, aGlobal, aSrc.GetAsBlob(),
+                                   aCropRect);
     return promise.forget();
   } else {
     MOZ_CRASH("Unsupported type!");
@@ -1425,13 +1345,10 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
   return promise.forget();
 }
 
-/*static*/ JSObject*
-ImageBitmap::ReadStructuredClone(JSContext* aCx,
-                                 JSStructuredCloneReader* aReader,
-                                 nsIGlobalObject* aParent,
-                                 const nsTArray<RefPtr<DataSourceSurface>>& aClonedSurfaces,
-                                 uint32_t aIndex)
-{
+/*static*/ JSObject* ImageBitmap::ReadStructuredClone(
+    JSContext* aCx, JSStructuredCloneReader* aReader, nsIGlobalObject* aParent,
+    const nsTArray<RefPtr<DataSourceSurface>>& aClonedSurfaces,
+    uint32_t aIndex) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aReader);
   // aParent might be null.
@@ -1473,11 +1390,11 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
 #endif
     RefPtr<layers::Image> img = CreateImageFromSurface(aClonedSurfaces[aIndex]);
     RefPtr<ImageBitmap> imageBitmap =
-      new ImageBitmap(aParent, img, !!writeOnly, alphaType);
+        new ImageBitmap(aParent, img, !!writeOnly, alphaType);
 
     ErrorResult error;
-    imageBitmap->SetPictureRect(IntRect(picRectX, picRectY,
-                                        picRectWidth, picRectHeight), error);
+    imageBitmap->SetPictureRect(
+        IntRect(picRectX, picRectY, picRectWidth, picRectHeight), error);
     if (NS_WARN_IF(error.Failed())) {
       error.SuppressException();
       return nullptr;
@@ -1493,18 +1410,19 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   return &(value.toObject());
 }
 
-/*static*/ bool
-ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
-                                  nsTArray<RefPtr<DataSourceSurface>>& aClonedSurfaces,
-                                  ImageBitmap* aImageBitmap)
-{
+/*static*/ bool ImageBitmap::WriteStructuredClone(
+    JSStructuredCloneWriter* aWriter,
+    nsTArray<RefPtr<DataSourceSurface>>& aClonedSurfaces,
+    ImageBitmap* aImageBitmap) {
   MOZ_ASSERT(aWriter);
   MOZ_ASSERT(aImageBitmap);
 
   const uint32_t picRectX = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.x);
   const uint32_t picRectY = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.y);
-  const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
-  const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
+  const uint32_t picRectWidth =
+      BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
+  const uint32_t picRectHeight =
+      BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
   const uint32_t alphaType = BitwiseCast<uint32_t>(aImageBitmap->mAlphaType);
 
   // Indexing the cloned surfaces and send the index to the receiver.
@@ -1513,12 +1431,12 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEBITMAP, index)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectX, picRectY)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectWidth, picRectHeight)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, alphaType, aImageBitmap->mWriteOnly))) {
+      NS_WARN_IF(
+          !JS_WriteUint32Pair(aWriter, alphaType, aImageBitmap->mWriteOnly))) {
     return false;
   }
 
-  RefPtr<SourceSurface> surface =
-    aImageBitmap->mData->GetAsSourceSurface();
+  RefPtr<SourceSurface> surface = aImageBitmap->mData->GetAsSourceSurface();
   RefPtr<DataSourceSurface> snapshot = surface->GetDataSurface();
   RefPtr<DataSourceSurface> dstDataSurface;
   {
@@ -1526,11 +1444,8 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
     // won't Unmap after exiting function. So instead calling GetStride()
     // directly, using ScopedMap to get stride.
     DataSourceSurface::ScopedMap map(snapshot, DataSourceSurface::READ);
-    dstDataSurface =
-      Factory::CreateDataSourceSurfaceWithStride(snapshot->GetSize(),
-                                                 snapshot->GetFormat(),
-                                                 map.GetStride(),
-                                                 true);
+    dstDataSurface = Factory::CreateDataSourceSurfaceWithStride(
+        snapshot->GetSize(), snapshot->GetFormat(), map.GetStride(), true);
   }
   if (NS_WARN_IF(!dstDataSurface)) {
     return false;
@@ -1540,9 +1455,7 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   return true;
 }
 
-size_t
-ImageBitmap::GetAllocatedSize() const
-{
+size_t ImageBitmap::GetAllocatedSize() const {
   if (!mAllocatedImageData) {
     return 0;
   }
@@ -1561,19 +1474,14 @@ ImageBitmap::GetAllocatedSize() const
   return surface->GetSize().height * surface->GetSize().width * bytesPerPixel;
 }
 
-size_t
-BindingJSObjectMallocBytes(ImageBitmap* aBitmap)
-{
+size_t BindingJSObjectMallocBytes(ImageBitmap* aBitmap) {
   return aBitmap->GetAllocatedSize();
 }
 
 /* static */ already_AddRefed<CreateImageBitmapFromBlob>
-CreateImageBitmapFromBlob::Create(Promise* aPromise,
-                                  nsIGlobalObject* aGlobal,
-                                  Blob& aBlob,
-                                  const Maybe<IntRect>& aCropRect,
-                                  nsIEventTarget* aMainThreadEventTarget)
-{
+CreateImageBitmapFromBlob::Create(Promise* aPromise, nsIGlobalObject* aGlobal,
+                                  Blob& aBlob, const Maybe<IntRect>& aCropRect,
+                                  nsIEventTarget* aMainThreadEventTarget) {
   // Get the internal stream of the blob.
   nsCOMPtr<nsIInputStream> stream;
   ErrorResult error;
@@ -1585,7 +1493,7 @@ CreateImageBitmapFromBlob::Create(Promise* aPromise,
   if (!NS_InputStreamIsBuffered(stream)) {
     nsCOMPtr<nsIInputStream> bufferedStream;
     nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                   stream.forget(), 4096);
+                                            stream.forget(), 4096);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -1593,9 +1501,8 @@ CreateImageBitmapFromBlob::Create(Promise* aPromise,
     stream = bufferedStream;
   }
 
-  RefPtr<CreateImageBitmapFromBlob> task =
-    new CreateImageBitmapFromBlob(aPromise, aGlobal, stream.forget(),
-                                  aCropRect, aMainThreadEventTarget);
+  RefPtr<CreateImageBitmapFromBlob> task = new CreateImageBitmapFromBlob(
+      aPromise, aGlobal, stream.forget(), aCropRect, aMainThreadEventTarget);
 
   // Nothing to do for the main-thread.
   if (NS_IsMainThread()) {
@@ -1608,10 +1515,8 @@ CreateImageBitmapFromBlob::Create(Promise* aPromise,
   MOZ_ASSERT(workerPrivate);
 
   RefPtr<StrongWorkerRef> workerRef =
-    StrongWorkerRef::Create(workerPrivate, "CreateImageBitmapFromBlob",
-                            [task]() {
-      task->WorkerShuttingDown();
-    });
+      StrongWorkerRef::Create(workerPrivate, "CreateImageBitmapFromBlob",
+                              [task]() { task->WorkerShuttingDown(); });
   if (NS_WARN_IF(!workerRef)) {
     return nullptr;
   }
@@ -1620,22 +1525,19 @@ CreateImageBitmapFromBlob::Create(Promise* aPromise,
   return task.forget();
 }
 
-nsresult
-CreateImageBitmapFromBlob::StartMimeTypeAndDecodeAndCropBlob()
-{
+nsresult CreateImageBitmapFromBlob::StartMimeTypeAndDecodeAndCropBlob() {
   MOZ_ASSERT(IsCurrentThread());
 
   // Workers.
   if (!NS_IsMainThread()) {
     RefPtr<CreateImageBitmapFromBlob> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlob",
-      [self]() {
-        nsresult rv = self->MimeTypeAndDecodeAndCropBlob();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          self->MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr, rv);
-        }
-      });
+        "CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlob", [self]() {
+          nsresult rv = self->MimeTypeAndDecodeAndCropBlob();
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            self->MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr, rv);
+          }
+        });
 
     return mMainThreadEventTarget->Dispatch(r.forget());
   }
@@ -1644,9 +1546,7 @@ CreateImageBitmapFromBlob::StartMimeTypeAndDecodeAndCropBlob()
   return MimeTypeAndDecodeAndCropBlob();
 }
 
-nsresult
-CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlob()
-{
+nsresult CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlob() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoCString mimeType;
@@ -1662,9 +1562,8 @@ CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlob()
   return DecodeAndCropBlob(mimeType);
 }
 
-nsresult
-CreateImageBitmapFromBlob::DecodeAndCropBlob(const nsACString& aMimeType)
-{
+nsresult CreateImageBitmapFromBlob::DecodeAndCropBlob(
+    const nsACString& aMimeType) {
   // Get the Component object.
   nsCOMPtr<imgITools> imgtool = do_GetService(NS_IMGTOOLS_CID);
   if (NS_WARN_IF(!imgtool)) {
@@ -1681,14 +1580,9 @@ CreateImageBitmapFromBlob::DecodeAndCropBlob(const nsACString& aMimeType)
   return NS_OK;
 }
 
-static nsresult
-sniff_cb(nsIInputStream* aInputStream,
-         void* aClosure,
-         const char* aFromRawSegment,
-         uint32_t aToOffset,
-         uint32_t aCount,
-         uint32_t* aWriteCount)
-{
+static nsresult sniff_cb(nsIInputStream* aInputStream, void* aClosure,
+                         const char* aFromRawSegment, uint32_t aToOffset,
+                         uint32_t aCount, uint32_t* aWriteCount) {
   nsACString* mimeType = static_cast<nsACString*>(aClosure);
   MOZ_ASSERT(mimeType);
 
@@ -1702,18 +1596,14 @@ sniff_cb(nsIInputStream* aInputStream,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-CreateImageBitmapFromBlob::GetMimeTypeSync(nsACString& aMimeType)
-{
+nsresult CreateImageBitmapFromBlob::GetMimeTypeSync(nsACString& aMimeType) {
   uint32_t dummy;
   return mInputStream->ReadSegments(sniff_cb, &aMimeType, 128, &dummy);
 }
 
-nsresult
-CreateImageBitmapFromBlob::GetMimeTypeAsync()
-{
+nsresult CreateImageBitmapFromBlob::GetMimeTypeAsync() {
   nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
-    do_QueryInterface(mInputStream);
+      do_QueryInterface(mInputStream);
   if (NS_WARN_IF(!asyncInputStream)) {
     // If the stream is not async, why are we here?
     return NS_ERROR_FAILURE;
@@ -1723,16 +1613,14 @@ CreateImageBitmapFromBlob::GetMimeTypeAsync()
 }
 
 NS_IMETHODIMP
-CreateImageBitmapFromBlob::OnInputStreamReady(nsIAsyncInputStream* aStream)
-{
+CreateImageBitmapFromBlob::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   // The stream should have data now. Let's start from scratch again.
   return MimeTypeAndDecodeAndCropBlob();
 }
 
 NS_IMETHODIMP
 CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
-                                        nsresult aStatus)
-{
+                                        nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_FAILED(aStatus)) {
@@ -1743,13 +1631,15 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   MOZ_ASSERT(aImgContainer);
 
   // Get the surface out.
-  uint32_t frameFlags = imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_WANT_DATA_SURFACE;
+  uint32_t frameFlags =
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_WANT_DATA_SURFACE;
   uint32_t whichFrame = imgIContainer::FRAME_FIRST;
-  RefPtr<SourceSurface> surface = aImgContainer->GetFrame(whichFrame, frameFlags);
+  RefPtr<SourceSurface> surface =
+      aImgContainer->GetFrame(whichFrame, frameFlags);
 
   if (NS_WARN_IF(!surface)) {
-    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr,
-                                                    NS_ERROR_DOM_INVALID_STATE_ERR);
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(
+        nullptr, NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
@@ -1779,8 +1669,8 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   }
 
   if (NS_WARN_IF(!croppedSurface)) {
-    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr,
-                                                    NS_ERROR_DOM_INVALID_STATE_ERR);
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(
+        nullptr, NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
@@ -1788,8 +1678,8 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   RefPtr<layers::Image> image = CreateImageFromSurface(croppedSurface);
 
   if (NS_WARN_IF(!image)) {
-    MimeTypeAndDecodeAndCropBlobCompletedMainThread(nullptr,
-                                                    NS_ERROR_DOM_INVALID_STATE_ERR);
+    MimeTypeAndDecodeAndCropBlobCompletedMainThread(
+        nullptr, NS_ERROR_DOM_INVALID_STATE_ERR);
     return NS_OK;
   }
 
@@ -1797,10 +1687,8 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   return NS_OK;
 }
 
-void
-CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedMainThread(layers::Image* aImage,
-                                                                           nsresult aStatus)
-{
+void CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedMainThread(
+    layers::Image* aImage, nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!IsCurrentThread()) {
@@ -1812,8 +1700,8 @@ CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedMainThread(layer
     }
 
     RefPtr<CreateImageBitmapFromBlobRunnable> r =
-      new CreateImageBitmapFromBlobRunnable(mWorkerRef->Private(),
-                                            this, aImage, aStatus);
+        new CreateImageBitmapFromBlobRunnable(mWorkerRef->Private(), this,
+                                              aImage, aStatus);
     r->Dispatch();
     return;
   }
@@ -1821,10 +1709,9 @@ CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedMainThread(layer
   MimeTypeAndDecodeAndCropBlobCompletedOwningThread(aImage, aStatus);
 }
 
-void
-CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedOwningThread(layers::Image* aImage,
-                                                                             nsresult aStatus)
-{
+void CreateImageBitmapFromBlob::
+    MimeTypeAndDecodeAndCropBlobCompletedOwningThread(layers::Image* aImage,
+                                                      nsresult aStatus) {
   MOZ_ASSERT(IsCurrentThread());
 
   if (!mPromise) {
@@ -1848,7 +1735,7 @@ CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedOwningThread(lay
 
   // Create ImageBitmap object.
   RefPtr<ImageBitmap> imageBitmap =
-    new ImageBitmap(mGlobalObject, aImage, false /* write-only */);
+      new ImageBitmap(mGlobalObject, aImage, false /* write-only */);
 
   if (mCropRect.isSome()) {
     ErrorResult rv;
@@ -1865,9 +1752,7 @@ CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedOwningThread(lay
   mPromise->MaybeResolve(imageBitmap);
 }
 
-void
-CreateImageBitmapFromBlob::WorkerShuttingDown()
-{
+void CreateImageBitmapFromBlob::WorkerShuttingDown() {
   MOZ_ASSERT(IsCurrentThread());
 
   MutexAutoLock lock(mMutex);
@@ -1878,5 +1763,5 @@ CreateImageBitmapFromBlob::WorkerShuttingDown()
   mGlobalObject = nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

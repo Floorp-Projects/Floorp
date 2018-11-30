@@ -14,7 +14,8 @@
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixutil.h"
 
-namespace mozilla { namespace ct {
+namespace mozilla {
+namespace ct {
 
 using namespace mozilla::pkix;
 
@@ -34,11 +35,10 @@ static const size_t kSTHSignatureLengthBytes = 2;
 static const size_t kLeafIndexLength = 8;
 static const size_t kInclusionPathLengthBytes = 2;
 
-static Result
-GetDigestAlgorithmLengthAndIdentifier(DigestAlgorithm digestAlgorithm,
-  /* out */ size_t& digestAlgorithmLength,
-  /* out */ SECOidTag& digestAlgorithmId)
-{
+static Result GetDigestAlgorithmLengthAndIdentifier(
+    DigestAlgorithm digestAlgorithm,
+    /* out */ size_t& digestAlgorithmLength,
+    /* out */ SECOidTag& digestAlgorithmId) {
   switch (digestAlgorithm) {
     case DigestAlgorithm::sha512:
       digestAlgorithmLength = SHA512_LENGTH;
@@ -53,13 +53,10 @@ GetDigestAlgorithmLengthAndIdentifier(DigestAlgorithm digestAlgorithm,
   }
 }
 
-Result
-DecodeAndVerifySignedTreeHead(Input signerSubjectPublicKeyInfo,
-                              DigestAlgorithm digestAlgorithm,
-                              der::PublicKeyAlgorithm publicKeyAlgorithm,
-                              Input signedTreeHeadInput,
-                    /* out */ SignedTreeHeadDataV2& signedTreeHead)
-{
+Result DecodeAndVerifySignedTreeHead(
+    Input signerSubjectPublicKeyInfo, DigestAlgorithm digestAlgorithm,
+    der::PublicKeyAlgorithm publicKeyAlgorithm, Input signedTreeHeadInput,
+    /* out */ SignedTreeHeadDataV2& signedTreeHead) {
   SignedTreeHeadDataV2 result;
   Reader reader(signedTreeHeadInput);
 
@@ -105,9 +102,8 @@ DecodeAndVerifySignedTreeHead(Input signerSubjectPublicKeyInfo,
 
   SECOidTag unusedDigestAlgorithmId;
   size_t digestAlgorithmLength;
-  rv = GetDigestAlgorithmLengthAndIdentifier(digestAlgorithm,
-                                             digestAlgorithmLength,
-                                             unusedDigestAlgorithmId);
+  rv = GetDigestAlgorithmLengthAndIdentifier(
+      digestAlgorithm, digestAlgorithmLength, unusedDigestAlgorithmId);
   if (rv != Success) {
     return rv;
   }
@@ -131,7 +127,7 @@ DecodeAndVerifySignedTreeHead(Input signerSubjectPublicKeyInfo,
     return rv;
   }
 
-  SignedDigest signedDigest = { digestInput, digestAlgorithm, signatureInput };
+  SignedDigest signedDigest = {digestInput, digestAlgorithm, signatureInput};
   switch (publicKeyAlgorithm) {
     case der::PublicKeyAlgorithm::ECDSA:
       rv = VerifyECDSASignedDigestNSS(signedDigest, signerSubjectPublicKeyInfo,
@@ -163,9 +159,7 @@ DecodeAndVerifySignedTreeHead(Input signerSubjectPublicKeyInfo,
   return Success;
 }
 
-Result
-DecodeInclusionProof(Input input, InclusionProofDataV2& output)
-{
+Result DecodeInclusionProof(Input input, InclusionProofDataV2& output) {
   InclusionProofDataV2 result;
   Reader reader(input);
 
@@ -231,10 +225,9 @@ DecodeInclusionProof(Input input, InclusionProofDataV2& output)
   return Success;
 }
 
-static Result
-CommonFinishDigest(UniquePK11Context& context, size_t digestAlgorithmLength,
-  /* out */ Buffer& outputBuffer)
-{
+static Result CommonFinishDigest(UniquePK11Context& context,
+                                 size_t digestAlgorithmLength,
+                                 /* out */ Buffer& outputBuffer) {
   uint32_t outLen = 0;
   outputBuffer.assign(digestAlgorithmLength, 0);
   if (PK11_DigestFinal(context.get(), outputBuffer.data(), &outLen,
@@ -247,10 +240,9 @@ CommonFinishDigest(UniquePK11Context& context, size_t digestAlgorithmLength,
   return Success;
 }
 
-static Result
-LeafHash(Input leafEntry, size_t digestAlgorithmLength,
-  SECOidTag digestAlgorithmId, /* out */ Buffer& calculatedHash)
-{
+static Result LeafHash(Input leafEntry, size_t digestAlgorithmLength,
+                       SECOidTag digestAlgorithmId,
+                       /* out */ Buffer& calculatedHash) {
   UniquePK11Context context(PK11_CreateDigestContext(digestAlgorithmId));
   if (!context) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -260,17 +252,17 @@ LeafHash(Input leafEntry, size_t digestAlgorithmLength,
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   SECItem leafEntryItem = UnsafeMapInputToSECItem(leafEntry);
-  if (PK11_DigestOp(context.get(), leafEntryItem.data, leafEntryItem.len)
-        != SECSuccess) {
+  if (PK11_DigestOp(context.get(), leafEntryItem.data, leafEntryItem.len) !=
+      SECSuccess) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   return CommonFinishDigest(context, digestAlgorithmLength, calculatedHash);
 }
 
-static Result
-NodeHash(const Buffer& left, const Buffer& right, size_t digestAlgorithmLength,
-  SECOidTag digestAlgorithmId, /* out */ Buffer& calculatedHash)
-{
+static Result NodeHash(const Buffer& left, const Buffer& right,
+                       size_t digestAlgorithmLength,
+                       SECOidTag digestAlgorithmId,
+                       /* out */ Buffer& calculatedHash) {
   UniquePK11Context context(PK11_CreateDigestContext(digestAlgorithmId));
   if (!context) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -290,17 +282,16 @@ NodeHash(const Buffer& left, const Buffer& right, size_t digestAlgorithmLength,
 
 // This algorithm is specified by:
 // https://tools.ietf.org/html/draft-ietf-trans-rfc6962-bis-28#section-2.1.3.2
-Result
-VerifyInclusionProof(const InclusionProofDataV2& proof, Input leafEntry,
-                     Input expectedRootHash, DigestAlgorithm digestAlgorithm)
-{
+Result VerifyInclusionProof(const InclusionProofDataV2& proof, Input leafEntry,
+                            Input expectedRootHash,
+                            DigestAlgorithm digestAlgorithm) {
   if (proof.treeSize == 0) {
     return pkix::Result::ERROR_BAD_SIGNATURE;
   }
   size_t digestAlgorithmLength;
   SECOidTag digestAlgorithmId;
-  Result rv = GetDigestAlgorithmLengthAndIdentifier(digestAlgorithm,
-    digestAlgorithmLength, digestAlgorithmId);
+  Result rv = GetDigestAlgorithmLengthAndIdentifier(
+      digestAlgorithm, digestAlgorithmLength, digestAlgorithmId);
   if (rv != Success) {
     return rv;
   }
@@ -318,7 +309,7 @@ VerifyInclusionProof(const InclusionProofDataV2& proof, Input leafEntry,
   if (rv != Success) {
     return rv;
   }
-  for (const auto& hash: proof.inclusionPath) {
+  for (const auto& hash : proof.inclusionPath) {
     if (lastNodeIndex == 0) {
       return pkix::Result::ERROR_BAD_SIGNATURE;
     }
@@ -358,4 +349,5 @@ VerifyInclusionProof(const InclusionProofDataV2& proof, Input leafEntry,
   return Success;
 }
 
-} } //namespace mozilla::ct
+}  // namespace ct
+}  // namespace mozilla

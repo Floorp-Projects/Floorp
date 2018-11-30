@@ -14,16 +14,15 @@ class nsIURI;
 namespace mozilla {
 namespace places {
 
-class VisitInfo final : public mozIVisitInfo
-{
-public:
+class VisitInfo final : public mozIVisitInfo {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZIVISITINFO
 
   VisitInfo(int64_t aVisitId, PRTime aVisitDate, uint32_t aTransitionType,
             already_AddRefed<nsIURI> aReferrer);
 
-private:
+ private:
   ~VisitInfo();
   const int64_t mVisitId;
   const PRTime mVisitDate;
@@ -31,7 +30,7 @@ private:
   nsCOMPtr<nsIURI> mReferrer;
 };
 
-} // namespace places
-} // namespace mozilla
+}  // namespace places
+}  // namespace mozilla
 
-#endif // mozilla_places_VisitInfo_h__
+#endif  // mozilla_places_VisitInfo_h__

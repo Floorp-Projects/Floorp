@@ -7,17 +7,17 @@
 #ifndef MOZILLA_LAYERS_COMPOSITABLEFORWARDER
 #define MOZILLA_LAYERS_COMPOSITABLEFORWARDER
 
-#include <stdint.h>                     // for int32_t, uint64_t
+#include <stdint.h>  // for int32_t, uint64_t
 #include "gfxTypes.h"
-#include "mozilla/Attributes.h"         // for override
+#include "mozilla/Attributes.h"  // for override
 #include "mozilla/UniquePtr.h"
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
-#include "mozilla/layers/LayersTypes.h"  // for LayersBackend
-#include "mozilla/layers/TextureClient.h"  // for TextureClient
-#include "mozilla/layers/TextureForwarder.h"  // for TextureForwarder
-#include "nsRegion.h"                   // for nsIntRegion
+#include "mozilla/layers/LayersTypes.h"        // for LayersBackend
+#include "mozilla/layers/TextureClient.h"      // for TextureClient
+#include "mozilla/layers/TextureForwarder.h"   // for TextureForwarder
+#include "nsRegion.h"                          // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
@@ -43,12 +43,11 @@ class PTextureChild;
  * ImageBridgeChild is another CompositableForwarder.
  *
  * CompositableForwarder implements KnowsCompositor for simplicity as all
- * implementations of CompositableForwarder currently also implement KnowsCompositor.
- * This dependency could be split if we add new use cases.
+ * implementations of CompositableForwarder currently also implement
+ * KnowsCompositor. This dependency could be split if we add new use cases.
  */
-class CompositableForwarder : public KnowsCompositor
-{
-public:
+class CompositableForwarder : public KnowsCompositor {
+ public:
   /**
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
@@ -60,8 +59,9 @@ public:
    * Tell the CompositableHost on the compositor side what TiledLayerBuffer to
    * use for the next composition.
    */
-  virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
+  virtual void UseTiledLayerBuffer(
+      CompositableClient* aCompositable,
+      const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
 
   /**
    * Communicate to the compositor that aRegion in the texture identified by
@@ -110,20 +110,18 @@ public:
 
   virtual bool InForwarderThread() = 0;
 
-  void AssertInForwarderThread() {
-    MOZ_ASSERT(InForwarderThread());
-  }
+  void AssertInForwarderThread() { MOZ_ASSERT(InForwarderThread()); }
 
   static uint32_t GetMaxFileDescriptorsPerMessage();
 
   virtual ShadowLayerForwarder* AsLayerForwarder() { return nullptr; }
 
-protected:
-  nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
+ protected:
+  nsTArray<RefPtr<TextureClient>> mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

@@ -11,15 +11,12 @@
 
 #include "mozilla/Assertions.h"
 
-namespace mozilla
-{
-namespace sdp
-{
+namespace mozilla {
+namespace sdp {
 
 enum NetType { kNetTypeNone, kInternet };
 
-inline std::ostream& operator<<(std::ostream& os, sdp::NetType t)
-{
+inline std::ostream& operator<<(std::ostream& os, sdp::NetType t) {
   switch (t) {
     case sdp::kNetTypeNone:
       MOZ_ASSERT(false);
@@ -32,8 +29,7 @@ inline std::ostream& operator<<(std::ostream& os, sdp::NetType t)
 
 enum AddrType { kAddrTypeNone, kIPv4, kIPv6 };
 
-inline std::ostream& operator<<(std::ostream& os, sdp::AddrType t)
-{
+inline std::ostream& operator<<(std::ostream& os, sdp::AddrType t) {
   switch (t) {
     case sdp::kAddrTypeNone:
       MOZ_ASSERT(false);
@@ -52,8 +48,7 @@ enum Direction {
   kRecv = 2
 };
 
-inline std::ostream& operator<<(std::ostream& os, sdp::Direction d)
-{
+inline std::ostream& operator<<(std::ostream& os, sdp::Direction d) {
   switch (d) {
     case sdp::kSend:
       return os << "send";
@@ -63,8 +58,8 @@ inline std::ostream& operator<<(std::ostream& os, sdp::Direction d)
   MOZ_CRASH("Unknown Direction");
 }
 
-} // namespace sdp
+}  // namespace sdp
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -15,18 +15,17 @@ namespace mozilla {
 
 namespace dom {
 class SVGSVGElement;
-} // namespace dom
+}  // namespace dom
 
 /**
  * Implements support for parsing SVG fragment identifiers
  * http://www.w3.org/TR/SVG/linking.html#SVGFragmentIdentifiers
  */
-class SVGFragmentIdentifier
-{
+class SVGFragmentIdentifier {
   // To prevent the class being instantiated
   SVGFragmentIdentifier() = delete;
 
-public:
+ public:
   /**
    * Process the SVG fragment identifier, if there is one.
    * @return true if we found a valid svgView()-style fragment identifier,
@@ -36,14 +35,15 @@ public:
   static bool ProcessFragmentIdentifier(nsIDocument *aDocument,
                                         const nsAString &aAnchorName);
 
-private:
- /**
-  * Parse an SVG ViewSpec and set applicable attributes on the root element.
-  * @return true if there is a valid ViewSpec
-  */
-  static bool ProcessSVGViewSpec(const nsAString &aViewSpec, dom::SVGSVGElement *root);
+ private:
+  /**
+   * Parse an SVG ViewSpec and set applicable attributes on the root element.
+   * @return true if there is a valid ViewSpec
+   */
+  static bool ProcessSVGViewSpec(const nsAString &aViewSpec,
+                                 dom::SVGSVGElement *root);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_SVGFRAGMENTIDENTIFIER_H__
+#endif  // MOZILLA_SVGFRAGMENTIDENTIFIER_H__

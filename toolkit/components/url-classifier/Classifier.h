@@ -24,19 +24,20 @@ namespace safebrowsing {
  * Maintains the stores and LookupCaches for the url classifier.
  */
 class Classifier {
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Classifier);
 
   Classifier();
 
   nsresult Open(nsIFile& aCacheDirectory);
   void Close();
-  void Reset(); // Not including any intermediary for update.
+  void Reset();  // Not including any intermediary for update.
 
   /**
    * Clear data for specific tables.
    * If ClearType is Clear_Cache, this function will only clear cache in lookup
-   * cache, otherwise, it will clear data in lookup cache and data stored on disk.
+   * cache, otherwise, it will clear data in lookup cache and data stored on
+   * disk.
    */
   enum ClearType {
     Clear_Cache,
@@ -58,8 +59,7 @@ public:
   /**
    * Check a URL against the specified tables.
    */
-  nsresult Check(const nsACString& aSpec,
-                 const nsACString& tables,
+  nsresult Check(const nsACString& aSpec, const nsACString& tables,
                  LookupResultArray& aResults);
 
   /**
@@ -87,10 +87,8 @@ public:
    * Get a bunch of extra prefixes to query for completion
    * and mask the real entry being requested
    */
-  nsresult ReadNoiseEntries(const Prefix& aPrefix,
-                            const nsACString& aTableName,
-                            uint32_t aCount,
-                            PrefixArray& aNoiseEntries);
+  nsresult ReadNoiseEntries(const Prefix& aPrefix, const nsACString& aTableName,
+                            uint32_t aCount, PrefixArray& aNoiseEntries);
 
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
   nsresult DumpRawTableUpdates(const nsACString& aRawUpdates);
@@ -123,7 +121,7 @@ public:
   void GetCacheInfo(const nsACString& aTable,
                     nsIUrlClassifierCacheInfo** aCache);
 
-private:
+ private:
   ~Classifier();
 
   void DropStores();
@@ -134,10 +132,11 @@ private:
   nsresult RecoverBackups();
   nsresult CleanToDelete();
   nsresult CopyInUseDirForUpdate();
-  nsresult CopyDirectoryInterruptible(nsCOMPtr<nsIFile>& aDestDir, nsCOMPtr<nsIFile>& aSourceDir);
+  nsresult CopyDirectoryInterruptible(nsCOMPtr<nsIFile>& aDestDir,
+                                      nsCOMPtr<nsIFile>& aSourceDir);
   nsresult RegenActiveTables();
 
-  void MergeNewLookupCaches(); // Merge mNewLookupCaches into mLookupCaches.
+  void MergeNewLookupCaches();  // Merge mNewLookupCaches into mLookupCaches.
 
   void CopyAndInvalidateFullHashCache();
 
@@ -155,8 +154,7 @@ private:
   nsresult UpdateHashStore(TableUpdateArray& aUpdates,
                            const nsACString& aTable);
 
-  nsresult UpdateTableV4(TableUpdateArray& aUpdates,
-                         const nsACString& aTable);
+  nsresult UpdateTableV4(TableUpdateArray& aUpdates, const nsACString& aTable);
 
   nsresult UpdateCache(RefPtr<const TableUpdate> aUpdates);
 
@@ -168,9 +166,7 @@ private:
                                          LookupCacheArray& aLookupCaches,
                                          nsIFile* aRootStoreDirectory);
 
-
-  bool CheckValidUpdate(TableUpdateArray& aUpdates,
-                        const nsACString& aTable);
+  bool CheckValidUpdate(TableUpdateArray& aUpdates, const nsACString& aTable);
 
   nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult);
 
@@ -204,9 +200,9 @@ private:
   nsCOMPtr<nsIFile> mRootStoreDirectory;
   // Used for atomically updating the other dirs.
   nsCOMPtr<nsIFile> mBackupDirectory;
-  nsCOMPtr<nsIFile> mUpdatingDirectory; // For update only.
+  nsCOMPtr<nsIFile> mUpdatingDirectory;  // For update only.
   nsCOMPtr<nsIFile> mToDeleteDirectory;
-  LookupCacheArray mLookupCaches; // For query only.
+  LookupCacheArray mLookupCaches;  // For query only.
   nsTArray<nsCString> mActiveTablesCache;
   uint32_t mHashKey;
 
@@ -223,7 +219,7 @@ private:
 
   bool mUpdateInterrupted;
 
-  nsCOMPtr<nsIThread> mUpdateThread; // For async update.
+  nsCOMPtr<nsIThread> mUpdateThread;  // For async update.
 
   // Identical to mRootStoreDirectory but for update only because
   // nsIFile is not thread safe and mRootStoreDirectory needs to
@@ -231,10 +227,10 @@ private:
   // It will be initialized right before update on the worker thread.
   nsCOMPtr<nsIFile> mRootStoreDirectoryForUpdate;
 
-  bool mIsClosed; // true once Close() has been called
+  bool mIsClosed;  // true once Close() has been called
 };
 
-} // namespace safebrowsing
-} // namespace mozilla
+}  // namespace safebrowsing
+}  // namespace mozilla
 
 #endif

@@ -16,28 +16,31 @@ class gfxContext;
 class gfxImageSurface;
 
 class gfxQuartzSurface : public gfxASurface {
-public:
-    gfxQuartzSurface(const mozilla::gfx::IntSize&, gfxImageFormat format);
-    gfxQuartzSurface(CGContextRef context, const mozilla::gfx::IntSize& size);
-    gfxQuartzSurface(cairo_surface_t *csurf, const mozilla::gfx::IntSize& aSize);
-    gfxQuartzSurface(unsigned char *data, const mozilla::gfx::IntSize& size, long stride, gfxImageFormat format);
+ public:
+  gfxQuartzSurface(const mozilla::gfx::IntSize&, gfxImageFormat format);
+  gfxQuartzSurface(CGContextRef context, const mozilla::gfx::IntSize& size);
+  gfxQuartzSurface(cairo_surface_t* csurf, const mozilla::gfx::IntSize& aSize);
+  gfxQuartzSurface(unsigned char* data, const mozilla::gfx::IntSize& size,
+                   long stride, gfxImageFormat format);
 
-    virtual ~gfxQuartzSurface();
+  virtual ~gfxQuartzSurface();
 
-    virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
-                                                               const mozilla::gfx::IntSize& aSize);
+  virtual already_AddRefed<gfxASurface> CreateSimilarSurface(
+      gfxContentType aType, const mozilla::gfx::IntSize& aSize);
 
-    virtual const mozilla::gfx::IntSize GetSize() const { return mozilla::gfx::IntSize(mSize.width, mSize.height); }
+  virtual const mozilla::gfx::IntSize GetSize() const {
+    return mozilla::gfx::IntSize(mSize.width, mSize.height);
+  }
 
-    CGContextRef GetCGContext() { return mCGContext; }
+  CGContextRef GetCGContext() { return mCGContext; }
 
-    already_AddRefed<gfxImageSurface> GetAsImageSurface();
+  already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
-protected:
-    void MakeInvalid();
+ protected:
+  void MakeInvalid();
 
-    CGContextRef mCGContext;
-    mozilla::gfx::IntSize mSize;
+  CGContextRef mCGContext;
+  mozilla::gfx::IntSize mSize;
 };
 
 #endif /* GFX_QUARTZSURFACE_H */

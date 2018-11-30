@@ -14,9 +14,7 @@
 
 namespace mozilla {
 
-void
-GetErrorName(nsresult rv, nsACString& name)
-{
+void GetErrorName(nsresult rv, nsACString& name) {
   if (const char* errorName = GetErrorNameInternal(rv)) {
     name.AssignASCII(errorName);
     return;
@@ -46,11 +44,10 @@ GetErrorName(nsresult rv, nsACString& name)
 
   name.AppendLiteral(", ");
 
-  const char * nsprName = nullptr;
+  const char* nsprName = nullptr;
   if (isSecurityError) {
     // Invert the logic from NSSErrorsService::GetXPCOMFromNSSError
-    PRErrorCode nsprCode
-      = -1 * static_cast<PRErrorCode>(NS_ERROR_GET_CODE(rv));
+    PRErrorCode nsprCode = -1 * static_cast<PRErrorCode>(NS_ERROR_GET_CODE(rv));
     nsprName = PR_ErrorToName(nsprCode);
 
     // All NSPR error codes defined by NSPR or NSS should have a name mapping.
@@ -66,16 +63,13 @@ GetErrorName(nsresult rv, nsACString& name)
   name.AppendLiteral(")");
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 extern "C" {
 
 // This is an extern "C" binding for the GetErrorName method which is used by
 // the nsresult rust bindings in xpcom/rust/nserror.
-void
-Gecko_GetErrorName(nsresult aRv, nsACString& aName)
-{
+void Gecko_GetErrorName(nsresult aRv, nsACString& aName) {
   mozilla::GetErrorName(aRv, aName);
 }
-
 }

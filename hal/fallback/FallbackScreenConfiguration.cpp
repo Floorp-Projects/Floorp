@@ -7,32 +7,20 @@
 namespace mozilla {
 namespace hal_impl {
 
-void
-EnableScreenConfigurationNotifications()
-{
-}
+void EnableScreenConfigurationNotifications() {}
 
-void
-DisableScreenConfigurationNotifications()
-{
-}
+void DisableScreenConfigurationNotifications() {}
 
-void
-GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
-{
+void GetCurrentScreenConfiguration(
+    hal::ScreenConfiguration* aScreenConfiguration) {
   fallback::GetCurrentScreenConfiguration(aScreenConfiguration);
 }
 
-bool
-LockScreenOrientation(const ScreenOrientation& aOrientation)
-{
+bool LockScreenOrientation(const ScreenOrientation& aOrientation) {
   return false;
 }
 
-void
-UnlockScreenOrientation()
-{
-}
+void UnlockScreenOrientation() {}
 
-} // namespace hal_impl
-} // namespace mozilla
+}  // namespace hal_impl
+}  // namespace mozilla

@@ -24,170 +24,104 @@ class Headers;
 class InternalHeaders;
 class RequestOrUSVString;
 
-class Request final : public nsISupports
-                    , public FetchBody<Request>
-                    , public nsWrapperCache
-{
+class Request final : public nsISupports,
+                      public FetchBody<Request>,
+                      public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Request)
 
-public:
+ public:
   Request(nsIGlobalObject* aOwner, InternalRequest* aRequest,
           AbortSignal* aSignal);
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
     return Request_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  void
-  GetUrl(nsAString& aUrl) const
-  {
+  void GetUrl(nsAString& aUrl) const {
     nsAutoCString url;
     mRequest->GetURL(url);
     CopyUTF8toUTF16(url, aUrl);
   }
 
-  void
-  GetMethod(nsCString& aMethod) const
-  {
-    aMethod = mRequest->mMethod;
-  }
+  void GetMethod(nsCString& aMethod) const { aMethod = mRequest->mMethod; }
 
-  RequestMode
-  Mode() const
-  {
-    return mRequest->mMode;
-  }
+  RequestMode Mode() const { return mRequest->mMode; }
 
-  RequestCredentials
-  Credentials() const
-  {
-    return mRequest->mCredentialsMode;
-  }
+  RequestCredentials Credentials() const { return mRequest->mCredentialsMode; }
 
-  RequestCache
-  Cache() const
-  {
-    return mRequest->GetCacheMode();
-  }
+  RequestCache Cache() const { return mRequest->GetCacheMode(); }
 
-  RequestRedirect
-  Redirect() const
-  {
-    return mRequest->GetRedirectMode();
-  }
+  RequestRedirect Redirect() const { return mRequest->GetRedirectMode(); }
 
-  void
-  GetIntegrity(nsAString& aIntegrity) const
-  {
+  void GetIntegrity(nsAString& aIntegrity) const {
     aIntegrity = mRequest->GetIntegrity();
   }
 
-  bool
-  MozErrors() const
-  {
-    return mRequest->MozErrors();
-  }
+  bool MozErrors() const { return mRequest->MozErrors(); }
 
-  RequestDestination
-  Destination() const
-  {
-    return mRequest->Destination();
-  }
+  RequestDestination Destination() const { return mRequest->Destination(); }
 
-  void
-  OverrideContentPolicyType(nsContentPolicyType aContentPolicyType)
-  {
+  void OverrideContentPolicyType(nsContentPolicyType aContentPolicyType) {
     mRequest->OverrideContentPolicyType(aContentPolicyType);
   }
 
-  bool
-  IsContentPolicyTypeOverridden() const
-  {
+  bool IsContentPolicyTypeOverridden() const {
     return mRequest->IsContentPolicyTypeOverridden();
   }
 
-  void
-  GetReferrer(nsAString& aReferrer) const
-  {
+  void GetReferrer(nsAString& aReferrer) const {
     mRequest->GetReferrer(aReferrer);
   }
 
-  ReferrerPolicy
-  ReferrerPolicy_() const
-  {
-    return mRequest->ReferrerPolicy_();
-  }
+  ReferrerPolicy ReferrerPolicy_() const { return mRequest->ReferrerPolicy_(); }
 
-  InternalHeaders*
-  GetInternalHeaders() const
-  {
-    return mRequest->Headers();
-  }
+  InternalHeaders* GetInternalHeaders() const { return mRequest->Headers(); }
 
   Headers* Headers_();
 
   using FetchBody::GetBody;
 
-  void
-  GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr)
-  {
+  void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr) {
     mRequest->GetBody(aStream, aBodyLength);
   }
 
-  void
-  SetBody(nsIInputStream* aStream, int64_t aBodyLength)
-  {
+  void SetBody(nsIInputStream* aStream, int64_t aBodyLength) {
     mRequest->SetBody(aStream, aBodyLength);
   }
 
   using FetchBody::BodyBlobURISpec;
 
-  const nsACString&
-  BodyBlobURISpec() const
-  {
+  const nsACString& BodyBlobURISpec() const {
     return mRequest->BodyBlobURISpec();
   }
 
   using FetchBody::BodyLocalPath;
 
-  const nsAString&
-  BodyLocalPath() const
-  {
-    return mRequest->BodyLocalPath();
-  }
+  const nsAString& BodyLocalPath() const { return mRequest->BodyLocalPath(); }
 
-  static already_AddRefed<Request>
-  Constructor(const GlobalObject& aGlobal, const RequestOrUSVString& aInput,
-              const RequestInit& aInit, ErrorResult& rv);
+  static already_AddRefed<Request> Constructor(const GlobalObject& aGlobal,
+                                               const RequestOrUSVString& aInput,
+                                               const RequestInit& aInit,
+                                               ErrorResult& rv);
 
-  nsIGlobalObject* GetParentObject() const
-  {
-    return mOwner;
-  }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
 
-  already_AddRefed<Request>
-  Clone(ErrorResult& aRv);
+  already_AddRefed<Request> Clone(ErrorResult& aRv);
 
-  already_AddRefed<InternalRequest>
-  GetInternalRequest();
+  already_AddRefed<InternalRequest> GetInternalRequest();
 
-  const UniquePtr<mozilla::ipc::PrincipalInfo>&
-  GetPrincipalInfo() const
-  {
+  const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mRequest->GetPrincipalInfo();
   }
 
-  AbortSignal*
-  GetOrCreateSignal();
+  AbortSignal* GetOrCreateSignal();
 
   // This can return a null AbortSignalImpl.
-  AbortSignalImpl*
-  GetSignalImpl() const override;
+  AbortSignalImpl* GetSignalImpl() const override;
 
-private:
+ private:
   ~Request();
 
   RefPtr<InternalRequest> mRequest;
@@ -197,7 +131,7 @@ private:
   RefPtr<AbortSignal> mSignal;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Request_h
+#endif  // mozilla_dom_Request_h

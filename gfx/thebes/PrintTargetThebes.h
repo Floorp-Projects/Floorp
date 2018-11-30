@@ -24,36 +24,32 @@ namespace gfx {
  * non-virtual!
  */
 class PrintTargetThebes final : public PrintTarget {
-public:
-
-  static already_AddRefed<PrintTargetThebes>
-  CreateOrNull(gfxASurface* aSurface);
+ public:
+  static already_AddRefed<PrintTargetThebes> CreateOrNull(
+      gfxASurface* aSurface);
 
   virtual nsresult BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName,
-                                 int32_t aStartPage,
-                                 int32_t aEndPage) override;
+                                 int32_t aStartPage, int32_t aEndPage) override;
   virtual nsresult EndPrinting() override;
   virtual nsresult AbortPrinting() override;
   virtual nsresult BeginPage() override;
   virtual nsresult EndPage() override;
   virtual void Finish() override;
 
-  virtual already_AddRefed<DrawTarget>
-  MakeDrawTarget(const IntSize& aSize,
-                 DrawEventRecorder* aRecorder = nullptr) override;
+  virtual already_AddRefed<DrawTarget> MakeDrawTarget(
+      const IntSize& aSize, DrawEventRecorder* aRecorder = nullptr) override;
 
   already_AddRefed<DrawTarget> GetReferenceDrawTarget() final;
 
-private:
-
+ private:
   // Only created via CreateOrNull
   explicit PrintTargetThebes(gfxASurface* aSurface);
 
   RefPtr<gfxASurface> mGfxSurface;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_PRINTTARGETTHEBES_H */

@@ -16,7 +16,7 @@
 #include "ImageMetadata.h"
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
-#include "nsNetUtil.h" // for NS_NewBufferedInputStream
+#include "nsNetUtil.h"  // for NS_NewBufferedInputStream
 #include "nsStreamUtils.h"
 #include "OrientedImage.h"
 #include "SourceBuffer.h"
@@ -26,82 +26,71 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace image {
 
-/* static */ already_AddRefed<Image>
-ImageOps::Freeze(Image* aImage)
-{
+/* static */ already_AddRefed<Image> ImageOps::Freeze(Image* aImage) {
   RefPtr<Image> frozenImage = new FrozenImage(aImage);
   return frozenImage.forget();
 }
 
-/* static */ already_AddRefed<imgIContainer>
-ImageOps::Freeze(imgIContainer* aImage)
-{
+/* static */ already_AddRefed<imgIContainer> ImageOps::Freeze(
+    imgIContainer* aImage) {
   nsCOMPtr<imgIContainer> frozenImage =
-    new FrozenImage(static_cast<Image*>(aImage));
+      new FrozenImage(static_cast<Image*>(aImage));
   return frozenImage.forget();
 }
 
-/* static */ already_AddRefed<Image>
-ImageOps::Clip(Image* aImage, nsIntRect aClip,
-               const Maybe<nsSize>& aSVGViewportSize)
-{
-  RefPtr<Image> clippedImage = new ClippedImage(aImage, aClip, aSVGViewportSize);
+/* static */ already_AddRefed<Image> ImageOps::Clip(
+    Image* aImage, nsIntRect aClip, const Maybe<nsSize>& aSVGViewportSize) {
+  RefPtr<Image> clippedImage =
+      new ClippedImage(aImage, aClip, aSVGViewportSize);
   return clippedImage.forget();
 }
 
-/* static */ already_AddRefed<imgIContainer>
-ImageOps::Clip(imgIContainer* aImage, nsIntRect aClip,
-               const Maybe<nsSize>& aSVGViewportSize)
-{
+/* static */ already_AddRefed<imgIContainer> ImageOps::Clip(
+    imgIContainer* aImage, nsIntRect aClip,
+    const Maybe<nsSize>& aSVGViewportSize) {
   nsCOMPtr<imgIContainer> clippedImage =
-    new ClippedImage(static_cast<Image*>(aImage), aClip, aSVGViewportSize);
+      new ClippedImage(static_cast<Image*>(aImage), aClip, aSVGViewportSize);
   return clippedImage.forget();
 }
 
-/* static */ already_AddRefed<Image>
-ImageOps::Orient(Image* aImage, Orientation aOrientation)
-{
+/* static */ already_AddRefed<Image> ImageOps::Orient(
+    Image* aImage, Orientation aOrientation) {
   RefPtr<Image> orientedImage = new OrientedImage(aImage, aOrientation);
   return orientedImage.forget();
 }
 
-/* static */ already_AddRefed<imgIContainer>
-ImageOps::Orient(imgIContainer* aImage, Orientation aOrientation)
-{
+/* static */ already_AddRefed<imgIContainer> ImageOps::Orient(
+    imgIContainer* aImage, Orientation aOrientation) {
   nsCOMPtr<imgIContainer> orientedImage =
-    new OrientedImage(static_cast<Image*>(aImage), aOrientation);
+      new OrientedImage(static_cast<Image*>(aImage), aOrientation);
   return orientedImage.forget();
 }
 
-/* static */ already_AddRefed<imgIContainer>
-ImageOps::CreateFromDrawable(gfxDrawable* aDrawable)
-{
+/* static */ already_AddRefed<imgIContainer> ImageOps::CreateFromDrawable(
+    gfxDrawable* aDrawable) {
   nsCOMPtr<imgIContainer> drawableImage = new DynamicImage(aDrawable);
   return drawableImage.forget();
 }
 
 class ImageOps::ImageBufferImpl final : public ImageOps::ImageBuffer {
-public:
+ public:
   explicit ImageBufferImpl(already_AddRefed<SourceBuffer> aSourceBuffer)
-    : mSourceBuffer(aSourceBuffer)
-  { }
+      : mSourceBuffer(aSourceBuffer) {}
 
-protected:
-  ~ImageBufferImpl() override { }
+ protected:
+  ~ImageBufferImpl() override {}
 
-  already_AddRefed<SourceBuffer> GetSourceBuffer() const override
-  {
+  already_AddRefed<SourceBuffer> GetSourceBuffer() const override {
     RefPtr<SourceBuffer> sourceBuffer = mSourceBuffer;
     return sourceBuffer.forget();
   }
 
-private:
+ private:
   RefPtr<SourceBuffer> mSourceBuffer;
 };
 
 /* static */ already_AddRefed<ImageOps::ImageBuffer>
-ImageOps::CreateImageBuffer(already_AddRefed<nsIInputStream> aInputStream)
-{
+ImageOps::CreateImageBuffer(already_AddRefed<nsIInputStream> aInputStream) {
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   MOZ_ASSERT(inputStream);
 
@@ -133,9 +122,10 @@ ImageOps::CreateImageBuffer(already_AddRefed<nsIInputStream> aInputStream)
   }
   // Make sure our sourceBuffer is marked as complete.
   if (sourceBuffer->IsComplete()) {
-    NS_WARNING("The SourceBuffer was unexpectedly marked as complete. This may "
-               "indicate either an OOM condition, or that imagelib was not "
-               "initialized properly.");
+    NS_WARNING(
+        "The SourceBuffer was unexpectedly marked as complete. This may "
+        "indicate either an OOM condition, or that imagelib was not "
+        "initialized properly.");
     return nullptr;
   }
   sourceBuffer->Complete(NS_OK);
@@ -144,21 +134,17 @@ ImageOps::CreateImageBuffer(already_AddRefed<nsIInputStream> aInputStream)
   return imageBuffer.forget();
 }
 
-/* static */ nsresult
-ImageOps::DecodeMetadata(already_AddRefed<nsIInputStream> aInputStream,
-                         const nsACString& aMimeType,
-                         ImageMetadata& aMetadata)
-{
+/* static */ nsresult ImageOps::DecodeMetadata(
+    already_AddRefed<nsIInputStream> aInputStream, const nsACString& aMimeType,
+    ImageMetadata& aMetadata) {
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   RefPtr<ImageBuffer> buffer = CreateImageBuffer(inputStream.forget());
   return DecodeMetadata(buffer, aMimeType, aMetadata);
 }
 
-/* static */ nsresult
-ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
-                         const nsACString& aMimeType,
-                         ImageMetadata& aMetadata)
-{
+/* static */ nsresult ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
+                                               const nsACString& aMimeType,
+                                               ImageMetadata& aMetadata) {
   if (!aBuffer) {
     return NS_ERROR_FAILURE;
   }
@@ -170,17 +156,16 @@ ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
 
   // Create a decoder.
   DecoderType decoderType =
-    DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
-  RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousMetadataDecoder(decoderType,
-                                                   WrapNotNull(sourceBuffer));
+      DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
+  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousMetadataDecoder(
+      decoderType, WrapNotNull(sourceBuffer));
   if (!decoder) {
     return NS_ERROR_FAILURE;
   }
 
   // Run the decoder synchronously.
   RefPtr<IDecodingTask> task =
-    new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
+      new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
   task->Run();
   if (!decoder->GetDecodeDone() || decoder->HasError()) {
     return NS_ERROR_FAILURE;
@@ -194,23 +179,17 @@ ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
   return NS_OK;
 }
 
-/* static */ already_AddRefed<gfx::SourceSurface>
-ImageOps::DecodeToSurface(already_AddRefed<nsIInputStream> aInputStream,
-                          const nsACString& aMimeType,
-                          uint32_t aFlags,
-                          const Maybe<IntSize>& aSize /* = Nothing() */)
-{
+/* static */ already_AddRefed<gfx::SourceSurface> ImageOps::DecodeToSurface(
+    already_AddRefed<nsIInputStream> aInputStream, const nsACString& aMimeType,
+    uint32_t aFlags, const Maybe<IntSize>& aSize /* = Nothing() */) {
   nsCOMPtr<nsIInputStream> inputStream = std::move(aInputStream);
   RefPtr<ImageBuffer> buffer = CreateImageBuffer(inputStream.forget());
   return DecodeToSurface(buffer, aMimeType, aFlags, aSize);
 }
 
-/* static */ already_AddRefed<gfx::SourceSurface>
-ImageOps::DecodeToSurface(ImageBuffer* aBuffer,
-                          const nsACString& aMimeType,
-                          uint32_t aFlags,
-                          const Maybe<IntSize>& aSize /* = Nothing() */)
-{
+/* static */ already_AddRefed<gfx::SourceSurface> ImageOps::DecodeToSurface(
+    ImageBuffer* aBuffer, const nsACString& aMimeType, uint32_t aFlags,
+    const Maybe<IntSize>& aSize /* = Nothing() */) {
   if (!aBuffer) {
     return nullptr;
   }
@@ -222,20 +201,17 @@ ImageOps::DecodeToSurface(ImageBuffer* aBuffer,
 
   // Create a decoder.
   DecoderType decoderType =
-    DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
-  RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType,
-                                           WrapNotNull(sourceBuffer),
-                                           aSize,
-                                           DecoderFlags::FIRST_FRAME_ONLY,
-                                           ToSurfaceFlags(aFlags));
+      DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
+  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+      decoderType, WrapNotNull(sourceBuffer), aSize,
+      DecoderFlags::FIRST_FRAME_ONLY, ToSurfaceFlags(aFlags));
   if (!decoder) {
     return nullptr;
   }
 
   // Run the decoder synchronously.
   RefPtr<IDecodingTask> task =
-    new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
+      new AnonymousDecodingTask(WrapNotNull(decoder), /* aResumable */ false);
   task->Run();
   if (!decoder->GetDecodeDone() || decoder->HasError()) {
     return nullptr;
@@ -255,5 +231,5 @@ ImageOps::DecodeToSurface(ImageBuffer* aBuffer,
   return surface.forget();
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

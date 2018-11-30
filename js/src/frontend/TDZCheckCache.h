@@ -38,17 +38,18 @@ using CheckTDZMap = RecyclableNameMap<MaybeCheckTDZ>;
 // evaluating a lexical variable declaration initializes it (after any
 // initializer is evaluated), evaluating a lexical declaration marks its entry
 // as DontCheckTDZ.
-class TDZCheckCache : public Nestable<TDZCheckCache>
-{
-    PooledMapPtr<CheckTDZMap> cache_;
+class TDZCheckCache : public Nestable<TDZCheckCache> {
+  PooledMapPtr<CheckTDZMap> cache_;
 
-    MOZ_MUST_USE bool ensureCache(BytecodeEmitter* bce);
+  MOZ_MUST_USE bool ensureCache(BytecodeEmitter* bce);
 
-  public:
-    explicit TDZCheckCache(BytecodeEmitter* bce);
+ public:
+  explicit TDZCheckCache(BytecodeEmitter* bce);
 
-    mozilla::Maybe<MaybeCheckTDZ> needsTDZCheck(BytecodeEmitter* bce, JSAtom* name);
-    MOZ_MUST_USE bool noteTDZCheck(BytecodeEmitter* bce, JSAtom* name, MaybeCheckTDZ check);
+  mozilla::Maybe<MaybeCheckTDZ> needsTDZCheck(BytecodeEmitter* bce,
+                                              JSAtom* name);
+  MOZ_MUST_USE bool noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
+                                 MaybeCheckTDZ check);
 };
 
 } /* namespace frontend */

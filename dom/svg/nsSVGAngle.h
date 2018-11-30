@@ -25,19 +25,17 @@ class nsSVGOrientType;
 class SVGAngle;
 class SVGAnimatedAngle;
 class SVGAnimationElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-class nsSVGAngle
-{
+class nsSVGAngle {
   friend class mozilla::dom::SVGAngle;
   friend class mozilla::dom::SVGAnimatedAngle;
 
-public:
-  void Init(uint8_t aAttrEnum = 0xff,
-            float aValue = 0,
+ public:
+  void Init(uint8_t aAttrEnum = 0xff, float aValue = 0,
             uint8_t aUnitType =
-              mozilla::dom::SVGAngle_Binding::SVG_ANGLETYPE_UNSPECIFIED) {
+                mozilla::dom::SVGAngle_Binding::SVG_ANGLETYPE_UNSPECIFIED) {
     mAnimVal = mBaseVal = aValue;
     mAnimValUnit = mBaseValUnit = aUnitType;
     mAttrEnum = aAttrEnum;
@@ -45,67 +43,64 @@ public:
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement,
-                              bool aDoSetAttr);
+                              nsSVGElement* aSVGElement, bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
   void GetAnimValueString(nsAString& aValue) const;
 
-  float GetBaseValue() const
-    { return mBaseVal * GetDegreesPerUnit(mBaseValUnit); }
-  float GetAnimValue() const
-    { return mAnimVal * GetDegreesPerUnit(mAnimValUnit); }
+  float GetBaseValue() const {
+    return mBaseVal * GetDegreesPerUnit(mBaseValUnit);
+  }
+  float GetAnimValue() const {
+    return mAnimVal * GetDegreesPerUnit(mAnimValUnit);
+  }
 
-  void SetBaseValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement,
+  void SetBaseValue(float aValue, uint8_t aUnit, nsSVGElement* aSVGElement,
                     bool aDoSetAttr);
-  void SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement);
+  void SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement* aSVGElement);
 
   uint8_t GetBaseValueUnit() const { return mBaseValUnit; }
   uint8_t GetAnimValueUnit() const { return mAnimValUnit; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
 
-  static nsresult ToDOMSVGAngle(nsISupports **aResult);
-  already_AddRefed<mozilla::dom::SVGAnimatedAngle>
-    ToDOMAnimatedAngle(nsSVGElement* aSVGElement);
+  static nsresult ToDOMSVGAngle(nsISupports** aResult);
+  already_AddRefed<mozilla::dom::SVGAnimatedAngle> ToDOMAnimatedAngle(
+      nsSVGElement* aSVGElement);
   mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
-  static bool GetValueFromString(const nsAString& aString,
-                                 float& aValue,
+  static bool GetValueFromString(const nsAString& aString, float& aValue,
                                  uint16_t* aUnitType);
   static float GetDegreesPerUnit(uint8_t aUnit);
 
-private:
-
+ private:
   float mAnimVal;
   float mBaseVal;
   uint8_t mAnimValUnit;
   uint8_t mBaseValUnit;
-  uint8_t mAttrEnum; // element specified tracking for attribute
+  uint8_t mAttrEnum;  // element specified tracking for attribute
   bool mIsAnimated;
 
-  void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
+  void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement* aSVGElement);
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
-                                  nsSVGElement *aSVGElement);
-  nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, nsSVGElement *aSVGElement);
-  already_AddRefed<mozilla::dom::SVGAngle> ToDOMBaseVal(nsSVGElement* aSVGElement);
-  already_AddRefed<mozilla::dom::SVGAngle> ToDOMAnimVal(nsSVGElement* aSVGElement);
+                                  nsSVGElement* aSVGElement);
+  nsresult ConvertToSpecifiedUnits(uint16_t aUnitType,
+                                   nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAngle> ToDOMBaseVal(
+      nsSVGElement* aSVGElement);
+  already_AddRefed<mozilla::dom::SVGAngle> ToDOMAnimVal(
+      nsSVGElement* aSVGElement);
 
-public:
+ public:
   // We do not currently implemente a SMILAngle struct because in SVG 1.1 the
   // only *animatable* attribute that takes an <angle> is 'orient', on the
   // 'marker' element, and 'orient' must be special cased since it can also
   // take the value 'auto', making it a more complex type.
 
-  struct SMILOrient final : public nsISMILAttr
-  {
-  public:
-    SMILOrient(mozilla::dom::nsSVGOrientType* aOrientType,
-               nsSVGAngle* aAngle,
+  struct SMILOrient final : public nsISMILAttr {
+   public:
+    SMILOrient(mozilla::dom::nsSVGOrientType* aOrientType, nsSVGAngle* aAngle,
                nsSVGElement* aSVGElement)
-      : mOrientType(aOrientType)
-      , mAngle(aAngle)
-      , mSVGElement(aSVGElement)
-    {}
+        : mOrientType(aOrientType), mAngle(aAngle), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
@@ -115,14 +110,14 @@ public:
     nsSVGElement* mSVGElement;
 
     // nsISMILAttr methods
-    virtual nsresult ValueFromString(const nsAString& aStr,
-                                     const mozilla::dom::SVGAnimationElement* aSrcElement,
-                                     nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsresult ValueFromString(
+        const nsAString& aStr,
+        const mozilla::dom::SVGAnimationElement* aSrcElement,
+        nsSMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual nsSMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 
-#endif //__NS_SVGANGLE_H__
+#endif  //__NS_SVGANGLE_H__

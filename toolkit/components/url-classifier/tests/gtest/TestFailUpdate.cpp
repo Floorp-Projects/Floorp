@@ -10,21 +10,20 @@ using namespace mozilla::safebrowsing;
 static const char* kFilesInV2[] = {".pset", ".sbstore"};
 static const char* kFilesInV4[] = {".pset", ".metadata"};
 
-#define V2_TABLE  "gtest-malware-simple"
+#define V2_TABLE "gtest-malware-simple"
 #define V4_TABLE1 "goog-malware-proto"
 #define V4_TABLE2 "goog-phish-proto"
 
-#define ROOT_DIR        NS_LITERAL_STRING("safebrowsing")
-#define SB_FILE(x, y)   NS_ConvertUTF8toUTF16(nsPrintfCString("%s%s",x, y))
+#define ROOT_DIR NS_LITERAL_STRING("safebrowsing")
+#define SB_FILE(x, y) NS_ConvertUTF8toUTF16(nsPrintfCString("%s%s", x, y))
 
-template<typename T, size_t N>
-void CheckFileExist(const char* table, const T (&files)[N], bool expectExists)
-{
+template <typename T, size_t N>
+void CheckFileExist(const char* table, const T (&files)[N], bool expectExists) {
   for (uint32_t i = 0; i < N; i++) {
     // This is just a quick way to know if this is v4 table
     NS_ConvertUTF8toUTF16 SUB_DIR(strstr(table, "-proto") ? "google4" : "");
-    nsCOMPtr<nsIFile> file =
-      GetFile(nsTArray<nsString> { ROOT_DIR, SUB_DIR, SB_FILE(table, files[i]) });
+    nsCOMPtr<nsIFile> file = GetFile(
+        nsTArray<nsString>{ROOT_DIR, SUB_DIR, SB_FILE(table, files[i])});
 
     bool exists;
     file->Exists(&exists);
@@ -33,14 +32,14 @@ void CheckFileExist(const char* table, const T (&files)[N], bool expectExists)
   }
 }
 
-TEST(UrlClassifierFailUpdate, CheckTableReset)
-{
+TEST(UrlClassifierFailUpdate, CheckTableReset) {
   const bool FULL_UPDATE = true;
   const bool PARTIAL_UPDATE = false;
 
   // Apply V2 update
   {
-    RefPtr<TableUpdateV2> update = new TableUpdateV2(NS_LITERAL_CSTRING(V2_TABLE));
+    RefPtr<TableUpdateV2> update =
+        new TableUpdateV2(NS_LITERAL_CSTRING(V2_TABLE));
     Unused << update->NewAddChunk(1);
 
     ApplyUpdate(update);
@@ -58,7 +57,8 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
 
   // Apply V4 update for table1
   {
-    RefPtr<TableUpdateV4> update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
+    RefPtr<TableUpdateV4> update =
+        new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
     func(update, FULL_UPDATE, "test_prefix");
 
     ApplyUpdate(update);
@@ -69,7 +69,8 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
 
   // Apply V4 update for table2
   {
-    RefPtr<TableUpdateV4> update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE2));
+    RefPtr<TableUpdateV4> update =
+        new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE2));
     func(update, FULL_UPDATE, "test_prefix");
 
     ApplyUpdate(update);
@@ -80,7 +81,8 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
   // Apply V4 update with the same prefix in previous full udpate
   // This should cause an update error.
   {
-    RefPtr<TableUpdateV4> update = new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
+    RefPtr<TableUpdateV4> update =
+        new TableUpdateV4(NS_LITERAL_CSTRING(V4_TABLE1));
     func(update, PARTIAL_UPDATE, "test_prefix");
 
     ApplyUpdate(update);

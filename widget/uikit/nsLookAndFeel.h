@@ -8,38 +8,32 @@
 
 #include "nsXPLookAndFeel.h"
 
-class nsLookAndFeel final : public nsXPLookAndFeel
-{
-public:
-    nsLookAndFeel();
-    virtual ~nsLookAndFeel();
+class nsLookAndFeel final : public nsXPLookAndFeel {
+ public:
+  nsLookAndFeel();
+  virtual ~nsLookAndFeel();
 
-    void NativeInit() final;
-    virtual void RefreshImpl();
-    virtual nsresult NativeGetColor(const ColorID aID, nscolor &aResult);
-    virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
-    virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
-    virtual bool GetFontImpl(FontID aID, nsString& aFontName,
-                             gfxFontStyle& aFontStyle,
-                             float aDevPixPerCSSPixel);
-    virtual char16_t GetPasswordCharacterImpl()
-    {
-        // unicode value for the bullet character, used for password textfields.
-        return 0x2022;
-    }
+  void NativeInit() final;
+  virtual void RefreshImpl();
+  virtual nsresult NativeGetColor(const ColorID aID, nscolor &aResult);
+  virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
+  virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
+  virtual bool GetFontImpl(FontID aID, nsString &aFontName,
+                           gfxFontStyle &aFontStyle, float aDevPixPerCSSPixel);
+  virtual char16_t GetPasswordCharacterImpl() {
+    // unicode value for the bullet character, used for password textfields.
+    return 0x2022;
+  }
 
-    static bool UseOverlayScrollbars()
-    {
-        return true;
-    }
+  static bool UseOverlayScrollbars() { return true; }
 
-private:
-    nscolor mColorTextSelectForeground;
-    nscolor mColorDarkText;
+ private:
+  nscolor mColorTextSelectForeground;
+  nscolor mColorDarkText;
 
-    bool mInitialized;
+  bool mInitialized;
 
-    void EnsureInit();
+  void EnsureInit();
 };
 
 #endif

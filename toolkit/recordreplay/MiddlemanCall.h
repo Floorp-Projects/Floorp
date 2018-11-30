@@ -67,8 +67,7 @@ namespace recordreplay {
 //   resources held.
 
 // Ways of processing calls that can be sent to the middleman.
-enum class MiddlemanCallPhase
-{
+enum class MiddlemanCallPhase {
   // When replaying, a call is being performed that might need to be sent to
   // the middleman later.
   ReplayPreface,
@@ -99,8 +98,7 @@ enum class MiddlemanCallPhase
   MiddlemanRelease,
 };
 
-struct MiddlemanCall
-{
+struct MiddlemanCall {
   // Unique ID for this call.
   size_t mId;
 
@@ -132,9 +130,7 @@ struct MiddlemanCall
   // that was produced by the middleman itself.
   Maybe<const void*> mMiddlemanValue;
 
-  MiddlemanCall()
-    : mId(0), mCallId(0), mSent(false)
-  {}
+  MiddlemanCall() : mId(0), mCallId(0), mSent(false) {}
 
   void EncodeInput(BufferStream& aStream) const;
   void DecodeInput(BufferStream& aStream);
@@ -155,8 +151,7 @@ struct MiddlemanCall
 
 // Information needed to process one of the phases of a middleman call,
 // in either the replaying or middleman process.
-struct MiddlemanCallContext
-{
+struct MiddlemanCallContext {
   // Call being operated on.
   MiddlemanCall* mCall;
 
@@ -200,31 +195,37 @@ struct MiddlemanCallContext
   // valid.
   bool mReplayOutputIsOld;
 
-  MiddlemanCallContext(MiddlemanCall* aCall, CallArguments* aArguments, MiddlemanCallPhase aPhase)
-    : mCall(aCall), mArguments(aArguments), mPhase(aPhase),
-      mFailed(false), mSkipCallInMiddleman(false),
-      mDependentCalls(nullptr), mReplayOutputIsOld(false)
-  {
+  MiddlemanCallContext(MiddlemanCall* aCall, CallArguments* aArguments,
+                       MiddlemanCallPhase aPhase)
+      : mCall(aCall),
+        mArguments(aArguments),
+        mPhase(aPhase),
+        mFailed(false),
+        mSkipCallInMiddleman(false),
+        mDependentCalls(nullptr),
+        mReplayOutputIsOld(false) {
     switch (mPhase) {
-    case MiddlemanCallPhase::ReplayPreface:
-      mPrefaceStream.emplace(&mCall->mPreface);
-      break;
-    case MiddlemanCallPhase::ReplayInput:
-      mPrefaceStream.emplace(mCall->mPreface.begin(), mCall->mPreface.length());
-      mInputStream.emplace(&mCall->mInput);
-      break;
-    case MiddlemanCallPhase::MiddlemanInput:
-      mPrefaceStream.emplace(mCall->mPreface.begin(), mCall->mPreface.length());
-      mInputStream.emplace(mCall->mInput.begin(), mCall->mInput.length());
-      break;
-    case MiddlemanCallPhase::MiddlemanOutput:
-      mOutputStream.emplace(&mCall->mOutput);
-      break;
-    case MiddlemanCallPhase::ReplayOutput:
-      mOutputStream.emplace(mCall->mOutput.begin(), mCall->mOutput.length());
-      break;
-    case MiddlemanCallPhase::MiddlemanRelease:
-      break;
+      case MiddlemanCallPhase::ReplayPreface:
+        mPrefaceStream.emplace(&mCall->mPreface);
+        break;
+      case MiddlemanCallPhase::ReplayInput:
+        mPrefaceStream.emplace(mCall->mPreface.begin(),
+                               mCall->mPreface.length());
+        mInputStream.emplace(&mCall->mInput);
+        break;
+      case MiddlemanCallPhase::MiddlemanInput:
+        mPrefaceStream.emplace(mCall->mPreface.begin(),
+                               mCall->mPreface.length());
+        mInputStream.emplace(mCall->mInput.begin(), mCall->mInput.length());
+        break;
+      case MiddlemanCallPhase::MiddlemanOutput:
+        mOutputStream.emplace(&mCall->mOutput);
+        break;
+      case MiddlemanCallPhase::ReplayOutput:
+        mOutputStream.emplace(mCall->mOutput.begin(), mCall->mOutput.length());
+        break;
+      case MiddlemanCallPhase::MiddlemanRelease:
+        break;
     }
   }
 
@@ -254,70 +255,64 @@ struct MiddlemanCallContext
     return mInputStream.ref().ReadScalar();
   }
 
-  bool AccessInput() {
-    return mInputStream.isSome();
-  }
+  bool AccessInput() { return mInputStream.isSome(); }
 
   void ReadOrWriteInputBytes(void* aBuffer, size_t aSize) {
     switch (mPhase) {
-    case MiddlemanCallPhase::ReplayInput:
-      WriteInputBytes(aBuffer, aSize);
-      break;
-    case MiddlemanCallPhase::MiddlemanInput:
-      ReadInputBytes(aBuffer, aSize);
-      break;
-    default:
-      MOZ_CRASH();
+      case MiddlemanCallPhase::ReplayInput:
+        WriteInputBytes(aBuffer, aSize);
+        break;
+      case MiddlemanCallPhase::MiddlemanInput:
+        ReadInputBytes(aBuffer, aSize);
+        break;
+      default:
+        MOZ_CRASH();
     }
   }
 
-  bool AccessPreface() {
-    return mPrefaceStream.isSome();
-  }
+  bool AccessPreface() { return mPrefaceStream.isSome(); }
 
   void ReadOrWritePrefaceBytes(void* aBuffer, size_t aSize) {
     switch (mPhase) {
-    case MiddlemanCallPhase::ReplayPreface:
-      mPrefaceStream.ref().WriteBytes(aBuffer, aSize);
-      break;
-    case MiddlemanCallPhase::ReplayInput:
-    case MiddlemanCallPhase::MiddlemanInput:
-      mPrefaceStream.ref().ReadBytes(aBuffer, aSize);
-      break;
-    default:
-      MOZ_CRASH();
+      case MiddlemanCallPhase::ReplayPreface:
+        mPrefaceStream.ref().WriteBytes(aBuffer, aSize);
+        break;
+      case MiddlemanCallPhase::ReplayInput:
+      case MiddlemanCallPhase::MiddlemanInput:
+        mPrefaceStream.ref().ReadBytes(aBuffer, aSize);
+        break;
+      default:
+        MOZ_CRASH();
     }
   }
 
   void ReadOrWritePrefaceBuffer(void** aBufferPtr, size_t aSize) {
     switch (mPhase) {
-    case MiddlemanCallPhase::ReplayPreface:
-      mPrefaceStream.ref().WriteBytes(*aBufferPtr, aSize);
-      break;
-    case MiddlemanCallPhase::ReplayInput:
-    case MiddlemanCallPhase::MiddlemanInput:
-      *aBufferPtr = AllocateBytes(aSize);
-      mPrefaceStream.ref().ReadBytes(*aBufferPtr, aSize);
-      break;
-    default:
-      MOZ_CRASH();
+      case MiddlemanCallPhase::ReplayPreface:
+        mPrefaceStream.ref().WriteBytes(*aBufferPtr, aSize);
+        break;
+      case MiddlemanCallPhase::ReplayInput:
+      case MiddlemanCallPhase::MiddlemanInput:
+        *aBufferPtr = AllocateBytes(aSize);
+        mPrefaceStream.ref().ReadBytes(*aBufferPtr, aSize);
+        break;
+      default:
+        MOZ_CRASH();
     }
   }
 
-  bool AccessOutput() {
-    return mOutputStream.isSome();
-  }
+  bool AccessOutput() { return mOutputStream.isSome(); }
 
   void ReadOrWriteOutputBytes(void* aBuffer, size_t aSize) {
     switch (mPhase) {
-    case MiddlemanCallPhase::MiddlemanOutput:
-      mOutputStream.ref().WriteBytes(aBuffer, aSize);
-      break;
-    case MiddlemanCallPhase::ReplayOutput:
-      mOutputStream.ref().ReadBytes(aBuffer, aSize);
-      break;
-    default:
-      MOZ_CRASH();
+      case MiddlemanCallPhase::MiddlemanOutput:
+        mOutputStream.ref().WriteBytes(aBuffer, aSize);
+        break;
+      case MiddlemanCallPhase::ReplayOutput:
+        mOutputStream.ref().ReadBytes(aBuffer, aSize);
+        break;
+      default:
+        MOZ_CRASH();
     }
   }
 
@@ -344,7 +339,8 @@ struct MiddlemanCallContext
 // any outputs for the call must be filled in; otherwise, they already have
 // been filled in using data from the recording. Returns false if the call was
 // unable to be processed.
-bool SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged);
+bool SendCallToMiddleman(size_t aCallId, CallArguments* aArguments,
+                         bool aDiverged);
 
 // In the middleman process, perform one or more calls encoded in aInputData
 // and encode their outputs to aOutputData.
@@ -358,11 +354,10 @@ void ResetMiddlemanCalls();
 // Middleman Call Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// Capture the contents of an input buffer at BufferArg with element count at CountArg.
+// Capture the contents of an input buffer at BufferArg with element count at
+// CountArg.
 template <size_t BufferArg, size_t CountArg, typename ElemType = char>
-static inline void
-MM_Buffer(MiddlemanCallContext& aCx)
-{
+static inline void MM_Buffer(MiddlemanCallContext& aCx) {
   if (aCx.AccessPreface()) {
     auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
     auto byteSize = aCx.mArguments->Arg<CountArg, size_t>() * sizeof(ElemType);
@@ -372,9 +367,7 @@ MM_Buffer(MiddlemanCallContext& aCx)
 
 // Capture the contents of a fixed size input buffer.
 template <size_t BufferArg, size_t ByteSize>
-static inline void
-MM_BufferFixedSize(MiddlemanCallContext& aCx)
-{
+static inline void MM_BufferFixedSize(MiddlemanCallContext& aCx) {
   if (aCx.AccessPreface()) {
     auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
     if (buffer) {
@@ -385,22 +378,21 @@ MM_BufferFixedSize(MiddlemanCallContext& aCx)
 
 // Capture a C string argument.
 template <size_t StringArg>
-static inline void
-MM_CString(MiddlemanCallContext& aCx)
-{
+static inline void MM_CString(MiddlemanCallContext& aCx) {
   if (aCx.AccessPreface()) {
     auto& buffer = aCx.mArguments->Arg<StringArg, char*>();
-    size_t len = (aCx.mPhase == MiddlemanCallPhase::ReplayPreface) ? strlen(buffer) + 1 : 0;
+    size_t len = (aCx.mPhase == MiddlemanCallPhase::ReplayPreface)
+                     ? strlen(buffer) + 1
+                     : 0;
     aCx.ReadOrWritePrefaceBytes(&len, sizeof(len));
-    aCx.ReadOrWritePrefaceBuffer((void**) &buffer, len);
+    aCx.ReadOrWritePrefaceBuffer((void**)&buffer, len);
   }
 }
 
-// Capture the data written to an output buffer at BufferArg with element count at CountArg.
+// Capture the data written to an output buffer at BufferArg with element count
+// at CountArg.
 template <size_t BufferArg, size_t CountArg, typename ElemType>
-static inline void
-MM_WriteBuffer(MiddlemanCallContext& aCx)
-{
+static inline void MM_WriteBuffer(MiddlemanCallContext& aCx) {
   auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
   auto count = aCx.mArguments->Arg<CountArg, size_t>();
   aCx.ReadOrWriteOutputBuffer(&buffer, count * sizeof(ElemType));
@@ -408,26 +400,20 @@ MM_WriteBuffer(MiddlemanCallContext& aCx)
 
 // Capture the data written to a fixed size output buffer.
 template <size_t BufferArg, size_t ByteSize>
-static inline void
-MM_WriteBufferFixedSize(MiddlemanCallContext& aCx)
-{
+static inline void MM_WriteBufferFixedSize(MiddlemanCallContext& aCx) {
   auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
   aCx.ReadOrWriteOutputBuffer(&buffer, ByteSize);
 }
 
 // Capture return values that are too large for register storage.
 template <size_t ByteSize>
-static inline void
-MM_OversizeRval(MiddlemanCallContext& aCx)
-{
+static inline void MM_OversizeRval(MiddlemanCallContext& aCx) {
   MM_WriteBufferFixedSize<0, ByteSize>(aCx);
 }
 
 // Capture a byte count of stack argument data.
 template <size_t ByteSize>
-static inline void
-MM_StackArgumentData(MiddlemanCallContext& aCx)
-{
+static inline void MM_StackArgumentData(MiddlemanCallContext& aCx) {
   if (aCx.AccessPreface()) {
     auto stack = aCx.mArguments->StackAddress<0>();
     aCx.ReadOrWritePrefaceBytes(stack, ByteSize);
@@ -435,27 +421,18 @@ MM_StackArgumentData(MiddlemanCallContext& aCx)
 }
 
 // Avoid calling a function in the middleman process.
-static inline void
-MM_SkipInMiddleman(MiddlemanCallContext& aCx)
-{
+static inline void MM_SkipInMiddleman(MiddlemanCallContext& aCx) {
   if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
     aCx.mSkipCallInMiddleman = true;
   }
 }
 
-static inline void
-MM_NoOp(MiddlemanCallContext& aCx)
-{
-}
+static inline void MM_NoOp(MiddlemanCallContext& aCx) {}
 
-template <MiddlemanCallFn Fn0,
-          MiddlemanCallFn Fn1,
-          MiddlemanCallFn Fn2 = MM_NoOp,
-          MiddlemanCallFn Fn3 = MM_NoOp,
+template <MiddlemanCallFn Fn0, MiddlemanCallFn Fn1,
+          MiddlemanCallFn Fn2 = MM_NoOp, MiddlemanCallFn Fn3 = MM_NoOp,
           MiddlemanCallFn Fn4 = MM_NoOp>
-static inline void
-MM_Compose(MiddlemanCallContext& aCx)
-{
+static inline void MM_Compose(MiddlemanCallContext& aCx) {
   Fn0(aCx);
   Fn1(aCx);
   Fn2(aCx);
@@ -470,9 +447,10 @@ bool MM_SystemInput(MiddlemanCallContext& aCx, const void** aThingPtr);
 
 // Helper for capturing output system values that might be consumed by other
 // middleman calls.
-void MM_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating = false);
+void MM_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput,
+                     bool aUpdating = false);
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_MiddlemanCall_h
+#endif  // mozilla_recordreplay_MiddlemanCall_h

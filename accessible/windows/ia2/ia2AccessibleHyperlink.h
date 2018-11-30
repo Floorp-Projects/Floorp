@@ -17,12 +17,10 @@ namespace mozilla {
 namespace a11y {
 
 class ia2AccessibleHyperlink : public ia2AccessibleAction,
-                               public IAccessibleHyperlink
-{
-public:
-
+                               public IAccessibleHyperlink {
+ public:
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
+  STDMETHODIMP QueryInterface(REFIID, void **);
 
   // IAccessibleAction
   FORWARD_IACCESSIBLEACTION(ia2AccessibleAction)
@@ -45,7 +43,7 @@ public:
       /* [retval][out] */ boolean *valid);
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

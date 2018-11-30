@@ -20,9 +20,9 @@
 // FIXME/cjones: these really only pertain to the linux sys string
 // converters.
 #ifdef WCHAR_T_IS_UTF16
-#  define ICONV_WCHAR_T_ENCODING "UTF-16"
+#define ICONV_WCHAR_T_ENCODING "UTF-16"
 #else
-#  define ICONV_WCHAR_T_ENCODING "WCHAR_T"
+#define ICONV_WCHAR_T_ENCODING "WCHAR_T"
 #endif
 
 // FIXME/cjones: BIG assumption here that std::string is a good
@@ -32,33 +32,27 @@
 namespace base {
 
 // FIXME/cjones: as its name implies, this function is a hack.
-template<typename FromType, typename ToType>
-ToType
-GhettoStringConvert(const FromType& in)
-{
+template <typename FromType, typename ToType>
+ToType GhettoStringConvert(const FromType& in) {
   // FIXME/cjones: assumes no non-ASCII characters in |in|
   ToType out;
   out.resize(in.length());
   for (int i = 0; i < static_cast<int>(in.length()); ++i)
-      out[i] = static_cast<typename ToType::value_type>(in[i]);
+    out[i] = static_cast<typename ToType::value_type>(in[i]);
   return out;
 }
 
-} // namespace base
+}  // namespace base
 
 // Implement functions that were in the chromium ICU library, which
 // we're not taking.
 
-std::string
-WideToUTF8(const std::wstring& wide)
-{
-    return base::SysWideToUTF8(wide);
+std::string WideToUTF8(const std::wstring& wide) {
+  return base::SysWideToUTF8(wide);
 }
 
-std::wstring
-UTF8ToWide(const StringPiece& utf8)
-{
-    return base::SysUTF8ToWide(utf8);
+std::wstring UTF8ToWide(const StringPiece& utf8) {
+  return base::SysUTF8ToWide(utf8);
 }
 
 namespace base {
@@ -91,4 +85,4 @@ std::wstring SysNativeMBToWide(const StringPiece& native_mb) {
 }
 #endif
 
-} // namespace base
+}  // namespace base

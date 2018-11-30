@@ -20,18 +20,14 @@ class FormData;
 class URLSearchParams;
 class XMLHttpRequestUpload;
 
-class XMLHttpRequest : public XMLHttpRequestEventTarget
-{
-public:
-  static already_AddRefed<XMLHttpRequest>
-  Constructor(const GlobalObject& aGlobal,
-              const MozXMLHttpRequestParameters& aParams,
-              ErrorResult& aRv);
+class XMLHttpRequest : public XMLHttpRequestEventTarget {
+ public:
+  static already_AddRefed<XMLHttpRequest> Constructor(
+      const GlobalObject& aGlobal, const MozXMLHttpRequestParameters& aParams,
+      ErrorResult& aRv);
 
-  static already_AddRefed<XMLHttpRequest>
-  Constructor(const GlobalObject& aGlobal, const nsAString& ignored,
-              ErrorResult& aRv)
-  {
+  static already_AddRefed<XMLHttpRequest> Constructor(
+      const GlobalObject& aGlobal, const nsAString& ignored, ErrorResult& aRv) {
     // Pretend like someone passed null, so we can pick up the default values
     MozXMLHttpRequestParameters params;
     if (!params.Init(aGlobal.Context(), JS::NullHandleValue)) {
@@ -44,118 +40,96 @@ public:
 
   IMPL_EVENT_HANDLER(readystatechange)
 
-  virtual uint16_t
-  ReadyState() const = 0;
+  virtual uint16_t ReadyState() const = 0;
 
-  virtual void
-  Open(const nsACString& aMethod, const nsAString& aUrl, ErrorResult& aRv) = 0;
-
-  virtual void
-  Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
-       const nsAString& aUser, const nsAString& aPassword, ErrorResult& aRv) = 0;
-
-  virtual void
-  SetRequestHeader(const nsACString& aHeader, const nsACString& aValue,
-                   ErrorResult& aRv) = 0;
-
-  virtual uint32_t
-  Timeout() const = 0;
-
-  virtual void
-  SetTimeout(uint32_t aTimeout, ErrorResult& aRv) = 0;
-
-  virtual bool
-  WithCredentials() const = 0;
-
-  virtual void
-  SetWithCredentials(bool aWithCredentials, ErrorResult& aRv) = 0;
-
-  virtual XMLHttpRequestUpload*
-  GetUpload(ErrorResult& aRv) = 0;
-
-  virtual void
-  Send(JSContext* aCx,
-       const Nullable<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>& aData,
-       ErrorResult& aRv) = 0;
-
-  virtual void
-  SendInputStream(nsIInputStream* aInputStream, ErrorResult& aRv) = 0;
-
-  virtual void
-  Abort(ErrorResult& aRv) = 0;
-
-  virtual void
-  GetResponseURL(nsAString& aUrl) = 0;
-
-  virtual uint32_t
-  GetStatus(ErrorResult& aRv) = 0;
-
-  virtual void
-  GetStatusText(nsACString& aStatusText, ErrorResult& aRv) = 0;
-
-  virtual void
-  GetResponseHeader(const nsACString& aHeader, nsACString& aResult,
+  virtual void Open(const nsACString& aMethod, const nsAString& aUrl,
                     ErrorResult& aRv) = 0;
 
-  virtual void
-  GetAllResponseHeaders(nsACString& aResponseHeaders,
-                        ErrorResult& aRv) = 0;
+  virtual void Open(const nsACString& aMethod, const nsAString& aUrl,
+                    bool aAsync, const nsAString& aUser,
+                    const nsAString& aPassword, ErrorResult& aRv) = 0;
 
-  virtual void
-  OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv) = 0;
+  virtual void SetRequestHeader(const nsACString& aHeader,
+                                const nsACString& aValue, ErrorResult& aRv) = 0;
 
-  virtual XMLHttpRequestResponseType
-  ResponseType() const = 0;
+  virtual uint32_t Timeout() const = 0;
 
-  virtual void
-  SetResponseType(XMLHttpRequestResponseType aType,
-                  ErrorResult& aRv) = 0;
+  virtual void SetTimeout(uint32_t aTimeout, ErrorResult& aRv) = 0;
 
-  virtual void
-  GetResponse(JSContext* aCx, JS::MutableHandle<JS::Value> aResponse,
-              ErrorResult& aRv) = 0;
+  virtual bool WithCredentials() const = 0;
 
-  virtual void
-  GetResponseText(DOMString& aResponseText, ErrorResult& aRv) = 0;
+  virtual void SetWithCredentials(bool aWithCredentials, ErrorResult& aRv) = 0;
 
-  virtual nsIDocument*
-  GetResponseXML(ErrorResult& aRv) = 0;
+  virtual XMLHttpRequestUpload* GetUpload(ErrorResult& aRv) = 0;
 
-  virtual bool
-  MozBackgroundRequest() const = 0;
+  virtual void Send(
+      JSContext* aCx,
+      const Nullable<
+          DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>&
+          aData,
+      ErrorResult& aRv) = 0;
 
-  virtual void
-  SetMozBackgroundRequest(bool aMozBackgroundRequest, ErrorResult& aRv) = 0;
+  virtual void SendInputStream(nsIInputStream* aInputStream,
+                               ErrorResult& aRv) = 0;
 
-  virtual nsIChannel*
-  GetChannel() const = 0;
+  virtual void Abort(ErrorResult& aRv) = 0;
+
+  virtual void GetResponseURL(nsAString& aUrl) = 0;
+
+  virtual uint32_t GetStatus(ErrorResult& aRv) = 0;
+
+  virtual void GetStatusText(nsACString& aStatusText, ErrorResult& aRv) = 0;
+
+  virtual void GetResponseHeader(const nsACString& aHeader, nsACString& aResult,
+                                 ErrorResult& aRv) = 0;
+
+  virtual void GetAllResponseHeaders(nsACString& aResponseHeaders,
+                                     ErrorResult& aRv) = 0;
+
+  virtual void OverrideMimeType(const nsAString& aMimeType,
+                                ErrorResult& aRv) = 0;
+
+  virtual XMLHttpRequestResponseType ResponseType() const = 0;
+
+  virtual void SetResponseType(XMLHttpRequestResponseType aType,
+                               ErrorResult& aRv) = 0;
+
+  virtual void GetResponse(JSContext* aCx,
+                           JS::MutableHandle<JS::Value> aResponse,
+                           ErrorResult& aRv) = 0;
+
+  virtual void GetResponseText(DOMString& aResponseText, ErrorResult& aRv) = 0;
+
+  virtual nsIDocument* GetResponseXML(ErrorResult& aRv) = 0;
+
+  virtual bool MozBackgroundRequest() const = 0;
+
+  virtual void SetMozBackgroundRequest(bool aMozBackgroundRequest,
+                                       ErrorResult& aRv) = 0;
+
+  virtual nsIChannel* GetChannel() const = 0;
 
   // We need a GetInterface callable from JS for chrome JS
-  virtual void
-  GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
-               JS::MutableHandle<JS::Value> aRetval,
-               ErrorResult& aRv) = 0;
+  virtual void GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
+                            JS::MutableHandle<JS::Value> aRetval,
+                            ErrorResult& aRv) = 0;
 
-  virtual void
-  SetOriginAttributes(const mozilla::dom::OriginAttributesDictionary& aAttrs) = 0;
+  virtual void SetOriginAttributes(
+      const mozilla::dom::OriginAttributesDictionary& aAttrs) = 0;
 
-  virtual uint16_t
-  ErrorCode() const = 0;
+  virtual uint16_t ErrorCode() const = 0;
 
-  virtual bool
-  MozAnon() const = 0;
+  virtual bool MozAnon() const = 0;
 
-  virtual bool
-  MozSystem() const = 0;
+  virtual bool MozSystem() const = 0;
 
-  virtual JSObject*
-  WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override {
     return mozilla::dom::XMLHttpRequest_Binding::Wrap(aCx, this, aGivenProto);
   }
 };
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_XMLHttpRequest_h
+#endif  // mozilla_dom_XMLHttpRequest_h

@@ -11,34 +11,29 @@
 
 using namespace mozilla;
 
-SoftwareVsyncSource::SoftwareVsyncSource()
-{
+SoftwareVsyncSource::SoftwareVsyncSource() {
   MOZ_ASSERT(NS_IsMainThread());
   mGlobalDisplay = new SoftwareDisplay();
 }
 
-SoftwareVsyncSource::~SoftwareVsyncSource()
-{
+SoftwareVsyncSource::~SoftwareVsyncSource() {
   MOZ_ASSERT(NS_IsMainThread());
   mGlobalDisplay = nullptr;
 }
 
-SoftwareDisplay::SoftwareDisplay()
-  : mVsyncEnabled(false)
-{
+SoftwareDisplay::SoftwareDisplay() : mVsyncEnabled(false) {
   // Mimic 60 fps
   MOZ_ASSERT(NS_IsMainThread());
-  const double rate = 1000.0 / (double) gfxPlatform::GetSoftwareVsyncRate();
+  const double rate = 1000.0 / (double)gfxPlatform::GetSoftwareVsyncRate();
   mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
   mVsyncThread = new base::Thread("SoftwareVsyncThread");
-  MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "GFX: Could not start software vsync thread");
+  MOZ_RELEASE_ASSERT(mVsyncThread->Start(),
+                     "GFX: Could not start software vsync thread");
 }
 
 SoftwareDisplay::~SoftwareDisplay() {}
 
-void
-SoftwareDisplay::EnableVsync()
-{
+void SoftwareDisplay::EnableVsync() {
   MOZ_ASSERT(mVsyncThread->IsRunning());
   if (NS_IsMainThread()) {
     if (mVsyncEnabled) {
@@ -47,7 +42,7 @@ SoftwareDisplay::EnableVsync()
     mVsyncEnabled = true;
 
     mVsyncThread->message_loop()->PostTask(NewRunnableMethod(
-      "SoftwareDisplay::EnableVsync", this, &SoftwareDisplay::EnableVsync));
+        "SoftwareDisplay::EnableVsync", this, &SoftwareDisplay::EnableVsync));
     return;
   }
 
@@ -55,9 +50,7 @@ SoftwareDisplay::EnableVsync()
   NotifyVsync(mozilla::TimeStamp::Now());
 }
 
-void
-SoftwareDisplay::DisableVsync()
-{
+void SoftwareDisplay::DisableVsync() {
   MOZ_ASSERT(mVsyncThread->IsRunning());
   if (NS_IsMainThread()) {
     if (!mVsyncEnabled) {
@@ -66,7 +59,7 @@ SoftwareDisplay::DisableVsync()
     mVsyncEnabled = false;
 
     mVsyncThread->message_loop()->PostTask(NewRunnableMethod(
-      "SoftwareDisplay::DisableVsync", this, &SoftwareDisplay::DisableVsync));
+        "SoftwareDisplay::DisableVsync", this, &SoftwareDisplay::DisableVsync));
     return;
   }
 
@@ -77,22 +70,16 @@ SoftwareDisplay::DisableVsync()
   }
 }
 
-bool
-SoftwareDisplay::IsVsyncEnabled()
-{
+bool SoftwareDisplay::IsVsyncEnabled() {
   MOZ_ASSERT(NS_IsMainThread());
   return mVsyncEnabled;
 }
 
-bool
-SoftwareDisplay::IsInSoftwareVsyncThread()
-{
+bool SoftwareDisplay::IsInSoftwareVsyncThread() {
   return mVsyncThread->thread_id() == PlatformThread::CurrentId();
 }
 
-void
-SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp)
-{
+void SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(IsInSoftwareVsyncThread());
 
   mozilla::TimeStamp displayVsyncTime = aVsyncTimestamp;
@@ -100,7 +87,8 @@ SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp)
   // Posted tasks can only have integer millisecond delays
   // whereas TimeDurations can have floating point delays.
   // Thus the vsync timestamp can be in the future, which large parts
-  // of the system can't handle, including animations. Force the timestamp to be now.
+  // of the system can't handle, including animations. Force the timestamp to be
+  // now.
   if (aVsyncTimestamp > now) {
     displayVsyncTime = now;
   }
@@ -112,15 +100,9 @@ SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp)
   ScheduleNextVsync(aVsyncTimestamp);
 }
 
-mozilla::TimeDuration
-SoftwareDisplay::GetVsyncRate()
-{
-  return mVsyncRate;
-}
+mozilla::TimeDuration SoftwareDisplay::GetVsyncRate() { return mVsyncRate; }
 
-void
-SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
-{
+void SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(IsInSoftwareVsyncThread());
   mozilla::TimeStamp nextVsync = aVsyncTimestamp + mVsyncRate;
   mozilla::TimeDuration delay = nextVsync - mozilla::TimeStamp::Now();
@@ -130,20 +112,15 @@ SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
   }
 
   mCurrentVsyncTask = NewCancelableRunnableMethod<mozilla::TimeStamp>(
-    "SoftwareDisplay::NotifyVsync",
-    this,
-    &SoftwareDisplay::NotifyVsync,
-    nextVsync);
+      "SoftwareDisplay::NotifyVsync", this, &SoftwareDisplay::NotifyVsync,
+      nextVsync);
 
   RefPtr<Runnable> addrefedTask = mCurrentVsyncTask;
-  mVsyncThread->message_loop()->PostDelayedTask(
-    addrefedTask.forget(),
-    delay.ToMilliseconds());
+  mVsyncThread->message_loop()->PostDelayedTask(addrefedTask.forget(),
+                                                delay.ToMilliseconds());
 }
 
-void
-SoftwareDisplay::Shutdown()
-{
+void SoftwareDisplay::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   DisableVsync();
   mVsyncThread->Stop();

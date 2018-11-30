@@ -32,49 +32,42 @@ class nsPresContext;
  * All functions include as the first argument the frame that is delegating
  * the request.
  */
-class nsAbsoluteContainingBlock
-{
+class nsAbsoluteContainingBlock {
   using ReflowInput = mozilla::ReflowInput;
 
-public:
+ public:
   typedef nsIFrame::ChildListID ChildListID;
 
   explicit nsAbsoluteContainingBlock(ChildListID aChildListID)
 #ifdef DEBUG
-    : mChildListID(aChildListID)
+      : mChildListID(aChildListID)
 #endif
   {
     MOZ_ASSERT(mChildListID == nsIFrame::kAbsoluteList ||
-               mChildListID == nsIFrame::kFixedList,
+                   mChildListID == nsIFrame::kFixedList,
                "should either represent position:fixed or absolute content");
   }
 
   const nsFrameList& GetChildList() const { return mAbsoluteFrames; }
   void AppendChildList(nsTArray<nsIFrame::ChildList>* aLists,
-                       ChildListID aListID) const
-  {
+                       ChildListID aListID) const {
     NS_ASSERTION(aListID == mChildListID, "wrong list ID");
     GetChildList().AppendIfNonempty(aLists, aListID);
   }
 
-  void SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                           ChildListID     aListID,
-                           nsFrameList&    aChildList);
-  void AppendFrames(nsIFrame*      aDelegatingFrame,
-                    ChildListID    aListID,
-                    nsFrameList&   aFrameList);
-  void InsertFrames(nsIFrame*      aDelegatingFrame,
-                    ChildListID    aListID,
-                    nsIFrame*      aPrevFrame,
-                    nsFrameList&   aFrameList);
-  void RemoveFrame(nsIFrame*      aDelegatingFrame,
-                   ChildListID    aListID,
-                   nsIFrame*      aOldFrame);
+  void SetInitialChildList(nsIFrame* aDelegatingFrame, ChildListID aListID,
+                           nsFrameList& aChildList);
+  void AppendFrames(nsIFrame* aDelegatingFrame, ChildListID aListID,
+                    nsFrameList& aFrameList);
+  void InsertFrames(nsIFrame* aDelegatingFrame, ChildListID aListID,
+                    nsIFrame* aPrevFrame, nsFrameList& aFrameList);
+  void RemoveFrame(nsIFrame* aDelegatingFrame, ChildListID aListID,
+                   nsIFrame* aOldFrame);
 
   enum class AbsPosReflowFlags {
-    eConstrainHeight   = 0x1,
-    eCBWidthChanged    = 0x2,
-    eCBHeightChanged   = 0x4,
+    eConstrainHeight = 0x1,
+    eCBWidthChanged = 0x2,
+    eCBHeightChanged = 0x4,
     eCBWidthAndHeightChanged = eCBWidthChanged | eCBHeightChanged,
     eIsGridContainerCB = 0x8,
   };
@@ -95,17 +88,13 @@ public:
    *
    * @param aFlags zero or more AbsPosReflowFlags
    */
-  void Reflow(nsContainerFrame*        aDelegatingFrame,
-              nsPresContext*           aPresContext,
-              const ReflowInput& aReflowInput,
-              nsReflowStatus&          aReflowStatus,
-              const nsRect&            aContainingBlock,
-              AbsPosReflowFlags        aFlags,
-              nsOverflowAreas*         aOverflowAreas);
+  void Reflow(nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
+              const ReflowInput& aReflowInput, nsReflowStatus& aReflowStatus,
+              const nsRect& aContainingBlock, AbsPosReflowFlags aFlags,
+              nsOverflowAreas* aOverflowAreas);
 
   using PostDestroyData = nsIFrame::PostDestroyData;
-  void DestroyFrames(nsIFrame* aDelegatingFrame,
-                     nsIFrame* aDestructRoot,
+  void DestroyFrames(nsIFrame* aDelegatingFrame, nsIFrame* aDestructRoot,
                      PostDestroyData& aPostDestroyData);
 
   bool HasAbsoluteFrames() const { return mAbsoluteFrames.NotEmpty(); }
@@ -121,7 +110,7 @@ public:
    */
   void MarkAllFramesDirty();
 
-protected:
+ protected:
   /**
    * Returns true if the position of aFrame depends on the position of
    * its placeholder or if the position or size of aFrame depends on a
@@ -146,14 +135,13 @@ protected:
                                    mozilla::LogicalMargin* aOffsets,
                                    mozilla::LogicalSize* aLogicalCBSize);
 
-  void ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
-                           nsPresContext*           aPresContext,
+  void ReflowAbsoluteFrame(nsIFrame* aDelegatingFrame,
+                           nsPresContext* aPresContext,
                            const ReflowInput& aReflowInput,
-                           const nsRect&            aContainingBlockRect,
-                           AbsPosReflowFlags        aFlags,
-                           nsIFrame*                aKidFrame,
-                           nsReflowStatus&          aStatus,
-                           nsOverflowAreas*         aOverflowAreas);
+                           const nsRect& aContainingBlockRect,
+                           AbsPosReflowFlags aFlags, nsIFrame* aKidFrame,
+                           nsReflowStatus& aStatus,
+                           nsOverflowAreas* aOverflowAreas);
 
   /**
    * Mark our absolute frames dirty.
@@ -163,15 +151,16 @@ protected:
    */
   void DoMarkFramesDirty(bool aMarkAllDirty);
 
-protected:
+ protected:
   nsFrameList mAbsoluteFrames;  // additional named child list
 
 #ifdef DEBUG
-  ChildListID const mChildListID; // kFixedList or kAbsoluteList
+  ChildListID const mChildListID;  // kFixedList or kAbsoluteList
 #endif
 };
 
 namespace mozilla {
-  MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsAbsoluteContainingBlock::AbsPosReflowFlags)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(
+    nsAbsoluteContainingBlock::AbsPosReflowFlags)
 }
 #endif /* nsnsAbsoluteContainingBlock_h___ */

@@ -14,21 +14,16 @@
 namespace mozilla {
 namespace dom {
 
-class CSSMozDocumentRule final : public css::ConditionRule
-{
-public:
+class CSSMozDocumentRule final : public css::ConditionRule {
+ public:
   CSSMozDocumentRule(RefPtr<RawServoMozDocumentRule> aRawRule,
-                     StyleSheet* aSheet,
-                     css::Rule* aParentRule,
-                     uint32_t aLine,
+                     StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
                      uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  static bool Match(nsIDocument* aDoc,
-                    nsIURI* aDocURI,
-                    const nsACString& aDocURISpec,
-                    const nsACString& aPattern,
+  static bool Match(nsIDocument* aDoc, nsIURI* aDocURI,
+                    const nsACString& aDocURISpec, const nsACString& aPattern,
                     css::DocumentMatchingFunction);
 
 #ifdef DEBUG
@@ -44,19 +39,19 @@ public:
   void SetConditionText(const nsAString& aConditionText,
                         ErrorResult& aRv) final;
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const override;
+  size_t SizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   ~CSSMozDocumentRule() = default;
 
   RefPtr<RawServoMozDocumentRule> mRawRule;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CSSMozDocumentRule_h
+#endif  // mozilla_dom_CSSMozDocumentRule_h

@@ -12,7 +12,8 @@
 
 namespace mozilla {
 
-template<typename> class LinkedList;
+template <typename>
+class LinkedList;
 class WebGLContext;
 
 ////
@@ -20,45 +21,43 @@ class WebGLContext;
 // This class is a mixin for objects that are tied to a specific
 // context (which is to say, all of them).  They provide initialization
 // as well as comparison with the current context.
-class WebGLContextBoundObject
-{
-public:
-    WebGLContext* const mContext;
-private:
-    const uint32_t mContextGeneration;
+class WebGLContextBoundObject {
+ public:
+  WebGLContext* const mContext;
 
-public:
-    explicit WebGLContextBoundObject(WebGLContext* webgl);
+ private:
+  const uint32_t mContextGeneration;
 
-    bool IsCompatibleWithContext(const WebGLContext* other) const;
+ public:
+  explicit WebGLContextBoundObject(WebGLContext* webgl);
+
+  bool IsCompatibleWithContext(const WebGLContext* other) const;
 };
 
 ////
 
-class WebGLDeletableObject : public WebGLContextBoundObject
-{
-    template<typename> friend class WebGLRefCountedObject;
+class WebGLDeletableObject : public WebGLContextBoundObject {
+  template <typename>
+  friend class WebGLRefCountedObject;
 
-private:
-    enum DeletionStatus { Default, DeleteRequested, Deleted };
+ private:
+  enum DeletionStatus { Default, DeleteRequested, Deleted };
 
-    DeletionStatus mDeletionStatus;
+  DeletionStatus mDeletionStatus;
 
-    ////
+  ////
 
-    explicit WebGLDeletableObject(WebGLContext* webgl)
-      : WebGLContextBoundObject(webgl)
-      , mDeletionStatus(Default)
-    { }
+  explicit WebGLDeletableObject(WebGLContext* webgl)
+      : WebGLContextBoundObject(webgl), mDeletionStatus(Default) {}
 
-    ~WebGLDeletableObject() {
-        MOZ_ASSERT(mDeletionStatus == Deleted,
-                   "Derived class destructor must call DeleteOnce().");
-    }
+  ~WebGLDeletableObject() {
+    MOZ_ASSERT(mDeletionStatus == Deleted,
+               "Derived class destructor must call DeleteOnce().");
+  }
 
-public:
-    bool IsDeleted() const { return mDeletionStatus == Deleted; }
-    bool IsDeleteRequested() const { return mDeletionStatus != Default; }
+ public:
+  bool IsDeleted() const { return mDeletionStatus == Deleted; }
+  bool IsDeleteRequested() const { return mDeletionStatus != Default; }
 };
 
 /* Each WebGL object class WebGLFoo wants to:
@@ -139,62 +138,56 @@ public:
  * known as the "curiously recursive template pattern (CRTP)".
  */
 
-template<typename Derived>
-class WebGLRefCountedObject : public WebGLDeletableObject
-{
-    friend class WebGLContext;
-    template<typename T> friend void ClearLinkedList(LinkedList<T>& list);
+template <typename Derived>
+class WebGLRefCountedObject : public WebGLDeletableObject {
+  friend class WebGLContext;
+  template <typename T>
+  friend void ClearLinkedList(LinkedList<T>& list);
 
-private:
-    nsAutoRefCnt mWebGLRefCnt;
+ private:
+  nsAutoRefCnt mWebGLRefCnt;
 
-public:
-    explicit WebGLRefCountedObject(WebGLContext* webgl)
-        : WebGLDeletableObject(webgl)
-    { }
+ public:
+  explicit WebGLRefCountedObject(WebGLContext* webgl)
+      : WebGLDeletableObject(webgl) {}
 
-    ~WebGLRefCountedObject() {
-        MOZ_ASSERT(mWebGLRefCnt == 0,
-                   "Destroying WebGL object still referenced by other WebGL"
-                   " objects.");
+  ~WebGLRefCountedObject() {
+    MOZ_ASSERT(mWebGLRefCnt == 0,
+               "Destroying WebGL object still referenced by other WebGL"
+               " objects.");
+  }
+
+  // called by WebGLRefPtr
+  void WebGLAddRef() { ++mWebGLRefCnt; }
+
+  // called by WebGLRefPtr
+  void WebGLRelease() {
+    MOZ_ASSERT(mWebGLRefCnt > 0,
+               "Releasing WebGL object with WebGL refcnt already zero");
+    --mWebGLRefCnt;
+    MaybeDelete();
+  }
+
+  // this is the function that WebGL.deleteXxx() functions want to call
+  void RequestDelete() {
+    if (mDeletionStatus == Default) mDeletionStatus = DeleteRequested;
+    MaybeDelete();
+  }
+
+ protected:
+  void DeleteOnce() {
+    if (mDeletionStatus != Deleted) {
+      static_cast<Derived*>(this)->Delete();
+      mDeletionStatus = Deleted;
     }
+  }
 
-    // called by WebGLRefPtr
-    void WebGLAddRef() {
-        ++mWebGLRefCnt;
+ private:
+  void MaybeDelete() {
+    if (mWebGLRefCnt == 0 && mDeletionStatus == DeleteRequested) {
+      DeleteOnce();
     }
-
-    // called by WebGLRefPtr
-    void WebGLRelease() {
-        MOZ_ASSERT(mWebGLRefCnt > 0,
-                   "Releasing WebGL object with WebGL refcnt already zero");
-        --mWebGLRefCnt;
-        MaybeDelete();
-    }
-
-    // this is the function that WebGL.deleteXxx() functions want to call
-    void RequestDelete() {
-        if (mDeletionStatus == Default)
-            mDeletionStatus = DeleteRequested;
-        MaybeDelete();
-    }
-
-protected:
-    void DeleteOnce() {
-        if (mDeletionStatus != Deleted) {
-            static_cast<Derived*>(this)->Delete();
-            mDeletionStatus = Deleted;
-        }
-    }
-
-private:
-    void MaybeDelete() {
-        if (mWebGLRefCnt == 0 &&
-            mDeletionStatus == DeleteRequested)
-        {
-            DeleteOnce();
-        }
-    }
+  }
 };
 
 /* This WebGLRefPtr class is meant to be used for references between WebGL
@@ -211,155 +204,129 @@ private:
  * alive by this reference even if the matching webgl.deleteXxx() function is
  * called on it.
  */
-template<typename T>
-class WebGLRefPtr
-{
-public:
-    WebGLRefPtr()
-        : mRawPtr(0)
-    {}
+template <typename T>
+class WebGLRefPtr {
+ public:
+  WebGLRefPtr() : mRawPtr(0) {}
 
-    WebGLRefPtr(const WebGLRefPtr<T>& smartPtr)
-        : mRawPtr(smartPtr.mRawPtr)
-    {
-        AddRefOnPtr(mRawPtr);
+  WebGLRefPtr(const WebGLRefPtr<T>& smartPtr) : mRawPtr(smartPtr.mRawPtr) {
+    AddRefOnPtr(mRawPtr);
+  }
+
+  explicit WebGLRefPtr(T* rawPtr) : mRawPtr(rawPtr) { AddRefOnPtr(mRawPtr); }
+
+  ~WebGLRefPtr() { ReleasePtr(mRawPtr); }
+
+  WebGLRefPtr<T>& operator=(const WebGLRefPtr<T>& rhs) {
+    assign_with_AddRef(rhs.mRawPtr);
+    return *this;
+  }
+
+  WebGLRefPtr<T>& operator=(T* rhs) {
+    assign_with_AddRef(rhs);
+    return *this;
+  }
+
+  T* get() const { return static_cast<T*>(mRawPtr); }
+
+  operator T*() const { return get(); }
+
+  T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN {
+    MOZ_ASSERT(
+        mRawPtr != 0,
+        "You can't dereference a nullptr WebGLRefPtr with operator->()!");
+    return get();
+  }
+
+  T& operator*() const {
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a nullptr WebGLRefPtr with operator*()!");
+    return *get();
+  }
+
+ private:
+  static void AddRefOnPtr(T* rawPtr) {
+    if (rawPtr) {
+      rawPtr->WebGLAddRef();
+      rawPtr->AddRef();
     }
+  }
 
-    explicit WebGLRefPtr(T* rawPtr)
-        : mRawPtr(rawPtr)
-    {
-        AddRefOnPtr(mRawPtr);
+  static void ReleasePtr(T* rawPtr) {
+    if (rawPtr) {
+      rawPtr->WebGLRelease();  // must be done first before Release(), as
+                               // Release() might actually destroy the object
+      rawPtr->Release();
     }
+  }
 
-    ~WebGLRefPtr() {
-        ReleasePtr(mRawPtr);
-    }
+  void assign_with_AddRef(T* rawPtr) {
+    AddRefOnPtr(rawPtr);
+    assign_assuming_AddRef(rawPtr);
+  }
 
-    WebGLRefPtr<T>&
-    operator=(const WebGLRefPtr<T>& rhs)
-    {
-        assign_with_AddRef(rhs.mRawPtr);
-        return *this;
-    }
+  void assign_assuming_AddRef(T* newPtr) {
+    T* oldPtr = mRawPtr;
+    mRawPtr = newPtr;
+    ReleasePtr(oldPtr);
+  }
 
-    WebGLRefPtr<T>&
-    operator=(T* rhs)
-    {
-        assign_with_AddRef(rhs);
-        return *this;
-    }
-
-    T* get() const {
-        return static_cast<T*>(mRawPtr);
-    }
-
-    operator T*() const {
-        return get();
-    }
-
-    T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN {
-        MOZ_ASSERT(mRawPtr != 0, "You can't dereference a nullptr WebGLRefPtr with operator->()!");
-        return get();
-    }
-
-    T& operator*() const {
-        MOZ_ASSERT(mRawPtr != 0, "You can't dereference a nullptr WebGLRefPtr with operator*()!");
-        return *get();
-    }
-
-private:
-
-    static void AddRefOnPtr(T* rawPtr) {
-        if (rawPtr) {
-            rawPtr->WebGLAddRef();
-            rawPtr->AddRef();
-        }
-    }
-
-    static void ReleasePtr(T* rawPtr) {
-        if (rawPtr) {
-            rawPtr->WebGLRelease(); // must be done first before Release(), as Release() might actually destroy the object
-            rawPtr->Release();
-        }
-    }
-
-    void assign_with_AddRef(T* rawPtr) {
-        AddRefOnPtr(rawPtr);
-        assign_assuming_AddRef(rawPtr);
-    }
-
-    void assign_assuming_AddRef(T* newPtr) {
-        T* oldPtr = mRawPtr;
-        mRawPtr = newPtr;
-        ReleasePtr(oldPtr);
-    }
-
-protected:
-    T* mRawPtr;
+ protected:
+  T* mRawPtr;
 };
 
 // this class is a mixin for GL objects that have dimensions
 // that we need to track.
-class WebGLRectangleObject
-{
-public:
-    WebGLRectangleObject()
-        : mWidth(0)
-        , mHeight(0)
-    {}
+class WebGLRectangleObject {
+ public:
+  WebGLRectangleObject() : mWidth(0), mHeight(0) {}
 
-    WebGLRectangleObject(GLsizei width, GLsizei height)
-        : mWidth(width)
-        , mHeight(height)
-    {}
+  WebGLRectangleObject(GLsizei width, GLsizei height)
+      : mWidth(width), mHeight(height) {}
 
-    GLsizei Width() const { return mWidth; }
-    void width(GLsizei value) { mWidth = value; }
+  GLsizei Width() const { return mWidth; }
+  void width(GLsizei value) { mWidth = value; }
 
-    GLsizei Height() const { return mHeight; }
-    void height(GLsizei value) { mHeight = value; }
+  GLsizei Height() const { return mHeight; }
+  void height(GLsizei value) { mHeight = value; }
 
-    void setDimensions(GLsizei width, GLsizei height) {
-        mWidth = width;
-        mHeight = height;
+  void setDimensions(GLsizei width, GLsizei height) {
+    mWidth = width;
+    mHeight = height;
+  }
+
+  void setDimensions(WebGLRectangleObject* rect) {
+    if (rect) {
+      mWidth = rect->Width();
+      mHeight = rect->Height();
+    } else {
+      mWidth = 0;
+      mHeight = 0;
     }
+  }
 
-    void setDimensions(WebGLRectangleObject* rect) {
-        if (rect) {
-            mWidth = rect->Width();
-            mHeight = rect->Height();
-        } else {
-            mWidth = 0;
-            mHeight = 0;
-        }
-    }
+  bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
+    return Width() == other.Width() && Height() == other.Height();
+  }
 
-    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
-        return Width() == other.Width() && Height() == other.Height();
-    }
-
-protected:
-    GLsizei mWidth;
-    GLsizei mHeight;
+ protected:
+  GLsizei mWidth;
+  GLsizei mHeight;
 };
 
-}// namespace mozilla
+}  // namespace mozilla
 
 template <typename T>
-inline void
-ImplCycleCollectionUnlink(mozilla::WebGLRefPtr<T>& field)
-{
-    field = nullptr;
+inline void ImplCycleCollectionUnlink(mozilla::WebGLRefPtr<T>& field) {
+  field = nullptr;
 }
 
 template <typename T>
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
-                            const mozilla::WebGLRefPtr<T>& field,
-                            const char* name,
-                            uint32_t flags = 0)
-{
-    CycleCollectionNoteChild(callback, field.get(), name, flags);
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& callback,
+    const mozilla::WebGLRefPtr<T>& field, const char* name,
+    uint32_t flags = 0) {
+  CycleCollectionNoteChild(callback, field.get(), name, flags);
 }
 
 #endif

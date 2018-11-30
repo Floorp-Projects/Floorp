@@ -15,36 +15,30 @@ namespace dom {
 
 class GridTracks;
 
-class GridTrack : public nsISupports
-                , public nsWrapperCache
-{
-public:
-  explicit GridTrack(GridTracks *parent);
+class GridTrack : public nsISupports, public nsWrapperCache {
+ public:
+  explicit GridTrack(GridTracks* parent);
 
-protected:
+ protected:
   virtual ~GridTrack();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GridTrack)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  GridTracks* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  GridTracks* GetParentObject() { return mParent; }
 
   double Start() const;
   double Breadth() const;
   GridDeclaration Type() const;
   GridTrackState State() const;
 
-  void SetTrackValues(double aStart,
-                      double aBreadth,
-                      GridDeclaration aType,
+  void SetTrackValues(double aStart, double aBreadth, GridDeclaration aType,
                       GridTrackState aState);
 
-protected:
+ protected:
   RefPtr<GridTracks> mParent;
   double mStart;
   double mBreadth;
@@ -52,7 +46,7 @@ protected:
   GridTrackState mState;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_GridTrack_h */

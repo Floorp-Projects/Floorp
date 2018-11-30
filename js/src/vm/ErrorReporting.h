@@ -11,11 +11,11 @@
 
 #include <stdarg.h>
 
-#include "jsapi.h" // for JSErrorNotes, JSErrorReport
-#include "jsfriendapi.h" // for ScriptEnvironmentPreparer
+#include "jsapi.h"        // for JSErrorNotes, JSErrorReport
+#include "jsfriendapi.h"  // for ScriptEnvironmentPreparer
 
-#include "js/UniquePtr.h" // for UniquePtr
-#include "js/Utility.h" // for UniqueTwoByteChars
+#include "js/UniquePtr.h"  // for UniquePtr
+#include "js/Utility.h"    // for UniqueTwoByteChars
 
 namespace js {
 
@@ -23,75 +23,70 @@ namespace js {
  * Metadata for a compilation error (or warning) at a particular offset, or at
  * no offset (i.e. with respect to a script overall).
  */
-struct ErrorMetadata
-{
-    // The file/URL where the error occurred.
-    const char* filename;
+struct ErrorMetadata {
+  // The file/URL where the error occurred.
+  const char* filename;
 
-    // The line and column numbers where the error occurred.  If the error
-    // is with respect to the entire script and not with respect to a
-    // particular location, these will both be zero.
-    uint32_t lineNumber;
-    uint32_t columnNumber;
+  // The line and column numbers where the error occurred.  If the error
+  // is with respect to the entire script and not with respect to a
+  // particular location, these will both be zero.
+  uint32_t lineNumber;
+  uint32_t columnNumber;
 
-    // If the error occurs at a particular location, context surrounding the
-    // location of the error: the line that contained the error, or a small
-    // portion of it if the line is long.  (If the error occurs within a
-    // regular expression, this context is based upon its pattern characters.)
-    //
-    // This information is provided on a best-effort basis: code populating
-    // ErrorMetadata instances isn't obligated to supply this.
-    JS::UniqueTwoByteChars lineOfContext;
+  // If the error occurs at a particular location, context surrounding the
+  // location of the error: the line that contained the error, or a small
+  // portion of it if the line is long.  (If the error occurs within a
+  // regular expression, this context is based upon its pattern characters.)
+  //
+  // This information is provided on a best-effort basis: code populating
+  // ErrorMetadata instances isn't obligated to supply this.
+  JS::UniqueTwoByteChars lineOfContext;
 
-    // If |lineOfContext| is provided, we show only a portion (a "window") of
-    // the line around the erroneous token -- the first char in the token, plus
-    // |lineOfContextRadius| chars before it and |lineOfContextRadius - 1|
-    // chars after it.  This is because for a very long line, the full line is
-    // (a) not that helpful, and (b) wastes a lot of memory.  See bug 634444.
-    static constexpr size_t lineOfContextRadius = 60;
+  // If |lineOfContext| is provided, we show only a portion (a "window") of
+  // the line around the erroneous token -- the first char in the token, plus
+  // |lineOfContextRadius| chars before it and |lineOfContextRadius - 1|
+  // chars after it.  This is because for a very long line, the full line is
+  // (a) not that helpful, and (b) wastes a lot of memory.  See bug 634444.
+  static constexpr size_t lineOfContextRadius = 60;
 
-    // If |lineOfContext| is non-null, its length.
-    size_t lineLength;
+  // If |lineOfContext| is non-null, its length.
+  size_t lineLength;
 
-    // If |lineOfContext| is non-null, the offset within it of the token that
-    // triggered the error.
-    size_t tokenOffset;
+  // If |lineOfContext| is non-null, the offset within it of the token that
+  // triggered the error.
+  size_t tokenOffset;
 
-    // Whether the error is "muted" because it derives from a cross-origin
-    // load.  See the comment in TransitiveCompileOptions in jsapi.h for
-    // details.
-    bool isMuted;
+  // Whether the error is "muted" because it derives from a cross-origin
+  // load.  See the comment in TransitiveCompileOptions in jsapi.h for
+  // details.
+  bool isMuted;
 };
 
-class CompileError : public JSErrorReport
-{
-  public:
-    void throwError(JSContext* cx);
+class CompileError : public JSErrorReport {
+ public:
+  void throwError(JSContext* cx);
 };
 
 class MOZ_STACK_CLASS ReportExceptionClosure final
-  : public ScriptEnvironmentPreparer::Closure
-{
-    JS::HandleValue exn_;
+    : public ScriptEnvironmentPreparer::Closure {
+  JS::HandleValue exn_;
 
-  public:
-    explicit ReportExceptionClosure(JS::HandleValue exn)
-      : exn_(exn) { }
+ public:
+  explicit ReportExceptionClosure(JS::HandleValue exn) : exn_(exn) {}
 
-    bool operator()(JSContext* cx) override;
+  bool operator()(JSContext* cx) override;
 };
 
 /** Send a JSErrorReport to the warningReporter callback. */
-extern void
-CallWarningReporter(JSContext* cx, JSErrorReport* report);
+extern void CallWarningReporter(JSContext* cx, JSErrorReport* report);
 
 /**
  * Report a compile error during script processing prior to execution of the
  * script.
  */
-extern void
-ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
-                   unsigned flags, unsigned errorNumber, va_list args);
+extern void ReportCompileError(JSContext* cx, ErrorMetadata&& metadata,
+                               UniquePtr<JSErrorNotes> notes, unsigned flags,
+                               unsigned errorNumber, va_list args);
 
 /**
  * Report a compile warning during script processing prior to execution of the
@@ -101,9 +96,9 @@ ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNot
  * This function DOES NOT respect an existing werror option.  If the caller
  * wishes such option to be respected, it must do so itself.
  */
-extern MOZ_MUST_USE bool
-ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
-                     unsigned flags, unsigned errorNumber, va_list args);
+extern MOZ_MUST_USE bool ReportCompileWarning(
+    JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
+    unsigned flags, unsigned errorNumber, va_list args);
 
 class GlobalObject;
 
@@ -112,9 +107,10 @@ class GlobalObject;
  * assumed to be in any particular realm, but the global and error are
  * expected to be same-compartment.
  */
-extern void
-ReportErrorToGlobal(JSContext* cx, JS::Handle<js::GlobalObject*> global, JS::HandleValue error);
+extern void ReportErrorToGlobal(JSContext* cx,
+                                JS::Handle<js::GlobalObject*> global,
+                                JS::HandleValue error);
 
-} // namespace js
+}  // namespace js
 
 #endif /* vm_ErrorReporting_h */

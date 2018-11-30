@@ -65,137 +65,121 @@ class JSScript;
 
 namespace js {
 
-#define STRUCTURED_CHANNEL_LIST(_) \
-    _(BaselineICStats)
+#define STRUCTURED_CHANNEL_LIST(_) _(BaselineICStats)
 
 // Structured spew channels
 enum class SpewChannel {
 #define STRUCTURED_CHANNEL(name) name,
-    STRUCTURED_CHANNEL_LIST(STRUCTURED_CHANNEL)
+  STRUCTURED_CHANNEL_LIST(STRUCTURED_CHANNEL)
 #undef STRUCTURED_CHANNEL
-    Count
+      Count
 };
 
 // A filter is used to select what channels are enabled
 //
 // To save memory, JSScripts do not have their own filters, but instead have
 // a single bit which tracks if that script has opted into spewing.
-class StructuredSpewFilter
-{
-    // Packed set of bits indicating what spew channels
-    // are enabled.
-    mozilla::EnumSet<SpewChannel> bits_;
+class StructuredSpewFilter {
+  // Packed set of bits indicating what spew channels
+  // are enabled.
+  mozilla::EnumSet<SpewChannel> bits_;
 
-  public:
-    // Default construct to all bits disabled.
-    StructuredSpewFilter()
-      : bits_()
-    {}
+ public:
+  // Default construct to all bits disabled.
+  StructuredSpewFilter() : bits_() {}
 
-    // Return true iff spew is enabled for this channel for
-    // the script this was created for.
-    bool enabled(SpewChannel x) const {
-        return bits_.contains(x);
-    }
+  // Return true iff spew is enabled for this channel for
+  // the script this was created for.
+  bool enabled(SpewChannel x) const { return bits_.contains(x); }
 
-    void enableChannel(SpewChannel x) {
-        bits_ += x;
-    }
+  void enableChannel(SpewChannel x) { bits_ += x; }
 
-    void disableAll() {
-        bits_.clear();
-    }
-
+  void disableAll() { bits_.clear(); }
 };
 
-class StructuredSpewer
-{
-  public:
-    StructuredSpewer()
+class StructuredSpewer {
+ public:
+  StructuredSpewer()
       : outputInitializationAttempted_(false),
         json_(mozilla::Nothing()),
-        selectedChannels_()
-    {
-        // If we are recording or replaying, we cannot use getenv
-        if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-            return;
-        }
-        if (getenv("SPEW")) {
-            parseSpewFlags(getenv("SPEW"));
-        }
+        selectedChannels_() {
+    // If we are recording or replaying, we cannot use getenv
+    if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+      return;
     }
-
-    ~StructuredSpewer() {
-        if (json_.isSome()) {
-            json_->endList();
-            output_.flush();
-            output_.finish();
-        }
+    if (getenv("SPEW")) {
+      parseSpewFlags(getenv("SPEW"));
     }
+  }
 
-    // Check if the spewer is enabled for a particular script, used to power
-    // script level filtering.
-    static bool enabled(JSScript* script);
-
-    // A generic printf like spewer that logs the formatted string.
-    static void spew(JSContext* cx, SpewChannel channel, const char* fmt, ...) MOZ_FORMAT_PRINTF(3,4);
-
-  private:
-    // In order to support lazy initialization, and simultaneously support a
-    // failure to open a log file being non-fatal (as lazily reporting failure
-    // would be hard, we have an akward set of states to represent.
-    //
-    // We need to handle:
-    // - Output file not initialized, and not yet attempted
-    // - Output file not intialized, attempted, and failed.
-    // - Output file initialized, JSON writer ready for input.
-    //
-    // Because Fprinter doesn't record whether or not its initialization was
-    // attempted, we keep track of that here.
-    //
-    // The contract we require is that ensureInitializationAttempted() be called
-    // just before any attempte to write. This will ensure the file open is
-    // attemped in the right place.
-    bool outputInitializationAttempted_;
-    Fprinter output_;
-    mozilla::Maybe<JSONPrinter> json_;
-
-    // Globally selected channels.
-    StructuredSpewFilter selectedChannels_;
-
-    using NameArray = mozilla::EnumeratedArray<SpewChannel,
-                                               SpewChannel::Count,
-                                               const char*>;
-    // Channel Names
-    static NameArray const names_;
-
-    // Return the global filter.
-    StructuredSpewFilter& filter() {
-        return selectedChannels_;
+  ~StructuredSpewer() {
+    if (json_.isSome()) {
+      json_->endList();
+      output_.flush();
+      output_.finish();
     }
+  }
 
-    // Get channel name
-    static const char* getName(SpewChannel channel) {
-        return names_[channel];
-    }
+  // Check if the spewer is enabled for a particular script, used to power
+  // script level filtering.
+  static bool enabled(JSScript* script);
 
-    // Call just before writes to the output are expected.
-    //
-    // Avoids opening files that will remain empty.
-    void ensureInitializationAttempted();
+  // A generic printf like spewer that logs the formatted string.
+  static void spew(JSContext* cx, SpewChannel channel, const char* fmt, ...)
+      MOZ_FORMAT_PRINTF(3, 4);
 
-    void tryToInitializeOutput(const char* path);
+ private:
+  // In order to support lazy initialization, and simultaneously support a
+  // failure to open a log file being non-fatal (as lazily reporting failure
+  // would be hard, we have an akward set of states to represent.
+  //
+  // We need to handle:
+  // - Output file not initialized, and not yet attempted
+  // - Output file not intialized, attempted, and failed.
+  // - Output file initialized, JSON writer ready for input.
+  //
+  // Because Fprinter doesn't record whether or not its initialization was
+  // attempted, we keep track of that here.
+  //
+  // The contract we require is that ensureInitializationAttempted() be called
+  // just before any attempte to write. This will ensure the file open is
+  // attemped in the right place.
+  bool outputInitializationAttempted_;
+  Fprinter output_;
+  mozilla::Maybe<JSONPrinter> json_;
 
-    // Using flags, choose the enabled channels for this spewer.
-    void parseSpewFlags(const char* flags);
+  // Globally selected channels.
+  StructuredSpewFilter selectedChannels_;
 
-    // Returns true iff the channels is enabled for the given script.
-    bool enabled(JSContext* cx, const JSScript* script, SpewChannel channel) const;
+  using NameArray =
+      mozilla::EnumeratedArray<SpewChannel, SpewChannel::Count, const char*>;
+  // Channel Names
+  static NameArray const names_;
 
-    // Start a record
-    void startObject(JSContext* cx, const JSScript* script, SpewChannel channel);
+  // Return the global filter.
+  StructuredSpewFilter& filter() { return selectedChannels_; }
 
-    friend class AutoStructuredSpewer;
+  // Get channel name
+  static const char* getName(SpewChannel channel) { return names_[channel]; }
+
+  // Call just before writes to the output are expected.
+  //
+  // Avoids opening files that will remain empty.
+  void ensureInitializationAttempted();
+
+  void tryToInitializeOutput(const char* path);
+
+  // Using flags, choose the enabled channels for this spewer.
+  void parseSpewFlags(const char* flags);
+
+  // Returns true iff the channels is enabled for the given script.
+  bool enabled(JSContext* cx, const JSScript* script,
+               SpewChannel channel) const;
+
+  // Start a record
+  void startObject(JSContext* cx, const JSScript* script, SpewChannel channel);
+
+  friend class AutoStructuredSpewer;
 };
 
 // An RAII class for accessing the structured spewer.
@@ -220,36 +204,34 @@ class StructuredSpewer
 //  As well, this class cannot be copied or assigned to ensure the
 //  correct number of destructors fire.
 class MOZ_RAII AutoStructuredSpewer {
-    mozilla::Maybe<JSONPrinter*> printer_;
-    AutoStructuredSpewer(const AutoStructuredSpewer&) = delete;
-    void operator=(AutoStructuredSpewer&) = delete;
-  public:
+  mozilla::Maybe<JSONPrinter*> printer_;
+  AutoStructuredSpewer(const AutoStructuredSpewer&) = delete;
+  void operator=(AutoStructuredSpewer&) = delete;
 
-    explicit AutoStructuredSpewer(JSContext* cx, SpewChannel channel, JSScript* script);
+ public:
+  explicit AutoStructuredSpewer(JSContext* cx, SpewChannel channel,
+                                JSScript* script);
 
-    ~AutoStructuredSpewer() {
-        if (printer_.isSome()) {
-            printer_.ref()->endObject();
-        }
+  ~AutoStructuredSpewer() {
+    if (printer_.isSome()) {
+      printer_.ref()->endObject();
     }
+  }
 
-    explicit operator bool() const {
-        return printer_.isSome();
-    }
+  explicit operator bool() const { return printer_.isSome(); }
 
-    JSONPrinter* operator->() {
-        MOZ_ASSERT(printer_.isSome());
-        return printer_.ref();
-    }
+  JSONPrinter* operator->() {
+    MOZ_ASSERT(printer_.isSome());
+    return printer_.ref();
+  }
 
-    JSONPrinter& operator*() {
-        MOZ_ASSERT(printer_.isSome());
-        return *printer_.ref();
-    }
-
+  JSONPrinter& operator*() {
+    MOZ_ASSERT(printer_.isSome());
+    return *printer_.ref();
+  }
 };
 
-} // namespace js
+}  // namespace js
 
 #endif
 #endif /* jit_StructuredSpewer_h */

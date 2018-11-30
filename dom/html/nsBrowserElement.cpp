@@ -24,9 +24,7 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-bool
-nsBrowserElement::IsBrowserElementOrThrow(ErrorResult& aRv)
-{
+bool nsBrowserElement::IsBrowserElementOrThrow(ErrorResult& aRv) {
   if (mBrowserElementAPI) {
     return true;
   }
@@ -34,9 +32,7 @@ nsBrowserElement::IsBrowserElementOrThrow(ErrorResult& aRv)
   return false;
 }
 
-void
-nsBrowserElement::InitBrowserElementAPI()
-{
+void nsBrowserElement::InitBrowserElementAPI() {
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE_VOID(frameLoader);
 
@@ -45,7 +41,8 @@ nsBrowserElement::InitBrowserElementAPI()
   }
 
   if (!mBrowserElementAPI) {
-    mBrowserElementAPI = do_CreateInstance("@mozilla.org/dom/browser-element-api;1");
+    mBrowserElementAPI =
+        do_CreateInstance("@mozilla.org/dom/browser-element-api;1");
     if (NS_WARN_IF(!mBrowserElementAPI)) {
       return;
     }
@@ -53,41 +50,28 @@ nsBrowserElement::InitBrowserElementAPI()
   mBrowserElementAPI->SetFrameLoader(frameLoader);
 }
 
-void
-nsBrowserElement::DestroyBrowserElementFrameScripts()
-{
+void nsBrowserElement::DestroyBrowserElementFrameScripts() {
   if (!mBrowserElementAPI) {
     return;
   }
   mBrowserElementAPI->DestroyFrameScripts();
 }
 
-void
-nsBrowserElement::SendMouseEvent(const nsAString& aType,
-                                 uint32_t aX,
-                                 uint32_t aY,
-                                 uint32_t aButton,
-                                 uint32_t aClickCount,
-                                 uint32_t aModifiers,
-                                 ErrorResult& aRv)
-{
+void nsBrowserElement::SendMouseEvent(const nsAString& aType, uint32_t aX,
+                                      uint32_t aY, uint32_t aButton,
+                                      uint32_t aClickCount, uint32_t aModifiers,
+                                      ErrorResult& aRv) {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
-  nsresult rv = mBrowserElementAPI->SendMouseEvent(aType,
-                                                   aX,
-                                                   aY,
-                                                   aButton,
-                                                   aClickCount,
-                                                   aModifiers);
+  nsresult rv = mBrowserElementAPI->SendMouseEvent(aType, aX, aY, aButton,
+                                                   aClickCount, aModifiers);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 }
 
-void
-nsBrowserElement::GoBack(ErrorResult& aRv)
-{
+void nsBrowserElement::GoBack(ErrorResult& aRv) {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->GoBack();
@@ -97,9 +81,7 @@ nsBrowserElement::GoBack(ErrorResult& aRv)
   }
 }
 
-void
-nsBrowserElement::GoForward(ErrorResult& aRv)
-{
+void nsBrowserElement::GoForward(ErrorResult& aRv) {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->GoForward();
@@ -109,9 +91,7 @@ nsBrowserElement::GoForward(ErrorResult& aRv)
   }
 }
 
-void
-nsBrowserElement::Reload(bool aHardReload, ErrorResult& aRv)
-{
+void nsBrowserElement::Reload(bool aHardReload, ErrorResult& aRv) {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->Reload(aHardReload);
@@ -121,9 +101,7 @@ nsBrowserElement::Reload(bool aHardReload, ErrorResult& aRv)
   }
 }
 
-void
-nsBrowserElement::Stop(ErrorResult& aRv)
-{
+void nsBrowserElement::Stop(ErrorResult& aRv) {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->Stop();
@@ -133,9 +111,7 @@ nsBrowserElement::Stop(ErrorResult& aRv)
   }
 }
 
-already_AddRefed<Promise>
-nsBrowserElement::GetCanGoBack(ErrorResult& aRv)
-{
+already_AddRefed<Promise> nsBrowserElement::GetCanGoBack(ErrorResult& aRv) {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
 
   RefPtr<Promise> p;
@@ -149,9 +125,7 @@ nsBrowserElement::GetCanGoBack(ErrorResult& aRv)
   return p.forget();
 }
 
-already_AddRefed<Promise>
-nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
-{
+already_AddRefed<Promise> nsBrowserElement::GetCanGoForward(ErrorResult& aRv) {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
 
   RefPtr<Promise> p;
@@ -165,4 +139,4 @@ nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
   return p.forget();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

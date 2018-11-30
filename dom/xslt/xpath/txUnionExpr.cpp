@@ -7,12 +7,12 @@
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
 
-  //-------------/
- //- UnionExpr -/
+//-------------/
+//- UnionExpr -/
 //-------------/
 
-    //-----------------------------/
-  //- Virtual methods from Expr -/
+//-----------------------------/
+//- Virtual methods from Expr -/
 //-----------------------------/
 
 /**
@@ -21,74 +21,64 @@
  * @param ps the ContextState containing the stack information needed
  * for evaluation
  * @return the result of the evaluation
-**/
-nsresult
-UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
-{
-    *aResult = nullptr;
-    RefPtr<txNodeSet> nodes;
-    nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+ **/
+nsresult UnionExpr::evaluate(txIEvalContext* aContext,
+                             txAExprResult** aResult) {
+  *aResult = nullptr;
+  RefPtr<txNodeSet> nodes;
+  nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t i, len = mExpressions.Length();
+  for (i = 0; i < len; ++i) {
+    RefPtr<txAExprResult> exprResult;
+    rv = mExpressions[i]->evaluate(aContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    uint32_t i, len = mExpressions.Length();
-    for (i = 0; i < len; ++i) {
-        RefPtr<txAExprResult> exprResult;
-        rv = mExpressions[i]->evaluate(aContext, getter_AddRefs(exprResult));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (exprResult->getResultType() != txAExprResult::NODESET) {
-            //XXX ErrorReport: report nonnodeset error
-            return NS_ERROR_XSLT_NODESET_EXPECTED;
-        }
-
-        RefPtr<txNodeSet> resultSet, ownedSet;
-        resultSet = static_cast<txNodeSet*>
-                               (static_cast<txAExprResult*>(exprResult));
-        exprResult = nullptr;
-        rv = aContext->recycler()->
-            getNonSharedNodeSet(resultSet, getter_AddRefs(ownedSet));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = nodes->addAndTransfer(ownedSet);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (exprResult->getResultType() != txAExprResult::NODESET) {
+      // XXX ErrorReport: report nonnodeset error
+      return NS_ERROR_XSLT_NODESET_EXPECTED;
     }
 
-    *aResult = nodes;
-    NS_ADDREF(*aResult);
+    RefPtr<txNodeSet> resultSet, ownedSet;
+    resultSet =
+        static_cast<txNodeSet*>(static_cast<txAExprResult*>(exprResult));
+    exprResult = nullptr;
+    rv = aContext->recycler()->getNonSharedNodeSet(resultSet,
+                                                   getter_AddRefs(ownedSet));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_OK;
-} //-- evaluate
+    rv = nodes->addAndTransfer(ownedSet);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-Expr::ExprType
-UnionExpr::getType()
-{
-  return UNION_EXPR;
-}
+  *aResult = nodes;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}  //-- evaluate
+
+Expr::ExprType UnionExpr::getType() { return UNION_EXPR; }
 
 TX_IMPL_EXPR_STUBS_LIST(UnionExpr, NODESET_RESULT, mExpressions)
 
-bool
-UnionExpr::isSensitiveTo(ContextSensitivity aContext)
-{
-    uint32_t i, len = mExpressions.Length();
-    for (i = 0; i < len; ++i) {
-        if (mExpressions[i]->isSensitiveTo(aContext)) {
-            return true;
-        }
+bool UnionExpr::isSensitiveTo(ContextSensitivity aContext) {
+  uint32_t i, len = mExpressions.Length();
+  for (i = 0; i < len; ++i) {
+    if (mExpressions[i]->isSensitiveTo(aContext)) {
+      return true;
     }
+  }
 
-    return false;
+  return false;
 }
 
 #ifdef TX_TO_STRING
-void
-UnionExpr::toString(nsAString& dest)
-{
-    uint32_t i;
-    for (i = 0; i < mExpressions.Length(); ++i) {
-        if (i > 0)
-            dest.AppendLiteral(" | ");
-        mExpressions[i]->toString(dest);
-    }
+void UnionExpr::toString(nsAString& dest) {
+  uint32_t i;
+  for (i = 0; i < mExpressions.Length(); ++i) {
+    if (i > 0) dest.AppendLiteral(" | ");
+    mExpressions[i]->toString(dest);
+  }
 }
 #endif

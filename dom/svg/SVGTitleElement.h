@@ -13,23 +13,25 @@
 
 typedef nsSVGElement SVGTitleElementBase;
 
-nsresult NS_NewSVGTitleElement(nsIContent **aResult,
-                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGTitleElement(
+    nsIContent **aResult, already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo);
 namespace mozilla {
 namespace dom {
 
 class SVGTitleElement final : public SVGTitleElementBase,
-                              public nsStubMutationObserver
-{
-protected:
-  friend nsresult (::NS_NewSVGTitleElement(nsIContent **aResult,
-                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGTitleElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+                              public nsStubMutationObserver {
+ protected:
+  friend nsresult(::NS_NewSVGTitleElement(
+      nsIContent **aResult,
+      already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo));
+  explicit SVGTitleElement(
+      already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo);
   ~SVGTitleElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject *WrapNode(JSContext *aCx,
+                             JS::Handle<JSObject *> aGivenProto) override;
 
-public:
+ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -40,7 +42,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  virtual nsresult Clone(dom::NodeInfo *, nsINode **aResult) const override;
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent) override;
@@ -49,12 +51,12 @@ public:
                               bool aNullParent = true) override;
 
   virtual void DoneAddingChildren(bool aHaveNotified) override;
-private:
+
+ private:
   void SendTitleChangeEvent(bool aBound);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGTitleElement_h
-
+#endif  // mozilla_dom_SVGTitleElement_h

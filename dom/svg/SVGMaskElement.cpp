@@ -20,41 +20,35 @@ namespace dom {
 
 using namespace SVGUnitTypes_Binding;
 
-JSObject*
-SVGMaskElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGMaskElement::WrapNode(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return SVGMaskElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 //--------------------- Masks ------------------------
 
-nsSVGElement::LengthInfo SVGMaskElement::sLengthInfo[4] =
-{
-  { nsGkAtoms::x, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { nsGkAtoms::y, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { nsGkAtoms::width, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { nsGkAtoms::height, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+nsSVGElement::LengthInfo SVGMaskElement::sLengthInfo[4] = {
+    {nsGkAtoms::x, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::X},
+    {nsGkAtoms::y, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::Y},
+    {nsGkAtoms::width, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::X},
+    {nsGkAtoms::height, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
+     SVGContentUtils::Y},
 };
 
-nsSVGElement::EnumInfo SVGMaskElement::sEnumInfo[2] =
-{
-  { nsGkAtoms::maskUnits,
-    sSVGUnitTypesMap,
-    SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
-  },
-  { nsGkAtoms::maskContentUnits,
-    sSVGUnitTypesMap,
-    SVG_UNIT_TYPE_USERSPACEONUSE
-  }
-};
+nsSVGElement::EnumInfo SVGMaskElement::sEnumInfo[2] = {
+    {nsGkAtoms::maskUnits, sSVGUnitTypesMap, SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
+    {nsGkAtoms::maskContentUnits, sSVGUnitTypesMap,
+     SVG_UNIT_TYPE_USERSPACEONUSE}};
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGMaskElement::SVGMaskElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGMaskElementBase(std::move(aNodeInfo))
-{
-}
+SVGMaskElement::SVGMaskElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGMaskElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
 // nsINode method
@@ -63,91 +57,69 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMaskElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedEnumeration>
-SVGMaskElement::MaskUnits()
-{
+already_AddRefed<SVGAnimatedEnumeration> SVGMaskElement::MaskUnits() {
   return mEnumAttributes[MASKUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration>
-SVGMaskElement::MaskContentUnits()
-{
+already_AddRefed<SVGAnimatedEnumeration> SVGMaskElement::MaskContentUnits() {
   return mEnumAttributes[MASKCONTENTUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGMaskElement::X()
-{
+already_AddRefed<SVGAnimatedLength> SVGMaskElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGMaskElement::Y()
-{
+already_AddRefed<SVGAnimatedLength> SVGMaskElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGMaskElement::Width()
-{
+already_AddRefed<SVGAnimatedLength> SVGMaskElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGMaskElement::Height()
-{
+already_AddRefed<SVGAnimatedLength> SVGMaskElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-/* virtual */ bool
-SVGMaskElement::HasValidDimensions() const
-{
+/* virtual */ bool SVGMaskElement::HasValidDimensions() const {
   return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
-           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
+          mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
          (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
-           mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
+          mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
-nsSVGElement::LengthAttributesInfo
-SVGMaskElement::GetLengthInfo()
-{
+nsSVGElement::LengthAttributesInfo SVGMaskElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
 
-nsSVGElement::EnumAttributesInfo
-SVGMaskElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            ArrayLength(sEnumInfo));
+nsSVGElement::EnumAttributesInfo SVGMaskElement::GetEnumInfo() {
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
 //----------------------------------------------------------------------
 // nsIContent methods
 
 NS_IMETHODIMP_(bool)
-SVGMaskElement::IsAttributeMapped(const nsAtom* name) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sColorMap,
-    sFEFloodMap,
-    sFillStrokeMap,
-    sFiltersMap,
-    sFontSpecificationMap,
-    sGradientStopMap,
-    sGraphicsMap,
-    sMarkersMap,
-    sMaskMap,
-    sTextContentElementsMap,
-    sViewportsMap
-  };
+SVGMaskElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sColorMap,
+                                                    sFEFloodMap,
+                                                    sFillStrokeMap,
+                                                    sFiltersMap,
+                                                    sFontSpecificationMap,
+                                                    sGradientStopMap,
+                                                    sGraphicsMap,
+                                                    sMarkersMap,
+                                                    sMaskMap,
+                                                    sTextContentElementsMap,
+                                                    sViewportsMap};
 
   return FindAttributeDependence(name, map) ||
-    SVGMaskElementBase::IsAttributeMapped(name);
+         SVGMaskElementBase::IsAttributeMapped(name);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -20,45 +20,34 @@ using namespace mozilla::a11y;
 // LeafAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-LeafAccessible::
-  LeafAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  AccessibleWrap(aContent, aDoc)
-{
+LeafAccessible::LeafAccessible(nsIContent* aContent, DocAccessible* aDoc)
+    : AccessibleWrap(aContent, aDoc) {
   mStateFlags |= eNoKidsFromDOM;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // LeafAccessible: Accessible public
 
-Accessible*
-LeafAccessible::ChildAtPoint(int32_t aX, int32_t aY,
-                             EWhichChildAtPoint aWhichChild)
-{
+Accessible* LeafAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                                         EWhichChildAtPoint aWhichChild) {
   // Don't walk into leaf accessibles.
   return this;
 }
 
-bool
-LeafAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
-{
+bool LeafAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
   MOZ_ASSERT_UNREACHABLE("InsertChildAt called on leaf accessible!");
   return false;
 }
 
-bool
-LeafAccessible::RemoveChild(Accessible* aChild)
-{
+bool LeafAccessible::RemoveChild(Accessible* aChild) {
   MOZ_ASSERT_UNREACHABLE("RemoveChild called on leaf accessible!");
   return false;
 }
 
-bool
-LeafAccessible::IsAcceptableChild(nsIContent* aEl) const
-{
+bool LeafAccessible::IsAcceptableChild(nsIContent* aEl) const {
   // No children for leaf accessible.
   return false;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // LinkableAccessible
@@ -67,9 +56,7 @@ LeafAccessible::IsAcceptableChild(nsIContent* aEl) const
 ////////////////////////////////////////////////////////////////////////////////
 // LinkableAccessible. nsIAccessible
 
-void
-LinkableAccessible::TakeFocus() const
-{
+void LinkableAccessible::TakeFocus() const {
   if (const Accessible* actionAcc = ActionWalk()) {
     actionAcc->TakeFocus();
   } else {
@@ -77,9 +64,7 @@ LinkableAccessible::TakeFocus() const
   }
 }
 
-uint64_t
-LinkableAccessible::NativeLinkState() const
-{
+uint64_t LinkableAccessible::NativeLinkState() const {
   bool isLink;
   const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
@@ -89,9 +74,7 @@ LinkableAccessible::NativeLinkState() const
   return 0;
 }
 
-void
-LinkableAccessible::Value(nsString& aValue) const
-{
+void LinkableAccessible::Value(nsString& aValue) const {
   aValue.Truncate();
 
   Accessible::Value(aValue);
@@ -106,18 +89,14 @@ LinkableAccessible::Value(nsString& aValue) const
   }
 }
 
-uint8_t
-LinkableAccessible::ActionCount() const
-{
+uint8_t LinkableAccessible::ActionCount() const {
   bool isLink, isOnclick, isLabelWithControl;
   ActionWalk(&isLink, &isOnclick, &isLabelWithControl);
   return (isLink || isOnclick || isLabelWithControl) ? 1 : 0;
 }
 
-const Accessible*
-LinkableAccessible::ActionWalk(bool* aIsLink, bool* aIsOnclick,
-                               bool* aIsLabelWithControl) const
-{
+const Accessible* LinkableAccessible::ActionWalk(
+    bool* aIsLink, bool* aIsOnclick, bool* aIsLabelWithControl) const {
   if (aIsOnclick) {
     *aIsOnclick = false;
   }
@@ -164,9 +143,7 @@ LinkableAccessible::ActionWalk(bool* aIsLink, bool* aIsOnclick,
   return nullptr;
 }
 
-void
-LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
-{
+void LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   aName.Truncate();
 
   // Action 0 (default action): Jump to link
@@ -181,9 +158,7 @@ LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
   }
 }
 
-bool
-LinkableAccessible::DoAction(uint8_t aIndex) const
-{
+bool LinkableAccessible::DoAction(uint8_t aIndex) const {
   if (aIndex != eAction_Jump) {
     return false;
   }
@@ -195,11 +170,9 @@ LinkableAccessible::DoAction(uint8_t aIndex) const
   return AccessibleWrap::DoAction(aIndex);
 }
 
-KeyBinding
-LinkableAccessible::AccessKey() const
-{
+KeyBinding LinkableAccessible::AccessKey() const {
   if (const Accessible* actionAcc =
-    const_cast<LinkableAccessible*>(this)->ActionWalk()) {
+          const_cast<LinkableAccessible*>(this)->ActionWalk()) {
     return actionAcc->AccessKey();
   }
 
@@ -209,9 +182,8 @@ LinkableAccessible::AccessKey() const
 ////////////////////////////////////////////////////////////////////////////////
 // LinkableAccessible: HyperLinkAccessible
 
-already_AddRefed<nsIURI>
-LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
-{
+already_AddRefed<nsIURI> LinkableAccessible::AnchorURIAt(
+    uint32_t aAnchorIndex) const {
   bool isLink;
   const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
@@ -225,35 +197,15 @@ LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
   return nullptr;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // DummyAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-uint64_t
-DummyAccessible::NativeState() const
-{
-  return 0;
-}
-uint64_t
-DummyAccessible::NativeInteractiveState() const
-{
-  return 0;
-}
+uint64_t DummyAccessible::NativeState() const { return 0; }
+uint64_t DummyAccessible::NativeInteractiveState() const { return 0; }
 
-uint64_t
-DummyAccessible::NativeLinkState() const
-{
-  return 0;
-}
+uint64_t DummyAccessible::NativeLinkState() const { return 0; }
 
-bool
-DummyAccessible::NativelyUnavailable() const
-{
-  return false;
-}
+bool DummyAccessible::NativelyUnavailable() const { return false; }
 
-void
-DummyAccessible::ApplyARIAState(uint64_t* aState) const
-{
-}
+void DummyAccessible::ApplyARIAState(uint64_t* aState) const {}

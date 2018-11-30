@@ -16,11 +16,11 @@
 namespace mozilla {
 namespace dom {
 class Element;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 class nsKeygenFormProcessorContent final : public nsIFormProcessor {
-public:
+ public:
   nsKeygenFormProcessorContent();
 
   virtual nsresult ProcessValue(mozilla::dom::Element* aElement,
@@ -39,8 +39,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-protected:
+ protected:
   ~nsKeygenFormProcessorContent();
 };
 
-#endif // nsKeygenHandlerContent_h
+#endif  // nsKeygenHandlerContent_h

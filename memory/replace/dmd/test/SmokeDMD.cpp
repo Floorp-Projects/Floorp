@@ -28,15 +28,13 @@ using namespace mozilla::dmd;
 
 DMDFuncs::Singleton DMDFuncs::sSingleton;
 
-class FpWriteFunc : public mozilla::JSONWriteFunc
-{
-public:
-  explicit FpWriteFunc(const char* aFilename)
-  {
+class FpWriteFunc : public mozilla::JSONWriteFunc {
+ public:
+  explicit FpWriteFunc(const char* aFilename) {
     mFp = fopen(aFilename, "w");
     if (!mFp) {
-      fprintf(stderr, "SmokeDMD: can't create %s file: %s\n",
-              aFilename, strerror(errno));
+      fprintf(stderr, "SmokeDMD: can't create %s file: %s\n", aFilename,
+              strerror(errno));
       exit(1);
     }
   }
@@ -45,14 +43,12 @@ public:
 
   void Write(const char* aStr) override { fputs(aStr, mFp); }
 
-private:
+ private:
   FILE* mFp;
 };
 
 // This stops otherwise-unused variables from being optimized away.
-static void
-UseItOrLoseIt(void* aPtr, int aSeven)
-{
+static void UseItOrLoseIt(void* aPtr, int aSeven) {
   char buf[64];
   int n = sprintf(buf, "%p\n", aPtr);
   if (n == 20 + aSeven) {
@@ -62,11 +58,10 @@ UseItOrLoseIt(void* aPtr, int aSeven)
 
 // This function checks that heap blocks that have the same stack trace but
 // different (or no) reporters get aggregated separately.
-void Foo(int aSeven)
-{
+void Foo(int aSeven) {
   char* a[6];
   for (int i = 0; i < aSeven - 1; i++) {
-    a[i] = (char*) malloc(128 - 16*i);
+    a[i] = (char*)malloc(128 - 16 * i);
     UseItOrLoseIt(a[i], aSeven);
   }
 
@@ -74,25 +69,23 @@ void Foo(int aSeven)
   // generated for adjacent calls to Report(), which breaks the test. Inserting
   // the UseItOrLoseIt() calls in between is enough to prevent this.
 
-  Report(a[2]);                     // reported
+  Report(a[2]);  // reported
 
   UseItOrLoseIt(a[2], aSeven);
 
   for (int i = 0; i < aSeven - 5; i++) {
-    Report(a[i]);                   // reported
+    Report(a[i]);  // reported
     UseItOrLoseIt(a[i], aSeven);
   }
 
   UseItOrLoseIt(a[2], aSeven);
 
-  Report(a[3]);                     // reported
+  Report(a[3]);  // reported
 
   // a[4], a[5] unreported
 }
 
-void
-TestEmpty(const char* aTestName, const char* aMode)
-{
+void TestEmpty(const char* aTestName, const char* aMode) {
   char filename[128];
   sprintf(filename, "complete-%s-%s.json", aTestName, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
@@ -105,9 +98,7 @@ TestEmpty(const char* aTestName, const char* aMode)
   Analyze(std::move(f));
 }
 
-void
-TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
-{
+void TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven) {
   char filename[128];
   sprintf(filename, "complete-%s%d-%s.json", aTestName, aNum, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
@@ -123,8 +114,8 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   int i;
   char* a = nullptr;
   for (i = 0; i < aSeven + 3; i++) {
-      a = (char*) malloc(100);
-      UseItOrLoseIt(a, aSeven);
+    a = (char*)malloc(100);
+    UseItOrLoseIt(a, aSeven);
   }
   free(a);
 
@@ -135,24 +126,24 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // behaviour across all platforms with jemalloc.
   // Analyze 1: reported.
   // Analyze 2: thrice-reported.
-  char* a2 = (char*) malloc(16);
+  char* a2 = (char*)malloc(16);
   Report(a2);
 
   // Analyze 1: reported.
   // Analyze 2: reportedness carries over, due to ReportOnAlloc.
-  char* b = (char*) malloc(10);
+  char* b = (char*)malloc(10);
   ReportOnAlloc(b);
 
   // ReportOnAlloc, then freed.
   // Analyze 1: freed, irrelevant.
   // Analyze 2: freed, irrelevant.
-  char* b2 = (char*) malloc(16);
+  char* b2 = (char*)malloc(16);
   ReportOnAlloc(b2);
   free(b2);
 
   // Analyze 1: reported 4 times.
   // Analyze 2: freed, irrelevant.
-  char* c = (char*) calloc(10, 3);
+  char* c = (char*)calloc(10, 3);
   Report(c);
   for (int i = 0; i < aSeven - 4; i++) {
     Report(c);
@@ -165,29 +156,29 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // jemalloc rounds this up to 8192.
   // Analyze 1: reported.
   // Analyze 2: freed.
-  char* e = (char*) malloc(4096);
-  e = (char*) realloc(e, 7169);
+  char* e = (char*)malloc(4096);
+  e = (char*)realloc(e, 7169);
   Report(e);
 
   // First realloc is like malloc;  second realloc is shrinking.
   // Analyze 1: reported.
   // Analyze 2: re-reported.
-  char* e2 = (char*) realloc(nullptr, 1024);
-  e2 = (char*) realloc(e2, 512);
+  char* e2 = (char*)realloc(nullptr, 1024);
+  e2 = (char*)realloc(e2, 512);
   Report(e2);
 
   // First realloc is like malloc;  second realloc creates a min-sized block.
   // XXX: on Windows, second realloc frees the block.
   // Analyze 1: reported.
   // Analyze 2: freed, irrelevant.
-  char* e3 = (char*) realloc(nullptr, 1023);
-//e3 = (char*) realloc(e3, 0);
+  char* e3 = (char*)realloc(nullptr, 1023);
+  // e3 = (char*) realloc(e3, 0);
   MOZ_ASSERT(e3);
   Report(e3);
 
   // Analyze 1: freed, irrelevant.
   // Analyze 2: freed, irrelevant.
-  char* f1 = (char*) malloc(64);
+  char* f1 = (char*)malloc(64);
   UseItOrLoseIt(f1, aSeven);
   free(f1);
 
@@ -201,7 +192,7 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
 
   // Analyze 1: twice-reported.
   // Analyze 2: twice-reported.
-  char* g1 = (char*) malloc(77);
+  char* g1 = (char*)malloc(77);
   ReportOnAlloc(g1);
   ReportOnAlloc(g1);
 
@@ -213,13 +204,13 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
 
   // Analyze 1: twice-reported.
   // Analyze 2: once-reported.
-  char* g2 = (char*) malloc(78);
+  char* g2 = (char*)malloc(78);
   Report(g2);
   ReportOnAlloc(g2);
 
   // Analyze 1: twice-reported.
   // Analyze 2: once-reported.
-  char* g3 = (char*) malloc(79);
+  char* g3 = (char*)malloc(79);
   ReportOnAlloc(g3);
   Report(g3);
 
@@ -227,21 +218,21 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // Analyze 1: all unreported.
   // Analyze 2: all freed, irrelevant.
   // XXX: no memalign on Mac
-//void* w = memalign(64, 65);           // rounds up to 128
-//UseItOrLoseIt(w, aSeven);
+  // void* w = memalign(64, 65);           // rounds up to 128
+  // UseItOrLoseIt(w, aSeven);
 
   // XXX: posix_memalign doesn't work on B2G
-//void* x;
-//posix_memalign(&y, 128, 129);         // rounds up to 256
-//UseItOrLoseIt(x, aSeven);
+  // void* x;
+  // posix_memalign(&y, 128, 129);         // rounds up to 256
+  // UseItOrLoseIt(x, aSeven);
 
   // XXX: valloc doesn't work on Windows.
-//void* y = valloc(1);                  // rounds up to 4096
-//UseItOrLoseIt(y, aSeven);
+  // void* y = valloc(1);                  // rounds up to 4096
+  // UseItOrLoseIt(y, aSeven);
 
   // XXX: C11 only
-//void* z = aligned_alloc(64, 256);
-//UseItOrLoseIt(z, aSeven);
+  // void* z = aligned_alloc(64, 256);
+  // UseItOrLoseIt(z, aSeven);
 
   if (aNum == 1) {
     // Analyze 1.
@@ -258,10 +249,10 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   free(e);
   Report(e2);
   free(e3);
-//free(w);
-//free(x);
-//free(y);
-//free(z);
+  // free(w);
+  // free(x);
+  // free(y);
+  // free(z);
 
   // Do some allocations that will only show up in cumulative mode.
   for (int i = 0; i < 100; i++) {
@@ -276,9 +267,7 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   }
 }
 
-void
-TestPartial(const char* aTestName, const char* aMode, int aSeven)
-{
+void TestPartial(const char* aTestName, const char* aMode, int aSeven) {
   char filename[128];
   sprintf(filename, "complete-%s-%s.json", aTestName, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
@@ -298,7 +287,7 @@ TestPartial(const char* aTestName, const char* aMode, int aSeven)
   // So we expect about 0.0469 * 10000 == 469.
   // We actually get 511.
   for (int i = 0; i < kTenThousand; i++) {
-    s = (char*) malloc(16);
+    s = (char*)malloc(16);
     UseItOrLoseIt(s, aSeven);
   }
 
@@ -306,7 +295,7 @@ TestPartial(const char* aTestName, const char* aMode, int aSeven)
   // So we expect about 0.3193 * 10000 == 3193.
   // We actually get 3136.
   for (int i = 0; i < kTenThousand; i++) {
-    s = (char*) malloc(128);
+    s = (char*)malloc(128);
     UseItOrLoseIt(s, aSeven);
   }
 
@@ -314,37 +303,33 @@ TestPartial(const char* aTestName, const char* aMode, int aSeven)
   // So we expect about 0.9539 * 10000 == 9539.
   // We actually get 9531.
   for (int i = 0; i < kTenThousand; i++) {
-    s = (char*) malloc(1024);
+    s = (char*)malloc(1024);
     UseItOrLoseIt(s, aSeven);
   }
 
   Analyze(std::move(f));
 }
 
-void
-TestScan(int aSeven)
-{
+void TestScan(int aSeven) {
   auto f = MakeUnique<FpWriteFunc>("basic-scan.json");
 
   ResetEverything("--mode=scan");
 
-  uintptr_t* p = (uintptr_t*) malloc(6 * sizeof(uintptr_t*));
+  uintptr_t* p = (uintptr_t*)malloc(6 * sizeof(uintptr_t*));
   UseItOrLoseIt(p, aSeven);
 
   // Hard-coded values checked by scan-test.py
-  p[0] = 0x123; // outside a block, small value
-  p[1] = 0x0; // null
-  p[2] = (uintptr_t)((uint8_t*)p - 1); // pointer outside a block, but nearby
-  p[3] = (uintptr_t)p; // pointer to start of a block
-  p[4] = (uintptr_t)((uint8_t*)p + 1); // pointer into a block
-  p[5] = 0x0; // trailing null
+  p[0] = 0x123;                         // outside a block, small value
+  p[1] = 0x0;                           // null
+  p[2] = (uintptr_t)((uint8_t*)p - 1);  // pointer outside a block, but nearby
+  p[3] = (uintptr_t)p;                  // pointer to start of a block
+  p[4] = (uintptr_t)((uint8_t*)p + 1);  // pointer into a block
+  p[5] = 0x0;                           // trailing null
 
   Analyze(std::move(f));
 }
 
-void
-RunTests()
-{
+void RunTests() {
   // This test relies on the compiler not doing various optimizations, such as
   // eliding unused malloc() calls or unrolling loops with fixed iteration
   // counts. So we compile it with -O0 (or equivalent), which probably prevents
@@ -355,7 +340,7 @@ RunTests()
 
   // Make sure that DMD is actually running; it is initialized on the first
   // allocation.
-  int *x = (int*)malloc(100);
+  int* x = (int*)malloc(100);
   UseItOrLoseIt(x, seven);
   MOZ_RELEASE_ASSERT(IsRunning());
 
@@ -365,19 +350,18 @@ RunTests()
   TestEmpty("empty", "dark-matter");
   TestEmpty("empty", "cumulative");
 
-  TestFull("full", 1, "live",        seven);
+  TestFull("full", 1, "live", seven);
   TestFull("full", 1, "dark-matter", seven);
 
   TestFull("full", 2, "dark-matter", seven);
-  TestFull("full", 2, "cumulative",  seven);
+  TestFull("full", 2, "cumulative", seven);
 
   TestPartial("partial", "live", seven);
 
   TestScan(seven);
 }
 
-int main()
-{
+int main() {
   RunTests();
 
   return 0;

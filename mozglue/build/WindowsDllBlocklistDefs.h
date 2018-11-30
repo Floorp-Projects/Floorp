@@ -22,10 +22,10 @@ DLL_BLOCKLIST_DEFINITIONS_BEGIN
 DLL_BLOCKLIST_ENTRY("npffaddon.dll", ALL_VERSIONS)
 
 // AVG 8 - Antivirus vendor AVG, old version, plugin already blocklisted
-DLL_BLOCKLIST_ENTRY("avgrsstx.dll", MAKE_VERSION(8,5,0,401))
+DLL_BLOCKLIST_ENTRY("avgrsstx.dll", MAKE_VERSION(8, 5, 0, 401))
 
 // calc.dll - Suspected malware
-DLL_BLOCKLIST_ENTRY("calc.dll", MAKE_VERSION(1,0,0,1))
+DLL_BLOCKLIST_ENTRY("calc.dll", MAKE_VERSION(1, 0, 0, 1))
 
 // hook.dll - Suspected malware
 DLL_BLOCKLIST_ENTRY("hook.dll", ALL_VERSIONS)
@@ -35,31 +35,31 @@ DLL_BLOCKLIST_ENTRY("hook.dll", ALL_VERSIONS)
 DLL_BLOCKLIST_ENTRY("googledesktopnetwork3.dll", UNVERSIONED)
 
 // rdolib.dll - Suspected malware
-DLL_BLOCKLIST_ENTRY("rdolib.dll", MAKE_VERSION(6,0,88,4))
+DLL_BLOCKLIST_ENTRY("rdolib.dll", MAKE_VERSION(6, 0, 88, 4))
 
 // fgjk4wvb.dll - Suspected malware
-DLL_BLOCKLIST_ENTRY("fgjk4wvb.dll", MAKE_VERSION(8,8,8,8))
+DLL_BLOCKLIST_ENTRY("fgjk4wvb.dll", MAKE_VERSION(8, 8, 8, 8))
 
 // radhslib.dll - Naomi internet filter - unmaintained since 2006
 DLL_BLOCKLIST_ENTRY("radhslib.dll", UNVERSIONED)
 
 // Music download filter for vkontakte.ru - old instances
 // of this DLL cause crashes
-DLL_BLOCKLIST_ENTRY("vksaver.dll", MAKE_VERSION(2,2,2,0))
+DLL_BLOCKLIST_ENTRY("vksaver.dll", MAKE_VERSION(2, 2, 2, 0))
 
 // Topcrash in Firefox 4.0b1
-DLL_BLOCKLIST_ENTRY("rlxf.dll", MAKE_VERSION(1,2,323,1))
+DLL_BLOCKLIST_ENTRY("rlxf.dll", MAKE_VERSION(1, 2, 323, 1))
 
 // psicon.dll - Topcrashes in Thunderbird, and some crashes in Firefox
 // Adobe photoshop library, now redundant in later installations
 DLL_BLOCKLIST_ENTRY("psicon.dll", ALL_VERSIONS)
 
 // Topcrash in Firefox 4 betas (bug 618899)
-DLL_BLOCKLIST_ENTRY("accelerator.dll", MAKE_VERSION(3,2,1,6))
+DLL_BLOCKLIST_ENTRY("accelerator.dll", MAKE_VERSION(3, 2, 1, 6))
 
 // Topcrash with Roboform in Firefox 8 (bug 699134)
-DLL_BLOCKLIST_ENTRY("rf-firefox.dll", MAKE_VERSION(7,6,1,0))
-DLL_BLOCKLIST_ENTRY("roboform.dll", MAKE_VERSION(7,6,1,0))
+DLL_BLOCKLIST_ENTRY("rf-firefox.dll", MAKE_VERSION(7, 6, 1, 0))
+DLL_BLOCKLIST_ENTRY("roboform.dll", MAKE_VERSION(7, 6, 1, 0))
 
 // Topcrash with Babylon Toolbar on FF16+ (bug 721264)
 DLL_BLOCKLIST_ENTRY("babyfox.dll", ALL_VERSIONS)
@@ -179,10 +179,12 @@ DLL_BLOCKLIST_ENTRY("nahimic2osd.dll", MAKE_VERSION(2, 5, 19, 0xffff))
 DLL_BLOCKLIST_ENTRY("nahimicmsidevprops.dll", UNVERSIONED)
 
 // Bug 1268470 - crashes with Kaspersky Lab on Windows 8
-DLL_BLOCKLIST_ENTRY("klsihk64.dll", MAKE_VERSION(14, 0, 456, 0xffff), DllBlockInfo::BLOCK_WIN8_ONLY)
+DLL_BLOCKLIST_ENTRY("klsihk64.dll", MAKE_VERSION(14, 0, 456, 0xffff),
+                    DllBlockInfo::BLOCK_WIN8_ONLY)
 
 // Bug 1407337, crashes with OpenSC < 0.16.0
-DLL_BLOCKLIST_ENTRY("onepin-opensc-pkcs11.dll", MAKE_VERSION(0, 15, 0xffff, 0xffff))
+DLL_BLOCKLIST_ENTRY("onepin-opensc-pkcs11.dll",
+                    MAKE_VERSION(0, 15, 0xffff, 0xffff))
 
 // Avecto Privilege Guard causes crashes, bug 1385542
 DLL_BLOCKLIST_ENTRY("pghook.dll", ALL_VERSIONS)
@@ -204,11 +206,13 @@ DLL_BLOCKLIST_ENTRY("nviewh64.dll", MAKE_VERSION(6, 14, 10, 14847))
 
 // DLLs used by TestDllBlocklist* gTests
 DLL_BLOCKLIST_ENTRY("testdllblocklist_matchbyname.dll", ALL_VERSIONS)
-DLL_BLOCKLIST_ENTRY("testdllblocklist_matchbyversion.dll", MAKE_VERSION(5, 5, 5, 5))
-DLL_BLOCKLIST_ENTRY("testdllblocklist_allowbyversion.dll", MAKE_VERSION(5, 5, 5, 5))
+DLL_BLOCKLIST_ENTRY("testdllblocklist_matchbyversion.dll",
+                    MAKE_VERSION(5, 5, 5, 5))
+DLL_BLOCKLIST_ENTRY("testdllblocklist_allowbyversion.dll",
+                    MAKE_VERSION(5, 5, 5, 5))
 
-#endif // ENABLE_TESTS
+#endif  // ENABLE_TESTS
 
 DLL_BLOCKLIST_DEFINITIONS_END
 
-#endif // mozilla_WindowsDllBlocklistDefs_h
+#endif  // mozilla_WindowsDllBlocklistDefs_h

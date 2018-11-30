@@ -14,17 +14,13 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 
-class nsDocElementCreatedNotificationRunner : public mozilla::Runnable
-{
-public:
+class nsDocElementCreatedNotificationRunner : public mozilla::Runnable {
+ public:
   explicit nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)
-    : mozilla::Runnable("nsDocElementCreatedNotificationRunner")
-    , mDoc(aDoc)
-  {
-  }
+      : mozilla::Runnable("nsDocElementCreatedNotificationRunner"),
+        mDoc(aDoc) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     nsContentSink::NotifyDocElementCreated(mDoc);
     return NS_OK;
   }

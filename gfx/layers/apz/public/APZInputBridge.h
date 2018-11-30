@@ -7,9 +7,9 @@
 #ifndef mozilla_layers_APZInputBridge_h
 #define mozilla_layers_APZInputBridge_h
 
-#include "APZUtils.h"                   // for APZWheelAction
-#include "mozilla/EventForwards.h"      // for WidgetInputEvent, nsEventStatus
-#include "Units.h"                      // for LayoutDeviceIntPoint
+#include "APZUtils.h"               // for APZWheelAction
+#include "mozilla/EventForwards.h"  // for WidgetInputEvent, nsEventStatus
+#include "Units.h"                  // for LayoutDeviceIntPoint
 
 namespace mozilla {
 
@@ -30,7 +30,7 @@ struct ScrollableLayerGuid;
  * APZCTreeManager overrides and implements these methods directly.
  */
 class APZInputBridge {
-public:
+ public:
   /**
    * General handler for incoming input events. Manipulates the frame metrics
    * based on what type of input it is. For example, a PinchGestureEvent will
@@ -65,10 +65,9 @@ public:
    * @param aOutInputBlockId returns the id of the input block that this event
    * was added to, if that was the case. May be null.
    */
-  virtual nsEventStatus ReceiveInputEvent(
-      InputData& aEvent,
-      ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId) = 0;
+  virtual nsEventStatus ReceiveInputEvent(InputData& aEvent,
+                                          ScrollableLayerGuid* aOutTargetGuid,
+                                          uint64_t* aOutInputBlockId) = 0;
 
   /**
    * WidgetInputEvent handler. Transforms |aEvent| (which is assumed to be an
@@ -86,10 +85,9 @@ public:
    *
    * See documentation for other ReceiveInputEvent above.
    */
-  nsEventStatus ReceiveInputEvent(
-      WidgetInputEvent& aEvent,
-      ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId);
+  nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
 
   // Returns the kind of wheel event action, if any, that will be (or was)
   // performed by APZ. If this returns true, the event must not perform a
@@ -99,24 +97,23 @@ public:
   // be sent through APZ so they are transformed correctly for TabParent.
   static Maybe<APZWheelAction> ActionForWheelEvent(WidgetWheelEvent* aEvent);
 
-protected:
+ protected:
   friend class APZInputBridgeParent;
 
-  // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
+  // Methods to help process WidgetInputEvents (or manage conversion to/from
+  // InputData)
 
-  virtual void ProcessUnhandledEvent(
-      LayoutDeviceIntPoint* aRefPoint,
-      ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutFocusSequenceNumber) = 0;
+  virtual void ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
+                                     ScrollableLayerGuid* aOutTargetGuid,
+                                     uint64_t* aOutFocusSequenceNumber) = 0;
 
-  virtual void UpdateWheelTransaction(
-      LayoutDeviceIntPoint aRefPoint,
-      EventMessage aEventMessage) = 0;
+  virtual void UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
+                                      EventMessage aEventMessage) = 0;
 
-  virtual ~APZInputBridge() { }
+  virtual ~APZInputBridge() {}
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // mozilla_layers_APZInputBridge_h
+#endif  // mozilla_layers_APZInputBridge_h

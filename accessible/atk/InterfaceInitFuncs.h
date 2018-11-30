@@ -14,31 +14,30 @@ namespace a11y {
 
 class AccessibleWrap;
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 extern "C" {
 void actionInterfaceInitCB(AtkActionIface* aIface);
 void componentInterfaceInitCB(AtkComponentIface* aIface);
-void documentInterfaceInitCB(AtkDocumentIface *aIface);
+void documentInterfaceInitCB(AtkDocumentIface* aIface);
 void editableTextInterfaceInitCB(AtkEditableTextIface* aIface);
-void hyperlinkImplInterfaceInitCB(AtkHyperlinkImplIface *aIface);
+void hyperlinkImplInterfaceInitCB(AtkHyperlinkImplIface* aIface);
 void hypertextInterfaceInitCB(AtkHypertextIface* aIface);
 void imageInterfaceInitCB(AtkImageIface* aIface);
 void selectionInterfaceInitCB(AtkSelectionIface* aIface);
-void tableInterfaceInitCB(AtkTableIface *aIface);
-void tableCellInterfaceInitCB(AtkTableCellIface *aIface);
+void tableInterfaceInitCB(AtkTableIface* aIface);
+void tableCellInterfaceInitCB(AtkTableCellIface* aIface);
 void textInterfaceInitCB(AtkTextIface* aIface);
-void valueInterfaceInitCB(AtkValueIface *aIface);
+void valueInterfaceInitCB(AtkValueIface* aIface);
 }
 
 /**
  * XXX these should live in a file of utils for atk.
  */
-AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj,
-                                      gint aX, gint aY, AtkCoordType aCoordType);
-void getExtentsHelper(AtkObject* aAtkObj,
-                      gint* aX, gint* aY, gint* aWidth, gint* aHeight,
-                      AtkCoordType aCoordType);
+AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
+                                      AtkCoordType aCoordType);
+void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
+                      gint* aHeight, AtkCoordType aCoordType);
 
-#endif // ATK_INTERFACE_INIT_FUNCS_H_
+#endif  // ATK_INTERFACE_INIT_FUNCS_H_

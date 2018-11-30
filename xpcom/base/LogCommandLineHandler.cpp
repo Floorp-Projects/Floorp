@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LogCommandLineHandler.h"
 
@@ -11,24 +11,24 @@
 
 namespace mozilla {
 
-void LoggingHandleCommandLineArgs(int argc, char const* const* argv,
-                                  std::function<void(nsACString const&)> const& consumer)
-{
+void LoggingHandleCommandLineArgs(
+    int argc, char const* const* argv,
+    std::function<void(nsACString const&)> const& consumer) {
   // Keeps the name of a pending env var (MOZ_LOG or MOZ_LOG_FILE) that
   // we expect to get a value for in the next iterated arg.
   // Used for the `-MOZ_LOG <modules>` form of argument.
   nsAutoCString env;
 
-  auto const names = {
-    NS_LITERAL_CSTRING("MOZ_LOG"),
-    NS_LITERAL_CSTRING("MOZ_LOG_FILE")
-  };
+  auto const names = {NS_LITERAL_CSTRING("MOZ_LOG"),
+                      NS_LITERAL_CSTRING("MOZ_LOG_FILE")};
 
   for (int arg = 1; arg < argc; ++arg) {
     Tokenizer p(argv[arg]);
 
     if (!env.IsEmpty() && p.CheckChar('-')) {
-      NS_WARNING("Expects value after -MOZ_LOG(_FILE) argument, but another argument found");
+      NS_WARNING(
+          "Expects value after -MOZ_LOG(_FILE) argument, but another argument "
+          "found");
 
       // We only expect values for the pending env var, start over
       p.Rollback();
@@ -88,4 +88,4 @@ void LoggingHandleCommandLineArgs(int argc, char const* const* argv,
   }
 }
 
-} // mozilla
+}  // namespace mozilla

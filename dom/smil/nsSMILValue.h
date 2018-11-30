@@ -19,17 +19,13 @@
  * avoiding recomposing). These nsSMILValue objects typically live much longer
  * than a single sample.
  */
-class nsSMILValue
-{
-public:
-  nsSMILValue() : mU(), mType(nsSMILNullType::Singleton()) { }
+class nsSMILValue {
+ public:
+  nsSMILValue() : mU(), mType(nsSMILNullType::Singleton()) {}
   explicit nsSMILValue(const nsISMILType* aType);
   nsSMILValue(const nsSMILValue& aVal);
 
-  ~nsSMILValue()
-  {
-    mType->Destroy(*this);
-  }
+  ~nsSMILValue() { mType->Destroy(*this); }
 
   const nsSMILValue& operator=(const nsSMILValue& aVal);
 
@@ -40,20 +36,14 @@ public:
   // Equality operators. These are allowed to be conservative (return false
   // more than you'd expect) - see comment above nsISMILType::IsEqual.
   bool operator==(const nsSMILValue& aVal) const;
-  bool operator!=(const nsSMILValue& aVal) const {
-    return !(*this == aVal);
-  }
+  bool operator!=(const nsSMILValue& aVal) const { return !(*this == aVal); }
 
-  bool IsNull() const
-  {
-    return (mType == nsSMILNullType::Singleton());
-  }
+  bool IsNull() const { return (mType == nsSMILNullType::Singleton()); }
 
   nsresult Add(const nsSMILValue& aValueToAdd, uint32_t aCount = 1);
   nsresult SandwichAdd(const nsSMILValue& aValueToAdd);
   nsresult ComputeDistance(const nsSMILValue& aTo, double& aDistance) const;
-  nsresult Interpolate(const nsSMILValue& aEndVal,
-                       double aUnitDistance,
+  nsresult Interpolate(const nsSMILValue& aEndVal, double aUnitDistance,
                        nsSMILValue& aResult) const;
 
   union {
@@ -72,7 +62,7 @@ public:
   } mU;
   const nsISMILType* mType;
 
-protected:
+ protected:
   void InitAndCheckPostcondition(const nsISMILType* aNewType);
   void DestroyAndCheckPostcondition();
   void DestroyAndReinit(const nsISMILType* aNewType);

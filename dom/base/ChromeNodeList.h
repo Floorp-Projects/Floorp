@@ -13,16 +13,12 @@ class ErrorResult;
 namespace dom {
 class GlobalObject;
 
-class ChromeNodeList final : public nsSimpleContentList
-{
-public:
-  explicit ChromeNodeList(nsINode* aOwner)
-  : nsSimpleContentList(aOwner)
-  {
-  }
+class ChromeNodeList final : public nsSimpleContentList {
+ public:
+  explicit ChromeNodeList(nsINode* aOwner) : nsSimpleContentList(aOwner) {}
 
-  static already_AddRefed<ChromeNodeList>
-  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+  static already_AddRefed<ChromeNodeList> Constructor(
+      const GlobalObject& aGlobal, ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -31,5 +27,5 @@ public:
   void Remove(nsINode& aNode, ErrorResult& aError);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

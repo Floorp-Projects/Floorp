@@ -19,62 +19,50 @@
 #include "secmodt.h"
 #include "nsKeygenHandler.h"
 
+using mozilla::Unused;
 using mozilla::dom::ContentChild;
 using mozilla::dom::Element;
-using mozilla::Unused;
 
 NS_IMPL_ISUPPORTS(nsKeygenFormProcessorContent, nsIFormProcessor)
 
-nsKeygenFormProcessorContent::nsKeygenFormProcessorContent()
-{
-}
+nsKeygenFormProcessorContent::nsKeygenFormProcessorContent() {}
 
-nsKeygenFormProcessorContent::~nsKeygenFormProcessorContent()
-{
-}
+nsKeygenFormProcessorContent::~nsKeygenFormProcessorContent() {}
 
-nsresult
-nsKeygenFormProcessorContent::ProcessValue(Element* aElement,
-                                           const nsAString& aName,
-                                           nsAString& aValue)
-{
+nsresult nsKeygenFormProcessorContent::ProcessValue(Element* aElement,
+                                                    const nsAString& aName,
+                                                    nsAString& aValue) {
   nsAutoString challengeValue;
   nsAutoString keyTypeValue;
   nsAutoString keyParamsValue;
-  nsKeygenFormProcessor::ExtractParams(aElement, challengeValue, keyTypeValue, keyParamsValue);
+  nsKeygenFormProcessor::ExtractParams(aElement, challengeValue, keyTypeValue,
+                                       keyParamsValue);
 
   ContentChild* child = ContentChild::GetSingleton();
 
   nsString oldValue(aValue);
   nsString newValue;
-  Unused << child->SendKeygenProcessValue(oldValue, challengeValue,
-                                          keyTypeValue, keyParamsValue,
-                                          &newValue);
+  Unused << child->SendKeygenProcessValue(
+      oldValue, challengeValue, keyTypeValue, keyParamsValue, &newValue);
 
   aValue.Assign(newValue);
   return NS_OK;
 }
 
-nsresult
-nsKeygenFormProcessorContent::ProcessValueIPC(const nsAString& aOldValue,
-                                              const nsAString& aChallenge,
-                                              const nsAString& aKeyType,
-                                              const nsAString& aKeyParams,
-                                              nsAString& aNewValue)
-{
+nsresult nsKeygenFormProcessorContent::ProcessValueIPC(
+    const nsAString& aOldValue, const nsAString& aChallenge,
+    const nsAString& aKeyType, const nsAString& aKeyParams,
+    nsAString& aNewValue) {
   MOZ_ASSERT(false, "should never be called in the child process");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult
-nsKeygenFormProcessorContent::ProvideContent(const nsAString& aFormType,
-                                             nsTArray<nsString>& aContent,
-                                             nsAString& aAttribute)
-{
+nsresult nsKeygenFormProcessorContent::ProvideContent(
+    const nsAString& aFormType, nsTArray<nsString>& aContent,
+    nsAString& aAttribute) {
   nsString attribute;
-  Unused <<
-    ContentChild::GetSingleton()->SendKeygenProvideContent(&attribute,
-                                                           &aContent);
+  Unused << ContentChild::GetSingleton()->SendKeygenProvideContent(&attribute,
+                                                                   &aContent);
   aAttribute.Assign(attribute);
   return NS_OK;
 }

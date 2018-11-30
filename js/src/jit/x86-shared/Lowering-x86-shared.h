@@ -12,49 +12,50 @@
 namespace js {
 namespace jit {
 
-class LIRGeneratorX86Shared : public LIRGeneratorShared
-{
-  protected:
-    LIRGeneratorX86Shared(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : LIRGeneratorShared(gen, graph, lirGraph)
-    {}
+class LIRGeneratorX86Shared : public LIRGeneratorShared {
+ protected:
+  LIRGeneratorX86Shared(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
+      : LIRGeneratorShared(gen, graph, lirGraph) {}
 
-    LTableSwitch* newLTableSwitch(const LAllocation& in, const LDefinition& inputCopy,
-                                  MTableSwitch* ins);
-    LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
+  LTableSwitch* newLTableSwitch(const LAllocation& in,
+                                const LDefinition& inputCopy,
+                                MTableSwitch* ins);
+  LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
 
-    void lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir, MDefinition* lhs,
-                       MDefinition* rhs);
-    void lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir, MDefinition* input);
-    void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir, MDefinition* lhs,
-                     MDefinition* rhs);
+  void lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
+                     MDefinition* lhs, MDefinition* rhs);
+  void lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
+                   MDefinition* input);
+  void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
+                   MDefinition* lhs, MDefinition* rhs);
 
-    template<size_t Temps>
-    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
-                            MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+  template <size_t Temps>
+  void lowerForShiftInt64(
+      LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
+      MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
 
-    template<size_t Temps>
-    void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir, MDefinition* lhs,
-                     MDefinition* rhs);
-    void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
-                                 MDefinition* lhs, MDefinition* rhs);
-    void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
-    void lowerDivI(MDiv* div);
-    void lowerModI(MMod* mod);
-    void lowerUDiv(MDiv* div);
-    void lowerUMod(MMod* mod);
-    void lowerUrshD(MUrsh* mir);
-    void lowerTruncateDToInt32(MTruncateToInt32* ins);
-    void lowerTruncateFToInt32(MTruncateToInt32* ins);
-    void lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins,
-                                               bool useI386ByteRegisters);
-    void lowerAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins,
-                                              bool useI386ByteRegisters);
-    void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins,
-                                           bool useI386ByteRegisters);
+  template <size_t Temps>
+  void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir,
+                   MDefinition* lhs, MDefinition* rhs);
+  void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
+                               MDefinition* lhs, MDefinition* rhs);
+  void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
+  void lowerDivI(MDiv* div);
+  void lowerModI(MMod* mod);
+  void lowerUDiv(MDiv* div);
+  void lowerUMod(MMod* mod);
+  void lowerUrshD(MUrsh* mir);
+  void lowerTruncateDToInt32(MTruncateToInt32* ins);
+  void lowerTruncateFToInt32(MTruncateToInt32* ins);
+  void lowerCompareExchangeTypedArrayElement(
+      MCompareExchangeTypedArrayElement* ins, bool useI386ByteRegisters);
+  void lowerAtomicExchangeTypedArrayElement(
+      MAtomicExchangeTypedArrayElement* ins, bool useI386ByteRegisters);
+  void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins,
+                                         bool useI386ByteRegisters);
 };
 
-} // namespace jit
-} // namespace js
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_x86_shared_Lowering_x86_shared_h */

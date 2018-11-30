@@ -19,9 +19,9 @@ namespace widget {
  * multiple IM context but we don't support such behavior).
  */
 
-class WinTextEventDispatcherListener final : public TextEventDispatcherListener
-{
-public:
+class WinTextEventDispatcherListener final
+    : public TextEventDispatcherListener {
+ public:
   static WinTextEventDispatcherListener* GetInstance();
   static void Shutdown();
 
@@ -30,22 +30,21 @@ public:
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                        const IMENotification& aNotification) override;
   NS_IMETHOD_(IMENotificationRequests) GetIMENotificationRequests() override;
-  NS_IMETHOD_(void) OnRemovedFrom(
-                      TextEventDispatcher* aTextEventDispatcher) override;
-  NS_IMETHOD_(void) WillDispatchKeyboardEvent(
-                      TextEventDispatcher* aTextEventDispatcher,
-                      WidgetKeyboardEvent& aKeyboardEvent,
-                      uint32_t aIndexOfKeypress,
-                      void* aData) override;
+  NS_IMETHOD_(void)
+  OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;
+  NS_IMETHOD_(void)
+  WillDispatchKeyboardEvent(TextEventDispatcher* aTextEventDispatcher,
+                            WidgetKeyboardEvent& aKeyboardEvent,
+                            uint32_t aIndexOfKeypress, void* aData) override;
 
-private:
+ private:
   WinTextEventDispatcherListener();
   virtual ~WinTextEventDispatcherListener();
 
   static StaticRefPtr<WinTextEventDispatcherListener> sInstance;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // #ifndef WinTextEventDispatcherListener_h_
+#endif  // #ifndef WinTextEventDispatcherListener_h_

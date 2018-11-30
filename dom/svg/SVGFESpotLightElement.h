@@ -10,31 +10,33 @@
 #include "nsSVGFilters.h"
 #include "nsSVGNumber2.h"
 
-nsresult NS_NewSVGFESpotLightElement(nsIContent **aResult,
-                                     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+nsresult NS_NewSVGFESpotLightElement(
+    nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
 typedef SVGFELightElement SVGFESpotLightElementBase;
 
-class SVGFESpotLightElement : public SVGFESpotLightElementBase
-{
-  friend nsresult (::NS_NewSVGFESpotLightElement(nsIContent **aResult,
-                                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+class SVGFESpotLightElement : public SVGFESpotLightElementBase {
+  friend nsresult(::NS_NewSVGFESpotLightElement(
+      nsIContent** aResult,
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   friend class ::nsSVGFELightingElement;
-protected:
-  explicit SVGFESpotLightElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : SVGFESpotLightElementBase(std::move(aNodeInfo))
-  {
-  }
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-public:
-  virtual mozilla::gfx::LightType ComputeLightAttributes(nsSVGFilterInstance* aInstance,
-                                                         nsTArray<float>& aFloatAttributes) override;
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsAtom* aAttribute) const override;
+ protected:
+  explicit SVGFESpotLightElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : SVGFESpotLightElementBase(std::move(aNodeInfo)) {}
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
+
+ public:
+  virtual mozilla::gfx::LightType ComputeLightAttributes(
+      nsSVGFilterInstance* aInstance,
+      nsTArray<float>& aFloatAttributes) override;
+  virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
+                                         nsAtom* aAttribute) const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -48,16 +50,24 @@ public:
   already_AddRefed<SVGAnimatedNumber> SpecularExponent();
   already_AddRefed<SVGAnimatedNumber> LimitingConeAngle();
 
-protected:
+ protected:
   virtual NumberAttributesInfo GetNumberInfo() override;
 
-  enum { ATTR_X, ATTR_Y, ATTR_Z, POINTS_AT_X, POINTS_AT_Y, POINTS_AT_Z,
-         SPECULAR_EXPONENT, LIMITING_CONE_ANGLE };
+  enum {
+    ATTR_X,
+    ATTR_Y,
+    ATTR_Z,
+    POINTS_AT_X,
+    POINTS_AT_Y,
+    POINTS_AT_Z,
+    SPECULAR_EXPONENT,
+    LIMITING_CONE_ANGLE
+  };
   nsSVGNumber2 mNumberAttributes[8];
   static NumberInfo sNumberInfo[8];
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGFESpotLightElement_h
+#endif  // mozilla_dom_SVGFESpotLightElement_h

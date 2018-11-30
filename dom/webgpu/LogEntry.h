@@ -12,28 +12,26 @@
 namespace mozilla {
 namespace dom {
 enum class WebGPULogEntryType : uint8_t;
-} // namespace dom
+}  // namespace dom
 namespace webgpu {
 
 class Device;
 
-class LogEntry final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(LogEntry)
+class LogEntry final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(LogEntry)
 
-private:
-    LogEntry() = delete;
-    virtual ~LogEntry();
+ private:
+  LogEntry() = delete;
+  virtual ~LogEntry();
 
-public:
-    dom::WebGPULogEntryType Type() const;
-    void GetObj(JSContext* cx, JS::MutableHandleValue out) const;
-    void GetReason(nsString& out) const;
+ public:
+  dom::WebGPULogEntryType Type() const;
+  void GetObj(JSContext* cx, JS::MutableHandleValue out) const;
+  void GetReason(nsString& out) const;
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_LogEntry_H_
+#endif  // WEBGPU_LogEntry_H_

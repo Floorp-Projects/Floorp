@@ -18,37 +18,33 @@ namespace dom {
 
 class GridDimension;
 
-class Grid : public nsISupports
-           , public nsWrapperCache
-{
-public:
+class Grid : public nsISupports, public nsWrapperCache {
+ public:
   explicit Grid(nsISupports* aParent, nsGridContainerFrame* aFrame);
 
-protected:
+ protected:
   virtual ~Grid();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Grid)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  Element* GetParentObject()
-  {
-    return mParent;
-  }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+  Element* GetParentObject() { return mParent; }
 
   GridDimension* Rows() const;
   GridDimension* Cols() const;
   void GetAreas(nsTArray<RefPtr<GridArea>>& aAreas) const;
 
-protected:
+ protected:
   nsCOMPtr<Element> mParent;
   RefPtr<GridDimension> mRows;
   RefPtr<GridDimension> mCols;
   nsTArray<RefPtr<GridArea>> mAreas;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_Grid_h */

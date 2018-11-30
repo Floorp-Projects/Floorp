@@ -13,19 +13,11 @@ namespace webgpu {
 
 Fence::~Fence() = default;
 
-bool
-Fence::Wait(const double milliseconds) const
-{
-    MOZ_CRASH("todo");
-}
+bool Fence::Wait(const double milliseconds) const { MOZ_CRASH("todo"); }
 
-already_AddRefed<dom::Promise>
-Fence::Promise() const
-{
-    MOZ_CRASH("todo");
-}
+already_AddRefed<dom::Promise> Fence::Promise() const { MOZ_CRASH("todo"); }
 
 WEBGPU_IMPL_GOOP_0(Fence)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

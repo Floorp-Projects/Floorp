@@ -14,43 +14,37 @@ namespace gfx {
 
 using namespace std;
 
-DrawEventRecorderPrivate::DrawEventRecorderPrivate() : mExternalFonts(false)
-{
-}
+DrawEventRecorderPrivate::DrawEventRecorderPrivate() : mExternalFonts(false) {}
 
-void
-DrawEventRecorderPrivate::StoreExternalSurfaceRecording(SourceSurface* aSurface,
-                                                        uint64_t aKey)
-{
+void DrawEventRecorderPrivate::StoreExternalSurfaceRecording(
+    SourceSurface *aSurface, uint64_t aKey) {
   RecordEvent(RecordedExternalSurfaceCreation(aSurface, aKey));
   mExternalSurfaces.push_back(aSurface);
 }
 
-void
-DrawEventRecorderPrivate::StoreSourceSurfaceRecording(SourceSurface *aSurface,
-                                                      const char *aReason)
-{
+void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
+    SourceSurface *aSurface, const char *aReason) {
   RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
   if (dataSurf) {
     DataSourceSurface::ScopedMap map(dataSurf, DataSourceSurface::READ);
-    RecordEvent(
-      RecordedSourceSurfaceCreation(aSurface, map.GetData(), map.GetStride(),
-                                    dataSurf->GetSize(), dataSurf->GetFormat()));
+    RecordEvent(RecordedSourceSurfaceCreation(
+        aSurface, map.GetData(), map.GetStride(), dataSurf->GetSize(),
+        dataSurf->GetFormat()));
     return;
   }
 
   gfxWarning() << "Recording failed to record SourceSurface for " << aReason;
   // Insert a bogus source surface.
-  int32_t stride = aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat());
-  UniquePtr<uint8_t[]> sourceData(new uint8_t[stride * aSurface->GetSize().height]());
-  RecordEvent(
-    RecordedSourceSurfaceCreation(aSurface, sourceData.get(), stride,
-                                  aSurface->GetSize(), aSurface->GetFormat()));
+  int32_t stride =
+      aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat());
+  UniquePtr<uint8_t[]> sourceData(
+      new uint8_t[stride * aSurface->GetSize().height]());
+  RecordEvent(RecordedSourceSurfaceCreation(aSurface, sourceData.get(), stride,
+                                            aSurface->GetSize(),
+                                            aSurface->GetFormat()));
 }
 
-void
-DrawEventRecorderFile::RecordEvent(const RecordedEvent &aEvent)
-{
+void DrawEventRecorderFile::RecordEvent(const RecordedEvent &aEvent) {
   WriteElement(mOutputStream, aEvent.mType);
 
   aEvent.RecordToStream(mOutputStream);
@@ -58,87 +52,59 @@ DrawEventRecorderFile::RecordEvent(const RecordedEvent &aEvent)
   Flush();
 }
 
-void
-DrawEventRecorderMemory::RecordEvent(const RecordedEvent &aEvent)
-{
+void DrawEventRecorderMemory::RecordEvent(const RecordedEvent &aEvent) {
   WriteElement(mOutputStream, aEvent.mType);
 
   aEvent.RecordToStream(mOutputStream);
 }
 
-void
-DrawEventRecorderMemory::AddDependentSurface(uint64_t aDependencyId)
-{
+void DrawEventRecorderMemory::AddDependentSurface(uint64_t aDependencyId) {
   mDependentSurfaces.PutEntry(aDependencyId);
 }
 
-nsTHashtable<nsUint64HashKey>&&
-DrawEventRecorderMemory::TakeDependentSurfaces()
-{
+nsTHashtable<nsUint64HashKey>
+    &&DrawEventRecorderMemory::TakeDependentSurfaces() {
   return std::move(mDependentSurfaces);
 }
 
-DrawEventRecorderFile::DrawEventRecorderFile(const char_type* aFilename)
-  : mOutputStream(aFilename, ofstream::binary)
-{
+DrawEventRecorderFile::DrawEventRecorderFile(const char_type *aFilename)
+    : mOutputStream(aFilename, ofstream::binary) {
   WriteHeader(mOutputStream);
 }
 
-DrawEventRecorderFile::~DrawEventRecorderFile()
-{
-  mOutputStream.close();
-}
+DrawEventRecorderFile::~DrawEventRecorderFile() { mOutputStream.close(); }
 
-void
-DrawEventRecorderFile::Flush()
-{
-  mOutputStream.flush();
-}
+void DrawEventRecorderFile::Flush() { mOutputStream.flush(); }
 
-bool
-DrawEventRecorderFile::IsOpen()
-{
-  return mOutputStream.is_open();
-}
+bool DrawEventRecorderFile::IsOpen() { return mOutputStream.is_open(); }
 
-void
-DrawEventRecorderFile::OpenNew(const char_type* aFilename)
-{
+void DrawEventRecorderFile::OpenNew(const char_type *aFilename) {
   MOZ_ASSERT(!mOutputStream.is_open());
 
   mOutputStream.open(aFilename, ofstream::binary);
   WriteHeader(mOutputStream);
 }
 
-void
-DrawEventRecorderFile::Close()
-{
+void DrawEventRecorderFile::Close() {
   MOZ_ASSERT(mOutputStream.is_open());
 
   mOutputStream.close();
 }
 
-DrawEventRecorderMemory::DrawEventRecorderMemory()
-{
+DrawEventRecorderMemory::DrawEventRecorderMemory() {
   WriteHeader(mOutputStream);
 }
 
-DrawEventRecorderMemory::DrawEventRecorderMemory(const SerializeResourcesFn &aFn) :
-  mSerializeCallback(aFn)
-{
+DrawEventRecorderMemory::DrawEventRecorderMemory(
+    const SerializeResourcesFn &aFn)
+    : mSerializeCallback(aFn) {
   mExternalFonts = !!mSerializeCallback;
   WriteHeader(mOutputStream);
 }
 
+void DrawEventRecorderMemory::Flush() {}
 
-void
-DrawEventRecorderMemory::Flush()
-{
-}
-
-void
-DrawEventRecorderMemory::FlushItem(IntRect aRect)
-{
+void DrawEventRecorderMemory::FlushItem(IntRect aRect) {
   MOZ_RELEASE_ASSERT(!aRect.IsEmpty());
   // Detaching our existing resources will add some
   // destruction events to our stream so we need to do that
@@ -162,9 +128,7 @@ DrawEventRecorderMemory::FlushItem(IntRect aRect)
   WriteHeader(mOutputStream);
 }
 
-bool
-DrawEventRecorderMemory::Finish()
-{
+bool DrawEventRecorderMemory::Finish() {
   // this length might be 0, and things should still work.
   // for example if there are no items in a particular area
   size_t indexOffset = mOutputStream.mLength;
@@ -178,21 +142,16 @@ DrawEventRecorderMemory::Finish()
   return hasItems;
 }
 
-
-size_t
-DrawEventRecorderMemory::RecordingSize()
-{
+size_t DrawEventRecorderMemory::RecordingSize() {
   return mOutputStream.mLength;
 }
 
-void
-DrawEventRecorderMemory::WipeRecording()
-{
+void DrawEventRecorderMemory::WipeRecording() {
   mOutputStream = MemStream();
   mIndex = MemStream();
 
   WriteHeader(mOutputStream);
 }
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla

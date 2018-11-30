@@ -32,19 +32,18 @@ namespace dom {
 // and then move the reference across thread/process boundries to the
 // target worker thread.  This class is not intended to support simultaneous
 // read/write operations from different threads at the same time.
-class ServiceWorkerCloneData final : public ipc::StructuredCloneData
-{
+class ServiceWorkerCloneData final : public ipc::StructuredCloneData {
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
   ~ServiceWorkerCloneData();
 
-public:
+ public:
   ServiceWorkerCloneData();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerCloneData)
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_ServiceWorkerCloneData_h__
+#endif  // mozilla_dom_ServiceWorkerCloneData_h__

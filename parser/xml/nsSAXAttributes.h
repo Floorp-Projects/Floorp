@@ -12,8 +12,7 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
-struct SAXAttr
-{
+struct SAXAttr {
   nsString uri;
   nsString localName;
   nsString qName;
@@ -21,21 +20,18 @@ struct SAXAttr
   nsString value;
 };
 
-class nsSAXAttributes final : public nsISAXAttributes
-{
-public:
+class nsSAXAttributes final : public nsISAXAttributes {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISAXATTRIBUTES
 
-  nsresult AddAttribute(const nsAString &aURI,
-                        const nsAString &aLocalName,
-                        const nsAString &aQName,
-                        const nsAString &aType,
+  nsresult AddAttribute(const nsAString &aURI, const nsAString &aLocalName,
+                        const nsAString &aQName, const nsAString &aType,
                         const nsAString &aValue);
 
-private:
+ private:
   ~nsSAXAttributes() {}
   nsTArray<SAXAttr> mAttrs;
 };
 
-#endif // nsSAXAttributes_h__
+#endif  // nsSAXAttributes_h__

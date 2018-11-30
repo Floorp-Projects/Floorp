@@ -24,53 +24,64 @@
 namespace js {
 namespace wasm {
 
-// Return whether BaselineCompileFunction can generate code on the current device.
-bool
-BaselineCanCompile();
+// Return whether BaselineCompileFunction can generate code on the current
+// device.
+bool BaselineCanCompile();
 
 // Generate adequate code quickly.
-MOZ_MUST_USE bool
-BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
-                         const FuncCompileInputVector& inputs, CompiledCode* code,
-                         ExclusiveDeferredValidationState& dvs,
-                         UniqueChars* error);
+MOZ_MUST_USE bool BaselineCompileFunctions(
+    const ModuleEnvironment& env, LifoAlloc& lifo,
+    const FuncCompileInputVector& inputs, CompiledCode* code,
+    ExclusiveDeferredValidationState& dvs, UniqueChars* error);
 
-class BaseLocalIter
-{
-  private:
-    using ConstValTypeRange = mozilla::Range<const ValType>;
+class BaseLocalIter {
+ private:
+  using ConstValTypeRange = mozilla::Range<const ValType>;
 
-    const ValTypeVector&               locals_;
-    size_t                             argsLength_;
-    ConstValTypeRange                  argsRange_; // range struct cache for ABIArgIter
-    jit::ABIArgIter<ConstValTypeRange> argsIter_;
-    size_t                             index_;
-    int32_t                            localSize_;
-    int32_t                            reservedSize_;
-    int32_t                            frameOffset_;
-    jit::MIRType                       mirType_;
-    bool                               done_;
+  const ValTypeVector& locals_;
+  size_t argsLength_;
+  ConstValTypeRange argsRange_;  // range struct cache for ABIArgIter
+  jit::ABIArgIter<ConstValTypeRange> argsIter_;
+  size_t index_;
+  int32_t localSize_;
+  int32_t reservedSize_;
+  int32_t frameOffset_;
+  jit::MIRType mirType_;
+  bool done_;
 
-    void settle();
-    int32_t pushLocal(size_t nbytes);
+  void settle();
+  int32_t pushLocal(size_t nbytes);
 
-  public:
-    BaseLocalIter(const ValTypeVector& locals, size_t argsLength, bool debugEnabled);
-    void operator++(int);
-    bool done() const { return done_; }
+ public:
+  BaseLocalIter(const ValTypeVector& locals, size_t argsLength,
+                bool debugEnabled);
+  void operator++(int);
+  bool done() const { return done_; }
 
-    jit::MIRType mirType() const { MOZ_ASSERT(!done_); return mirType_; }
-    int32_t frameOffset() const { MOZ_ASSERT(!done_); return frameOffset_; }
-    size_t index() const { MOZ_ASSERT(!done_); return index_; }
-    int32_t currentLocalSize() const { return localSize_; }
-    int32_t reservedSize() const { return reservedSize_; }
+  jit::MIRType mirType() const {
+    MOZ_ASSERT(!done_);
+    return mirType_;
+  }
+  int32_t frameOffset() const {
+    MOZ_ASSERT(!done_);
+    return frameOffset_;
+  }
+  size_t index() const {
+    MOZ_ASSERT(!done_);
+    return index_;
+  }
+  int32_t currentLocalSize() const { return localSize_; }
+  int32_t reservedSize() const { return reservedSize_; }
 
 #ifdef DEBUG
-    bool isArg() const { MOZ_ASSERT(!done_); return !argsIter_.done(); }
+  bool isArg() const {
+    MOZ_ASSERT(!done_);
+    return !argsIter_.done();
+  }
 #endif
 };
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
-#endif // asmjs_wasm_baseline_compile_h
+#endif  // asmjs_wasm_baseline_compile_h

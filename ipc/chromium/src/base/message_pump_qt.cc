@@ -27,33 +27,24 @@ static int sPokeEvent;
 
 namespace base {
 
-MessagePumpForUI::MessagePumpForUI()
-  : state_(NULL),
-    qt_pump(*this)
-{
-}
+MessagePumpForUI::MessagePumpForUI() : state_(NULL), qt_pump(*this) {}
 
-MessagePumpForUI::~MessagePumpForUI() {
-}
+MessagePumpForUI::~MessagePumpForUI() {}
 
-MessagePumpQt::MessagePumpQt(MessagePumpForUI &aPump)
-  : pump(aPump), mTimer(new QTimer(this))
-{
+MessagePumpQt::MessagePumpQt(MessagePumpForUI& aPump)
+    : pump(aPump), mTimer(new QTimer(this)) {
   // Register our custom event type, to use in qApp event loop
   sPokeEvent = QEvent::registerEventType();
   connect(mTimer, SIGNAL(timeout()), this, SLOT(dispatchDelayed()));
   mTimer->setSingleShot(true);
 }
 
-MessagePumpQt::~MessagePumpQt()
-{
+MessagePumpQt::~MessagePumpQt() {
   mTimer->stop();
   delete mTimer;
 }
 
-bool
-MessagePumpQt::event(QEvent *e)
-{
+bool MessagePumpQt::event(QEvent* e) {
   if (e->type() == sPokeEvent) {
     pump.HandleDispatch();
     return true;
@@ -61,9 +52,8 @@ MessagePumpQt::event(QEvent *e)
   return false;
 }
 
-void
-MessagePumpQt::scheduleDelayedIfNeeded(const TimeTicks& delayed_work_time)
-{
+void MessagePumpQt::scheduleDelayedIfNeeded(
+    const TimeTicks& delayed_work_time) {
   if (delayed_work_time.is_null()) {
     return;
   }
@@ -73,18 +63,15 @@ MessagePumpQt::scheduleDelayedIfNeeded(const TimeTicks& delayed_work_time)
   }
 
   TimeDelta later = delayed_work_time - TimeTicks::Now();
-  // later.InMilliseconds() returns an int64_t, QTimer only accepts int's for start(),
-  // std::min only works on exact same types.
-  int laterMsecs = later.InMilliseconds() > std::numeric_limits<int>::max() ?
-    std::numeric_limits<int>::max() : later.InMilliseconds();
+  // later.InMilliseconds() returns an int64_t, QTimer only accepts int's for
+  // start(), std::min only works on exact same types.
+  int laterMsecs = later.InMilliseconds() > std::numeric_limits<int>::max()
+                       ? std::numeric_limits<int>::max()
+                       : later.InMilliseconds();
   mTimer->start(laterMsecs > 0 ? laterMsecs : 0);
 }
 
-void
-MessagePumpQt::dispatchDelayed()
-{
-  pump.HandleDispatch();
-}
+void MessagePumpQt::dispatchDelayed() { pump.HandleDispatch(); }
 
 void MessagePumpForUI::Run(Delegate* delegate) {
   RunState state;
@@ -101,14 +88,14 @@ void MessagePumpForUI::Run(Delegate* delegate) {
   RunState* previous_state = state_;
   state_ = &state;
 
-  for(;;) {
+  for (;;) {
     QEventLoop::ProcessEventsFlags block = QEventLoop::AllEvents;
     if (!more_work_is_plausible) {
       block |= QEventLoop::WaitForMoreEvents;
     }
 
     QAbstractEventDispatcher* dispatcher =
-      QAbstractEventDispatcher::instance(QThread::currentThread());
+        QAbstractEventDispatcher::instance(QThread::currentThread());
     // An assertion seems too much here, as during startup,
     // the dispatcher might not be ready yet.
     if (!dispatcher) {
@@ -128,7 +115,7 @@ void MessagePumpForUI::Run(Delegate* delegate) {
     }
 
     more_work_is_plausible |=
-      state_->delegate->DoDelayedWork(&delayed_work_time_);
+        state_->delegate->DoDelayedWork(&delayed_work_time_);
     if (state_->should_quit) {
       break;
     }
@@ -154,7 +141,7 @@ void MessagePumpForUI::HandleDispatch() {
   }
 
   if (state_->delegate->DoWork()) {
-    // there might be more, see more_work_is_plausible 
+    // there might be more, see more_work_is_plausible
     // variable above, that's why we ScheduleWork() to keep going.
     ScheduleWork();
   }
@@ -176,13 +163,12 @@ void MessagePumpForUI::Quit() {
 }
 
 void MessagePumpForUI::ScheduleWork() {
-  QCoreApplication::postEvent(&qt_pump,
-                              new QEvent((QEvent::Type) sPokeEvent));
+  QCoreApplication::postEvent(&qt_pump, new QEvent((QEvent::Type)sPokeEvent));
 }
 
 void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
-  // On GLib implementation, a work source is defined which explicitly checks the
-  // time that has passed. Here, on Qt we can use a QTimer that enqueues our
+  // On GLib implementation, a work source is defined which explicitly checks
+  // the time that has passed. Here, on Qt we can use a QTimer that enqueues our
   // event signal in an event queue.
   delayed_work_time_ = delayed_work_time;
   qt_pump.scheduleDelayedIfNeeded(delayed_work_time_);

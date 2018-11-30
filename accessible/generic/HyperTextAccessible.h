@@ -30,8 +30,8 @@ namespace a11y {
 class TextRange;
 
 struct DOMPoint {
-  DOMPoint() : node(nullptr), idx(0) { }
-  DOMPoint(nsINode* aNode, int32_t aIdx) : node(aNode), idx(aIdx) { }
+  DOMPoint() : node(nullptr), idx(0) {}
+  DOMPoint(nsINode* aNode, int32_t aIdx) : node(aNode), idx(aIdx) {}
 
   nsINode* node;
   int32_t idx;
@@ -44,11 +44,10 @@ const char16_t kImaginaryEmbeddedObjectChar = ' ';
 const char16_t kForcedNewLineChar = '\n';
 
 /**
-  * Special Accessible that knows how contain both text and embedded objects
-  */
-class HyperTextAccessible : public AccessibleWrap
-{
-public:
+ * Special Accessible that knows how contain both text and embedded objects
+ */
+class HyperTextAccessible : public AccessibleWrap {
+ public:
   HyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HyperTextAccessible, AccessibleWrap)
@@ -68,12 +67,12 @@ public:
   // HyperTextAccessible (static helper method)
 
   // Convert content offset to rendered text offset
-  nsresult ContentToRenderedOffset(nsIFrame *aFrame, int32_t aContentOffset,
-                                   uint32_t *aRenderedOffset) const;
+  nsresult ContentToRenderedOffset(nsIFrame* aFrame, int32_t aContentOffset,
+                                   uint32_t* aRenderedOffset) const;
 
   // Convert rendered text offset to content offset
-  nsresult RenderedToContentOffset(nsIFrame *aFrame, uint32_t aRenderedOffset,
-                                   int32_t *aContentOffset) const;
+  nsresult RenderedToContentOffset(nsIFrame* aFrame, uint32_t aRenderedOffset,
+                                   int32_t* aContentOffset) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // HyperLinkAccessible
@@ -81,30 +80,24 @@ public:
   /**
    * Return link count within this hypertext accessible.
    */
-  uint32_t LinkCount()
-    { return EmbeddedChildCount(); }
+  uint32_t LinkCount() { return EmbeddedChildCount(); }
 
   /**
    * Return link accessible at the given index.
    */
-  Accessible* LinkAt(uint32_t aIndex)
-  {
-    return GetEmbeddedChildAt(aIndex);
-  }
+  Accessible* LinkAt(uint32_t aIndex) { return GetEmbeddedChildAt(aIndex); }
 
   /**
    * Return index for the given link accessible.
    */
-  int32_t LinkIndexOf(Accessible* aLink)
-  {
+  int32_t LinkIndexOf(Accessible* aLink) {
     return GetIndexOfEmbeddedChild(aLink);
   }
 
   /**
    * Return link accessible at the given text offset.
    */
-  int32_t LinkIndexAtOffset(uint32_t aOffset)
-  {
+  int32_t LinkIndexAtOffset(uint32_t aOffset) {
     Accessible* child = GetChildAtOffset(aOffset);
     return child ? LinkIndexOf(child) : -1;
   }
@@ -121,15 +114,15 @@ public:
    * @param aNode         [in] the node to look for
    * @param aNodeOffset   [in] the offset to look for
    *                       if -1 just look directly for the node
-   *                       if >=0 and aNode is text, this represents a char offset
-   *                       if >=0 and aNode is not text, this represents a child node offset
-   * @param aIsEndOffset  [in] if true, then then this offset is not inclusive. The character
-   *                       indicated by the offset returned is at [offset - 1]. This means
-   *                       if the passed-in offset is really in a descendant, then the offset returned
-   *                       will come just after the relevant embedded object characer.
-   *                       If false, then the offset is inclusive. The character indicated
-   *                       by the offset returned is at [offset]. If the passed-in offset in inside a
-   *                       descendant, then the returned offset will be on the relevant embedded object char.
+   *                       if >=0 and aNode is text, this represents a char
+   * offset if >=0 and aNode is not text, this represents a child node offset
+   * @param aIsEndOffset  [in] if true, then then this offset is not inclusive.
+   * The character indicated by the offset returned is at [offset - 1]. This
+   * means if the passed-in offset is really in a descendant, then the offset
+   * returned will come just after the relevant embedded object characer. If
+   * false, then the offset is inclusive. The character indicated by the offset
+   * returned is at [offset]. If the passed-in offset in inside a descendant,
+   * then the returned offset will be on the relevant embedded object char.
    */
   uint32_t DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
                             bool aIsEndOffset = false) const;
@@ -175,21 +168,18 @@ public:
   /**
    * Return character count within the hypertext accessible.
    */
-  uint32_t CharacterCount() const
-    { return GetChildOffset(ChildCount()); }
+  uint32_t CharacterCount() const { return GetChildOffset(ChildCount()); }
 
   /**
    * Get a character at the given offset (don't support magic offsets).
    */
   bool CharAt(int32_t aOffset, nsAString& aChar,
-              int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr)
-  {
+              int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr) {
     NS_ASSERTION(!aStartOffset == !aEndOffset,
                  "Offsets should be both defined or both undefined!");
 
     int32_t childIdx = GetChildIndexAtOffset(aOffset);
-    if (childIdx == -1)
-      return false;
+    if (childIdx == -1) return false;
 
     Accessible* child = GetChildAt(childIdx);
     child->AppendTextTo(aChar, aOffset - GetChildOffset(childIdx), 1);
@@ -201,8 +191,7 @@ public:
     return true;
   }
 
-  char16_t CharAt(int32_t aOffset)
-  {
+  char16_t CharAt(int32_t aOffset) {
     nsAutoString charAtOffset;
     CharAt(aOffset, charAtOffset);
     return charAtOffset.CharAt(0);
@@ -211,27 +200,28 @@ public:
   /**
    * Return true if char at the given offset equals to given char.
    */
-  bool IsCharAt(int32_t aOffset, char16_t aChar)
-    { return CharAt(aOffset) == aChar; }
+  bool IsCharAt(int32_t aOffset, char16_t aChar) {
+    return CharAt(aOffset) == aChar;
+  }
 
   /**
    * Return true if terminal char is at the given offset.
    */
-  bool IsLineEndCharAt(int32_t aOffset)
-    { return IsCharAt(aOffset, '\n'); }
+  bool IsLineEndCharAt(int32_t aOffset) { return IsCharAt(aOffset, '\n'); }
 
   /**
    * Return text between given offsets.
    */
-  void TextSubstring(int32_t aStartOffset, int32_t aEndOffset, nsAString& aText);
+  void TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                     nsAString& aText);
 
   /**
    * Return text before/at/after the given offset corresponding to
    * the boundary type.
    */
   void TextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-                       int32_t* aStartOffset, int32_t* aEndOffset,
-                       nsAString& aText);
+                        int32_t* aStartOffset, int32_t* aEndOffset,
+                        nsAString& aText);
   void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                     int32_t* aStartOffset, int32_t* aEndOffset,
                     nsAString& aText);
@@ -242,9 +232,9 @@ public:
   /**
    * Return text attributes for the given text range.
    */
-  already_AddRefed<nsIPersistentProperties>
-    TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
-                   int32_t* aStartOffset, int32_t* aEndOffset);
+  already_AddRefed<nsIPersistentProperties> TextAttributes(
+      bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+      int32_t* aEndOffset);
 
   /**
    * Return text attributes applied to the accessible.
@@ -260,8 +250,7 @@ public:
    *                           cached offsets for next siblings of the child
    */
   int32_t GetChildOffset(const Accessible* aChild,
-                         bool aInvalidateAfter = false) const
-  {
+                         bool aInvalidateAfter = false) const {
     int32_t index = GetIndexOf(aChild);
     return index == -1 ? -1 : GetChildOffset(index, aInvalidateAfter);
   }
@@ -284,8 +273,7 @@ public:
    *
    * @param  aOffset  [in] the given text offset
    */
-  Accessible* GetChildAtOffset(uint32_t aOffset) const
-  {
+  Accessible* GetChildAtOffset(uint32_t aOffset) const {
     return GetChildAt(GetChildIndexAtOffset(aOffset));
   }
 
@@ -303,17 +291,19 @@ public:
   /**
    * Return a rect of the given text range relative given coordinate system.
    */
-  nsIntRect TextBounds(int32_t aStartOffset, int32_t aEndOffset,
-                       uint32_t aCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
+  nsIntRect TextBounds(
+      int32_t aStartOffset, int32_t aEndOffset,
+      uint32_t aCoordType =
+          nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
   /**
    * Return a rect for character at given offset relative given coordinate
    * system.
    */
-  nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType)
-  {
-    int32_t endOffset = aOffset == static_cast<int32_t>(CharacterCount()) ?
-      aOffset : aOffset + 1;
+  nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType) {
+    int32_t endOffset = aOffset == static_cast<int32_t>(CharacterCount())
+                            ? aOffset
+                            : aOffset + 1;
     return TextBounds(aOffset, endOffset, aCoordType);
   }
 
@@ -346,15 +336,15 @@ public:
   /**
    * Return the start and end offset of the specified selection.
    */
-  bool SelectionBoundsAt(int32_t aSelectionNum,
-                         int32_t* aStartOffset, int32_t* aEndOffset);
+  bool SelectionBoundsAt(int32_t aSelectionNum, int32_t* aStartOffset,
+                         int32_t* aEndOffset);
 
   /*
    * Changes the start and end offset of the specified selection.
    * @return true if succeeded
    */
-  bool SetSelectionBoundsAt(int32_t aSelectionNum,
-                            int32_t aStartOffset, int32_t aEndOffset);
+  bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
+                            int32_t aEndOffset);
 
   /**
    * Adds a selection bounded by the specified offsets.
@@ -377,10 +367,8 @@ public:
   /**
    * Scroll the given text range to the given point.
    */
-  void ScrollSubstringToPoint(int32_t aStartOffset,
-                              int32_t aEndOffset,
-                              uint32_t aCoordinateType,
-                              int32_t aX, int32_t aY);
+  void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
+                              uint32_t aCoordinateType, int32_t aX, int32_t aY);
 
   /**
    * Return a range that encloses the text control or the document this
@@ -389,8 +377,8 @@ public:
   void EnclosingRange(TextRange& aRange) const;
 
   /**
-   * Return an array of disjoint ranges for selected text within the text control
-   * or the document this accessible belongs to.
+   * Return an array of disjoint ranges for selected text within the text
+   * control or the document this accessible belongs to.
    */
   void SelectionRanges(nsTArray<TextRange>* aRanges) const;
 
@@ -431,8 +419,8 @@ public:
    */
   dom::Selection* DOMSelection() const;
 
-protected:
-  virtual ~HyperTextAccessible() { }
+ protected:
+  virtual ~HyperTextAccessible() {}
 
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
@@ -457,18 +445,16 @@ protected:
   /**
    * Return true if the given offset points to terminal empty line if any.
    */
-  bool IsEmptyLastLineOffset(int32_t aOffset)
-  {
+  bool IsEmptyLastLineOffset(int32_t aOffset) {
     return aOffset == static_cast<int32_t>(CharacterCount()) &&
-      IsLineEndCharAt(aOffset - 1);
+           IsLineEndCharAt(aOffset - 1);
   }
 
   /**
    * Return an offset of the found word boundary.
    */
   uint32_t FindWordBoundary(uint32_t aOffset, nsDirection aDirection,
-                           EWordMovementType aWordMovementType)
-  {
+                            EWordMovementType aWordMovementType) {
     return FindOffset(aOffset, aDirection, eSelectWord, aWordMovementType);
   }
 
@@ -505,8 +491,7 @@ protected:
    * Return the boundaries of the substring in case of textual frame or
    * frame boundaries in case of non textual frame, offsets are ignored.
    */
-  nsIntRect GetBoundsInFrame(nsIFrame* aFrame,
-                             uint32_t aStartRenderedOffset,
+  nsIntRect GetBoundsInFrame(nsIFrame* aFrame, uint32_t aStartRenderedOffset,
                              uint32_t aEndRenderedOffset);
 
   // Selection helpers
@@ -569,25 +554,21 @@ protected:
    */
   void SetMathMLXMLRoles(nsIPersistentProperties* aAttributes);
 
-private:
+ private:
   /**
    * End text offsets array.
    */
   mutable nsTArray<uint32_t> mOffsets;
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcasting method
 
-inline HyperTextAccessible*
-Accessible::AsHyperText()
-{
+inline HyperTextAccessible* Accessible::AsHyperText() {
   return IsHyperText() ? static_cast<HyperTextAccessible*>(this) : nullptr;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif
-

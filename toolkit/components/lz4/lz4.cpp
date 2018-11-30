@@ -20,14 +20,15 @@ using namespace mozilla::Compression;
 /**
  * Compresses 'inputSize' bytes from 'source' into 'dest'.
  * Destination buffer must be already allocated,
- * and must be sized to handle worst cases situations (input data not compressible)
- * Worst case size evaluation is provided by function LZ4_compressBound()
+ * and must be sized to handle worst cases situations (input data not
+ * compressible) Worst case size evaluation is provided by function
+ * LZ4_compressBound()
  *
  * @param inputSize is the input size. Max supported value is ~1.9GB
  * @param return the number of bytes written in buffer dest
  */
-extern "C" MOZ_EXPORT size_t
-workerlz4_compress(const char* source, size_t inputSize, char* dest) {
+extern "C" MOZ_EXPORT size_t workerlz4_compress(const char* source,
+                                                size_t inputSize, char* dest) {
   return LZ4::compress(source, inputSize, dest);
 }
 
@@ -44,15 +45,12 @@ workerlz4_compress(const char* source, size_t inputSize, char* dest) {
  * @param outputSize is the output size, therefore the original size
  * @return true/false
  */
-extern "C" MOZ_EXPORT int
-workerlz4_decompress(const char* source, size_t inputSize,
-                     char* dest, size_t maxOutputSize,
-                     size_t *bytesOutput) {
-  return LZ4::decompress(source, inputSize,
-                         dest, maxOutputSize,
-                         bytesOutput);
+extern "C" MOZ_EXPORT int workerlz4_decompress(const char* source,
+                                               size_t inputSize, char* dest,
+                                               size_t maxOutputSize,
+                                               size_t* bytesOutput) {
+  return LZ4::decompress(source, inputSize, dest, maxOutputSize, bytesOutput);
 }
-
 
 /*
   Provides the maximum size that LZ4 may output in a "worst case"
@@ -63,11 +61,6 @@ workerlz4_decompress(const char* source, size_t inputSize,
   @param inputSize is the input size. Max supported value is ~1.9GB
   @return maximum output size in a "worst case" scenario
 */
-extern "C" MOZ_EXPORT size_t
-workerlz4_maxCompressedSize(size_t inputSize)
-{
+extern "C" MOZ_EXPORT size_t workerlz4_maxCompressedSize(size_t inputSize) {
   return LZ4::maxCompressedSize(inputSize);
 }
-
-
-

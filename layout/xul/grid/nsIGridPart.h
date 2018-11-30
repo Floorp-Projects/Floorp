@@ -16,22 +16,23 @@ class nsGridRow;
 class nsGridLayout2;
 
 // 07373ed7-e947-4a5e-b36c-69f7c195677b
-#define NS_IGRIDPART_IID \
-{ 0x07373ed7, 0xe947, 0x4a5e, \
-  { 0xb3, 0x6c, 0x69, 0xf7, 0xc1, 0x95, 0x67, 0x7b } }
+#define NS_IGRIDPART_IID                             \
+  {                                                  \
+    0x07373ed7, 0xe947, 0x4a5e, {                    \
+      0xb3, 0x6c, 0x69, 0xf7, 0xc1, 0x95, 0x67, 0x7b \
+    }                                                \
+  }
 
 /**
  * An additional interface implemented by nsBoxLayout implementations
  * for parts of a grid (excluding cells, which are not special).
  */
 class nsIGridPart : public nsISupports {
-
-public:
-
+ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGRIDPART_IID)
 
-  virtual nsGridRowGroupLayout* CastToRowGroupLayout()=0;
-  virtual nsGridLayout2* CastToGridLayout()=0;
+  virtual nsGridRowGroupLayout* CastToRowGroupLayout() = 0;
+  virtual nsGridLayout2* CastToGridLayout() = 0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box
@@ -50,7 +51,8 @@ public:
    *                   grids.)
    * @return The grid of which aBox (a row, row group, or grid) is a part.
    */
-  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr)=0;
+  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex,
+                          nsGridRowLayout* aRequestor = nullptr) = 0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box
@@ -60,7 +62,8 @@ public:
    *                   row group).
    * @returns The layout manager for aParentBox.
    */
-  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) = 0;
+  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox,
+                                         nsIFrame** aParentBox) = 0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box
@@ -68,29 +71,29 @@ public:
    * @param aRowCount [INOUT] Row count
    * @param aComputedColumnCount [INOUT] Column count
    */
-  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount)=0;
-  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState)=0;
-  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows)=0;
-  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal)=0;
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount,
+                                int32_t& aComputedColumnCount) = 0;
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) = 0;
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) = 0;
+  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) = 0;
   virtual int32_t GetRowCount() { return 1; }
 
   /**
    * Return the level of the grid hierarchy this grid part represents.
    */
   enum Type { eGrid, eRowGroup, eRowLeaf };
-  virtual Type GetType()=0;
+  virtual Type GetType() = 0;
 
   /**
    * Return whether this grid part is an appropriate parent for the argument.
    */
   bool CanContain(nsIGridPart* aPossibleChild) {
     Type thisType = GetType(), childType = aPossibleChild->GetType();
-    return thisType + 1 == childType || (thisType == eRowGroup && childType == eRowGroup);
+    return thisType + 1 == childType ||
+           (thisType == eRowGroup && childType == eRowGroup);
   }
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIGridPart, NS_IGRIDPART_IID)
 
 #endif
-

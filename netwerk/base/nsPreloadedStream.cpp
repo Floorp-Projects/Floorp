@@ -12,144 +12,111 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(nsPreloadedStream,
-                  nsIInputStream,
-                  nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS(nsPreloadedStream, nsIInputStream, nsIAsyncInputStream)
 
 nsPreloadedStream::nsPreloadedStream(nsIAsyncInputStream *aStream,
                                      const char *data, uint32_t datalen)
-    : mStream(aStream),
-      mOffset(0),
-      mLen(datalen)
-{
-    mBuf = (char *) moz_xmalloc(datalen);
-    memcpy(mBuf, data, datalen);
+    : mStream(aStream), mOffset(0), mLen(datalen) {
+  mBuf = (char *)moz_xmalloc(datalen);
+  memcpy(mBuf, data, datalen);
 }
 
-nsPreloadedStream::~nsPreloadedStream()
-{
-    free(mBuf);
+nsPreloadedStream::~nsPreloadedStream() { free(mBuf); }
+
+NS_IMETHODIMP
+nsPreloadedStream::Close() {
+  mLen = 0;
+  return mStream->Close();
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::Close()
-{
-    mLen = 0;
-    return mStream->Close();
-}
+nsPreloadedStream::Available(uint64_t *_retval) {
+  uint64_t avail = 0;
 
-
-NS_IMETHODIMP
-nsPreloadedStream::Available(uint64_t *_retval)
-{
-    uint64_t avail = 0;
-
-    nsresult rv = mStream->Available(&avail);
-    if (NS_FAILED(rv))
-        return rv;
-    *_retval = avail + mLen;
-    return NS_OK;
+  nsresult rv = mStream->Available(&avail);
+  if (NS_FAILED(rv)) return rv;
+  *_retval = avail + mLen;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::Read(char *aBuf, uint32_t aCount,
-                        uint32_t *_retval)
-{
-    if (!mLen)
-        return mStream->Read(aBuf, aCount, _retval);
+nsPreloadedStream::Read(char *aBuf, uint32_t aCount, uint32_t *_retval) {
+  if (!mLen) return mStream->Read(aBuf, aCount, _retval);
 
+  uint32_t toRead = std::min(mLen, aCount);
+  memcpy(aBuf, mBuf + mOffset, toRead);
+  mOffset += toRead;
+  mLen -= toRead;
+  *_retval = toRead;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
+                                uint32_t aCount, uint32_t *result) {
+  if (!mLen) return mStream->ReadSegments(aWriter, aClosure, aCount, result);
+
+  *result = 0;
+  while (mLen > 0 && aCount > 0) {
     uint32_t toRead = std::min(mLen, aCount);
-    memcpy(aBuf, mBuf + mOffset, toRead);
-    mOffset += toRead;
-    mLen -= toRead;
-    *_retval = toRead;
-    return NS_OK;
-}
+    uint32_t didRead = 0;
+    nsresult rv;
 
-NS_IMETHODIMP
-nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter,
-                                void *aClosure, uint32_t aCount,
-                                uint32_t *result)
-{
-    if (!mLen)
-        return mStream->ReadSegments(aWriter, aClosure, aCount, result);
+    rv = aWriter(this, aClosure, mBuf + mOffset, *result, toRead, &didRead);
 
-    *result = 0;
-    while (mLen > 0 && aCount > 0) {
-        uint32_t toRead = std::min(mLen, aCount);
-        uint32_t didRead = 0;
-        nsresult rv;
+    if (NS_FAILED(rv)) return NS_OK;
 
-        rv = aWriter(this, aClosure, mBuf + mOffset, *result, toRead, &didRead);
-
-        if (NS_FAILED(rv))
-            return NS_OK;
-
-        *result += didRead;
-        mOffset += didRead;
-        mLen -= didRead;
-        aCount -= didRead;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPreloadedStream::IsNonBlocking(bool *_retval)
-{
-    return mStream->IsNonBlocking(_retval);
-}
-
-NS_IMETHODIMP
-nsPreloadedStream::CloseWithStatus(nsresult aStatus)
-{
-    mLen = 0;
-    return mStream->CloseWithStatus(aStatus);
-}
-
-class RunOnThread : public Runnable
-{
-public:
-  RunOnThread(nsIAsyncInputStream* aStream, nsIInputStreamCallback* aCallback)
-    : Runnable("net::RunOnThread")
-    , mStream(aStream)
-    , mCallback(aCallback)
-  {
+    *result += didRead;
+    mOffset += didRead;
+    mLen -= didRead;
+    aCount -= didRead;
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPreloadedStream::IsNonBlocking(bool *_retval) {
+  return mStream->IsNonBlocking(_retval);
+}
+
+NS_IMETHODIMP
+nsPreloadedStream::CloseWithStatus(nsresult aStatus) {
+  mLen = 0;
+  return mStream->CloseWithStatus(aStatus);
+}
+
+class RunOnThread : public Runnable {
+ public:
+  RunOnThread(nsIAsyncInputStream *aStream, nsIInputStreamCallback *aCallback)
+      : Runnable("net::RunOnThread"), mStream(aStream), mCallback(aCallback) {}
 
   virtual ~RunOnThread() = default;
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mCallback->OnInputStreamReady(mStream);
     return NS_OK;
-    }
+  }
 
-private:
-    nsCOMPtr<nsIAsyncInputStream>    mStream;
-    nsCOMPtr<nsIInputStreamCallback> mCallback;
+ private:
+  nsCOMPtr<nsIAsyncInputStream> mStream;
+  nsCOMPtr<nsIInputStreamCallback> mCallback;
 };
 
 NS_IMETHODIMP
-nsPreloadedStream::AsyncWait(nsIInputStreamCallback *aCallback,
-                             uint32_t aFlags,
+nsPreloadedStream::AsyncWait(nsIInputStreamCallback *aCallback, uint32_t aFlags,
                              uint32_t aRequestedCount,
-                             nsIEventTarget *aEventTarget)
-{
-    if (!mLen)
-        return mStream->AsyncWait(aCallback, aFlags, aRequestedCount,
-                                  aEventTarget);
+                             nsIEventTarget *aEventTarget) {
+  if (!mLen)
+    return mStream->AsyncWait(aCallback, aFlags, aRequestedCount, aEventTarget);
 
-    if (!aCallback)
-        return NS_OK;
+  if (!aCallback) return NS_OK;
 
-    if (!aEventTarget)
-        return aCallback->OnInputStreamReady(this);
+  if (!aEventTarget) return aCallback->OnInputStreamReady(this);
 
-    nsCOMPtr<nsIRunnable> event =
-        new RunOnThread(this, aCallback);
-    return aEventTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+  nsCOMPtr<nsIRunnable> event = new RunOnThread(this, aCallback);
+  return aEventTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

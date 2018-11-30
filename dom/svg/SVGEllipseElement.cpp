@@ -18,27 +18,28 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGEllipseElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGEllipseElement::WrapNode(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return SVGEllipseElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] =
-{
-  { nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { nsGkAtoms::rx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { nsGkAtoms::ry, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+nsSVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] = {
+    {nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::X},
+    {nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::Y},
+    {nsGkAtoms::rx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::X},
+    {nsGkAtoms::ry, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::Y},
 };
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGEllipseElement::SVGEllipseElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGEllipseElementBase(std::move(aNodeInfo))
-{
-}
+SVGEllipseElement::SVGEllipseElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGEllipseElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -48,45 +49,33 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGEllipseElement)
 //----------------------------------------------------------------------
 // nsIDOMSVGEllipseElement methods
 
-already_AddRefed<SVGAnimatedLength>
-SVGEllipseElement::Cx()
-{
+already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Cx() {
   return mLengthAttributes[CX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGEllipseElement::Cy()
-{
+already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Cy() {
   return mLengthAttributes[CY].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGEllipseElement::Rx()
-{
+already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Rx() {
   return mLengthAttributes[RX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGEllipseElement::Ry()
-{
+already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Ry() {
   return mLengthAttributes[RY].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-/* virtual */ bool
-SVGEllipseElement::HasValidDimensions() const
-{
+/* virtual */ bool SVGEllipseElement::HasValidDimensions() const {
   return mLengthAttributes[RX].IsExplicitlySet() &&
          mLengthAttributes[RX].GetAnimValInSpecifiedUnits() > 0 &&
          mLengthAttributes[RY].IsExplicitlySet() &&
          mLengthAttributes[RY].GetAnimValInSpecifiedUnits() > 0;
 }
 
-nsSVGElement::LengthAttributesInfo
-SVGEllipseElement::GetLengthInfo()
-{
+nsSVGElement::LengthAttributesInfo SVGEllipseElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -94,12 +83,9 @@ SVGEllipseElement::GetLengthInfo()
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
 
-bool
-SVGEllipseElement::GetGeometryBounds(Rect* aBounds,
-                                     const StrokeOptions& aStrokeOptions,
-                                     const Matrix& aToBoundsSpace,
-                                     const Matrix* aToNonScalingStrokeSpace)
-{
+bool SVGEllipseElement::GetGeometryBounds(
+    Rect* aBounds, const StrokeOptions& aStrokeOptions,
+    const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   float x, y, rx, ry;
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
 
@@ -118,8 +104,8 @@ SVGEllipseElement::GetGeometryBounds(Rect* aBounds,
           MOZ_ASSERT(!aToNonScalingStrokeSpace->IsSingular());
           Rect userBounds(x - rx, y - ry, 2 * rx, 2 * ry);
           SVGContentUtils::RectilinearGetStrokeBounds(
-            userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,
-            aStrokeOptions.mLineWidth, aBounds);
+              userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,
+              aStrokeOptions.mLineWidth, aBounds);
           return true;
         }
         return false;
@@ -135,9 +121,7 @@ SVGEllipseElement::GetGeometryBounds(Rect* aBounds,
   return false;
 }
 
-already_AddRefed<Path>
-SVGEllipseElement::BuildPath(PathBuilder* aBuilder)
-{
+already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, rx, ry;
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
 
@@ -150,5 +134,5 @@ SVGEllipseElement::BuildPath(PathBuilder* aBuilder)
   return aBuilder->Finish();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -15,9 +15,8 @@ namespace dom {
 class Directory;
 class FileSystemDirectoryReader;
 
-class FileSystemDirectoryEntry : public FileSystemEntry
-{
-public:
+class FileSystemDirectoryEntry : public FileSystemEntry {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemDirectoryEntry,
                                            FileSystemEntry)
@@ -27,58 +26,50 @@ public:
                            FileSystemDirectoryEntry* aParentEntry,
                            FileSystem* aFileSystem);
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual bool
-  IsDirectory() const override
-  {
-    return true;
+  virtual bool IsDirectory() const override { return true; }
+
+  virtual void GetName(nsAString& aName, ErrorResult& aRv) const override;
+
+  virtual void GetFullPath(nsAString& aFullPath,
+                           ErrorResult& aRv) const override;
+
+  virtual already_AddRefed<FileSystemDirectoryReader> CreateReader();
+
+  void GetFile(
+      const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
+      const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) {
+    GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(), aFlag,
+                aSuccessCallback, aErrorCallback, eGetFile);
   }
 
-  virtual void
-  GetName(nsAString& aName, ErrorResult& aRv) const override;
-
-  virtual void
-  GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
-
-  virtual already_AddRefed<FileSystemDirectoryReader>
-  CreateReader();
-
-  void
-  GetFile(const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
-          const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback)
-  {
-    GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(),
-                aFlag, aSuccessCallback, aErrorCallback, eGetFile);
-  }
-
-  void
-  GetDirectory(const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
-               const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback)
-  {
-    GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(),
-                aFlag, aSuccessCallback, aErrorCallback, eGetDirectory);
+  void GetDirectory(
+      const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
+      const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) {
+    GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(), aFlag,
+                aSuccessCallback, aErrorCallback, eGetDirectory);
   }
 
   enum GetInternalType { eGetFile, eGetDirectory };
 
-  virtual void
-  GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
-              const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-              GetInternalType aType);
+  virtual void GetInternal(
+      const nsAString& aPath, const FileSystemFlags& aFlag,
+      const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+      GetInternalType aType);
 
-protected:
+ protected:
   virtual ~FileSystemDirectoryEntry();
 
-private:
+ private:
   RefPtr<Directory> mDirectory;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_FileSystemDirectoryEntry_h
+#endif  // mozilla_dom_FileSystemDirectoryEntry_h

@@ -12,7 +12,7 @@
 #include "nsISupportsImpl.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/layers/UiCompositorControllerChild.h"
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 class nsIWidget;
 
@@ -20,11 +20,11 @@ namespace mozilla {
 namespace widget {
 class CompositorWidget;
 class CompositorWidgetDelegate;
-} // namespace widget
+}  // namespace widget
 namespace gfx {
 class GPUProcessHost;
 class GPUProcessManager;
-} // namespace gfx
+}  // namespace gfx
 namespace layers {
 
 class GeckoContentController;
@@ -35,21 +35,21 @@ class ClientLayerManager;
 
 // A CompositorSession provides access to a compositor without exposing whether
 // or not it's in-process or out-of-process.
-class CompositorSession
-{
+class CompositorSession {
   friend class gfx::GPUProcessManager;
 
-protected:
+ protected:
   typedef gfx::GPUProcessHost GPUProcessHost;
   typedef widget::CompositorWidget CompositorWidget;
   typedef widget::CompositorWidgetDelegate CompositorWidgetDelegate;
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorSession)
 
   virtual void Shutdown() = 0;
 
-  // This returns a CompositorBridgeParent if the compositor resides in the same process.
+  // This returns a CompositorBridgeParent if the compositor resides in the same
+  // process.
   virtual CompositorBridgeParent* GetInProcessBridge() const = 0;
 
   // Set the GeckoContentController for the root of the layer tree.
@@ -67,39 +67,38 @@ public:
   }
 
   // Return the id of the root layer tree.
-  LayersId RootLayerTreeId() const {
-    return mRootLayerTreeId;
-  }
+  LayersId RootLayerTreeId() const { return mRootLayerTreeId; }
 
 #if defined(MOZ_WIDGET_ANDROID)
-  // Set the UiCompositorControllerChild after Session creation so the Session constructor
-  // doesn't get mucked up for other platforms.
-  void SetUiCompositorControllerChild(RefPtr<UiCompositorControllerChild> aUiController) {
+  // Set the UiCompositorControllerChild after Session creation so the Session
+  // constructor doesn't get mucked up for other platforms.
+  void SetUiCompositorControllerChild(
+      RefPtr<UiCompositorControllerChild> aUiController) {
     mUiCompositorControllerChild = aUiController;
   }
 
   RefPtr<UiCompositorControllerChild> GetUiCompositorControllerChild() {
     return mUiCompositorControllerChild;
   }
-#endif // defined(MOZ_WIDGET_ANDROID)
-protected:
+#endif  // defined(MOZ_WIDGET_ANDROID)
+ protected:
   CompositorSession(CompositorWidgetDelegate* aDelegate,
                     CompositorBridgeChild* aChild,
                     const LayersId& aRootLayerTreeId);
   virtual ~CompositorSession();
 
-protected:
+ protected:
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
   LayersId mRootLayerTreeId;
 #if defined(MOZ_WIDGET_ANDROID)
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
-#endif // defined(MOZ_WIDGET_ANDROID)
-private:
+#endif  // defined(MOZ_WIDGET_ANDROID)
+ private:
   DISALLOW_COPY_AND_ASSIGN(CompositorSession);
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
-#endif // _include_mozilla_gfx_ipc_CompositorSession_h_
+#endif  // _include_mozilla_gfx_ipc_CompositorSession_h_

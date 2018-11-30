@@ -17,38 +17,30 @@ class ErrorResult;
 
 namespace dom {
 
-class TextEncoder final : public NonRefcountedDOMObject
-{
-public:
+class TextEncoder final : public NonRefcountedDOMObject {
+ public:
   // The WebIDL constructor.
 
-  static TextEncoder*
-  Constructor(const GlobalObject& aGlobal,
-              ErrorResult& aRv)
-  {
+  static TextEncoder* Constructor(const GlobalObject& aGlobal,
+                                  ErrorResult& aRv) {
     nsAutoPtr<TextEncoder> txtEncoder(new TextEncoder());
     txtEncoder->Init();
     return txtEncoder.forget();
   }
 
-  TextEncoder()
-  {
-  }
+  TextEncoder() {}
 
-  virtual
-  ~TextEncoder()
-  {}
+  virtual ~TextEncoder() {}
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
-  {
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aReflector) {
     return TextEncoder_Binding::Wrap(aCx, this, aGivenProto, aReflector);
   }
 
-protected:
-
+ protected:
   void Init();
 
-public:
+ public:
   /**
    * Return the encoding name.
    *
@@ -65,14 +57,12 @@ public:
    * @return JSObject* The Uint8Array wrapped in a JS object.  Returned via
    *                   the aRetval out param.
    */
-  void Encode(JSContext* aCx,
-              JS::Handle<JSObject*> aObj,
-              const nsAString& aString,
-              JS::MutableHandle<JSObject*> aRetval,
+  void Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
+              const nsAString& aString, JS::MutableHandle<JSObject*> aRetval,
               ErrorResult& aRv);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_textencoder_h_
+#endif  // mozilla_dom_textencoder_h_

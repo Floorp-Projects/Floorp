@@ -38,10 +38,9 @@ using namespace mozilla::ipc;
 
 namespace {
 
-nsresult
-PopulateContentSecurityPolicies(nsIContentSecurityPolicy* aCSP,
-                                nsTArray<ContentSecurityPolicy>& aPolicies)
-{
+nsresult PopulateContentSecurityPolicies(
+    nsIContentSecurityPolicy* aCSP,
+    nsTArray<ContentSecurityPolicy>& aPolicies) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCSP);
   MOZ_ASSERT(aPolicies.IsEmpty());
@@ -59,19 +58,17 @@ PopulateContentSecurityPolicies(nsIContentSecurityPolicy* aCSP,
     nsAutoString policyString;
     policy->toString(policyString);
 
-    aPolicies.AppendElement(ContentSecurityPolicy(policyString,
-                                                  policy->getReportOnlyFlag(),
-                                                  policy->getDeliveredViaMetaTagFlag()));
+    aPolicies.AppendElement(
+        ContentSecurityPolicy(policyString, policy->getReportOnlyFlag(),
+                              policy->getDeliveredViaMetaTagFlag()));
   }
 
   return NS_OK;
 }
 
-nsresult
-PopulateContentSecurityPolicyArray(nsIPrincipal* aPrincipal,
-                                   nsTArray<ContentSecurityPolicy>& policies,
-                                   nsTArray<ContentSecurityPolicy>& preloadPolicies)
-{
+nsresult PopulateContentSecurityPolicyArray(
+    nsIPrincipal* aPrincipal, nsTArray<ContentSecurityPolicy>& policies,
+    nsTArray<ContentSecurityPolicy>& preloadPolicies) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(policies.IsEmpty());
   MOZ_ASSERT(preloadPolicies.IsEmpty());
@@ -104,39 +101,33 @@ PopulateContentSecurityPolicyArray(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-} // anonymous
+}  // namespace
 
 SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
-                           SharedWorkerChild* aActor,
-                           MessagePort* aMessagePort)
-  : DOMEventTargetHelper(aWindow)
-  , mWindow(aWindow)
-  , mActor(aActor)
-  , mMessagePort(aMessagePort)
-  , mFrozen(false)
-{
+                           SharedWorkerChild* aActor, MessagePort* aMessagePort)
+    : DOMEventTargetHelper(aWindow),
+      mWindow(aWindow),
+      mActor(aActor),
+      mMessagePort(aMessagePort),
+      mFrozen(false) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aMessagePort);
 }
 
-SharedWorker::~SharedWorker()
-{
+SharedWorker::~SharedWorker() {
   AssertIsOnMainThread();
   Close();
 }
 
 // static
-already_AddRefed<SharedWorker>
-SharedWorker::Constructor(const GlobalObject& aGlobal,
-                          const nsAString& aScriptURL,
-                          const StringOrWorkerOptions& aOptions,
-                          ErrorResult& aRv)
-{
+already_AddRefed<SharedWorker> SharedWorker::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aScriptURL,
+    const StringOrWorkerOptions& aOptions, ErrorResult& aRv) {
   AssertIsOnMainThread();
 
   nsCOMPtr<nsPIDOMWindowInner> window =
-    do_QueryInterface(aGlobal.GetAsSupports());
+      do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window);
 
   // If the window is blocked from accessing storage, do not allow it
@@ -153,7 +144,7 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
 
   // Assert that the principal private browsing state matches the
   // StorageAccess value.
-#ifdef  MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (storageAllowed == nsContentUtils::StorageAccess::ePrivateBrowsing) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
@@ -163,7 +154,7 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     }
     MOZ_DIAGNOSTIC_ASSERT(privateBrowsingId != 0);
   }
-#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   nsAutoString name;
   if (aOptions.IsString()) {
@@ -176,8 +167,8 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
   JSContext* cx = aGlobal.Context();
 
   WorkerLoadInfo loadInfo;
-  aRv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
-                                   false, WorkerPrivate::OverrideLoadGroup,
+  aRv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL, false,
+                                   WorkerPrivate::OverrideLoadGroup,
                                    WorkerTypeShared, &loadInfo);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -243,31 +234,20 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     ipcClientInfo = void_t();
   }
 
-  RemoteWorkerData remoteWorkerData(nsString(aScriptURL),
-                                    baseURL,
-                                    resolvedScriptURL,
-                                    name,
-                                    loadingPrincipalInfo,
-                                    loadingPrincipalCSP,
-                                    loadingPrincipalPreloadCSP,
-                                    principalInfo,
-                                    principalCSP,
-                                    principalPreloadCSP,
-                                    loadInfo.mDomain,
-                                    isSecureContext,
-                                    ipcClientInfo,
-                                    true /* sharedWorker */);
+  RemoteWorkerData remoteWorkerData(
+      nsString(aScriptURL), baseURL, resolvedScriptURL, name,
+      loadingPrincipalInfo, loadingPrincipalCSP, loadingPrincipalPreloadCSP,
+      principalInfo, principalCSP, principalPreloadCSP, loadInfo.mDomain,
+      isSecureContext, ipcClientInfo, true /* sharedWorker */);
 
-  PSharedWorkerChild* pActor =
-    actorChild->SendPSharedWorkerConstructor(remoteWorkerData,
-                                             loadInfo.mWindowID,
-                                             portIdentifier);
+  PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
+      remoteWorkerData, loadInfo.mWindowID, portIdentifier);
 
   RefPtr<SharedWorkerChild> actor = static_cast<SharedWorkerChild*>(pActor);
   MOZ_ASSERT(actor);
 
-  RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, actor,
-                                                       channel->Port2());
+  RefPtr<SharedWorker> sharedWorker =
+      new SharedWorker(window, actor, channel->Port2());
 
   // Let's inform the window about this SharedWorker.
   nsGlobalWindowInner::Cast(window)->StoreSharedWorker(sharedWorker);
@@ -276,16 +256,12 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
   return sharedWorker.forget();
 }
 
-MessagePort*
-SharedWorker::Port()
-{
+MessagePort* SharedWorker::Port() {
   AssertIsOnMainThread();
   return mMessagePort;
 }
 
-void
-SharedWorker::Freeze()
-{
+void SharedWorker::Freeze() {
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsFrozen());
 
@@ -300,9 +276,7 @@ SharedWorker::Freeze()
   }
 }
 
-void
-SharedWorker::Thaw()
-{
+void SharedWorker::Thaw() {
   AssertIsOnMainThread();
   MOZ_ASSERT(IsFrozen());
 
@@ -334,9 +308,7 @@ SharedWorker::Thaw()
   }
 }
 
-void
-SharedWorker::QueueEvent(Event* aEvent)
-{
+void SharedWorker::QueueEvent(Event* aEvent) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aEvent);
   MOZ_ASSERT(IsFrozen());
@@ -344,9 +316,7 @@ SharedWorker::QueueEvent(Event* aEvent)
   mFrozenEvents.AppendElement(aEvent);
 }
 
-void
-SharedWorker::Close()
-{
+void SharedWorker::Close() {
   AssertIsOnMainThread();
 
   if (mWindow) {
@@ -365,27 +335,21 @@ SharedWorker::Close()
   }
 }
 
-void
-SharedWorker::Suspend()
-{
+void SharedWorker::Suspend() {
   if (mActor) {
     mActor->SendSuspend();
   }
 }
 
-void
-SharedWorker::Resume()
-{
+void SharedWorker::Resume() {
   if (mActor) {
     mActor->SendResume();
   }
 }
 
-void
-SharedWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                          const Sequence<JSObject*>& aTransferable,
-                          ErrorResult& aRv)
-{
+void SharedWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                               const Sequence<JSObject*>& aTransferable,
+                               ErrorResult& aRv) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mMessagePort);
 
@@ -414,17 +378,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SharedWorker,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrozenEvents)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-JSObject*
-SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SharedWorker::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   AssertIsOnMainThread();
 
   return SharedWorker_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
-{
+void SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   AssertIsOnMainThread();
 
   if (IsFrozen()) {
@@ -445,15 +406,13 @@ SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   DOMEventTargetHelper::GetEventTargetParent(aVisitor);
 }
 
-void
-SharedWorker::ErrorPropagation(nsresult aError)
-{
+void SharedWorker::ErrorPropagation(nsresult aError) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(NS_FAILED(aError));
 
-  RefPtr<AsyncEventDispatcher> errorEvent =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("error"), CanBubble::eNo);
+  RefPtr<AsyncEventDispatcher> errorEvent = new AsyncEventDispatcher(
+      this, NS_LITERAL_STRING("error"), CanBubble::eNo);
   errorEvent->PostDOMEvent();
 
   Close();

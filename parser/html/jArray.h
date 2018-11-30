@@ -27,125 +27,93 @@
 #include "mozilla/BinarySearch.h"
 #include "nsDebug.h"
 
-template<class T, class L>
-struct staticJArray
-{
+template <class T, class L>
+struct staticJArray {
   const T* arr;
   const L length;
   operator T*() { return arr; }
-  T& operator[](L const index)
-  {
+  T& operator[](L const index) {
     MOZ_ASSERT(index >= 0, "Array access with negative index.");
     MOZ_ASSERT(index < length, "Array index out of bounds.");
     return ((T*)arr)[index];
   }
-  L binarySearch(T const elem)
-  {
+  L binarySearch(T const elem) {
     size_t idx;
     bool found = mozilla::BinarySearch(arr, 0, length, elem, &idx);
     return found ? idx : -1;
   }
 };
 
-template<class T, class L>
+template <class T, class L>
 class autoJArray;
 
-template<class T, class L>
-class jArray
-{
+template <class T, class L>
+class jArray {
   friend class autoJArray<T, L>;
 
-private:
+ private:
   T* arr;
 
-public:
+ public:
   L length;
-  static jArray<T, L> newJArray(L const len)
-  {
+  static jArray<T, L> newJArray(L const len) {
     MOZ_ASSERT(len >= 0, "Negative length.");
-    jArray<T, L> newArray = { new T[size_t(len)], len };
+    jArray<T, L> newArray = {new T[size_t(len)], len};
     return newArray;
   }
-  static jArray<T, L> newFallibleJArray(L const len)
-  {
+  static jArray<T, L> newFallibleJArray(L const len) {
     MOZ_ASSERT(len >= 0, "Negative length.");
     T* a = new (mozilla::fallible) T[size_t(len)];
-    jArray<T, L> newArray = { a, a ? len : 0 };
+    jArray<T, L> newArray = {a, a ? len : 0};
     return newArray;
   }
   operator T*() { return arr; }
-  T& operator[](L const index)
-  {
+  T& operator[](L const index) {
     MOZ_ASSERT(index >= 0, "Array access with negative index.");
     MOZ_ASSERT(index < length, "Array index out of bounds.");
     return arr[index];
   }
-  void operator=(staticJArray<T, L>& other)
-  {
+  void operator=(staticJArray<T, L>& other) {
     arr = (T*)other.arr;
     length = other.length;
   }
-  MOZ_IMPLICIT jArray(decltype(nullptr))
-    : arr(nullptr)
-    , length(0)
-  {
-  }
-  jArray()
-    : arr(nullptr)
-    , length(0)
-  {
-  }
+  MOZ_IMPLICIT jArray(decltype(nullptr)) : arr(nullptr), length(0) {}
+  jArray() : arr(nullptr), length(0) {}
 
-private:
-  jArray(T* aArr, L aLength)
-    : arr(aArr)
-    , length(aLength)
-  {
-  }
+ private:
+  jArray(T* aArr, L aLength) : arr(aArr), length(aLength) {}
 };
 
-template<class T, class L>
-class autoJArray
-{
-private:
+template <class T, class L>
+class autoJArray {
+ private:
   T* arr;
 
-public:
+ public:
   L length;
-  autoJArray()
-    : arr(0)
-    , length(0)
-  {
-  }
+  autoJArray() : arr(0), length(0) {}
   MOZ_IMPLICIT autoJArray(const jArray<T, L>& other)
-    : arr(other.arr)
-    , length(other.length)
-  {
-  }
+      : arr(other.arr), length(other.length) {}
   ~autoJArray() { delete[] arr; }
   operator T*() { return arr; }
-  T& operator[](L const index)
-  {
+  T& operator[](L const index) {
     MOZ_ASSERT(index >= 0, "Array access with negative index.");
     MOZ_ASSERT(index < length, "Array index out of bounds.");
     return arr[index];
   }
-  operator jArray<T, L>()
-  {
+  operator jArray<T, L>() {
     // WARNING! This makes it possible to goof with buffer ownership!
     // This is needed for the getStack and getListOfActiveFormattingElements
     // methods to work sensibly.
-    jArray<T, L> newArray = { arr, length };
+    jArray<T, L> newArray = {arr, length};
     return newArray;
   }
-  void operator=(const jArray<T, L>& other)
-  {
+  void operator=(const jArray<T, L>& other) {
     delete[] arr;
     arr = other.arr;
     length = other.length;
   }
-  void operator=(decltype(nullptr))
-  {
+  void operator=(decltype(nullptr)) {
     // Make assigning null to an array in Java delete the buffer in C++
     delete[] arr;
     arr = nullptr;
@@ -153,4 +121,4 @@ public:
   }
 };
 
-#endif // jArray_h
+#endif  // jArray_h

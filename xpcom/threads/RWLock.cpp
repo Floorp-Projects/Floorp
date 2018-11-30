@@ -19,9 +19,10 @@ static_assert(sizeof(SRWLOCK) <= sizeof(void*), "SRWLOCK is too big!");
 namespace mozilla {
 
 RWLock::RWLock(const char* aName)
-  : BlockingResourceBase(aName, eMutex)
+    : BlockingResourceBase(aName, eMutex)
 #ifdef DEBUG
-  , mOwningThread(nullptr)
+      ,
+      mOwningThread(nullptr)
 #endif
 {
 #ifdef XP_WIN
@@ -33,24 +34,19 @@ RWLock::RWLock(const char* aName)
 }
 
 #ifdef DEBUG
-bool
-RWLock::LockedForWritingByCurrentThread()
-{
+bool RWLock::LockedForWritingByCurrentThread() {
   return mOwningThread == PR_GetCurrentThread();
 }
 #endif
 
 #ifndef XP_WIN
-RWLock::~RWLock()
-{
+RWLock::~RWLock() {
   MOZ_RELEASE_ASSERT(pthread_rwlock_destroy(NativeHandle(mRWLock)) == 0,
                      "pthread_rwlock_destroy failed");
 }
 #endif
 
-void
-RWLock::ReadLockInternal()
-{
+void RWLock::ReadLockInternal() {
 #ifdef XP_WIN
   AcquireSRWLockShared(NativeHandle(mRWLock));
 #else
@@ -59,9 +55,7 @@ RWLock::ReadLockInternal()
 #endif
 }
 
-void
-RWLock::ReadUnlockInternal()
-{
+void RWLock::ReadUnlockInternal() {
 #ifdef XP_WIN
   ReleaseSRWLockShared(NativeHandle(mRWLock));
 #else
@@ -70,9 +64,7 @@ RWLock::ReadUnlockInternal()
 #endif
 }
 
-void
-RWLock::WriteLockInternal()
-{
+void RWLock::WriteLockInternal() {
 #ifdef XP_WIN
   AcquireSRWLockExclusive(NativeHandle(mRWLock));
 #else
@@ -81,9 +73,7 @@ RWLock::WriteLockInternal()
 #endif
 }
 
-void
-RWLock::WriteUnlockInternal()
-{
+void RWLock::WriteUnlockInternal() {
 #ifdef XP_WIN
   ReleaseSRWLockExclusive(NativeHandle(mRWLock));
 #else
@@ -92,6 +82,6 @@ RWLock::WriteUnlockInternal()
 #endif
 }
 
-}
+}  // namespace mozilla
 
 #undef NativeHandle

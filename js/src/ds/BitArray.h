@@ -17,69 +17,68 @@
 namespace js {
 
 template <size_t nbits>
-class BitArray
-{
-  private:
-    // Use a 32 bit word to make it easier to access a BitArray from JIT code.
-    using WordT = uint32_t;
+class BitArray {
+ private:
+  // Use a 32 bit word to make it easier to access a BitArray from JIT code.
+  using WordT = uint32_t;
 
-    static const size_t bitsPerElement = sizeof(WordT) * CHAR_BIT;
-    static const size_t numSlots = nbits / bitsPerElement + (nbits % bitsPerElement == 0 ? 0 : 1);
-    static const size_t paddingBits = (numSlots * bitsPerElement) - nbits;
-    static_assert(paddingBits < bitsPerElement, "More padding bits than expected.");
-    static const WordT paddingMask = WordT(-1) >> paddingBits;
+  static const size_t bitsPerElement = sizeof(WordT) * CHAR_BIT;
+  static const size_t numSlots =
+      nbits / bitsPerElement + (nbits % bitsPerElement == 0 ? 0 : 1);
+  static const size_t paddingBits = (numSlots * bitsPerElement) - nbits;
+  static_assert(paddingBits < bitsPerElement,
+                "More padding bits than expected.");
+  static const WordT paddingMask = WordT(-1) >> paddingBits;
 
-    WordT map[numSlots];
+  WordT map[numSlots];
 
-  public:
-    constexpr BitArray() : map() {};
+ public:
+  constexpr BitArray() : map(){};
 
-    void clear(bool value) {
-        memset(map, value ? 0xFF : 0, sizeof(map));
-        if (value) {
-            map[numSlots - 1] &= paddingMask;
-        }
+  void clear(bool value) {
+    memset(map, value ? 0xFF : 0, sizeof(map));
+    if (value) {
+      map[numSlots - 1] &= paddingMask;
     }
+  }
 
-    inline bool get(size_t offset) const {
-        size_t index;
-        WordT mask;
-        getIndexAndMask(offset, &index, &mask);
-        return map[index] & mask;
-    }
+  inline bool get(size_t offset) const {
+    size_t index;
+    WordT mask;
+    getIndexAndMask(offset, &index, &mask);
+    return map[index] & mask;
+  }
 
-    void set(size_t offset) {
-        size_t index;
-        WordT mask;
-        getIndexAndMask(offset, &index, &mask);
-        map[index] |= mask;
-    }
+  void set(size_t offset) {
+    size_t index;
+    WordT mask;
+    getIndexAndMask(offset, &index, &mask);
+    map[index] |= mask;
+  }
 
-    void unset(size_t offset) {
-        size_t index;
-        WordT mask;
-        getIndexAndMask(offset, &index, &mask);
-        map[index] &= ~mask;
-    }
+  void unset(size_t offset) {
+    size_t index;
+    WordT mask;
+    getIndexAndMask(offset, &index, &mask);
+    map[index] &= ~mask;
+  }
 
-    bool isAllClear() const {
-        for (size_t i = 0; i < numSlots; i++) {
-            if (map[i]) {
-                return false;
-            }
-        }
-        return true;
+  bool isAllClear() const {
+    for (size_t i = 0; i < numSlots; i++) {
+      if (map[i]) {
+        return false;
+      }
     }
+    return true;
+  }
 
-    static void getIndexAndMask(size_t offset, size_t* indexp, WordT* maskp) {
-        static_assert(bitsPerElement == 32, "unexpected bitsPerElement value");
-        *indexp = offset / bitsPerElement;
-        *maskp = WordT(1) << (offset % bitsPerElement);
-    }
+  static void getIndexAndMask(size_t offset, size_t* indexp, WordT* maskp) {
+    static_assert(bitsPerElement == 32, "unexpected bitsPerElement value");
+    *indexp = offset / bitsPerElement;
+    *maskp = WordT(1) << (offset % bitsPerElement);
+  }
 
-    static size_t offsetOfMap() {
-        return offsetof(BitArray<nbits>, map);
-    }
+  static size_t offsetOfMap() { return offsetof(BitArray<nbits>, map); }
 };
 
 } /* namespace js */

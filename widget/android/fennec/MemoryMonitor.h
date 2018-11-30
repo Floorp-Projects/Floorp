@@ -11,23 +11,17 @@
 
 namespace mozilla {
 
-class MemoryMonitor final
-    : public java::MemoryMonitor::Natives<MemoryMonitor>
-{
-public:
-    static void
-    DispatchMemoryPressure()
-    {
-        NS_DispatchMemoryPressure(MemoryPressureState::MemPressure_New);
-    }
+class MemoryMonitor final : public java::MemoryMonitor::Natives<MemoryMonitor> {
+ public:
+  static void DispatchMemoryPressure() {
+    NS_DispatchMemoryPressure(MemoryPressureState::MemPressure_New);
+  }
 
-    static void
-    DispatchMemoryPressureStop()
-    {
-        NS_DispatchMemoryPressure(MemoryPressureState::MemPressure_Stopping);
-    }
+  static void DispatchMemoryPressureStop() {
+    NS_DispatchMemoryPressure(MemoryPressureState::MemPressure_Stopping);
+  }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MemoryMonitor_h
+#endif  // MemoryMonitor_h

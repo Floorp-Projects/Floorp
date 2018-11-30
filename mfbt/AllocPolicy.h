@@ -73,12 +73,10 @@ namespace mozilla {
  * A policy that straightforwardly uses malloc/calloc/realloc/free and adds no
  * extra behaviors.
  */
-class MallocAllocPolicy
-{
-public:
+class MallocAllocPolicy {
+ public:
   template <typename T>
-  T* maybe_pod_malloc(size_t aNumElems)
-  {
+  T* maybe_pod_malloc(size_t aNumElems) {
     if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
       return nullptr;
     }
@@ -86,14 +84,12 @@ public:
   }
 
   template <typename T>
-  T* maybe_pod_calloc(size_t aNumElems)
-  {
+  T* maybe_pod_calloc(size_t aNumElems) {
     return static_cast<T*>(calloc(aNumElems, sizeof(T)));
   }
 
   template <typename T>
-  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
-  {
+  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
     if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
       return nullptr;
     }
@@ -101,37 +97,28 @@ public:
   }
 
   template <typename T>
-  T* pod_malloc(size_t aNumElems)
-  {
+  T* pod_malloc(size_t aNumElems) {
     return maybe_pod_malloc<T>(aNumElems);
   }
 
   template <typename T>
-  T* pod_calloc(size_t aNumElems)
-  {
+  T* pod_calloc(size_t aNumElems) {
     return maybe_pod_calloc<T>(aNumElems);
   }
 
   template <typename T>
-  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
-  {
+  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
     return maybe_pod_realloc<T>(aPtr, aOldSize, aNewSize);
   }
 
   template <typename T>
-  void free_(T* aPtr, size_t aNumElems = 0)
-  {
+  void free_(T* aPtr, size_t aNumElems = 0) {
     free(aPtr);
   }
 
-  void reportAllocOverflow() const
-  {
-  }
+  void reportAllocOverflow() const {}
 
-  MOZ_MUST_USE bool checkSimulatedOOM() const
-  {
-    return true;
-  }
+  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
 };
 
 /*
@@ -141,61 +128,48 @@ public:
  * This type should be used in situations where you want to use a MFBT type with
  * inline storage, and don't want to allow it to allocate on the heap.
  */
-class NeverAllocPolicy
-{
-public:
+class NeverAllocPolicy {
+ public:
   template <typename T>
-  T* maybe_pod_malloc(size_t aNumElems)
-  {
+  T* maybe_pod_malloc(size_t aNumElems) {
     return nullptr;
   }
 
   template <typename T>
-  T* maybe_pod_calloc(size_t aNumElems)
-  {
+  T* maybe_pod_calloc(size_t aNumElems) {
     return nullptr;
   }
 
   template <typename T>
-  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
-  {
+  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
     MOZ_CRASH("NeverAllocPolicy::maybe_pod_realloc");
   }
 
   template <typename T>
-  T* pod_malloc(size_t aNumElems)
-  {
+  T* pod_malloc(size_t aNumElems) {
     return nullptr;
   }
 
   template <typename T>
-  T* pod_calloc(size_t aNumElems)
-  {
+  T* pod_calloc(size_t aNumElems) {
     return nullptr;
   }
 
   template <typename T>
-  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
-  {
+  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
     MOZ_CRASH("NeverAllocPolicy::pod_realloc");
   }
 
   template <typename T>
-  void free_(T* aPtr, size_t aNumElems = 0)
-  {
+  void free_(T* aPtr, size_t aNumElems = 0) {
     MOZ_CRASH("NeverAllocPolicy::free_");
   }
 
-  void reportAllocOverflow() const
-  {
-  }
+  void reportAllocOverflow() const {}
 
-  MOZ_MUST_USE bool checkSimulatedOOM() const
-  {
-    return true;
-  }
+  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_AllocPolicy_h */

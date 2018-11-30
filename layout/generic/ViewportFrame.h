@@ -22,53 +22,44 @@ namespace mozilla {
 class ServoRestyleState;
 
 /**
-  * ViewportFrame is the parent of a single child - the doc root frame or a scroll frame
-  * containing the doc root frame. ViewportFrame stores this child in its primary child
-  * list.
-  */
-class ViewportFrame : public nsContainerFrame
-{
-public:
+ * ViewportFrame is the parent of a single child - the doc root frame or a
+ * scroll frame containing the doc root frame. ViewportFrame stores this child
+ * in its primary child list.
+ */
+class ViewportFrame : public nsContainerFrame {
+ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(ViewportFrame)
 
   explicit ViewportFrame(ComputedStyle* aStyle)
-    : ViewportFrame(aStyle, kClassID)
-  {}
+      : ViewportFrame(aStyle, kClassID) {}
 
-  virtual ~ViewportFrame() { } // useful for debugging
+  virtual ~ViewportFrame() {}  // useful for debugging
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
+                    nsIFrame* aPrevInFlow) override;
 
 #ifdef DEBUG
-  virtual void AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList) override;
-  virtual void InsertFrames(ChildListID     aListID,
-                            nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList) override;
-  virtual void RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame) override;
+  virtual void AppendFrames(ChildListID aListID,
+                            nsFrameList& aFrameList) override;
+  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            nsFrameList& aFrameList) override;
+  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 #endif
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
   void BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
                                    nsDisplayList* aList);
 
-  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aDesiredSize,
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  bool ComputeCustomOverflow(nsOverflowAreas&) override
-  {
-    return false;
-  }
+  bool ComputeCustomOverflow(nsOverflowAreas&) override { return false; }
 
   /**
    * Adjust aReflowInput to account for scrollbars and pres shell
@@ -93,11 +84,9 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-protected:
+ protected:
   ViewportFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsContainerFrame(aStyle, aID)
-    , mView(nullptr)
-  {}
+      : nsContainerFrame(aStyle, aID), mView(nullptr) {}
 
   /**
    * Calculate how much room is available for fixed frames. That means
@@ -111,12 +100,14 @@ protected:
   nsView* GetViewInternal() const override { return mView; }
   void SetViewInternal(nsView* aView) override { mView = aView; }
 
-private:
-  virtual mozilla::layout::FrameChildListID GetAbsoluteListID() const override { return kFixedList; }
+ private:
+  virtual mozilla::layout::FrameChildListID GetAbsoluteListID() const override {
+    return kFixedList;
+  }
 
   nsView* mView;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_ViewportFrame_h
+#endif  // mozilla_ViewportFrame_h

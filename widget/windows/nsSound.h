@@ -15,12 +15,12 @@
 
 class nsIThread;
 
-class nsSound : public nsISound
-              , public nsIStreamLoaderObserver
-              , public nsIObserver
+class nsSound : public nsISound,
+                public nsIStreamLoaderObserver,
+                public nsIObserver
 
 {
-public:
+ public:
   nsSound();
   static already_AddRefed<nsISound> GetInstance();
 
@@ -29,11 +29,11 @@ public:
   NS_DECL_NSISTREAMLOADEROBSERVER
   NS_DECL_NSIOBSERVER
 
-private:
+ private:
   virtual ~nsSound();
   void PurgeLastSound();
 
-private:
+ private:
   nsresult CreatePlayerThread();
 
   nsCOMPtr<nsIThread> mPlayerThread;

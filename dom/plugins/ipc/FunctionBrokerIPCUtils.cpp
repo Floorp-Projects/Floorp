@@ -25,15 +25,13 @@ namespace plugins {
 mozilla::LazyLogModule sPluginHooksLog("PluginHooks");
 
 static const DWORD SCHANNEL_SUPPORTED_PROTOCOLS =
-  SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT;
+    SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT;
 
 static const DWORD SCHANNEL_SUPPORTED_FLAGS =
-  SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_DEFAULT_CREDS |
-  SCH_CRED_REVOCATION_CHECK_END_CERT;
+    SCH_CRED_MANUAL_CRED_VALIDATION | SCH_CRED_NO_DEFAULT_CREDS |
+    SCH_CRED_REVOCATION_CHECK_END_CERT;
 
-void
-OpenFileNameIPC::CopyFromOfn(LPOPENFILENAMEW aLpofn)
-{
+void OpenFileNameIPC::CopyFromOfn(LPOPENFILENAMEW aLpofn) {
   mHwndOwner = nullptr;
 
   // Filter is double-NULL terminated.  mFilter should include the double-NULL.
@@ -41,25 +39,24 @@ OpenFileNameIPC::CopyFromOfn(LPOPENFILENAMEW aLpofn)
   if (mHasFilter) {
     uint32_t dNullIdx = 0;
     while (aLpofn->lpstrFilter[dNullIdx] != L'\0' ||
-           aLpofn->lpstrFilter[dNullIdx+1] != L'\0') {
+           aLpofn->lpstrFilter[dNullIdx + 1] != L'\0') {
       dNullIdx++;
     }
-    mFilter.assign(aLpofn->lpstrFilter, dNullIdx+2);
+    mFilter.assign(aLpofn->lpstrFilter, dNullIdx + 2);
   }
   mHasCustomFilter = aLpofn->lpstrCustomFilter != nullptr;
   if (mHasCustomFilter) {
     mCustomFilterIn = std::wstring(aLpofn->lpstrCustomFilter);
     mNMaxCustFilterOut =
-      aLpofn->nMaxCustFilter - (wcslen(aLpofn->lpstrCustomFilter) + 1);
-  }
-  else {
+        aLpofn->nMaxCustFilter - (wcslen(aLpofn->lpstrCustomFilter) + 1);
+  } else {
     mNMaxCustFilterOut = 0;
   }
   mFilterIndex = aLpofn->nFilterIndex;
   mFile = std::wstring(aLpofn->lpstrFile);
   mNMaxFile = aLpofn->nMaxFile;
   mNMaxFileTitle =
-    aLpofn->lpstrFileTitle != nullptr ? aLpofn->nMaxFileTitle : 0;
+      aLpofn->lpstrFileTitle != nullptr ? aLpofn->nMaxFileTitle : 0;
   mHasInitialDir = aLpofn->lpstrInitialDir != nullptr;
   if (mHasInitialDir) {
     mInitialDir = std::wstring(aLpofn->lpstrInitialDir);
@@ -85,28 +82,25 @@ OpenFileNameIPC::CopyFromOfn(LPOPENFILENAMEW aLpofn)
   mFlagsEx = aLpofn->FlagsEx;
 }
 
-void
-OpenFileNameIPC::AddToOfn(LPOPENFILENAMEW aLpofn) const
-{
+void OpenFileNameIPC::AddToOfn(LPOPENFILENAMEW aLpofn) const {
   aLpofn->lStructSize = sizeof(OPENFILENAMEW);
   aLpofn->hwndOwner = mHwndOwner;
   if (mHasFilter) {
-    memcpy(const_cast<LPWSTR>(aLpofn->lpstrFilter),
-           mFilter.data(), mFilter.size() * sizeof(wchar_t));
+    memcpy(const_cast<LPWSTR>(aLpofn->lpstrFilter), mFilter.data(),
+           mFilter.size() * sizeof(wchar_t));
   }
   if (mHasCustomFilter) {
     aLpofn->nMaxCustFilter = mCustomFilterIn.size() + 1 + mNMaxCustFilterOut;
     wcscpy(aLpofn->lpstrCustomFilter, mCustomFilterIn.c_str());
     memset(aLpofn->lpstrCustomFilter + mCustomFilterIn.size() + 1, 0,
            mNMaxCustFilterOut * sizeof(wchar_t));
-  }
-  else {
+  } else {
     aLpofn->nMaxCustFilter = 0;
   }
   aLpofn->nFilterIndex = mFilterIndex;
   if (mNMaxFile > 0) {
     wcsncpy(aLpofn->lpstrFile, mFile.c_str(),
-            std::min(static_cast<uint32_t>(mFile.size()+1), mNMaxFile));
+            std::min(static_cast<uint32_t>(mFile.size() + 1), mNMaxFile));
     aLpofn->lpstrFile[mNMaxFile - 1] = L'\0';
   }
   aLpofn->nMaxFile = mNMaxFile;
@@ -117,49 +111,46 @@ OpenFileNameIPC::AddToOfn(LPOPENFILENAMEW aLpofn) const
   if (mHasTitle) {
     wcscpy(const_cast<LPWSTR>(aLpofn->lpstrTitle), mTitle.c_str());
   }
-  aLpofn->Flags = mFlags;  /* TODO: Consider adding OFN_NOCHANGEDIR */
+  aLpofn->Flags = mFlags; /* TODO: Consider adding OFN_NOCHANGEDIR */
   if (mHasDefExt) {
     wcscpy(const_cast<LPWSTR>(aLpofn->lpstrDefExt), mDefExt.c_str());
   }
   aLpofn->FlagsEx = mFlagsEx;
 }
 
-void
-OpenFileNameIPC::AllocateOfnStrings(LPOPENFILENAMEW aLpofn) const
-{
+void OpenFileNameIPC::AllocateOfnStrings(LPOPENFILENAMEW aLpofn) const {
   if (mHasFilter) {
-    // mFilter is double-NULL terminated and it includes the double-NULL in its length.
+    // mFilter is double-NULL terminated and it includes the double-NULL in its
+    // length.
     aLpofn->lpstrFilter =
-      static_cast<LPCTSTR>(moz_xmalloc(sizeof(wchar_t) * (mFilter.size())));
+        static_cast<LPCTSTR>(moz_xmalloc(sizeof(wchar_t) * (mFilter.size())));
   }
   if (mHasCustomFilter) {
-    aLpofn->lpstrCustomFilter =
-      static_cast<LPTSTR>(moz_xmalloc(sizeof(wchar_t) * (mCustomFilterIn.size() + 1 + mNMaxCustFilterOut)));
+    aLpofn->lpstrCustomFilter = static_cast<LPTSTR>(moz_xmalloc(
+        sizeof(wchar_t) * (mCustomFilterIn.size() + 1 + mNMaxCustFilterOut)));
   }
   aLpofn->lpstrFile =
-    static_cast<LPTSTR>(moz_xmalloc(sizeof(wchar_t) * mNMaxFile));
+      static_cast<LPTSTR>(moz_xmalloc(sizeof(wchar_t) * mNMaxFile));
   if (mNMaxFileTitle > 0) {
     aLpofn->lpstrFileTitle =
-      static_cast<LPTSTR>(moz_xmalloc(sizeof(wchar_t) * mNMaxFileTitle));
+        static_cast<LPTSTR>(moz_xmalloc(sizeof(wchar_t) * mNMaxFileTitle));
   }
   if (mHasInitialDir) {
-    aLpofn->lpstrInitialDir =
-      static_cast<LPCTSTR>(moz_xmalloc(sizeof(wchar_t) * (mInitialDir.size() + 1)));
+    aLpofn->lpstrInitialDir = static_cast<LPCTSTR>(
+        moz_xmalloc(sizeof(wchar_t) * (mInitialDir.size() + 1)));
   }
   if (mHasTitle) {
-    aLpofn->lpstrTitle =
-      static_cast<LPCTSTR>(moz_xmalloc(sizeof(wchar_t) * (mTitle.size() + 1)));
+    aLpofn->lpstrTitle = static_cast<LPCTSTR>(
+        moz_xmalloc(sizeof(wchar_t) * (mTitle.size() + 1)));
   }
   if (mHasDefExt) {
-    aLpofn->lpstrDefExt =
-      static_cast<LPCTSTR>(moz_xmalloc(sizeof(wchar_t) * (mDefExt.size() + 1)));
+    aLpofn->lpstrDefExt = static_cast<LPCTSTR>(
+        moz_xmalloc(sizeof(wchar_t) * (mDefExt.size() + 1)));
   }
 }
 
 // static
-void
-OpenFileNameIPC::FreeOfnStrings(LPOPENFILENAMEW aLpofn)
-{
+void OpenFileNameIPC::FreeOfnStrings(LPOPENFILENAMEW aLpofn) {
   if (aLpofn->lpstrFilter) {
     free(const_cast<LPWSTR>(aLpofn->lpstrFilter));
   }
@@ -183,36 +174,34 @@ OpenFileNameIPC::FreeOfnStrings(LPOPENFILENAMEW aLpofn)
   }
 }
 
-void
-OpenFileNameRetIPC::CopyFromOfn(LPOPENFILENAMEW aLpofn)
-{
+void OpenFileNameRetIPC::CopyFromOfn(LPOPENFILENAMEW aLpofn) {
   if (aLpofn->lpstrCustomFilter != nullptr) {
-    mCustomFilterOut =
-      std::wstring(aLpofn->lpstrCustomFilter + wcslen(aLpofn->lpstrCustomFilter) + 1);
+    mCustomFilterOut = std::wstring(aLpofn->lpstrCustomFilter +
+                                    wcslen(aLpofn->lpstrCustomFilter) + 1);
   }
   mFile.assign(aLpofn->lpstrFile, aLpofn->nMaxFile);
   if (aLpofn->lpstrFileTitle != nullptr) {
-    mFileTitle.assign(aLpofn->lpstrFileTitle, wcslen(aLpofn->lpstrFileTitle) + 1);
+    mFileTitle.assign(aLpofn->lpstrFileTitle,
+                      wcslen(aLpofn->lpstrFileTitle) + 1);
   }
   mFileOffset = aLpofn->nFileOffset;
   mFileExtension = aLpofn->nFileExtension;
 }
 
-void
-OpenFileNameRetIPC::AddToOfn(LPOPENFILENAMEW aLpofn) const
-{
+void OpenFileNameRetIPC::AddToOfn(LPOPENFILENAMEW aLpofn) const {
   if (aLpofn->lpstrCustomFilter) {
     LPWSTR secondString =
-      aLpofn->lpstrCustomFilter + wcslen(aLpofn->lpstrCustomFilter) + 1;
+        aLpofn->lpstrCustomFilter + wcslen(aLpofn->lpstrCustomFilter) + 1;
     const wchar_t* customFilterOut = mCustomFilterOut.c_str();
-    MOZ_ASSERT(wcslen(aLpofn->lpstrCustomFilter) + 1 +
-               wcslen(customFilterOut) + 1 + 1 <= aLpofn->nMaxCustFilter);
+    MOZ_ASSERT(wcslen(aLpofn->lpstrCustomFilter) + 1 + wcslen(customFilterOut) +
+                   1 + 1 <=
+               aLpofn->nMaxCustFilter);
     wcscpy(secondString, customFilterOut);
-    secondString[wcslen(customFilterOut) + 1] = L'\0';  // terminated with two NULLs
+    secondString[wcslen(customFilterOut) + 1] =
+        L'\0';  // terminated with two NULLs
   }
   MOZ_ASSERT(mFile.size() <= aLpofn->nMaxFile);
-  memcpy(aLpofn->lpstrFile,
-         mFile.data(), mFile.size() * sizeof(wchar_t));
+  memcpy(aLpofn->lpstrFile, mFile.data(), mFile.size() * sizeof(wchar_t));
   if (aLpofn->lpstrFileTitle != nullptr) {
     MOZ_ASSERT(mFileTitle.size() + 1 < aLpofn->nMaxFileTitle);
     wcscpy(aLpofn->lpstrFileTitle, mFileTitle.c_str());
@@ -221,9 +210,7 @@ OpenFileNameRetIPC::AddToOfn(LPOPENFILENAMEW aLpofn) const
   aLpofn->nFileExtension = mFileExtension;
 }
 
-void
-IPCSchannelCred::CopyFrom(const PSCHANNEL_CRED& aSCred)
-{
+void IPCSchannelCred::CopyFrom(const PSCHANNEL_CRED& aSCred) {
   // We assert that the aSCred fields take supported values.
   // If they do not then we ignore the values we were given.
   MOZ_ASSERT(aSCred->dwVersion == SCHANNEL_CRED_VERSION);
@@ -237,7 +224,7 @@ IPCSchannelCred::CopyFrom(const PSCHANNEL_CRED& aSCred)
   MOZ_ASSERT((aSCred->grbitEnabledProtocols & SCHANNEL_SUPPORTED_PROTOCOLS) ==
              aSCred->grbitEnabledProtocols);
   mEnabledProtocols =
-    aSCred->grbitEnabledProtocols & SCHANNEL_SUPPORTED_PROTOCOLS;
+      aSCred->grbitEnabledProtocols & SCHANNEL_SUPPORTED_PROTOCOLS;
   mMinStrength = aSCred->dwMinimumCipherStrength;
   mMaxStrength = aSCred->dwMaximumCipherStrength;
   MOZ_ASSERT(aSCred->dwSessionLifespan == 0);
@@ -246,22 +233,18 @@ IPCSchannelCred::CopyFrom(const PSCHANNEL_CRED& aSCred)
   MOZ_ASSERT(aSCred->dwCredFormat == 0);
 }
 
-void
-IPCSchannelCred::CopyTo(PSCHANNEL_CRED& aSCred) const
-{
+void IPCSchannelCred::CopyTo(PSCHANNEL_CRED& aSCred) const {
   // Validate values as they come from an untrusted process.
   memset(aSCred, 0, sizeof(SCHANNEL_CRED));
   aSCred->dwVersion = SCHANNEL_CRED_VERSION;
   aSCred->grbitEnabledProtocols =
-    mEnabledProtocols & SCHANNEL_SUPPORTED_PROTOCOLS;
+      mEnabledProtocols & SCHANNEL_SUPPORTED_PROTOCOLS;
   aSCred->dwMinimumCipherStrength = mMinStrength;
   aSCred->dwMaximumCipherStrength = mMaxStrength;
   aSCred->dwFlags = mFlags & SCHANNEL_SUPPORTED_FLAGS;
 }
 
-void
-IPCInternetBuffers::CopyFrom(const LPINTERNET_BUFFERSA& aBufs)
-{
+void IPCInternetBuffers::CopyFrom(const LPINTERNET_BUFFERSA& aBufs) {
   mBuffers.Clear();
 
   LPINTERNET_BUFFERSA inetBuf = aBufs;
@@ -285,16 +268,14 @@ IPCInternetBuffers::CopyFrom(const LPINTERNET_BUFFERSA& aBufs)
   }
 }
 
-void
-IPCInternetBuffers::CopyTo(LPINTERNET_BUFFERSA& aBufs) const
-{
+void IPCInternetBuffers::CopyTo(LPINTERNET_BUFFERSA& aBufs) const {
   MOZ_ASSERT(!aBufs);
 
   LPINTERNET_BUFFERSA lastBuf = nullptr;
   for (size_t idx = 0; idx < mBuffers.Length(); ++idx) {
     const Buffer& ipcBuf = mBuffers[idx];
-    LPINTERNET_BUFFERSA newBuf =
-      static_cast<LPINTERNET_BUFFERSA>(moz_xcalloc(1, sizeof(INTERNET_BUFFERSA)));
+    LPINTERNET_BUFFERSA newBuf = static_cast<LPINTERNET_BUFFERSA>(
+        moz_xcalloc(1, sizeof(INTERNET_BUFFERSA)));
     if (idx == 0) {
       aBufs = newBuf;
     } else {
@@ -308,7 +289,7 @@ IPCInternetBuffers::CopyTo(LPINTERNET_BUFFERSA& aBufs) const
     newBuf->dwHeadersTotal = ipcBuf.mHeaderTotal;
     if (!ipcBuf.mHeader.IsVoid()) {
       newBuf->lpcszHeader =
-        static_cast<LPCSTR>(moz_xmalloc(ipcBuf.mHeader.Length()));
+          static_cast<LPCSTR>(moz_xmalloc(ipcBuf.mHeader.Length()));
       memcpy(const_cast<char*>(newBuf->lpcszHeader), ipcBuf.mHeader.Data(),
              ipcBuf.mHeader.Length());
       newBuf->dwHeadersLength = ipcBuf.mHeader.Length();
@@ -317,16 +298,13 @@ IPCInternetBuffers::CopyTo(LPINTERNET_BUFFERSA& aBufs) const
     newBuf->dwBufferTotal = ipcBuf.mBufferTotal;
     if (!ipcBuf.mBuffer.IsVoid()) {
       newBuf->lpvBuffer = moz_xmalloc(ipcBuf.mBuffer.Length());
-      memcpy(newBuf->lpvBuffer, ipcBuf.mBuffer.Data(),
-             ipcBuf.mBuffer.Length());
+      memcpy(newBuf->lpvBuffer, ipcBuf.mBuffer.Data(), ipcBuf.mBuffer.Length());
       newBuf->dwBufferLength = ipcBuf.mBuffer.Length();
     }
   }
 }
 
-/* static */ void
-IPCInternetBuffers::FreeBuffers(LPINTERNET_BUFFERSA& aBufs)
-{
+/* static */ void IPCInternetBuffers::FreeBuffers(LPINTERNET_BUFFERSA& aBufs) {
   if (!aBufs) {
     return;
   }
@@ -339,21 +317,17 @@ IPCInternetBuffers::FreeBuffers(LPINTERNET_BUFFERSA& aBufs)
   }
 }
 
-void
-IPCPrintDlg::CopyFrom(const LPPRINTDLGW& aDlg)
-{
+void IPCPrintDlg::CopyFrom(const LPPRINTDLGW& aDlg) {
   // DLP: Trouble -- my prior impl "worked" but didn't return anything
   // AFAIR.  So... ???  But it printed a page!!!  How?!
   MOZ_ASSERT_UNREACHABLE("TODO: DLP:");
 }
 
-void
-IPCPrintDlg::CopyTo(LPPRINTDLGW& aDlg) const
-{
+void IPCPrintDlg::CopyTo(LPPRINTDLGW& aDlg) const {
   MOZ_ASSERT_UNREACHABLE("TODO: DLP:");
 }
 
-} // namespace plugins
-} // namespace mozilla
+}  // namespace plugins
+}  // namespace mozilla
 
-#endif // defined(XP_WIN)
+#endif  // defined(XP_WIN)

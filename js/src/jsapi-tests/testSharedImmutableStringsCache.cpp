@@ -16,67 +16,59 @@ const int NUM_THREADS = 256;
 const int NUM_ITERATIONS = 256;
 
 const int NUM_STRINGS = 4;
-const char16_t *const STRINGS[NUM_STRINGS] = {
-    u"uno",
-    u"dos",
-    u"tres",
-    u"quattro"
+const char16_t* const STRINGS[NUM_STRINGS] = {u"uno", u"dos", u"tres",
+                                              u"quattro"};
+
+struct CacheAndIndex {
+  js::SharedImmutableStringsCache* cache;
+  int index;
+
+  CacheAndIndex(js::SharedImmutableStringsCache* cache, int index)
+      : cache(cache), index(index) {}
 };
 
-struct CacheAndIndex
-{
-    js::SharedImmutableStringsCache* cache;
-    int index;
+static void getString(CacheAndIndex* cacheAndIndex) {
+  for (int i = 0; i < NUM_ITERATIONS; i++) {
+    auto str = STRINGS[cacheAndIndex->index % NUM_STRINGS];
 
-    CacheAndIndex(js::SharedImmutableStringsCache* cache, int index)
-      : cache(cache)
-      , index(index)
-    { }
-};
+    auto dupe = js::DuplicateString(str);
+    MOZ_RELEASE_ASSERT(dupe);
 
-static void
-getString(CacheAndIndex* cacheAndIndex)
-{
-    for (int i = 0; i < NUM_ITERATIONS; i++) {
-        auto str = STRINGS[cacheAndIndex->index % NUM_STRINGS];
+    auto deduped =
+        cacheAndIndex->cache->getOrCreate(std::move(dupe), js_strlen(str));
+    MOZ_RELEASE_ASSERT(deduped.isSome());
+    MOZ_RELEASE_ASSERT(
+        js::EqualChars(str, deduped->chars(), js_strlen(str) + 1));
 
-        auto dupe = js::DuplicateString(str);
-        MOZ_RELEASE_ASSERT(dupe);
-
-        auto deduped = cacheAndIndex->cache->getOrCreate(std::move(dupe), js_strlen(str));
-        MOZ_RELEASE_ASSERT(deduped.isSome());
-        MOZ_RELEASE_ASSERT(js::EqualChars(str, deduped->chars(), js_strlen(str) + 1));
-
-        {
-            auto cloned = deduped->clone();
-            // We should be de-duplicating and giving back the same string.
-            MOZ_RELEASE_ASSERT(deduped->chars() == cloned.chars());
-        }
+    {
+      auto cloned = deduped->clone();
+      // We should be de-duplicating and giving back the same string.
+      MOZ_RELEASE_ASSERT(deduped->chars() == cloned.chars());
     }
+  }
 
-    js_delete(cacheAndIndex);
+  js_delete(cacheAndIndex);
 }
 
-BEGIN_TEST(testSharedImmutableStringsCache)
-{
-    auto maybeCache = js::SharedImmutableStringsCache::Create();
-    CHECK(maybeCache.isSome());
-    auto& cache = *maybeCache;
+BEGIN_TEST(testSharedImmutableStringsCache) {
+  auto maybeCache = js::SharedImmutableStringsCache::Create();
+  CHECK(maybeCache.isSome());
+  auto& cache = *maybeCache;
 
-    js::Vector<js::Thread> threads(cx);
-    CHECK(threads.reserve(NUM_THREADS));
+  js::Vector<js::Thread> threads(cx);
+  CHECK(threads.reserve(NUM_THREADS));
 
-    for (auto i : mozilla::IntegerRange(NUM_THREADS)) {
-        auto cacheAndIndex = js_new<CacheAndIndex>(&cache, i);
-        CHECK(cacheAndIndex);
-        threads.infallibleEmplaceBack();
-        CHECK(threads.back().init(getString, cacheAndIndex));
-    }
+  for (auto i : mozilla::IntegerRange(NUM_THREADS)) {
+    auto cacheAndIndex = js_new<CacheAndIndex>(&cache, i);
+    CHECK(cacheAndIndex);
+    threads.infallibleEmplaceBack();
+    CHECK(threads.back().init(getString, cacheAndIndex));
+  }
 
-    for (auto& thread : threads) {
-        thread.join();
-    }
+  for (auto& thread : threads) {
+    thread.join();
+  }
 
-    return true;
+  return true;
 }
 END_TEST(testSharedImmutableStringsCache)

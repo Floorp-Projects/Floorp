@@ -13,13 +13,11 @@
 #include "mozilla/Maybe.h"
 
 // This class holds basic operations on arrays of static atoms.
-class nsStaticAtomUtils
-{
-public:
+class nsStaticAtomUtils {
+ public:
   static mozilla::Maybe<uint32_t> Lookup(nsAtom* aAtom,
                                          const nsStaticAtom* aAtoms,
-                                         uint32_t aCount)
-  {
+                                         uint32_t aCount) {
     if (aAtom->IsStatic()) {
       ptrdiff_t index = aAtom->AsStatic() - aAtoms;
       if (index >= 0 && index < static_cast<ptrdiff_t>(aCount)) {
@@ -30,10 +28,9 @@ public:
   }
 
   static bool IsMember(nsAtom* aAtom, const nsStaticAtom* aAtoms,
-                       uint32_t aCount)
-  {
+                       uint32_t aCount) {
     return Lookup(aAtom, aAtoms, aCount).isSome();
   }
 };
 
-#endif // nsStaticAtomUtils_h
+#endif  // nsStaticAtomUtils_h

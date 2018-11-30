@@ -16,23 +16,20 @@ namespace mozilla {
 
 namespace {
 
-class AvailableEvent final : public Runnable
-{
-public:
+class AvailableEvent final : public Runnable {
+ public:
   AvailableEvent(nsIInputStream* stream,
                  const std::function<void(int64_t aLength)>& aCallback)
-    : Runnable("mozilla::AvailableEvent")
-    , mStream(stream)
-    , mCallback(aCallback)
-    , mSize(-1)
-  {
+      : Runnable("mozilla::AvailableEvent"),
+        mStream(stream),
+        mCallback(aCallback),
+        mSize(-1) {
     mCallbackTarget = GetCurrentThreadSerialEventTarget();
     MOZ_ASSERT(NS_IsMainThread());
   }
 
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     // ping
     if (!NS_IsMainThread()) {
       uint64_t size = 0;
@@ -44,7 +41,7 @@ public:
 
       mStream = nullptr;
 
-      nsCOMPtr<nsIRunnable> self(this); // overly cute
+      nsCOMPtr<nsIRunnable> self(this);  // overly cute
       mCallbackTarget->Dispatch(self.forget(), NS_DISPATCH_NORMAL);
       mCallbackTarget = nullptr;
       return NS_OK;
@@ -57,7 +54,7 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   nsCOMPtr<nsIInputStream> mStream;
   std::function<void(int64_t aLength)> mCallback;
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
@@ -65,12 +62,10 @@ private:
   int64_t mSize;
 };
 
-} // anonymous
+}  // namespace
 
-/* static */ bool
-InputStreamLengthHelper::GetSyncLength(nsIInputStream* aStream,
-                                       int64_t* aLength)
-{
+/* static */ bool InputStreamLengthHelper::GetSyncLength(
+    nsIInputStream* aStream, int64_t* aLength) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aLength);
 
@@ -97,7 +92,7 @@ InputStreamLengthHelper::GetSyncLength(nsIInputStream* aStream,
   }
 
   nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
-    do_QueryInterface(aStream);
+      do_QueryInterface(aStream);
   if (asyncStreamLength) {
     // GetAsyncLength should be used.
     return false;
@@ -135,25 +130,25 @@ InputStreamLengthHelper::GetSyncLength(nsIInputStream* aStream,
   return true;
 }
 
-/* static */ void
-InputStreamLengthHelper::GetAsyncLength(nsIInputStream* aStream,
-                                        const std::function<void(int64_t aLength)>& aCallback)
-{
+/* static */ void InputStreamLengthHelper::GetAsyncLength(
+    nsIInputStream* aStream,
+    const std::function<void(int64_t aLength)>& aCallback) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aCallback);
 
   // We don't want to allow this class to be used on workers because we are not
   // using the correct Runnable types.
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() || !dom::IsCurrentThreadRunningWorker());
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() ||
+                        !dom::IsCurrentThreadRunningWorker());
 
   RefPtr<InputStreamLengthHelper> helper =
-    new InputStreamLengthHelper(aStream, aCallback);
+      new InputStreamLengthHelper(aStream, aCallback);
 
   // Let's be sure that we don't call ::Available() on main-thread.
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIInputStreamLength> streamLength = do_QueryInterface(aStream);
     nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
-      do_QueryInterface(aStream);
+        do_QueryInterface(aStream);
     if (!streamLength && !asyncStreamLength) {
       // We cannot calculate the length of an async stream. We must fix the
       // caller if this happens.
@@ -165,7 +160,7 @@ InputStreamLengthHelper::GetAsyncLength(nsIInputStream* aStream,
       bool nonBlocking = false;
       if (NS_SUCCEEDED(aStream->IsNonBlocking(&nonBlocking)) && !nonBlocking) {
         nsCOMPtr<nsIEventTarget> target =
-          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+            do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
         MOZ_ASSERT(target);
 
         RefPtr<AvailableEvent> event = new AvailableEvent(aStream, aCallback);
@@ -180,12 +175,12 @@ InputStreamLengthHelper::GetAsyncLength(nsIInputStream* aStream,
   GetCurrentThreadSerialEventTarget()->Dispatch(helper, NS_DISPATCH_NORMAL);
 }
 
-InputStreamLengthHelper::InputStreamLengthHelper(nsIInputStream* aStream,
-                                                 const std::function<void(int64_t aLength)>& aCallback)
-  : Runnable("InputStreamLengthHelper")
-  , mStream(aStream)
-  , mCallback(aCallback)
-{
+InputStreamLengthHelper::InputStreamLengthHelper(
+    nsIInputStream* aStream,
+    const std::function<void(int64_t aLength)>& aCallback)
+    : Runnable("InputStreamLengthHelper"),
+      mStream(aStream),
+      mCallback(aCallback) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aCallback);
 }
@@ -193,8 +188,7 @@ InputStreamLengthHelper::InputStreamLengthHelper(nsIInputStream* aStream,
 InputStreamLengthHelper::~InputStreamLengthHelper() = default;
 
 NS_IMETHODIMP
-InputStreamLengthHelper::Run()
-{
+InputStreamLengthHelper::Run() {
   // Sync length access.
   nsCOMPtr<nsIInputStreamLength> streamLength = do_QueryInterface(mStream);
   if (streamLength) {
@@ -218,11 +212,10 @@ InputStreamLengthHelper::Run()
 
   // Async length access.
   nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
-    do_QueryInterface(mStream);
+      do_QueryInterface(mStream);
   if (asyncStreamLength) {
-    nsresult rv =
-     asyncStreamLength->AsyncLengthWait(this,
-                                        GetCurrentThreadSerialEventTarget());
+    nsresult rv = asyncStreamLength->AsyncLengthWait(
+        this, GetCurrentThreadSerialEventTarget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       ExecCallback(-1);
     }
@@ -243,16 +236,13 @@ InputStreamLengthHelper::Run()
 }
 
 NS_IMETHODIMP
-InputStreamLengthHelper::OnInputStreamLengthReady(nsIAsyncInputStreamLength* aStream,
-                                                  int64_t aLength)
-{
+InputStreamLengthHelper::OnInputStreamLengthReady(
+    nsIAsyncInputStreamLength* aStream, int64_t aLength) {
   ExecCallback(aLength);
   return NS_OK;
 }
 
-void
-InputStreamLengthHelper::ExecCallback(int64_t aLength)
-{
+void InputStreamLengthHelper::ExecCallback(int64_t aLength) {
   MOZ_ASSERT(mCallback);
 
   std::function<void(int64_t aLength)> callback;
@@ -264,4 +254,4 @@ InputStreamLengthHelper::ExecCallback(int64_t aLength)
 NS_IMPL_ISUPPORTS_INHERITED(InputStreamLengthHelper, Runnable,
                             nsIInputStreamLengthCallback)
 
-} // mozilla namespace
+}  // namespace mozilla

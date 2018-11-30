@@ -73,23 +73,20 @@ namespace {
  * notification. The duration of a step is defined as the number of
  * ticks between the time we receive a notification and the next one.
  */
-struct ShutdownStep
-{
+struct ShutdownStep {
   char const* const mTopic;
   int mTicks;
 
-  constexpr explicit ShutdownStep(const char *const topic)
-    : mTopic(topic)
-    , mTicks(-1)
-  {}
+  constexpr explicit ShutdownStep(const char* const topic)
+      : mTopic(topic), mTicks(-1) {}
 };
 
 static ShutdownStep sShutdownSteps[] = {
-  ShutdownStep("quit-application"),
-  ShutdownStep("profile-change-teardown"),
-  ShutdownStep("profile-before-change"),
-  ShutdownStep("xpcom-will-shutdown"),
-  ShutdownStep("xpcom-shutdown"),
+    ShutdownStep("quit-application"),
+    ShutdownStep("profile-change-teardown"),
+    ShutdownStep("profile-before-change"),
+    ShutdownStep("xpcom-will-shutdown"),
+    ShutdownStep("xpcom-shutdown"),
 };
 
 Atomic<bool> sShutdownNotified;
@@ -97,29 +94,27 @@ Atomic<bool> sShutdownNotified;
 // Utility function: create a thread that is non-joinable,
 // does not prevent the process from terminating, is never
 // cooperatively scheduled, and uses a default stack size.
-PRThread* CreateSystemThread(void (*start)(void* arg),
-                             void* arg)
-{
+PRThread* CreateSystemThread(void (*start)(void* arg), void* arg) {
   PRThread* thread =
-    PR_CreateThread(PR_SYSTEM_THREAD, /* This thread will not prevent the
-                                         process from terminating */
-                    start, arg, PR_PRIORITY_LOW,
-                    PR_GLOBAL_THREAD, /* Make sure that the thread is never
-                                         cooperatively scheduled */
-                    PR_UNJOINABLE_THREAD, 0 /* Use default stack size */
-  );
-  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(thread); // This pointer will never be deallocated.
+      PR_CreateThread(PR_SYSTEM_THREAD, /* This thread will not prevent the
+                                           process from terminating */
+                      start, arg, PR_PRIORITY_LOW,
+                      PR_GLOBAL_THREAD, /* Make sure that the thread is never
+                                           cooperatively scheduled */
+                      PR_UNJOINABLE_THREAD, 0 /* Use default stack size */
+      );
+  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(
+      thread);  // This pointer will never be deallocated.
   return thread;
 }
-
 
 ////////////////////////////////////////////
 //
 // The watchdog
 //
-// This nspr thread is in charge of crashing the process if any stage of shutdown
-// lasts more than some predefined duration. As a side-effect, it measures the
-// duration of each stage of shutdown.
+// This nspr thread is in charge of crashing the process if any stage of
+// shutdown lasts more than some predefined duration. As a side-effect, it
+// measures the duration of each stage of shutdown.
 //
 
 // The heartbeat of the operation.
@@ -151,9 +146,7 @@ struct Options {
 /**
  * Entry point for the watchdog thread
  */
-void
-RunWatchdog(void* arg)
-{
+void RunWatchdog(void* arg) {
   NS_SetCurrentThreadName("Shutdown Hang Terminator");
 
   // Let's copy and deallocate options, that's one less leak to worry
@@ -196,8 +189,10 @@ RunWatchdog(void* arg)
 
       if (lastStep) {
         nsCString msg;
-        msg.AppendPrintf("Shutdown hanging at step %s. "
-                         "Something is blocking the main-thread.", lastStep);
+        msg.AppendPrintf(
+            "Shutdown hanging at step %s. "
+            "Something is blocking the main-thread.",
+            lastStep);
         // This string will be leaked.
         MOZ_CRASH_UNSAFE_OOL(strdup(msg.BeginReading()));
       }
@@ -207,9 +202,9 @@ RunWatchdog(void* arg)
 
     // Maybe some workers are blocking the shutdown.
     mozilla::dom::workerinternals::RuntimeService* runtimeService =
-      mozilla::dom::workerinternals::RuntimeService::GetService();
+        mozilla::dom::workerinternals::RuntimeService::GetService();
     if (runtimeService) {
-     runtimeService->CrashIfHanging();
+      runtimeService->CrashIfHanging();
     }
 
     // Shutdown is apparently dead. Crash the process.
@@ -230,17 +225,13 @@ RunWatchdog(void* arg)
 //
 
 // Utility class, used by UniquePtr<> to close nspr files.
-class PR_CloseDelete
-{
-public:
+class PR_CloseDelete {
+ public:
   constexpr PR_CloseDelete() = default;
 
   PR_CloseDelete(const PR_CloseDelete& aOther) = default;
 
-  void operator()(PRFileDesc* aPtr) const
-  {
-    PR_Close(aPtr);
-  }
+  void operator()(PRFileDesc* aPtr) const { PR_Close(aPtr); }
 };
 
 //
@@ -272,8 +263,7 @@ public:
 Atomic<nsCString*> gWriteData(nullptr);
 PRMonitor* gWriteReady = nullptr;
 
-void RunWriter(void* arg)
-{
+void RunWriter(void* arg) {
   AUTO_PROFILER_REGISTER_THREAD("Shutdown Statistics Writer");
   NS_SetCurrentThreadName("Shutdown Statistics Writer");
 
@@ -327,10 +317,8 @@ void RunWriter(void* arg)
     // hardly critical, we don't want to spend too much effort
     // salvaging it.
     //
-    UniquePtr<PRFileDesc, PR_CloseDelete>
-      tmpFileDesc(PR_Open(tmpFilePath.get(),
-                          PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE,
-                          00600));
+    UniquePtr<PRFileDesc, PR_CloseDelete> tmpFileDesc(PR_Open(
+        tmpFilePath.get(), PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE, 00600));
 
     // Shutdown may complete before we have a chance to close the file.
     // This is not a leak.
@@ -357,20 +345,14 @@ void RunWriter(void* arg)
   }
 }
 
-} // namespace
+}  // namespace
 
 NS_IMPL_ISUPPORTS(nsTerminator, nsIObserver)
 
-nsTerminator::nsTerminator()
-  : mInitialized(false)
-  , mCurrentStep(-1)
-{
-}
+nsTerminator::nsTerminator() : mInitialized(false), mCurrentStep(-1) {}
 
 // During startup, register as an observer for all interesting topics.
-nsresult
-nsTerminator::SelfInit()
-{
+nsresult nsTerminator::SelfInit() {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os) {
     return NS_ERROR_UNEXPECTED;
@@ -384,10 +366,9 @@ nsTerminator::SelfInit()
   return NS_OK;
 }
 
-// Actually launch these threads. This takes place at the first sign of shutdown.
-void
-nsTerminator::Start()
-{
+// Actually launch these threads. This takes place at the first sign of
+// shutdown.
+void nsTerminator::Start() {
   MOZ_ASSERT(!mInitialized);
   StartWatchdog();
 #if !defined(NS_FREE_PERMANENT_DATA)
@@ -395,19 +376,17 @@ nsTerminator::Start()
   // get leak warnings on shutdown for intentional leaks (see bug 1242084).
   // This will be enabled again by bug 1255484 when 1255478 lands.
   StartWriter();
-#endif // !defined(NS_FREE_PERMANENT_DATA)
+#endif  // !defined(NS_FREE_PERMANENT_DATA)
   mInitialized = true;
   sShutdownNotified = false;
 }
 
 // Prepare, allocate and start the watchdog thread.
 // By design, it will never finish, nor be deallocated.
-void
-nsTerminator::StartWatchdog()
-{
+void nsTerminator::StartWatchdog() {
   int32_t crashAfterMS =
-    Preferences::GetInt("toolkit.asyncshutdown.crash_timeout",
-                        FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS);
+      Preferences::GetInt("toolkit.asyncshutdown.crash_timeout",
+                          FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS);
   // Ignore negative values
   if (crashAfterMS <= 0) {
     crashAfterMS = FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS;
@@ -422,7 +401,7 @@ nsTerminator::StartWatchdog()
     crashAfterMS += ADDITIONAL_WAIT_BEFORE_CRASH_MS;
   }
 
-# ifdef MOZ_VALGRIND
+#ifdef MOZ_VALGRIND
   // If we're running on Valgrind, we'll be making forward progress at a
   // rate of somewhere between 1/25th and 1/50th of normal.  This can cause
   // timeouts frequently enough to be a problem for the Valgrind runs on
@@ -439,7 +418,7 @@ nsTerminator::StartWatchdog()
       crashAfterMS *= scaleUp;
     }
   }
-# endif
+#endif
 
   UniquePtr<Options> options(new Options());
   const PRIntervalTime ticksDuration = PR_MillisecondsToInterval(1000);
@@ -449,17 +428,15 @@ nsTerminator::StartWatchdog()
     options->crashAfterTicks = crashAfterMS / 1000;
   }
 
-  DebugOnly<PRThread*> watchdogThread = CreateSystemThread(RunWatchdog,
-                                                options.release());
+  DebugOnly<PRThread*> watchdogThread =
+      CreateSystemThread(RunWatchdog, options.release());
   MOZ_ASSERT(watchdogThread);
 }
 
 // Prepare, allocate and start the writer thread. By design, it will never
 // finish, nor be deallocated. In case of error, we degrade
 // gracefully to not writing Telemetry data.
-void
-nsTerminator::StartWriter()
-{
+void nsTerminator::StartWriter() {
   if (!Telemetry::CanRecordExtended()) {
     return;
   }
@@ -482,9 +459,9 @@ nsTerminator::StartWriter()
   }
 
   gWriteReady = PR_NewMonitor();
-  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(gWriteReady); // We will never deallocate this object
-  PRThread* writerThread = CreateSystemThread(RunWriter,
-                                              ToNewUTF8String(path));
+  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(
+      gWriteReady);  // We will never deallocate this object
+  PRThread* writerThread = CreateSystemThread(RunWriter, ToNewUTF8String(path));
 
   if (!writerThread) {
     return;
@@ -492,8 +469,7 @@ nsTerminator::StartWriter()
 }
 
 NS_IMETHODIMP
-nsTerminator::Observe(nsISupports *, const char *aTopic, const char16_t *)
-{
+nsTerminator::Observe(nsISupports*, const char* aTopic, const char16_t*) {
   if (strcmp(aTopic, "profile-after-change") == 0) {
     return SelfInit();
   }
@@ -509,11 +485,11 @@ nsTerminator::Observe(nsISupports *, const char *aTopic, const char16_t *)
 
   UpdateHeartbeat(aTopic);
 #if !defined(NS_FREE_PERMANENT_DATA)
-  // Only allow nsTerminator to write on non-leak checked builds so we don't get leak warnings on
-  // shutdown for intentional leaks (see bug 1242084). This will be enabled again by bug
-  // 1255484 when 1255478 lands.
+  // Only allow nsTerminator to write on non-leak checked builds so we don't get
+  // leak warnings on shutdown for intentional leaks (see bug 1242084). This
+  // will be enabled again by bug 1255484 when 1255478 lands.
   UpdateTelemetry();
-#endif // !defined(NS_FREE_PERMANENT_DATA)
+#endif  // !defined(NS_FREE_PERMANENT_DATA)
   UpdateCrashReport(aTopic);
 
   // Perform a little cleanup
@@ -524,9 +500,7 @@ nsTerminator::Observe(nsISupports *, const char *aTopic, const char16_t *)
   return NS_OK;
 }
 
-void
-nsTerminator::UpdateHeartbeat(const char* aTopic)
-{
+void nsTerminator::UpdateHeartbeat(const char* aTopic) {
   // Reset the clock, find out how long the current phase has lasted.
   uint32_t ticks = gHeartbeat.exchange(0);
   if (mCurrentStep > 0) {
@@ -546,9 +520,7 @@ nsTerminator::UpdateHeartbeat(const char* aTopic)
   mCurrentStep = nextStep;
 }
 
-void
-nsTerminator::UpdateTelemetry()
-{
+void nsTerminator::UpdateTelemetry() {
   if (!Telemetry::CanRecordExtended() || !gWriteReady) {
     return;
   }
@@ -582,13 +554,14 @@ nsTerminator::UpdateTelemetry()
 
   if (fields == 0) {
     // Nothing to write
-      return;
+    return;
   }
 
   //
   // Send data to the worker thread.
   //
-  delete gWriteData.exchange(telemetryData.release()); // Clear any data that hasn't been written yet
+  delete gWriteData.exchange(
+      telemetryData.release());  // Clear any data that hasn't been written yet
 
   // In case the worker thread was sleeping, wake it up.
   PR_EnterMonitor(gWriteReady);
@@ -596,21 +569,17 @@ nsTerminator::UpdateTelemetry()
   PR_ExitMonitor(gWriteReady);
 }
 
-void
-nsTerminator::UpdateCrashReport(const char* aTopic)
-{
+void nsTerminator::UpdateCrashReport(const char* aTopic) {
   // In case of crash, we wish to know where in shutdown we are
   nsAutoCString report(aTopic);
 
   Unused << CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::ShutdownProgress, report);
+      CrashReporter::Annotation::ShutdownProgress, report);
 }
 
-void
-XPCOMShutdownNotified()
-{
+void XPCOMShutdownNotified() {
   MOZ_DIAGNOSTIC_ASSERT(sShutdownNotified == false);
   sShutdownNotified = true;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

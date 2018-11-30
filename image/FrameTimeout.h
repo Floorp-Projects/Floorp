@@ -20,8 +20,7 @@ namespace image {
  * support. For this reason, code that deals with frame timeouts should always
  * use a FrameTimeout value rather than the raw value from the image header.
  */
-struct FrameTimeout
-{
+struct FrameTimeout {
   /**
    * @return a FrameTimeout of zero. This should be used only for math
    * involving FrameTimeout values. You can't obtain a zero FrameTimeout from
@@ -33,8 +32,7 @@ struct FrameTimeout
   static FrameTimeout Forever() { return FrameTimeout(-1); }
 
   /// @return a FrameTimeout obtained by normalizing a raw timeout value.
-  static FrameTimeout FromRawMilliseconds(int32_t aRawMilliseconds)
-  {
+  static FrameTimeout FromRawMilliseconds(int32_t aRawMilliseconds) {
     // Normalize all infinite timeouts to the same value.
     if (aRawMilliseconds < 0) {
       return FrameTimeout::Forever();
@@ -52,7 +50,7 @@ struct FrameTimeout
     //   Opera 7 final/Win:
     //     10ms is normalized to 100ms.
     //     >10ms is used unnormalized.
-    if (aRawMilliseconds >= 0 && aRawMilliseconds <= 10 ) {
+    if (aRawMilliseconds >= 0 && aRawMilliseconds <= 10) {
       return FrameTimeout(100);
     }
 
@@ -60,15 +58,15 @@ struct FrameTimeout
     return FrameTimeout(aRawMilliseconds);
   }
 
-  bool operator==(const FrameTimeout& aOther) const
-  {
+  bool operator==(const FrameTimeout& aOther) const {
     return mTimeout == aOther.mTimeout;
   }
 
-  bool operator!=(const FrameTimeout& aOther) const { return !(*this == aOther); }
+  bool operator!=(const FrameTimeout& aOther) const {
+    return !(*this == aOther);
+  }
 
-  FrameTimeout operator+(const FrameTimeout& aOther)
-  {
+  FrameTimeout operator+(const FrameTimeout& aOther) {
     if (*this == Forever() || aOther == Forever()) {
       return Forever();
     }
@@ -76,8 +74,7 @@ struct FrameTimeout
     return FrameTimeout(mTimeout + aOther.mTimeout);
   }
 
-  FrameTimeout& operator+=(const FrameTimeout& aOther)
-  {
+  FrameTimeout& operator+=(const FrameTimeout& aOther) {
     *this = *this + aOther;
     return *this;
   }
@@ -86,10 +83,10 @@ struct FrameTimeout
    * @return this FrameTimeout's value in milliseconds. Illegal to call on a
    * an infinite FrameTimeout value.
    */
-  uint32_t AsMilliseconds() const
-  {
+  uint32_t AsMilliseconds() const {
     if (*this == Forever()) {
-      MOZ_ASSERT_UNREACHABLE("Calling AsMilliseconds() on an infinite FrameTimeout");
+      MOZ_ASSERT_UNREACHABLE(
+          "Calling AsMilliseconds() on an infinite FrameTimeout");
       return 100;  // Fail to something sane.
     }
 
@@ -105,15 +102,13 @@ struct FrameTimeout
    */
   int32_t AsEncodedValueDeprecated() const { return mTimeout; }
 
-private:
-  explicit FrameTimeout(int32_t aTimeout)
-    : mTimeout(aTimeout)
-  { }
+ private:
+  explicit FrameTimeout(int32_t aTimeout) : mTimeout(aTimeout) {}
 
   int32_t mTimeout;
 };
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla
 
-#endif // mozilla_image_FrameTimeout_h
+#endif  // mozilla_image_FrameTimeout_h

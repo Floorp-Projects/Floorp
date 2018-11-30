@@ -15,24 +15,25 @@
 namespace mozilla {
 namespace dom {
 
-class BasicCardService final
-{
-public:
+class BasicCardService final {
+ public:
   NS_INLINE_DECL_REFCOUNTING(BasicCardService)
 
   static already_AddRefed<BasicCardService> GetService();
 
   bool IsBasicCardPayment(const nsAString& aSupportedMethods);
-  bool IsValidBasicCardRequest(JSContext* aCx, JSObject* aData, nsAString& aErrorMsg);
+  bool IsValidBasicCardRequest(JSContext* aCx, JSObject* aData,
+                               nsAString& aErrorMsg);
   bool IsValidBasicCardErrors(JSContext* aCx, JSObject* aData);
   bool IsValidExpiryMonth(const nsAString& aExpiryMonth);
   bool IsValidExpiryYear(const nsAString& aExpiryYear);
-private:
+
+ private:
   BasicCardService() = default;
   ~BasicCardService() = default;
 };
 
-} // end of namespace dom
-} // end of namespace mozilla
+}  // end of namespace dom
+}  // end of namespace mozilla
 
 #endif

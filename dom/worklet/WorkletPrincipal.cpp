@@ -12,18 +12,14 @@ namespace mozilla {
 namespace dom {
 namespace WorkletPrincipal {
 
-struct WorkletPrincipal final : public JSPrincipals
-{
-  bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) override
-  {
+struct WorkletPrincipal final : public JSPrincipals {
+  bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) override {
     MOZ_CRASH("WorkletPrincipal::write not implemented");
     return false;
   }
 };
 
-JSPrincipals*
-GetWorkletPrincipal()
-{
+JSPrincipals* GetWorkletPrincipal() {
   static WorkletPrincipal sPrincipal;
 
   /*
@@ -44,6 +40,6 @@ GetWorkletPrincipal()
   return &sPrincipal;
 }
 
-} // namespace WorkletPrincipal
-} // namespace dom
-} // namespace mozilla
+}  // namespace WorkletPrincipal
+}  // namespace dom
+}  // namespace mozilla

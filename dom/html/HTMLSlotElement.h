@@ -15,19 +15,19 @@ namespace dom {
 
 struct AssignedNodesOptions;
 
-class HTMLSlotElement final : public nsGenericHTMLElement
-{
-public:
-  explicit HTMLSlotElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+class HTMLSlotElement final : public nsGenericHTMLElement {
+ public:
+  explicit HTMLSlotElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSlotElement, slot)
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLSlotElement, nsGenericHTMLElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLSlotElement,
+                                           nsGenericHTMLElement)
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // nsIContent
-  virtual nsresult BindToTree(nsIDocument* aDocument,
-                              nsIContent* aParent,
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
@@ -41,15 +41,11 @@ public:
                                 bool aNotify) override;
 
   // WebIDL
-  void SetName(const nsAString& aName, ErrorResult& aRv)
-  {
+  void SetName(const nsAString& aName, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::name, aName, aRv);
   }
 
-  void GetName(nsAString& aName)
-  {
-    GetHTMLAttr(nsGkAtoms::name, aName);
-  }
+  void GetName(nsAString& aName) { GetHTMLAttr(nsGkAtoms::name, aName); }
 
   void AssignedNodes(const AssignedNodesOptions& aOptions,
                      nsTArray<RefPtr<nsINode>>& aNodes);
@@ -62,15 +58,14 @@ public:
   void ClearAssignedNodes();
 
   void EnqueueSlotChangeEvent();
-  void RemovedFromSignalSlotList()
-  {
+  void RemovedFromSignalSlotList() {
     MOZ_ASSERT(mInSignalSlotList);
     mInSignalSlotList = false;
   }
 
   void FireSlotChangeEvent();
 
-protected:
+ protected:
   virtual ~HTMLSlotElement();
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
@@ -83,7 +78,7 @@ protected:
   bool mInSignalSlotList = false;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLSlotElement_h
+#endif  // mozilla_dom_HTMLSlotElement_h

@@ -17,21 +17,15 @@ namespace mozilla {
 namespace css {
 
 StreamLoader::StreamLoader(mozilla::css::SheetLoadData* aSheetLoadData)
-  : mSheetLoadData(aSheetLoadData)
-  , mStatus(NS_OK)
-{
-}
+    : mSheetLoadData(aSheetLoadData), mStatus(NS_OK) {}
 
-StreamLoader::~StreamLoader()
-{
-}
+StreamLoader::~StreamLoader() {}
 
 NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
 
 /* nsIRequestObserver implementation */
 NS_IMETHODIMP
-StreamLoader::OnStartRequest(nsIRequest* aRequest, nsISupports*)
-{
+StreamLoader::OnStartRequest(nsIRequest* aRequest, nsISupports*) {
   // It's kinda bad to let Web content send a number that results
   // in a potentially large allocation directly, but efficiency of
   // compression bombs is so great that it doesn't make much sense
@@ -53,10 +47,8 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest, nsISupports*)
 }
 
 NS_IMETHODIMP
-StreamLoader::OnStopRequest(nsIRequest* aRequest,
-                            nsISupports* aContext,
-                            nsresult aStatus)
-{
+StreamLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                            nsresult aStatus) {
   // Decoded data
   nsCString utf8String;
   {
@@ -68,12 +60,13 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
     if (NS_FAILED(mStatus)) {
-      mSheetLoadData->VerifySheetReadyToParse(mStatus, EmptyCString(), EmptyCString(), channel);
+      mSheetLoadData->VerifySheetReadyToParse(mStatus, EmptyCString(),
+                                              EmptyCString(), channel);
       return mStatus;
     }
 
-    nsresult rv =
-      mSheetLoadData->VerifySheetReadyToParse(aStatus, mBOMBytes, bytes, channel);
+    nsresult rv = mSheetLoadData->VerifySheetReadyToParse(aStatus, mBOMBytes,
+                                                          bytes, channel);
     if (rv != NS_OK_PARSE_SHEET) {
       return rv;
     }
@@ -101,34 +94,29 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
     }
 
     if (validated == bytes.Length()) {
-     // Either this is UTF-8 and all valid, or it's not UTF-8 but is an
-     // empty string. This assumes that an empty string in any encoding
-     // decodes to empty string, which seems like a plausible assumption.
+      // Either this is UTF-8 and all valid, or it's not UTF-8 but is an
+      // empty string. This assumes that an empty string in any encoding
+      // decodes to empty string, which seems like a plausible assumption.
       utf8String.Assign(bytes);
     } else {
       rv = encoding->DecodeWithoutBOMHandling(bytes, utf8String, validated);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-  } // run destructor for `bytes`
+  }  // run destructor for `bytes`
 
   // For reasons I don't understand, factoring the below lines into
   // a method on SheetLoadData resulted in a linker error. Hence,
   // accessing fields of mSheetLoadData from here.
-  mSheetLoadData->mLoader->ParseSheet(
-    utf8String,
-    mSheetLoadData,
-    Loader::AllowAsyncParse::Yes);
+  mSheetLoadData->mLoader->ParseSheet(utf8String, mSheetLoadData,
+                                      Loader::AllowAsyncParse::Yes);
   return NS_OK;
 }
 
 /* nsIStreamListener implementation */
 NS_IMETHODIMP
-StreamLoader::OnDataAvailable(nsIRequest*,
-                              nsISupports*,
-                              nsIInputStream* aInputStream,
-                              uint64_t,
-                              uint32_t aCount)
-{
+StreamLoader::OnDataAvailable(nsIRequest*, nsISupports*,
+                              nsIInputStream* aInputStream, uint64_t,
+                              uint32_t aCount) {
   if (NS_FAILED(mStatus)) {
     return mStatus;
   }
@@ -136,16 +124,14 @@ StreamLoader::OnDataAvailable(nsIRequest*,
   return aInputStream->ReadSegments(WriteSegmentFun, this, aCount, &dummy);
 }
 
-void
-StreamLoader::HandleBOM()
-{
+void StreamLoader::HandleBOM() {
   MOZ_ASSERT(mEncodingFromBOM.isNothing());
   MOZ_ASSERT(mBytes.IsEmpty());
 
   const Encoding* encoding;
   size_t bomLength;
   Tie(encoding, bomLength) = Encoding::ForBOM(mBOMBytes);
-  mEncodingFromBOM.emplace(encoding); // Null means no BOM.
+  mEncodingFromBOM.emplace(encoding);  // Null means no BOM.
 
   // BOMs are three bytes at most, but may be fewer. Copy over anything
   // that wasn't part of the BOM to mBytes. Note that we need to track
@@ -154,14 +140,9 @@ StreamLoader::HandleBOM()
   mBOMBytes.Truncate(bomLength);
 }
 
-nsresult
-StreamLoader::WriteSegmentFun(nsIInputStream*,
-                              void* aClosure,
-                              const char* aSegment,
-                              uint32_t,
-                              uint32_t aCount,
-                              uint32_t* aWriteCount)
-{
+nsresult StreamLoader::WriteSegmentFun(nsIInputStream*, void* aClosure,
+                                       const char* aSegment, uint32_t,
+                                       uint32_t aCount, uint32_t* aWriteCount) {
   *aWriteCount = 0;
   StreamLoader* self = static_cast<StreamLoader*>(aClosure);
   if (NS_FAILED(self->mStatus)) {
@@ -192,5 +173,5 @@ StreamLoader::WriteSegmentFun(nsIInputStream*,
   return NS_OK;
 }
 
-} // namespace css
-} // namespace mozilla
+}  // namespace css
+}  // namespace mozilla

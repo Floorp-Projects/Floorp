@@ -15,7 +15,7 @@ namespace mozilla {
 // send reports from the SIGSYS handler to the SandboxReporter
 // instance in the parent.
 class SandboxReporterClient {
-public:
+ public:
   // Note: this does not take ownership of the file descriptor; if
   // it's not kSandboxReporterFileDesc (e.g., for unit testing), the
   // caller will need to close it to avoid leaks.
@@ -36,11 +36,12 @@ public:
     SendReport(report);
     return report;
   }
-private:
+
+ private:
   SandboxReport::ProcType mProcType;
   int mFd;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_SandboxReporterClient_h
+#endif  // mozilla_SandboxReporterClient_h

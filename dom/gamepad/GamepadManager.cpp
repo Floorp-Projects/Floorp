@@ -42,43 +42,39 @@ namespace {
 
 const char* kGamepadEnabledPref = "dom.gamepad.enabled";
 const char* kGamepadEventsEnabledPref =
-  "dom.gamepad.non_standard_events.enabled";
+    "dom.gamepad.non_standard_events.enabled";
 
 const nsTArray<RefPtr<nsGlobalWindowInner>>::index_type NoIndex =
-  nsTArray<RefPtr<nsGlobalWindowInner>>::NoIndex;
+    nsTArray<RefPtr<nsGlobalWindowInner>>::NoIndex;
 
 bool sShutdown = false;
 
 StaticRefPtr<GamepadManager> gGamepadManagerSingleton;
 const uint32_t VR_GAMEPAD_IDX_OFFSET = 0x01 << 16;
 
-} // namespace
+}  // namespace
 
 NS_IMPL_ISUPPORTS(GamepadManager, nsIObserver)
 
 GamepadManager::GamepadManager()
-  : mEnabled(false),
-    mNonstandardEventsEnabled(false),
-    mShuttingDown(false),
-    mPromiseID(0)
-{}
+    : mEnabled(false),
+      mNonstandardEventsEnabled(false),
+      mShuttingDown(false),
+      mPromiseID(0) {}
 
-nsresult
-GamepadManager::Init()
-{
+nsresult GamepadManager::Init() {
   mEnabled = IsAPIEnabled();
   mNonstandardEventsEnabled =
-    Preferences::GetBool(kGamepadEventsEnabledPref, false);
+      Preferences::GetBool(kGamepadEventsEnabledPref, false);
   nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
+      mozilla::services::GetObserverService();
 
   if (NS_WARN_IF(!observerService)) {
     return NS_ERROR_FAILURE;
   }
 
   nsresult rv;
-  rv = observerService->AddObserver(this,
-                                    NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
+  rv = observerService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
                                     false);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -89,12 +85,10 @@ GamepadManager::Init()
 }
 
 NS_IMETHODIMP
-GamepadManager::Observe(nsISupports* aSubject,
-                        const char* aTopic,
-                        const char16_t* aData)
-{
+GamepadManager::Observe(nsISupports* aSubject, const char* aTopic,
+                        const char16_t* aData) {
   nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
+      mozilla::services::GetObserverService();
   if (observerService) {
     observerService->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
   }
@@ -102,9 +96,7 @@ GamepadManager::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void
-GamepadManager::StopMonitoring()
-{
+void GamepadManager::StopMonitoring() {
   for (uint32_t i = 0; i < mChannelChildren.Length(); ++i) {
     mChannelChildren[i]->SendGamepadListenerRemoved();
   }
@@ -116,9 +108,7 @@ GamepadManager::StopMonitoring()
   mGamepads.Clear();
 }
 
-void
-GamepadManager::BeginShutdown()
-{
+void GamepadManager::BeginShutdown() {
   mShuttingDown = true;
   StopMonitoring();
   // Don't let windows call back to unregister during shutdown
@@ -129,9 +119,7 @@ GamepadManager::BeginShutdown()
   sShutdown = true;
 }
 
-void
-GamepadManager::AddListener(nsGlobalWindowInner* aWindow)
-{
+void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -143,9 +131,9 @@ GamepadManager::AddListener(nsGlobalWindowInner* aWindow)
       return;
     }
 
-    GamepadEventChannelChild *child = new GamepadEventChannelChild();
-    PGamepadEventChannelChild *initedChild =
-      actor->SendPGamepadEventChannelConstructor(child);
+    GamepadEventChannelChild* child = new GamepadEventChannelChild();
+    PGamepadEventChannelChild* initedChild =
+        actor->SendPGamepadEventChannelConstructor(child);
     if (NS_WARN_IF(!initedChild)) {
       // We are probably shutting down.
       return;
@@ -163,20 +151,19 @@ GamepadManager::AddListener(nsGlobalWindowInner* aWindow)
     }
   }
 
-  if (!mEnabled || mShuttingDown || nsContentUtils::ShouldResistFingerprinting()) {
+  if (!mEnabled || mShuttingDown ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
   if (mListeners.IndexOf(aWindow) != NoIndex) {
-    return; // already exists
+    return;  // already exists
   }
 
   mListeners.AppendElement(aWindow);
 }
 
-void
-GamepadManager::RemoveListener(nsGlobalWindowInner* aWindow)
-{
+void GamepadManager::RemoveListener(nsGlobalWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
 
   if (mShuttingDown) {
@@ -186,11 +173,11 @@ GamepadManager::RemoveListener(nsGlobalWindowInner* aWindow)
   }
 
   if (mListeners.IndexOf(aWindow) == NoIndex) {
-    return; // doesn't exist
+    return;  // doesn't exist
   }
 
   for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
-      aWindow->RemoveGamepad(iter.Key());
+    aWindow->RemoveGamepad(iter.Key());
   }
 
   mListeners.RemoveElement(aWindow);
@@ -200,9 +187,7 @@ GamepadManager::RemoveListener(nsGlobalWindowInner* aWindow)
   }
 }
 
-already_AddRefed<Gamepad>
-GamepadManager::GetGamepad(uint32_t aIndex) const
-{
+already_AddRefed<Gamepad> GamepadManager::GetGamepad(uint32_t aIndex) const {
   RefPtr<Gamepad> gamepad;
   if (mGamepads.Get(aIndex, getter_AddRefs(gamepad))) {
     return gamepad.forget();
@@ -211,16 +196,13 @@ GamepadManager::GetGamepad(uint32_t aIndex) const
   return nullptr;
 }
 
-already_AddRefed<Gamepad>
-GamepadManager::GetGamepad(uint32_t aGamepadId, GamepadServiceType aServiceType) const
-{
+already_AddRefed<Gamepad> GamepadManager::GetGamepad(
+    uint32_t aGamepadId, GamepadServiceType aServiceType) const {
   return GetGamepad(GetGamepadIndexWithServiceType(aGamepadId, aServiceType));
 }
 
-
-uint32_t GamepadManager::GetGamepadIndexWithServiceType(uint32_t aIndex,
-                                                        GamepadServiceType aServiceType) const
-{
+uint32_t GamepadManager::GetGamepadIndexWithServiceType(
+    uint32_t aIndex, GamepadServiceType aServiceType) const {
   uint32_t newIndex = 0;
 
   switch (aServiceType) {
@@ -239,31 +221,18 @@ uint32_t GamepadManager::GetGamepadIndexWithServiceType(uint32_t aIndex,
   return newIndex;
 }
 
-void
-GamepadManager::AddGamepad(uint32_t aIndex,
-                           const nsAString& aId,
-                           GamepadMappingType aMapping,
-                           GamepadHand aHand,
-                           GamepadServiceType aServiceType,
-                           uint32_t aDisplayID,
-                           uint32_t aNumButtons,
-                           uint32_t aNumAxes,
-                           uint32_t aNumHaptics)
-{
-   uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
+void GamepadManager::AddGamepad(uint32_t aIndex, const nsAString& aId,
+                                GamepadMappingType aMapping, GamepadHand aHand,
+                                GamepadServiceType aServiceType,
+                                uint32_t aDisplayID, uint32_t aNumButtons,
+                                uint32_t aNumAxes, uint32_t aNumHaptics) {
+  uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
 
-  //TODO: bug 852258: get initial button/axis state
-  RefPtr<Gamepad> gamepad =
-    new Gamepad(nullptr,
-                aId,
-                0, // index is set by global window
-                newIndex,
-                aMapping,
-                aHand,
-                aDisplayID,
-                aNumButtons,
-                aNumAxes,
-                aNumHaptics);
+  // TODO: bug 852258: get initial button/axis state
+  RefPtr<Gamepad> gamepad = new Gamepad(nullptr, aId,
+                                        0,  // index is set by global window
+                                        newIndex, aMapping, aHand, aDisplayID,
+                                        aNumButtons, aNumAxes, aNumHaptics);
 
   // We store the gamepad related to its index given by the parent process,
   // and no duplicate index is allowed.
@@ -272,9 +241,8 @@ GamepadManager::AddGamepad(uint32_t aIndex,
   NewConnectionEvent(newIndex, true);
 }
 
-void
-GamepadManager::RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType)
-{
+void GamepadManager::RemoveGamepad(uint32_t aIndex,
+                                   GamepadServiceType aServiceType) {
   uint32_t newIndex = GetGamepadIndexWithServiceType(aIndex, aServiceType);
 
   RefPtr<Gamepad> gamepad = GetGamepad(newIndex);
@@ -287,52 +255,40 @@ GamepadManager::RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType)
   mGamepads.Remove(newIndex);
 }
 
-void
-GamepadManager::FireButtonEvent(EventTarget* aTarget,
-                                Gamepad* aGamepad,
-                                uint32_t aButton,
-                                double aValue)
-{
-  nsString name = aValue == 1.0L ? NS_LITERAL_STRING("gamepadbuttondown") :
-                                   NS_LITERAL_STRING("gamepadbuttonup");
+void GamepadManager::FireButtonEvent(EventTarget* aTarget, Gamepad* aGamepad,
+                                     uint32_t aButton, double aValue) {
+  nsString name = aValue == 1.0L ? NS_LITERAL_STRING("gamepadbuttondown")
+                                 : NS_LITERAL_STRING("gamepadbuttonup");
   GamepadButtonEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
   init.mGamepad = aGamepad;
   init.mButton = aButton;
   RefPtr<GamepadButtonEvent> event =
-    GamepadButtonEvent::Constructor(aTarget, name, init);
+      GamepadButtonEvent::Constructor(aTarget, name, init);
 
   event->SetTrusted(true);
 
   aTarget->DispatchEvent(*event);
 }
 
-void
-GamepadManager::FireAxisMoveEvent(EventTarget* aTarget,
-                                  Gamepad* aGamepad,
-                                  uint32_t aAxis,
-                                  double aValue)
-{
+void GamepadManager::FireAxisMoveEvent(EventTarget* aTarget, Gamepad* aGamepad,
+                                       uint32_t aAxis, double aValue) {
   GamepadAxisMoveEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
   init.mGamepad = aGamepad;
   init.mAxis = aAxis;
   init.mValue = aValue;
-  RefPtr<GamepadAxisMoveEvent> event =
-    GamepadAxisMoveEvent::Constructor(aTarget,
-                                      NS_LITERAL_STRING("gamepadaxismove"),
-                                      init);
+  RefPtr<GamepadAxisMoveEvent> event = GamepadAxisMoveEvent::Constructor(
+      aTarget, NS_LITERAL_STRING("gamepadaxismove"), init);
 
   event->SetTrusted(true);
 
   aTarget->DispatchEvent(*event);
 }
 
-void
-GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected)
-{
+void GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected) {
   // Do not fire gamepadconnected and gamepaddisconnected events when
   // privacy.resistFingerprinting is true.
   if (nsContentUtils::ShouldResistFingerprinting()) {
@@ -378,7 +334,6 @@ GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected)
     // For disconnection events, fire one at every window that has received
     // data from this gamepad.
     for (uint32_t i = 0; i < listeners.Length(); i++) {
-
       // Even background windows get these events, so we don't have to
       // deal with the hassle of syncing the state of removed gamepads.
 
@@ -395,29 +350,24 @@ GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected)
   }
 }
 
-void
-GamepadManager::FireConnectionEvent(EventTarget* aTarget,
-                                    Gamepad* aGamepad,
-                                    bool aConnected)
-{
-  nsString name = aConnected ? NS_LITERAL_STRING("gamepadconnected") :
-                               NS_LITERAL_STRING("gamepaddisconnected");
+void GamepadManager::FireConnectionEvent(EventTarget* aTarget,
+                                         Gamepad* aGamepad, bool aConnected) {
+  nsString name = aConnected ? NS_LITERAL_STRING("gamepadconnected")
+                             : NS_LITERAL_STRING("gamepaddisconnected");
   GamepadEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
   init.mGamepad = aGamepad;
-  RefPtr<GamepadEvent> event =
-    GamepadEvent::Constructor(aTarget, name, init);
+  RefPtr<GamepadEvent> event = GamepadEvent::Constructor(aTarget, name, init);
 
   event->SetTrusted(true);
 
   aTarget->DispatchEvent(*event);
 }
 
-void
-GamepadManager::SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad)
-{
-  if (mShuttingDown || !mEnabled || nsContentUtils::ShouldResistFingerprinting()) {
+void GamepadManager::SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad) {
+  if (mShuttingDown || !mEnabled ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
@@ -430,16 +380,10 @@ GamepadManager::SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad)
 }
 
 // static
-bool
-GamepadManager::IsServiceRunning()
-{
-  return !!gGamepadManagerSingleton;
-}
+bool GamepadManager::IsServiceRunning() { return !!gGamepadManagerSingleton; }
 
 // static
-already_AddRefed<GamepadManager>
-GamepadManager::GetService()
-{
+already_AddRefed<GamepadManager> GamepadManager::GetService() {
   if (sShutdown) {
     return nullptr;
   }
@@ -447,7 +391,7 @@ GamepadManager::GetService()
   if (!gGamepadManagerSingleton) {
     RefPtr<GamepadManager> manager = new GamepadManager();
     nsresult rv = manager->Init();
-    if(NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
     gGamepadManagerSingleton = manager;
@@ -459,14 +403,12 @@ GamepadManager::GetService()
 }
 
 // static
-bool
-GamepadManager::IsAPIEnabled() {
+bool GamepadManager::IsAPIEnabled() {
   return Preferences::GetBool(kGamepadEnabledPref, false);
 }
 
-bool
-GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow, uint32_t aIndex)
-{
+bool GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
+                                               uint32_t aIndex) {
   if (!WindowHasSeenGamepad(aWindow, aIndex)) {
     // This window hasn't seen this gamepad before, so
     // send a connection event first.
@@ -476,18 +418,14 @@ GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow, uint32_t
   return false;
 }
 
-bool
-GamepadManager::WindowHasSeenGamepad(nsGlobalWindowInner* aWindow, uint32_t aIndex) const
-{
+bool GamepadManager::WindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
+                                          uint32_t aIndex) const {
   RefPtr<Gamepad> gamepad = aWindow->GetGamepad(aIndex);
   return gamepad != nullptr;
 }
 
-void
-GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
-                                        uint32_t aIndex,
-                                        bool aHasSeen)
-{
+void GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
+                                             uint32_t aIndex, bool aHasSeen) {
   MOZ_ASSERT(aWindow);
 
   if (mListeners.IndexOf(aWindow) == NoIndex) {
@@ -509,10 +447,9 @@ GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,
   }
 }
 
-void
-GamepadManager::Update(const GamepadChangeEvent& aEvent)
-{
-  if (!mEnabled || mShuttingDown || nsContentUtils::ShouldResistFingerprinting()) {
+void GamepadManager::Update(const GamepadChangeEvent& aEvent) {
+  if (!mEnabled || mShuttingDown ||
+      nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
@@ -522,13 +459,9 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
 
   if (body.type() == GamepadChangeEventBody::TGamepadAdded) {
     const GamepadAdded& a = body.get_GamepadAdded();
-    AddGamepad(index, a.id(),
-               static_cast<GamepadMappingType>(a.mapping()),
-               static_cast<GamepadHand>(a.hand()),
-               serviceType,
-               a.display_id(),
-               a.num_buttons(), a.num_axes(),
-               a.num_haptics());
+    AddGamepad(index, a.id(), static_cast<GamepadMappingType>(a.mapping()),
+               static_cast<GamepadHand>(a.hand()), serviceType, a.display_id(),
+               a.num_buttons(), a.num_axes(), a.num_haptics());
     return;
   }
   if (body.type() == GamepadChangeEventBody::TGamepadRemoved) {
@@ -556,31 +489,27 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
   }
 }
 
-void
-GamepadManager::MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& aEvent,
-                                                      nsGlobalWindowInner* aWindow)
-{
+void GamepadManager::MaybeConvertToNonstandardGamepadEvent(
+    const GamepadChangeEvent& aEvent, nsGlobalWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
 
   if (!mNonstandardEventsEnabled) {
     return;
   }
 
-  const uint32_t index = GetGamepadIndexWithServiceType(aEvent.index(),
-                                                        aEvent.service_type());
+  const uint32_t index =
+      GetGamepadIndexWithServiceType(aEvent.index(), aEvent.service_type());
   RefPtr<Gamepad> gamepad = aWindow->GetGamepad(index);
   const GamepadChangeEventBody& body = aEvent.body();
 
   if (gamepad) {
     switch (body.type()) {
-      case GamepadChangeEventBody::TGamepadButtonInformation:
-      {
+      case GamepadChangeEventBody::TGamepadButtonInformation: {
         const GamepadButtonInformation& a = body.get_GamepadButtonInformation();
         FireButtonEvent(aWindow, gamepad, a.button(), a.value());
         break;
       }
-      case GamepadChangeEventBody::TGamepadAxisInformation:
-      {
+      case GamepadChangeEventBody::TGamepadAxisInformation: {
         const GamepadAxisInformation& a = body.get_GamepadAxisInformation();
         FireAxisMoveEvent(aWindow, gamepad, a.axis(), a.value());
         break;
@@ -591,42 +520,38 @@ GamepadManager::MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& 
   }
 }
 
-bool
-GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWindowInner *aWindow)
-{
+bool GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent,
+                                       nsGlobalWindowInner* aWindow) {
   bool ret = false;
   bool firstTime = false;
-  const uint32_t index = GetGamepadIndexWithServiceType(aEvent.index(),
-                                                        aEvent.service_type());
+  const uint32_t index =
+      GetGamepadIndexWithServiceType(aEvent.index(), aEvent.service_type());
   if (aWindow) {
     firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
   }
 
-  RefPtr<Gamepad> gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
+  RefPtr<Gamepad> gamepad =
+      aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
   const GamepadChangeEventBody& body = aEvent.body();
 
   if (gamepad) {
     switch (body.type()) {
-      case GamepadChangeEventBody::TGamepadButtonInformation:
-      {
+      case GamepadChangeEventBody::TGamepadButtonInformation: {
         const GamepadButtonInformation& a = body.get_GamepadButtonInformation();
         gamepad->SetButton(a.button(), a.pressed(), a.touched(), a.value());
         break;
       }
-      case GamepadChangeEventBody::TGamepadAxisInformation:
-      {
+      case GamepadChangeEventBody::TGamepadAxisInformation: {
         const GamepadAxisInformation& a = body.get_GamepadAxisInformation();
         gamepad->SetAxis(a.axis(), a.value());
         break;
       }
-      case GamepadChangeEventBody::TGamepadPoseInformation:
-      {
+      case GamepadChangeEventBody::TGamepadPoseInformation: {
         const GamepadPoseInformation& a = body.get_GamepadPoseInformation();
         gamepad->SetPose(a.pose_state());
         break;
       }
-      case GamepadChangeEventBody::TGamepadHandInformation:
-      {
+      case GamepadChangeEventBody::TGamepadHandInformation: {
         const GamepadHandInformation& a = body.get_GamepadHandInformation();
         gamepad->SetHand(a.hand());
         break;
@@ -645,11 +570,9 @@ GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWind
   return ret;
 }
 
-already_AddRefed<Promise>
-GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                              double aIntensity, double aDuration,
-                              nsIGlobalObject* aGlobal, ErrorResult& aRv)
-{
+already_AddRefed<Promise> GamepadManager::VibrateHaptic(
+    uint32_t aControllerIdx, uint32_t aHapticIndex, double aIntensity,
+    double aDuration, nsIGlobalObject* aGlobal, ErrorResult& aRv) {
   const char* kGamepadHapticEnabledPref = "dom.gamepad.haptic_feedback.enabled";
   RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -662,16 +585,14 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
         const uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
         gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
         vm->AddPromise(mPromiseID, promise);
-        vm->SendVibrateHaptic(index, aHapticIndex,
-                              aIntensity, aDuration,
+        vm->SendVibrateHaptic(index, aHapticIndex, aIntensity, aDuration,
                               mPromiseID);
       }
     } else {
-      for (const auto& channelChild: mChannelChildren) {
+      for (const auto& channelChild : mChannelChildren) {
         channelChild->AddPromise(mPromiseID, promise);
         channelChild->SendVibrateHaptic(aControllerIdx, aHapticIndex,
-                                        aIntensity, aDuration,
-                                        mPromiseID);
+                                        aIntensity, aDuration, mPromiseID);
       }
     }
   }
@@ -680,9 +601,7 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
   return promise.forget();
 }
 
-void
-GamepadManager::StopHaptics()
-{
+void GamepadManager::StopHaptics() {
   const char* kGamepadHapticEnabledPref = "dom.gamepad.haptic_feedback.enabled";
   if (!Preferences::GetBool(kGamepadHapticEnabledPref)) {
     return;
@@ -704,5 +623,5 @@ GamepadManager::StopHaptics()
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

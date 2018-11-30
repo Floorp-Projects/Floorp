@@ -11,15 +11,14 @@
 
 namespace mozilla {
 
-WebGLExtensionTextureFilterAnisotropic::WebGLExtensionTextureFilterAnisotropic(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-}
+WebGLExtensionTextureFilterAnisotropic::WebGLExtensionTextureFilterAnisotropic(
+    WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {}
 
-WebGLExtensionTextureFilterAnisotropic::~WebGLExtensionTextureFilterAnisotropic()
-{
-}
+WebGLExtensionTextureFilterAnisotropic::
+    ~WebGLExtensionTextureFilterAnisotropic() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFilterAnisotropic, EXT_texture_filter_anisotropic)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFilterAnisotropic,
+                          EXT_texture_filter_anisotropic)
 
-} // namespace mozilla
+}  // namespace mozilla

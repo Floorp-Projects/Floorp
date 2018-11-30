@@ -17,27 +17,22 @@ NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedLength, mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedLength, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedLength, Release)
 
-JSObject*
-SVGAnimatedLength::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGAnimatedLength::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedLength_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMSVGLength>
-SVGAnimatedLength::BaseVal()
-{
+already_AddRefed<DOMSVGLength> SVGAnimatedLength::BaseVal() {
   RefPtr<DOMSVGLength> angle;
   mVal->ToDOMBaseVal(getter_AddRefs(angle), mSVGElement);
   return angle.forget();
 }
 
-already_AddRefed<DOMSVGLength>
-SVGAnimatedLength::AnimVal()
-{
+already_AddRefed<DOMSVGLength> SVGAnimatedLength::AnimVal() {
   RefPtr<DOMSVGLength> angle;
   mVal->ToDOMAnimVal(getter_AddRefs(angle), mSVGElement);
   return angle.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

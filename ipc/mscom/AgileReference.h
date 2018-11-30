@@ -33,36 +33,28 @@ namespace mscom {
  * HRESULT hr = myAgileRef->Resolve(IID_IFoo, getter_AddRefs(foo));
  * // Now foo may be called from the main thread
  */
-class AgileReference final
-{
-public:
+class AgileReference final {
+ public:
   AgileReference();
 
   template <typename InterfaceT>
   explicit AgileReference(RefPtr<InterfaceT>& aObject)
-    : AgileReference(__uuidof(InterfaceT), aObject)
-  {
-  }
+      : AgileReference(__uuidof(InterfaceT), aObject) {}
 
   AgileReference(REFIID aIid, IUnknown* aObject);
   AgileReference(AgileReference&& aOther);
 
   ~AgileReference();
 
-  explicit operator bool() const
-  {
-    return mAgileRef || mGitCookie;
-  }
+  explicit operator bool() const { return mAgileRef || mGitCookie; }
 
   template <typename T>
-  void Assign(const RefPtr<T>& aOther)
-  {
+  void Assign(const RefPtr<T>& aOther) {
     Assign(__uuidof(T), aOther);
   }
 
   template <typename T>
-  AgileReference& operator=(const RefPtr<T>& aOther)
-  {
+  AgileReference& operator=(const RefPtr<T>& aOther) {
     Assign(aOther);
     return *this;
   }
@@ -74,39 +66,36 @@ public:
 
   AgileReference& operator=(AgileReference&& aOther);
 
-  AgileReference& operator=(decltype(nullptr))
-  {
+  AgileReference& operator=(decltype(nullptr)) {
     Clear();
     return *this;
   }
 
   void Clear();
 
-private:
+ private:
   void Assign(REFIID aIid, IUnknown* aObject);
   void AssignInternal(IUnknown* aObject);
   static IGlobalInterfaceTable* ObtainGit();
 
-private:
-  IID                     mIid;
+ private:
+  IID mIid;
   RefPtr<IAgileReference> mAgileRef;
-  DWORD                   mGitCookie;
+  DWORD mGitCookie;
 };
 
-} // namespace mscom
-} // namespace mozilla
+}  // namespace mscom
+}  // namespace mozilla
 
 template <typename T>
 RefPtr<T>::RefPtr(const mozilla::mscom::AgileReference& aAgileRef)
-  : mRawPtr(nullptr)
-{
+    : mRawPtr(nullptr) {
   (*this) = aAgileRef;
 }
 
 template <typename T>
-RefPtr<T>&
-RefPtr<T>::operator=(const mozilla::mscom::AgileReference& aAgileRef)
-{
+RefPtr<T>& RefPtr<T>::operator=(
+    const mozilla::mscom::AgileReference& aAgileRef) {
   void* newRawPtr;
   if (FAILED(aAgileRef.Resolve(__uuidof(T), &newRawPtr))) {
     newRawPtr = nullptr;
@@ -115,4 +104,4 @@ RefPtr<T>::operator=(const mozilla::mscom::AgileReference& aAgileRef)
   return *this;
 }
 
-#endif // mozilla_mscom_AgileReference_h
+#endif  // mozilla_mscom_AgileReference_h

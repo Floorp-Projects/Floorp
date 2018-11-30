@@ -19,22 +19,23 @@
 namespace mozilla {
 namespace dom {
 
-class StructuredCloneBlob final : public nsIMemoryReporter
-                                , public StructuredCloneHolder
-{
+class StructuredCloneBlob final : public nsIMemoryReporter,
+                                  public StructuredCloneHolder {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
-  static JSObject* ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader,
+  static JSObject* ReadStructuredClone(JSContext* aCx,
+                                       JSStructuredCloneReader* aReader,
                                        StructuredCloneHolder* aHolder);
   bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter,
                             StructuredCloneHolder* aHolder);
 
-  static already_AddRefed<StructuredCloneBlob>
-  Constructor(GlobalObject& aGlobal, JS::HandleValue aValue, JS::HandleObject aTargetGlobal, ErrorResult& aRv);
+  static already_AddRefed<StructuredCloneBlob> Constructor(
+      GlobalObject& aGlobal, JS::HandleValue aValue,
+      JS::HandleObject aTargetGlobal, ErrorResult& aRv);
 
   void Deserialize(JSContext* aCx, JS::HandleObject aTargetScope,
                    JS::MutableHandleValue aResult, ErrorResult& aRv);
@@ -42,27 +43,27 @@ public:
   nsISupports* GetParentObject() const { return nullptr; }
   JSObject* GetWrapper() const { return nullptr; }
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandleObject aResult);
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandleObject aResult);
 
-protected:
+ protected:
   virtual ~StructuredCloneBlob();
 
-private:
+ private:
   explicit StructuredCloneBlob();
 
-  static already_AddRefed<StructuredCloneBlob> Create()
-  {
+  static already_AddRefed<StructuredCloneBlob> Create() {
     RefPtr<StructuredCloneBlob> holder = new StructuredCloneBlob();
     RegisterWeakMemoryReporter(holder);
     return holder.forget();
   }
 
-  bool ReadStructuredCloneInternal(JSContext* aCx, JSStructuredCloneReader* aReader,
+  bool ReadStructuredCloneInternal(JSContext* aCx,
+                                   JSStructuredCloneReader* aReader,
                                    StructuredCloneHolder* aHolder);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_StructuredCloneBlob_h
-
+#endif  // mozilla_dom_StructuredCloneBlob_h

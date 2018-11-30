@@ -13,14 +13,13 @@
 namespace mozilla {
 namespace gfx {
 
-class SharedDIB
-{
-public:
+class SharedDIB {
+ public:
   typedef base::SharedMemoryHandle Handle;
 
   static const uint32_t kBytesPerPixel = 4;
 
-public:
+ public:
   SharedDIB();
   ~SharedDIB();
 
@@ -33,19 +32,19 @@ public:
   // Returns true if this object contains a valid dib.
   bool IsValid();
 
-  // Wrap a new shared dib around allocated shared memory. Note aHandle must point
-  // to a memory section large enough to hold a dib of size aSize, otherwise this
-  // will fail.
+  // Wrap a new shared dib around allocated shared memory. Note aHandle must
+  // point to a memory section large enough to hold a dib of size aSize,
+  // otherwise this will fail.
   nsresult Attach(Handle aHandle, uint32_t aSize);
 
   // Returns a SharedMemoryHandle suitable for sharing with another process.
   nsresult ShareToProcess(base::ProcessId aTargetPid, Handle *aNewHandle);
 
-protected:
+ protected:
   base::SharedMemory *mShMem;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif

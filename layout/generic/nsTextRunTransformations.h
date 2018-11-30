@@ -22,51 +22,46 @@ struct nsTransformedCharStyle final {
 
   explicit nsTransformedCharStyle(mozilla::ComputedStyle* aStyle,
                                   nsPresContext* aPresContext)
-    : mFont(aStyle->StyleFont()->mFont)
-    , mLanguage(aStyle->StyleFont()->mLanguage)
-    , mPresContext(aPresContext)
-    , mScriptSizeMultiplier(aStyle->StyleFont()->mScriptSizeMultiplier)
-    , mTextTransform(aStyle->StyleText()->mTextTransform)
-    , mMathVariant(aStyle->StyleFont()->mMathVariant)
-    , mExplicitLanguage(aStyle->StyleFont()->mExplicitLanguage) {}
+      : mFont(aStyle->StyleFont()->mFont),
+        mLanguage(aStyle->StyleFont()->mLanguage),
+        mPresContext(aPresContext),
+        mScriptSizeMultiplier(aStyle->StyleFont()->mScriptSizeMultiplier),
+        mTextTransform(aStyle->StyleText()->mTextTransform),
+        mMathVariant(aStyle->StyleFont()->mMathVariant),
+        mExplicitLanguage(aStyle->StyleFont()->mExplicitLanguage) {}
 
-  nsFont                  mFont;
-  RefPtr<nsAtom>          mLanguage;
-  RefPtr<nsPresContext>   mPresContext;
-  float                   mScriptSizeMultiplier;
-  uint8_t                 mTextTransform;
-  uint8_t                 mMathVariant;
-  bool                    mExplicitLanguage;
-  bool                    mForceNonFullWidth = false;
+  nsFont mFont;
+  RefPtr<nsAtom> mLanguage;
+  RefPtr<nsPresContext> mPresContext;
+  float mScriptSizeMultiplier;
+  uint8_t mTextTransform;
+  uint8_t mMathVariant;
+  bool mExplicitLanguage;
+  bool mForceNonFullWidth = false;
 
-private:
+ private:
   ~nsTransformedCharStyle() {}
   nsTransformedCharStyle(const nsTransformedCharStyle& aOther) = delete;
-  nsTransformedCharStyle& operator=(const nsTransformedCharStyle& aOther) = delete;
+  nsTransformedCharStyle& operator=(const nsTransformedCharStyle& aOther) =
+      delete;
 };
 
 class nsTransformingTextRunFactory {
-public:
+ public:
   virtual ~nsTransformingTextRunFactory() {}
 
   // Default 8-bit path just transforms to Unicode and takes that path
-  already_AddRefed<nsTransformedTextRun>
-  MakeTextRun(const uint8_t* aString, uint32_t aLength,
-              const gfxFontGroup::Parameters* aParams,
-              gfxFontGroup* aFontGroup,
-              mozilla::gfx::ShapedTextFlags aFlags,
-              nsTextFrameUtils::Flags aFlags2,
-              nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
-              bool aOwnsFactory);
+  already_AddRefed<nsTransformedTextRun> MakeTextRun(
+      const uint8_t* aString, uint32_t aLength,
+      const gfxFontGroup::Parameters* aParams, gfxFontGroup* aFontGroup,
+      mozilla::gfx::ShapedTextFlags aFlags, nsTextFrameUtils::Flags aFlags2,
+      nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles, bool aOwnsFactory);
 
-  already_AddRefed<nsTransformedTextRun>
-  MakeTextRun(const char16_t* aString, uint32_t aLength,
-              const gfxFontGroup::Parameters* aParams,
-              gfxFontGroup* aFontGroup,
-              mozilla::gfx::ShapedTextFlags aFlags,
-              nsTextFrameUtils::Flags aFlags2,
-              nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
-              bool aOwnsFactory);
+  already_AddRefed<nsTransformedTextRun> MakeTextRun(
+      const char16_t* aString, uint32_t aLength,
+      const gfxFontGroup::Parameters* aParams, gfxFontGroup* aFontGroup,
+      mozilla::gfx::ShapedTextFlags aFlags, nsTextFrameUtils::Flags aFlags2,
+      nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles, bool aOwnsFactory);
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
                               mozilla::gfx::DrawTarget* aRefDrawTarget,
@@ -78,18 +73,21 @@ public:
  * and then render the text using some other textrun implementation.
  */
 class nsCaseTransformTextRunFactory : public nsTransformingTextRunFactory {
-public:
+ public:
   // We could add an optimization here so that when there is no inner
-  // factory, no title-case conversion, and no upper-casing of SZLIG, we override
-  // MakeTextRun (after making it virtual in the superclass) and have it
-  // just convert the string to uppercase or lowercase and create the textrun
+  // factory, no title-case conversion, and no upper-casing of SZLIG, we
+  // override MakeTextRun (after making it virtual in the superclass) and have
+  // it just convert the string to uppercase or lowercase and create the textrun
   // via the fontgroup.
 
   // Takes ownership of aInnerTransformTextRunFactory
-  explicit nsCaseTransformTextRunFactory(mozilla::UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
-                                         bool aAllUppercase = false)
-    : mInnerTransformingTextRunFactory(std::move(aInnerTransformingTextRunFactory)),
-      mAllUppercase(aAllUppercase) {}
+  explicit nsCaseTransformTextRunFactory(
+      mozilla::UniquePtr<nsTransformingTextRunFactory>
+          aInnerTransformingTextRunFactory,
+      bool aAllUppercase = false)
+      : mInnerTransformingTextRunFactory(
+            std::move(aInnerTransformingTextRunFactory)),
+        mAllUppercase(aAllUppercase) {}
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
                               mozilla::gfx::DrawTarget* aRefDrawTarget,
@@ -105,19 +103,18 @@ public:
   // will be copied to the output arrays, which must also be provided by
   // the caller. For the global upper-casing usage (no input textrun),
   // these are ignored.
-  static bool TransformString(const nsAString& aString,
-                              nsString& aConvertedString,
-                              bool aAllUppercase,
-                              const nsAtom* aLanguage,
-                              nsTArray<bool>& aCharsToMergeArray,
-                              nsTArray<bool>& aDeletedCharsArray,
-                              const nsTransformedTextRun* aTextRun = nullptr,
-                              uint32_t aOffsetInTextRun = 0,
-                              nsTArray<uint8_t>* aCanBreakBeforeArray = nullptr,
-                              nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray = nullptr);
+  static bool TransformString(
+      const nsAString& aString, nsString& aConvertedString, bool aAllUppercase,
+      const nsAtom* aLanguage, nsTArray<bool>& aCharsToMergeArray,
+      nsTArray<bool>& aDeletedCharsArray,
+      const nsTransformedTextRun* aTextRun = nullptr,
+      uint32_t aOffsetInTextRun = 0,
+      nsTArray<uint8_t>* aCanBreakBeforeArray = nullptr,
+      nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray = nullptr);
 
-protected:
-  mozilla::UniquePtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
+ protected:
+  mozilla::UniquePtr<nsTransformingTextRunFactory>
+      mInnerTransformingTextRunFactory;
   bool mAllUppercase;
 };
 
@@ -126,17 +123,14 @@ protected:
  * to fully rebuild the textrun contents.
  */
 class nsTransformedTextRun final : public gfxTextRun {
-public:
-
-  static already_AddRefed<nsTransformedTextRun>
-  Create(const gfxTextRunFactory::Parameters* aParams,
-         nsTransformingTextRunFactory* aFactory,
-         gfxFontGroup* aFontGroup,
-         const char16_t* aString, uint32_t aLength,
-         const mozilla::gfx::ShapedTextFlags aFlags,
-         const nsTextFrameUtils::Flags aFlags2,
-         nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
-         bool aOwnsFactory);
+ public:
+  static already_AddRefed<nsTransformedTextRun> Create(
+      const gfxTextRunFactory::Parameters* aParams,
+      nsTransformingTextRunFactory* aFactory, gfxFontGroup* aFontGroup,
+      const char16_t* aString, uint32_t aLength,
+      const mozilla::gfx::ShapedTextFlags aFlags,
+      const nsTextFrameUtils::Flags aFlags2,
+      nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles, bool aOwnsFactory);
 
   ~nsTransformedTextRun() {
     if (mOwnsFactory) {
@@ -154,8 +148,7 @@ public:
    * called after a Create.
    */
   void FinishSettingProperties(mozilla::gfx::DrawTarget* aRefDrawTarget,
-                               gfxMissingFontRecorder* aMFR)
-  {
+                               gfxMissingFontRecorder* aMFR) {
     if (mNeedsRebuild) {
       mNeedsRebuild = false;
       mFactory->RebuildTextRun(this, aRefDrawTarget, aMFR);
@@ -163,38 +156,42 @@ public:
   }
 
   // override the gfxTextRun impls to account for additional members here
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
+  virtual size_t SizeOfExcludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) override;
+  virtual size_t SizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) override;
 
-  nsTransformingTextRunFactory       *mFactory;
+  nsTransformingTextRunFactory* mFactory;
   nsTArray<RefPtr<nsTransformedCharStyle>> mStyles;
-  nsTArray<bool>                      mCapitalize;
-  nsString                            mString;
-  bool                                mOwnsFactory;
-  bool                                mNeedsRebuild;
+  nsTArray<bool> mCapitalize;
+  nsString mString;
+  bool mOwnsFactory;
+  bool mNeedsRebuild;
 
-private:
+ private:
   nsTransformedTextRun(const gfxTextRunFactory::Parameters* aParams,
                        nsTransformingTextRunFactory* aFactory,
-                       gfxFontGroup* aFontGroup,
-                       const char16_t* aString, uint32_t aLength,
+                       gfxFontGroup* aFontGroup, const char16_t* aString,
+                       uint32_t aLength,
                        const mozilla::gfx::ShapedTextFlags aFlags,
                        const nsTextFrameUtils::Flags aFlags2,
                        nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
                        bool aOwnsFactory)
-    : gfxTextRun(aParams, aLength, aFontGroup, aFlags, aFlags2),
-      mFactory(aFactory), mStyles(aStyles), mString(aString, aLength),
-      mOwnsFactory(aOwnsFactory), mNeedsRebuild(true)
-  {
+      : gfxTextRun(aParams, aLength, aFontGroup, aFlags, aFlags2),
+        mFactory(aFactory),
+        mStyles(aStyles),
+        mString(aString, aLength),
+        mOwnsFactory(aOwnsFactory),
+        mNeedsRebuild(true) {
     mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>(this + 1);
   }
 };
 
 /**
  * Copy a given textrun, but merge certain characters into a single logical
- * character. Glyphs for a character are added to the glyph list for the previous
- * character and then the merged character is eliminated. Visually the results
- * are identical.
+ * character. Glyphs for a character are added to the glyph list for the
+ * previous character and then the merged character is eliminated. Visually the
+ * results are identical.
  *
  * This is used for text-transform:uppercase when we encounter a SZLIG,
  * whose uppercase form is "SS", or other ligature or precomposed form
@@ -220,14 +217,12 @@ private:
  * @param aDeletedChars when aDeletedChars[i] is true, the character at this
  * position in aDest was deleted (has no corresponding char in aSrc)
  */
-void
-MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
-                         const bool* aCharsToMerge, const bool* aDeletedChars);
+void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
+                              const bool* aCharsToMerge,
+                              const bool* aDeletedChars);
 
-gfxTextRunFactory::Parameters
-GetParametersForInner(nsTransformedTextRun* aTextRun,
-                      mozilla::gfx::ShapedTextFlags* aFlags,
-                      mozilla::gfx::DrawTarget* aRefDrawTarget);
-
+gfxTextRunFactory::Parameters GetParametersForInner(
+    nsTransformedTextRun* aTextRun, mozilla::gfx::ShapedTextFlags* aFlags,
+    mozilla::gfx::DrawTarget* aRefDrawTarget);
 
 #endif /*NSTEXTRUNTRANSFORMATIONS_H_*/

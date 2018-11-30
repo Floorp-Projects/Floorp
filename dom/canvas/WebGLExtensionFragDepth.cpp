@@ -12,23 +12,17 @@
 namespace mozilla {
 
 WebGLExtensionFragDepth::WebGLExtensionFragDepth(WebGLContext* webgl)
-    : WebGLExtensionBase(webgl)
-{
-    MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
 
-WebGLExtensionFragDepth::~WebGLExtensionFragDepth()
-{
-}
+WebGLExtensionFragDepth::~WebGLExtensionFragDepth() {}
 
-bool
-WebGLExtensionFragDepth::IsSupported(const WebGLContext* webgl)
-{
-    gl::GLContext* gl = webgl->GL();
-    return gl->IsSupported(gl::GLFeature::frag_depth);
+bool WebGLExtensionFragDepth::IsSupported(const WebGLContext* webgl) {
+  gl::GLContext* gl = webgl->GL();
+  return gl->IsSupported(gl::GLFeature::frag_depth);
 }
-
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFragDepth, EXT_frag_depth)
 
-} // namespace mozilla
+}  // namespace mozilla

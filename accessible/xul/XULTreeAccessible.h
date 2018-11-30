@@ -28,9 +28,8 @@ const uint32_t kDefaultTreeCacheLength = 128;
  * Accessible class for XUL tree element.
  */
 
-class XULTreeAccessible : public AccessibleWrap
-{
-public:
+class XULTreeAccessible : public AccessibleWrap {
+ public:
   XULTreeAccessible(nsIContent* aContent, DocAccessible* aDoc,
                     nsTreeBodyFrame* aTreeframe);
 
@@ -106,14 +105,14 @@ public:
    */
   void TreeViewChanged(nsITreeView* aView);
 
-protected:
+ protected:
   virtual ~XULTreeAccessible();
 
   /**
    * Creates tree item accessible for the given row index.
    */
-  virtual already_AddRefed<Accessible>
-    CreateTreeItemAccessible(int32_t aRow) const;
+  virtual already_AddRefed<Accessible> CreateTreeItemAccessible(
+      int32_t aRow) const;
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsITreeView* mTreeView;
@@ -124,17 +123,15 @@ protected:
  * Base class for tree item accessibles.
  */
 
-#define XULTREEITEMBASEACCESSIBLE_IMPL_CID            \
-{  /* 1ab79ae7-766a-443c-940b-b1e6b0831dfc */         \
-  0x1ab79ae7,                                         \
-  0x766a,                                             \
-  0x443c,                                             \
-  { 0x94, 0x0b, 0xb1, 0xe6, 0xb0, 0x83, 0x1d, 0xfc }  \
-}
+#define XULTREEITEMBASEACCESSIBLE_IMPL_CID           \
+  { /* 1ab79ae7-766a-443c-940b-b1e6b0831dfc */       \
+    0x1ab79ae7, 0x766a, 0x443c, {                    \
+      0x94, 0x0b, 0xb1, 0xe6, 0xb0, 0x83, 0x1d, 0xfc \
+    }                                                \
+  }
 
-class XULTreeItemAccessibleBase : public AccessibleWrap
-{
-public:
+class XULTreeItemAccessibleBase : public AccessibleWrap {
+ public:
   XULTreeItemAccessibleBase(nsIContent* aContent, DocAccessible* aDoc,
                             Accessible* aParent, nsITreeBoxObject* aTree,
                             nsITreeView* aTreeView, int32_t aRow);
@@ -177,24 +174,26 @@ public:
    * Return cell accessible for the given column. If XUL tree accessible is not
    * accessible table then return null.
    */
-  virtual XULTreeGridCellAccessible* GetCellAccessible(nsTreeColumn* aColumn) const
-    { return nullptr; }
+  virtual XULTreeGridCellAccessible* GetCellAccessible(
+      nsTreeColumn* aColumn) const {
+    return nullptr;
+  }
 
   /**
    * Proccess row invalidation. Used to fires name change events.
    */
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) = 0;
 
-protected:
+ protected:
   virtual ~XULTreeItemAccessibleBase();
 
   enum { eAction_Click = 0, eAction_Expand = 1 };
 
   // Accessible
-  virtual void DispatchClickEvent(nsIContent *aContent,
+  virtual void DispatchClickEvent(nsIContent* aContent,
                                   uint32_t aActionIndex) const override;
-  virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
-                                         nsresult *aError = nullptr) const override;
+  virtual Accessible* GetSiblingAtOffset(
+      int32_t aOffset, nsresult* aError = nullptr) const override;
 
   // XULTreeItemAccessibleBase
 
@@ -216,13 +215,11 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(XULTreeItemAccessibleBase,
                               XULTREEITEMBASEACCESSIBLE_IMPL_CID)
 
-
 /**
  * Accessible class for items for XUL tree.
  */
-class XULTreeItemAccessible : public XULTreeItemAccessibleBase
-{
-public:
+class XULTreeItemAccessible : public XULTreeItemAccessibleBase {
+ public:
   XULTreeItemAccessible(nsIContent* aContent, DocAccessible* aDoc,
                         Accessible* aParent, nsITreeBoxObject* aTree,
                         nsITreeView* aTreeView, int32_t aRow);
@@ -238,9 +235,10 @@ public:
   virtual a11y::role NativeRole() const override;
 
   // XULTreeItemAccessibleBase
-  virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) override;
+  virtual void RowInvalidated(int32_t aStartColIdx,
+                              int32_t aEndColIdx) override;
 
-protected:
+ protected:
   virtual ~XULTreeItemAccessible();
 
   // XULTreeItemAccessible
@@ -248,34 +246,27 @@ protected:
   nsString mCachedName;
 };
 
-
 /**
  * Accessible class for columns element of XUL tree.
  */
-class XULTreeColumAccessible : public XULColumAccessible
-{
-public:
+class XULTreeColumAccessible : public XULColumAccessible {
+ public:
   XULTreeColumAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-protected:
-
+ protected:
   // Accessible
-  virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
-                                         nsresult* aError = nullptr) const
-    override;
+  virtual Accessible* GetSiblingAtOffset(
+      int32_t aOffset, nsresult* aError = nullptr) const override;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcasting method
 
-inline XULTreeAccessible*
-Accessible::AsXULTree()
-{
+inline XULTreeAccessible* Accessible::AsXULTree() {
   return IsXULTree() ? static_cast<XULTreeAccessible*>(this) : nullptr;
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

@@ -12,28 +12,27 @@
 #include "nsThreadUtils.h"
 #include "nsWindow.h"
 
-#define GECKOBUNDLE_START(name)                                                \
-  nsTArray<jni::String::LocalRef> _##name##_keys;                              \
+#define GECKOBUNDLE_START(name)                   \
+  nsTArray<jni::String::LocalRef> _##name##_keys; \
   nsTArray<jni::Object::LocalRef> _##name##_values;
 
-#define GECKOBUNDLE_PUT(name, key, value)                                      \
-  _##name##_keys.AppendElement(jni::StringParam(NS_LITERAL_STRING(key)));      \
+#define GECKOBUNDLE_PUT(name, key, value)                                 \
+  _##name##_keys.AppendElement(jni::StringParam(NS_LITERAL_STRING(key))); \
   _##name##_values.AppendElement(value);
 
-#define GECKOBUNDLE_FINISH(name)                                               \
-  MOZ_ASSERT(_##name##_keys.Length() == _##name##_values.Length());            \
-  auto _##name##_jkeys =                                                       \
-    jni::ObjectArray::New<jni::String>(_##name##_keys.Length());               \
-  auto _##name##_jvalues =                                                     \
-    jni::ObjectArray::New<jni::Object>(_##name##_values.Length());             \
-  for (size_t i = 0;                                                           \
-       i < _##name##_keys.Length() && i < _##name##_values.Length();           \
-       i++) {                                                                  \
-    _##name##_jkeys->SetElement(i, _##name##_keys.ElementAt(i));               \
-    _##name##_jvalues->SetElement(i, _##name##_values.ElementAt(i));           \
-  }                                                                            \
-  auto name =                                                                  \
-    mozilla::java::GeckoBundle::New(_##name##_jkeys, _##name##_jvalues);
+#define GECKOBUNDLE_FINISH(name)                                            \
+  MOZ_ASSERT(_##name##_keys.Length() == _##name##_values.Length());         \
+  auto _##name##_jkeys =                                                    \
+      jni::ObjectArray::New<jni::String>(_##name##_keys.Length());          \
+  auto _##name##_jvalues =                                                  \
+      jni::ObjectArray::New<jni::Object>(_##name##_values.Length());        \
+  for (size_t i = 0;                                                        \
+       i < _##name##_keys.Length() && i < _##name##_values.Length(); i++) { \
+    _##name##_jkeys->SetElement(i, _##name##_keys.ElementAt(i));            \
+    _##name##_jvalues->SetElement(i, _##name##_values.ElementAt(i));        \
+  }                                                                         \
+  auto name =                                                               \
+      mozilla::java::GeckoBundle::New(_##name##_jkeys, _##name##_jvalues);
 
 namespace mozilla {
 namespace a11y {
@@ -44,28 +43,26 @@ class RootAccessibleWrap;
 class BatchData;
 
 class SessionAccessibility final
-  : public java::SessionAccessibility::NativeProvider::Natives<SessionAccessibility>
-{
-public:
-  typedef java::SessionAccessibility::NativeProvider::Natives<SessionAccessibility> Base;
+    : public java::SessionAccessibility::NativeProvider::Natives<
+          SessionAccessibility> {
+ public:
+  typedef java::SessionAccessibility::NativeProvider::Natives<
+      SessionAccessibility>
+      Base;
 
   SessionAccessibility(
-    nsWindow::NativePtr<SessionAccessibility>* aPtr,
-    nsWindow* aWindow,
-    java::SessionAccessibility::NativeProvider::Param aSessionAccessibility)
-    : mWindow(aPtr, aWindow)
-    , mSessionAccessibility(aSessionAccessibility)
-  {
+      nsWindow::NativePtr<SessionAccessibility>* aPtr, nsWindow* aWindow,
+      java::SessionAccessibility::NativeProvider::Param aSessionAccessibility)
+      : mWindow(aPtr, aWindow), mSessionAccessibility(aSessionAccessibility) {
     SetAttached(true, nullptr);
   }
 
-  void OnDetach(already_AddRefed<Runnable> aDisposer)
-  {
+  void OnDetach(already_AddRefed<Runnable> aDisposer) {
     SetAttached(false, std::move(aDisposer));
   }
 
-  const java::SessionAccessibility::NativeProvider::Ref& GetJavaAccessibility()
-  {
+  const java::SessionAccessibility::NativeProvider::Ref&
+  GetJavaAccessibility() {
     return mSessionAccessibility;
   }
 
@@ -82,23 +79,17 @@ public:
 
   // Event methods
   void SendFocusEvent(AccessibleWrap* aAccessible);
-  void SendScrollingEvent(AccessibleWrap* aAccessible,
-                          int32_t aScrollX,
-                          int32_t aScrollY,
-                          int32_t aMaxScrollX,
+  void SendScrollingEvent(AccessibleWrap* aAccessible, int32_t aScrollX,
+                          int32_t aScrollY, int32_t aMaxScrollX,
                           int32_t aMaxScrollY);
   void SendAccessibilityFocusedEvent(AccessibleWrap* aAccessible);
   void SendHoverEnterEvent(AccessibleWrap* aAccessible);
   void SendTextSelectionChangedEvent(AccessibleWrap* aAccessible,
                                      int32_t aCaretOffset);
-  void SendTextTraversedEvent(AccessibleWrap* aAccessible,
-                              int32_t aStartOffset,
+  void SendTextTraversedEvent(AccessibleWrap* aAccessible, int32_t aStartOffset,
                               int32_t aEndOffset);
-  void SendTextChangedEvent(AccessibleWrap* aAccessible,
-                            const nsString& aStr,
-                            int32_t aStart,
-                            uint32_t aLen,
-                            bool aIsInsert,
+  void SendTextChangedEvent(AccessibleWrap* aAccessible, const nsString& aStr,
+                            int32_t aStart, uint32_t aLen, bool aIsInsert,
                             bool aFromUser);
   void SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected);
   void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
@@ -106,28 +97,31 @@ public:
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
 
   // Cache methods
-  void ReplaceViewportCache(const nsTArray<AccessibleWrap*>& aAccessibles,
-                           const nsTArray<BatchData>& aData = nsTArray<BatchData>());
+  void ReplaceViewportCache(
+      const nsTArray<AccessibleWrap*>& aAccessibles,
+      const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
-  void ReplaceFocusPathCache(const nsTArray<AccessibleWrap*>& aAccessibles,
-                             const nsTArray<BatchData>& aData = nsTArray<BatchData>());
+  void ReplaceFocusPathCache(
+      const nsTArray<AccessibleWrap*>& aAccessibles,
+      const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
-  void UpdateCachedBounds(const nsTArray<AccessibleWrap*>& aAccessibles,
-                          const nsTArray<BatchData>& aData = nsTArray<BatchData>());
+  void UpdateCachedBounds(
+      const nsTArray<AccessibleWrap*>& aAccessibles,
+      const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 
-private:
+ private:
   ~SessionAccessibility() {}
 
   void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
   RootAccessibleWrap* GetRoot();
 
-  nsWindow::WindowPtr<SessionAccessibility> mWindow; // Parent only
+  nsWindow::WindowPtr<SessionAccessibility> mWindow;  // Parent only
   java::SessionAccessibility::NativeProvider::GlobalRef mSessionAccessibility;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

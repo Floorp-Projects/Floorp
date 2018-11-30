@@ -9,7 +9,6 @@
 
 namespace mozilla {
 
-
 /*
  * The DispatchCategory class is used to fake the inheritance
  * of the TaskCategory enum so we can extend it to hold
@@ -17,12 +16,9 @@ namespace mozilla {
  * we use when a worker dispatches a call.
  *
  */
-class DispatchCategory final
-{
-public:
-  explicit DispatchCategory(uint32_t aValue)
-    : mValue(aValue)
-  {
+class DispatchCategory final {
+ public:
+  explicit DispatchCategory(uint32_t aValue) : mValue(aValue) {
     // Since DispatchCategory is adding one single value to the
     // TaskCategory enum, we can check here that the value is
     // the next index e.g. TaskCategory::Count
@@ -30,21 +26,18 @@ public:
   }
 
   constexpr explicit DispatchCategory(TaskCategory aValue)
-    : mValue((uint32_t)aValue)
-  {}
+      : mValue((uint32_t)aValue) {}
 
-  uint32_t
-  GetValue() const
-  {
-    return mValue;
-  }
+  uint32_t GetValue() const { return mValue; }
 
   static const DispatchCategory Worker;
-private:
+
+ private:
   uint32_t mValue;
 };
 
-typedef Array<Atomic<uint32_t>, (uint32_t)TaskCategory::Count + 1> DispatchCounter;
+typedef Array<Atomic<uint32_t>, (uint32_t)TaskCategory::Count + 1>
+    DispatchCounter;
 
 // PerformanceCounter is a class that can be used to keep track of
 // runnable execution times and dispatch counts.
@@ -69,9 +62,8 @@ typedef Array<Atomic<uint32_t>, (uint32_t)TaskCategory::Count + 1> DispatchCount
 // recursivity. If an event triggers a recursive call to
 // nsThread::ProcessNextEVent, the counter will discard the time
 // spent in sub events.
-class PerformanceCounter final
-{
-public:
+class PerformanceCounter final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PerformanceCounter)
 
   explicit PerformanceCounter(const nsACString& aName);
@@ -126,7 +118,7 @@ public:
    */
   uint64_t GetID() const;
 
-private:
+ private:
   ~PerformanceCounter() {}
 
   Atomic<uint64_t> mExecutionDuration;
@@ -136,6 +128,6 @@ private:
   const uint64_t mID;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_PerformanceCounter_h
+#endif  // mozilla_PerformanceCounter_h

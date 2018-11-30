@@ -16,122 +16,85 @@
 using namespace mozilla::gfx;
 typedef mozilla::gfx::Polygon MozPolygon;
 
-TEST(MozPolygon, TriangulateRectangle)
-{
-  const MozPolygon p {
-    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
-    Point4D(0.0f, 1.0f, 1.0f, 1.0f),
-    Point4D(1.0f, 1.0f, 1.0f, 1.0f),
-    Point4D(1.0f, 0.0f, 1.0f, 1.0f)
-  };
+TEST(MozPolygon, TriangulateRectangle) {
+  const MozPolygon p{
+      Point4D(0.0f, 0.0f, 1.0f, 1.0f), Point4D(0.0f, 1.0f, 1.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 1.0f, 1.0f), Point4D(1.0f, 0.0f, 1.0f, 1.0f)};
 
   const nsTArray<Triangle> triangles = p.ToTriangles();
   const nsTArray<Triangle> expected = {
-    Triangle(Point(0.0f, 0.0f), Point(0.0f, 1.0f), Point(1.0f, 1.0f)),
-    Triangle(Point(0.0f, 0.0f), Point(1.0f, 1.0f), Point(1.0f, 0.0f))
-  };
+      Triangle(Point(0.0f, 0.0f), Point(0.0f, 1.0f), Point(1.0f, 1.0f)),
+      Triangle(Point(0.0f, 0.0f), Point(1.0f, 1.0f), Point(1.0f, 0.0f))};
 
   AssertArrayEQ(triangles, expected);
 }
 
-TEST(MozPolygon, TriangulatePentagon)
-{
-  const MozPolygon p {
-    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
-    Point4D(0.0f, 1.0f, 1.0f, 1.0f),
-    Point4D(0.5f, 1.5f, 1.0f, 1.0f),
-    Point4D(1.0f, 1.0f, 1.0f, 1.0f),
-    Point4D(1.0f, 0.0f, 1.0f, 1.0f)
-  };
+TEST(MozPolygon, TriangulatePentagon) {
+  const MozPolygon p{
+      Point4D(0.0f, 0.0f, 1.0f, 1.0f), Point4D(0.0f, 1.0f, 1.0f, 1.0f),
+      Point4D(0.5f, 1.5f, 1.0f, 1.0f), Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+      Point4D(1.0f, 0.0f, 1.0f, 1.0f)};
 
   const nsTArray<Triangle> triangles = p.ToTriangles();
   const nsTArray<Triangle> expected = {
-    Triangle(Point(0.0f, 0.0f), Point(0.0f, 1.0f), Point(0.5f, 1.5f)),
-    Triangle(Point(0.0f, 0.0f), Point(0.5f, 1.5f), Point(1.0f, 1.0f)),
-    Triangle(Point(0.0f, 0.0f), Point(1.0f, 1.0f), Point(1.0f, 0.0f))
-  };
+      Triangle(Point(0.0f, 0.0f), Point(0.0f, 1.0f), Point(0.5f, 1.5f)),
+      Triangle(Point(0.0f, 0.0f), Point(0.5f, 1.5f), Point(1.0f, 1.0f)),
+      Triangle(Point(0.0f, 0.0f), Point(1.0f, 1.0f), Point(1.0f, 0.0f))};
 
   AssertArrayEQ(triangles, expected);
 }
 
-void
-TestClipRect(const MozPolygon& aPolygon,
-             const MozPolygon& aExpected,
-             const Rect& aRect)
-{
+void TestClipRect(const MozPolygon& aPolygon, const MozPolygon& aExpected,
+                  const Rect& aRect) {
   const MozPolygon res = aPolygon.ClipPolygon(MozPolygon::FromRect(aRect));
   EXPECT_TRUE(res == aExpected);
 }
 
-TEST(MozPolygon, ClipRectangle)
-{
-  MozPolygon polygon {
-    Point4D(0.0f, 0.0f, 0.0f, 1.0f),
-    Point4D(0.0f, 1.0f, 0.0f, 1.0f),
-    Point4D(1.0f, 1.0f, 0.0f, 1.0f),
-    Point4D(1.0f, 0.0f, 0.0f, 1.0f)
-  };
+TEST(MozPolygon, ClipRectangle) {
+  MozPolygon polygon{
+      Point4D(0.0f, 0.0f, 0.0f, 1.0f), Point4D(0.0f, 1.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 0.0f, 1.0f), Point4D(1.0f, 0.0f, 0.0f, 1.0f)};
   TestClipRect(polygon, polygon, Rect(0.0f, 0.0f, 1.0f, 1.0f));
 
-  MozPolygon expected = MozPolygon {
-    Point4D(0.0f, 0.0f, 0.0f, 1.0f),
-    Point4D(0.0f, 0.8f, 0.0f, 1.0f),
-    Point4D(0.8f, 0.8f, 0.0f, 1.0f),
-    Point4D(0.8f, 0.0f, 0.0f, 1.0f)
-  };
+  MozPolygon expected = MozPolygon{
+      Point4D(0.0f, 0.0f, 0.0f, 1.0f), Point4D(0.0f, 0.8f, 0.0f, 1.0f),
+      Point4D(0.8f, 0.8f, 0.0f, 1.0f), Point4D(0.8f, 0.0f, 0.0f, 1.0f)};
   TestClipRect(polygon, expected, Rect(0.0f, 0.0f, 0.8f, 0.8f));
 
-  expected = MozPolygon {
-    Point4D(0.2f, 0.2f, 0.0f, 1.0f),
-    Point4D(0.2f, 1.0f, 0.0f, 1.0f),
-    Point4D(1.0f, 1.0f, 0.0f, 1.0f),
-    Point4D(1.0f, 0.2f, 0.0f, 1.0f)
-  };
+  expected = MozPolygon{
+      Point4D(0.2f, 0.2f, 0.0f, 1.0f), Point4D(0.2f, 1.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 0.0f, 1.0f), Point4D(1.0f, 0.2f, 0.0f, 1.0f)};
   TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.8f, 0.8f));
 
-  expected = MozPolygon {
-    Point4D(0.2f, 0.2f, 0.0f, 1.0f),
-    Point4D(0.2f, 0.8f, 0.0f, 1.0f),
-    Point4D(0.8f, 0.8f, 0.0f, 1.0f),
-    Point4D(0.8f, 0.2f, 0.0f, 1.0f)
-  };
+  expected = MozPolygon{
+      Point4D(0.2f, 0.2f, 0.0f, 1.0f), Point4D(0.2f, 0.8f, 0.0f, 1.0f),
+      Point4D(0.8f, 0.8f, 0.0f, 1.0f), Point4D(0.8f, 0.2f, 0.0f, 1.0f)};
   TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.6f, 0.6f));
 }
 
-TEST(MozPolygon, ClipTriangle)
-{
+TEST(MozPolygon, ClipTriangle) {
   MozPolygon clipped, expected;
-  const MozPolygon polygon {
-    Point4D(0.0f, 0.0f, 0.0f, 1.0f),
-    Point4D(0.0f, 1.0f, 0.0f, 1.0f),
-    Point4D(1.0f, 1.0f, 0.0f, 1.0f)
-  };
+  const MozPolygon polygon{Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+                           Point4D(0.0f, 1.0f, 0.0f, 1.0f),
+                           Point4D(1.0f, 1.0f, 0.0f, 1.0f)};
 
-  expected = MozPolygon {
-    Point4D(0.0f, 0.0f, 0.0f, 1.0f),
-    Point4D(0.0f, 1.0f, 0.0f, 1.0f),
-    Point4D(1.0f, 1.0f, 0.0f, 1.0f)
-  };
+  expected = MozPolygon{Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+                        Point4D(0.0f, 1.0f, 0.0f, 1.0f),
+                        Point4D(1.0f, 1.0f, 0.0f, 1.0f)};
   TestClipRect(polygon, expected, Rect(0.0f, 0.0f, 1.0f, 1.0f));
 
-  expected = MozPolygon {
-    Point4D(0.0f, 0.0f, 0.0f, 1.0f),
-    Point4D(0.0f, 0.8f, 0.0f, 1.0f),
-    Point4D(0.8f, 0.8f, 0.0f, 1.0f)
-  };
+  expected = MozPolygon{Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+                        Point4D(0.0f, 0.8f, 0.0f, 1.0f),
+                        Point4D(0.8f, 0.8f, 0.0f, 1.0f)};
   TestClipRect(polygon, expected, Rect(0.0f, 0.0f, 0.8f, 0.8f));
 
-  expected = MozPolygon {
-    Point4D(0.2f, 0.2f, 0.0f, 1.0f),
-    Point4D(0.2f, 1.0f, 0.0f, 1.0f),
-    Point4D(1.0f, 1.0f, 0.0f, 1.0f)
-  };
+  expected = MozPolygon{Point4D(0.2f, 0.2f, 0.0f, 1.0f),
+                        Point4D(0.2f, 1.0f, 0.0f, 1.0f),
+                        Point4D(1.0f, 1.0f, 0.0f, 1.0f)};
   TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.8f, 0.8f));
 
-  expected = MozPolygon {
-    Point4D(0.2f, 0.2f, 0.0f, 1.0f),
-    Point4D(0.2f, 0.8f, 0.0f, 1.0f),
-    Point4D(0.8f, 0.8f, 0.0f, 1.0f)
-  };
+  expected = MozPolygon{Point4D(0.2f, 0.2f, 0.0f, 1.0f),
+                        Point4D(0.2f, 0.8f, 0.0f, 1.0f),
+                        Point4D(0.8f, 0.8f, 0.0f, 1.0f)};
   TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.6f, 0.6f));
 }

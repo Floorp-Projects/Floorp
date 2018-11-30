@@ -16,17 +16,15 @@
 
 // This must come outside of any namespace, or else it won't overload with the
 // double based version in nsMathUtils.h
-inline mozilla::Decimal
-NS_floorModulo(mozilla::Decimal x, mozilla::Decimal y)
-{
+inline mozilla::Decimal NS_floorModulo(mozilla::Decimal x, mozilla::Decimal y) {
   return (x - y * (x / y).floor());
 }
 
 namespace mozilla {
 namespace dom {
 class HTMLInputElement;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 struct DoNotDelete;
 class nsIFrame;
@@ -34,12 +32,11 @@ class nsIFrame;
 /**
  * A common superclass for different types of a HTMLInputElement.
  */
-class InputType
-{
-public:
-  static mozilla::UniquePtr<InputType, DoNotDelete>
-  Create(mozilla::dom::HTMLInputElement* aInputElement, uint8_t aType,
-         void* aMemory);
+class InputType {
+ public:
+  static mozilla::UniquePtr<InputType, DoNotDelete> Create(
+      mozilla::dom::HTMLInputElement* aInputElement, uint8_t aType,
+      void* aMemory);
 
   virtual ~InputType() {}
 
@@ -61,8 +58,9 @@ public:
   virtual bool HasStepMismatch(bool aUseZeroIfValueNaN) const;
   virtual bool HasBadInput() const;
 
-  nsresult GetValidationMessage(nsAString& aValidationMessage,
-                                nsIConstraintValidation::ValidityStateType aType);
+  nsresult GetValidationMessage(
+      nsAString& aValidationMessage,
+      nsIConstraintValidation::ValidityStateType aType);
   virtual nsresult GetValueMissingMessage(nsAString& aMessage);
   virtual nsresult GetTypeMismatchMessage(nsAString& aMessage);
   virtual nsresult GetRangeOverflowMessage(nsAString& aMessage);
@@ -84,9 +82,9 @@ public:
                                      mozilla::Decimal& aResultValue) const;
 
   /**
-   * Convert a Decimal to a string in a type specific way, ie convert a timestamp
-   * to a date string if type=date or append the number string representing the
-   * value if type=number.
+   * Convert a Decimal to a string in a type specific way, ie convert a
+   * timestamp to a date string if type=date or append the number string
+   * representing the value if type=number.
    *
    * @param aValue the Decimal to be converted
    * @param aResultString [out] the string representing the Decimal
@@ -97,17 +95,17 @@ public:
   virtual bool ConvertNumberToString(mozilla::Decimal aValue,
                                      nsAString& aResultString) const;
 
-protected:
+ protected:
   explicit InputType(mozilla::dom::HTMLInputElement* aInputElement)
-    : mInputElement(aInputElement)
-  {}
+      : mInputElement(aInputElement) {}
 
   /**
    * Get the mutable state of the element.
    * When the element isn't mutable (immutable), the value or checkedness
    * should not be changed by the user.
    *
-   * See: https://html.spec.whatwg.org/multipage/forms.html#the-input-element:concept-fe-mutable
+   * See:
+   * https://html.spec.whatwg.org/multipage/forms.html#the-input-element:concept-fe-mutable
    */
   virtual bool IsMutable() const;
 
@@ -153,9 +151,7 @@ protected:
    * @return the date in aYear, aMonth, aDay.
    * @return whether the parsing was successful.
    */
-  bool ParseDate(const nsAString& aValue,
-                 uint32_t* aYear,
-                 uint32_t* aMonth,
+  bool ParseDate(const nsAString& aValue, uint32_t* aYear, uint32_t* aMonth,
                  uint32_t* aDay) const;
 
   /**
@@ -166,7 +162,8 @@ protected:
    * Note: |aResult| can be null.
    *
    * @param aValue the string to be parsed.
-   * @param aResult the time expressed in milliseconds representing the time [out]
+   * @param aResult the time expressed in milliseconds representing the time
+   * [out]
    * @return whether the parsing was successful.
    */
   bool ParseTime(const nsAString& aValue, uint32_t* aResult) const;
@@ -178,8 +175,7 @@ protected:
    * @return the year and month in aYear and aMonth.
    * @return whether the parsing was successful.
    */
-  bool ParseMonth(const nsAString& aValue,
-                  uint32_t* aYear,
+  bool ParseMonth(const nsAString& aValue, uint32_t* aYear,
                   uint32_t* aMonth) const;
 
   /**
@@ -189,8 +185,7 @@ protected:
    * @return the year and week in aYear and aWeek.
    * @return whether the parsing was successful.
    */
-  bool ParseWeek(const nsAString& aValue,
-                 uint32_t* aYear,
+  bool ParseWeek(const nsAString& aValue, uint32_t* aYear,
                  uint32_t* aWeek) const;
 
   /**
@@ -202,10 +197,8 @@ protected:
    *         in aTime.
    * @return whether the parsing was successful.
    */
-  bool ParseDateTimeLocal(const nsAString& aValue,
-                          uint32_t* aYear,
-                          uint32_t* aMonth,
-                          uint32_t* aDay,
+  bool ParseDateTimeLocal(const nsAString& aValue, uint32_t* aYear,
+                          uint32_t* aMonth, uint32_t* aDay,
                           uint32_t* aTime) const;
 
   /**
@@ -238,6 +231,8 @@ protected:
 
 // Custom deleter for UniquePtr<InputType> to avoid freeing memory pre-allocated
 // for InputType, but we still need to call the destructor explictly.
-struct DoNotDelete { void operator()(::InputType* p) { p->~InputType(); } };
+struct DoNotDelete {
+  void operator()(::InputType* p) { p->~InputType(); }
+};
 
 #endif /* InputType_h__ */

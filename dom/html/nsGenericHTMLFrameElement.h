@@ -21,11 +21,14 @@ namespace mozilla {
 namespace dom {
 class XULFrameElement;
 }
-}
+}  // namespace mozilla
 
-#define NS_GENERICHTMLFRAMEELEMENT_IID \
-{ 0x8190db72, 0xdab0, 0x4d72, \
-  { 0x94, 0x26, 0x87, 0x5f, 0x5a, 0x8a, 0x2a, 0xe5 } }
+#define NS_GENERICHTMLFRAMEELEMENT_IID               \
+  {                                                  \
+    0x8190db72, 0xdab0, 0x4d72, {                    \
+      0x94, 0x26, 0x87, 0x5f, 0x5a, 0x8a, 0x2a, 0xe5 \
+    }                                                \
+  }
 
 /**
  * A helper class for frame elements
@@ -33,20 +36,18 @@ class XULFrameElement;
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIFrameLoaderOwner,
                                   public mozilla::nsBrowserElement,
-                                  public nsIMozBrowserFrame
-{
-public:
-  nsGenericHTMLFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                            mozilla::dom::FromParser aFromParser)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-    , nsBrowserElement()
-    , mSrcLoadHappened(false)
-    , mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK)
-    , mBrowserFrameListenersRegistered(false)
-    , mFrameLoaderCreationDisallowed(false)
-    , mReallyIsBrowser(false)
-  {
-  }
+                                  public nsIMozBrowserFrame {
+ public:
+  nsGenericHTMLFrameElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+      mozilla::dom::FromParser aFromParser)
+      : nsGenericHTMLElement(std::move(aNodeInfo)),
+        nsBrowserElement(),
+        mSrcLoadHappened(false),
+        mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK),
+        mBrowserFrameListenersRegistered(false),
+        mFrameLoaderCreationDisallowed(false),
+        mReallyIsBrowser(false) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -57,7 +58,8 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_GENERICHTMLFRAMEELEMENT_IID)
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) override;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                               int32_t* aTabIndex) override;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
@@ -98,12 +100,11 @@ public:
    */
   static int32_t MapScrollingAttribute(const nsAttrValue* aValue);
 
-  nsIPrincipal* GetSrcTriggeringPrincipal() const
-  {
+  nsIPrincipal* GetSrcTriggeringPrincipal() const {
     return mSrcTriggeringPrincipal;
   }
 
-protected:
+ protected:
   virtual ~nsGenericHTMLFrameElement();
 
   // This doesn't really ensure a frame loader in all cases, only when
@@ -148,7 +149,7 @@ protected:
   // do not bloat any struct.
   bool mFullscreenFlag = false;
 
-private:
+ private:
   void GetManifestURL(nsAString& aOut);
 
   /**
@@ -169,4 +170,4 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsGenericHTMLFrameElement,
                               NS_GENERICHTMLFRAMEELEMENT_IID)
 
-#endif // nsGenericHTMLFrameElement_h
+#endif  // nsGenericHTMLFrameElement_h

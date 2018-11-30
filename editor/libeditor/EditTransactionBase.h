@@ -16,9 +16,8 @@ namespace mozilla {
 /**
  * Base class for all document editing transactions.
  */
-class EditTransactionBase : public nsITransaction
-{
-public:
+class EditTransactionBase : public nsITransaction {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditTransactionBase, nsITransaction)
 
@@ -26,14 +25,14 @@ public:
   NS_IMETHOD GetIsTransient(bool* aIsTransient) override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
-protected:
+ protected:
   virtual ~EditTransactionBase();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#define NS_DECL_EDITTRANSACTIONBASE \
+#define NS_DECL_EDITTRANSACTIONBASE    \
   NS_IMETHOD DoTransaction() override; \
   NS_IMETHOD UndoTransaction() override;
 
-#endif // #ifndef mozilla_EditTransactionBase_h
+#endif  // #ifndef mozilla_EditTransactionBase_h

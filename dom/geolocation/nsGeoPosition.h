@@ -23,41 +23,35 @@
 /**
  * Simple object that holds a single point in space.
  */
-class nsGeoPositionCoords final : public nsIDOMGeoPositionCoords
-{
-public:
+class nsGeoPositionCoords final : public nsIDOMGeoPositionCoords {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITIONCOORDS
 
-  nsGeoPositionCoords(double aLat, double aLong,
-                      double aAlt, double aHError,
-                      double aVError, double aHeading,
-                      double aSpeed);
-private:
+  nsGeoPositionCoords(double aLat, double aLong, double aAlt, double aHError,
+                      double aVError, double aHeading, double aSpeed);
+
+ private:
   ~nsGeoPositionCoords();
   const double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
 };
-
 
 ////////////////////////////////////////////////////
 // nsGeoPosition
 ////////////////////////////////////////////////////
 
-class nsGeoPosition final : public nsIDOMGeoPosition
-{
-public:
+class nsGeoPosition final : public nsIDOMGeoPosition {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITION
 
-  nsGeoPosition(double aLat, double aLong,
-                double aAlt, double aHError,
-                double aVError, double aHeading,
-                double aSpeed, DOMTimeStamp aTimestamp);
-
-  nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
+  nsGeoPosition(double aLat, double aLong, double aAlt, double aHError,
+                double aVError, double aHeading, double aSpeed,
                 DOMTimeStamp aTimestamp);
 
-private:
+  nsGeoPosition(nsIDOMGeoPositionCoords* aCoords, DOMTimeStamp aTimestamp);
+
+ private:
   ~nsGeoPosition();
   DOMTimeStamp mTimestamp;
   RefPtr<nsIDOMGeoPositionCoords> mCoords;
@@ -72,21 +66,20 @@ namespace dom {
 
 class Coordinates;
 
-class Position final : public nsISupports,
-                       public nsWrapperCache
-{
+class Position final : public nsISupports, public nsWrapperCache {
   ~Position();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Position)
 
-public:
+ public:
   Position(nsISupports* aParent, nsIDOMGeoPosition* aGeoPosition);
 
   nsISupports* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   Coordinates* Coords();
 
@@ -94,27 +87,26 @@ public:
 
   nsIDOMGeoPosition* GetWrappedGeoPosition() { return mGeoPosition; }
 
-private:
+ private:
   RefPtr<Coordinates> mCoordinates;
   nsCOMPtr<nsISupports> mParent;
   nsCOMPtr<nsIDOMGeoPosition> mGeoPosition;
 };
 
-class Coordinates final : public nsISupports,
-                          public nsWrapperCache
-{
+class Coordinates final : public nsISupports, public nsWrapperCache {
   ~Coordinates();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Coordinates)
 
-public:
+ public:
   Coordinates(Position* aPosition, nsIDOMGeoPositionCoords* aCoords);
 
   Position* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   double Latitude() const;
 
@@ -129,13 +121,13 @@ public:
   Nullable<double> GetHeading() const;
 
   Nullable<double> GetSpeed() const;
-private:
+
+ private:
   RefPtr<Position> mPosition;
   nsCOMPtr<nsIDOMGeoPositionCoords> mCoords;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* nsGeoPosition_h */
-

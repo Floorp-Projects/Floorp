@@ -19,14 +19,14 @@ namespace a11y {
  * IAccessibleTable and IAccessibleTable2 interfaces.
  */
 class XULTreeGridAccessibleWrap : public XULTreeGridAccessible,
-                                  public ia2AccessibleTable
-{
+                                  public ia2AccessibleTable {
   ~XULTreeGridAccessibleWrap() {}
 
-public:
+ public:
   XULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc,
-                            nsTreeBodyFrame* aTree) :
-    XULTreeGridAccessible(aContent, aDoc, aTree), ia2AccessibleTable(this) {}
+                            nsTreeBodyFrame* aTree)
+      : XULTreeGridAccessible(aContent, aDoc, aTree),
+        ia2AccessibleTable(this) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -42,19 +42,17 @@ public:
  * IAccessibleTableCell interface.
  */
 class XULTreeGridCellAccessibleWrap : public XULTreeGridCellAccessible,
-                                      public ia2AccessibleTableCell
-{
+                                      public ia2AccessibleTableCell {
   ~XULTreeGridCellAccessibleWrap() {}
 
-public:
-  XULTreeGridCellAccessibleWrap(nsIContent* aContent,
-                                DocAccessible* aDoc,
+ public:
+  XULTreeGridCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc,
                                 XULTreeGridRowAccessible* aRowAcc,
-                                nsITreeBoxObject* aTree,
-                                nsITreeView* aTreeView,
-                                int32_t aRow, nsTreeColumn* aColumn) :
-    XULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView, aRow,
-                              aColumn), ia2AccessibleTableCell(this) {}
+                                nsITreeBoxObject* aTree, nsITreeView* aTreeView,
+                                int32_t aRow, nsTreeColumn* aColumn)
+      : XULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView,
+                                  aRow, aColumn),
+        ia2AccessibleTableCell(this) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -65,7 +63,7 @@ public:
   virtual void Shutdown() override;
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

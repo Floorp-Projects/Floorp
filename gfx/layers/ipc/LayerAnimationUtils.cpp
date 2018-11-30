@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LayerAnimationUtils.h"
-#include "mozilla/ComputedTimingFunction.h" // For ComputedTimingFunction
-#include "mozilla/layers/LayersMessages.h" // For TimingFunction etc.
+#include "mozilla/ComputedTimingFunction.h"  // For ComputedTimingFunction
+#include "mozilla/layers/LayersMessages.h"   // For TimingFunction etc.
 #include "nsTimingFunction.h"
 
 namespace mozilla {
@@ -14,8 +14,7 @@ namespace layers {
 
 /* static */ Maybe<ComputedTimingFunction>
 AnimationUtils::TimingFunctionToComputedTimingFunction(
-  const TimingFunction& aTimingFunction)
-{
+    const TimingFunction& aTimingFunction) {
   switch (aTimingFunction.type()) {
     case TimingFunction::Tnull_t:
       return Nothing();
@@ -30,12 +29,11 @@ AnimationUtils::TimingFunctionToComputedTimingFunction(
       return Some(ComputedTimingFunction::Steps(sf.steps(), pos));
     }
     default:
-      MOZ_ASSERT_UNREACHABLE(
-        "Function must be null, bezier, step or frames");
+      MOZ_ASSERT_UNREACHABLE("Function must be null, bezier, step or frames");
       break;
   }
   return Nothing();
 }
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla

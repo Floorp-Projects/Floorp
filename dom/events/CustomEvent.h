@@ -14,14 +14,13 @@ namespace dom {
 
 struct CustomEventInit;
 
-class CustomEvent final : public Event
-{
-private:
+class CustomEvent final : public Event {
+ private:
   virtual ~CustomEvent();
 
   JS::Heap<JS::Value> mDetail;
 
-public:
+ public:
   explicit CustomEvent(mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext = nullptr,
                        mozilla::WidgetEvent* aEvent = nullptr);
@@ -29,38 +28,26 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CustomEvent, Event)
 
-  static already_AddRefed<CustomEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const CustomEventInit& aParam,
-              ErrorResult& aRv);
+  static already_AddRefed<CustomEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const CustomEventInit& aParam, ErrorResult& aRv);
 
-  virtual JSObject*
-  WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  CustomEvent* AsCustomEvent() override
-  {
-    return this;
-  }
+  CustomEvent* AsCustomEvent() override { return this; }
 
-  void
-  GetDetail(JSContext* aCx,
-            JS::MutableHandle<JS::Value> aRetval);
+  void GetDetail(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 
-  void
-  InitCustomEvent(JSContext* aCx,
-                  const nsAString& aType,
-                  bool aCanBubble,
-                  bool aCancelable,
-                  JS::Handle<JS::Value> aDetail);
+  void InitCustomEvent(JSContext* aCx, const nsAString& aType, bool aCanBubble,
+                       bool aCancelable, JS::Handle<JS::Value> aDetail);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-already_AddRefed<mozilla::dom::CustomEvent>
-NS_NewDOMCustomEvent(mozilla::dom::EventTarget* aOwner,
-                     nsPresContext* aPresContext,
-                     mozilla::WidgetEvent* aEvent);
+already_AddRefed<mozilla::dom::CustomEvent> NS_NewDOMCustomEvent(
+    mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+    mozilla::WidgetEvent* aEvent);
 
-#endif // CustomEvent_h__
+#endif  // CustomEvent_h__

@@ -15,21 +15,20 @@
 namespace mozilla {
 
 // Runnable to fire the SpiderMonkey Debugger API's onGarbageCollection hook.
-class DebuggerOnGCRunnable : public CancelableRunnable
-{
+class DebuggerOnGCRunnable : public CancelableRunnable {
   JS::dbg::GarbageCollectionEvent::Ptr mGCData;
 
   explicit DebuggerOnGCRunnable(JS::dbg::GarbageCollectionEvent::Ptr&& aGCData)
-    : CancelableRunnable("DebuggerOnGCRunnable"), mGCData(std::move(aGCData))
-  { }
+      : CancelableRunnable("DebuggerOnGCRunnable"),
+        mGCData(std::move(aGCData)) {}
 
-public:
+ public:
   static nsresult Enqueue(JSContext* aCx, const JS::GCDescription& aDesc);
 
   NS_DECL_NSIRUNNABLE
   nsresult Cancel() override;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // ifdef mozilla_dom_DebuggerOnGCRunnable_h
+#endif  // ifdef mozilla_dom_DebuggerOnGCRunnable_h

@@ -13,56 +13,47 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleApplication,
-                            xpcAccessibleGeneric,
+NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleApplication, xpcAccessibleGeneric,
                             nsIAccessibleApplication)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleApplication
 
 NS_IMETHODIMP
-xpcAccessibleApplication::GetAppName(nsAString& aName)
-{
+xpcAccessibleApplication::GetAppName(nsAString& aName) {
   aName.Truncate();
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   Intl()->AppName(aName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleApplication::GetAppVersion(nsAString& aVersion)
-{
+xpcAccessibleApplication::GetAppVersion(nsAString& aVersion) {
   aVersion.Truncate();
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   Intl()->AppVersion(aVersion);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleApplication::GetPlatformName(nsAString& aName)
-{
+xpcAccessibleApplication::GetPlatformName(nsAString& aName) {
   aName.Truncate();
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   Intl()->PlatformName(aName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleApplication::GetPlatformVersion(nsAString& aVersion)
-{
+xpcAccessibleApplication::GetPlatformVersion(nsAString& aVersion) {
   aVersion.Truncate();
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   Intl()->PlatformVersion(aVersion);
   return NS_OK;

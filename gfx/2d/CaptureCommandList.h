@@ -17,16 +17,12 @@
 namespace mozilla {
 namespace gfx {
 
-class CaptureCommandList
-{
-public:
-  CaptureCommandList()
-    : mLastCommand(nullptr)
-  {}
+class CaptureCommandList {
+ public:
+  CaptureCommandList() : mLastCommand(nullptr) {}
   CaptureCommandList(CaptureCommandList&& aOther)
-    : mStorage(std::move(aOther.mStorage))
-    , mLastCommand(aOther.mLastCommand)
-  {
+      : mStorage(std::move(aOther.mStorage)),
+        mLastCommand(aOther.mLastCommand) {
     aOther.mLastCommand = nullptr;
   }
   ~CaptureCommandList();
@@ -51,47 +47,36 @@ public:
 
   template <typename T>
   T* ReuseOrAppend() {
-    { // Scope lock
-      if (mLastCommand != nullptr &&
-        mLastCommand->GetType() == T::Type) {
+    {  // Scope lock
+      if (mLastCommand != nullptr && mLastCommand->GetType() == T::Type) {
         return reinterpret_cast<T*>(mLastCommand);
       }
     }
     return Append<T>();
   }
 
-  bool IsEmpty() const {
-    return mStorage.empty();
-  }
+  bool IsEmpty() const { return mStorage.empty(); }
 
   template <typename T>
   bool BufferWillAlloc() const {
     return mStorage.size() + sizeof(uint32_t) + sizeof(T) > mStorage.capacity();
   }
 
-  size_t BufferCapacity() const {
-    return mStorage.capacity();
-  }
+  size_t BufferCapacity() const { return mStorage.capacity(); }
 
   void Clear();
 
-  class iterator
-  {
-  public:
+  class iterator {
+   public:
     explicit iterator(CaptureCommandList& aParent)
-     : mParent(aParent),
-       mCurrent(nullptr),
-       mEnd(nullptr)
-    {
+        : mParent(aParent), mCurrent(nullptr), mEnd(nullptr) {
       if (!mParent.mStorage.empty()) {
         mCurrent = &mParent.mStorage.front();
         mEnd = mCurrent + mParent.mStorage.size();
       }
     }
 
-    bool Done() const {
-      return mCurrent >= mEnd;
-    }
+    bool Done() const { return mCurrent >= mEnd; }
     void Next() {
       MOZ_ASSERT(!Done());
       mCurrent += *reinterpret_cast<uint32_t*>(mCurrent);
@@ -101,14 +86,13 @@ public:
       return reinterpret_cast<DrawingCommand*>(mCurrent + sizeof(uint32_t));
     }
 
-  private:
+   private:
     CaptureCommandList& mParent;
     uint8_t* mCurrent;
     uint8_t* mEnd;
   };
 
-  void Log(TreeLog& aStream)
-  {
+  void Log(TreeLog& aStream) {
     for (iterator iter(*this); !iter.Done(); iter.Next()) {
       DrawingCommand* cmd = iter.Get();
       cmd->Log(aStream);
@@ -116,16 +100,16 @@ public:
     }
   }
 
-private:
+ private:
   CaptureCommandList(const CaptureCommandList& aOther) = delete;
-  void operator =(const CaptureCommandList& aOther) = delete;
+  void operator=(const CaptureCommandList& aOther) = delete;
 
-private:
+ private:
   std::vector<uint8_t> mStorage;
   DrawingCommand* mLastCommand;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
-#endif // mozilla_gfx_2d_CaptureCommandList_h
+#endif  // mozilla_gfx_2d_CaptureCommandList_h

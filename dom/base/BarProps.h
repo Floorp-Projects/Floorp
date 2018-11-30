@@ -29,30 +29,28 @@ class ErrorResult;
 namespace dom {
 
 // Script "BarProp" object
-class BarProp : public nsISupports,
-                public nsWrapperCache
-{
-public:
-  explicit BarProp(nsGlobalWindowInner *aWindow);
+class BarProp : public nsISupports, public nsWrapperCache {
+ public:
+  explicit BarProp(nsGlobalWindowInner* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BarProp)
 
   nsPIDOMWindowInner* GetParentObject() const;
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) = 0;
   virtual void SetVisible(bool aVisible, CallerType aCallerType,
                           ErrorResult& aRv) = 0;
 
-protected:
+ protected:
   virtual ~BarProp();
 
   bool GetVisibleByFlag(uint32_t aChromeFlag, ErrorResult& aRv);
   void SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag,
-                        CallerType aCallerType, ErrorResult &aRv);
+                        CallerType aCallerType, ErrorResult& aRv);
 
   already_AddRefed<nsIWebBrowserChrome> GetBrowserChrome();
 
@@ -60,10 +58,9 @@ protected:
 };
 
 // Script "menubar" object
-class MenubarProp final : public BarProp
-{
-public:
-  explicit MenubarProp(nsGlobalWindowInner *aWindow);
+class MenubarProp final : public BarProp {
+ public:
+  explicit MenubarProp(nsGlobalWindowInner* aWindow);
   virtual ~MenubarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -72,10 +69,9 @@ public:
 };
 
 // Script "toolbar" object
-class ToolbarProp final : public BarProp
-{
-public:
-  explicit ToolbarProp(nsGlobalWindowInner *aWindow);
+class ToolbarProp final : public BarProp {
+ public:
+  explicit ToolbarProp(nsGlobalWindowInner* aWindow);
   virtual ~ToolbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -84,10 +80,9 @@ public:
 };
 
 // Script "locationbar" object
-class LocationbarProp final : public BarProp
-{
-public:
-  explicit LocationbarProp(nsGlobalWindowInner *aWindow);
+class LocationbarProp final : public BarProp {
+ public:
+  explicit LocationbarProp(nsGlobalWindowInner* aWindow);
   virtual ~LocationbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -96,10 +91,9 @@ public:
 };
 
 // Script "personalbar" object
-class PersonalbarProp final : public BarProp
-{
-public:
-  explicit PersonalbarProp(nsGlobalWindowInner *aWindow);
+class PersonalbarProp final : public BarProp {
+ public:
+  explicit PersonalbarProp(nsGlobalWindowInner* aWindow);
   virtual ~PersonalbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -108,10 +102,9 @@ public:
 };
 
 // Script "statusbar" object
-class StatusbarProp final : public BarProp
-{
-public:
-  explicit StatusbarProp(nsGlobalWindowInner *aWindow);
+class StatusbarProp final : public BarProp {
+ public:
+  explicit StatusbarProp(nsGlobalWindowInner* aWindow);
   virtual ~StatusbarProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -120,10 +113,9 @@ public:
 };
 
 // Script "scrollbars" object
-class ScrollbarsProp final : public BarProp
-{
-public:
-  explicit ScrollbarsProp(nsGlobalWindowInner *aWindow);
+class ScrollbarsProp final : public BarProp {
+ public:
+  explicit ScrollbarsProp(nsGlobalWindowInner* aWindow);
   virtual ~ScrollbarsProp();
 
   virtual bool GetVisible(CallerType aCallerType, ErrorResult& aRv) override;
@@ -131,8 +123,7 @@ public:
                           ErrorResult& aRv) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* mozilla_dom_BarProps_h */
-

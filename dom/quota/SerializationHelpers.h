@@ -16,28 +16,23 @@
 namespace IPC {
 
 template <>
-struct ParamTraits<mozilla::dom::quota::PersistenceType> :
-  public ContiguousEnumSerializer<
-                               mozilla::dom::quota::PersistenceType,
-                               mozilla::dom::quota::PERSISTENCE_TYPE_PERSISTENT,
-                               mozilla::dom::quota::PERSISTENCE_TYPE_INVALID>
-{ };
+struct ParamTraits<mozilla::dom::quota::PersistenceType>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::quota::PersistenceType,
+          mozilla::dom::quota::PERSISTENCE_TYPE_PERSISTENT,
+          mozilla::dom::quota::PERSISTENCE_TYPE_INVALID> {};
 
 template <>
-struct ParamTraits<mozilla::dom::quota::Client::Type> :
-  public ContiguousEnumSerializer<
-                          mozilla::dom::quota::Client::Type,
-                          mozilla::dom::quota::Client::IDB,
-                          mozilla::dom::quota::Client::TYPE_MAX>
-{ };
+struct ParamTraits<mozilla::dom::quota::Client::Type>
+    : public ContiguousEnumSerializer<mozilla::dom::quota::Client::Type,
+                                      mozilla::dom::quota::Client::IDB,
+                                      mozilla::dom::quota::Client::TYPE_MAX> {};
 
 template <>
-struct ParamTraits<mozilla::OriginAttributesPattern>
-{
+struct ParamTraits<mozilla::OriginAttributesPattern> {
   typedef mozilla::OriginAttributesPattern paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mAppId);
     WriteParam(aMsg, aParam.mFirstPartyDomain);
     WriteParam(aMsg, aParam.mInIsolatedMozBrowser);
@@ -45,8 +40,8 @@ struct ParamTraits<mozilla::OriginAttributesPattern>
     WriteParam(aMsg, aParam.mUserContextId);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mAppId) &&
            ReadParam(aMsg, aIter, &aResult->mFirstPartyDomain) &&
            ReadParam(aMsg, aIter, &aResult->mInIsolatedMozBrowser) &&
@@ -55,6 +50,6 @@ struct ParamTraits<mozilla::OriginAttributesPattern>
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // mozilla_dom_quota_SerializationHelpers_h
+#endif  // mozilla_dom_quota_SerializationHelpers_h

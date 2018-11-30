@@ -21,42 +21,36 @@ namespace mozilla {
 namespace ipc {
 class PrincipalInfo;
 class AutoIPCStream;
-} // namespace ipc
+}  // namespace ipc
 
 namespace dom {
 
 class InternalHeaders;
 class IPCInternalResponse;
 
-class InternalResponse final
-{
+class InternalResponse final {
   friend class FetchDriver;
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalResponse)
 
   InternalResponse(uint16_t aStatus, const nsACString& aStatusText);
 
-  static already_AddRefed<InternalResponse>
-  FromIPC(const IPCInternalResponse& aIPCResponse);
+  static already_AddRefed<InternalResponse> FromIPC(
+      const IPCInternalResponse& aIPCResponse);
 
-  template<typename M>
-  void
-  ToIPC(IPCInternalResponse* aIPCResponse,
-        M* aManager,
-        UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+  template <typename M>
+  void ToIPC(IPCInternalResponse* aIPCResponse, M* aManager,
+             UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 
-  enum CloneType
-  {
+  enum CloneType {
     eCloneInputStream,
     eDontCloneInputStream,
   };
 
   already_AddRefed<InternalResponse> Clone(CloneType eCloneType);
 
-  static already_AddRefed<InternalResponse>
-  NetworkError(nsresult aRv)
-  {
+  static already_AddRefed<InternalResponse> NetworkError(nsresult aRv) {
     MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aRv));
     RefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
     ErrorResult result;
@@ -67,21 +61,15 @@ public:
     return response.forget();
   }
 
-  already_AddRefed<InternalResponse>
-  OpaqueResponse();
+  already_AddRefed<InternalResponse> OpaqueResponse();
 
-  already_AddRefed<InternalResponse>
-  OpaqueRedirectResponse();
+  already_AddRefed<InternalResponse> OpaqueRedirectResponse();
 
-  already_AddRefed<InternalResponse>
-  BasicResponse();
+  already_AddRefed<InternalResponse> BasicResponse();
 
-  already_AddRefed<InternalResponse>
-  CORSResponse();
+  already_AddRefed<InternalResponse> CORSResponse();
 
-  ResponseType
-  Type() const
-  {
+  ResponseType Type() const {
     MOZ_ASSERT_IF(mType == ResponseType::Error, !mWrappedResponse);
     MOZ_ASSERT_IF(mType == ResponseType::Default, !mWrappedResponse);
     MOZ_ASSERT_IF(mType == ResponseType::Basic, mWrappedResponse);
@@ -91,38 +79,26 @@ public:
     return mType;
   }
 
-  bool
-  IsError() const
-  {
-    return Type() == ResponseType::Error;
-  }
+  bool IsError() const { return Type() == ResponseType::Error; }
   // GetUrl should return last fetch URL in response's url list and null if
   // response's url list is the empty list.
-  const nsCString&
-  GetURL() const
-  {
+  const nsCString& GetURL() const {
     // Empty urlList when response is a synthetic response.
     if (mURLList.IsEmpty()) {
       return EmptyCString();
     }
     return mURLList.LastElement();
   }
-  void
-  GetURLList(nsTArray<nsCString>& aURLList) const
-  {
+  void GetURLList(nsTArray<nsCString>& aURLList) const {
     aURLList.Assign(mURLList);
   }
-  const nsCString&
-  GetUnfilteredURL() const
-  {
+  const nsCString& GetUnfilteredURL() const {
     if (mWrappedResponse) {
       return mWrappedResponse->GetURL();
     }
     return GetURL();
   }
-  void
-  GetUnfilteredURLList(nsTArray<nsCString>& aURLList) const
-  {
+  void GetUnfilteredURLList(nsTArray<nsCString>& aURLList) const {
     if (mWrappedResponse) {
       return mWrappedResponse->GetURLList(aURLList);
     }
@@ -130,27 +106,19 @@ public:
     return GetURLList(aURLList);
   }
 
-  void
-  SetURLList(const nsTArray<nsCString>& aURLList)
-  {
+  void SetURLList(const nsTArray<nsCString>& aURLList) {
     mURLList.Assign(aURLList);
 
 #ifdef DEBUG
-    for(uint32_t i = 0; i < mURLList.Length(); ++i) {
+    for (uint32_t i = 0; i < mURLList.Length(); ++i) {
       MOZ_ASSERT(mURLList[i].Find(NS_LITERAL_CSTRING("#")) == kNotFound);
     }
 #endif
   }
 
-  uint16_t
-  GetStatus() const
-  {
-    return mStatus;
-  }
+  uint16_t GetStatus() const { return mStatus; }
 
-  uint16_t
-  GetUnfilteredStatus() const
-  {
+  uint16_t GetUnfilteredStatus() const {
     if (mWrappedResponse) {
       return mWrappedResponse->GetStatus();
     }
@@ -158,15 +126,9 @@ public:
     return GetStatus();
   }
 
-  const nsCString&
-  GetStatusText() const
-  {
-    return mStatusText;
-  }
+  const nsCString& GetStatusText() const { return mStatusText; }
 
-  const nsCString&
-  GetUnfilteredStatusText() const
-  {
+  const nsCString& GetUnfilteredStatusText() const {
     if (mWrappedResponse) {
       return mWrappedResponse->GetStatusText();
     }
@@ -174,15 +136,9 @@ public:
     return GetStatusText();
   }
 
-  InternalHeaders*
-  Headers()
-  {
-    return mHeaders;
-  }
+  InternalHeaders* Headers() { return mHeaders; }
 
-  InternalHeaders*
-  UnfilteredHeaders()
-  {
+  InternalHeaders* UnfilteredHeaders() {
     if (mWrappedResponse) {
       return mWrappedResponse->Headers();
     };
@@ -190,9 +146,8 @@ public:
     return Headers();
   }
 
-  void
-  GetUnfilteredBody(nsIInputStream** aStream, int64_t* aBodySize = nullptr)
-  {
+  void GetUnfilteredBody(nsIInputStream** aStream,
+                         int64_t* aBodySize = nullptr) {
     if (mWrappedResponse) {
       MOZ_ASSERT(!mBody);
       return mWrappedResponse->GetBody(aStream, aBodySize);
@@ -204,9 +159,7 @@ public:
     }
   }
 
-  void
-  GetBody(nsIInputStream** aStream, int64_t* aBodySize = nullptr)
-  {
+  void GetBody(nsIInputStream** aStream, int64_t* aBodySize = nullptr) {
     if (Type() == ResponseType::Opaque ||
         Type() == ResponseType::Opaqueredirect) {
       *aStream = nullptr;
@@ -219,39 +172,27 @@ public:
     GetUnfilteredBody(aStream, aBodySize);
   }
 
-  void
-  SetBodyBlobURISpec(nsACString& aBlobURISpec)
-  {
+  void SetBodyBlobURISpec(nsACString& aBlobURISpec) {
     mBodyBlobURISpec = aBlobURISpec;
   }
 
-  const nsACString&
-  BodyBlobURISpec() const
-  {
+  const nsACString& BodyBlobURISpec() const {
     if (mWrappedResponse) {
       return mWrappedResponse->BodyBlobURISpec();
     }
     return mBodyBlobURISpec;
   }
 
-  void
-  SetBodyLocalPath(nsAString& aLocalPath)
-  {
-    mBodyLocalPath = aLocalPath;
-  }
+  void SetBodyLocalPath(nsAString& aLocalPath) { mBodyLocalPath = aLocalPath; }
 
-  const nsAString&
-  BodyLocalPath() const
-  {
+  const nsAString& BodyLocalPath() const {
     if (mWrappedResponse) {
       return mWrappedResponse->BodyLocalPath();
     }
     return mBodyLocalPath;
   }
 
-  void
-  SetBody(nsIInputStream* aBody, int64_t aBodySize)
-  {
+  void SetBody(nsIInputStream* aBody, int64_t aBodySize) {
     if (mWrappedResponse) {
       return mWrappedResponse->SetBody(aBody, aBodySize);
     }
@@ -267,21 +208,15 @@ public:
     mBodySize = aBodySize;
   }
 
-  uint32_t
-  GetPaddingInfo();
+  uint32_t GetPaddingInfo();
 
-  nsresult
-  GeneratePaddingInfo();
+  nsresult GeneratePaddingInfo();
 
-  int64_t
-  GetPaddingSize();
+  int64_t GetPaddingSize();
 
-  void
-  SetPaddingSize(int64_t aPaddingSize);
+  void SetPaddingSize(int64_t aPaddingSize);
 
-  void
-  SetAlternativeBody(nsIInputStream* aAlternativeBody)
-  {
+  void SetAlternativeBody(nsIInputStream* aAlternativeBody) {
     if (mWrappedResponse) {
       return mWrappedResponse->SetAlternativeBody(aAlternativeBody);
     }
@@ -291,9 +226,7 @@ public:
     mAlternativeBody = aAlternativeBody;
   }
 
-  already_AddRefed<nsIInputStream>
-  TakeAlternativeBody()
-  {
+  already_AddRefed<nsIInputStream> TakeAlternativeBody() {
     if (mWrappedResponse) {
       return mWrappedResponse->TakeAlternativeBody();
     }
@@ -309,9 +242,8 @@ public:
     return mAlternativeBody.forget();
   }
 
-  void
-  SetCacheInfoChannel(const nsMainThreadPtrHandle<nsICacheInfoChannel>& aCacheInfoChannel)
-  {
+  void SetCacheInfoChannel(
+      const nsMainThreadPtrHandle<nsICacheInfoChannel>& aCacheInfoChannel) {
     if (mWrappedResponse) {
       return mWrappedResponse->SetCacheInfoChannel(aCacheInfoChannel);
     }
@@ -319,9 +251,7 @@ public:
     mCacheInfoChannel = aCacheInfoChannel;
   }
 
-  nsMainThreadPtrHandle<nsICacheInfoChannel>
-  TakeCacheInfoChannel()
-  {
+  nsMainThreadPtrHandle<nsICacheInfoChannel> TakeCacheInfoChannel() {
     if (mWrappedResponse) {
       return mWrappedResponse->TakeCacheInfoChannel();
     }
@@ -330,59 +260,36 @@ public:
     return rtn;
   }
 
-  void
-  InitChannelInfo(nsIChannel* aChannel)
-  {
+  void InitChannelInfo(nsIChannel* aChannel) {
     mChannelInfo.InitFromChannel(aChannel);
   }
 
-  void
-  InitChannelInfo(const mozilla::ipc::IPCChannelInfo& aChannelInfo)
-  {
+  void InitChannelInfo(const mozilla::ipc::IPCChannelInfo& aChannelInfo) {
     mChannelInfo.InitFromIPCChannelInfo(aChannelInfo);
   }
 
-  void
-  InitChannelInfo(const ChannelInfo& aChannelInfo)
-  {
+  void InitChannelInfo(const ChannelInfo& aChannelInfo) {
     mChannelInfo = aChannelInfo;
   }
 
-  const ChannelInfo&
-  GetChannelInfo() const
-  {
-    return mChannelInfo;
-  }
+  const ChannelInfo& GetChannelInfo() const { return mChannelInfo; }
 
-  const UniquePtr<mozilla::ipc::PrincipalInfo>&
-  GetPrincipalInfo() const
-  {
+  const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mPrincipalInfo;
   }
 
-  bool
-  IsRedirected() const
-  {
-    return mURLList.Length() > 1;
-  }
+  bool IsRedirected() const { return mURLList.Length() > 1; }
 
-  nsresult
-  GetErrorCode() const
-  {
-    return mErrorCode;
-  }
+  nsresult GetErrorCode() const { return mErrorCode; }
 
   // Takes ownership of the principal info.
-  void
-  SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
+  void SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
 
-  LoadTainting
-  GetTainting() const;
+  LoadTainting GetTainting() const;
 
-  already_AddRefed<InternalResponse>
-  Unfiltered();
+  already_AddRefed<InternalResponse> Unfiltered();
 
-private:
+ private:
   ~InternalResponse();
 
   explicit InternalResponse(const InternalResponse& aOther) = delete;
@@ -416,10 +323,11 @@ private:
   nsCOMPtr<nsIInputStream> mAlternativeBody;
   nsMainThreadPtrHandle<nsICacheInfoChannel> mCacheInfoChannel;
 
-public:
+ public:
   static const int64_t UNKNOWN_BODY_SIZE = -1;
   static const int64_t UNKNOWN_PADDING_SIZE = -1;
-private:
+
+ private:
   ChannelInfo mChannelInfo;
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
 
@@ -430,7 +338,7 @@ private:
   RefPtr<InternalResponse> mWrappedResponse;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_InternalResponse_h
+#endif  // mozilla_dom_InternalResponse_h

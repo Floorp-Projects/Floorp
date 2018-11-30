@@ -9,9 +9,8 @@
 #include "nsString.h"
 #include "nsINode.h"
 
-class XPathGenerator
-{
-public:
+class XPathGenerator {
+ public:
   /**
    * Return a properly quoted string to insert into an XPath
    * */

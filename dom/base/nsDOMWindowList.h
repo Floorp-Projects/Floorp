@@ -13,9 +13,8 @@
 class nsIDocShell;
 class nsIDOMWindow;
 
-class nsDOMWindowList final
-{
-public:
+class nsDOMWindowList final {
+ public:
   explicit nsDOMWindowList(nsIDocShell* aDocShell);
 
   NS_INLINE_DECL_REFCOUNTING(nsDOMWindowList)
@@ -24,10 +23,9 @@ public:
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
   already_AddRefed<nsPIDOMWindowOuter> NamedItem(const nsAString& aName);
 
-  //local methods
+  // local methods
   void SetDocShell(nsIDocShell* aDocShell);
-  already_AddRefed<nsIDocShellTreeItem> GetDocShellTreeItemAt(uint32_t aIndex)
-  {
+  already_AddRefed<nsIDocShellTreeItem> GetDocShellTreeItemAt(uint32_t aIndex) {
     EnsureFresh();
     nsCOMPtr<nsIDocShellTreeItem> item;
     if (mDocShellNode) {
@@ -36,13 +34,13 @@ public:
     return item.forget();
   }
 
-protected:
+ protected:
   ~nsDOMWindowList();
 
   // Note: this function may flush and cause mDocShellNode to become null.
   void EnsureFresh();
 
-  nsIDocShell* mDocShellNode; //Weak Reference
+  nsIDocShell* mDocShellNode;  // Weak Reference
 };
 
-#endif // nsDOMWindowList_h___
+#endif  // nsDOMWindowList_h___

@@ -11,33 +11,29 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPermission : public nsIPermission
-{
-public:
+class nsPermission : public nsIPermission {
+ public:
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERMISSION
 
   static already_AddRefed<nsPermission> Create(nsIPrincipal* aPrincipal,
-                                               const nsACString &aType,
+                                               const nsACString& aType,
                                                uint32_t aCapability,
                                                uint32_t aExpireType,
                                                int64_t aExpireTime);
 
-protected:
-  nsPermission(nsIPrincipal* aPrincipal,
-               const nsACString &aType,
-               uint32_t aCapability,
-               uint32_t aExpireType,
-               int64_t aExpireTime);
+ protected:
+  nsPermission(nsIPrincipal* aPrincipal, const nsACString& aType,
+               uint32_t aCapability, uint32_t aExpireType, int64_t aExpireTime);
 
-  virtual ~nsPermission() {};
+  virtual ~nsPermission(){};
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mType;
-  uint32_t  mCapability;
-  uint32_t  mExpireType;
-  int64_t   mExpireTime;
+  uint32_t mCapability;
+  uint32_t mExpireType;
+  int64_t mExpireTime;
 };
 
-#endif // nsPermission_h__
+#endif  // nsPermission_h__

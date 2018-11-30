@@ -25,19 +25,23 @@
 namespace mozilla {
 namespace gfx {
 
-class ScaledFontBase : public ScaledFont
-{
-public:
+class ScaledFontBase : public ScaledFont {
+ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontBase, override)
 
   ScaledFontBase(const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
   virtual ~ScaledFontBase();
 
-  virtual already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget) override;
+  virtual already_AddRefed<Path> GetPathForGlyphs(
+      const GlyphBuffer& aBuffer, const DrawTarget* aTarget) override;
 
-  virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *aTransformHint) override;
+  virtual void CopyGlyphsToBuilder(const GlyphBuffer& aBuffer,
+                                   PathBuilder* aBuilder,
+                                   const Matrix* aTransformHint) override;
 
-  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) override;
+  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices,
+                                     uint32_t aNumGlyphs,
+                                     GlyphMetrics* aGlyphMetrics) override;
 
   virtual Float GetSize() const override { return mSize; }
 
@@ -47,16 +51,18 @@ public:
 
 #ifdef USE_CAIRO_SCALED_FONT
   bool PopulateCairoScaledFont();
-  virtual cairo_scaled_font_t* GetCairoScaledFont() override { return mScaledFont; }
+  virtual cairo_scaled_font_t* GetCairoScaledFont() override {
+    return mScaledFont;
+  }
   virtual void SetCairoScaledFont(cairo_scaled_font_t* font) override;
 #endif
 
-protected:
+ protected:
   friend class DrawTargetSkia;
 #ifdef USE_SKIA
   Atomic<SkTypeface*> mTypeface;
   virtual SkTypeface* CreateSkTypeface() { return nullptr; }
-  SkPath GetSkiaPathForGlyphs(const GlyphBuffer &aBuffer);
+  SkPath GetSkiaPathForGlyphs(const GlyphBuffer& aBuffer);
 #endif
 #ifdef USE_CAIRO_SCALED_FONT
   // Overridders should ensure the cairo_font_face_t has been addrefed.
@@ -66,7 +72,7 @@ protected:
   Float mSize;
 };
 
-} // namespace gfx
-} // namespace mozilla
+}  // namespace gfx
+}  // namespace mozilla
 
 #endif /* MOZILLA_GFX_SCALEDFONTBASE_H_ */

@@ -12,24 +12,22 @@
 namespace mozilla {
 class PeerConnectionImpl;
 
-class PacketDumper
-{
-  public:
-    explicit PacketDumper(PeerConnectionImpl* aPc);
-    explicit PacketDumper(const std::string& aPcHandle);
-    PacketDumper(const PacketDumper&) = delete;
-    ~PacketDumper();
+class PacketDumper {
+ public:
+  explicit PacketDumper(PeerConnectionImpl* aPc);
+  explicit PacketDumper(const std::string& aPcHandle);
+  PacketDumper(const PacketDumper&) = delete;
+  ~PacketDumper();
 
-    PacketDumper& operator=(const PacketDumper&) = delete;
+  PacketDumper& operator=(const PacketDumper&) = delete;
 
-    void Dump(size_t level, dom::mozPacketDumpType type, bool sending,
-              const void* data, size_t size);
+  void Dump(size_t level, dom::mozPacketDumpType type, bool sending,
+            const void* data, size_t size);
 
-  private:
-    RefPtr<PeerConnectionImpl> mPc;
+ private:
+  RefPtr<PeerConnectionImpl> mPc;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _PACKET_DUMPER_H_
-
+#endif  // _PACKET_DUMPER_H_

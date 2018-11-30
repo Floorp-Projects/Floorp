@@ -20,7 +20,7 @@
 // this binary through the installer.
 #pragma comment(linker, "/SUBSYSTEM:windows")
 
-SERVICE_STATUS gSvcStatus = { 0 };
+SERVICE_STATUS gSvcStatus = {0};
 SERVICE_STATUS_HANDLE gSvcStatusHandle = nullptr;
 HANDLE gWorkDoneEvent = nullptr;
 HANDLE gThread = nullptr;
@@ -31,9 +31,7 @@ bool gServiceControlStopping = false;
 
 BOOL GetLogDirectoryPath(WCHAR *path);
 
-int
-wmain(int argc, WCHAR **argv)
-{
+int wmain(int argc, WCHAR **argv) {
   // If command-line parameter is "install", install the service
   // or upgrade if already installed
   // If command line parameter is "forceinstall", install the service
@@ -108,9 +106,9 @@ wmain(int argc, WCHAR **argv)
   }
 
   SERVICE_TABLE_ENTRYW DispatchTable[] = {
-    { const_cast<LPWSTR>(SVC_NAME), (LPSERVICE_MAIN_FUNCTIONW) SvcMain }, // -Wwritable-strings
-    { nullptr, nullptr }
-  };
+      {const_cast<LPWSTR>(SVC_NAME),
+       (LPSERVICE_MAIN_FUNCTIONW)SvcMain},  // -Wwritable-strings
+      {nullptr, nullptr}};
 
   // This call returns when the service has stopped.
   // The process should simply terminate when the call returns.
@@ -127,9 +125,7 @@ wmain(int argc, WCHAR **argv)
  * @param  path The out buffer for the backup log path of size MAX_PATH + 1
  * @return TRUE if successful.
  */
-BOOL
-GetLogDirectoryPath(WCHAR *path)
-{
+BOOL GetLogDirectoryPath(WCHAR *path) {
   if (!GetModuleFileNameW(nullptr, path, MAX_PATH)) {
     return FALSE;
   }
@@ -153,10 +149,8 @@ GetLogDirectoryPath(WCHAR *path)
  * @param  logNumber The log number, 0 == updater.log
  * @return TRUE if successful.
  */
-BOOL
-GetBackupLogPath(LPWSTR path, LPCWSTR basePath, int logNumber)
-{
-  WCHAR logName[64] = { L'\0' };
+BOOL GetBackupLogPath(LPWSTR path, LPCWSTR basePath, int logNumber) {
+  WCHAR logName[64] = {L'\0'};
   wcsncpy(path, basePath, sizeof(logName) / sizeof(logName[0]) - 1);
   if (logNumber <= 0) {
     swprintf(logName, sizeof(logName) / sizeof(logName[0]),
@@ -179,13 +173,11 @@ GetBackupLogPath(LPWSTR path, LPCWSTR basePath, int logNumber)
  * @param basePath      The base directory path where log files are stored
  * @param numLogsToKeep The number of logs to keep
  */
-void
-BackupOldLogs(LPCWSTR basePath, int numLogsToKeep)
-{
+void BackupOldLogs(LPCWSTR basePath, int numLogsToKeep) {
   WCHAR oldPath[MAX_PATH + 1];
   WCHAR newPath[MAX_PATH + 1];
   for (int i = numLogsToKeep; i >= 1; i--) {
-    if (!GetBackupLogPath(oldPath, basePath, i -1)) {
+    if (!GetBackupLogPath(oldPath, basePath, i - 1)) {
       continue;
     }
 
@@ -212,18 +204,14 @@ BackupOldLogs(LPCWSTR basePath, int numLogsToKeep)
  * a stopped state dirctly and never set a stop pending state.  It is safe to
  * forcefully terminate the process ourselves since all work is done once we
  * start this thread.
-*/
-DWORD WINAPI
-EnsureProcessTerminatedThread(LPVOID)
-{
+ */
+DWORD WINAPI EnsureProcessTerminatedThread(LPVOID) {
   Sleep(5000);
   exit(0);
   return 0;
 }
 
-void
-StartTerminationThread()
-{
+void StartTerminationThread() {
   // If the process does not self terminate like it should, this thread
   // will terminate the process after 5 seconds.
   HANDLE thread = CreateThread(nullptr, 0, EnsureProcessTerminatedThread,
@@ -236,9 +224,7 @@ StartTerminationThread()
 /**
  * Main entry point when running as a service.
  */
-void WINAPI
-SvcMain(DWORD argc, LPWSTR *argv)
-{
+void WINAPI SvcMain(DWORD argc, LPWSTR *argv) {
   // Setup logging, and backup the old logs
   WCHAR updatePath[MAX_PATH + 1];
   if (GetLogDirectoryPath(updatePath)) {
@@ -303,11 +289,7 @@ SvcMain(DWORD argc, LPWSTR *argv)
  * @param exitCode      The system error code
  * @param waitHint      Estimated time for pending operation in milliseconds
  */
-void
-ReportSvcStatus(DWORD currentState,
-                DWORD exitCode,
-                DWORD waitHint)
-{
+void ReportSvcStatus(DWORD currentState, DWORD exitCode, DWORD waitHint) {
   static DWORD dwCheckPoint = 1;
 
   gSvcStatus.dwCurrentState = currentState;
@@ -318,12 +300,11 @@ ReportSvcStatus(DWORD currentState,
       SERVICE_STOP_PENDING == currentState) {
     gSvcStatus.dwControlsAccepted = 0;
   } else {
-    gSvcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP |
-                                    SERVICE_ACCEPT_SHUTDOWN;
+    gSvcStatus.dwControlsAccepted =
+        SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
   }
 
-  if ((SERVICE_RUNNING == currentState) ||
-      (SERVICE_STOPPED == currentState)) {
+  if ((SERVICE_RUNNING == currentState) || (SERVICE_STOPPED == currentState)) {
     gSvcStatus.dwCheckPoint = 0;
   } else {
     gSvcStatus.dwCheckPoint = dwCheckPoint++;
@@ -336,13 +317,11 @@ ReportSvcStatus(DWORD currentState,
 /**
  * Since the SvcCtrlHandler should only spend at most 30 seconds before
  * returning, this function does the service stop work for the SvcCtrlHandler.
-*/
-DWORD WINAPI
-StopServiceAndWaitForCommandThread(LPVOID)
-{
+ */
+DWORD WINAPI StopServiceAndWaitForCommandThread(LPVOID) {
   do {
     ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 1000);
-  } while(WaitForSingleObject(gWorkDoneEvent, 100) == WAIT_TIMEOUT);
+  } while (WaitForSingleObject(gWorkDoneEvent, 100) == WAIT_TIMEOUT);
   CloseHandle(gWorkDoneEvent);
   gWorkDoneEvent = nullptr;
   ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
@@ -354,9 +333,7 @@ StopServiceAndWaitForCommandThread(LPVOID)
  * Called by SCM whenever a control code is sent to the service
  * using the ControlService function.
  */
-void WINAPI
-SvcCtrlHandler(DWORD dwCtrl)
-{
+void WINAPI SvcCtrlHandler(DWORD dwCtrl) {
   // After a SERVICE_CONTROL_STOP there should be no more commands sent to
   // the SvcCtrlHandler.
   if (gServiceControlStopping) {
@@ -364,17 +341,16 @@ SvcCtrlHandler(DWORD dwCtrl)
   }
 
   // Handle the requested control code.
-  switch(dwCtrl) {
-  case SERVICE_CONTROL_SHUTDOWN:
-  case SERVICE_CONTROL_STOP: {
+  switch (dwCtrl) {
+    case SERVICE_CONTROL_SHUTDOWN:
+    case SERVICE_CONTROL_STOP: {
       gServiceControlStopping = true;
       ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 1000);
 
       // The SvcCtrlHandler thread should not spend more than 30 seconds in
       // shutdown so we spawn a new thread for stopping the service
-      HANDLE thread = CreateThread(nullptr, 0,
-                                   StopServiceAndWaitForCommandThread,
-                                   nullptr, 0, nullptr);
+      HANDLE thread = CreateThread(
+          nullptr, 0, StopServiceAndWaitForCommandThread, nullptr, 0, nullptr);
       if (thread) {
         CloseHandle(thread);
       } else {
@@ -383,9 +359,8 @@ SvcCtrlHandler(DWORD dwCtrl)
         // get an error.
         StopServiceAndWaitForCommandThread(nullptr);
       }
-    }
-    break;
-  default:
-    break;
+    } break;
+    default:
+      break;
   }
 }

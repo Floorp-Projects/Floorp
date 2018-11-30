@@ -21,24 +21,20 @@ class Promise;
 
 typedef ArrayBufferViewOrArrayBuffer CryptoOperationData;
 
-class SubtleCrypto final : public nsISupports,
-                           public nsWrapperCache
-{
+class SubtleCrypto final : public nsISupports, public nsWrapperCache {
   ~SubtleCrypto() {}
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SubtleCrypto)
 
-public:
+ public:
   explicit SubtleCrypto(nsIGlobalObject* aParent);
 
-  nsIGlobalObject* GetParentObject() const
-  {
-    return mParent;
-  }
+  nsIGlobalObject* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<Promise> Encrypt(JSContext* cx,
                                     const ObjectOrString& algorithm,
@@ -52,8 +48,7 @@ public:
                                     const CryptoOperationData& data,
                                     ErrorResult& aRv);
 
-  already_AddRefed<Promise> Sign(JSContext* cx,
-                                 const ObjectOrString& algorithm,
+  already_AddRefed<Promise> Sign(JSContext* cx, const ObjectOrString& algorithm,
                                  CryptoKey& key,
                                  const CryptoOperationData& data,
                                  ErrorResult& aRv);
@@ -70,8 +65,7 @@ public:
                                    const CryptoOperationData& aData,
                                    ErrorResult& aRv);
 
-  already_AddRefed<Promise> ImportKey(JSContext* cx,
-                                      const nsAString& format,
+  already_AddRefed<Promise> ImportKey(JSContext* cx, const nsAString& format,
                                       JS::Handle<JSObject*> keyData,
                                       const ObjectOrString& algorithm,
                                       bool extractable,
@@ -87,42 +81,33 @@ public:
                                         const Sequence<nsString>& keyUsages,
                                         ErrorResult& aRv);
 
-  already_AddRefed<Promise> DeriveKey(JSContext* cx,
-                                      const ObjectOrString& algorithm,
-                                      CryptoKey& baseKey,
-                                      const ObjectOrString& derivedKeyType,
-                                      bool extractable,
-                                      const Sequence<nsString>& keyUsages,
-                                      ErrorResult& aRv);
+  already_AddRefed<Promise> DeriveKey(
+      JSContext* cx, const ObjectOrString& algorithm, CryptoKey& baseKey,
+      const ObjectOrString& derivedKeyType, bool extractable,
+      const Sequence<nsString>& keyUsages, ErrorResult& aRv);
 
   already_AddRefed<Promise> DeriveBits(JSContext* cx,
                                        const ObjectOrString& algorithm,
-                                       CryptoKey& baseKey,
-                                       uint32_t length,
+                                       CryptoKey& baseKey, uint32_t length,
                                        ErrorResult& aRv);
 
-  already_AddRefed<Promise> WrapKey(JSContext* cx,
-                                    const nsAString& format,
-                                    CryptoKey& key,
-                                    CryptoKey& wrappingKey,
+  already_AddRefed<Promise> WrapKey(JSContext* cx, const nsAString& format,
+                                    CryptoKey& key, CryptoKey& wrappingKey,
                                     const ObjectOrString& wrapAlgorithm,
                                     ErrorResult& aRv);
 
-  already_AddRefed<Promise> UnwrapKey(JSContext* cx,
-                                      const nsAString& format,
-                                      const ArrayBufferViewOrArrayBuffer& wrappedKey,
-                                      CryptoKey& unwrappingKey,
-                                      const ObjectOrString& unwrapAlgorithm,
-                                      const ObjectOrString& unwrappedKeyAlgorithm,
-                                      bool extractable,
-                                      const Sequence<nsString>& keyUsages,
-                                      ErrorResult& aRv);
+  already_AddRefed<Promise> UnwrapKey(
+      JSContext* cx, const nsAString& format,
+      const ArrayBufferViewOrArrayBuffer& wrappedKey, CryptoKey& unwrappingKey,
+      const ObjectOrString& unwrapAlgorithm,
+      const ObjectOrString& unwrappedKeyAlgorithm, bool extractable,
+      const Sequence<nsString>& keyUsages, ErrorResult& aRv);
 
-private:
+ private:
   nsCOMPtr<nsIGlobalObject> mParent;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SubtleCrypto_h
+#endif  // mozilla_dom_SubtleCrypto_h

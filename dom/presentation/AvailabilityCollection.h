@@ -17,19 +17,18 @@ namespace dom {
 
 class PresentationAvailability;
 
-class AvailabilityCollection final
-{
-public:
+class AvailabilityCollection final {
+ public:
   static AvailabilityCollection* GetSingleton();
 
   void Add(PresentationAvailability* aAvailability);
 
   void Remove(PresentationAvailability* aAvailability);
 
-  already_AddRefed<PresentationAvailability>
-  Find(const uint64_t aWindowId, const nsTArray<nsString>& aUrls);
+  already_AddRefed<PresentationAvailability> Find(
+      const uint64_t aWindowId, const nsTArray<nsString>& aUrls);
 
-private:
+ private:
   friend class StaticAutoPtr<AvailabilityCollection>;
 
   AvailabilityCollection();
@@ -39,7 +38,7 @@ private:
   nsTArray<WeakPtr<PresentationAvailability>> mAvailabilities;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_AvailabilityCollection_h
+#endif  // mozilla_dom_AvailabilityCollection_h

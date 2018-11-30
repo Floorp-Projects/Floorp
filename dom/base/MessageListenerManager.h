@@ -17,34 +17,29 @@ namespace dom {
 class MessageBroadcaster;
 
 /**
- * Implementation for the WebIDL MessageListenerManager interface. Base class for message
- * managers that are exposed to script.
+ * Implementation for the WebIDL MessageListenerManager interface. Base class
+ * for message managers that are exposed to script.
  */
 class MessageListenerManager : public nsFrameMessageManager,
-                               public nsWrapperCache
-{
-public:
+                               public nsWrapperCache {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MessageListenerManager,
                                                          nsFrameMessageManager)
 
-  MessageBroadcaster* GetParentObject()
-  {
-    return mParentManager;
-  }
+  MessageBroadcaster* GetParentObject() { return mParentManager; }
 
-  virtual MessageBroadcaster* GetParentManager() override
-  {
+  virtual MessageBroadcaster* GetParentManager() override {
     return mParentManager;
   }
 
   /**
-   * If aRemove is true then RemoveChildManager(this) will be called on the parent manager
-   * first.
+   * If aRemove is true then RemoveChildManager(this) will be called on the
+   * parent manager first.
    */
   virtual void ClearParentManager(bool aRemove) override;
 
-protected:
+ protected:
   MessageListenerManager(ipc::MessageManagerCallback* aCallback,
                          MessageBroadcaster* aParentManager,
                          MessageManagerFlags aFlags);
@@ -53,7 +48,7 @@ protected:
   RefPtr<MessageBroadcaster> mParentManager;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MessageListenerManager_h
+#endif  // mozilla_dom_MessageListenerManager_h

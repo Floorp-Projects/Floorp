@@ -27,7 +27,7 @@ class LockImpl {
 #if defined(OS_WIN)
   using NativeHandle = SRWLOCK;
 #elif defined(OS_POSIX)
-  using NativeHandle =  pthread_mutex_t;
+  using NativeHandle = pthread_mutex_t;
 #endif
 
   LockImpl();

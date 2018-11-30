@@ -19,16 +19,15 @@ class nsTextNode;
 // The label for button is specified through generated content
 // in the ua.css file.
 
-class nsGfxButtonControlFrame final
-  : public nsHTMLButtonControlFrame
-  , public nsIAnonymousContentCreator
-{
-public:
+class nsGfxButtonControlFrame final : public nsHTMLButtonControlFrame,
+                                      public nsIAnonymousContentCreator {
+ public:
   NS_DECL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)
 
   explicit nsGfxButtonControlFrame(ComputedStyle* aStyle);
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
@@ -41,26 +40,25 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  virtual nsresult CreateAnonymousContent(
+      nsTArray<ContentInfo>& aElements) override;
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) override;
 
-  virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsAtom*        aAttribute,
-                                    int32_t         aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) override;
 
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
-protected:
+ protected:
   nsresult GetDefaultLabel(nsAString& aLabel) const;
 
   nsresult GetLabel(nsString& aLabel);
 
   virtual bool IsInput() override { return true; }
-private:
+
+ private:
   RefPtr<nsTextNode> mTextContent;
 };
 
-
 #endif
-

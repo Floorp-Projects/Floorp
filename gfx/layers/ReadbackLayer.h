@@ -7,16 +7,16 @@
 #ifndef GFX_READBACKLAYER_H
 #define GFX_READBACKLAYER_H
 
-#include <stdint.h>                     // for uint64_t
-#include "Layers.h"                     // for Layer, etc
-#include "mozilla/gfx/Rect.h"           // for gfxRect
-#include "mozilla/gfx/Point.h"          // for IntPoint
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsAutoPtr.h"                  // for nsAutoPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nscore.h"                     // for nsACString
+#include <stdint.h>             // for uint64_t
+#include "Layers.h"             // for Layer, etc
+#include "mozilla/gfx/Rect.h"   // for gfxRect
+#include "mozilla/gfx/Point.h"  // for IntPoint
+#include "mozilla/mozalloc.h"   // for operator delete
+#include "nsAutoPtr.h"          // for nsAutoPtr
+#include "nsCOMPtr.h"           // for already_AddRefed
+#include "nsDebug.h"            // for NS_ASSERTION
+#include "nsPoint.h"            // for nsIntPoint
+#include "nscore.h"             // for nsACString
 
 class gfxContext;
 
@@ -27,7 +27,7 @@ class ReadbackProcessor;
 
 namespace layerscope {
 class LayersPacket;
-} // namespace layerscope
+}  // namespace layerscope
 
 /**
  * A ReadbackSink receives a stream of updates to a rectangle of pixels.
@@ -35,7 +35,7 @@ class LayersPacket;
  * EndTransaction or from the event loop.
  */
 class ReadbackSink {
-public:
+ public:
   ReadbackSink() {}
   virtual ~ReadbackSink() {}
 
@@ -59,8 +59,8 @@ public:
    * We don't support partially unknown backgrounds. Therefore, the
    * first BeginUpdate after a SetUnknown will have the complete background.
    */
-  virtual already_AddRefed<gfx::DrawTarget>
-      BeginUpdate(const gfx::IntRect& aRect, uint64_t aSequenceNumber) = 0;
+  virtual already_AddRefed<gfx::DrawTarget> BeginUpdate(
+      const gfx::IntRect& aRect, uint64_t aSequenceNumber) = 0;
   /**
    * EndUpdate must be called immediately after BeginUpdate, without returning
    * to the event loop.
@@ -83,18 +83,18 @@ public:
  * plugin rendering APIs. It should not be used for anything else.
  */
 class ReadbackLayer : public Layer {
-public:
+ public:
   MOZ_LAYER_DECL_NAME("ReadbackLayer", TYPE_READBACK)
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
-  {
+  virtual void ComputeEffectiveTransforms(
+      const gfx::Matrix4x4& aTransformToSurface) override {
     // Snap our local transform first, and snap the inherited transform as well.
     // This makes our snapping equivalent to what would happen if our content
     // was drawn into a PaintedLayer (gfxContext would snap using the local
     // transform, then we'd snap again when compositing the PaintedLayer).
     mEffectiveTransform =
-        SnapTransform(GetLocalTransform(), gfxRect(0, 0, mSize.width, mSize.height),
-                      nullptr)*
+        SnapTransform(GetLocalTransform(),
+                      gfxRect(0, 0, mSize.width, mSize.height), nullptr) *
         SnapTransformTranslation(aTransformToSurface, nullptr);
   }
 
@@ -108,8 +108,7 @@ public:
    * layer is destroyed or when a new sink is set.
    * Initially the contents of the readback area are completely unknown.
    */
-  void SetSink(ReadbackSink* aSink)
-  {
+  void SetSink(ReadbackSink* aSink) {
     SetUnknown();
     mSink = aSink;
   }
@@ -121,16 +120,14 @@ public:
    * has its top-left at 0,0 and has size aSize.
    * Can only be called while the sink is null!
    */
-  void SetSize(const gfx::IntSize& aSize)
-  {
+  void SetSize(const gfx::IntSize& aSize) {
     NS_ASSERTION(!mSink, "Should have no sink while changing size!");
     mSize = aSize;
   }
   const gfx::IntSize& GetSize() { return mSize; }
   gfx::IntRect GetRect() { return gfx::IntRect(gfx::IntPoint(0, 0), mSize); }
 
-  bool IsBackgroundKnown()
-  {
+  bool IsBackgroundKnown() {
     return mBackgroundLayer || mBackgroundColor.a == 1.f;
   }
 
@@ -139,19 +136,19 @@ public:
     mSink = nullptr;
   }
 
-  void NotifyPaintedLayerRemoved(PaintedLayer* aLayer)
-  {
+  void NotifyPaintedLayerRemoved(PaintedLayer* aLayer) {
     if (mBackgroundLayer == aLayer) {
       mBackgroundLayer = nullptr;
     }
   }
 
-  const nsIntPoint& GetBackgroundLayerOffset() { return mBackgroundLayerOffset; }
+  const nsIntPoint& GetBackgroundLayerOffset() {
+    return mBackgroundLayerOffset;
+  }
 
   uint64_t AllocateSequenceNumber() { return ++mSequenceCounter; }
 
-  void SetUnknown()
-  {
+  void SetUnknown() {
     if (IsBackgroundKnown()) {
       if (mSink) {
         mSink->SetUnknown(AllocateSequenceNumber());
@@ -161,21 +158,22 @@ public:
     }
   }
 
-protected:
+ protected:
   friend class ReadbackProcessor;
 
-  ReadbackLayer(LayerManager* aManager, void* aImplData) :
-    Layer(aManager, aImplData),
-    mSequenceCounter(0),
-    mSize(0,0),
-    mBackgroundLayer(nullptr),
-    mBackgroundLayerOffset(0, 0),
-    mBackgroundColor(gfx::Color())
-  {}
+  ReadbackLayer(LayerManager* aManager, void* aImplData)
+      : Layer(aManager, aImplData),
+        mSequenceCounter(0),
+        mSize(0, 0),
+        mBackgroundLayer(nullptr),
+        mBackgroundLayerOffset(0, 0),
+        mBackgroundColor(gfx::Color()) {}
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
+  virtual void PrintInfo(std::stringstream& aStream,
+                         const char* aPrefix) override;
 
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
+  virtual void DumpPacket(layerscope::LayersPacket* aPacket,
+                          const void* aParent) override;
 
   uint64_t mSequenceCounter;
   nsAutoPtr<ReadbackSink> mSink;
@@ -192,14 +190,14 @@ protected:
   // When mBackgroundLayer is non-null, this is the offset to add to
   // convert from the coordinates of mBackgroundLayer to the coordinates
   // of this layer.
-  nsIntPoint   mBackgroundLayerOffset;
+  nsIntPoint mBackgroundLayerOffset;
   // When mBackgroundColor is opaque, this is the color of the ColorLayer
   // that contained the contents we reported to mSink, which covered the
   // entire readback area.
-  gfx::Color   mBackgroundColor;
+  gfx::Color mBackgroundColor;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif /* GFX_READBACKLAYER_H */

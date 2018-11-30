@@ -15,11 +15,10 @@ class nsWindow;
 namespace mozilla {
 namespace widget {
 
-class PlatformCompositorWidgetDelegate
-  : public CompositorWidgetDelegate
-{
-public:
-  virtual void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) = 0;
+class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
+ public:
+  virtual void NotifyClientSizeChanged(
+      const LayoutDeviceIntSize& aClientSize) = 0;
 
   // CompositorWidgetDelegate Overrides
 
@@ -30,11 +29,9 @@ public:
 
 class GtkCompositorWidgetInitData;
 
-class GtkCompositorWidget
- : public CompositorWidget
- , public PlatformCompositorWidgetDelegate
-{
-public:
+class GtkCompositorWidget : public CompositorWidget,
+                            public PlatformCompositorWidgetDelegate {
+ public:
   GtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
                       const layers::CompositorOptions& aOptions,
                       nsWindow* aWindow = nullptr);
@@ -45,9 +42,9 @@ public:
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   void EndRemoteDrawing() override;
 
-  already_AddRefed<gfx::DrawTarget>
-  StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
-                             layers::BufferMode* aBufferMode) override;
+  already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
+      LayoutDeviceIntRegion& aInvalidRegion,
+      layers::BufferMode* aBufferMode) override;
   void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
                                 LayoutDeviceIntRegion& aInvalidRegion) override;
   uintptr_t GetWidgetKey() override;
@@ -65,18 +62,18 @@ public:
 
   void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
 
-protected:
+ protected:
   nsWindow* mWidget;
 
-private:
+ private:
   LayoutDeviceIntSize mClientSize;
 
   Display* mXDisplay;
-  Window   mXWindow;
+  Window mXWindow;
   WindowSurfaceProvider mProvider;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // widget_gtk_GtkCompositorWidget_h
+#endif  // widget_gtk_GtkCompositorWidget_h

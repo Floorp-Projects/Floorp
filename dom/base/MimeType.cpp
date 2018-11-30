@@ -2,24 +2,23 @@
 #include "nsUnicharUtils.h"
 
 namespace {
-  template<typename char_type>
-  static inline bool IsHTTPTokenPoint(const char_type c) {
-    return c == '!' || c == '#' || c == '$' || c == '%' || c == '&' ||
-           c == '\'' || c == '*' || c == '+' || c == '-' || c == '.' ||
-           c == '^' || c == '_' || c == '`' || c == '|' || c == '~' ||
-           mozilla::IsAsciiAlphanumeric(c);
-  }
-
-  template<typename char_type>
-  static inline bool IsHTTPQuotedStringTokenPoint(const char_type c) {
-    return c == 0x9 || (c >= ' ' && c <= '~') || mozilla::IsNonAsciiLatin1(c);
-  }
+template <typename char_type>
+static inline bool IsHTTPTokenPoint(const char_type c) {
+  return c == '!' || c == '#' || c == '$' || c == '%' || c == '&' ||
+         c == '\'' || c == '*' || c == '+' || c == '-' || c == '.' ||
+         c == '^' || c == '_' || c == '`' || c == '|' || c == '~' ||
+         mozilla::IsAsciiAlphanumeric(c);
 }
 
-template<typename char_type>
+template <typename char_type>
+static inline bool IsHTTPQuotedStringTokenPoint(const char_type c) {
+  return c == 0x9 || (c >= ' ' && c <= '~') || mozilla::IsNonAsciiLatin1(c);
+}
+}  // namespace
+
+template <typename char_type>
 /* static */ mozilla::UniquePtr<TMimeType<char_type>>
-TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType)
-{
+TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
   // See https://mimesniff.spec.whatwg.org/#parsing-a-mime-type
 
   // Steps 1-2
@@ -94,7 +93,8 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType)
   for (const char_type* c = subtypeStart; c < subtypeEnd; ++c) {
     subtype.Append(ToLowerCaseASCII(*c));
   }
-  mozilla::UniquePtr<TMimeType<char_type>> mimeType(mozilla::MakeUnique<TMimeType<char_type>>(type, subtype));
+  mozilla::UniquePtr<TMimeType<char_type>> mimeType(
+      mozilla::MakeUnique<TMimeType<char_type>>(type, subtype));
 
   // Step 11
   while (pos < end) {
@@ -136,13 +136,11 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType)
 
     // Step 11.8
     if (*pos == '"') {
-
       // Step 11.8.1
       ++pos;
 
       // Step 11.8.2
       while (true) {
-
         // Step 11.8.2.1
         while (pos < end && *pos != '"' && *pos != '\\') {
           if (!IsHTTPQuotedStringTokenPoint(*pos)) {
@@ -187,9 +185,8 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType)
         ++pos;
       }
 
-    // Step 11.9
+      // Step 11.9
     } else {
-
       // Step 11.9.1
       const char_type* paramValueStart = pos;
       while (pos < end && *pos != ';') {
@@ -232,10 +229,8 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType)
   return mimeType;
 }
 
-template<typename char_type>
-void
-TMimeType<char_type>::Serialize(nsTSubstring<char_type>& aOutput) const
-{
+template <typename char_type>
+void TMimeType<char_type>::Serialize(nsTSubstring<char_type>& aOutput) const {
   aOutput.Assign(mType);
   aOutput.AppendLiteral("/");
   aOutput.Append(mSubtype);
@@ -248,28 +243,23 @@ TMimeType<char_type>::Serialize(nsTSubstring<char_type>& aOutput) const
   }
 }
 
-template<typename char_type>
-void
-TMimeType<char_type>::GetFullType(nsTSubstring<char_type>& aOutput) const
-{
+template <typename char_type>
+void TMimeType<char_type>::GetFullType(nsTSubstring<char_type>& aOutput) const {
   aOutput.Assign(mType);
   aOutput.AppendLiteral("/");
   aOutput.Append(mSubtype);
 }
 
-template<typename char_type>
-bool
-TMimeType<char_type>::HasParameter(const nsTSubstring<char_type>& aName) const
-{
+template <typename char_type>
+bool TMimeType<char_type>::HasParameter(
+    const nsTSubstring<char_type>& aName) const {
   return mParameters.Get(aName, nullptr);
 }
 
-template<typename char_type>
-bool
-TMimeType<char_type>::GetParameterValue(const nsTSubstring<char_type>& aName,
-                                        nsTSubstring<char_type>& aOutput,
-                                        bool aAppend) const
-{
+template <typename char_type>
+bool TMimeType<char_type>::GetParameterValue(
+    const nsTSubstring<char_type>& aName, nsTSubstring<char_type>& aOutput,
+    bool aAppend) const {
   if (!aAppend) {
     aOutput.Truncate();
   }
@@ -298,11 +288,10 @@ TMimeType<char_type>::GetParameterValue(const nsTSubstring<char_type>& aName,
   return true;
 }
 
-template<typename char_type>
-void
-TMimeType<char_type>::SetParameterValue(const nsTSubstring<char_type>& aName,
-                                        const nsTSubstring<char_type>& aValue)
-{
+template <typename char_type>
+void TMimeType<char_type>::SetParameterValue(
+    const nsTSubstring<char_type>& aName,
+    const nsTSubstring<char_type>& aValue) {
   if (!mParameters.Get(aName, nullptr)) {
     mParameterNames.AppendElement(aName);
   }
@@ -311,21 +300,27 @@ TMimeType<char_type>::SetParameterValue(const nsTSubstring<char_type>& aName,
   mParameters.Put(aName, value);
 }
 
-template mozilla::UniquePtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(const nsTSubstring<char16_t>& aMimeType);
-template mozilla::UniquePtr<TMimeType<char>> TMimeType<char>::Parse(const nsTSubstring<char>& aMimeType);
-template void TMimeType<char16_t>::Serialize(nsTSubstring<char16_t>& aOutput) const;
+template mozilla::UniquePtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(
+    const nsTSubstring<char16_t>& aMimeType);
+template mozilla::UniquePtr<TMimeType<char>> TMimeType<char>::Parse(
+    const nsTSubstring<char>& aMimeType);
+template void TMimeType<char16_t>::Serialize(
+    nsTSubstring<char16_t>& aOutput) const;
 template void TMimeType<char>::Serialize(nsTSubstring<char>& aOutput) const;
-template void TMimeType<char16_t>::GetFullType(nsTSubstring<char16_t>& aOutput) const;
+template void TMimeType<char16_t>::GetFullType(
+    nsTSubstring<char16_t>& aOutput) const;
 template void TMimeType<char>::GetFullType(nsTSubstring<char>& aOutput) const;
-template bool TMimeType<char16_t>::HasParameter(const nsTSubstring<char16_t>& aName) const;
-template bool TMimeType<char>::HasParameter(const nsTSubstring<char>& aName) const;
-template bool TMimeType<char16_t>::GetParameterValue(const nsTSubstring<char16_t>& aName,
-                                                     nsTSubstring<char16_t>& aOutput,
-                                                     bool aAppend) const;
-template bool TMimeType<char>::GetParameterValue(const nsTSubstring<char>& aName,
-                                                 nsTSubstring<char>& aOutput,
-                                                 bool aAppend) const;
-template void TMimeType<char16_t>::SetParameterValue(const nsTSubstring<char16_t>& aName,
-                                                     const nsTSubstring<char16_t>& aValue);
-template void TMimeType<char>::SetParameterValue(const nsTSubstring<char>& aName,
-                                                 const nsTSubstring<char>& aValue);
+template bool TMimeType<char16_t>::HasParameter(
+    const nsTSubstring<char16_t>& aName) const;
+template bool TMimeType<char>::HasParameter(
+    const nsTSubstring<char>& aName) const;
+template bool TMimeType<char16_t>::GetParameterValue(
+    const nsTSubstring<char16_t>& aName, nsTSubstring<char16_t>& aOutput,
+    bool aAppend) const;
+template bool TMimeType<char>::GetParameterValue(
+    const nsTSubstring<char>& aName, nsTSubstring<char>& aOutput,
+    bool aAppend) const;
+template void TMimeType<char16_t>::SetParameterValue(
+    const nsTSubstring<char16_t>& aName, const nsTSubstring<char16_t>& aValue);
+template void TMimeType<char>::SetParameterValue(
+    const nsTSubstring<char>& aName, const nsTSubstring<char>& aValue);

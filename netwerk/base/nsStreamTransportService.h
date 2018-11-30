@@ -18,30 +18,30 @@ class nsIThreadPool;
 namespace mozilla {
 namespace net {
 
-class nsStreamTransportService final : public nsIStreamTransportService
-                                     , public nsIEventTarget
-                                     , public nsIObserver
-{
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSISTREAMTRANSPORTSERVICE
-    NS_DECL_NSIEVENTTARGET_FULL
-    NS_DECL_NSIOBSERVER
+class nsStreamTransportService final : public nsIStreamTransportService,
+                                       public nsIEventTarget,
+                                       public nsIObserver {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISTREAMTRANSPORTSERVICE
+  NS_DECL_NSIEVENTTARGET_FULL
+  NS_DECL_NSIOBSERVER
 
-    nsresult Init();
+  nsresult Init();
 
-    nsStreamTransportService() : mShutdownLock("nsStreamTransportService.mShutdownLock"),
-                                 mIsShutdown(false) {}
+  nsStreamTransportService()
+      : mShutdownLock("nsStreamTransportService.mShutdownLock"),
+        mIsShutdown(false) {}
 
-private:
-    ~nsStreamTransportService();
+ private:
+  ~nsStreamTransportService();
 
-    nsCOMPtr<nsIThreadPool> mPool;
+  nsCOMPtr<nsIThreadPool> mPool;
 
-    mozilla::Mutex mShutdownLock;
-    bool mIsShutdown;
+  mozilla::Mutex mShutdownLock;
+  bool mIsShutdown;
 };
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla
 #endif

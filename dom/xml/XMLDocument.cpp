@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "mozilla/dom/XMLDocument.h"
 #include "nsParserCIID.h"
 #include "nsCharsetSource.h"
@@ -56,19 +55,13 @@ using namespace mozilla::dom;
 // =
 // ==================================================================
 
-
-nsresult
-NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
-                  const nsAString& aNamespaceURI,
-                  const nsAString& aQualifiedName,
-                  DocumentType* aDoctype,
-                  nsIURI* aDocumentURI,
-                  nsIURI* aBaseURI,
-                  nsIPrincipal* aPrincipal,
-                  bool aLoadedAsData,
-                  nsIGlobalObject* aEventObject,
-                  DocumentFlavor aFlavor)
-{
+nsresult NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
+                           const nsAString& aNamespaceURI,
+                           const nsAString& aQualifiedName,
+                           DocumentType* aDoctype, nsIURI* aDocumentURI,
+                           nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
+                           bool aLoadedAsData, nsIGlobalObject* aEventObject,
+                           DocumentFlavor aFlavor) {
   // Note: can't require that aDocumentURI/aBaseURI/aPrincipal be non-null,
   // since at least one caller (XMLHttpRequest) doesn't have decent args to
   // pass in.
@@ -104,13 +97,13 @@ NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
       rv = NS_NewHTMLDocument(getter_AddRefs(d));
       isHTML = true;
     } else if (publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Strict//EN") ||
-               publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Transitional//EN") ||
+               publicId.EqualsLiteral(
+                   "-//W3C//DTD XHTML 1.0 Transitional//EN") ||
                publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Frameset//EN")) {
       rv = NS_NewHTMLDocument(getter_AddRefs(d));
       isHTML = true;
       isXHTML = true;
-    }
-    else if (publicId.EqualsLiteral("-//W3C//DTD SVG 1.1//EN")) {
+    } else if (publicId.EqualsLiteral("-//W3C//DTD SVG 1.1//EN")) {
       rv = NS_NewSVGDocument(getter_AddRefs(d));
     }
     // XXX Add support for XUL documents.
@@ -143,7 +136,7 @@ NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
   // that the doc group is assigned correctly.
   if (nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aEventObject)) {
     d->SetScriptHandlingObject(sgo);
-  } else if (aEventObject){
+  } else if (aEventObject) {
     d->SetScopeObject(aEventObject);
   }
 
@@ -169,7 +162,7 @@ NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
     options.SetAsString();
 
     nsCOMPtr<Element> root =
-      doc->CreateElementNS(aNamespaceURI, aQualifiedName, options, result);
+        doc->CreateElementNS(aNamespaceURI, aQualifiedName, options, result);
     if (NS_WARN_IF(result.Failed())) {
       return result.StealNSResult();
     }
@@ -189,10 +182,8 @@ NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
   return NS_OK;
 }
 
-nsresult
-NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData,
-                  bool aIsPlainDocument)
-{
+nsresult NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData,
+                           bool aIsPlainDocument) {
   RefPtr<XMLDocument> doc = new XMLDocument();
 
   nsresult rv = doc->Init();
@@ -209,17 +200,13 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData,
   return NS_OK;
 }
 
-nsresult
-NS_NewXBLDocument(nsIDocument** aInstancePtrResult,
-                  nsIURI* aDocumentURI,
-                  nsIURI* aBaseURI,
-                  nsIPrincipal* aPrincipal)
-{
-  nsresult rv = NS_NewDOMDocument(aInstancePtrResult,
-                                  NS_LITERAL_STRING("http://www.mozilla.org/xbl"),
-                                  NS_LITERAL_STRING("bindings"), nullptr,
-                                  aDocumentURI, aBaseURI, aPrincipal, false,
-                                  nullptr, DocumentFlavorLegacyGuess);
+nsresult NS_NewXBLDocument(nsIDocument** aInstancePtrResult,
+                           nsIURI* aDocumentURI, nsIURI* aBaseURI,
+                           nsIPrincipal* aPrincipal) {
+  nsresult rv = NS_NewDOMDocument(
+      aInstancePtrResult, NS_LITERAL_STRING("http://www.mozilla.org/xbl"),
+      NS_LITERAL_STRING("bindings"), nullptr, aDocumentURI, aBaseURI,
+      aPrincipal, false, nullptr, DocumentFlavorLegacyGuess);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIDocument* idoc = *aInstancePtrResult;
@@ -240,42 +227,34 @@ namespace mozilla {
 namespace dom {
 
 XMLDocument::XMLDocument(const char* aContentType)
-  : nsDocument(aContentType),
-    mChannelIsPending(false),
-    mAsync(true),
-    mLoopingForSyncLoad(false),
-    mIsPlainDocument(false),
-    mSuppressParserErrorElement(false),
-    mSuppressParserErrorConsoleMessages(false)
-{
+    : nsDocument(aContentType),
+      mChannelIsPending(false),
+      mAsync(true),
+      mLoopingForSyncLoad(false),
+      mIsPlainDocument(false),
+      mSuppressParserErrorElement(false),
+      mSuppressParserErrorConsoleMessages(false) {
   mType = eGenericXML;
 }
 
-XMLDocument::~XMLDocument()
-{
+XMLDocument::~XMLDocument() {
   // XXX We rather crash than hang
   mLoopingForSyncLoad = false;
 }
 
-nsresult
-XMLDocument::Init()
-{
+nsresult XMLDocument::Init() {
   nsresult rv = nsDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
 
-void
-XMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
-{
+void XMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
   nsDocument::Reset(aChannel, aLoadGroup);
 }
 
-void
-XMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
-                        nsIPrincipal* aPrincipal)
-{
+void XMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
+                             nsIPrincipal* aPrincipal) {
   if (mChannelIsPending) {
     StopDocumentLoad();
     mChannel->Cancel(NS_BINDING_ABORTED);
@@ -285,13 +264,11 @@ XMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
 }
 
-bool
-XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
-                  ErrorResult& aRv)
-{
+bool XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
+                       ErrorResult& aRv) {
   bool hasHadScriptObject = true;
   nsIScriptGlobalObject* scriptObject =
-    GetScriptHandlingObject(hasHadScriptObject);
+      GetScriptHandlingObject(hasHadScriptObject);
   if (!scriptObject && hasHadScriptObject) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return false;
@@ -302,11 +279,9 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
 
   // The callingDoc's Principal and doc's Principal should be the same
   if (callingDoc && (callingDoc->NodePrincipal() != principal)) {
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("DOM"),
-                                    callingDoc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "XMLDocumentLoadPrincipalMismatch");
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), callingDoc,
+        nsContentUtils::eDOM_PROPERTIES, "XMLDocumentLoadPrincipalMismatch");
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return false;
   }
@@ -324,7 +299,7 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
     docForWarning->WarnOnceAbout(nsIDocument::eUseOfDOM3LoadMethod);
   }
 
-  nsIURI *baseURI = mDocumentURI;
+  nsIURI* baseURI = mDocumentURI;
   nsAutoCString charset;
 
   if (callingDoc) {
@@ -346,10 +321,10 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
 
     bool isChrome = false;
     if (NS_FAILED(uri->SchemeIs("chrome", &isChrome)) || !isChrome) {
-
       nsAutoString error;
-      error.AssignLiteral("Cross site loading using document.load is no "
-                          "longer supported. Use XMLHttpRequest instead.");
+      error.AssignLiteral(
+          "Cross site loading using document.load is no "
+          "longer supported. Use XMLHttpRequest instead.");
       nsCOMPtr<nsIScriptError> errorObject =
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
       if (NS_FAILED(rv)) {
@@ -357,15 +332,10 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
         return false;
       }
 
-      rv = errorObject->InitWithSourceURI(error,
-                                          mDocumentURI,
-                                          EmptyString(),
-                                          0, 0,
-                                          nsIScriptError::warningFlag,
-                                          "DOM",
-                                          callingDoc ?
-                                          callingDoc->InnerWindowID() :
-                                          this->InnerWindowID());
+      rv = errorObject->InitWithSourceURI(
+          error, mDocumentURI, EmptyString(), 0, 0, nsIScriptError::warningFlag,
+          "DOM",
+          callingDoc ? callingDoc->InnerWindowID() : this->InnerWindowID());
 
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
@@ -373,7 +343,7 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
       }
 
       nsCOMPtr<nsIConsoleService> consoleService =
-        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+          do_GetService(NS_CONSOLESERVICE_CONTRACTID);
       if (consoleService) {
         consoleService->LogMessage(errorObject);
       }
@@ -412,16 +382,13 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
   nsCOMPtr<nsIChannel> channel;
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
   // which in turn keeps STOP button from becoming active
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     uri,
-                     callingDoc ? callingDoc.get() :
-                                  static_cast<nsIDocument*>(this),
-                     nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-                     nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                     nullptr, // aPerformanceStorage
-                     loadGroup,
-                     req,
-                     nsIRequest::LOAD_BACKGROUND);
+  rv = NS_NewChannel(
+      getter_AddRefs(channel), uri,
+      callingDoc ? callingDoc.get() : static_cast<nsIDocument*>(this),
+      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+      nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
+      nullptr,  // aPerformanceStorage
+      loadGroup, req, nsIRequest::LOAD_BACKGROUND);
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -433,7 +400,8 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
   // when Request.mode set correctly.
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(channel);
   if (httpChannel) {
-    rv = httpChannel->SetCorsMode(nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN);
+    rv =
+        httpChannel->SetCorsMode(nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -447,10 +415,8 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
 
   // Prepare for loading the XML document "into oneself"
   nsCOMPtr<nsIStreamListener> listener;
-  if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel,
-                                       loadGroup, nullptr,
-                                       getter_AddRefs(listener),
-                                       false))) {
+  if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel, loadGroup, nullptr,
+                                       getter_AddRefs(listener), false))) {
     NS_ERROR("XMLDocument::Load: Failed to start the document load.");
     aRv.Throw(rv);
     return false;
@@ -481,7 +447,8 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
     if (rootElement->LocalName().EqualsLiteral("parsererror")) {
       nsAutoString ns;
       rootElement->GetNamespaceURI(ns);
-      if (ns.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
+      if (ns.EqualsLiteral(
+              "http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
         return false;
       }
     }
@@ -490,50 +457,36 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
   return true;
 }
 
-void
-XMLDocument::SetSuppressParserErrorElement(bool aSuppress)
-{
+void XMLDocument::SetSuppressParserErrorElement(bool aSuppress) {
   mSuppressParserErrorElement = aSuppress;
 }
 
-bool
-XMLDocument::SuppressParserErrorElement()
-{
+bool XMLDocument::SuppressParserErrorElement() {
   return mSuppressParserErrorElement;
 }
 
-void
-XMLDocument::SetSuppressParserErrorConsoleMessages(bool aSuppress)
-{
+void XMLDocument::SetSuppressParserErrorConsoleMessages(bool aSuppress) {
   mSuppressParserErrorConsoleMessages = aSuppress;
 }
 
-bool
-XMLDocument::SuppressParserErrorConsoleMessages()
-{
+bool XMLDocument::SuppressParserErrorConsoleMessages() {
   return mSuppressParserErrorConsoleMessages;
 }
 
-nsresult
-XMLDocument::StartDocumentLoad(const char* aCommand,
-                               nsIChannel* aChannel,
-                               nsILoadGroup* aLoadGroup,
-                               nsISupports* aContainer,
-                               nsIStreamListener **aDocListener,
-                               bool aReset,
-                               nsIContentSink* aSink)
-{
-  nsresult rv = nsDocument::StartDocumentLoad(aCommand,
-                                              aChannel, aLoadGroup,
-                                              aContainer,
-                                              aDocListener, aReset, aSink);
+nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
+                                        nsIChannel* aChannel,
+                                        nsILoadGroup* aLoadGroup,
+                                        nsISupports* aContainer,
+                                        nsIStreamListener** aDocListener,
+                                        bool aReset, nsIContentSink* aSink) {
+  nsresult rv = nsDocument::StartDocumentLoad(
+      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
 
   if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
     mLoadedAsInteractiveData = true;
-    aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
+    aCommand = kLoadAsData;  // XBL, for example, needs scripts and styles
   }
-
 
   int32_t charsetSource = kCharsetFromDocTypeDefault;
   NotNull<const Encoding*> encoding = UTF_8_ENCODING;
@@ -552,8 +505,7 @@ XMLDocument::StartDocumentLoad(const char* aCommand,
 
   if (aSink) {
     sink = do_QueryInterface(aSink);
-  }
-  else {
+  } else {
     nsCOMPtr<nsIDocShell> docShell;
     if (aContainer) {
       docShell = do_QueryInterface(aContainer);
@@ -575,14 +527,12 @@ XMLDocument::StartDocumentLoad(const char* aCommand,
   mParser->SetDocumentCharset(encoding, charsetSource);
   mParser->SetCommand(aCommand);
   mParser->SetContentSink(sink);
-  mParser->Parse(aUrl, nullptr, (void *)this);
+  mParser->Parse(aUrl, nullptr, (void*)this);
 
   return NS_OK;
 }
 
-void
-XMLDocument::EndLoad()
-{
+void XMLDocument::EndLoad() {
   mChannelIsPending = false;
   mLoopingForSyncLoad = false;
 
@@ -599,17 +549,14 @@ XMLDocument::EndLoad()
   }
 }
 
-/* virtual */ void
-XMLDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
-{
+/* virtual */ void XMLDocument::DocAddSizeOfExcludingThis(
+    nsWindowSizes& aWindowSizes) const {
   nsDocument::DocAddSizeOfExcludingThis(aWindowSizes);
 }
 
 // nsIDocument interface
 
-nsresult
-XMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
-{
+nsresult XMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
@@ -625,9 +572,8 @@ XMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
   return NS_OK;
 }
 
-JSObject*
-XMLDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* XMLDocument::WrapNode(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   if (mIsPlainDocument) {
     return Document_Binding::Wrap(aCx, this, aGivenProto);
   }
@@ -635,5 +581,5 @@ XMLDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return XMLDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

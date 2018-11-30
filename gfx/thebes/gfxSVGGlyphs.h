@@ -25,8 +25,8 @@ namespace mozilla {
 class SVGContextPaint;
 namespace dom {
 class Element;
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 /**
  * Wraps an SVG document contained in the SVG table of an OpenType font.
@@ -36,40 +36,39 @@ class Element;
  * Finds and looks up elements contained in the SVG document which have glyph
  *   mappings to be drawn by gfxSVGGlyphs
  */
-class gfxSVGGlyphsDocument final : public nsAPostRefreshObserver
-{
-    typedef mozilla::dom::Element Element;
+class gfxSVGGlyphsDocument final : public nsAPostRefreshObserver {
+  typedef mozilla::dom::Element Element;
 
-public:
-    gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen,
-                         gfxSVGGlyphs *aSVGGlyphs);
+ public:
+  gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen,
+                       gfxSVGGlyphs *aSVGGlyphs);
 
-    Element *GetGlyphElement(uint32_t aGlyphId);
+  Element *GetGlyphElement(uint32_t aGlyphId);
 
-    ~gfxSVGGlyphsDocument();
+  ~gfxSVGGlyphsDocument();
 
-    virtual void DidRefresh() override;
+  virtual void DidRefresh() override;
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
-    nsresult ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen);
+ private:
+  nsresult ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen);
 
-    nsresult SetupPresentation();
+  nsresult SetupPresentation();
 
-    void FindGlyphElements(Element *aElement);
+  void FindGlyphElements(Element *aElement);
 
-    void InsertGlyphId(Element *aGlyphElement);
+  void InsertGlyphId(Element *aGlyphElement);
 
-    // Weak so as not to create a cycle. mOwner owns us so this can't dangle.
-    gfxSVGGlyphs* mOwner;
-    nsCOMPtr<nsIDocument> mDocument;
-    nsCOMPtr<nsIContentViewer> mViewer;
-    nsCOMPtr<nsIPresShell> mPresShell;
+  // Weak so as not to create a cycle. mOwner owns us so this can't dangle.
+  gfxSVGGlyphs *mOwner;
+  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsIContentViewer> mViewer;
+  nsCOMPtr<nsIPresShell> mPresShell;
 
-    nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
+  nsBaseHashtable<nsUint32HashKey, Element *, Element *> mGlyphIdMap;
 
-    nsCString mSVGGlyphsDocumentURI;
+  nsCString mSVGGlyphsDocumentURI;
 };
 
 /**
@@ -78,91 +77,91 @@ private:
  *   and rendering SVG glyphs.
  * Each |gfxFontEntry| owns at most one |gfxSVGGlyphs| instance.
  */
-class gfxSVGGlyphs
-{
-private:
-    typedef mozilla::dom::Element Element;
+class gfxSVGGlyphs {
+ private:
+  typedef mozilla::dom::Element Element;
 
-public:
-    /**
-     * @param aSVGTable The SVG table from the OpenType font
-     *
-     * The gfxSVGGlyphs object takes over ownership of the blob references
-     * that are passed in, and will hb_blob_destroy() them when finished;
-     * the caller should -not- destroy these references.
-     */
-    gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry);
+ public:
+  /**
+   * @param aSVGTable The SVG table from the OpenType font
+   *
+   * The gfxSVGGlyphs object takes over ownership of the blob references
+   * that are passed in, and will hb_blob_destroy() them when finished;
+   * the caller should -not- destroy these references.
+   */
+  gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry);
 
-    /**
-     * Releases our references to the SVG table and cleans up everything else.
-     */
-    ~gfxSVGGlyphs();
+  /**
+   * Releases our references to the SVG table and cleans up everything else.
+   */
+  ~gfxSVGGlyphs();
 
-    /**
-     * This is called when the refresh driver has ticked.
-     */
-    void DidRefresh();
+  /**
+   * This is called when the refresh driver has ticked.
+   */
+  void DidRefresh();
 
-    /**
-     * Find the |gfxSVGGlyphsDocument| containing an SVG glyph for |aGlyphId|.
-     * If |aGlyphId| does not map to an SVG document, return null.
-     * If a |gfxSVGGlyphsDocument| has not been created for the document, create one.
-     */
-    gfxSVGGlyphsDocument *FindOrCreateGlyphsDocument(uint32_t aGlyphId);
+  /**
+   * Find the |gfxSVGGlyphsDocument| containing an SVG glyph for |aGlyphId|.
+   * If |aGlyphId| does not map to an SVG document, return null.
+   * If a |gfxSVGGlyphsDocument| has not been created for the document, create
+   * one.
+   */
+  gfxSVGGlyphsDocument *FindOrCreateGlyphsDocument(uint32_t aGlyphId);
 
-    /**
-     * Return true iff there is an SVG glyph for |aGlyphId|
-     */
-    bool HasSVGGlyph(uint32_t aGlyphId);
+  /**
+   * Return true iff there is an SVG glyph for |aGlyphId|
+   */
+  bool HasSVGGlyph(uint32_t aGlyphId);
 
-    /**
-     * Render the SVG glyph for |aGlyphId|
-     * @param aContextPaint Information on text context paints.
-     *   See |SVGContextPaint|.
-     */
-    void RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
-                     mozilla::SVGContextPaint* aContextPaint);
+  /**
+   * Render the SVG glyph for |aGlyphId|
+   * @param aContextPaint Information on text context paints.
+   *   See |SVGContextPaint|.
+   */
+  void RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
+                   mozilla::SVGContextPaint *aContextPaint);
 
-    /**
-     * Get the extents for the SVG glyph associated with |aGlyphId|
-     * @param aSVGToAppSpace The matrix mapping the SVG glyph space to the
-     *   target context space
-     */
-    bool GetGlyphExtents(uint32_t aGlyphId, const gfxMatrix& aSVGToAppSpace,
-                         gfxRect *aResult);
+  /**
+   * Get the extents for the SVG glyph associated with |aGlyphId|
+   * @param aSVGToAppSpace The matrix mapping the SVG glyph space to the
+   *   target context space
+   */
+  bool GetGlyphExtents(uint32_t aGlyphId, const gfxMatrix &aSVGToAppSpace,
+                       gfxRect *aResult);
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
-    Element *GetGlyphElement(uint32_t aGlyphId);
+ private:
+  Element *GetGlyphElement(uint32_t aGlyphId);
 
-    nsClassHashtable<nsUint32HashKey, gfxSVGGlyphsDocument> mGlyphDocs;
-    nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
+  nsClassHashtable<nsUint32HashKey, gfxSVGGlyphsDocument> mGlyphDocs;
+  nsBaseHashtable<nsUint32HashKey, Element *, Element *> mGlyphIdMap;
 
-    hb_blob_t *mSVGData;
+  hb_blob_t *mSVGData;
 
-    // pointer to the font entry that owns this gfxSVGGlyphs object
-    gfxFontEntry* MOZ_NON_OWNING_REF mFontEntry;
+  // pointer to the font entry that owns this gfxSVGGlyphs object
+  gfxFontEntry *MOZ_NON_OWNING_REF mFontEntry;
 
-    const struct Header {
-        mozilla::AutoSwap_PRUint16 mVersion;
-        mozilla::AutoSwap_PRUint32 mDocIndexOffset;
-        mozilla::AutoSwap_PRUint32 mColorPalettesOffset;
-    } *mHeader;
+  const struct Header {
+    mozilla::AutoSwap_PRUint16 mVersion;
+    mozilla::AutoSwap_PRUint32 mDocIndexOffset;
+    mozilla::AutoSwap_PRUint32 mColorPalettesOffset;
+  } * mHeader;
 
-    struct IndexEntry {
-        mozilla::AutoSwap_PRUint16 mStartGlyph;
-        mozilla::AutoSwap_PRUint16 mEndGlyph;
-        mozilla::AutoSwap_PRUint32 mDocOffset;
-        mozilla::AutoSwap_PRUint32 mDocLength;
-    };
+  struct IndexEntry {
+    mozilla::AutoSwap_PRUint16 mStartGlyph;
+    mozilla::AutoSwap_PRUint16 mEndGlyph;
+    mozilla::AutoSwap_PRUint32 mDocOffset;
+    mozilla::AutoSwap_PRUint32 mDocLength;
+  };
 
-    const struct DocIndex {
-      mozilla::AutoSwap_PRUint16 mNumEntries;
-      IndexEntry mEntries[1]; /* actual length = mNumEntries */
-    } *mDocIndex;
+  const struct DocIndex {
+    mozilla::AutoSwap_PRUint16 mNumEntries;
+    IndexEntry mEntries[1]; /* actual length = mNumEntries */
+  } * mDocIndex;
 
-    static int CompareIndexEntries(const void *_a, const void *_b);
+  static int CompareIndexEntries(const void *_a, const void *_b);
 };
 
 /**
@@ -176,73 +175,65 @@ private:
  * Moz2D the less likely it is that this hack will work.  It will also make
  * converting to Moz2D harder.
  */
-class SimpleTextContextPaint : public mozilla::SVGContextPaint
-{
-private:
-    static const mozilla::gfx::Color sZero;
+class SimpleTextContextPaint : public mozilla::SVGContextPaint {
+ private:
+  static const mozilla::gfx::Color sZero;
 
-    static gfxMatrix SetupDeviceToPatternMatrix(gfxPattern *aPattern,
-                                                const gfxMatrix& aCTM)
-    {
-        if (!aPattern) {
-            return gfxMatrix();
-        }
-        gfxMatrix deviceToUser = aCTM;
-        if (!deviceToUser.Invert()) {
-            return gfxMatrix(0, 0, 0, 0, 0, 0); // singular
-        }
-        return deviceToUser * aPattern->GetMatrix();
+  static gfxMatrix SetupDeviceToPatternMatrix(gfxPattern *aPattern,
+                                              const gfxMatrix &aCTM) {
+    if (!aPattern) {
+      return gfxMatrix();
     }
-
-public:
-    SimpleTextContextPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern,
-                          const gfxMatrix& aCTM) :
-        mFillPattern(aFillPattern ? aFillPattern : new gfxPattern(sZero)),
-        mStrokePattern(aStrokePattern ? aStrokePattern : new gfxPattern(sZero))
-    {
-        mFillMatrix = SetupDeviceToPatternMatrix(aFillPattern, aCTM);
-        mStrokeMatrix = SetupDeviceToPatternMatrix(aStrokePattern, aCTM);
+    gfxMatrix deviceToUser = aCTM;
+    if (!deviceToUser.Invert()) {
+      return gfxMatrix(0, 0, 0, 0, 0, 0);  // singular
     }
+    return deviceToUser * aPattern->GetMatrix();
+  }
 
-    already_AddRefed<gfxPattern>
-    GetFillPattern(const DrawTarget* aDrawTarget,
-                   float aOpacity,
-                   const gfxMatrix& aCTM,
-                   imgDrawingParams& aImgParams) override {
-        if (mFillPattern) {
-            mFillPattern->SetMatrix(aCTM * mFillMatrix);
-        }
-        RefPtr<gfxPattern> fillPattern = mFillPattern;
-        return fillPattern.forget();
+ public:
+  SimpleTextContextPaint(gfxPattern *aFillPattern, gfxPattern *aStrokePattern,
+                         const gfxMatrix &aCTM)
+      : mFillPattern(aFillPattern ? aFillPattern : new gfxPattern(sZero)),
+        mStrokePattern(aStrokePattern ? aStrokePattern
+                                      : new gfxPattern(sZero)) {
+    mFillMatrix = SetupDeviceToPatternMatrix(aFillPattern, aCTM);
+    mStrokeMatrix = SetupDeviceToPatternMatrix(aStrokePattern, aCTM);
+  }
+
+  already_AddRefed<gfxPattern> GetFillPattern(
+      const DrawTarget *aDrawTarget, float aOpacity, const gfxMatrix &aCTM,
+      imgDrawingParams &aImgParams) override {
+    if (mFillPattern) {
+      mFillPattern->SetMatrix(aCTM * mFillMatrix);
     }
+    RefPtr<gfxPattern> fillPattern = mFillPattern;
+    return fillPattern.forget();
+  }
 
-    already_AddRefed<gfxPattern>
-    GetStrokePattern(const DrawTarget* aDrawTarget,
-                     float aOpacity,
-                     const gfxMatrix& aCTM,
-                     imgDrawingParams& aImgParams) override {
-        if (mStrokePattern) {
-            mStrokePattern->SetMatrix(aCTM * mStrokeMatrix);
-        }
-        RefPtr<gfxPattern> strokePattern = mStrokePattern;
-        return strokePattern.forget();
+  already_AddRefed<gfxPattern> GetStrokePattern(
+      const DrawTarget *aDrawTarget, float aOpacity, const gfxMatrix &aCTM,
+      imgDrawingParams &aImgParams) override {
+    if (mStrokePattern) {
+      mStrokePattern->SetMatrix(aCTM * mStrokeMatrix);
     }
+    RefPtr<gfxPattern> strokePattern = mStrokePattern;
+    return strokePattern.forget();
+  }
 
-    float GetFillOpacity() const override {
-        return mFillPattern ? 1.0f : 0.0f;
-    }
+  float GetFillOpacity() const override { return mFillPattern ? 1.0f : 0.0f; }
 
-    float GetStrokeOpacity() const override {
-        return mStrokePattern ? 1.0f : 0.0f;
-    }
+  float GetStrokeOpacity() const override {
+    return mStrokePattern ? 1.0f : 0.0f;
+  }
 
-private:
-    RefPtr<gfxPattern> mFillPattern;
-    RefPtr<gfxPattern> mStrokePattern;
+ private:
+  RefPtr<gfxPattern> mFillPattern;
+  RefPtr<gfxPattern> mStrokePattern;
 
-    // Device space to pattern space transforms
-    gfxMatrix mFillMatrix;
-    gfxMatrix mStrokeMatrix;
+  // Device space to pattern space transforms
+  gfxMatrix mFillMatrix;
+  gfxMatrix mStrokeMatrix;
 };
 
 #endif

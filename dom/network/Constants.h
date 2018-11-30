@@ -14,12 +14,12 @@ namespace mozilla {
 namespace dom {
 namespace network {
 
-  static const uint32_t kDefaultType = 5; // ConnectionType::None
-  static const bool   kDefaultIsWifi = false;
-  static const uint32_t kDefaultDHCPGateway = 0;
+static const uint32_t kDefaultType = 5;  // ConnectionType::None
+static const bool kDefaultIsWifi = false;
+static const uint32_t kDefaultDHCPGateway = 0;
 
-} // namespace network
-} // namespace dom
-} // namespace mozilla
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_network_Constants_h__
+#endif  // mozilla_dom_network_Constants_h__

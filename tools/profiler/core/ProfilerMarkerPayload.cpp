@@ -16,31 +16,24 @@
 
 using namespace mozilla;
 
-static void MOZ_ALWAYS_INLINE
-WriteTime(SpliceableJSONWriter& aWriter,
-          const TimeStamp& aProcessStartTime,
-          const TimeStamp& aTime, const char *aName)
-{
+static void MOZ_ALWAYS_INLINE WriteTime(SpliceableJSONWriter& aWriter,
+                                        const TimeStamp& aProcessStartTime,
+                                        const TimeStamp& aTime,
+                                        const char* aName) {
   if (!aTime.IsNull()) {
-    aWriter.DoubleProperty(aName,
-                           (aTime - aProcessStartTime).ToMilliseconds());
+    aWriter.DoubleProperty(aName, (aTime - aProcessStartTime).ToMilliseconds());
   }
 }
 
-void
-ProfilerMarkerPayload::StreamType(const char* aMarkerType,
-                                  SpliceableJSONWriter& aWriter)
-{
+void ProfilerMarkerPayload::StreamType(const char* aMarkerType,
+                                       SpliceableJSONWriter& aWriter) {
   MOZ_ASSERT(aMarkerType);
   aWriter.StringProperty("type", aMarkerType);
 }
 
-void
-ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
-                                         SpliceableJSONWriter& aWriter,
-                                         const TimeStamp& aProcessStartTime,
-                                         UniqueStacks& aUniqueStacks)
-{
+void ProfilerMarkerPayload::StreamCommonProps(
+    const char* aMarkerType, SpliceableJSONWriter& aWriter,
+    const TimeStamp& aProcessStartTime, UniqueStacks& aUniqueStacks) {
   StreamType(aMarkerType, aWriter);
   WriteTime(aWriter, aProcessStartTime, mStartTime, "startTime");
   WriteTime(aWriter, aProcessStartTime, mEndTime, "endTime");
@@ -52,18 +45,14 @@ ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
   }
   if (mStack) {
     aWriter.StartObjectProperty("stack");
-    {
-      mStack->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
-    }
+    { mStack->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks); }
     aWriter.EndObject();
   }
 }
 
-void
-TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const TimeStamp& aProcessStartTime,
-                                    UniqueStacks& aUniqueStacks)
-{
+void TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                         const TimeStamp& aProcessStartTime,
+                                         UniqueStacks& aUniqueStacks) {
   StreamCommonProps("tracing", aWriter, aProcessStartTime, aUniqueStacks);
 
   if (mCategory) {
@@ -77,11 +66,9 @@ TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-void
-IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                               const TimeStamp& aProcessStartTime,
-                               UniqueStacks& aUniqueStacks)
-{
+void IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                    const TimeStamp& aProcessStartTime,
+                                    UniqueStacks& aUniqueStacks) {
   StreamCommonProps("io", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("source", mSource);
   if (mFilename) {
@@ -89,43 +76,40 @@ IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-void
-UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                       const TimeStamp& aProcessStartTime,
-                                       UniqueStacks& aUniqueStacks)
-{
+void UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                            const TimeStamp& aProcessStartTime,
+                                            UniqueStacks& aUniqueStacks) {
   StreamCommonProps("UserTiming", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(mName).get());
   aWriter.StringProperty("entryType", mEntryType);
 
   if (mStartMark.isSome()) {
-    aWriter.StringProperty("startMark", NS_ConvertUTF16toUTF8(mStartMark.value()).get());
+    aWriter.StringProperty("startMark",
+                           NS_ConvertUTF16toUTF8(mStartMark.value()).get());
   } else {
     aWriter.NullProperty("startMark");
   }
   if (mEndMark.isSome()) {
-    aWriter.StringProperty("endMark", NS_ConvertUTF16toUTF8(mEndMark.value()).get());
+    aWriter.StringProperty("endMark",
+                           NS_ConvertUTF16toUTF8(mEndMark.value()).get());
   } else {
     aWriter.NullProperty("endMark");
   }
 }
 
-void
-DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                     const TimeStamp& aProcessStartTime,
-                                     UniqueStacks& aUniqueStacks)
-{
-  TracingMarkerPayload::StreamPayload(aWriter, aProcessStartTime, aUniqueStacks);
+void DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                          const TimeStamp& aProcessStartTime,
+                                          UniqueStacks& aUniqueStacks) {
+  TracingMarkerPayload::StreamPayload(aWriter, aProcessStartTime,
+                                      aUniqueStacks);
 
   WriteTime(aWriter, aProcessStartTime, mTimeStamp, "timeStamp");
   aWriter.StringProperty("eventType", NS_ConvertUTF16toUTF8(mEventType).get());
 }
 
-void
-LayerTranslationMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                             const TimeStamp& aProcessStartTime,
-                                             UniqueStacks& aUniqueStacks)
-{
+void LayerTranslationMarkerPayload::StreamPayload(
+    SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime,
+    UniqueStacks& aUniqueStacks) {
   StreamType("LayerTranslation", aWriter);
   const size_t bufferSize = 32;
   char buffer[bufferSize];
@@ -136,16 +120,13 @@ LayerTranslationMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("y", mPoint.y);
 }
 
-void
-VsyncMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                  const TimeStamp& aProcessStartTime,
-                                  UniqueStacks& aUniqueStacks)
-{
+void VsyncMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                       const TimeStamp& aProcessStartTime,
+                                       UniqueStacks& aUniqueStacks) {
   StreamType("VsyncTimestamp", aWriter);
 }
 
-static const char *GetNetworkState(NetworkLoadType aType)
-{
+static const char* GetNetworkState(NetworkLoadType aType) {
   switch (aType) {
     case NetworkLoadType::LOAD_START:
       return "STATUS_START";
@@ -157,8 +138,8 @@ static const char *GetNetworkState(NetworkLoadType aType)
   return "";
 }
 
-static const char *GetCacheState(mozilla::net::CacheDisposition aCacheDisposition)
-{
+static const char* GetCacheState(
+    mozilla::net::CacheDisposition aCacheDisposition) {
   switch (aCacheDisposition) {
     case mozilla::net::kCacheUnresolved:
       return "Unresolved";
@@ -177,16 +158,15 @@ static const char *GetCacheState(mozilla::net::CacheDisposition aCacheDispositio
   return nullptr;
 }
 
-void
-NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const TimeStamp& aProcessStartTime,
-                                    UniqueStacks& aUniqueStacks)
-{
+void NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                         const TimeStamp& aProcessStartTime,
+                                         UniqueStacks& aUniqueStacks) {
   StreamCommonProps("Network", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.IntProperty("id", mID);
-  const char *typeString = GetNetworkState(mType);
-  const char *cacheString = GetCacheState(mCacheDisposition);
-  // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter, typeString);
+  const char* typeString = GetNetworkState(mType);
+  const char* cacheString = GetCacheState(mCacheDisposition);
+  // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter,
+  // typeString);
   aWriter.StringProperty("status", typeString);
   if (cacheString) {
     aWriter.StringProperty("cache", cacheString);
@@ -202,25 +182,31 @@ NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
     aWriter.StringProperty("RedirectURI", mRedirectURI.get());
   }
   if (mType != NetworkLoadType::LOAD_START) {
-    WriteTime(aWriter, aProcessStartTime, mTimings.domainLookupStart, "domainLookupStart");
-    WriteTime(aWriter, aProcessStartTime, mTimings.domainLookupEnd, "domainLookupEnd");
-    WriteTime(aWriter, aProcessStartTime, mTimings.connectStart, "connectStart");
-    WriteTime(aWriter, aProcessStartTime, mTimings.tcpConnectEnd, "tcpConnectEnd");
-    WriteTime(aWriter, aProcessStartTime, mTimings.secureConnectionStart, "secureConnectionStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.domainLookupStart,
+              "domainLookupStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.domainLookupEnd,
+              "domainLookupEnd");
+    WriteTime(aWriter, aProcessStartTime, mTimings.connectStart,
+              "connectStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.tcpConnectEnd,
+              "tcpConnectEnd");
+    WriteTime(aWriter, aProcessStartTime, mTimings.secureConnectionStart,
+              "secureConnectionStart");
     WriteTime(aWriter, aProcessStartTime, mTimings.connectEnd, "connectEnd");
-    WriteTime(aWriter, aProcessStartTime, mTimings.requestStart, "requestStart");
-    WriteTime(aWriter, aProcessStartTime, mTimings.responseStart, "responseStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.requestStart,
+              "requestStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.responseStart,
+              "responseStart");
     WriteTime(aWriter, aProcessStartTime, mTimings.responseEnd, "responseEnd");
   }
 }
 
-void
-ScreenshotPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                  const TimeStamp& aProcessStartTime,
-                                  UniqueStacks& aUniqueStacks)
-{
+void ScreenshotPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                      const TimeStamp& aProcessStartTime,
+                                      UniqueStacks& aUniqueStacks) {
   StreamType("CompositorScreenshot", aWriter);
-  aUniqueStacks.mUniqueStrings->WriteProperty(aWriter, "url", mScreenshotDataURL.get());
+  aUniqueStacks.mUniqueStrings->WriteProperty(aWriter, "url",
+                                              mScreenshotDataURL.get());
 
   char hexWindowID[32];
   SprintfLiteral(hexWindowID, "0x%" PRIXPTR, mWindowIdentifier);
@@ -229,11 +215,9 @@ ScreenshotPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.DoubleProperty("windowHeight", mWindowSize.height);
 }
 
-void
-GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const TimeStamp& aProcessStartTime,
-                                    UniqueStacks& aUniqueStacks)
-{
+void GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                         const TimeStamp& aProcessStartTime,
+                                         UniqueStacks& aUniqueStacks) {
   MOZ_ASSERT(mTimingJSON);
   StreamCommonProps("GCSlice", aWriter, aProcessStartTime, aUniqueStacks);
   if (mTimingJSON) {
@@ -243,11 +227,9 @@ GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-void
-GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const TimeStamp& aProcessStartTime,
-                                    UniqueStacks& aUniqueStacks)
-{
+void GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                         const TimeStamp& aProcessStartTime,
+                                         UniqueStacks& aUniqueStacks) {
   MOZ_ASSERT(mTimingJSON);
   StreamCommonProps("GCMajor", aWriter, aProcessStartTime, aUniqueStacks);
   if (mTimingJSON) {
@@ -257,11 +239,9 @@ GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-void
-GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const TimeStamp& aProcessStartTime,
-                                    UniqueStacks& aUniqueStacks)
-{
+void GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                         const TimeStamp& aProcessStartTime,
+                                         UniqueStacks& aUniqueStacks) {
   MOZ_ASSERT(mTimingData);
   StreamCommonProps("GCMinor", aWriter, aProcessStartTime, aUniqueStacks);
   if (mTimingData) {
@@ -271,19 +251,16 @@ GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-void
-HangMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                 const TimeStamp& aProcessStartTime,
-                                 UniqueStacks& aUniqueStacks)
-{
-  StreamCommonProps("BHR-detected hang", aWriter, aProcessStartTime, aUniqueStacks);
+void HangMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                      const TimeStamp& aProcessStartTime,
+                                      UniqueStacks& aUniqueStacks) {
+  StreamCommonProps("BHR-detected hang", aWriter, aProcessStartTime,
+                    aUniqueStacks);
 }
 
-void
-StyleMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                  const TimeStamp& aProcessStartTime,
-                                  UniqueStacks& aUniqueStacks)
-{
+void StyleMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                       const TimeStamp& aProcessStartTime,
+                                       UniqueStacks& aUniqueStacks) {
   StreamCommonProps("Styles", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("category", "Paint");
   aWriter.IntProperty("elementsTraversed", mStats.mElementsTraversed);
@@ -293,11 +270,10 @@ StyleMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("stylesReused", mStats.mStylesReused);
 }
 
-void
-LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                     const TimeStamp& aProcessStartTime,
-                                     UniqueStacks& aUniqueStacks)
-{
-  StreamCommonProps("MainThreadLongTask", aWriter, aProcessStartTime, aUniqueStacks);
+void LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                          const TimeStamp& aProcessStartTime,
+                                          UniqueStacks& aUniqueStacks) {
+  StreamCommonProps("MainThreadLongTask", aWriter, aProcessStartTime,
+                    aUniqueStacks);
   aWriter.StringProperty("category", "LongTask");
 }

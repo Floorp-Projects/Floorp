@@ -6,7 +6,8 @@
 #ifndef mozilla_windowscfgstatus_h
 #define mozilla_windowscfgstatus_h
 
-#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64))
+#if defined(_MSC_VER) && \
+    (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64))
 
 #include <windows.h>
 #include "mozilla/Attributes.h"
@@ -26,8 +27,7 @@ extern "C" {
  * It will never return true.
  */
 MFBT_API bool CFG_DisabledOrCrash();
-
 }
 
-#endif // defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
-#endif // mozilla_windowscfgstatus_h
+#endif  // defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#endif  // mozilla_windowscfgstatus_h

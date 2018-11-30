@@ -28,18 +28,15 @@
 
 class ClearKeyDecryptor;
 
-class CryptoMetaData
-{
-public:
+class CryptoMetaData {
+ public:
   CryptoMetaData() {}
 
-  explicit CryptoMetaData(const cdm::InputBuffer_1* aInputBuffer)
-  {
+  explicit CryptoMetaData(const cdm::InputBuffer_1* aInputBuffer) {
     Init(aInputBuffer);
   }
 
-  void Init(const cdm::InputBuffer_1* aInputBuffer)
-  {
+  void Init(const cdm::InputBuffer_1* aInputBuffer) {
     if (!aInputBuffer) {
       assert(!IsValid());
       return;
@@ -57,9 +54,7 @@ public:
   }
 
   bool IsValid() const {
-    return !mKeyId.empty() &&
-           !mIV.empty() &&
-           !mCipherBytes.empty() &&
+    return !mKeyId.empty() && !mIV.empty() && !mCipherBytes.empty() &&
            !mClearBytes.empty();
   }
 
@@ -74,15 +69,14 @@ public:
   std::vector<uint32_t> mCipherBytes;
 };
 
-class ClearKeyDecryptionManager : public RefCounted
-{
-private:
+class ClearKeyDecryptionManager : public RefCounted {
+ private:
   ClearKeyDecryptionManager();
   ~ClearKeyDecryptionManager();
 
   static ClearKeyDecryptionManager* sInstance;
 
-public:
+ public:
   static ClearKeyDecryptionManager* Get();
 
   bool HasSeenKeyId(const KeyId& aKeyId) const;
@@ -101,10 +95,10 @@ public:
   cdm::Status Decrypt(std::vector<uint8_t>& aBuffer,
                       const CryptoMetaData& aMetadata);
 
-private:
+ private:
   bool IsExpectingKeyForKeyId(const KeyId& aKeyId) const;
 
   std::map<KeyId, ClearKeyDecryptor*> mDecryptors;
 };
 
-#endif // __ClearKeyDecryptionManager_h__
+#endif  // __ClearKeyDecryptionManager_h__

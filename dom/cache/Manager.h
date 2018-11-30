@@ -62,9 +62,8 @@ class StreamList;
 // As an invariant, all Manager objects must cease all IO before shutdown.  This
 // is enforced by the Manager::Factory.  If content still holds references to
 // Cache DOM objects during shutdown, then all operations will begin rejecting.
-class Manager final
-{
-public:
+class Manager final {
+ public:
   // Callback interface implemented by clients of Manager, such as CacheParent
   // and CacheStorageParent.  In general, if you call a Manager method you
   // should expect to receive exactly one On*() callback.  For example, if
@@ -84,49 +83,38 @@ public:
   //
   // All public methods should be invoked on the same thread used to create
   // the Manager.
-  class Listener
-  {
-  public:
+  class Listener {
+   public:
     // convenience routines
-    void
-    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult);
+    void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult);
 
-    void
-    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
-                 CacheId aOpenedCacheId);
+    void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                      CacheId aOpenedCacheId);
 
-    void
-    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
-                 const SavedResponse& aSavedResponse,
-                 StreamList* aStreamList);
+    void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                      const SavedResponse& aSavedResponse,
+                      StreamList* aStreamList);
 
-    void
-    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
-                 const nsTArray<SavedResponse>& aSavedResponseList,
-                 StreamList* aStreamList);
+    void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                      const nsTArray<SavedResponse>& aSavedResponseList,
+                      StreamList* aStreamList);
 
-    void
-    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
-                 const nsTArray<SavedRequest>& aSavedRequestList,
-                 StreamList* aStreamList);
+    void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                      const nsTArray<SavedRequest>& aSavedRequestList,
+                      StreamList* aStreamList);
 
     // interface to be implemented
-    virtual void
-    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
-                 CacheId aOpenedCacheId,
-                 const nsTArray<SavedResponse>& aSavedResponseList,
-                 const nsTArray<SavedRequest>& aSavedRequestList,
-                 StreamList* aStreamList) { }
+    virtual void OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                              CacheId aOpenedCacheId,
+                              const nsTArray<SavedResponse>& aSavedResponseList,
+                              const nsTArray<SavedRequest>& aSavedRequestList,
+                              StreamList* aStreamList) {}
 
-  protected:
-    ~Listener() { }
+   protected:
+    ~Listener() {}
   };
 
-  enum State
-  {
-    Open,
-    Closing
-  };
+  enum State { Open, Closing };
 
   static nsresult GetOrCreate(ManagerId* aManagerId, Manager** aManagerOut);
   static already_AddRefed<Manager> Get(ManagerId* aManagerId);
@@ -169,10 +157,11 @@ public:
 
   void ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
                       const CacheOpArgs& aOpArgs);
-  void ExecutePutAll(Listener* aListener, CacheId aCacheId,
-                     const nsTArray<CacheRequestResponse>& aPutList,
-                     const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreamList,
-                     const nsTArray<nsCOMPtr<nsIInputStream>>& aResponseStreamList);
+  void ExecutePutAll(
+      Listener* aListener, CacheId aCacheId,
+      const nsTArray<CacheRequestResponse>& aPutList,
+      const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreamList,
+      const nsTArray<nsCOMPtr<nsIInputStream>>& aResponseStreamList);
 
   void ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
                         const CacheOpArgs& aOpArgs);
@@ -180,11 +169,10 @@ public:
   void ExecuteOpenStream(Listener* aListener, InputStreamResolver&& aResolver,
                          const nsID& aBodyId);
 
-  void
-  NoteStreamOpenComplete(const nsID& aBodyId, ErrorResult&& aRv,
-                         nsCOMPtr<nsIInputStream>&& aBodyStream);
+  void NoteStreamOpenComplete(const nsID& aBodyId, ErrorResult&& aRv,
+                              nsCOMPtr<nsIInputStream>&& aBodyStream);
 
-private:
+ private:
   class Factory;
   class BaseAction;
   class DeleteOrphanedCacheAction;
@@ -228,38 +216,26 @@ private:
   Context* MOZ_NON_OWNING_REF mContext;
 
   // Weak references cleared by RemoveListener() in Listener destructors.
-  struct ListenerEntry
-  {
-    ListenerEntry()
-      : mId(UINT64_MAX)
-      , mListener(nullptr)
-    {
-    }
+  struct ListenerEntry {
+    ListenerEntry() : mId(UINT64_MAX), mListener(nullptr) {}
 
     ListenerEntry(ListenerId aId, Listener* aListener)
-      : mId(aId)
-      , mListener(aListener)
-    {
-    }
+        : mId(aId), mListener(aListener) {}
 
     ListenerId mId;
     Listener* mListener;
   };
 
-  class ListenerEntryIdComparator
-  {
-  public:
-    bool Equals(const ListenerEntry& aA, const ListenerId& aB) const
-    {
+  class ListenerEntryIdComparator {
+   public:
+    bool Equals(const ListenerEntry& aA, const ListenerId& aB) const {
       return aA.mId == aB;
     }
   };
 
-  class ListenerEntryListenerComparator
-  {
-  public:
-    bool Equals(const ListenerEntry& aA, const Listener* aB) const
-    {
+  class ListenerEntryListenerComparator {
+   public:
+    bool Equals(const ListenerEntry& aA, const Listener* aB) const {
       return aA.mListener == aB;
     }
   };
@@ -274,28 +250,26 @@ private:
   bool mShuttingDown;
   State mState;
 
-  struct CacheIdRefCounter
-  {
+  struct CacheIdRefCounter {
     CacheId mCacheId;
     MozRefCountType mCount;
     bool mOrphaned;
   };
   nsTArray<CacheIdRefCounter> mCacheIdRefs;
 
-  struct BodyIdRefCounter
-  {
+  struct BodyIdRefCounter {
     nsID mBodyId;
     MozRefCountType mCount;
     bool mOrphaned;
   };
   nsTArray<BodyIdRefCounter> mBodyIdRefs;
 
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(cache::Manager)
 };
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_cache_Manager_h
+#endif  // mozilla_dom_cache_Manager_h

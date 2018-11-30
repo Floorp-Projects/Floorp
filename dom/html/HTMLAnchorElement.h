@@ -17,17 +17,13 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
-class HTMLAnchorElement final : public nsGenericHTMLElement,
-                                public Link
-{
-public:
+class HTMLAnchorElement final : public nsGenericHTMLElement, public Link {
+ public:
   using Element::GetText;
 
-  explicit HTMLAnchorElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo))
-    , Link(this)
-  {
-  }
+  explicit HTMLAnchorElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      : nsGenericHTMLElement(std::move(aNodeInfo)), Link(this) {}
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -51,11 +47,11 @@ public:
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) override;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                               int32_t* aTabIndex) override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
-  virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) override;
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
   virtual bool IsLink(nsIURI** aURI) const override;
   virtual void GetLinkTarget(nsAString& aTarget) override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;
@@ -69,7 +65,7 @@ public:
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode **aResult) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   virtual EventStates IntrinsicState() const override;
 
@@ -79,71 +75,47 @@ public:
 
   // WebIDL API
 
-  void GetHref(nsAString& aValue)
-  {
+  void GetHref(nsAString& aValue) {
     GetURIAttr(nsGkAtoms::href, nullptr, aValue);
   }
-  void SetHref(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void SetHref(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::href, aValue, rv);
   }
   void GetTarget(nsAString& aValue);
-  void SetTarget(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void SetTarget(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::target, aValue, rv);
   }
-  void GetDownload(DOMString& aValue)
-  {
+  void GetDownload(DOMString& aValue) {
     GetHTMLAttr(nsGkAtoms::download, aValue);
   }
-  void SetDownload(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void SetDownload(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::download, aValue, rv);
   }
-  void GetPing(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::ping, aValue);
-  }
-  void SetPing(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void GetPing(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::ping, aValue); }
+  void SetPing(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::ping, aValue, rv);
   }
-  void GetRel(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::rel, aValue);
-  }
-  void SetRel(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void GetRel(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::rel, aValue); }
+  void SetRel(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::rel, aValue, rv);
   }
-  void SetReferrerPolicy(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void SetReferrerPolicy(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::referrerpolicy, aValue, rv);
   }
-  void GetReferrerPolicy(DOMString& aPolicy)
-  {
+  void GetReferrerPolicy(DOMString& aPolicy) {
     GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aPolicy);
   }
   nsDOMTokenList* RelList();
-  void GetHreflang(DOMString& aValue)
-  {
+  void GetHreflang(DOMString& aValue) {
     GetHTMLAttr(nsGkAtoms::hreflang, aValue);
   }
-  void SetHreflang(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void SetHreflang(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::hreflang, aValue, rv);
   }
   // Needed for docshell
-  void GetType(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::type, aValue);
-  }
-  void GetType(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::type, aValue);
-  }
-  void SetType(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void GetType(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::type, aValue); }
+  void GetType(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::type, aValue); }
+  void SetType(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::type, aValue, rv);
   }
   void GetText(nsAString& aValue, mozilla::ErrorResult& rv);
@@ -178,72 +150,48 @@ public:
   // Link::Link::GetHash is OK for us
   // Link::Link::SetHash is OK for us
 
-  void GetCoords(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::coords, aValue);
-  }
-  void SetCoords(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void GetCoords(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::coords, aValue); }
+  void SetCoords(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::coords, aValue, rv);
   }
-  void GetCharset(DOMString& aValue)
-  {
+  void GetCharset(DOMString& aValue) {
     GetHTMLAttr(nsGkAtoms::charset, aValue);
   }
-  void SetCharset(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void SetCharset(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::charset, aValue, rv);
   }
-  void GetName(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::name, aValue);
-  }
-  void GetName(nsAString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::name, aValue);
-  }
-  void SetName(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void GetName(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::name, aValue); }
+  void GetName(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::name, aValue); }
+  void SetName(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::name, aValue, rv);
   }
-  void GetRev(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::rev, aValue);
-  }
-  void SetRev(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void GetRev(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::rev, aValue); }
+  void SetRev(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::rev, aValue, rv);
   }
-  void GetShape(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::shape, aValue);
-  }
-  void SetShape(const nsAString& aValue, mozilla::ErrorResult& rv)
-  {
+  void GetShape(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::shape, aValue); }
+  void SetShape(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::shape, aValue, rv);
   }
-  void Stringify(nsAString& aResult)
-  {
-    GetHref(aResult);
-  }
+  void Stringify(nsAString& aResult) { GetHref(aResult); }
   void ToString(nsAString& aSource);
 
-  void NodeInfoChanged(nsIDocument* aOldDoc) final
-  {
+  void NodeInfoChanged(nsIDocument* aOldDoc) final {
     ClearHasPendingLinkUpdate();
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }
 
   static DOMTokenListSupportedToken sSupportedRelValues[];
 
-protected:
+ protected:
   virtual ~HTMLAnchorElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
-  RefPtr<nsDOMTokenList > mRelList;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
+  RefPtr<nsDOMTokenList> mRelList;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLAnchorElement_h
+#endif  // mozilla_dom_HTMLAnchorElement_h

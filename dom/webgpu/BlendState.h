@@ -14,18 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class BlendState final
-    : public ChildOf<Device>
-{
-public:
-    WEBGPU_DECL_GOOP(BlendState)
+class BlendState final : public ChildOf<Device> {
+ public:
+  WEBGPU_DECL_GOOP(BlendState)
 
-private:
-    BlendState() = delete;
-    virtual ~BlendState();
+ private:
+  BlendState() = delete;
+  virtual ~BlendState();
 };
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla
 
-#endif // WEBGPU_BlendState_H_
+#endif  // WEBGPU_BlendState_H_

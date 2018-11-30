@@ -23,7 +23,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(AuthenticatorResponse)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AuthenticatorResponse)
-   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AuthenticatorResponse)
@@ -35,42 +35,33 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AuthenticatorResponse)
 NS_INTERFACE_MAP_END
 
 AuthenticatorResponse::AuthenticatorResponse(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
-  , mClientDataJSONCachedObj(nullptr)
-{
+    : mParent(aParent), mClientDataJSONCachedObj(nullptr) {
   mozilla::HoldJSObjects(this);
 }
 
-AuthenticatorResponse::~AuthenticatorResponse()
-{
+AuthenticatorResponse::~AuthenticatorResponse() {
   mozilla::DropJSObjects(this);
 }
 
-JSObject*
-AuthenticatorResponse::WrapObject(JSContext* aCx,
-                                  JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AuthenticatorResponse::WrapObject(JSContext* aCx,
+                                            JS::Handle<JSObject*> aGivenProto) {
   return AuthenticatorResponse_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AuthenticatorResponse::GetClientDataJSON(JSContext* aCx,
-                                         JS::MutableHandle<JSObject*> aRetVal)
-{
+void AuthenticatorResponse::GetClientDataJSON(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   if (!mClientDataJSONCachedObj) {
     mClientDataJSONCachedObj = mClientDataJSON.ToArrayBuffer(aCx);
   }
   aRetVal.set(mClientDataJSONCachedObj);
 }
 
-nsresult
-AuthenticatorResponse::SetClientDataJSON(CryptoBuffer& aBuffer)
-{
+nsresult AuthenticatorResponse::SetClientDataJSON(CryptoBuffer& aBuffer) {
   if (NS_WARN_IF(!mClientDataJSON.Assign(aBuffer))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

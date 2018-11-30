@@ -14,51 +14,40 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-class TestContainerLayer: public ContainerLayer {
-public:
+class TestContainerLayer : public ContainerLayer {
+ public:
   explicit TestContainerLayer(LayerManager* aManager)
-    : ContainerLayer(aManager, nullptr)
-  {}
+      : ContainerLayer(aManager, nullptr) {}
 
-  virtual const char* Name() const {
-    return "TestContainerLayer";
-  }
+  virtual const char* Name() const { return "TestContainerLayer"; }
 
-  virtual LayerType GetType() const {
-    return TYPE_CONTAINER;
-  }
+  virtual LayerType GetType() const { return TYPE_CONTAINER; }
 
-  virtual void ComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface) {
+  virtual void ComputeEffectiveTransforms(
+      const Matrix4x4& aTransformToSurface) {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 };
 
-class TestPaintedLayer: public PaintedLayer {
-public:
+class TestPaintedLayer : public PaintedLayer {
+ public:
   explicit TestPaintedLayer(LayerManager* aManager)
-    : PaintedLayer(aManager, nullptr)
-  {}
+      : PaintedLayer(aManager, nullptr) {}
 
-  virtual const char* Name() const {
-    return "TestPaintedLayer";
-  }
+  virtual const char* Name() const { return "TestPaintedLayer"; }
 
-  virtual LayerType GetType() const {
-    return TYPE_PAINTED;
-  }
+  virtual LayerType GetType() const { return TYPE_PAINTED; }
 
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) {
-    MOZ_CRASH();
-  }
+  virtual void InvalidateRegion(const nsIntRegion& aRegion) { MOZ_CRASH(); }
 };
 
-class TestLayerManager: public LayerManager {
-public:
-  TestLayerManager()
-    : LayerManager()
-  {}
+class TestLayerManager : public LayerManager {
+ public:
+  TestLayerManager() : LayerManager() {}
 
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) { return false; }
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) {
+    return false;
+  }
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() {
     RefPtr<ContainerLayer> layer = new TestContainerLayer(this);
     return layer.forget();
@@ -77,7 +66,10 @@ public:
     MOZ_CRASH("Not implemented.");
   }
   virtual void SetRoot(Layer* aLayer) {}
-  virtual bool BeginTransactionWithTarget(gfxContext* aTarget, const nsCString& = nsCString()) { return true; }
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget,
+                                          const nsCString& = nsCString()) {
+    return true;
+  }
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
     MOZ_CRASH("Not implemented.");
   }
@@ -87,16 +79,13 @@ public:
   virtual int32_t GetMaxTextureSize() const { return 0; }
 };
 
-class TestUserData: public LayerUserData {
-public:
+class TestUserData : public LayerUserData {
+ public:
   MOCK_METHOD0(Die, void());
   virtual ~TestUserData() { Die(); }
 };
 
-
-TEST(Layers, LayerConstructor) {
-  TestContainerLayer layer(nullptr);
-}
+TEST(Layers, LayerConstructor) { TestContainerLayer layer(nullptr); }
 
 TEST(Layers, Defaults) {
   TestContainerLayer layer(nullptr);
@@ -164,8 +153,8 @@ TEST(Layers, UserData) {
   EXPECT_CALL(*data3, Die());
 }
 
-static
-already_AddRefed<Layer> CreateLayer(char aLayerType, LayerManager* aManager) {
+static already_AddRefed<Layer> CreateLayer(char aLayerType,
+                                           LayerManager* aManager) {
   RefPtr<Layer> layer = nullptr;
   if (aLayerType == 'c') {
     layer = aManager->CreateContainerLayer();
@@ -177,13 +166,11 @@ already_AddRefed<Layer> CreateLayer(char aLayerType, LayerManager* aManager) {
   return layer.forget();
 }
 
-already_AddRefed<Layer> CreateLayerTree(
-    const char* aLayerTreeDescription,
-    nsIntRegion* aVisibleRegions,
-    const Matrix4x4* aTransforms,
-    RefPtr<LayerManager>& manager,
-    nsTArray<RefPtr<Layer> >& aLayersOut) {
-
+already_AddRefed<Layer> CreateLayerTree(const char* aLayerTreeDescription,
+                                        nsIntRegion* aVisibleRegions,
+                                        const Matrix4x4* aTransforms,
+                                        RefPtr<LayerManager>& manager,
+                                        nsTArray<RefPtr<Layer> >& aLayersOut) {
   aLayersOut.Clear();
 
   if (!manager) {
@@ -197,7 +184,9 @@ already_AddRefed<Layer> CreateLayerTree(
   for (size_t i = 0; i < strlen(aLayerTreeDescription); i++) {
     if (aLayerTreeDescription[i] == '(') {
       if (!lastLayer) {
-        printf("Syntax error, likely '(' character isn't preceded by a container.\n");
+        printf(
+            "Syntax error, likely '(' character isn't preceded by a "
+            "container.\n");
         MOZ_CRASH();
       }
       parentContainerLayer = lastLayer->AsContainerLayer();
@@ -209,9 +198,11 @@ already_AddRefed<Layer> CreateLayerTree(
       parentContainerLayer = parentContainerLayer->GetParent();
       lastLayer = nullptr;
     } else {
-      RefPtr<Layer> layer = CreateLayer(aLayerTreeDescription[i], manager.get());
+      RefPtr<Layer> layer =
+          CreateLayer(aLayerTreeDescription[i], manager.get());
       if (aVisibleRegions) {
-        layer->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(aVisibleRegions[layerNumber]));
+        layer->SetVisibleRegion(
+            LayerIntRegion::FromUnknownRegion(aVisibleRegions[layerNumber]));
         layer->SetEventRegions(EventRegions(aVisibleRegions[layerNumber]));
       }
       if (aTransforms) {
@@ -226,7 +217,8 @@ already_AddRefed<Layer> CreateLayerTree(
         rootLayer = layer;
       }
       if (parentContainerLayer) {
-        parentContainerLayer->InsertAfter(layer, parentContainerLayer->GetLastChild());
+        parentContainerLayer->InsertAfter(layer,
+                                          parentContainerLayer->GetLastChild());
         layer->SetParent(parentContainerLayer);
       }
       lastLayer = layer;
@@ -246,21 +238,22 @@ already_AddRefed<Layer> CreateLayerTree(
 TEST(Layers, LayerTree) {
   const char* layerTreeSyntax = "c(c(tt))";
   nsIntRegion layerVisibleRegion[] = {
-    nsIntRegion(IntRect(0,0,100,100)),
-    nsIntRegion(IntRect(0,0,100,100)),
-    nsIntRegion(IntRect(0,0,100,100)),
-    nsIntRegion(IntRect(10,10,20,20)),
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+      nsIntRegion(IntRect(10, 10, 20, 20)),
   };
   Matrix4x4 transforms[] = {
-    Matrix4x4(),
-    Matrix4x4(),
-    Matrix4x4(),
-    Matrix4x4(),
+      Matrix4x4(),
+      Matrix4x4(),
+      Matrix4x4(),
+      Matrix4x4(),
   };
   nsTArray<RefPtr<Layer> > layers;
 
   RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
+  RefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion,
+                                       transforms, lm, layers);
 
   // B2G g++ doesn't like ASSERT_NE with nullptr directly. It thinks it's
   // an int.
@@ -301,7 +294,8 @@ TEST(Layers, RepositionChild) {
 
   nsTArray<RefPtr<Layer> > layers;
   RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, nullptr, nullptr, lm, layers);
+  RefPtr<Layer> root =
+      CreateLayerTree(layerTreeSyntax, nullptr, nullptr, lm, layers);
   ContainerLayer* parent = root->AsContainerLayer();
   ValidateTreePointers(layers);
 
@@ -350,7 +344,7 @@ TEST(Layers, RepositionChild) {
 }
 
 class LayerMetricsWrapperTester : public ::testing::Test {
-protected:
+ protected:
   virtual void SetUp() {
     // This ensures ScrollMetadata::sNullMetadata is initialized.
     gfxPlatform::GetPlatform();
@@ -360,7 +354,8 @@ protected:
 TEST_F(LayerMetricsWrapperTester, SimpleTree) {
   nsTArray<RefPtr<Layer> > layers;
   RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
+  RefPtr<Layer> root =
+      CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
   LayerMetricsWrapper wrapper(root);
 
   ASSERT_EQ(root.get(), wrapper.GetLayer());
@@ -394,8 +389,7 @@ TEST_F(LayerMetricsWrapperTester, SimpleTree) {
   ASSERT_TRUE(rootWrapper == wrapper.GetParent());
 }
 
-static ScrollMetadata
-MakeMetadata(ScrollableLayerGuid::ViewID aId) {
+static ScrollMetadata MakeMetadata(ScrollableLayerGuid::ViewID aId) {
   ScrollMetadata metadata;
   metadata.GetMetrics().SetScrollId(aId);
   return metadata;
@@ -404,32 +398,46 @@ MakeMetadata(ScrollableLayerGuid::ViewID aId) {
 TEST_F(LayerMetricsWrapperTester, MultiFramemetricsTree) {
   nsTArray<RefPtr<Layer> > layers;
   RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
+  RefPtr<Layer> root =
+      CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
 
   nsTArray<ScrollMetadata> metadata;
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 0)); // topmost of root layer
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::NULL_SCROLL_ID));
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 1));
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 2));
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::NULL_SCROLL_ID));
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::NULL_SCROLL_ID));      // bottom of root layer
+  metadata.InsertElementAt(0,
+                           MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID +
+                                        0));  // topmost of root layer
+  metadata.InsertElementAt(0,
+                           MakeMetadata(ScrollableLayerGuid::NULL_SCROLL_ID));
+  metadata.InsertElementAt(
+      0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 1));
+  metadata.InsertElementAt(
+      0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 2));
+  metadata.InsertElementAt(0,
+                           MakeMetadata(ScrollableLayerGuid::NULL_SCROLL_ID));
+  metadata.InsertElementAt(
+      0, MakeMetadata(
+             ScrollableLayerGuid::NULL_SCROLL_ID));  // bottom of root layer
   root->SetScrollMetadata(metadata);
 
   metadata.Clear();
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 3));
+  metadata.InsertElementAt(
+      0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 3));
   layers[1]->SetScrollMetadata(metadata);
 
   metadata.Clear();
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::NULL_SCROLL_ID));
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 4));
+  metadata.InsertElementAt(0,
+                           MakeMetadata(ScrollableLayerGuid::NULL_SCROLL_ID));
+  metadata.InsertElementAt(
+      0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 4));
   layers[2]->SetScrollMetadata(metadata);
 
   metadata.Clear();
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 5));
+  metadata.InsertElementAt(
+      0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 5));
   layers[4]->SetScrollMetadata(metadata);
 
   metadata.Clear();
-  metadata.InsertElementAt(0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 6));
+  metadata.InsertElementAt(
+      0, MakeMetadata(ScrollableLayerGuid::START_SCROLL_ID + 6));
   layers[5]->SetScrollMetadata(metadata);
 
   LayerMetricsWrapper wrapper(root, LayerMetricsWrapper::StartAt::TOP);
@@ -470,16 +478,21 @@ TEST_F(LayerMetricsWrapperTester, MultiFramemetricsTree) {
   }
   ASSERT_FALSE(wrapper.IsValid());
 
-  wrapper = LayerMetricsWrapper(layers[4], LayerMetricsWrapper::StartAt::BOTTOM);
-  ASSERT_EQ(ScrollableLayerGuid::START_SCROLL_ID + 5, wrapper.Metrics().GetScrollId());
+  wrapper =
+      LayerMetricsWrapper(layers[4], LayerMetricsWrapper::StartAt::BOTTOM);
+  ASSERT_EQ(ScrollableLayerGuid::START_SCROLL_ID + 5,
+            wrapper.Metrics().GetScrollId());
   wrapper = wrapper.GetParent();
-  ASSERT_EQ(ScrollableLayerGuid::START_SCROLL_ID + 4, wrapper.Metrics().GetScrollId());
+  ASSERT_EQ(ScrollableLayerGuid::START_SCROLL_ID + 4,
+            wrapper.Metrics().GetScrollId());
   ASSERT_EQ(layers[2].get(), wrapper.GetLayer());
   ASSERT_FALSE(wrapper.GetNextSibling().IsValid());
   wrapper = wrapper.GetParent();
-  ASSERT_EQ(ScrollableLayerGuid::NULL_SCROLL_ID, wrapper.Metrics().GetScrollId());
+  ASSERT_EQ(ScrollableLayerGuid::NULL_SCROLL_ID,
+            wrapper.Metrics().GetScrollId());
   ASSERT_EQ(layers[2].get(), wrapper.GetLayer());
   wrapper = wrapper.GetNextSibling();
-  ASSERT_EQ(ScrollableLayerGuid::START_SCROLL_ID + 6, wrapper.Metrics().GetScrollId());
+  ASSERT_EQ(ScrollableLayerGuid::START_SCROLL_ID + 6,
+            wrapper.Metrics().GetScrollId());
   ASSERT_EQ(layers[5].get(), wrapper.GetLayer());
 }

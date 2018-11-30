@@ -13,47 +13,38 @@ namespace dom {
 
 // Makes sure that aStart and aEnd is less then or equal to aSize and greater
 // than 0
-static void
-ParseSize(int64_t aSize, int64_t& aStart, int64_t& aEnd)
-{
+static void ParseSize(int64_t aSize, int64_t& aStart, int64_t& aEnd) {
   CheckedInt64 newStartOffset = aStart;
   if (aStart < -aSize) {
     newStartOffset = 0;
-  }
-  else if (aStart < 0) {
+  } else if (aStart < 0) {
     newStartOffset += aSize;
-  }
-  else if (aStart > aSize) {
+  } else if (aStart > aSize) {
     newStartOffset = aSize;
   }
 
   CheckedInt64 newEndOffset = aEnd;
   if (aEnd < -aSize) {
     newEndOffset = 0;
-  }
-  else if (aEnd < 0) {
+  } else if (aEnd < 0) {
     newEndOffset += aSize;
-  }
-  else if (aEnd > aSize) {
+  } else if (aEnd > aSize) {
     newEndOffset = aSize;
   }
 
   if (!newStartOffset.isValid() || !newEndOffset.isValid() ||
       newStartOffset.value() >= newEndOffset.value()) {
     aStart = aEnd = 0;
-  }
-  else {
+  } else {
     aStart = newStartOffset.value();
     aEnd = newEndOffset.value();
   }
 }
 
-already_AddRefed<BlobImpl>
-BlobImpl::Slice(const Optional<int64_t>& aStart,
-                const Optional<int64_t>& aEnd,
-                const nsAString& aContentType,
-                ErrorResult& aRv)
-{
+already_AddRefed<BlobImpl> BlobImpl::Slice(const Optional<int64_t>& aStart,
+                                           const Optional<int64_t>& aEnd,
+                                           const nsAString& aContentType,
+                                           ErrorResult& aRv) {
   // Truncate aStart and aEnd so that we stay within this file.
   uint64_t thisLength = GetSize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -72,5 +63,5 @@ BlobImpl::Slice(const Optional<int64_t>& aStart,
 
 NS_IMPL_ISUPPORTS(BlobImpl, BlobImpl)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

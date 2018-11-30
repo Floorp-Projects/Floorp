@@ -27,14 +27,13 @@
 
 using namespace cdm;
 
-bool AllZero(const std::vector<uint32_t>& aBytes)
-{
-  return all_of(aBytes.begin(), aBytes.end(), [](uint32_t b) { return b == 0; });
+bool AllZero(const std::vector<uint32_t>& aBytes) {
+  return all_of(aBytes.begin(), aBytes.end(),
+                [](uint32_t b) { return b == 0; });
 }
 
-class ClearKeyDecryptor : public RefCounted
-{
-public:
+class ClearKeyDecryptor : public RefCounted {
+ public:
   ClearKeyDecryptor();
 
   void InitKey(const Key& aKey);
@@ -45,32 +44,27 @@ public:
 
   const Key& DecryptionKey() const { return mKey; }
 
-private:
+ private:
   ~ClearKeyDecryptor();
 
   Key mKey;
 };
 
+/* static */ ClearKeyDecryptionManager* ClearKeyDecryptionManager::sInstance =
+    nullptr;
 
-/* static */ ClearKeyDecryptionManager*
-ClearKeyDecryptionManager::sInstance = nullptr;
-
-/* static */ ClearKeyDecryptionManager*
-ClearKeyDecryptionManager::Get()
-{
+/* static */ ClearKeyDecryptionManager* ClearKeyDecryptionManager::Get() {
   if (!sInstance) {
     sInstance = new ClearKeyDecryptionManager();
   }
   return sInstance;
 }
 
-ClearKeyDecryptionManager::ClearKeyDecryptionManager()
-{
+ClearKeyDecryptionManager::ClearKeyDecryptionManager() {
   CK_LOGD("ClearKeyDecryptionManager::ClearKeyDecryptionManager");
 }
 
-ClearKeyDecryptionManager::~ClearKeyDecryptionManager()
-{
+ClearKeyDecryptionManager::~ClearKeyDecryptionManager() {
   CK_LOGD("ClearKeyDecryptionManager::~ClearKeyDecryptionManager");
 
   sInstance = nullptr;
@@ -81,45 +75,33 @@ ClearKeyDecryptionManager::~ClearKeyDecryptionManager()
   mDecryptors.clear();
 }
 
-bool
-ClearKeyDecryptionManager::HasSeenKeyId(const KeyId& aKeyId) const
-{
+bool ClearKeyDecryptionManager::HasSeenKeyId(const KeyId& aKeyId) const {
   CK_LOGD("ClearKeyDecryptionManager::SeenKeyId %s",
           mDecryptors.find(aKeyId) != mDecryptors.end() ? "t" : "f");
   return mDecryptors.find(aKeyId) != mDecryptors.end();
 }
 
-bool
-ClearKeyDecryptionManager::IsExpectingKeyForKeyId(const KeyId& aKeyId) const
-{
-  CK_LOGARRAY("ClearKeyDecryptionManager::IsExpectingKeyForId ",
-              aKeyId.data(),
+bool ClearKeyDecryptionManager::IsExpectingKeyForKeyId(
+    const KeyId& aKeyId) const {
+  CK_LOGARRAY("ClearKeyDecryptionManager::IsExpectingKeyForId ", aKeyId.data(),
               aKeyId.size());
   const auto& decryptor = mDecryptors.find(aKeyId);
   return decryptor != mDecryptors.end() && !decryptor->second->HasKey();
 }
 
-bool
-ClearKeyDecryptionManager::HasKeyForKeyId(const KeyId& aKeyId) const
-{
+bool ClearKeyDecryptionManager::HasKeyForKeyId(const KeyId& aKeyId) const {
   CK_LOGD("ClearKeyDecryptionManager::HasKeyForKeyId");
   const auto& decryptor = mDecryptors.find(aKeyId);
   return decryptor != mDecryptors.end() && decryptor->second->HasKey();
 }
 
-const Key&
-ClearKeyDecryptionManager::GetDecryptionKey(const KeyId& aKeyId)
-{
+const Key& ClearKeyDecryptionManager::GetDecryptionKey(const KeyId& aKeyId) {
   assert(HasKeyForKeyId(aKeyId));
   return mDecryptors[aKeyId]->DecryptionKey();
 }
 
-void
-ClearKeyDecryptionManager::InitKey(KeyId aKeyId, Key aKey)
-{
-  CK_LOGD("ClearKeyDecryptionManager::InitKey ",
-          aKeyId.data(),
-          aKeyId.size());
+void ClearKeyDecryptionManager::InitKey(KeyId aKeyId, Key aKey) {
+  CK_LOGD("ClearKeyDecryptionManager::InitKey ", aKeyId.data(), aKeyId.size());
   if (IsExpectingKeyForKeyId(aKeyId)) {
     CK_LOGARRAY("Initialized Key ", aKeyId.data(), aKeyId.size());
     mDecryptors[aKeyId]->InitKey(aKey);
@@ -128,11 +110,8 @@ ClearKeyDecryptionManager::InitKey(KeyId aKeyId, Key aKey)
   }
 }
 
-void
-ClearKeyDecryptionManager::ExpectKeyId(KeyId aKeyId)
-{
-  CK_LOGD("ClearKeyDecryptionManager::ExpectKeyId ",
-          aKeyId.data(),
+void ClearKeyDecryptionManager::ExpectKeyId(KeyId aKeyId) {
+  CK_LOGD("ClearKeyDecryptionManager::ExpectKeyId ", aKeyId.data(),
           aKeyId.size());
   if (!HasSeenKeyId(aKeyId)) {
     mDecryptors[aKeyId] = new ClearKeyDecryptor();
@@ -140,9 +119,7 @@ ClearKeyDecryptionManager::ExpectKeyId(KeyId aKeyId)
   mDecryptors[aKeyId]->AddRef();
 }
 
-void
-ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
-{
+void ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId) {
   CK_LOGD("ClearKeyDecryptionManager::ReleaseKeyId");
   assert(HasSeenKeyId(aKeyId));
 
@@ -152,59 +129,41 @@ ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
   }
 }
 
-Status
-ClearKeyDecryptionManager::Decrypt(std::vector<uint8_t>& aBuffer,
-                                   const CryptoMetaData& aMetadata)
-{
+Status ClearKeyDecryptionManager::Decrypt(std::vector<uint8_t>& aBuffer,
+                                          const CryptoMetaData& aMetadata) {
   return Decrypt(&aBuffer[0], aBuffer.size(), aMetadata);
 }
 
-Status
-ClearKeyDecryptionManager::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                                   const CryptoMetaData& aMetadata)
-{
+Status ClearKeyDecryptionManager::Decrypt(uint8_t* aBuffer,
+                                          uint32_t aBufferSize,
+                                          const CryptoMetaData& aMetadata) {
   CK_LOGD("ClearKeyDecryptionManager::Decrypt");
   if (!HasKeyForKeyId(aMetadata.mKeyId)) {
-    CK_LOGARRAY("Unable to find decryptor for keyId: ",
-                aMetadata.mKeyId.data(),
+    CK_LOGARRAY("Unable to find decryptor for keyId: ", aMetadata.mKeyId.data(),
                 aMetadata.mKeyId.size());
     return Status::kNoKey;
   }
 
-  CK_LOGARRAY("Found decryptor for keyId: ",
-              aMetadata.mKeyId.data(),
+  CK_LOGARRAY("Found decryptor for keyId: ", aMetadata.mKeyId.data(),
               aMetadata.mKeyId.size());
-  return mDecryptors[aMetadata.mKeyId]->Decrypt(aBuffer,
-                                                aBufferSize,
+  return mDecryptors[aMetadata.mKeyId]->Decrypt(aBuffer, aBufferSize,
                                                 aMetadata);
 }
 
-ClearKeyDecryptor::ClearKeyDecryptor()
-{
-  CK_LOGD("ClearKeyDecryptor ctor");
-}
+ClearKeyDecryptor::ClearKeyDecryptor() { CK_LOGD("ClearKeyDecryptor ctor"); }
 
-ClearKeyDecryptor::~ClearKeyDecryptor()
-{
+ClearKeyDecryptor::~ClearKeyDecryptor() {
   if (HasKey()) {
-    CK_LOGARRAY("ClearKeyDecryptor dtor; key = ",
-                mKey.data(),
-                mKey.size());
+    CK_LOGARRAY("ClearKeyDecryptor dtor; key = ", mKey.data(), mKey.size());
   } else {
     CK_LOGD("ClearKeyDecryptor dtor");
   }
 }
 
-void
-ClearKeyDecryptor::InitKey(const Key& aKey)
-{
-  mKey = aKey;
-}
+void ClearKeyDecryptor::InitKey(const Key& aKey) { mKey = aKey; }
 
-Status
-ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                           const CryptoMetaData& aMetadata)
-{
+Status ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
+                                  const CryptoMetaData& aMetadata) {
   CK_LOGD("ClearKeyDecryptor::Decrypt");
   // If the sample is split up into multiple encrypted subsamples, we need to
   // stitch them into one continuous buffer for decryption.
@@ -217,7 +176,7 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
                   "We need uintptr_t to be exactly the same size as a pointer");
     mozilla::CheckedInt<uintptr_t> data = reinterpret_cast<uintptr_t>(aBuffer);
     const uintptr_t endBuffer =
-      reinterpret_cast<uintptr_t>(aBuffer + aBufferSize);
+        reinterpret_cast<uintptr_t>(aBuffer + aBufferSize);
     uint8_t* iter = &tmp[0];
     for (size_t i = 0; i < aMetadata.NumSubsamples(); i++) {
       data += aMetadata.mClearBytes[i];
@@ -246,9 +205,8 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
   // It is possible that we could be passed an unencrypted sample, if all
   // encrypted sample lengths are zero, and in this case, a zero length
   // IV is allowed.
-  assert(aMetadata.mIV.size() == 8 \
-         || aMetadata.mIV.size() == 16 \
-         || (aMetadata.mIV.size() == 0 && AllZero(aMetadata.mCipherBytes)));
+  assert(aMetadata.mIV.size() == 8 || aMetadata.mIV.size() == 16 ||
+         (aMetadata.mIV.size() == 0 && AllZero(aMetadata.mCipherBytes)));
 
   std::vector<uint8_t> iv(aMetadata.mIV);
   iv.insert(iv.end(), CENC_KEY_LEN - aMetadata.mIV.size(), 0);

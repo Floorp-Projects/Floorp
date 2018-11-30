@@ -13,9 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-nsresult
-BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
-{
+nsresult BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength) {
   NS_ENSURE_ARG_POINTER(aData);
   if (!aLength) {
     return NS_OK;
@@ -32,9 +30,7 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
   return AppendBlobImpl(blobImpl);
 }
 
-nsresult
-BlobSet::AppendString(const nsAString& aString, bool nativeEOL)
-{
+nsresult BlobSet::AppendString(const nsAString& aString, bool nativeEOL) {
   nsCString utf8Str;
   if (NS_WARN_IF(!AppendUTF16toUTF8(aString, utf8Str, mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -51,13 +47,11 @@ BlobSet::AppendString(const nsAString& aString, bool nativeEOL)
   }
 
   RefPtr<StringBlobImpl> blobImpl =
-    StringBlobImpl::Create(utf8Str, EmptyString());
+      StringBlobImpl::Create(utf8Str, EmptyString());
   return AppendBlobImpl(blobImpl);
 }
 
-nsresult
-BlobSet::AppendBlobImpl(BlobImpl* aBlobImpl)
-{
+nsresult BlobSet::AppendBlobImpl(BlobImpl* aBlobImpl) {
   NS_ENSURE_ARG_POINTER(aBlobImpl);
 
   // If aBlobImpl is a MultipartBlobImpl, let's append the sub-blobImpls
@@ -80,5 +74,5 @@ BlobSet::AppendBlobImpl(BlobImpl* aBlobImpl)
   return NS_OK;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

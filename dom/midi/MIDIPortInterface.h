@@ -18,9 +18,8 @@ class MIDIPortInfo;
  * MIDIPort IPC connection need to a synchronized set of info/state.
  *
  */
-class MIDIPortInterface
-{
-public:
+class MIDIPortInterface {
+ public:
   MIDIPortInterface(const MIDIPortInfo& aPortInfo, bool aSysexEnabled);
   const nsString& Id() const { return mId; }
   const nsString& Name() const { return mName; }
@@ -32,7 +31,8 @@ public:
   MIDIPortConnectionState ConnectionState() const { return mConnectionState; }
   bool IsShutdown() const { return mShuttingDown; }
   virtual void Shutdown();
-protected:
+
+ protected:
   virtual ~MIDIPortInterface();
   nsString mId;
   nsString mName;
@@ -45,7 +45,7 @@ protected:
   bool mShuttingDown;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MIDIPortInterface_h
+#endif  // mozilla_dom_MIDIPortInterface_h

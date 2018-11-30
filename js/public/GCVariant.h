@@ -43,148 +43,148 @@ struct GCVariantImplementation;
 
 // The base case.
 template <typename T>
-struct GCVariantImplementation<T>
-{
-    template <typename ConcreteVariant>
-    static void trace(JSTracer* trc, ConcreteVariant* v, const char* name) {
-        T& thing = v->template as<T>();
-        if (!mozilla::IsPointer<T>::value || thing) {
-            GCPolicy<T>::trace(trc, &thing, name);
-        }
+struct GCVariantImplementation<T> {
+  template <typename ConcreteVariant>
+  static void trace(JSTracer* trc, ConcreteVariant* v, const char* name) {
+    T& thing = v->template as<T>();
+    if (!mozilla::IsPointer<T>::value || thing) {
+      GCPolicy<T>::trace(trc, &thing, name);
     }
+  }
 
-    template <typename Matcher, typename ConcreteVariant>
-    static typename Matcher::ReturnType
-    match(Matcher& matcher, Handle<ConcreteVariant> v) {
-        const T& thing = v.get().template as<T>();
-        return matcher.match(Handle<T>::fromMarkedLocation(&thing));
-    }
+  template <typename Matcher, typename ConcreteVariant>
+  static typename Matcher::ReturnType match(Matcher& matcher,
+                                            Handle<ConcreteVariant> v) {
+    const T& thing = v.get().template as<T>();
+    return matcher.match(Handle<T>::fromMarkedLocation(&thing));
+  }
 
-    template <typename Matcher, typename ConcreteVariant>
-    static typename Matcher::ReturnType
-    match(Matcher& matcher, MutableHandle<ConcreteVariant> v) {
-        T& thing = v.get().template as<T>();
-        return matcher.match(MutableHandle<T>::fromMarkedLocation(&thing));
-    }
+  template <typename Matcher, typename ConcreteVariant>
+  static typename Matcher::ReturnType match(Matcher& matcher,
+                                            MutableHandle<ConcreteVariant> v) {
+    T& thing = v.get().template as<T>();
+    return matcher.match(MutableHandle<T>::fromMarkedLocation(&thing));
+  }
 };
 
 // The inductive case.
 template <typename T, typename... Ts>
-struct GCVariantImplementation<T, Ts...>
-{
-    using Next = GCVariantImplementation<Ts...>;
+struct GCVariantImplementation<T, Ts...> {
+  using Next = GCVariantImplementation<Ts...>;
 
-    template <typename ConcreteVariant>
-    static void trace(JSTracer* trc, ConcreteVariant* v, const char* name) {
-        if (v->template is<T>()) {
-            T& thing = v->template as<T>();
-            if (!mozilla::IsPointer<T>::value || thing) {
-                GCPolicy<T>::trace(trc, &thing, name);
-            }
-        } else {
-            Next::trace(trc, v, name);
-        }
+  template <typename ConcreteVariant>
+  static void trace(JSTracer* trc, ConcreteVariant* v, const char* name) {
+    if (v->template is<T>()) {
+      T& thing = v->template as<T>();
+      if (!mozilla::IsPointer<T>::value || thing) {
+        GCPolicy<T>::trace(trc, &thing, name);
+      }
+    } else {
+      Next::trace(trc, v, name);
     }
+  }
 
-    template <typename Matcher, typename ConcreteVariant>
-    static typename Matcher::ReturnType
-    match(Matcher& matcher, Handle<ConcreteVariant> v) {
-        if (v.get().template is<T>()) {
-            const T& thing = v.get().template as<T>();
-            return matcher.match(Handle<T>::fromMarkedLocation(&thing));
-        }
-        return Next::match(matcher, v);
+  template <typename Matcher, typename ConcreteVariant>
+  static typename Matcher::ReturnType match(Matcher& matcher,
+                                            Handle<ConcreteVariant> v) {
+    if (v.get().template is<T>()) {
+      const T& thing = v.get().template as<T>();
+      return matcher.match(Handle<T>::fromMarkedLocation(&thing));
     }
+    return Next::match(matcher, v);
+  }
 
-    template <typename Matcher, typename ConcreteVariant>
-    static typename Matcher::ReturnType
-    match(Matcher& matcher, MutableHandle<ConcreteVariant> v) {
-        if (v.get().template is<T>()) {
-            T& thing = v.get().template as<T>();
-            return matcher.match(MutableHandle<T>::fromMarkedLocation(&thing));
-        }
-        return Next::match(matcher, v);
+  template <typename Matcher, typename ConcreteVariant>
+  static typename Matcher::ReturnType match(Matcher& matcher,
+                                            MutableHandle<ConcreteVariant> v) {
+    if (v.get().template is<T>()) {
+      T& thing = v.get().template as<T>();
+      return matcher.match(MutableHandle<T>::fromMarkedLocation(&thing));
     }
+    return Next::match(matcher, v);
+  }
 };
 
-} // namespace detail
+}  // namespace detail
 
 template <typename... Ts>
-struct GCPolicy<mozilla::Variant<Ts...>>
-{
-    using Impl = detail::GCVariantImplementation<Ts...>;
+struct GCPolicy<mozilla::Variant<Ts...>> {
+  using Impl = detail::GCVariantImplementation<Ts...>;
 
-    static void trace(JSTracer* trc, mozilla::Variant<Ts...>* v, const char* name) {
-        Impl::trace(trc, v, name);
-    }
+  static void trace(JSTracer* trc, mozilla::Variant<Ts...>* v,
+                    const char* name) {
+    Impl::trace(trc, v, name);
+  }
 
-    static bool isValid(const mozilla::Variant<Ts...>& v) {
-        return v.match(IsValidMatcher());
-    }
+  static bool isValid(const mozilla::Variant<Ts...>& v) {
+    return v.match(IsValidMatcher());
+  }
 
-  private:
-    struct IsValidMatcher
-    {
-        template<typename T>
-        bool match(T& v) {
-            return GCPolicy<T>::isValid(v);
-        };
+ private:
+  struct IsValidMatcher {
+    template <typename T>
+    bool match(T& v) {
+      return GCPolicy<T>::isValid(v);
     };
+  };
 };
 
-} // namespace JS
+}  // namespace JS
 
 namespace js {
 
 template <typename Wrapper, typename... Ts>
-class WrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper>
-{
-    using Impl = JS::detail::GCVariantImplementation<Ts...>;
-    using Variant = mozilla::Variant<Ts...>;
+class WrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper> {
+  using Impl = JS::detail::GCVariantImplementation<Ts...>;
+  using Variant = mozilla::Variant<Ts...>;
 
-    const Variant& variant() const { return static_cast<const Wrapper*>(this)->get(); }
+  const Variant& variant() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
 
-  public:
-    template <typename T>
-    bool is() const {
-        return variant().template is<T>();
-    }
+ public:
+  template <typename T>
+  bool is() const {
+    return variant().template is<T>();
+  }
 
-    template <typename T>
-    JS::Handle<T> as() const {
-        return Handle<T>::fromMarkedLocation(&variant().template as<T>());
-    }
+  template <typename T>
+  JS::Handle<T> as() const {
+    return Handle<T>::fromMarkedLocation(&variant().template as<T>());
+  }
 
-    template <typename Matcher>
-    typename Matcher::ReturnType
-    match(Matcher& matcher) const {
-        return Impl::match(matcher, JS::Handle<Variant>::fromMarkedLocation(&variant()));
-    }
+  template <typename Matcher>
+  typename Matcher::ReturnType match(Matcher& matcher) const {
+    return Impl::match(matcher,
+                       JS::Handle<Variant>::fromMarkedLocation(&variant()));
+  }
 };
 
 template <typename Wrapper, typename... Ts>
 class MutableWrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper>
-  : public WrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper>
-{
-    using Impl = JS::detail::GCVariantImplementation<Ts...>;
-    using Variant = mozilla::Variant<Ts...>;
+    : public WrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper> {
+  using Impl = JS::detail::GCVariantImplementation<Ts...>;
+  using Variant = mozilla::Variant<Ts...>;
 
-    const Variant& variant() const { return static_cast<const Wrapper*>(this)->get(); }
-    Variant& variant() { return static_cast<Wrapper*>(this)->get(); }
+  const Variant& variant() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+  Variant& variant() { return static_cast<Wrapper*>(this)->get(); }
 
-  public:
-    template <typename T>
-    JS::MutableHandle<T> as() {
-        return JS::MutableHandle<T>::fromMarkedLocation(&variant().template as<T>());
-    }
+ public:
+  template <typename T>
+  JS::MutableHandle<T> as() {
+    return JS::MutableHandle<T>::fromMarkedLocation(
+        &variant().template as<T>());
+  }
 
-    template <typename Matcher>
-    typename Matcher::ReturnType
-    match(Matcher& matcher) {
-        return Impl::match(matcher, JS::MutableHandle<Variant>::fromMarkedLocation(&variant()));
-    }
+  template <typename Matcher>
+  typename Matcher::ReturnType match(Matcher& matcher) {
+    return Impl::match(
+        matcher, JS::MutableHandle<Variant>::fromMarkedLocation(&variant()));
+  }
 };
 
-} // namespace js
+}  // namespace js
 
-#endif // js_GCVariant_h
+#endif  // js_GCVariant_h

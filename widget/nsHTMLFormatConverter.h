@@ -12,22 +12,21 @@
 
 class nsIMutableArray;
 
-class nsHTMLFormatConverter : public nsIFormatConverter
-{
-public:
-
+class nsHTMLFormatConverter : public nsIFormatConverter {
+ public:
   nsHTMLFormatConverter();
 
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFORMATCONVERTER
 
-protected:
+ protected:
   virtual ~nsHTMLFormatConverter();
 
-  NS_IMETHOD ConvertFromHTMLToUnicode(const nsAutoString & aFromStr, nsAutoString & aToStr);
-  NS_IMETHOD ConvertFromHTMLToAOLMail(const nsAutoString & aFromStr, nsAutoString & aToStr);
-
+  NS_IMETHOD ConvertFromHTMLToUnicode(const nsAutoString& aFromStr,
+                                      nsAutoString& aToStr);
+  NS_IMETHOD ConvertFromHTMLToAOLMail(const nsAutoString& aFromStr,
+                                      nsAutoString& aToStr);
 };
 
-#endif // nsHTMLFormatConverter_h__
+#endif  // nsHTMLFormatConverter_h__

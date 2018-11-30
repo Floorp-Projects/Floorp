@@ -22,21 +22,15 @@ using namespace mozilla::dom;
 ////////////////////////////////////////////////////////////////////////////////
 //// Helper Methods
 
-void
-expect_visit(nsLinkState aState)
-{
+void expect_visit(nsLinkState aState) {
   do_check_true(aState == eLinkState_Visited);
 }
 
-void
-expect_no_visit(nsLinkState aState)
-{
+void expect_no_visit(nsLinkState aState) {
   do_check_true(aState == eLinkState_Unvisited);
 }
 
-already_AddRefed<nsIURI>
-new_test_uri()
-{
+already_AddRefed<nsIURI> new_test_uri() {
   // Create a unique spec.
   static int32_t specNumber = 0;
   nsCString spec = NS_LITERAL_CSTRING("http://mozilla.org/");
@@ -49,63 +43,51 @@ new_test_uri()
   return testURI.forget();
 }
 
-class VisitURIObserver final : public nsIObserver
-{
+class VisitURIObserver final : public nsIObserver {
   ~VisitURIObserver() = default;
 
-public:
+ public:
   NS_DECL_ISUPPORTS
 
-  explicit VisitURIObserver(int aExpectedVisits = 1) :
-    mVisits(0),
-    mExpectedVisits(aExpectedVisits)
-  {
+  explicit VisitURIObserver(int aExpectedVisits = 1)
+      : mVisits(0), mExpectedVisits(aExpectedVisits) {
     nsCOMPtr<nsIObserverService> observerService =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     do_check_true(observerService);
-    (void)observerService->AddObserver(this,
-                                       "uri-visit-saved",
-                                       false);
+    (void)observerService->AddObserver(this, "uri-visit-saved", false);
   }
 
-  void WaitForNotification()
-  {
+  void WaitForNotification() {
     SpinEventLoopUntil([&]() { return mVisits >= mExpectedVisits; });
   }
 
-  NS_IMETHOD Observe(nsISupports* aSubject,
-                     const char* aTopic,
-                     const char16_t* aData) override
-  {
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override {
     mVisits++;
 
     if (mVisits == mExpectedVisits) {
       nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+          do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
       (void)observerService->RemoveObserver(this, "uri-visit-saved");
     }
 
     return NS_OK;
   }
-private:
+
+ private:
   int mVisits;
   int mExpectedVisits;
 };
-NS_IMPL_ISUPPORTS(
-  VisitURIObserver,
-  nsIObserver
-)
+NS_IMPL_ISUPPORTS(VisitURIObserver, nsIObserver)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
-void
-test_set_places_enabled()
-{
+void test_set_places_enabled() {
   // Ensure places is enabled for everyone.
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+      do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   do_check_success(rv);
 
   rv = prefBranch->SetBoolPref("places.history.enabled", true);
@@ -115,10 +97,7 @@ test_set_places_enabled()
   run_next_test();
 }
 
-
-void
-test_wait_checkpoint()
-{
+void test_wait_checkpoint() {
   // This "fake" test is here to wait for the initial WAL checkpoint we force
   // after creating the database schema, since that may happen at any time,
   // and cause concurrent readers to access an older checkpoint.
@@ -127,7 +106,7 @@ test_wait_checkpoint()
   db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT 1"),
                            getter_AddRefs(stmt));
   RefPtr<PlacesAsyncStatementSpinner> spinner =
-    new PlacesAsyncStatementSpinner();
+      new PlacesAsyncStatementSpinner();
   nsCOMPtr<mozIStoragePendingStatement> pending;
   (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pending));
   spinner->SpinUntilCompleted();
@@ -139,12 +118,10 @@ test_wait_checkpoint()
 // These variables are shared between part 1 and part 2 of the test.  Part 2
 // sets the nsCOMPtr's to nullptr, freeing the reference.
 namespace test_unvisited_does_not_notify {
-  nsCOMPtr<nsIURI> testURI;
-  RefPtr<Link> testLink;
-} // namespace test_unvisited_does_not_notify
-void
-test_unvisited_does_not_notify_part1()
-{
+nsCOMPtr<nsIURI> testURI;
+RefPtr<Link> testLink;
+}  // namespace test_unvisited_does_not_notify
+void test_unvisited_does_not_notify_part1() {
   using namespace test_unvisited_does_not_notify;
 
   // This test is done in two parts.  The first part registers for a URI that
@@ -168,9 +145,7 @@ test_unvisited_does_not_notify_part1()
   run_next_test();
 }
 
-void
-test_visited_notifies()
-{
+void test_visited_notifies() {
   // First, we add our test URI to history.
   nsCOMPtr<nsIURI> testURI = new_test_uri();
   addURI(testURI);
@@ -187,9 +162,7 @@ test_visited_notifies()
   // Note: test will continue upon notification.
 }
 
-void
-test_unvisited_does_not_notify_part2()
-{
+void test_unvisited_does_not_notify_part2() {
   using namespace test_unvisited_does_not_notify;
 
   // We would have had a failure at this point had the content node been told it
@@ -206,9 +179,7 @@ test_unvisited_does_not_notify_part2()
   run_next_test();
 }
 
-void
-test_same_uri_notifies_both()
-{
+void test_same_uri_notifies_both() {
   // First, we add our test URI to history.
   nsCOMPtr<nsIURI> testURI = new_test_uri();
   addURI(testURI);
@@ -229,9 +200,7 @@ test_same_uri_notifies_both()
   // Note: test will continue upon notification.
 }
 
-void
-test_unregistered_visited_does_not_notify()
-{
+void test_unregistered_visited_does_not_notify() {
   // This test must have a test that has a successful notification after it.
   // The Link would have been notified by now if we were buggy and notified
   // unregistered Links (due to request serialization).
@@ -260,9 +229,7 @@ test_unregistered_visited_does_not_notify()
   run_next_test();
 }
 
-void
-test_new_visit_notifies_waiting_Link()
-{
+void test_new_visit_notifies_waiting_Link() {
   // Create our test Link.  The callback function will release the reference we
   // have on the link.
   RefPtr<Link> link = new mock_Link(expect_visit);
@@ -279,9 +246,7 @@ test_new_visit_notifies_waiting_Link()
   // Note: test will continue upon notification.
 }
 
-void
-test_RegisterVisitedCallback_returns_before_notifying()
-{
+void test_RegisterVisitedCallback_returns_before_notifying() {
   // Add a URI so that it's already in history.
   nsCOMPtr<nsIURI> testURI = new_test_uri();
   addURI(testURI);
@@ -303,80 +268,66 @@ test_RegisterVisitedCallback_returns_before_notifying()
 }
 
 namespace test_observer_topic_dispatched_helpers {
-  #define URI_VISITED "visited"
-  #define URI_NOT_VISITED "not visited"
-  #define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
-  class statusObserver final : public nsIObserver
-  {
-    ~statusObserver() = default;
+#define URI_VISITED "visited"
+#define URI_NOT_VISITED "not visited"
+#define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
+class statusObserver final : public nsIObserver {
+  ~statusObserver() = default;
 
-  public:
-    NS_DECL_ISUPPORTS
+ public:
+  NS_DECL_ISUPPORTS
 
-    statusObserver(nsIURI* aURI,
-                   const bool aExpectVisit,
-                   bool& _notified)
-    : mURI(aURI)
-    , mExpectVisit(aExpectVisit)
-    , mNotified(_notified)
-    {
-      nsCOMPtr<nsIObserverService> observerService =
+  statusObserver(nsIURI* aURI, const bool aExpectVisit, bool& _notified)
+      : mURI(aURI), mExpectVisit(aExpectVisit), mNotified(_notified) {
+    nsCOMPtr<nsIObserverService> observerService =
         do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-      do_check_true(observerService);
-      (void)observerService->AddObserver(this,
-                                         URI_VISITED_RESOLUTION_TOPIC,
-                                         false);
-    }
+    do_check_true(observerService);
+    (void)observerService->AddObserver(this, URI_VISITED_RESOLUTION_TOPIC,
+                                       false);
+  }
 
-    NS_IMETHOD Observe(nsISupports* aSubject,
-                       const char* aTopic,
-                       const char16_t* aData) override
-    {
-      // Make sure we got notified of the right topic.
-      do_check_false(strcmp(aTopic, URI_VISITED_RESOLUTION_TOPIC));
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override {
+    // Make sure we got notified of the right topic.
+    do_check_false(strcmp(aTopic, URI_VISITED_RESOLUTION_TOPIC));
 
-      // If this isn't for our URI, do not do anything.
-      nsCOMPtr<nsIURI> notifiedURI = do_QueryInterface(aSubject);
-      do_check_true(notifiedURI);
+    // If this isn't for our URI, do not do anything.
+    nsCOMPtr<nsIURI> notifiedURI = do_QueryInterface(aSubject);
+    do_check_true(notifiedURI);
 
-      bool isOurURI;
-      nsresult rv = notifiedURI->Equals(mURI, &isOurURI);
-      do_check_success(rv);
-      if (!isOurURI) {
-        return NS_OK;
-      }
-
-      // Check that we have either the visited or not visited string.
-      bool visited = !!NS_LITERAL_STRING(URI_VISITED).Equals(aData);
-      bool notVisited = !!NS_LITERAL_STRING(URI_NOT_VISITED).Equals(aData);
-      do_check_true(visited || notVisited);
-
-      // Check to make sure we got the state we expected.
-      do_check_eq(visited, mExpectVisit);
-
-      // Indicate that we've been notified.
-      mNotified = true;
-
-      // Remove ourselves as an observer.
-      nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-      (void)observerService->RemoveObserver(this,
-                                            URI_VISITED_RESOLUTION_TOPIC);
+    bool isOurURI;
+    nsresult rv = notifiedURI->Equals(mURI, &isOurURI);
+    do_check_success(rv);
+    if (!isOurURI) {
       return NS_OK;
     }
-  private:
-    nsCOMPtr<nsIURI> mURI;
-    const bool mExpectVisit;
-    bool& mNotified;
-  };
-  NS_IMPL_ISUPPORTS(
-    statusObserver,
-    nsIObserver
-  )
-} // namespace test_observer_topic_dispatched_helpers
-void
-test_observer_topic_dispatched()
-{
+
+    // Check that we have either the visited or not visited string.
+    bool visited = !!NS_LITERAL_STRING(URI_VISITED).Equals(aData);
+    bool notVisited = !!NS_LITERAL_STRING(URI_NOT_VISITED).Equals(aData);
+    do_check_true(visited || notVisited);
+
+    // Check to make sure we got the state we expected.
+    do_check_eq(visited, mExpectVisit);
+
+    // Indicate that we've been notified.
+    mNotified = true;
+
+    // Remove ourselves as an observer.
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    (void)observerService->RemoveObserver(this, URI_VISITED_RESOLUTION_TOPIC);
+    return NS_OK;
+  }
+
+ private:
+  nsCOMPtr<nsIURI> mURI;
+  const bool mExpectVisit;
+  bool& mNotified;
+};
+NS_IMPL_ISUPPORTS(statusObserver, nsIObserver)
+}  // namespace test_observer_topic_dispatched_helpers
+void test_observer_topic_dispatched() {
   using namespace test_observer_topic_dispatched_helpers;
 
   // Create two URIs, making sure only one is in history.
@@ -396,10 +347,10 @@ test_observer_topic_dispatched()
   // Add the right observers for the URIs to check results.
   bool visitedNotified = false;
   nsCOMPtr<nsIObserver> visitedObs =
-    new statusObserver(visitedURI, true, visitedNotified);
+      new statusObserver(visitedURI, true, visitedNotified);
   bool notVisitedNotified = false;
   nsCOMPtr<nsIObserver> unvisitedObs =
-    new statusObserver(notVisitedURI, false, notVisitedNotified);
+      new statusObserver(notVisitedURI, false, notVisitedNotified);
 
   // Register our Links to be notified.
   nsCOMPtr<IHistory> history = do_get_IHistory();
@@ -409,9 +360,7 @@ test_observer_topic_dispatched()
   do_check_success(rv);
 
   // Spin the event loop as long as we have not been properly notified.
-  SpinEventLoopUntil([&]() {
-      return visitedNotified && notVisitedNotified;
-    });
+  SpinEventLoopUntil([&]() { return visitedNotified && notVisitedNotified; });
 
   // Unregister our observer that would not have been released.
   rv = history->UnregisterVisitedCallback(notVisitedURI, notVisitedLink);
@@ -420,9 +369,7 @@ test_observer_topic_dispatched()
   run_next_test();
 }
 
-void
-test_visituri_inserts()
-{
+void test_visituri_inserts() {
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
@@ -443,9 +390,7 @@ test_visituri_inserts()
   run_next_test();
 }
 
-void
-test_visituri_updates()
-{
+void test_visituri_updates() {
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
@@ -467,9 +412,7 @@ test_visituri_updates()
   run_next_test();
 }
 
-void
-test_visituri_preserves_shown_and_typed()
-{
+void test_visituri_preserves_shown_and_typed() {
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
@@ -489,9 +432,7 @@ test_visituri_preserves_shown_and_typed()
   run_next_test();
 }
 
-void
-test_visituri_creates_visit()
-{
+void test_visituri_creates_visit() {
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
@@ -512,9 +453,7 @@ test_visituri_creates_visit()
   run_next_test();
 }
 
-void
-test_visituri_transition_typed()
-{
+void test_visituri_transition_typed() {
   nsCOMPtr<nsINavHistoryService> navHistory = do_get_NavHistory();
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
@@ -535,9 +474,7 @@ test_visituri_transition_typed()
   run_next_test();
 }
 
-void
-test_visituri_transition_embed()
-{
+void test_visituri_transition_embed() {
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
@@ -557,9 +494,7 @@ test_visituri_transition_embed()
   run_next_test();
 }
 
-void
-test_new_visit_adds_place_guid()
-{
+void test_new_visit_adds_place_guid() {
   // First, add a visit and wait.  This will also add a place.
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
   nsCOMPtr<IHistory> history = do_get_IHistory();
@@ -581,9 +516,7 @@ test_new_visit_adds_place_guid()
 ////////////////////////////////////////////////////////////////////////////////
 //// IPC-only Tests
 
-void
-test_two_null_links_same_uri()
-{
+void test_two_null_links_same_uri() {
   // Tests that we do not crash when we have had two nullptr Links passed to
   // RegisterVisitedCallback and then the visit occurs (bug 607469).  This only
   // happens in IPC builds.
@@ -612,26 +545,26 @@ test_two_null_links_same_uri()
  * Note: for tests marked "Order Important!", please see the test for details.
  */
 Test gTests[] = {
-  PTEST(test_set_places_enabled), // Must come first!
-  PTEST(test_wait_checkpoint), // Must come second!
-  PTEST(test_unvisited_does_not_notify_part1), // Order Important!
-  PTEST(test_visited_notifies),
-  PTEST(test_unvisited_does_not_notify_part2), // Order Important!
-  PTEST(test_same_uri_notifies_both),
-  PTEST(test_unregistered_visited_does_not_notify), // Order Important!
-  PTEST(test_new_visit_notifies_waiting_Link),
-  PTEST(test_RegisterVisitedCallback_returns_before_notifying),
-  PTEST(test_observer_topic_dispatched),
-  PTEST(test_visituri_inserts),
-  PTEST(test_visituri_updates),
-  PTEST(test_visituri_preserves_shown_and_typed),
-  PTEST(test_visituri_creates_visit),
-  PTEST(test_visituri_transition_typed),
-  PTEST(test_visituri_transition_embed),
-  PTEST(test_new_visit_adds_place_guid),
+    PTEST(test_set_places_enabled),               // Must come first!
+    PTEST(test_wait_checkpoint),                  // Must come second!
+    PTEST(test_unvisited_does_not_notify_part1),  // Order Important!
+    PTEST(test_visited_notifies),
+    PTEST(test_unvisited_does_not_notify_part2),  // Order Important!
+    PTEST(test_same_uri_notifies_both),
+    PTEST(test_unregistered_visited_does_not_notify),  // Order Important!
+    PTEST(test_new_visit_notifies_waiting_Link),
+    PTEST(test_RegisterVisitedCallback_returns_before_notifying),
+    PTEST(test_observer_topic_dispatched),
+    PTEST(test_visituri_inserts),
+    PTEST(test_visituri_updates),
+    PTEST(test_visituri_preserves_shown_and_typed),
+    PTEST(test_visituri_creates_visit),
+    PTEST(test_visituri_transition_typed),
+    PTEST(test_visituri_transition_embed),
+    PTEST(test_new_visit_adds_place_guid),
 
-  // The rest of these tests are tests that are only run in IPC builds.
-  PTEST(test_two_null_links_same_uri),
+    // The rest of these tests are tests that are only run in IPC builds.
+    PTEST(test_two_null_links_same_uri),
 };
 
 #define TEST_NAME "IHistory"

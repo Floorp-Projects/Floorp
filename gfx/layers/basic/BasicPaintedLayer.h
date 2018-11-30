@@ -7,18 +7,18 @@
 #ifndef GFX_BASICPAINTEDLAYER_H
 #define GFX_BASICPAINTEDLAYER_H
 
-#include "Layers.h"                     // for PaintedLayer, LayerManager, etc
-#include "RotatedBuffer.h"              // for RotatedBuffer, etc
-#include "BasicImplData.h"              // for BasicImplData
-#include "BasicLayers.h"                // for BasicLayerManager
-#include "gfxPoint.h"                   // for gfxPoint
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "Layers.h"                 // for PaintedLayer, LayerManager, etc
+#include "RotatedBuffer.h"          // for RotatedBuffer, etc
+#include "BasicImplData.h"          // for BasicImplData
+#include "BasicLayers.h"            // for BasicLayerManager
+#include "gfxPoint.h"               // for gfxPoint
+#include "mozilla/RefPtr.h"         // for RefPtr
+#include "mozilla/gfx/BasePoint.h"  // for BasePoint
 #include "mozilla/layers/ContentClient.h"  // for ContentClientBasic
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
-#include "nsRegion.h"                   // for nsIntRegion
+#include "mozilla/mozalloc.h"              // for operator delete
+#include "nsDebug.h"                       // for NS_ASSERTION
+#include "nsISupportsImpl.h"               // for MOZ_COUNT_CTOR, etc
+#include "nsRegion.h"                      // for nsIntRegion
 class gfxContext;
 
 namespace mozilla {
@@ -27,41 +27,35 @@ namespace layers {
 class ReadbackProcessor;
 
 class BasicPaintedLayer : public PaintedLayer, public BasicImplData {
-public:
+ public:
   typedef ContentClient::PaintState PaintState;
   typedef ContentClient::ContentType ContentType;
 
-  explicit BasicPaintedLayer(BasicLayerManager* aLayerManager, gfx::BackendType aBackend) :
-    PaintedLayer(aLayerManager, static_cast<BasicImplData*>(this)),
-    mContentClient(nullptr)
-    , mBackend(aBackend)
-  {
+  explicit BasicPaintedLayer(BasicLayerManager* aLayerManager,
+                             gfx::BackendType aBackend)
+      : PaintedLayer(aLayerManager, static_cast<BasicImplData*>(this)),
+        mContentClient(nullptr),
+        mBackend(aBackend) {
     MOZ_COUNT_CTOR(BasicPaintedLayer);
   }
 
-protected:
-  virtual ~BasicPaintedLayer()
-  {
-    MOZ_COUNT_DTOR(BasicPaintedLayer);
-  }
+ protected:
+  virtual ~BasicPaintedLayer() { MOZ_COUNT_DTOR(BasicPaintedLayer); }
 
-public:
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
-  {
+ public:
+  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     PaintedLayer::SetVisibleRegion(aRegion);
   }
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) override
-  {
+  virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     mInvalidRegion.Add(aRegion);
     UpdateValidRegionAfterInvalidRegionChanged();
   }
 
-  virtual void PaintThebes(gfxContext* aContext,
-                           Layer* aMaskLayer,
+  virtual void PaintThebes(gfxContext* aContext, Layer* aMaskLayer,
                            LayerManager::DrawPaintedLayerCallback aCallback,
                            void* aCallbackData) override;
 
@@ -69,22 +63,21 @@ public:
                         void* aCallbackData,
                         ReadbackProcessor* aReadback) override;
 
-  virtual void ClearCachedResources() override
-  {
+  virtual void ClearCachedResources() override {
     if (mContentClient) {
       mContentClient->Clear();
     }
     ClearValidRegion();
   }
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
-  {
+  virtual void ComputeEffectiveTransforms(
+      const gfx::Matrix4x4& aTransformToSurface) override {
     if (!BasicManager()->IsRetained()) {
       // Don't do any snapping of our transform, since we're just going to
       // draw straight through without intermediate buffers.
       mEffectiveTransform = GetLocalTransform() * aTransformToSurface;
-      if (gfxPoint(0,0) != mResidualTranslation) {
-        mResidualTranslation = gfxPoint(0,0);
+      if (gfxPoint(0, 0) != mResidualTranslation) {
+        mResidualTranslation = gfxPoint(0, 0);
         ClearValidRegion();
       }
       ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
@@ -93,21 +86,18 @@ public:
     PaintedLayer::ComputeEffectiveTransforms(aTransformToSurface);
   }
 
-  BasicLayerManager* BasicManager()
-  {
+  BasicLayerManager* BasicManager() {
     return static_cast<BasicLayerManager*>(mManager);
   }
 
-protected:
-  virtual void
-  PaintBuffer(gfxContext* aContext,
-              const nsIntRegion& aRegionToDraw,
-              const nsIntRegion& aExtendedRegionToDraw,
-              const nsIntRegion& aRegionToInvalidate,
-              DrawRegionClip aClip,
-              LayerManager::DrawPaintedLayerCallback aCallback,
-              void* aCallbackData)
-  {
+ protected:
+  virtual void PaintBuffer(gfxContext* aContext,
+                           const nsIntRegion& aRegionToDraw,
+                           const nsIntRegion& aExtendedRegionToDraw,
+                           const nsIntRegion& aRegionToInvalidate,
+                           DrawRegionClip aClip,
+                           LayerManager::DrawPaintedLayerCallback aCallback,
+                           void* aCallbackData) {
     if (!aCallback) {
       BasicManager()->SetTransactionIncomplete();
       return;
@@ -127,7 +117,7 @@ protected:
   gfx::BackendType mBackend;
 };
 
-} // namespace layers
-} // namespace mozilla
+}  // namespace layers
+}  // namespace mozilla
 
 #endif

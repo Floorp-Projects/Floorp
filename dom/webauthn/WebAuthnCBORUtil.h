@@ -16,21 +16,18 @@
 namespace mozilla {
 namespace dom {
 
-nsresult
-CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
-                       /* out */ CryptoBuffer& aPubKeyObj);
+nsresult CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
+                                /* out */ CryptoBuffer& aPubKeyObj);
 
-nsresult
-CBOREncodeFidoU2FAttestationObj(const CryptoBuffer& aAuthDataBuf,
-                                const CryptoBuffer& aAttestationCertBuf,
-                                const CryptoBuffer& aSignatureBuf,
-                                /* out */ CryptoBuffer& aAttestationObj);
+nsresult CBOREncodeFidoU2FAttestationObj(
+    const CryptoBuffer& aAuthDataBuf, const CryptoBuffer& aAttestationCertBuf,
+    const CryptoBuffer& aSignatureBuf,
+    /* out */ CryptoBuffer& aAttestationObj);
 
-nsresult
-CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
-                             /* out */ CryptoBuffer& aAttestationObj);
+nsresult CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
+                                      /* out */ CryptoBuffer& aAttestationObj);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WebAuthnCBORUtil_h
+#endif  // mozilla_dom_WebAuthnCBORUtil_h

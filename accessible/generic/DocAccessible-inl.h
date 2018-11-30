@@ -22,9 +22,8 @@
 namespace mozilla {
 namespace a11y {
 
-inline Accessible*
-DocAccessible::AccessibleOrTrueContainer(nsINode* aNode, int aIgnoreARIAHidden) const
-{
+inline Accessible* DocAccessible::AccessibleOrTrueContainer(
+    nsINode* aNode, int aIgnoreARIAHidden) const {
   // HTML comboboxes have no-content list accessible as an intermediate
   // containing all options.
   Accessible* container = GetAccessibleOrContainer(aNode, aIgnoreARIAHidden);
@@ -34,9 +33,7 @@ DocAccessible::AccessibleOrTrueContainer(nsINode* aNode, int aIgnoreARIAHidden) 
   return container;
 }
 
-inline nsIAccessiblePivot*
-DocAccessible::VirtualCursor()
-{
+inline nsIAccessiblePivot* DocAccessible::VirtualCursor() {
   if (!mVirtualCursor) {
     mVirtualCursor = new nsAccessiblePivot(this);
     mVirtualCursor->AddObserver(this);
@@ -44,45 +41,35 @@ DocAccessible::VirtualCursor()
   return mVirtualCursor;
 }
 
-inline void
-DocAccessible::FireDelayedEvent(AccEvent* aEvent)
-{
+inline void DocAccessible::FireDelayedEvent(AccEvent* aEvent) {
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eDocLoad))
-    logging::DocLoadEventFired(aEvent);
+  if (logging::IsEnabled(logging::eDocLoad)) logging::DocLoadEventFired(aEvent);
 #endif
 
   mNotificationController->QueueEvent(aEvent);
 }
 
-inline void
-DocAccessible::FireDelayedEvent(uint32_t aEventType, Accessible* aTarget)
-{
+inline void DocAccessible::FireDelayedEvent(uint32_t aEventType,
+                                            Accessible* aTarget) {
   RefPtr<AccEvent> event = new AccEvent(aEventType, aTarget);
   FireDelayedEvent(event);
 }
 
-inline void
-DocAccessible::BindChildDocument(DocAccessible* aDocument)
-{
+inline void DocAccessible::BindChildDocument(DocAccessible* aDocument) {
   mNotificationController->ScheduleChildDocBinding(aDocument);
 }
 
-template<class Class, class Arg>
-inline void
-DocAccessible::HandleNotification(Class* aInstance,
-                                  typename TNotification<Class, Arg>::Callback aMethod,
-                                  Arg* aArg)
-{
+template <class Class, class Arg>
+inline void DocAccessible::HandleNotification(
+    Class* aInstance, typename TNotification<Class, Arg>::Callback aMethod,
+    Arg* aArg) {
   if (mNotificationController) {
-    mNotificationController->HandleNotification<Class, Arg>(aInstance,
-                                                            aMethod, aArg);
+    mNotificationController->HandleNotification<Class, Arg>(aInstance, aMethod,
+                                                            aArg);
   }
 }
 
-inline void
-DocAccessible::UpdateText(nsIContent* aTextNode)
-{
+inline void DocAccessible::UpdateText(nsIContent* aTextNode) {
   NS_ASSERTION(mNotificationController, "The document was shut down!");
 
   // Ignore the notification if initial tree construction hasn't been done yet.
@@ -90,12 +77,9 @@ DocAccessible::UpdateText(nsIContent* aTextNode)
     mNotificationController->ScheduleTextUpdate(aTextNode);
 }
 
-inline void
-DocAccessible::AddScrollListener()
-{
+inline void DocAccessible::AddScrollListener() {
   // Delay scroll initializing until the document has a root frame.
-  if (!mPresShell->GetRootFrame())
-    return;
+  if (!mPresShell->GetRootFrame()) return;
 
   mDocFlags |= eScrollInitialized;
   nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
@@ -109,17 +93,12 @@ DocAccessible::AddScrollListener()
   }
 }
 
-inline void
-DocAccessible::RemoveScrollListener()
-{
+inline void DocAccessible::RemoveScrollListener() {
   nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
-  if (sf)
-    sf->RemoveScrollPositionListener(this);
+  if (sf) sf->RemoveScrollPositionListener(this);
 }
 
-inline void
-DocAccessible::NotifyOfLoad(uint32_t aLoadEventType)
-{
+inline void DocAccessible::NotifyOfLoad(uint32_t aLoadEventType) {
   mLoadState |= eDOMLoaded;
   mLoadEventType = aLoadEventType;
 
@@ -127,28 +106,23 @@ DocAccessible::NotifyOfLoad(uint32_t aLoadEventType)
   // caused by file loading. Fire busy state change event.
   if (HasLoadState(eCompletelyLoaded) && IsLoadEventTarget()) {
     RefPtr<AccEvent> stateEvent =
-      new AccStateChangeEvent(this, states::BUSY, false);
+        new AccStateChangeEvent(this, states::BUSY, false);
     FireDelayedEvent(stateEvent);
   }
 }
 
-inline void
-DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible)
-{
+inline void DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible) {
   if (aAccessible->IsCombobox() || aAccessible->Role() == roles::ENTRY)
     FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE, aAccessible);
 }
 
-inline Accessible*
-DocAccessible::GetAccessibleEvenIfNotInMapOrContainer(nsINode* aNode) const
-{
+inline Accessible* DocAccessible::GetAccessibleEvenIfNotInMapOrContainer(
+    nsINode* aNode) const {
   Accessible* acc = GetAccessibleEvenIfNotInMap(aNode);
   return acc ? acc : GetContainerAccessible(aNode);
 }
 
-inline void
-DocAccessible::CreateSubtree(Accessible* aChild)
-{
+inline void DocAccessible::CreateSubtree(Accessible* aChild) {
   // If a focused node has been shown then it could mean its frame was recreated
   // while the node stays focused and we need to fire focus event on
   // the accessible we just created. If the queue contains a focus event for
@@ -167,8 +141,7 @@ DocAccessible::CreateSubtree(Accessible* aChild)
     roles::Role role = aChild->ARIARole();
     if (role == roles::MENUPOPUP) {
       FireDelayedEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START, aChild);
-    }
-    else if (role == roles::ALERT) {
+    } else if (role == roles::ALERT) {
       FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, aChild);
     }
   }
@@ -177,29 +150,25 @@ DocAccessible::CreateSubtree(Accessible* aChild)
   // account active item?
   if (focusedAcc) {
     FocusMgr()->DispatchFocusEvent(this, focusedAcc);
-    SelectionMgr()->
-      SetControlSelectionListener(focusedAcc->GetNode()->AsElement());
+    SelectionMgr()->SetControlSelectionListener(
+        focusedAcc->GetNode()->AsElement());
   }
 }
 
-inline DocAccessible::AttrRelProviders*
-DocAccessible::GetRelProviders(dom::Element* aElement,
-                               const nsAString& aID) const
-{
-  DependentIDsHashtable* hash =
-    mDependentIDsHashes.Get(aElement->GetUncomposedDocOrConnectedShadowRoot());
+inline DocAccessible::AttrRelProviders* DocAccessible::GetRelProviders(
+    dom::Element* aElement, const nsAString& aID) const {
+  DependentIDsHashtable* hash = mDependentIDsHashes.Get(
+      aElement->GetUncomposedDocOrConnectedShadowRoot());
   if (hash) {
     return hash->Get(aID);
   }
   return nullptr;
 }
 
-inline DocAccessible::AttrRelProviders*
-DocAccessible::GetOrCreateRelProviders(dom::Element* aElement,
-                                       const nsAString& aID)
-{
+inline DocAccessible::AttrRelProviders* DocAccessible::GetOrCreateRelProviders(
+    dom::Element* aElement, const nsAString& aID) {
   dom::DocumentOrShadowRoot* docOrShadowRoot =
-    aElement->GetUncomposedDocOrConnectedShadowRoot();
+      aElement->GetUncomposedDocOrConnectedShadowRoot();
   DependentIDsHashtable* hash = mDependentIDsHashes.Get(docOrShadowRoot);
   if (!hash) {
     hash = new DependentIDsHashtable();
@@ -214,12 +183,10 @@ DocAccessible::GetOrCreateRelProviders(dom::Element* aElement,
   return providers;
 }
 
-inline void
-DocAccessible::RemoveRelProvidersIfEmpty(dom::Element* aElement,
-                                         const nsAString& aID)
-{
+inline void DocAccessible::RemoveRelProvidersIfEmpty(dom::Element* aElement,
+                                                     const nsAString& aID) {
   dom::DocumentOrShadowRoot* docOrShadowRoot =
-    aElement->GetUncomposedDocOrConnectedShadowRoot();
+      aElement->GetUncomposedDocOrConnectedShadowRoot();
   DependentIDsHashtable* hash = mDependentIDsHashes.Get(docOrShadowRoot);
   if (hash) {
     AttrRelProviders* providers = hash->Get(aID);
@@ -232,7 +199,7 @@ DocAccessible::RemoveRelProvidersIfEmpty(dom::Element* aElement,
   }
 }
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

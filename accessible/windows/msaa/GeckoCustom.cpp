@@ -14,16 +14,14 @@ IMPL_IUNKNOWN_QUERY_IFACE(IGeckoCustom)
 IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAcc)
 
 HRESULT
-GeckoCustom::get_anchorCount(long* aCount)
-{
+GeckoCustom::get_anchorCount(long* aCount) {
   *aCount = mAcc->AnchorCount();
   return S_OK;
 }
 
 HRESULT
-GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY,
-                                   int32_t* aWidth, int32_t* aHeight)
-{
+GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
+                                   int32_t* aHeight) {
   nsIntRect bounds = mAcc->BoundsInCSSPixels();
   if (!bounds.IsEmpty()) {
     *aX = bounds.X();
@@ -36,8 +34,7 @@ GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY,
 }
 
 HRESULT
-GeckoCustom::get_DOMNodeID(BSTR* aID)
-{
+GeckoCustom::get_DOMNodeID(BSTR* aID) {
   nsIContent* content = mAcc->GetContent();
   if (!content) {
     return S_OK;
@@ -53,22 +50,19 @@ GeckoCustom::get_DOMNodeID(BSTR* aID)
 }
 
 STDMETHODIMP
-GeckoCustom::get_ID(uint64_t* aID)
-{
+GeckoCustom::get_ID(uint64_t* aID) {
   *aID = mAcc->IsDoc() ? 0 : reinterpret_cast<uintptr_t>(mAcc.get());
   return S_OK;
 }
 
 STDMETHODIMP
-GeckoCustom::get_minimumIncrement(double* aIncrement)
-{
+GeckoCustom::get_minimumIncrement(double* aIncrement) {
   *aIncrement = mAcc->Step();
   return S_OK;
 }
 
 STDMETHODIMP
-GeckoCustom::get_mozState(uint64_t* aState)
-{
+GeckoCustom::get_mozState(uint64_t* aState) {
   *aState = mAcc->State();
   return S_OK;
 }

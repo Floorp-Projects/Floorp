@@ -57,10 +57,8 @@ Thus, internally, a key has the following fields:
 
 struct JsonWebKey;
 
-class CryptoKey final : public nsISupports
-                      , public nsWrapperCache
-{
-public:
+class CryptoKey final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CryptoKey)
 
@@ -71,32 +69,30 @@ public:
   static const uint32_t TYPE_MASK = 0x0000FF00;
   enum KeyType {
     UNKNOWN = 0x00000000,
-    SECRET  = 0x00000100,
-    PUBLIC  = 0x00000200,
+    SECRET = 0x00000100,
+    PUBLIC = 0x00000200,
     PRIVATE = 0x00000300
   };
 
   static const uint32_t CLEAR_USAGES = 0xFF00FFFF;
   static const uint32_t USAGES_MASK = 0x00FF0000;
   enum KeyUsage {
-    ENCRYPT    = 0x00010000,
-    DECRYPT    = 0x00020000,
-    SIGN       = 0x00040000,
-    VERIFY     = 0x00080000,
-    DERIVEKEY  = 0x00100000,
+    ENCRYPT = 0x00010000,
+    DECRYPT = 0x00020000,
+    SIGN = 0x00040000,
+    VERIFY = 0x00080000,
+    DERIVEKEY = 0x00100000,
     DERIVEBITS = 0x00200000,
-    WRAPKEY    = 0x00400000,
-    UNWRAPKEY  = 0x00800000
+    WRAPKEY = 0x00400000,
+    UNWRAPKEY = 0x00800000
   };
 
   explicit CryptoKey(nsIGlobalObject* aWindow);
 
-  nsIGlobalObject* GetParentObject() const
-  {
-    return mGlobal;
-  }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL methods
   void GetType(nsString& aRetVal) const;
@@ -152,19 +148,16 @@ public:
                                   JsonWebKey& aRetVal);
 
   static UniqueSECKEYPublicKey PublicKeyFromJwk(const JsonWebKey& aKeyData);
-  static nsresult PublicKeyToJwk(SECKEYPublicKey* aPubKey,
-                                 JsonWebKey& aRetVal);
+  static nsresult PublicKeyToJwk(SECKEYPublicKey* aPubKey, JsonWebKey& aRetVal);
 
   static UniqueSECKEYPublicKey PublicDhKeyFromRaw(
-    CryptoBuffer& aKeyData,
-    const CryptoBuffer& aPrime,
-    const CryptoBuffer& aGenerator);
+      CryptoBuffer& aKeyData, const CryptoBuffer& aPrime,
+      const CryptoBuffer& aGenerator);
   static nsresult PublicDhKeyToRaw(SECKEYPublicKey* aPubKey,
                                    CryptoBuffer& aRetVal);
 
-  static UniqueSECKEYPublicKey PublicECKeyFromRaw(
-    CryptoBuffer& aKeyData,
-    const nsString& aNamedCurve);
+  static UniqueSECKEYPublicKey PublicECKeyFromRaw(CryptoBuffer& aKeyData,
+                                                  const nsString& aNamedCurve);
   static nsresult PublicECKeyToRaw(SECKEYPublicKey* aPubKey,
                                    CryptoBuffer& aRetVal);
 
@@ -174,11 +167,11 @@ public:
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
   bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
-private:
+ private:
   ~CryptoKey() {}
 
   RefPtr<nsIGlobalObject> mGlobal;
-  uint32_t mAttributes; // see above
+  uint32_t mAttributes;  // see above
   KeyAlgorithmProxy mAlgorithm;
 
   // Only one key handle should be set, according to the KeyType
@@ -187,7 +180,7 @@ private:
   UniqueSECKEYPublicKey mPublicKey;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_CryptoKey_h
+#endif  // mozilla_dom_CryptoKey_h

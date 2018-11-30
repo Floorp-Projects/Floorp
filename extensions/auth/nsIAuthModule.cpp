@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIAuthModule.h"
-#if defined( USE_SSPI )
+#if defined(USE_SSPI)
 #include "nsAuthSSPI.h"
 #else
 #include "nsAuthSambaNTLM.h"
@@ -15,15 +15,14 @@
 #include "nsNSSComponent.h"
 
 // static
-already_AddRefed<nsIAuthModule>
-nsIAuthModule::CreateInstance(const char* aType)
-{
+already_AddRefed<nsIAuthModule> nsIAuthModule::CreateInstance(
+    const char* aType) {
   nsCOMPtr<nsIAuthModule> auth;
   if (!nsCRT::strcmp(aType, "kerb-gss")) {
     auth = new nsAuthGSSAPI(PACKAGE_TYPE_KERBEROS);
   } else if (!nsCRT::strcmp(aType, "negotiate-gss")) {
     auth = new nsAuthGSSAPI(PACKAGE_TYPE_NEGOTIATE);
-#if defined( USE_SSPI )
+#if defined(USE_SSPI)
   } else if (!nsCRT::strcmp(aType, "negotiate-sspi")) {
     auth = new nsAuthSSPI();
   } else if (!nsCRT::strcmp(aType, "kerb-sspi")) {
@@ -44,9 +43,8 @@ nsIAuthModule::CreateInstance(const char* aType)
 #endif
   } else if (!nsCRT::strcmp(aType, "sasl-gssapi")) {
     auth = new nsAuthSASL();
-  } else if (!nsCRT::strcmp(aType, "ntlm") &&
-    XRE_IsParentProcess() &&
-    EnsureNSSInitializedChromeOrContent()) {
+  } else if (!nsCRT::strcmp(aType, "ntlm") && XRE_IsParentProcess() &&
+             EnsureNSSInitializedChromeOrContent()) {
     RefPtr<nsNTLMAuthModule> ntlmAuth = new nsNTLMAuthModule();
 
     nsresult rv = ntlmAuth->InitTest();

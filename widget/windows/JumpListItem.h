@@ -8,11 +8,11 @@
 
 #include <windows.h>
 #include <shobjidl.h>
-#undef LogSeverity // SetupAPI.h #defines this as DWORD
+#undef LogSeverity  // SetupAPI.h #defines this as DWORD
 
 #include "mozilla/RefPtr.h"
 #include "nsIJumpListItem.h"  // defines nsIJumpListItem
-#include "nsIMIMEInfo.h" // defines nsILocalHandlerApp
+#include "nsIMIMEInfo.h"      // defines nsILocalHandlerApp
 #include "nsTArray.h"
 #include "nsIMutableArray.h"
 #include "nsCOMPtr.h"
@@ -26,115 +26,107 @@ class nsIThread;
 namespace mozilla {
 namespace widget {
 
-class JumpListItemBase : public nsIJumpListItem
-{
-public:
-  JumpListItemBase() :
-   mItemType(nsIJumpListItem::JUMPLIST_ITEM_EMPTY)
-  {}
+class JumpListItemBase : public nsIJumpListItem {
+ public:
+  JumpListItemBase() : mItemType(nsIJumpListItem::JUMPLIST_ITEM_EMPTY) {}
 
-  explicit JumpListItemBase(int32_t type) :
-   mItemType(type)
-  {}
+  explicit JumpListItemBase(int32_t type) : mItemType(type) {}
 
   NS_DECL_NSIJUMPLISTITEM
 
   static const char kJumpListCacheDir[];
 
-protected:
-  virtual ~JumpListItemBase()
-  {}
+ protected:
+  virtual ~JumpListItemBase() {}
 
   short Type() { return mItemType; }
   short mItemType;
-
 };
 
-class JumpListItem : public JumpListItemBase
-{
+class JumpListItem : public JumpListItemBase {
   ~JumpListItem() {}
 
-public:
+ public:
   using JumpListItemBase::JumpListItemBase;
 
   NS_DECL_ISUPPORTS
 };
 
-class JumpListSeparator : public JumpListItemBase, public nsIJumpListSeparator
-{
+class JumpListSeparator : public JumpListItemBase, public nsIJumpListSeparator {
   ~JumpListSeparator() {}
 
-public:
-  JumpListSeparator() :
-   JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR)
-  {}
+ public:
+  JumpListSeparator()
+      : JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR) {}
 
   NS_DECL_ISUPPORTS
   NS_FORWARD_NSIJUMPLISTITEM(JumpListItemBase::)
 
-  static nsresult GetSeparator(RefPtr<IShellLinkW>& aShellLink);
+  static nsresult GetSeparator(RefPtr<IShellLinkW> &aShellLink);
 };
 
-class JumpListLink : public JumpListItemBase, public nsIJumpListLink
-{
+class JumpListLink : public JumpListItemBase, public nsIJumpListLink {
   ~JumpListLink() {}
 
-public:
-  JumpListLink() :
-   JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_LINK)
-  {}
+ public:
+  JumpListLink() : JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_LINK) {}
 
   NS_DECL_ISUPPORTS
-  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItemBase::GetType(aType); }
+  NS_IMETHOD GetType(int16_t *aType) override {
+    return JumpListItemBase::GetType(aType);
+  }
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override;
   NS_DECL_NSIJUMPLISTLINK
 
-  static nsresult GetShellItem(nsCOMPtr<nsIJumpListItem>& item, RefPtr<IShellItem2>& aShellItem);
-  static nsresult GetJumpListLink(IShellItem *pItem, nsCOMPtr<nsIJumpListLink>& aLink);
+  static nsresult GetShellItem(nsCOMPtr<nsIJumpListItem> &item,
+                               RefPtr<IShellItem2> &aShellItem);
+  static nsresult GetJumpListLink(IShellItem *pItem,
+                                  nsCOMPtr<nsIJumpListLink> &aLink);
 
-protected:
+ protected:
   nsString mUriTitle;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 };
 
-class JumpListShortcut : public JumpListItemBase, public nsIJumpListShortcut
-{
+class JumpListShortcut : public JumpListItemBase, public nsIJumpListShortcut {
   ~JumpListShortcut() {}
 
-public:
-  JumpListShortcut() :
-   JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT)
-  {}
+ public:
+  JumpListShortcut()
+      : JumpListItemBase(nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JumpListShortcut, JumpListItemBase)
-  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItemBase::GetType(aType); }
+  NS_IMETHOD GetType(int16_t *aType) override {
+    return JumpListItemBase::GetType(aType);
+  }
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override;
   NS_DECL_NSIJUMPLISTSHORTCUT
 
-  static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
-                               RefPtr<IShellLinkW>& aShellLink,
+  static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem> &item,
+                               RefPtr<IShellLinkW> &aShellLink,
                                nsCOMPtr<nsIThread> &aIOThread);
-  static nsresult GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJumpListShortcut>& aShortcut);
+  static nsresult GetJumpListShortcut(IShellLinkW *pLink,
+                                      nsCOMPtr<nsIJumpListShortcut> &aShortcut);
   static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
                                     nsCOMPtr<nsIFile> &aICOFile);
 
-protected:
+ protected:
   int32_t mIconIndex;
   nsCOMPtr<nsIURI> mFaviconPageURI;
   nsCOMPtr<nsILocalHandlerApp> mHandlerApp;
 
-  bool ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp);
+  bool ExecutableExists(nsCOMPtr<nsILocalHandlerApp> &handlerApp);
   static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
                                        nsString &aICOFilePath,
                                        nsCOMPtr<nsIThread> &aIOThread);
-  static nsresult CacheIconFileFromFaviconURIAsync(nsCOMPtr<nsIURI> aFaviconPageURI,
-                                                   nsCOMPtr<nsIFile> aICOFile,
-                                                   nsCOMPtr<nsIThread> &aIOThread);
+  static nsresult CacheIconFileFromFaviconURIAsync(
+      nsCOMPtr<nsIURI> aFaviconPageURI, nsCOMPtr<nsIFile> aICOFile,
+      nsCOMPtr<nsIThread> &aIOThread);
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
 #endif /* __JumpListItem_h__ */

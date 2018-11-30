@@ -129,13 +129,10 @@ class MessagePump {
   virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time) = 0;
 
   // If returned, just use the nsThread.
-  virtual nsIEventTarget* GetXPCOMThread()
-  {
-    return nullptr;
-  }
+  virtual nsIEventTarget* GetXPCOMThread() { return nullptr; }
 
-protected:
-  virtual ~MessagePump() {};
+ protected:
+  virtual ~MessagePump(){};
 };
 
 }  // namespace base

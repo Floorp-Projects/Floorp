@@ -23,40 +23,17 @@
 #define UTF8UTILS_WARNING(msg)
 #endif
 
-class UTF8traits
-{
-public:
-  static bool isASCII(char aChar)
-  {
-    return (aChar & 0x80) == 0x00;
-  }
-  static bool isInSeq(char aChar)
-  {
-    return (aChar & 0xC0) == 0x80;
-  }
-  static bool is2byte(char aChar)
-  {
-    return (aChar & 0xE0) == 0xC0;
-  }
-  static bool is3byte(char aChar)
-  {
-    return (aChar & 0xF0) == 0xE0;
-  }
-  static bool is4byte(char aChar)
-  {
-    return (aChar & 0xF8) == 0xF0;
-  }
-  static bool is5byte(char aChar)
-  {
-    return (aChar & 0xFC) == 0xF8;
-  }
-  static bool is6byte(char aChar)
-  {
-    return (aChar & 0xFE) == 0xFC;
-  }
+class UTF8traits {
+ public:
+  static bool isASCII(char aChar) { return (aChar & 0x80) == 0x00; }
+  static bool isInSeq(char aChar) { return (aChar & 0xC0) == 0x80; }
+  static bool is2byte(char aChar) { return (aChar & 0xE0) == 0xC0; }
+  static bool is3byte(char aChar) { return (aChar & 0xF0) == 0xE0; }
+  static bool is4byte(char aChar) { return (aChar & 0xF8) == 0xF0; }
+  static bool is5byte(char aChar) { return (aChar & 0xFC) == 0xF8; }
+  static bool is6byte(char aChar) { return (aChar & 0xFE) == 0xFC; }
   // return the number of bytes in a sequence beginning with aChar
-  static int bytes(char aChar)
-  {
+  static int bytes(char aChar) {
     if (isASCII(aChar)) {
       return 1;
     }
@@ -86,13 +63,10 @@ public:
  *
  * Precondition: *aBuffer < aEnd
  */
-class UTF8CharEnumerator
-{
-public:
-  static inline char32_t NextChar(const char** aBuffer,
-                                  const char* aEnd,
-                                  bool* aErr = nullptr)
-  {
+class UTF8CharEnumerator {
+ public:
+  static inline char32_t NextChar(const char** aBuffer, const char* aEnd,
+                                  bool* aErr = nullptr) {
     MOZ_ASSERT(aBuffer, "null buffer pointer pointer");
     MOZ_ASSERT(aEnd, "null end pointer");
 
@@ -204,13 +178,10 @@ public:
  *
  * Precondition: *aBuffer < aEnd
  */
-class UTF16CharEnumerator
-{
-public:
+class UTF16CharEnumerator {
+ public:
   static inline char32_t NextChar(const char16_t** aBuffer,
-                                  const char16_t* aEnd,
-                                  bool* aErr = nullptr)
-  {
+                                  const char16_t* aEnd, bool* aErr = nullptr) {
     MOZ_ASSERT(aBuffer, "null buffer pointer pointer");
     MOZ_ASSERT(aEnd, "null end pointer");
 
@@ -249,17 +220,16 @@ public:
   }
 };
 
-template<typename Char, typename UnsignedT>
-inline UnsignedT
-RewindToPriorUTF8Codepoint(const Char* utf8Chars, UnsignedT index)
-{
+template <typename Char, typename UnsignedT>
+inline UnsignedT RewindToPriorUTF8Codepoint(const Char* utf8Chars,
+                                            UnsignedT index) {
   static_assert(mozilla::IsSame<Char, char>::value ||
-                mozilla::IsSame<Char, unsigned char>::value ||
-                mozilla::IsSame<Char, signed char>::value,
+                    mozilla::IsSame<Char, unsigned char>::value ||
+                    mozilla::IsSame<Char, signed char>::value,
                 "UTF-8 data must be in 8-bit units");
-  static_assert(mozilla::IsUnsigned<UnsignedT>::value, "index type must be unsigned");
-  while (index > 0 && (utf8Chars[index] & 0xC0) == 0x80)
-    --index;
+  static_assert(mozilla::IsUnsigned<UnsignedT>::value,
+                "index type must be unsigned");
+  while (index > 0 && (utf8Chars[index] & 0xC0) == 0x80) --index;
 
   return index;
 }

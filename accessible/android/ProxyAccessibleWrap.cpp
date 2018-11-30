@@ -9,8 +9,7 @@
 using namespace mozilla::a11y;
 
 ProxyAccessibleWrap::ProxyAccessibleWrap(ProxyAccessible* aProxy)
-  : AccessibleWrap(nullptr, nullptr)
-{
+    : AccessibleWrap(nullptr, nullptr) {
   mType = eProxyType;
   mBits.proxy = aProxy;
 
@@ -27,18 +26,16 @@ ProxyAccessibleWrap::ProxyAccessibleWrap(ProxyAccessible* aProxy)
   }
 
   auto doc = reinterpret_cast<DocProxyAccessibleWrap*>(
-    Proxy()->Document()->GetWrapper());
+      Proxy()->Document()->GetWrapper());
   if (doc) {
     mID = AcquireID();
     doc->AddID(mID, this);
   }
 }
 
-void
-ProxyAccessibleWrap::Shutdown()
-{
+void ProxyAccessibleWrap::Shutdown() {
   auto doc = reinterpret_cast<DocProxyAccessibleWrap*>(
-    Proxy()->Document()->GetWrapper());
+      Proxy()->Document()->GetWrapper());
   if (mID && doc) {
     doc->RemoveID(mID);
     ReleaseID(mID);
@@ -51,100 +48,64 @@ ProxyAccessibleWrap::Shutdown()
 
 // Accessible
 
-already_AddRefed<nsIPersistentProperties>
-ProxyAccessibleWrap::Attributes()
-{
+already_AddRefed<nsIPersistentProperties> ProxyAccessibleWrap::Attributes() {
   AutoTArray<Attribute, 10> attrs;
   Proxy()->Attributes(&attrs);
   return AttributeArrayToProperties(attrs);
 }
 
-uint32_t
-ProxyAccessibleWrap::ChildCount() const
-{
+uint32_t ProxyAccessibleWrap::ChildCount() const {
   return Proxy()->ChildrenCount();
 }
 
-Accessible*
-ProxyAccessibleWrap::GetChildAt(uint32_t aIndex) const
-{
+Accessible* ProxyAccessibleWrap::GetChildAt(uint32_t aIndex) const {
   ProxyAccessible* child = Proxy()->ChildAt(aIndex);
   return child ? WrapperFor(child) : nullptr;
 }
 
-ENameValueFlag
-ProxyAccessibleWrap::Name(nsString& aName) const
-{
+ENameValueFlag ProxyAccessibleWrap::Name(nsString& aName) const {
   Proxy()->Name(aName);
   return eNameOK;
 }
 
-void
-ProxyAccessibleWrap::Value(nsString& aValue) const
-{
+void ProxyAccessibleWrap::Value(nsString& aValue) const {
   Proxy()->Value(aValue);
 }
 
-uint64_t
-ProxyAccessibleWrap::State()
-{ 
-  return Proxy()->State();
-}
+uint64_t ProxyAccessibleWrap::State() { return Proxy()->State(); }
 
-nsIntRect
-ProxyAccessibleWrap::Bounds() const
-{
-  return Proxy()->Bounds();
-}
+nsIntRect ProxyAccessibleWrap::Bounds() const { return Proxy()->Bounds(); }
 
-void
-ProxyAccessibleWrap::ScrollTo(uint32_t aHow) const
-{
+void ProxyAccessibleWrap::ScrollTo(uint32_t aHow) const {
   Proxy()->ScrollTo(aHow);
 }
 
 // Other
 
-void
-ProxyAccessibleWrap::SetTextContents(const nsAString& aText)
-{
+void ProxyAccessibleWrap::SetTextContents(const nsAString& aText) {
   Proxy()->ReplaceText(PromiseFlatString(aText));
 }
 
-void
-ProxyAccessibleWrap::GetTextContents(nsAString& aText)
-{
+void ProxyAccessibleWrap::GetTextContents(nsAString& aText) {
   nsAutoString text;
   Proxy()->TextSubstring(0, -1, text);
   aText.Assign(text);
 }
 
-bool
-ProxyAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
-                                        int32_t* aEndOffset)
-{
+bool ProxyAccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
+                                             int32_t* aEndOffset) {
   nsAutoString unused;
   return Proxy()->SelectionBoundsAt(0, unused, aStartOffset, aEndOffset);
 }
 
-role
-ProxyAccessibleWrap::WrapperRole()
-{
-  return Proxy()->Role();
-}
+role ProxyAccessibleWrap::WrapperRole() { return Proxy()->Role(); }
 
-AccessibleWrap*
-ProxyAccessibleWrap::WrapperParent()
-{
+AccessibleWrap* ProxyAccessibleWrap::WrapperParent() {
   return Proxy()->Parent() ? WrapperFor(Proxy()->Parent()) : nullptr;
 }
 
-bool
-ProxyAccessibleWrap::WrapperRangeInfo(double* aCurVal,
-                                      double* aMinVal,
-                                      double* aMaxVal,
-                                      double* aStep)
-{
+bool ProxyAccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,
+                                           double* aMaxVal, double* aStep) {
   if (HasNumericValue()) {
     ProxyAccessible* proxy = Proxy();
     *aCurVal = proxy->CurValue();
@@ -157,8 +118,6 @@ ProxyAccessibleWrap::WrapperRangeInfo(double* aCurVal,
   return false;
 }
 
-void
-ProxyAccessibleWrap::WrapperDOMNodeID(nsString& aDOMNodeID)
-{
+void ProxyAccessibleWrap::WrapperDOMNodeID(nsString& aDOMNodeID) {
   Proxy()->DOMNodeID(aDOMNodeID);
 }

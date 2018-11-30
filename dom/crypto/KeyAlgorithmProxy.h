@@ -25,9 +25,7 @@ struct RsaHashedKeyAlgorithmStorage {
   uint16_t mModulusLength;
   CryptoBuffer mPublicExponent;
 
-  bool
-  ToKeyAlgorithm(JSContext* aCx, RsaHashedKeyAlgorithm& aRsa) const
-  {
+  bool ToKeyAlgorithm(JSContext* aCx, RsaHashedKeyAlgorithm& aRsa) const {
     JS::Rooted<JSObject*> exponent(aCx, mPublicExponent.ToUint8Array(aCx));
     if (!exponent) {
       return false;
@@ -50,9 +48,7 @@ struct DhKeyAlgorithmStorage {
   CryptoBuffer mPrime;
   CryptoBuffer mGenerator;
 
-  bool
-  ToKeyAlgorithm(JSContext* aCx, DhKeyAlgorithm& aDh) const
-  {
+  bool ToKeyAlgorithm(JSContext* aCx, DhKeyAlgorithm& aDh) const {
     JS::Rooted<JSObject*> prime(aCx, mPrime.ToUint8Array(aCx));
     if (!prime) {
       return false;
@@ -75,8 +71,7 @@ struct DhKeyAlgorithmStorage {
 
 // This class encapuslates a KeyAlgorithm object, and adds several
 // methods that make WebCrypto operations simpler.
-struct KeyAlgorithmProxy
-{
+struct KeyAlgorithmProxy {
   enum KeyAlgorithmType {
     AES,
     HMAC,
@@ -109,18 +104,14 @@ struct KeyAlgorithmProxy
   static nsString GetJwkAlg(const KeyAlgorithm& aAlgorithm);
 
   // Construction of the various algorithm types
-  void
-  MakeAes(const nsString& aName, uint32_t aLength)
-  {
+  void MakeAes(const nsString& aName, uint32_t aLength) {
     mType = AES;
     mName = aName;
     mAes.mName = aName;
     mAes.mLength = aLength;
   }
 
-  void
-  MakeHmac(uint32_t aLength, const nsString& aHashName)
-  {
+  void MakeHmac(uint32_t aLength, const nsString& aHashName) {
     mType = HMAC;
     mName = NS_LITERAL_STRING(WEBCRYPTO_ALG_HMAC);
     mHmac.mName = NS_LITERAL_STRING(WEBCRYPTO_ALG_HMAC);
@@ -128,10 +119,8 @@ struct KeyAlgorithmProxy
     mHmac.mHash.mName = aHashName;
   }
 
-  bool
-  MakeRsa(const nsString& aName, uint32_t aModulusLength,
-         const CryptoBuffer& aPublicExponent, const nsString& aHashName)
-  {
+  bool MakeRsa(const nsString& aName, uint32_t aModulusLength,
+               const CryptoBuffer& aPublicExponent, const nsString& aHashName) {
     mType = RSA;
     mName = aName;
     mRsa.mName = aName;
@@ -143,19 +132,15 @@ struct KeyAlgorithmProxy
     return true;
   }
 
-  void
-  MakeEc(const nsString& aName, const nsString& aNamedCurve)
-  {
+  void MakeEc(const nsString& aName, const nsString& aNamedCurve) {
     mType = EC;
     mName = aName;
     mEc.mName = aName;
     mEc.mNamedCurve = aNamedCurve;
   }
 
-  bool
-  MakeDh(const nsString& aName, const CryptoBuffer& aPrime,
-         const CryptoBuffer& aGenerator)
-  {
+  bool MakeDh(const nsString& aName, const CryptoBuffer& aPrime,
+              const CryptoBuffer& aGenerator) {
     mType = DH;
     mName = aName;
     mDh.mName = aName;
@@ -169,7 +154,7 @@ struct KeyAlgorithmProxy
   }
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_KeyAlgorithmProxy_h
+#endif  // mozilla_dom_KeyAlgorithmProxy_h

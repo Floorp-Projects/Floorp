@@ -39,21 +39,21 @@ using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
 
-template<typename UnitT> class SourceText;
+template <typename UnitT>
+class SourceText;
 
 class HandleValueArray;
 
 class ObjectOpResult;
 class PropertyResult;
 
-enum class SymbolCode: uint32_t;
+enum class SymbolCode : uint32_t;
 
-} // namespace JS
+}  // namespace JS
 
 // Do the importing.
 namespace js {
 
-using JS::Value;
 using JS::BooleanValue;
 using JS::DoubleValue;
 using JS::Float32Value;
@@ -63,39 +63,40 @@ using JS::NullValue;
 using JS::NumberValue;
 using JS::ObjectOrNullValue;
 using JS::ObjectValue;
+using JS::PrivateGCThingValue;
 using JS::PrivateUint32Value;
 using JS::PrivateValue;
-using JS::PrivateGCThingValue;
 using JS::StringValue;
 using JS::UndefinedValue;
+using JS::Value;
 
+using JS::ConstTwoByteChars;
 using JS::Latin1Char;
 using JS::Latin1Chars;
 using JS::Latin1CharsZ;
-using JS::ConstTwoByteChars;
 using JS::TwoByteChars;
 using JS::TwoByteCharsZ;
-using JS::UTF8Chars;
-using JS::WTF8Chars;
-using JS::UTF8CharsZ;
 using JS::UniqueChars;
 using JS::UniqueTwoByteChars;
+using JS::UTF8Chars;
+using JS::UTF8CharsZ;
+using JS::WTF8Chars;
 
-using JS::Result;
 using JS::Ok;
 using JS::OOM;
+using JS::Result;
 
-using JS::AutoValueVector;
 using JS::AutoIdVector;
 using JS::AutoObjectVector;
+using JS::AutoValueVector;
 
-using JS::ValueVector;
 using JS::IdVector;
 using JS::ScriptVector;
+using JS::ValueVector;
 
-using JS::GCVector;
 using JS::GCHashMap;
 using JS::GCHashSet;
+using JS::GCVector;
 
 using JS::CallArgs;
 using JS::CallNonGenericMethod;
@@ -150,10 +151,10 @@ using JS::MutableHandleBigInt;
 #endif
 using JS::MutableHandleValue;
 
-using JS::NullHandleValue;
-using JS::UndefinedHandleValue;
-using JS::TrueHandleValue;
 using JS::FalseHandleValue;
+using JS::NullHandleValue;
+using JS::TrueHandleValue;
+using JS::UndefinedHandleValue;
 
 using JS::HandleValueArray;
 

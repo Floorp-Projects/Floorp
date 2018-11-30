@@ -19,34 +19,30 @@ class nsSVGViewBox;
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedRect final : public nsWrapperCache
-{
-public:
+class SVGAnimatedRect final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedRect)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedRect)
 
   SVGAnimatedRect(nsSVGViewBox* aVal, nsSVGElement* aSVGElement);
 
-  nsSVGElement* GetParentObject() const
-  {
-    return mSVGElement;
-  }
+  nsSVGElement* GetParentObject() const { return mSVGElement; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<SVGIRect> GetBaseVal();
 
   already_AddRefed<SVGIRect> GetAnimVal();
 
-private:
+ private:
   virtual ~SVGAnimatedRect();
 
-  nsSVGViewBox* mVal; // kept alive because it belongs to content
+  nsSVGViewBox* mVal;  // kept alive because it belongs to content
   RefPtr<nsSVGElement> mSVGElement;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGAnimatedRect_h
-
+#endif  // mozilla_dom_SVGAnimatedRect_h

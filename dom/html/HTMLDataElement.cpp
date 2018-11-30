@@ -13,22 +13,18 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Data)
 namespace mozilla {
 namespace dom {
 
-HTMLDataElement::HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsGenericHTMLElement(std::move(aNodeInfo))
-{
-}
+HTMLDataElement::HTMLDataElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
-HTMLDataElement::~HTMLDataElement()
-{
-}
+HTMLDataElement::~HTMLDataElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLDataElement)
 
-JSObject*
-HTMLDataElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* HTMLDataElement::WrapNode(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return HTMLDataElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

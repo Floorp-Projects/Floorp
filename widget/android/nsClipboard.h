@@ -8,12 +8,11 @@
 
 #include "nsIClipboard.h"
 
-class nsClipboard final : public nsIClipboard
-{
-private:
+class nsClipboard final : public nsIClipboard {
+ private:
   ~nsClipboard() {}
 
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLIPBOARD
 

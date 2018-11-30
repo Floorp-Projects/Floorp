@@ -14,24 +14,22 @@ namespace mozilla {
 namespace dom {
 
 // PresentationChannelDescription for Data Channel
-class DCPresentationChannelDescription final : public nsIPresentationChannelDescription
-{
-public:
+class DCPresentationChannelDescription final
+    : public nsIPresentationChannelDescription {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONCHANNELDESCRIPTION
 
   explicit DCPresentationChannelDescription(const nsAString& aSDP)
-    : mSDP(aSDP)
-  {
-  }
+      : mSDP(aSDP) {}
 
-private:
+ private:
   virtual ~DCPresentationChannelDescription() = default;
 
   nsString mSDP;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_DCPresentationChannelDescription_h
+#endif  // mozilla_dom_DCPresentationChannelDescription_h

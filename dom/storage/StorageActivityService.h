@@ -16,55 +16,45 @@ namespace mozilla {
 
 namespace ipc {
 class PrincipalInfo;
-} // ipc
+}  // namespace ipc
 
 namespace dom {
 
-class StorageActivityService final : public nsIStorageActivityService
-                                   , public nsIObserver
-                                   , public nsITimerCallback
-                                   , public nsSupportsWeakReference
-{
-public:
+class StorageActivityService final : public nsIStorageActivityService,
+                                     public nsIObserver,
+                                     public nsITimerCallback,
+                                     public nsSupportsWeakReference {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTORAGEACTIVITYSERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
   // Main-thread only.
-  static void
-  SendActivity(nsIPrincipal* aPrincipal);
+  static void SendActivity(nsIPrincipal* aPrincipal);
 
   // Thread-safe.
-  static void
-  SendActivity(const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+  static void SendActivity(const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
   // Thread-safe but for parent process only!
-  static void
-  SendActivity(const nsACString& aOrigin);
+  static void SendActivity(const nsACString& aOrigin);
 
   // Used by XPCOM. Don't use it, use SendActivity() instead.
-  static already_AddRefed<StorageActivityService>
-  GetOrCreate();
+  static already_AddRefed<StorageActivityService> GetOrCreate();
 
-private:
+ private:
   StorageActivityService();
   ~StorageActivityService();
 
-  void
-  SendActivityInternal(nsIPrincipal* aPrincipal);
+  void SendActivityInternal(nsIPrincipal* aPrincipal);
 
-  void
-  SendActivityInternal(const nsACString& aOrigin);
+  void SendActivityInternal(const nsACString& aOrigin);
 
-  void
-  SendActivityToParent(nsIPrincipal* aPrincipal);
+  void SendActivityToParent(nsIPrincipal* aPrincipal);
 
-  void
-  MaybeStartTimer();
+  void MaybeStartTimer();
 
-  void
-  MaybeStopTimer();
+  void MaybeStopTimer();
 
   // Activities grouped by origin (+OriginAttributes).
   nsDataHashtable<nsCStringHashKey, PRTime> mActivities;
@@ -72,7 +62,7 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_StorageActivityService_h
+#endif  // mozilla_dom_StorageActivityService_h

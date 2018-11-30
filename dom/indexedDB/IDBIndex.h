@@ -26,17 +26,15 @@ namespace dom {
 
 class IDBObjectStore;
 class IDBRequest;
-template <typename> class Sequence;
+template <typename>
+class Sequence;
 
 namespace indexedDB {
 class IndexMetadata;
 class KeyPath;
-} // namespace indexedDB
+}  // namespace indexedDB
 
-class IDBIndex final
-  : public nsISupports
-  , public nsWrapperCache
-{
+class IDBIndex final : public nsISupports, public nsWrapperCache {
   RefPtr<IDBObjectStore> mObjectStore;
 
   JS::Heap<JS::Value> mCachedKeyPath;
@@ -51,184 +49,150 @@ class IDBIndex final
   const int64_t mId;
   bool mRooted;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBIndex)
 
-  static already_AddRefed<IDBIndex>
-  Create(IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata& aMetadata);
+  static already_AddRefed<IDBIndex> Create(
+      IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata& aMetadata);
 
-  int64_t
-  Id() const
-  {
+  int64_t Id() const {
     AssertIsOnOwningThread();
 
     return mId;
   }
 
-  const nsString&
-  Name() const;
+  const nsString& Name() const;
 
-  bool
-  Unique() const;
+  bool Unique() const;
 
-  bool
-  MultiEntry() const;
+  bool MultiEntry() const;
 
-  bool
-  LocaleAware() const;
+  bool LocaleAware() const;
 
-  const indexedDB::KeyPath&
-  GetKeyPath() const;
+  const indexedDB::KeyPath& GetKeyPath() const;
 
-  void
-  GetLocale(nsString& aLocale) const;
+  void GetLocale(nsString& aLocale) const;
 
-  const nsCString&
-  Locale() const;
+  const nsCString& Locale() const;
 
-  bool
-  IsAutoLocale() const;
+  bool IsAutoLocale() const;
 
-  IDBObjectStore*
-  ObjectStore() const
-  {
+  IDBObjectStore* ObjectStore() const {
     AssertIsOnOwningThread();
     return mObjectStore;
   }
 
-  nsPIDOMWindowInner*
-  GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
-  void
-  GetName(nsString& aName) const
-  {
-    aName = Name();
-  }
+  void GetName(nsString& aName) const { aName = Name(); }
 
-  void
-  SetName(const nsAString& aName, ErrorResult& aRv);
+  void SetName(const nsAString& aName, ErrorResult& aRv);
 
-  void
-  GetKeyPath(JSContext* aCx,
-             JS::MutableHandle<JS::Value> aResult,
-             ErrorResult& aRv);
+  void GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                  ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  OpenCursor(JSContext* aCx,
-             JS::Handle<JS::Value> aRange,
-             IDBCursorDirection aDirection,
-             ErrorResult& aRv)
-  {
+  already_AddRefed<IDBRequest> OpenCursor(JSContext* aCx,
+                                          JS::Handle<JS::Value> aRange,
+                                          IDBCursorDirection aDirection,
+                                          ErrorResult& aRv) {
     AssertIsOnOwningThread();
 
     return OpenCursorInternal(/* aKeysOnly */ false, aCx, aRange, aDirection,
                               aRv);
   }
 
-  already_AddRefed<IDBRequest>
-  OpenKeyCursor(JSContext* aCx,
-                JS::Handle<JS::Value> aRange,
-                IDBCursorDirection aDirection,
-                ErrorResult& aRv)
-  {
+  already_AddRefed<IDBRequest> OpenKeyCursor(JSContext* aCx,
+                                             JS::Handle<JS::Value> aRange,
+                                             IDBCursorDirection aDirection,
+                                             ErrorResult& aRv) {
     AssertIsOnOwningThread();
 
     return OpenCursorInternal(/* aKeysOnly */ true, aCx, aRange, aDirection,
                               aRv);
   }
 
-  already_AddRefed<IDBRequest>
-  Get(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv)
-  {
+  already_AddRefed<IDBRequest> Get(JSContext* aCx, JS::Handle<JS::Value> aKey,
+                                   ErrorResult& aRv) {
     AssertIsOnOwningThread();
 
     return GetInternal(/* aKeyOnly */ false, aCx, aKey, aRv);
   }
 
-  already_AddRefed<IDBRequest>
-  GetKey(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv)
-  {
+  already_AddRefed<IDBRequest> GetKey(JSContext* aCx,
+                                      JS::Handle<JS::Value> aKey,
+                                      ErrorResult& aRv) {
     AssertIsOnOwningThread();
 
     return GetInternal(/* aKeyOnly */ true, aCx, aKey, aRv);
   }
 
-  already_AddRefed<IDBRequest>
-  Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
-         ErrorResult& aRv);
+  already_AddRefed<IDBRequest> Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
+                                     ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  GetAll(JSContext* aCx, JS::Handle<JS::Value> aKey,
-         const Optional<uint32_t>& aLimit, ErrorResult& aRv)
-  {
+  already_AddRefed<IDBRequest> GetAll(JSContext* aCx,
+                                      JS::Handle<JS::Value> aKey,
+                                      const Optional<uint32_t>& aLimit,
+                                      ErrorResult& aRv) {
     AssertIsOnOwningThread();
 
     return GetAllInternal(/* aKeysOnly */ false, aCx, aKey, aLimit, aRv);
   }
 
-  already_AddRefed<IDBRequest>
-  GetAllKeys(JSContext* aCx, JS::Handle<JS::Value> aKey,
-             const Optional<uint32_t>& aLimit, ErrorResult& aRv)
-  {
+  already_AddRefed<IDBRequest> GetAllKeys(JSContext* aCx,
+                                          JS::Handle<JS::Value> aKey,
+                                          const Optional<uint32_t>& aLimit,
+                                          ErrorResult& aRv) {
     AssertIsOnOwningThread();
 
     return GetAllInternal(/* aKeysOnly */ true, aCx, aKey, aLimit, aRv);
   }
 
-  void
-  RefreshMetadata(bool aMayDelete);
+  void RefreshMetadata(bool aMayDelete);
 
-  void
-  NoteDeletion();
+  void NoteDeletion();
 
-  bool
-  IsDeleted() const
-  {
+  bool IsDeleted() const {
     AssertIsOnOwningThread();
 
     return !!mDeletedMetadata;
   }
 
-  void
-  AssertIsOnOwningThread() const
+  void AssertIsOnOwningThread() const
 #ifdef DEBUG
-  ;
+      ;
 #else
-  { }
+  {
+  }
 #endif
 
   // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-private:
-  IDBIndex(IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata* aMetadata);
+ private:
+  IDBIndex(IDBObjectStore* aObjectStore,
+           const indexedDB::IndexMetadata* aMetadata);
 
   ~IDBIndex();
 
-  already_AddRefed<IDBRequest>
-  GetInternal(bool aKeyOnly,
-              JSContext* aCx,
-              JS::Handle<JS::Value> aKey,
-              ErrorResult& aRv);
+  already_AddRefed<IDBRequest> GetInternal(bool aKeyOnly, JSContext* aCx,
+                                           JS::Handle<JS::Value> aKey,
+                                           ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  GetAllInternal(bool aKeysOnly,
-                 JSContext* aCx,
-                 JS::Handle<JS::Value> aKey,
-                 const Optional<uint32_t>& aLimit,
-                 ErrorResult& aRv);
+  already_AddRefed<IDBRequest> GetAllInternal(bool aKeysOnly, JSContext* aCx,
+                                              JS::Handle<JS::Value> aKey,
+                                              const Optional<uint32_t>& aLimit,
+                                              ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  OpenCursorInternal(bool aKeysOnly,
-                     JSContext* aCx,
-                     JS::Handle<JS::Value> aRange,
-                     IDBCursorDirection aDirection,
-                     ErrorResult& aRv);
+  already_AddRefed<IDBRequest> OpenCursorInternal(bool aKeysOnly,
+                                                  JSContext* aCx,
+                                                  JS::Handle<JS::Value> aRange,
+                                                  IDBCursorDirection aDirection,
+                                                  ErrorResult& aRv);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_idbindex_h__
+#endif  // mozilla_dom_idbindex_h__

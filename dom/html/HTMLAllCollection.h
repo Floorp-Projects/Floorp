@@ -23,39 +23,37 @@ namespace dom {
 
 class Element;
 class OwningHTMLCollectionOrElement;
-template<typename> struct Nullable;
-template<typename> class Optional;
+template <typename>
+struct Nullable;
+template <typename>
+class Optional;
 
-class HTMLAllCollection final : public nsISupports
-                              , public nsWrapperCache
-{
+class HTMLAllCollection final : public nsISupports, public nsWrapperCache {
   ~HTMLAllCollection();
 
-public:
+ public:
   explicit HTMLAllCollection(nsHTMLDocument* aDocument);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HTMLAllCollection)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
   nsINode* GetParentObject() const;
 
   uint32_t Length();
-  Element* IndexedGetter(uint32_t aIndex, bool& aFound)
-  {
+  Element* IndexedGetter(uint32_t aIndex, bool& aFound) {
     Element* result = Item(aIndex);
     aFound = !!result;
     return result;
   }
 
   void NamedItem(const nsAString& aName,
-                 Nullable<OwningHTMLCollectionOrElement>& aResult)
-  {
+                 Nullable<OwningHTMLCollectionOrElement>& aResult) {
     bool found = false;
     NamedGetter(aName, found, aResult);
   }
-  void NamedGetter(const nsAString& aName,
-                   bool& aFound,
+  void NamedGetter(const nsAString& aName, bool& aFound,
                    Nullable<OwningHTMLCollectionOrElement>& aResult);
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
@@ -64,16 +62,16 @@ public:
 
   void LegacyCall(JS::Handle<JS::Value>,
                   const Optional<nsAString>& aNameOrIndex,
-                  Nullable<OwningHTMLCollectionOrElement>& aResult)
-  {
+                  Nullable<OwningHTMLCollectionOrElement>& aResult) {
     Item(aNameOrIndex, aResult);
   }
 
-private:
+ private:
   nsContentList* Collection();
 
   /**
-   * Returns the HTMLCollection for document.all[aID], or null if there isn't one.
+   * Returns the HTMLCollection for document.all[aID], or null if there isn't
+   * one.
    */
   nsContentList* GetDocumentAllList(const nsAString& aID);
 
@@ -87,7 +85,7 @@ private:
   nsRefPtrHashtable<nsStringHashKey, nsContentList> mNamedMap;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLAllCollection_h
+#endif  // mozilla_dom_HTMLAllCollection_h

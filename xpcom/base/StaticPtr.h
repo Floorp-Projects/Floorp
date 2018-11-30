@@ -35,20 +35,18 @@ namespace mozilla {
  * this is intentional, since their range of acceptable uses is smaller.
  */
 
-template<class T>
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticAutoPtr
-{
-public:
+template <class T>
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticAutoPtr {
+ public:
   // In debug builds, check that mRawPtr is initialized for us as we expect
   // by the compiler.  In non-debug builds, don't declare a constructor
   // so that the compiler can see that the constructor is trivial.
 #ifdef DEBUG
-  StaticAutoPtr()
-  {
+  StaticAutoPtr() {
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
-  // False positive with gcc. See bug 1430729
+    // False positive with gcc. See bug 1430729
 #endif
     MOZ_ASSERT(!mRawPtr);
 #ifdef __GNUC__
@@ -57,8 +55,7 @@ public:
   }
 #endif
 
-  StaticAutoPtr<T>& operator=(T* aRhs)
-  {
+  StaticAutoPtr<T>& operator=(T* aRhs) {
     Assign(aRhs);
     return *this;
   }
@@ -67,22 +64,20 @@ public:
 
   operator T*() const { return get(); }
 
-  T* operator->() const
-  {
+  T* operator->() const {
     MOZ_ASSERT(mRawPtr);
     return get();
   }
 
   T& operator*() const { return *get(); }
 
-  T* forget()
-  {
+  T* forget() {
     T* temp = mRawPtr;
     mRawPtr = nullptr;
     return temp;
   }
 
-private:
+ private:
   // Disallow copy constructor, but only in debug mode.  We only define
   // a default constructor in debug mode (see above); if we declared
   // this constructor always, the compiler wouldn't generate a trivial
@@ -91,8 +86,7 @@ private:
   StaticAutoPtr(StaticAutoPtr<T>& aOther);
 #endif
 
-  void Assign(T* aNewPtr)
-  {
+  void Assign(T* aNewPtr) {
     MOZ_ASSERT(!aNewPtr || mRawPtr != aNewPtr);
     T* oldPtr = mRawPtr;
     mRawPtr = aNewPtr;
@@ -102,20 +96,18 @@ private:
   T* mRawPtr;
 };
 
-template<class T>
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr
-{
-public:
+template <class T>
+class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr {
+ public:
   // In debug builds, check that mRawPtr is initialized for us as we expect
   // by the compiler.  In non-debug builds, don't declare a constructor
   // so that the compiler can see that the constructor is trivial.
 #ifdef DEBUG
-  StaticRefPtr()
-  {
+  StaticRefPtr() {
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
-  // False positive with gcc. See bug 1430729
+    // False positive with gcc. See bug 1430729
 #endif
     MOZ_ASSERT(!mRawPtr);
 #ifdef __GNUC__
@@ -124,32 +116,26 @@ public:
   }
 #endif
 
-  StaticRefPtr<T>& operator=(T* aRhs)
-  {
+  StaticRefPtr<T>& operator=(T* aRhs) {
     AssignWithAddref(aRhs);
     return *this;
   }
 
-  StaticRefPtr<T>& operator=(const StaticRefPtr<T>& aRhs)
-  {
+  StaticRefPtr<T>& operator=(const StaticRefPtr<T>& aRhs) {
     return (this = aRhs.mRawPtr);
   }
 
-  StaticRefPtr<T>& operator=(already_AddRefed<T>& aRhs)
-  {
+  StaticRefPtr<T>& operator=(already_AddRefed<T>& aRhs) {
     AssignAssumingAddRef(aRhs.take());
     return *this;
   }
 
-  StaticRefPtr<T>& operator=(already_AddRefed<T>&& aRhs)
-  {
+  StaticRefPtr<T>& operator=(already_AddRefed<T>&& aRhs) {
     AssignAssumingAddRef(aRhs.take());
     return *this;
   }
 
-  already_AddRefed<T>
-  forget()
-  {
+  already_AddRefed<T> forget() {
     T* temp = mRawPtr;
     mRawPtr = nullptr;
     return already_AddRefed<T>(temp);
@@ -159,25 +145,22 @@ public:
 
   operator T*() const { return get(); }
 
-  T* operator->() const
-  {
+  T* operator->() const {
     MOZ_ASSERT(mRawPtr);
     return get();
   }
 
   T& operator*() const { return *get(); }
 
-private:
-  void AssignWithAddref(T* aNewPtr)
-  {
+ private:
+  void AssignWithAddref(T* aNewPtr) {
     if (aNewPtr) {
       aNewPtr->AddRef();
     }
     AssignAssumingAddRef(aNewPtr);
   }
 
-  void AssignAssumingAddRef(T* aNewPtr)
-  {
+  void AssignAssumingAddRef(T* aNewPtr) {
     T* oldPtr = mRawPtr;
     mRawPtr = aNewPtr;
     if (oldPtr) {
@@ -190,58 +173,48 @@ private:
 
 namespace StaticPtr_internal {
 class Zero;
-} // namespace StaticPtr_internal
+}  // namespace StaticPtr_internal
 
 #define REFLEXIVE_EQUALITY_OPERATORS(type1, type2, eq_fn, ...) \
-  template<__VA_ARGS__>                                        \
-  inline bool                                                  \
-  operator==(type1 lhs, type2 rhs)                             \
-  {                                                            \
+  template <__VA_ARGS__>                                       \
+  inline bool operator==(type1 lhs, type2 rhs) {               \
     return eq_fn;                                              \
   }                                                            \
                                                                \
-  template<__VA_ARGS__>                                        \
-  inline bool                                                  \
-  operator==(type2 lhs, type1 rhs)                             \
-  {                                                            \
+  template <__VA_ARGS__>                                       \
+  inline bool operator==(type2 lhs, type1 rhs) {               \
     return rhs == lhs;                                         \
   }                                                            \
                                                                \
-  template<__VA_ARGS__>                                        \
-  inline bool                                                  \
-  operator!=(type1 lhs, type2 rhs)                             \
-  {                                                            \
+  template <__VA_ARGS__>                                       \
+  inline bool operator!=(type1 lhs, type2 rhs) {               \
     return !(lhs == rhs);                                      \
   }                                                            \
                                                                \
-  template<__VA_ARGS__>                                        \
-  inline bool                                                  \
-  operator!=(type2 lhs, type1 rhs)                             \
-  {                                                            \
+  template <__VA_ARGS__>                                       \
+  inline bool operator!=(type2 lhs, type1 rhs) {               \
     return !(lhs == rhs);                                      \
   }
 
 // StaticAutoPtr (in)equality operators
 
-template<class T, class U>
-inline bool
-operator==(const StaticAutoPtr<T>& aLhs, const StaticAutoPtr<U>& aRhs)
-{
+template <class T, class U>
+inline bool operator==(const StaticAutoPtr<T>& aLhs,
+                       const StaticAutoPtr<U>& aRhs) {
   return aLhs.get() == aRhs.get();
 }
 
-template<class T, class U>
-inline bool
-operator!=(const StaticAutoPtr<T>& aLhs, const StaticAutoPtr<U>& aRhs)
-{
+template <class T, class U>
+inline bool operator!=(const StaticAutoPtr<T>& aLhs,
+                       const StaticAutoPtr<U>& aRhs) {
   return !(aLhs == aRhs);
 }
 
 REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, const U*,
                              lhs.get() == rhs, class T, class U)
 
-REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, U*,
-                             lhs.get() == rhs, class T, class U)
+REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, U*, lhs.get() == rhs,
+                             class T, class U)
 
 // Let us compare StaticAutoPtr to 0.
 REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, StaticPtr_internal::Zero*,
@@ -249,25 +222,23 @@ REFLEXIVE_EQUALITY_OPERATORS(const StaticAutoPtr<T>&, StaticPtr_internal::Zero*,
 
 // StaticRefPtr (in)equality operators
 
-template<class T, class U>
-inline bool
-operator==(const StaticRefPtr<T>& aLhs, const StaticRefPtr<U>& aRhs)
-{
+template <class T, class U>
+inline bool operator==(const StaticRefPtr<T>& aLhs,
+                       const StaticRefPtr<U>& aRhs) {
   return aLhs.get() == aRhs.get();
 }
 
-template<class T, class U>
-inline bool
-operator!=(const StaticRefPtr<T>& aLhs, const StaticRefPtr<U>& aRhs)
-{
+template <class T, class U>
+inline bool operator!=(const StaticRefPtr<T>& aLhs,
+                       const StaticRefPtr<U>& aRhs) {
   return !(aLhs == aRhs);
 }
 
-REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, const U*,
-                             lhs.get() == rhs, class T, class U)
+REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, const U*, lhs.get() == rhs,
+                             class T, class U)
 
-REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, U*,
-                             lhs.get() == rhs, class T, class U)
+REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, U*, lhs.get() == rhs,
+                             class T, class U)
 
 // Let us compare StaticRefPtr to 0.
 REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, StaticPtr_internal::Zero*,
@@ -275,25 +246,22 @@ REFLEXIVE_EQUALITY_OPERATORS(const StaticRefPtr<T>&, StaticPtr_internal::Zero*,
 
 #undef REFLEXIVE_EQUALITY_OPERATORS
 
-} // namespace mozilla
+}  // namespace mozilla
 
 // Declared in mozilla/RefPtr.h
-template<class T> template<class U>
+template <class T>
+template <class U>
 RefPtr<T>::RefPtr(const mozilla::StaticRefPtr<U>& aOther)
-  : RefPtr(aOther.get())
-{}
+    : RefPtr(aOther.get()) {}
 
-template<class T> template<class U>
-RefPtr<T>&
-RefPtr<T>::operator=(const mozilla::StaticRefPtr<U>& aOther)
-{
+template <class T>
+template <class U>
+RefPtr<T>& RefPtr<T>::operator=(const mozilla::StaticRefPtr<U>& aOther) {
   return operator=(aOther.get());
 }
 
 template <class T>
-inline already_AddRefed<T>
-do_AddRef(const mozilla::StaticRefPtr<T>& aObj)
-{
+inline already_AddRefed<T> do_AddRef(const mozilla::StaticRefPtr<T>& aObj) {
   RefPtr<T> ref(aObj);
   return ref.forget();
 }

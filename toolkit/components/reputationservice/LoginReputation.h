@@ -20,32 +20,25 @@ typedef uint32_t VerdictType;
 typedef MozPromise<VerdictType, nsresult, false> ReputationPromise;
 
 class LoginReputationService final : public nsILoginReputationService,
-                                     public nsIObserver
-{
-public:
+                                     public nsIObserver {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSILOGINREPUTATIONSERVICE
   NS_DECL_NSIOBSERVER
 
-public:
-  static
-  already_AddRefed<LoginReputationService> GetSingleton();
+ public:
+  static already_AddRefed<LoginReputationService> GetSingleton();
 
-  static
-  already_AddRefed<nsILoginReputationQuery> ConstructQueryParam(nsIURI* aURI);
+  static already_AddRefed<nsILoginReputationQuery> ConstructQueryParam(
+      nsIURI* aURI);
 
-  static
-  nsCString VerdictTypeToString(VerdictType aVerdict);
+  static nsCString VerdictTypeToString(VerdictType aVerdict);
 
-private:
-
+ private:
   struct QueryRequest {
     QueryRequest(nsILoginReputationQuery* aParam,
-                 nsILoginReputationQueryCallback* aCallback) :
-      mParam(aParam),
-      mCallback(aCallback)
-    {
-    }
+                 nsILoginReputationQueryCallback* aCallback)
+        : mParam(aParam), mCallback(aCallback) {}
 
     nsCOMPtr<nsILoginReputationQuery> mParam;
     nsCOMPtr<nsILoginReputationQueryCallback> mCallback;
@@ -66,8 +59,7 @@ private:
   nsresult QueryLoginWhitelist(QueryRequest* aRequest);
 
   // Called when a query request is finished.
-  nsresult Finish(const QueryRequest* aRequest,
-                  nsresult aStatus,
+  nsresult Finish(const QueryRequest* aRequest, nsresult aStatus,
                   VerdictType aVerdict);
 
   // Clear data and join the worker threads.

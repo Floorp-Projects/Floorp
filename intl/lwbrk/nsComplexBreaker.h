@@ -12,8 +12,7 @@
  * filling boolean values indicating line break opportunities for
  * corresponding charactersin aBreakBefore[] on return.
  */
-void
-NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
-                        uint8_t* aBreakBefore);
+void NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
+                             uint8_t* aBreakBefore);
 
-#endif  /* nsComplexBreaker_h__ */
+#endif /* nsComplexBreaker_h__ */

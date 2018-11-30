@@ -16,11 +16,9 @@ namespace {
 
 StaticRefPtr<FileSystemSecurity> gFileSystemSecurity;
 
-} // anonymous
+}  // namespace
 
-/* static */ already_AddRefed<FileSystemSecurity>
-FileSystemSecurity::Get()
-{
+/* static */ already_AddRefed<FileSystemSecurity> FileSystemSecurity::Get() {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 
@@ -29,8 +27,7 @@ FileSystemSecurity::Get()
 }
 
 /* static */ already_AddRefed<FileSystemSecurity>
-FileSystemSecurity::GetOrCreate()
-{
+FileSystemSecurity::GetOrCreate() {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 
@@ -43,22 +40,18 @@ FileSystemSecurity::GetOrCreate()
   return service.forget();
 }
 
-FileSystemSecurity::FileSystemSecurity()
-{
+FileSystemSecurity::FileSystemSecurity() {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 }
 
-FileSystemSecurity::~FileSystemSecurity()
-{
+FileSystemSecurity::~FileSystemSecurity() {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 }
 
-void
-FileSystemSecurity::GrantAccessToContentProcess(ContentParentId aId,
-                                                const nsAString& aDirectoryPath)
-{
+void FileSystemSecurity::GrantAccessToContentProcess(
+    ContentParentId aId, const nsAString& aDirectoryPath) {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 
@@ -73,19 +66,15 @@ FileSystemSecurity::GrantAccessToContentProcess(ContentParentId aId,
   paths->AppendElement(aDirectoryPath);
 }
 
-void
-FileSystemSecurity::Forget(ContentParentId aId)
-{
+void FileSystemSecurity::Forget(ContentParentId aId) {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 
   mPaths.Remove(aId);
 }
 
-bool
-FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
-                                              const nsAString& aPath)
-{
+bool FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
+                                                   const nsAString& aPath) {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
 
@@ -115,5 +104,5 @@ FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
   return false;
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

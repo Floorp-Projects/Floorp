@@ -17,39 +17,39 @@
 namespace mozilla {
 
 class WebBrowserPersistResourcesParent final
-    : public PWebBrowserPersistResourcesParent
-    , public nsIWebBrowserPersistDocumentReceiver
-{
-public:
-    WebBrowserPersistResourcesParent(nsIWebBrowserPersistDocument* aDocument,
-                                     nsIWebBrowserPersistResourceVisitor* aVisitor);
+    : public PWebBrowserPersistResourcesParent,
+      public nsIWebBrowserPersistDocumentReceiver {
+ public:
+  WebBrowserPersistResourcesParent(
+      nsIWebBrowserPersistDocument* aDocument,
+      nsIWebBrowserPersistResourceVisitor* aVisitor);
 
-    virtual mozilla::ipc::IPCResult
-    RecvVisitResource(const nsCString& aURI, const nsContentPolicyType& aContentPolicyType) override;
+  virtual mozilla::ipc::IPCResult RecvVisitResource(
+      const nsCString& aURI,
+      const nsContentPolicyType& aContentPolicyType) override;
 
-    virtual mozilla::ipc::IPCResult
-    RecvVisitDocument(PWebBrowserPersistDocumentParent* aSubDocument) override;
+  virtual mozilla::ipc::IPCResult RecvVisitDocument(
+      PWebBrowserPersistDocumentParent* aSubDocument) override;
 
-    virtual mozilla::ipc::IPCResult
-    Recv__delete__(const nsresult& aStatus) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(
+      const nsresult& aStatus) override;
 
-    virtual void
-    ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    NS_DECL_NSIWEBBROWSERPERSISTDOCUMENTRECEIVER
-    NS_DECL_ISUPPORTS
+  NS_DECL_NSIWEBBROWSERPERSISTDOCUMENTRECEIVER
+  NS_DECL_ISUPPORTS
 
-private:
-    // Note: even if the XPIDL didn't need mDocument for visitor
-    // callbacks, this object still needs to hold a strong reference
-    // to it to defer actor subtree deletion until after the
-    // visitation is finished.
-    nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
-    nsCOMPtr<nsIWebBrowserPersistResourceVisitor> mVisitor;
+ private:
+  // Note: even if the XPIDL didn't need mDocument for visitor
+  // callbacks, this object still needs to hold a strong reference
+  // to it to defer actor subtree deletion until after the
+  // visitation is finished.
+  nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
+  nsCOMPtr<nsIWebBrowserPersistResourceVisitor> mVisitor;
 
-    virtual ~WebBrowserPersistResourcesParent();
+  virtual ~WebBrowserPersistResourcesParent();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WebBrowserPersistResourcesParent_h__
+#endif  // WebBrowserPersistResourcesParent_h__

@@ -11,8 +11,7 @@
 
 namespace mozilla {
 
-enum class CSSPropFlags : uint8_t
-{
+enum class CSSPropFlags : uint8_t {
   // This property is not parsed. It is only there for internal use like
   // attribute mapping.
   Inaccessible = 1 << 0,
@@ -59,6 +58,6 @@ enum class CSSPropFlags : uint8_t
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSPropFlags)
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_CSSPropFlags_h
+#endif  // mozilla_CSSPropFlags_h

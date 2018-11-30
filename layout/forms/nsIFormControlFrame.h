@@ -13,13 +13,12 @@
 class nsAtom;
 
 /**
-  * nsIFormControlFrame is the common interface for frames of form controls. It
-  * provides a uniform way of creating widgets, resizing, and painting.
-  * @see nsLeafFrame and its base classes for more info
-  */
-class nsIFormControlFrame : public nsQueryFrame
-{
-public:
+ * nsIFormControlFrame is the common interface for frames of form controls. It
+ * provides a uniform way of creating widgets, resizing, and painting.
+ * @see nsLeafFrame and its base classes for more info
+ */
+class nsIFormControlFrame : public nsQueryFrame {
+ public:
   NS_DECL_QUERYFRAME_TARGET(nsIFormControlFrame)
 
   /**
@@ -40,4 +39,3 @@ public:
 };
 
 #endif
-

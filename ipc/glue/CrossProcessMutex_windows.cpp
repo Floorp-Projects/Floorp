@@ -17,8 +17,7 @@ using base::ProcessHandle;
 
 namespace mozilla {
 
-CrossProcessMutex::CrossProcessMutex(const char*)
-{
+CrossProcessMutex::CrossProcessMutex(const char*) {
   // We explicitly share this using DuplicateHandle, we do -not- want this to
   // be inherited by child processes by default! So no security attributes are
   // given.
@@ -29,8 +28,7 @@ CrossProcessMutex::CrossProcessMutex(const char*)
   MOZ_COUNT_CTOR(CrossProcessMutex);
 }
 
-CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
-{
+CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle) {
   DWORD flags;
   if (!::GetHandleInformation(aHandle, &flags)) {
     MOZ_CRASH("Attempt to construct a mutex from an invalid handle!");
@@ -39,33 +37,27 @@ CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
   MOZ_COUNT_CTOR(CrossProcessMutex);
 }
 
-CrossProcessMutex::~CrossProcessMutex()
-{
+CrossProcessMutex::~CrossProcessMutex() {
   NS_ASSERTION(mMutex, "Improper construction of mutex or double free.");
   ::CloseHandle(mMutex);
   MOZ_COUNT_DTOR(CrossProcessMutex);
 }
 
-void
-CrossProcessMutex::Lock()
-{
+void CrossProcessMutex::Lock() {
   NS_ASSERTION(mMutex, "Improper construction of mutex.");
   ::WaitForSingleObject(mMutex, INFINITE);
 }
 
-void
-CrossProcessMutex::Unlock()
-{
+void CrossProcessMutex::Unlock() {
   NS_ASSERTION(mMutex, "Improper construction of mutex.");
   ::ReleaseMutex(mMutex);
 }
 
-CrossProcessMutexHandle
-CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
-{
+CrossProcessMutexHandle CrossProcessMutex::ShareToProcess(
+    base::ProcessId aTargetPid) {
   HANDLE newHandle;
-  bool succeeded = ipc::DuplicateHandle(mMutex, aTargetPid, &newHandle,
-                                        0, DUPLICATE_SAME_ACCESS);
+  bool succeeded = ipc::DuplicateHandle(mMutex, aTargetPid, &newHandle, 0,
+                                        DUPLICATE_SAME_ACCESS);
 
   if (!succeeded) {
     return nullptr;
@@ -74,4 +66,4 @@ CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
   return newHandle;
 }
 
-}
+}  // namespace mozilla

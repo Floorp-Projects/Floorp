@@ -40,10 +40,9 @@ using namespace mozilla::a11y;
 // HTMLTableCellAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-HTMLTableCellAccessible::
-  HTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc)
-{
+HTMLTableCellAccessible::HTMLTableCellAccessible(nsIContent* aContent,
+                                                 DocAccessible* aDoc)
+    : HyperTextAccessibleWrap(aContent, aDoc) {
   mType = eHTMLTableCellType;
   mGenericTypes |= eTableCell;
 }
@@ -51,50 +50,40 @@ HTMLTableCellAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableCellAccessible: Accessible implementation
 
-role
-HTMLTableCellAccessible::NativeRole() const
-{
+role HTMLTableCellAccessible::NativeRole() const {
   if (mContent->IsMathMLElement(nsGkAtoms::mtd_)) {
     return roles::MATHML_CELL;
   }
   return roles::CELL;
 }
 
-uint64_t
-HTMLTableCellAccessible::NativeState() const
-{
+uint64_t HTMLTableCellAccessible::NativeState() const {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 
-  nsIFrame *frame = mContent->GetPrimaryFrame();
+  nsIFrame* frame = mContent->GetPrimaryFrame();
   NS_ASSERTION(frame, "No frame for valid cell accessible!");
 
-  if (frame && frame->IsSelected())
-    state |= states::SELECTED;
+  if (frame && frame->IsSelected()) state |= states::SELECTED;
 
   return state;
 }
 
-uint64_t
-HTMLTableCellAccessible::NativeInteractiveState() const
-{
+uint64_t HTMLTableCellAccessible::NativeInteractiveState() const {
   return HyperTextAccessibleWrap::NativeInteractiveState() | states::SELECTABLE;
 }
 
 already_AddRefed<nsIPersistentProperties>
-HTMLTableCellAccessible::NativeAttributes()
-{
+HTMLTableCellAccessible::NativeAttributes() {
   nsCOMPtr<nsIPersistentProperties> attributes =
-    HyperTextAccessibleWrap::NativeAttributes();
+      HyperTextAccessibleWrap::NativeAttributes();
 
   // table-cell-index attribute
   TableAccessible* table = Table();
-  if (!table)
-    return attributes.forget();
+  if (!table) return attributes.forget();
 
   int32_t rowIdx = -1, colIdx = -1;
   nsresult rv = GetCellIndexes(rowIdx, colIdx);
-  if (NS_FAILED(rv))
-    return attributes.forget();
+  if (NS_FAILED(rv)) return attributes.forget();
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(table->CellIndexAt(rowIdx, colIdx));
@@ -110,13 +99,14 @@ HTMLTableCellAccessible::NativeAttributes()
     if (abbr->IsAbbreviation()) {
       nsIContent* firstChildNode = abbr->GetContent()->GetFirstChild();
       if (firstChildNode) {
-        nsTextEquivUtils::
-          AppendTextEquivFromTextContent(firstChildNode, &abbrText);
+        nsTextEquivUtils::AppendTextEquivFromTextContent(firstChildNode,
+                                                         &abbrText);
       }
     }
   }
   if (abbrText.IsEmpty())
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr, abbrText);
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr,
+                                   abbrText);
 
   if (!abbrText.IsEmpty())
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::abbr, abbrText);
@@ -137,13 +127,12 @@ HTMLTableCellAccessible::NativeAttributes()
   return attributes.forget();
 }
 
-GroupPos
-HTMLTableCellAccessible::GroupPosition()
-{
+GroupPos HTMLTableCellAccessible::GroupPosition() {
   int32_t count = 0, index = 0;
   TableAccessible* table = Table();
-  if (table && nsCoreUtils::GetUIntAttr(table->AsAccessible()->GetContent(),
-                                        nsGkAtoms::aria_colcount, &count) &&
+  if (table &&
+      nsCoreUtils::GetUIntAttr(table->AsAccessible()->GetContent(),
+                               nsGkAtoms::aria_colcount, &count) &&
       nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_colindex, &index)) {
     return GroupPos(0, index, count);
   }
@@ -154,65 +143,50 @@ HTMLTableCellAccessible::GroupPosition()
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableCellAccessible: TableCellAccessible implementation
 
-TableAccessible*
-HTMLTableCellAccessible::Table() const
-{
+TableAccessible* HTMLTableCellAccessible::Table() const {
   Accessible* parent = const_cast<HTMLTableCellAccessible*>(this);
   while ((parent = parent->Parent())) {
-    if (parent->IsTable())
-      return parent->AsTable();
+    if (parent->IsTable()) return parent->AsTable();
   }
 
   return nullptr;
 }
 
-uint32_t
-HTMLTableCellAccessible::ColIdx() const
-{
+uint32_t HTMLTableCellAccessible::ColIdx() const {
   nsTableCellFrame* cellFrame = GetCellFrame();
   NS_ENSURE_TRUE(cellFrame, 0);
   return cellFrame->ColIndex();
 }
 
-uint32_t
-HTMLTableCellAccessible::RowIdx() const
-{
+uint32_t HTMLTableCellAccessible::RowIdx() const {
   nsTableCellFrame* cellFrame = GetCellFrame();
   NS_ENSURE_TRUE(cellFrame, 0);
   return cellFrame->RowIndex();
 }
 
-uint32_t
-HTMLTableCellAccessible::ColExtent() const
-{
+uint32_t HTMLTableCellAccessible::ColExtent() const {
   int32_t rowIdx = -1, colIdx = -1;
   GetCellIndexes(rowIdx, colIdx);
 
   TableAccessible* table = Table();
   NS_ASSERTION(table, "cell not in a table!");
-  if (!table)
-    return 0;
+  if (!table) return 0;
 
   return table->ColExtentAt(rowIdx, colIdx);
 }
 
-uint32_t
-HTMLTableCellAccessible::RowExtent() const
-{
+uint32_t HTMLTableCellAccessible::RowExtent() const {
   int32_t rowIdx = -1, colIdx = -1;
   GetCellIndexes(rowIdx, colIdx);
 
   TableAccessible* table = Table();
   NS_ASSERTION(table, "cell not in atable!");
-  if (!table)
-    return 0;
+  if (!table) return 0;
 
   return table->RowExtentAt(rowIdx, colIdx);
 }
 
-void
-HTMLTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells)
-{
+void HTMLTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
   IDRefsIterator itr(mDoc, mContent, nsGkAtoms::headers);
   while (Accessible* cell = itr.Next()) {
     a11y::role cellRole = cell->Role();
@@ -227,13 +201,10 @@ HTMLTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells)
     }
   }
 
-  if (aCells->IsEmpty())
-    TableCellAccessible::ColHeaderCells(aCells);
+  if (aCells->IsEmpty()) TableCellAccessible::ColHeaderCells(aCells);
 }
 
-void
-HTMLTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells)
-{
+void HTMLTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
   IDRefsIterator itr(mDoc, mContent, nsGkAtoms::headers);
   while (Accessible* cell = itr.Next()) {
     a11y::role cellRole = cell->Role();
@@ -248,13 +219,10 @@ HTMLTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells)
     }
   }
 
-  if (aCells->IsEmpty())
-    TableCellAccessible::RowHeaderCells(aCells);
+  if (aCells->IsEmpty()) TableCellAccessible::RowHeaderCells(aCells);
 }
 
-bool
-HTMLTableCellAccessible::Selected()
-{
+bool HTMLTableCellAccessible::Selected() {
   int32_t rowIdx = -1, colIdx = -1;
   GetCellIndexes(rowIdx, colIdx);
 
@@ -267,51 +235,40 @@ HTMLTableCellAccessible::Selected()
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableCellAccessible: protected implementation
 
-nsITableCellLayout*
-HTMLTableCellAccessible::GetCellLayout() const
-{
+nsITableCellLayout* HTMLTableCellAccessible::GetCellLayout() const {
   return do_QueryFrame(mContent->GetPrimaryFrame());
 }
 
-nsTableCellFrame*
-HTMLTableCellAccessible::GetCellFrame() const
-{
+nsTableCellFrame* HTMLTableCellAccessible::GetCellFrame() const {
   return do_QueryFrame(mContent->GetPrimaryFrame());
 }
 
-nsresult
-HTMLTableCellAccessible::GetCellIndexes(int32_t& aRowIdx, int32_t& aColIdx) const
-{
-  nsITableCellLayout *cellLayout = GetCellLayout();
+nsresult HTMLTableCellAccessible::GetCellIndexes(int32_t& aRowIdx,
+                                                 int32_t& aColIdx) const {
+  nsITableCellLayout* cellLayout = GetCellLayout();
   NS_ENSURE_STATE(cellLayout);
 
   return cellLayout->GetCellIndexes(aRowIdx, aColIdx);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableHeaderCellAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-HTMLTableHeaderCellAccessible::
-  HTMLTableHeaderCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HTMLTableCellAccessible(aContent, aDoc)
-{
-}
+HTMLTableHeaderCellAccessible::HTMLTableHeaderCellAccessible(
+    nsIContent* aContent, DocAccessible* aDoc)
+    : HTMLTableCellAccessible(aContent, aDoc) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableHeaderCellAccessible: Accessible implementation
 
-role
-HTMLTableHeaderCellAccessible::NativeRole() const
-{
+role HTMLTableHeaderCellAccessible::NativeRole() const {
   // Check value of @scope attribute.
-  static Element::AttrValuesArray scopeValues[] =
-    { nsGkAtoms::col, nsGkAtoms::colgroup,
-      nsGkAtoms::row, nsGkAtoms::rowgroup, nullptr };
-  int32_t valueIdx =
-    mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::scope,
-                                           scopeValues, eCaseMatters);
+  static Element::AttrValuesArray scopeValues[] = {
+      nsGkAtoms::col, nsGkAtoms::colgroup, nsGkAtoms::row, nsGkAtoms::rowgroup,
+      nullptr};
+  int32_t valueIdx = mContent->AsElement()->FindAttrValueIn(
+      kNameSpaceID_None, nsGkAtoms::scope, scopeValues, eCaseMatters);
 
   switch (valueIdx) {
     case 0:
@@ -323,8 +280,7 @@ HTMLTableHeaderCellAccessible::NativeRole() const
   }
 
   TableAccessible* table = Table();
-  if (!table)
-    return roles::NOTHING;
+  if (!table) return roles::NOTHING;
 
   // If the cell next to this one is not a header cell then assume this cell is
   // a row header for it.
@@ -346,14 +302,11 @@ HTMLTableHeaderCellAccessible::NativeRole() const
   return rowExtent > 1 ? roles::ROWHEADER : roles::COLUMNHEADER;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableRowAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-role
-HTMLTableRowAccessible::NativeRole() const
-{
+role HTMLTableRowAccessible::NativeRole() const {
   if (mContent->IsMathMLElement(nsGkAtoms::mtr_)) {
     return roles::MATHML_TABLE_ROW;
   } else if (mContent->IsMathMLElement(nsGkAtoms::mlabeledtr_)) {
@@ -362,13 +315,12 @@ HTMLTableRowAccessible::NativeRole() const
   return roles::ROW;
 }
 
-GroupPos
-HTMLTableRowAccessible::GroupPosition()
-{
+GroupPos HTMLTableRowAccessible::GroupPosition() {
   int32_t count = 0, index = 0;
   Accessible* table = nsAccUtils::TableFor(this);
-  if (table && nsCoreUtils::GetUIntAttr(table->GetContent(),
-                                        nsGkAtoms::aria_rowcount, &count) &&
+  if (table &&
+      nsCoreUtils::GetUIntAttr(table->GetContent(), nsGkAtoms::aria_rowcount,
+                               &count) &&
       nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_rowindex, &index)) {
     return GroupPos(0, index, count);
   }
@@ -383,46 +335,38 @@ HTMLTableRowAccessible::GroupPosition()
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible: Accessible
 
-bool
-HTMLTableAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
-{
+bool HTMLTableAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
   // Move caption accessible so that it's the first child. Check for the first
   // caption only, because nsAccessibilityService ensures we don't create
   // accessibles for the other captions, since only the first is actually
   // visible.
-  return Accessible::InsertChildAt(aChild->IsHTMLCaption() ? 0 : aIndex, aChild);
+  return Accessible::InsertChildAt(aChild->IsHTMLCaption() ? 0 : aIndex,
+                                   aChild);
 }
 
-role
-HTMLTableAccessible::NativeRole() const
-{
+role HTMLTableAccessible::NativeRole() const {
   if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
     return roles::MATHML_TABLE;
   }
   return roles::TABLE;
 }
 
-uint64_t
-HTMLTableAccessible::NativeState() const
-{
+uint64_t HTMLTableAccessible::NativeState() const {
   return Accessible::NativeState() | states::READONLY;
 }
 
-ENameValueFlag
-HTMLTableAccessible::NativeName(nsString& aName) const
-{
+ENameValueFlag HTMLTableAccessible::NativeName(nsString& aName) const {
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
-  if (!aName.IsEmpty())
-    return nameFlag;
+  if (!aName.IsEmpty()) return nameFlag;
 
   // Use table caption as a name.
   Accessible* caption = Caption();
   if (caption) {
     nsIContent* captionContent = caption->GetContent();
     if (captionContent) {
-      nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
-      if (!aName.IsEmpty())
-        return eNameOK;
+      nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent,
+                                                   &aName);
+      if (!aName.IsEmpty()) return eNameOK;
     }
   }
 
@@ -432,10 +376,9 @@ HTMLTableAccessible::NativeName(nsString& aName) const
 }
 
 already_AddRefed<nsIPersistentProperties>
-HTMLTableAccessible::NativeAttributes()
-{
+HTMLTableAccessible::NativeAttributes() {
   nsCOMPtr<nsIPersistentProperties> attributes =
-    AccessibleWrap::NativeAttributes();
+      AccessibleWrap::NativeAttributes();
 
   if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
     GetAccService()->MarkupAttributes(mContent, attributes);
@@ -453,12 +396,9 @@ HTMLTableAccessible::NativeAttributes()
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible: Accessible
 
-Relation
-HTMLTableAccessible::RelationByType(RelationType aType) const
-{
+Relation HTMLTableAccessible::RelationByType(RelationType aType) const {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType == RelationType::LABELLED_BY)
-    rel.AppendTarget(Caption());
+  if (aType == RelationType::LABELLED_BY) rel.AppendTarget(Caption());
 
   return rel;
 }
@@ -466,122 +406,93 @@ HTMLTableAccessible::RelationByType(RelationType aType) const
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible: Table
 
-Accessible*
-HTMLTableAccessible::Caption() const
-{
+Accessible* HTMLTableAccessible::Caption() const {
   Accessible* child = mChildren.SafeElementAt(0, nullptr);
   return child && child->Role() == roles::CAPTION ? child : nullptr;
 }
 
-void
-HTMLTableAccessible::Summary(nsString& aSummary)
-{
+void HTMLTableAccessible::Summary(nsString& aSummary) {
   dom::HTMLTableElement* table = dom::HTMLTableElement::FromNode(mContent);
 
-  if (table)
-    table->GetSummary(aSummary);
+  if (table) table->GetSummary(aSummary);
 }
 
-uint32_t
-HTMLTableAccessible::ColCount() const
-{
+uint32_t HTMLTableAccessible::ColCount() const {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   return tableFrame ? tableFrame->GetColCount() : 0;
 }
 
-uint32_t
-HTMLTableAccessible::RowCount()
-{
+uint32_t HTMLTableAccessible::RowCount() {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   return tableFrame ? tableFrame->GetRowCount() : 0;
 }
 
-uint32_t
-HTMLTableAccessible::SelectedCellCount()
-{
+uint32_t HTMLTableAccessible::SelectedCellCount() {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return 0;
+  if (!tableFrame) return 0;
 
   uint32_t count = 0, rowCount = RowCount(), colCount = ColCount();
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
       nsTableCellFrame* cellFrame = tableFrame->GetCellFrameAt(rowIdx, colIdx);
-      if (!cellFrame || !cellFrame->IsSelected())
-        continue;
+      if (!cellFrame || !cellFrame->IsSelected()) continue;
 
       uint32_t startRow = cellFrame->RowIndex();
       uint32_t startCol = cellFrame->ColIndex();
-      if (startRow == rowIdx && startCol == colIdx)
-        count++;
+      if (startRow == rowIdx && startCol == colIdx) count++;
     }
   }
 
   return count;
 }
 
-uint32_t
-HTMLTableAccessible::SelectedColCount()
-{
+uint32_t HTMLTableAccessible::SelectedColCount() {
   uint32_t count = 0, colCount = ColCount();
 
   for (uint32_t colIdx = 0; colIdx < colCount; colIdx++)
-    if (IsColSelected(colIdx))
-      count++;
+    if (IsColSelected(colIdx)) count++;
 
   return count;
 }
 
-uint32_t
-HTMLTableAccessible::SelectedRowCount()
-{
+uint32_t HTMLTableAccessible::SelectedRowCount() {
   uint32_t count = 0, rowCount = RowCount();
 
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++)
-    if (IsRowSelected(rowIdx))
-      count++;
+    if (IsRowSelected(rowIdx)) count++;
 
   return count;
 }
 
-void
-HTMLTableAccessible::SelectedCells(nsTArray<Accessible*>* aCells)
-{
+void HTMLTableAccessible::SelectedCells(nsTArray<Accessible*>* aCells) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return;
+  if (!tableFrame) return;
 
   uint32_t rowCount = RowCount(), colCount = ColCount();
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
       nsTableCellFrame* cellFrame = tableFrame->GetCellFrameAt(rowIdx, colIdx);
-      if (!cellFrame || !cellFrame->IsSelected())
-        continue;
+      if (!cellFrame || !cellFrame->IsSelected()) continue;
 
       uint32_t startRow = cellFrame->RowIndex();
       uint32_t startCol = cellFrame->ColIndex();
-      if (startRow != rowIdx || startCol != colIdx)
-        continue;
+      if (startRow != rowIdx || startCol != colIdx) continue;
 
       Accessible* cell = mDoc->GetAccessible(cellFrame->GetContent());
-        aCells->AppendElement(cell);
+      aCells->AppendElement(cell);
     }
   }
 }
 
-void
-HTMLTableAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells)
-{
+void HTMLTableAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return;
+  if (!tableFrame) return;
 
   uint32_t rowCount = RowCount(), colCount = ColCount();
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
       nsTableCellFrame* cellFrame = tableFrame->GetCellFrameAt(rowIdx, colIdx);
-      if (!cellFrame || !cellFrame->IsSelected())
-        continue;
+      if (!cellFrame || !cellFrame->IsSelected()) continue;
 
       uint32_t startCol = cellFrame->ColIndex();
       uint32_t startRow = cellFrame->RowIndex();
@@ -591,37 +502,29 @@ HTMLTableAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells)
   }
 }
 
-void
-HTMLTableAccessible::SelectedColIndices(nsTArray<uint32_t>* aCols)
-{
+void HTMLTableAccessible::SelectedColIndices(nsTArray<uint32_t>* aCols) {
   uint32_t colCount = ColCount();
   for (uint32_t colIdx = 0; colIdx < colCount; colIdx++)
-    if (IsColSelected(colIdx))
-      aCols->AppendElement(colIdx);
+    if (IsColSelected(colIdx)) aCols->AppendElement(colIdx);
 }
 
-void
-HTMLTableAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows)
-{
+void HTMLTableAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
   uint32_t rowCount = RowCount();
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++)
-    if (IsRowSelected(rowIdx))
-      aRows->AppendElement(rowIdx);
+    if (IsRowSelected(rowIdx)) aRows->AppendElement(rowIdx);
 }
 
-Accessible*
-HTMLTableAccessible::CellAt(uint32_t aRowIdx, uint32_t aColIdx)
-{
+Accessible* HTMLTableAccessible::CellAt(uint32_t aRowIdx, uint32_t aColIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return nullptr;
+  if (!tableFrame) return nullptr;
 
   nsIContent* cellContent = tableFrame->GetCellAt(aRowIdx, aColIdx);
   Accessible* cell = mDoc->GetAccessible(cellContent);
 
   // Sometimes, the accessible returned here is a row accessible instead of
   // a cell accessible, for example when a cell has CSS display:block; set.
-  // In such cases, iterate through the cells in this row differently to find it.
+  // In such cases, iterate through the cells in this row differently to find
+  // it.
   if (cell && cell->IsTableRow()) {
     return CellInRowAt(cell, aColIdx);
   }
@@ -631,18 +534,16 @@ HTMLTableAccessible::CellAt(uint32_t aRowIdx, uint32_t aColIdx)
   return cell == this ? nullptr : cell;
 }
 
-int32_t
-HTMLTableAccessible::CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx)
-{
+int32_t HTMLTableAccessible::CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return -1;
+  if (!tableFrame) return -1;
 
   int32_t cellIndex = tableFrame->GetIndexByRowAndColumn(aRowIdx, aColIdx);
   if (cellIndex == -1) {
     // Sometimes, the accessible returned here is a row accessible instead of
     // a cell accessible, for example when a cell has CSS display:block; set.
-    // In such cases, iterate through the cells in this row differently to find it.
+    // In such cases, iterate through the cells in this row differently to find
+    // it.
     nsIContent* cellContent = tableFrame->GetCellAt(aRowIdx, aColIdx);
     Accessible* cell = mDoc->GetAccessible(cellContent);
     if (cell && cell->IsTableRow()) {
@@ -653,12 +554,9 @@ HTMLTableAccessible::CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx)
   return cellIndex;
 }
 
-int32_t
-HTMLTableAccessible::ColIndexAt(uint32_t aCellIdx)
-{
+int32_t HTMLTableAccessible::ColIndexAt(uint32_t aCellIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return -1;
+  if (!tableFrame) return -1;
 
   int32_t rowIdx = -1, colIdx = -1;
   tableFrame->GetRowAndColumnByIndex(aCellIdx, &rowIdx, &colIdx);
@@ -673,12 +571,9 @@ HTMLTableAccessible::ColIndexAt(uint32_t aCellIdx)
   return colIdx;
 }
 
-int32_t
-HTMLTableAccessible::RowIndexAt(uint32_t aCellIdx)
-{
+int32_t HTMLTableAccessible::RowIndexAt(uint32_t aCellIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return -1;
+  if (!tableFrame) return -1;
 
   int32_t rowIdx = -1, colIdx = -1;
   tableFrame->GetRowAndColumnByIndex(aCellIdx, &rowIdx, &colIdx);
@@ -693,10 +588,9 @@ HTMLTableAccessible::RowIndexAt(uint32_t aCellIdx)
   return rowIdx;
 }
 
-void
-HTMLTableAccessible::RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
-                                        int32_t* aColIdx)
-{
+void HTMLTableAccessible::RowAndColIndicesAt(uint32_t aCellIdx,
+                                             int32_t* aRowIdx,
+                                             int32_t* aColIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   if (tableFrame) {
     tableFrame->GetRowAndColumnByIndex(aCellIdx, aRowIdx, aColIdx);
@@ -709,12 +603,9 @@ HTMLTableAccessible::RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
   }
 }
 
-uint32_t
-HTMLTableAccessible::ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx)
-{
+uint32_t HTMLTableAccessible::ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return 0;
+  if (!tableFrame) return 0;
 
   uint32_t colExtent = tableFrame->GetEffectiveColSpanAt(aRowIdx, aColIdx);
   if (colExtent == 0) {
@@ -728,102 +619,80 @@ HTMLTableAccessible::ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx)
   return colExtent;
 }
 
-uint32_t
-HTMLTableAccessible::RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx)
-{
+uint32_t HTMLTableAccessible::RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return 0;
+  if (!tableFrame) return 0;
 
   return tableFrame->GetEffectiveRowSpanAt(aRowIdx, aColIdx);
 }
 
-bool
-HTMLTableAccessible::IsColSelected(uint32_t aColIdx)
-{
+bool HTMLTableAccessible::IsColSelected(uint32_t aColIdx) {
   bool isSelected = false;
 
   uint32_t rowCount = RowCount();
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     isSelected = IsCellSelected(rowIdx, aColIdx);
-    if (!isSelected)
-      return false;
+    if (!isSelected) return false;
   }
 
   return isSelected;
 }
 
-bool
-HTMLTableAccessible::IsRowSelected(uint32_t aRowIdx)
-{
+bool HTMLTableAccessible::IsRowSelected(uint32_t aRowIdx) {
   bool isSelected = false;
 
   uint32_t colCount = ColCount();
   for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
     isSelected = IsCellSelected(aRowIdx, colIdx);
-    if (!isSelected)
-      return false;
+    if (!isSelected) return false;
   }
 
   return isSelected;
 }
 
-bool
-HTMLTableAccessible::IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx)
-{
+bool HTMLTableAccessible::IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return false;
+  if (!tableFrame) return false;
 
   nsTableCellFrame* cellFrame = tableFrame->GetCellFrameAt(aRowIdx, aColIdx);
   return cellFrame ? cellFrame->IsSelected() : false;
 }
 
-void
-HTMLTableAccessible::SelectRow(uint32_t aRowIdx)
-{
+void HTMLTableAccessible::SelectRow(uint32_t aRowIdx) {
   DebugOnly<nsresult> rv =
-    RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelection::Row, true);
+      RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelection::Row, true);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
   AddRowOrColumnToSelection(aRowIdx, TableSelection::Row);
 }
 
-void
-HTMLTableAccessible::SelectCol(uint32_t aColIdx)
-{
+void HTMLTableAccessible::SelectCol(uint32_t aColIdx) {
   DebugOnly<nsresult> rv =
-    RemoveRowsOrColumnsFromSelection(aColIdx, TableSelection::Column, true);
+      RemoveRowsOrColumnsFromSelection(aColIdx, TableSelection::Column, true);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
   AddRowOrColumnToSelection(aColIdx, TableSelection::Column);
 }
 
-void
-HTMLTableAccessible::UnselectRow(uint32_t aRowIdx)
-{
+void HTMLTableAccessible::UnselectRow(uint32_t aRowIdx) {
   RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelection::Row, false);
 }
 
-void
-HTMLTableAccessible::UnselectCol(uint32_t aColIdx)
-{
+void HTMLTableAccessible::UnselectCol(uint32_t aColIdx) {
   RemoveRowsOrColumnsFromSelection(aColIdx, TableSelection::Column, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible: protected implementation
 
-nsresult
-HTMLTableAccessible::AddRowOrColumnToSelection(int32_t aIndex, TableSelection aTarget)
-{
+nsresult HTMLTableAccessible::AddRowOrColumnToSelection(
+    int32_t aIndex, TableSelection aTarget) {
   bool doSelectRow = (aTarget == TableSelection::Row);
 
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return NS_OK;
+  if (!tableFrame) return NS_OK;
 
   uint32_t count = 0;
   if (doSelectRow)
@@ -833,7 +702,7 @@ HTMLTableAccessible::AddRowOrColumnToSelection(int32_t aIndex, TableSelection aT
 
   nsIPresShell* presShell(mDoc->PresShell());
   RefPtr<nsFrameSelection> tableSelection =
-    const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
+      const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
   for (uint32_t idx = 0; idx < count; idx++) {
     int32_t rowIdx = doSelectRow ? aIndex : idx;
@@ -848,18 +717,14 @@ HTMLTableAccessible::AddRowOrColumnToSelection(int32_t aIndex, TableSelection aT
   return NS_OK;
 }
 
-nsresult
-HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(int32_t aIndex,
-                                                      TableSelection aTarget,
-                                                      bool aIsOuter)
-{
+nsresult HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(
+    int32_t aIndex, TableSelection aTarget, bool aIsOuter) {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (!tableFrame)
-    return NS_OK;
+  if (!tableFrame) return NS_OK;
 
   nsIPresShell* presShell(mDoc->PresShell());
   RefPtr<nsFrameSelection> tableSelection =
-    const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
+      const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
   bool doUnselectRow = (aTarget == TableSelection::Row);
   uint32_t count = doUnselectRow ? ColCount() : RowCount();
@@ -870,23 +735,18 @@ HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(int32_t aIndex,
   int32_t endColIdx = doUnselectRow ? count - 1 : aIndex;
 
   if (aIsOuter)
-    return tableSelection->RestrictCellsToSelection(mContent,
-                                                    startRowIdx, startColIdx,
-                                                    endRowIdx, endColIdx);
+    return tableSelection->RestrictCellsToSelection(
+        mContent, startRowIdx, startColIdx, endRowIdx, endColIdx);
 
-  return tableSelection->RemoveCellsFromSelection(mContent,
-                                                  startRowIdx, startColIdx,
-                                                  endRowIdx, endColIdx);
+  return tableSelection->RemoveCellsFromSelection(
+      mContent, startRowIdx, startColIdx, endRowIdx, endColIdx);
 }
 
-void
-HTMLTableAccessible::Description(nsString& aDescription)
-{
+void HTMLTableAccessible::Description(nsString& aDescription) {
   // Helpful for debugging layout vs. data tables
   aDescription.Truncate();
   Accessible::Description(aDescription);
-  if (!aDescription.IsEmpty())
-    return;
+  if (!aDescription.IsEmpty()) return;
 
   // Use summary as description if it weren't used as a name.
   // XXX: get rid code duplication with NameInternal().
@@ -898,7 +758,7 @@ HTMLTableAccessible::Description(nsString& aDescription)
       nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent,
                                                    &captionText);
 
-      if (!captionText.IsEmpty()) { // summary isn't used as a name.
+      if (!captionText.IsEmpty()) {  // summary isn't used as a name.
         mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::summary,
                                        aDescription);
       }
@@ -918,18 +778,11 @@ HTMLTableAccessible::Description(nsString& aDescription)
 // HTMLCaptionAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-Relation
-HTMLCaptionAccessible::RelationByType(RelationType aType) const
-{
+Relation HTMLCaptionAccessible::RelationByType(RelationType aType) const {
   Relation rel = HyperTextAccessible::RelationByType(aType);
-  if (aType == RelationType::LABEL_FOR)
-    rel.AppendTarget(Parent());
+  if (aType == RelationType::LABEL_FOR) rel.AppendTarget(Parent());
 
   return rel;
 }
 
-role
-HTMLCaptionAccessible::NativeRole() const
-{
-  return roles::CAPTION;
-}
+role HTMLCaptionAccessible::NativeRole() const { return roles::CAPTION; }

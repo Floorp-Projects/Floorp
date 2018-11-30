@@ -7,11 +7,11 @@
 #ifndef BASE_BASICTYPES_H_
 #define BASE_BASICTYPES_H_
 
-#include <limits.h>         // So we can set the bounds of our types
-#include <stddef.h>         // For size_t
-#include <string.h>         // for memcpy
+#include <limits.h>  // So we can set the bounds of our types
+#include <stddef.h>  // For size_t
+#include <string.h>  // for memcpy
 
-#include "base/port.h"    // Types that only need exist on certain systems
+#include "base/port.h"  // Types that only need exist on certain systems
 
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -20,38 +20,38 @@
 // such values require up to 21 bits.
 // (For type-checking on pointers, make this explicitly signed,
 // and it should always be the signed version of whatever int32_t is.)
-typedef signed int         char32;
+typedef signed int char32;
 
-const uint8_t  kuint8max  = (( uint8_t) 0xFF);
-const uint16_t kuint16max = ((uint16_t) 0xFFFF);
-const uint32_t kuint32max = ((uint32_t) 0xFFFFFFFF);
-const uint64_t kuint64max = ((uint64_t) GG_LONGLONG(0xFFFFFFFFFFFFFFFF));
-const  int8_t  kint8min   = ((  int8_t) 0x80);
-const  int8_t  kint8max   = ((  int8_t) 0x7F);
-const  int16_t kint16min  = (( int16_t) 0x8000);
-const  int16_t kint16max  = (( int16_t) 0x7FFF);
-const  int32_t kint32min  = (( int32_t) 0x80000000);
-const  int32_t kint32max  = (( int32_t) 0x7FFFFFFF);
-const  int64_t kint64min  = (( int64_t) GG_LONGLONG(0x8000000000000000));
-const  int64_t kint64max  = (( int64_t) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
+const uint8_t kuint8max = ((uint8_t)0xFF);
+const uint16_t kuint16max = ((uint16_t)0xFFFF);
+const uint32_t kuint32max = ((uint32_t)0xFFFFFFFF);
+const uint64_t kuint64max = ((uint64_t)GG_LONGLONG(0xFFFFFFFFFFFFFFFF));
+const int8_t kint8min = ((int8_t)0x80);
+const int8_t kint8max = ((int8_t)0x7F);
+const int16_t kint16min = ((int16_t)0x8000);
+const int16_t kint16max = ((int16_t)0x7FFF);
+const int32_t kint32min = ((int32_t)0x80000000);
+const int32_t kint32max = ((int32_t)0x7FFFFFFF);
+const int64_t kint64min = ((int64_t)GG_LONGLONG(0x8000000000000000));
+const int64_t kint64max = ((int64_t)GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 
 // Platform- and hardware-dependent printf specifiers
-#  if defined(OS_POSIX)
-#    define PRId64L "I64d"
-#    define PRIu64L "I64u"
-#    define PRIx64L "I64x"
-#  elif defined(OS_WIN)
-#    define PRId64L L"I64d"
-#    define PRIu64L L"I64u"
-#    define PRIx64L L"I64x"
-#  endif
+#if defined(OS_POSIX)
+#define PRId64L "I64d"
+#define PRIu64L "I64u"
+#define PRIx64L "I64x"
+#elif defined(OS_WIN)
+#define PRId64L L"I64d"
+#define PRIu64L L"I64u"
+#define PRIx64L L"I64x"
+#endif
 
 // A macro to disallow the copy constructor and operator= functions
 // This should be used in the private: declarations for a class
 #undef DISALLOW_COPY_AND_ASSIGN
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&);               \
-  void operator=(const TypeName&)
+  TypeName(const TypeName &);              \
+  void operator=(const TypeName &)
 
 // An older, deprecated, politically incorrect name for the above.
 #undef DISALLOW_EVIL_CONSTRUCTORS
@@ -132,10 +132,9 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
 // where a pointer is 4 bytes, this means all pointers to a type whose
 // size is 3 or greater than 4 will be (righteously) rejected.
 
-#define ARRAYSIZE_UNSAFE(a) \
+#define ARRAYSIZE_UNSAFE(a)     \
   ((sizeof(a) / sizeof(*(a))) / \
    static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
-
 
 // Use implicit_cast as a safe version of static_cast or const_cast
 // for upcasting in the type hierarchy (i.e. casting a pointer to Foo
@@ -154,7 +153,7 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
 // implicit_cast would have been part of the C++ standard library,
 // but the proposal was submitted too late.  It will probably make
 // its way into the language in the future.
-template<typename To, typename From>
+template <typename To, typename From>
 inline To implicit_cast(From const &f) {
   return f;
 }
@@ -162,11 +161,11 @@ inline To implicit_cast(From const &f) {
 // The COMPILE_ASSERT macro (below) creates an otherwise-unused typedef.  This
 // triggers compiler warnings with gcc 4.8 and higher, so mark the typedef
 // as permissibly-unused to disable the warnings.
-#  if defined(__GNUC__)
-#    define COMPILE_ASSERT_UNUSED_ATTRIBUTE __attribute__((unused))
-#  else
-#    define COMPILE_ASSERT_UNUSED_ATTRIBUTE /* nothing */
-#  endif
+#if defined(__GNUC__)
+#define COMPILE_ASSERT_UNUSED_ATTRIBUTE __attribute__((unused))
+#else
+#define COMPILE_ASSERT_UNUSED_ATTRIBUTE /* nothing */
+#endif
 
 // The COMPILE_ASSERT macro can be used to verify that a compile time
 // expression is true. For example, you could use it to verify the
@@ -186,12 +185,11 @@ inline To implicit_cast(From const &f) {
 // Avoid multiple definitions for webrtc
 #if !defined(COMPILE_ASSERT)
 template <bool>
-struct CompileAssert {
-};
+struct CompileAssert {};
 
-#define COMPILE_ASSERT(expr, msg) \
-  typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] \
-  COMPILE_ASSERT_UNUSED_ATTRIBUTE
+#define COMPILE_ASSERT(expr, msg)     \
+  typedef CompileAssert<(bool(expr))> \
+      msg[bool(expr) ? 1 : -1] COMPILE_ASSERT_UNUSED_ATTRIBUTE
 #endif
 
 // Implementation details of COMPILE_ASSERT:
@@ -235,7 +233,6 @@ struct CompileAssert {
 //   This is to avoid running into a bug in MS VC 7.1, which
 //   causes ((0.0) ? 1 : -1) to incorrectly evaluate to 1.
 
-
 // MetatagId refers to metatag-id that we assign to
 // each metatag <name, value> pair..
 typedef uint32_t MetatagId;
@@ -243,10 +240,7 @@ typedef uint32_t MetatagId;
 // Argument type used in interfaces that can optionally take ownership
 // of a passed in argument.  If TAKE_OWNERSHIP is passed, the called
 // object takes ownership of the argument.  Otherwise it does not.
-enum Ownership {
-  DO_NOT_TAKE_OWNERSHIP,
-  TAKE_OWNERSHIP
-};
+enum Ownership { DO_NOT_TAKE_OWNERSHIP, TAKE_OWNERSHIP };
 
 // The following enum should be used only as a constructor argument to indicate
 // that the variable has static storage class, and that the constructor should
@@ -263,7 +257,6 @@ enum Ownership {
 //       static MyClass my_variable_name(base::LINKER_INITIALIZED);
 namespace base {
 enum LinkerInitialized { LINKER_INITIALIZED };
-}  // base
-
+}  // namespace base
 
 #endif  // BASE_BASICTYPES_H_

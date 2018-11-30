@@ -20,29 +20,27 @@ class Accessible;
  * XPCOM nsIAccessibleHyperLink implementation, used by xpcAccessibleGeneric
  * class.
  */
-class xpcAccessibleHyperLink : public nsIAccessibleHyperLink
-{
-public:
+class xpcAccessibleHyperLink : public nsIAccessibleHyperLink {
+ public:
   NS_IMETHOD GetAnchorCount(int32_t* aAnchorCount) final;
   NS_IMETHOD GetStartIndex(int32_t* aStartIndex) final;
   NS_IMETHOD GetEndIndex(int32_t* aEndIndex) final;
   NS_IMETHOD GetURI(int32_t aIndex, nsIURI** aURI) final;
-  NS_IMETHOD GetAnchor(int32_t aIndex, nsIAccessible** aAccessible)
-    final;
+  NS_IMETHOD GetAnchor(int32_t aIndex, nsIAccessible** aAccessible) final;
   NS_IMETHOD GetValid(bool* aValid) final;
 
-protected:
-  xpcAccessibleHyperLink() { }
+ protected:
+  xpcAccessibleHyperLink() {}
   virtual ~xpcAccessibleHyperLink() {}
 
-private:
+ private:
   xpcAccessibleHyperLink(const xpcAccessibleHyperLink&) = delete;
-  xpcAccessibleHyperLink& operator =(const xpcAccessibleHyperLink&) = delete;
+  xpcAccessibleHyperLink& operator=(const xpcAccessibleHyperLink&) = delete;
 
   AccessibleOrProxy Intl();
 };
 
-} // namespace a11y
-} // namespace mozilla
+}  // namespace a11y
+}  // namespace mozilla
 
 #endif

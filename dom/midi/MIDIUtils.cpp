@@ -27,9 +27,7 @@ namespace MIDIUtils {
 
 // Checks validity of MIDIMessage passed to it. Throws debug warnings and
 // returns false if message is not valid.
-bool
-IsValidMessage(const MIDIMessage* aMsg)
-{
+bool IsValidMessage(const MIDIMessage* aMsg) {
   if (NS_WARN_IF(!aMsg)) {
     return false;
   }
@@ -41,8 +39,8 @@ IsValidMessage(const MIDIMessage* aMsg)
   MOZ_ASSERT((cmd & kCommandByte) == kCommandByte,
              "Constructed a MIDI packet where first byte is not command!");
   if (cmd == kSysexMessageStart) {
-    // All we can do with sysex is make sure it starts and  ends with the correct
-    // command bytes.
+    // All we can do with sysex is make sure it starts and  ends with the
+    // correct command bytes.
     if (aMsg->data()[aMsg->data().Length() - 1] != kSysexMessageEnd) {
       NS_WARNING("Last byte of Sysex Message not 0xF7!");
       return false;
@@ -56,7 +54,8 @@ IsValidMessage(const MIDIMessage* aMsg)
   // Otherwise, just use the correct array for testing lengths. We can't tell
   // much about message validity other than that.
   if ((cmd & kSystemMessage) == kSystemMessage) {
-    if (cmd - kSystemMessage >= static_cast<uint8_t>(ArrayLength(kSystemLengths))) {
+    if (cmd - kSystemMessage >=
+        static_cast<uint8_t>(ArrayLength(kSystemLengths))) {
       NS_WARNING("System Message Command byte not valid!");
       return false;
     }
@@ -74,11 +73,9 @@ IsValidMessage(const MIDIMessage* aMsg)
   return aMsg->data().Length() == kCommandLengths[cmdIndex];
 }
 
-uint32_t
-ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
-              const TimeStamp& aTimestamp,
-              nsTArray<MIDIMessage>& aMsgArray)
-{
+uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
+                       const TimeStamp& aTimestamp,
+                       nsTArray<MIDIMessage>& aMsgArray) {
   uint32_t bytesRead = 0;
   bool inSysexMessage = false;
   nsAutoPtr<MIDIMessage> currentMsg;
@@ -94,7 +91,8 @@ ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
     if (byte == kSysexMessageEnd) {
       if (!inSysexMessage) {
         MOZ_ASSERT(inSysexMessage);
-        NS_WARNING("Got sysex message end with no sysex message being processed!");
+        NS_WARNING(
+            "Got sysex message end with no sysex message being processed!");
       }
       inSysexMessage = false;
     } else if (byte & kCommandByte) {
@@ -115,9 +113,7 @@ ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
   return bytesRead;
 }
 
-bool
-IsSysexMessage(const MIDIMessage& aMsg)
-{
+bool IsSysexMessage(const MIDIMessage& aMsg) {
   if (aMsg.data().Length() == 0) {
     return false;
   }
@@ -126,6 +122,6 @@ IsSysexMessage(const MIDIMessage& aMsg)
   }
   return false;
 }
-}
-} // namespace dom
-} // namespace mozilla
+}  // namespace MIDIUtils
+}  // namespace dom
+}  // namespace mozilla

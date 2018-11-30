@@ -16,22 +16,21 @@
 #include "prlink.h"
 #endif
 
-#define FREEDESKTOP_SCREENSAVER_TARGET    "org.freedesktop.ScreenSaver"
-#define FREEDESKTOP_SCREENSAVER_OBJECT    "/ScreenSaver"
+#define FREEDESKTOP_SCREENSAVER_TARGET "org.freedesktop.ScreenSaver"
+#define FREEDESKTOP_SCREENSAVER_OBJECT "/ScreenSaver"
 #define FREEDESKTOP_SCREENSAVER_INTERFACE "org.freedesktop.ScreenSaver"
 
-#define SESSION_MANAGER_TARGET            "org.gnome.SessionManager"
-#define SESSION_MANAGER_OBJECT            "/org/gnome/SessionManager"
-#define SESSION_MANAGER_INTERFACE         "org.gnome.SessionManager"
+#define SESSION_MANAGER_TARGET "org.gnome.SessionManager"
+#define SESSION_MANAGER_OBJECT "/org/gnome/SessionManager"
+#define SESSION_MANAGER_INTERFACE "org.gnome.SessionManager"
 
-#define DBUS_TIMEOUT                      (-1)
+#define DBUS_TIMEOUT (-1)
 
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 
 StaticRefPtr<WakeLockListener> WakeLockListener::sSingleton;
-
 
 enum DesktopEnvironment {
   FreeDesktop,
@@ -42,23 +41,20 @@ enum DesktopEnvironment {
   Unsupported,
 };
 
-class WakeLockTopic
-{
-public:
+class WakeLockTopic {
+ public:
   WakeLockTopic(const nsAString& aTopic, DBusConnection* aConnection)
-    : mTopic(NS_ConvertUTF16toUTF8(aTopic))
-    , mConnection(aConnection)
-    , mDesktopEnvironment(FreeDesktop)
-    , mInhibitRequest(0)
-    , mShouldInhibit(false)
-    , mWaitingForReply(false)
-  {
-  }
+      : mTopic(NS_ConvertUTF16toUTF8(aTopic)),
+        mConnection(aConnection),
+        mDesktopEnvironment(FreeDesktop),
+        mInhibitRequest(0),
+        mShouldInhibit(false),
+        mWaitingForReply(false) {}
 
   nsresult InhibitScreensaver(void);
   nsresult UninhibitScreensaver(void);
 
-private:
+ private:
   bool SendInhibit();
   bool SendUninhibit();
 
@@ -86,15 +82,11 @@ private:
   bool mWaitingForReply;
 };
 
-
-bool
-WakeLockTopic::SendMessage(DBusMessage* aMessage)
-{
+bool WakeLockTopic::SendMessage(DBusMessage* aMessage) {
   // send message and get a handle for a reply
   RefPtr<DBusPendingCall> reply;
   dbus_connection_send_with_reply(mConnection, aMessage,
-                                  reply.StartAssignment(),
-                                  DBUS_TIMEOUT);
+                                  reply.StartAssignment(), DBUS_TIMEOUT);
   if (!reply) {
     return false;
   }
@@ -104,14 +96,11 @@ WakeLockTopic::SendMessage(DBusMessage* aMessage)
   return true;
 }
 
-bool
-WakeLockTopic::SendFreeDesktopInhibitMessage()
-{
-  RefPtr<DBusMessage> message = already_AddRefed<DBusMessage>(
-    dbus_message_new_method_call(FREEDESKTOP_SCREENSAVER_TARGET,
-                                 FREEDESKTOP_SCREENSAVER_OBJECT,
-                                 FREEDESKTOP_SCREENSAVER_INTERFACE,
-                                 "Inhibit"));
+bool WakeLockTopic::SendFreeDesktopInhibitMessage() {
+  RefPtr<DBusMessage> message =
+      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
+          FREEDESKTOP_SCREENSAVER_TARGET, FREEDESKTOP_SCREENSAVER_OBJECT,
+          FREEDESKTOP_SCREENSAVER_INTERFACE, "Inhibit"));
 
   if (!message) {
     return false;
@@ -119,41 +108,32 @@ WakeLockTopic::SendFreeDesktopInhibitMessage()
 
   const char* app = g_get_prgname();
   const char* topic = mTopic.get();
-  dbus_message_append_args(message,
-                           DBUS_TYPE_STRING, &app,
-                           DBUS_TYPE_STRING, &topic,
-                           DBUS_TYPE_INVALID);
+  dbus_message_append_args(message, DBUS_TYPE_STRING, &app, DBUS_TYPE_STRING,
+                           &topic, DBUS_TYPE_INVALID);
 
   return SendMessage(message);
 }
 
-bool
-WakeLockTopic::SendGNOMEInhibitMessage()
-{
-  RefPtr<DBusMessage> message = already_AddRefed<DBusMessage>(
-    dbus_message_new_method_call(SESSION_MANAGER_TARGET,
-                                 SESSION_MANAGER_OBJECT,
-                                 SESSION_MANAGER_INTERFACE,
-                                 "Inhibit"));
+bool WakeLockTopic::SendGNOMEInhibitMessage() {
+  RefPtr<DBusMessage> message =
+      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
+          SESSION_MANAGER_TARGET, SESSION_MANAGER_OBJECT,
+          SESSION_MANAGER_INTERFACE, "Inhibit"));
 
   if (!message) {
     return false;
   }
 
   static const uint32_t xid = 0;
-  static const uint32_t flags = (1 << 3); // Inhibit idle
+  static const uint32_t flags = (1 << 3);  // Inhibit idle
   const char* app = g_get_prgname();
   const char* topic = mTopic.get();
-  dbus_message_append_args(message,
-                           DBUS_TYPE_STRING, &app,
-                           DBUS_TYPE_UINT32, &xid,
-                           DBUS_TYPE_STRING, &topic,
-                           DBUS_TYPE_UINT32, &flags,
-                           DBUS_TYPE_INVALID);
+  dbus_message_append_args(message, DBUS_TYPE_STRING, &app, DBUS_TYPE_UINT32,
+                           &xid, DBUS_TYPE_STRING, &topic, DBUS_TYPE_UINT32,
+                           &flags, DBUS_TYPE_INVALID);
 
   return SendMessage(message);
 }
-
 
 #if defined(MOZ_X11)
 
@@ -168,9 +148,7 @@ static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nullptr;
 static _XScreenSaverQueryVersion_fn _XSSQueryVersion = nullptr;
 static _XScreenSaverSuspend_fn _XSSSuspend = nullptr;
 
-/* static */ bool
-WakeLockTopic::CheckXScreenSaverSupport()
-{
+/* static */ bool WakeLockTopic::CheckXScreenSaverSupport() {
   if (!sXssLib) {
     sXssLib = PR_LoadLibrary("libXss.so.1");
     if (!sXssLib) {
@@ -178,12 +156,12 @@ WakeLockTopic::CheckXScreenSaverSupport()
     }
   }
 
-  _XSSQueryExtension = (_XScreenSaverQueryExtension_fn)
-      PR_FindFunctionSymbol(sXssLib, "XScreenSaverQueryExtension");
-  _XSSQueryVersion = (_XScreenSaverQueryVersion_fn)
-      PR_FindFunctionSymbol(sXssLib, "XScreenSaverQueryVersion");
-  _XSSSuspend = (_XScreenSaverSuspend_fn)
-      PR_FindFunctionSymbol(sXssLib, "XScreenSaverSuspend");
+  _XSSQueryExtension = (_XScreenSaverQueryExtension_fn)PR_FindFunctionSymbol(
+      sXssLib, "XScreenSaverQueryExtension");
+  _XSSQueryVersion = (_XScreenSaverQueryVersion_fn)PR_FindFunctionSymbol(
+      sXssLib, "XScreenSaverQueryVersion");
+  _XSSSuspend = (_XScreenSaverSuspend_fn)PR_FindFunctionSymbol(
+      sXssLib, "XScreenSaverSuspend");
   if (!_XSSQueryExtension || !_XSSQueryVersion || !_XSSSuspend) {
     return false;
   }
@@ -204,9 +182,7 @@ WakeLockTopic::CheckXScreenSaverSupport()
   return true;
 }
 
-/* static */ bool
-WakeLockTopic::InhibitXScreenSaver(bool inhibit)
-{
+/* static */ bool WakeLockTopic::InhibitXScreenSaver(bool inhibit) {
   // Should only be called if CheckXScreenSaverSupport returns true.
   // There's a couple of safety checks here nonetheless.
   if (!_XSSSuspend) return false;
@@ -219,26 +195,22 @@ WakeLockTopic::InhibitXScreenSaver(bool inhibit)
 
 #endif
 
-
-bool
-WakeLockTopic::SendInhibit()
-{
+bool WakeLockTopic::SendInhibit() {
   bool sendOk = false;
 
-  switch (mDesktopEnvironment)
-  {
-  case FreeDesktop:
-    sendOk = SendFreeDesktopInhibitMessage();
-    break;
-  case GNOME:
-    sendOk = SendGNOMEInhibitMessage();
-    break;
+  switch (mDesktopEnvironment) {
+    case FreeDesktop:
+      sendOk = SendFreeDesktopInhibitMessage();
+      break;
+    case GNOME:
+      sendOk = SendGNOMEInhibitMessage();
+      break;
 #if defined(MOZ_X11)
-  case XScreenSaver:
-    return InhibitXScreenSaver(true);
+    case XScreenSaver:
+      return InhibitXScreenSaver(true);
 #endif
-  case Unsupported:
-    return false;
+    case Unsupported:
+      return false;
   }
 
   if (sendOk) {
@@ -248,23 +220,17 @@ WakeLockTopic::SendInhibit()
   return sendOk;
 }
 
-bool
-WakeLockTopic::SendUninhibit()
-{
+bool WakeLockTopic::SendUninhibit() {
   RefPtr<DBusMessage> message;
 
   if (mDesktopEnvironment == FreeDesktop) {
-    message = already_AddRefed<DBusMessage>(
-      dbus_message_new_method_call(FREEDESKTOP_SCREENSAVER_TARGET,
-                                   FREEDESKTOP_SCREENSAVER_OBJECT,
-                                   FREEDESKTOP_SCREENSAVER_INTERFACE,
-                                   "UnInhibit"));
+    message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
+        FREEDESKTOP_SCREENSAVER_TARGET, FREEDESKTOP_SCREENSAVER_OBJECT,
+        FREEDESKTOP_SCREENSAVER_INTERFACE, "UnInhibit"));
   } else if (mDesktopEnvironment == GNOME) {
-    message = already_AddRefed<DBusMessage>(
-      dbus_message_new_method_call(SESSION_MANAGER_TARGET,
-                                   SESSION_MANAGER_OBJECT,
-                                   SESSION_MANAGER_INTERFACE,
-                                   "Uninhibit"));
+    message = already_AddRefed<DBusMessage>(dbus_message_new_method_call(
+        SESSION_MANAGER_TARGET, SESSION_MANAGER_OBJECT,
+        SESSION_MANAGER_INTERFACE, "Uninhibit"));
   }
 #if defined(MOZ_X11)
   else if (mDesktopEnvironment == XScreenSaver) {
@@ -276,8 +242,7 @@ WakeLockTopic::SendUninhibit()
     return false;
   }
 
-  dbus_message_append_args(message,
-                           DBUS_TYPE_UINT32, &mInhibitRequest,
+  dbus_message_append_args(message, DBUS_TYPE_UINT32, &mInhibitRequest,
                            DBUS_TYPE_INVALID);
 
   dbus_connection_send(mConnection, message, nullptr);
@@ -288,9 +253,7 @@ WakeLockTopic::SendUninhibit()
   return true;
 }
 
-nsresult
-WakeLockTopic::InhibitScreensaver()
-{
+nsresult WakeLockTopic::InhibitScreensaver() {
   if (mShouldInhibit) {
     // Screensaver is inhibited. Nothing to do here.
     return NS_OK;
@@ -308,9 +271,7 @@ WakeLockTopic::InhibitScreensaver()
   return SendInhibit() ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-WakeLockTopic::UninhibitScreensaver()
-{
+nsresult WakeLockTopic::UninhibitScreensaver() {
   if (!mShouldInhibit) {
     // Screensaver isn't inhibited. Nothing to do here.
     return NS_OK;
@@ -328,9 +289,7 @@ WakeLockTopic::UninhibitScreensaver()
   return SendUninhibit() ? NS_OK : NS_ERROR_FAILURE;
 }
 
-void
-WakeLockTopic::InhibitFailed()
-{
+void WakeLockTopic::InhibitFailed() {
   mWaitingForReply = false;
 
   if (mDesktopEnvironment == FreeDesktop) {
@@ -353,9 +312,7 @@ WakeLockTopic::InhibitFailed()
   SendInhibit();
 }
 
-void
-WakeLockTopic::InhibitSucceeded(uint32_t aInhibitRequest)
-{
+void WakeLockTopic::InhibitSucceeded(uint32_t aInhibitRequest) {
   mWaitingForReply = false;
   mInhibitRequest = aInhibitRequest;
 
@@ -366,9 +323,8 @@ WakeLockTopic::InhibitSucceeded(uint32_t aInhibitRequest)
   }
 }
 
-/* static */ void
-WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
-{
+/* static */ void WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending,
+                                                     void* user_data) {
   if (!WakeLockListener::GetSingleton(false)) {
     // The WakeLockListener (and therefore our topic) was deleted while we were
     // waiting for a reply.
@@ -377,8 +333,8 @@ WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
 
   WakeLockTopic* self = static_cast<WakeLockTopic*>(user_data);
 
-  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
-    dbus_pending_call_steal_reply(pending));
+  RefPtr<DBusMessage> msg =
+      already_AddRefed<DBusMessage>(dbus_pending_call_steal_reply(pending));
   if (!msg) {
     return;
   }
@@ -386,8 +342,8 @@ WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
   if (dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_METHOD_RETURN) {
     uint32_t inhibitRequest;
 
-    if (dbus_message_get_args(msg, nullptr, DBUS_TYPE_UINT32,
-                              &inhibitRequest, DBUS_TYPE_INVALID)) {
+    if (dbus_message_get_args(msg, nullptr, DBUS_TYPE_UINT32, &inhibitRequest,
+                              DBUS_TYPE_INVALID)) {
       self->InhibitSucceeded(inhibitRequest);
     }
   } else {
@@ -395,15 +351,9 @@ WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
   }
 }
 
+WakeLockListener::WakeLockListener() : mConnection(nullptr) {}
 
-WakeLockListener::WakeLockListener()
-  : mConnection(nullptr)
-{
-}
-
-/* static */ WakeLockListener*
-WakeLockListener::GetSingleton(bool aCreate)
-{
+/* static */ WakeLockListener* WakeLockListener::GetSingleton(bool aCreate) {
   if (!sSingleton && aCreate) {
     sSingleton = new WakeLockListener();
   }
@@ -411,18 +361,12 @@ WakeLockListener::GetSingleton(bool aCreate)
   return sSingleton;
 }
 
-/* static */ void
-WakeLockListener::Shutdown()
-{
-  sSingleton = nullptr;
-}
+/* static */ void WakeLockListener::Shutdown() { sSingleton = nullptr; }
 
-bool
-WakeLockListener::EnsureDBusConnection()
-{
+bool WakeLockListener::EnsureDBusConnection() {
   if (!mConnection) {
-    mConnection =
-      already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SESSION, nullptr));
+    mConnection = already_AddRefed<DBusConnection>(
+        dbus_bus_get(DBUS_BUS_SESSION, nullptr));
 
     if (mConnection) {
       dbus_connection_set_exit_on_disconnect(mConnection, false);
@@ -433,16 +377,15 @@ WakeLockListener::EnsureDBusConnection()
   return mConnection != nullptr;
 }
 
-nsresult
-WakeLockListener::Callback(const nsAString& topic, const nsAString& state)
-{
+nsresult WakeLockListener::Callback(const nsAString& topic,
+                                    const nsAString& state) {
   if (!EnsureDBusConnection()) {
     return NS_ERROR_FAILURE;
   }
 
-  if(!topic.Equals(NS_LITERAL_STRING("screen")) &&
-     !topic.Equals(NS_LITERAL_STRING("audio-playing")) &&
-     !topic.Equals(NS_LITERAL_STRING("video-playing")))
+  if (!topic.Equals(NS_LITERAL_STRING("screen")) &&
+      !topic.Equals(NS_LITERAL_STRING("audio-playing")) &&
+      !topic.Equals(NS_LITERAL_STRING("video-playing")))
     return NS_OK;
 
   WakeLockTopic* topicLock = mTopics.Get(topic);
@@ -454,9 +397,8 @@ WakeLockListener::Callback(const nsAString& topic, const nsAString& state)
   // Treat "locked-background" the same as "unlocked" on desktop linux.
   bool shouldLock = state.EqualsLiteral("locked-foreground");
 
-  return shouldLock ?
-    topicLock->InhibitScreensaver() :
-    topicLock->UninhibitScreensaver();
+  return shouldLock ? topicLock->InhibitScreensaver()
+                    : topicLock->UninhibitScreensaver();
 }
 
 #endif

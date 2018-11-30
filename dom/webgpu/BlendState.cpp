@@ -15,5 +15,5 @@ BlendState::~BlendState() = default;
 
 WEBGPU_IMPL_GOOP_0(BlendState)
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

@@ -26,16 +26,16 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsISVGPoint)
   if (tmp->mList) {
     tmp->mList->mItems[tmp->mListIndex] = nullptr;
   }
-NS_IMPL_CYCLE_COLLECTION_UNLINK(mList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsISVGPoint)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsISVGPoint)
-NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsISVGPoint)
@@ -47,11 +47,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsISVGPoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-void
-nsISVGPoint::InsertingIntoList(DOMSVGPointList *aList,
-                               uint32_t aListIndex,
-                               bool aIsAnimValItem)
-{
+void nsISVGPoint::InsertingIntoList(DOMSVGPointList* aList, uint32_t aListIndex,
+                                    bool aIsAnimValItem) {
   MOZ_ASSERT(!HasOwner(), "Inserting item that already has an owner");
 
   mList = aList;
@@ -62,26 +59,19 @@ nsISVGPoint::InsertingIntoList(DOMSVGPointList *aList,
   MOZ_ASSERT(IndexIsValid(), "Bad index for DOMSVGPoint!");
 }
 
-void
-nsISVGPoint::RemovingFromList()
-{
+void nsISVGPoint::RemovingFromList() {
   mPt = InternalItem();
   mList = nullptr;
   MOZ_ASSERT(!mIsReadonly, "mIsReadonly set for list");
   mIsAnimValItem = false;
 }
 
-SVGPoint&
-nsISVGPoint::InternalItem()
-{
+SVGPoint& nsISVGPoint::InternalItem() {
   return mList->InternalList().mItems[mListIndex];
 }
 
 #ifdef DEBUG
-bool
-nsISVGPoint::IndexIsValid()
-{
+bool nsISVGPoint::IndexIsValid() {
   return mListIndex < mList->InternalList().Length();
 }
 #endif
-

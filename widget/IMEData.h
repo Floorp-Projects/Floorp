@@ -34,76 +34,57 @@ namespace widget {
  * If the IME implementation needs notifications even while our process is
  * deactive, it should also set NOTIFY_DURING_DEACTIVE.
  */
-struct IMENotificationRequests final
-{
+struct IMENotificationRequests final {
   typedef uint8_t Notifications;
 
-  enum : Notifications
-  {
-    NOTIFY_NOTHING                       = 0,
-    NOTIFY_TEXT_CHANGE                   = 1 << 1,
-    NOTIFY_POSITION_CHANGE               = 1 << 2,
+  enum : Notifications {
+    NOTIFY_NOTHING = 0,
+    NOTIFY_TEXT_CHANGE = 1 << 1,
+    NOTIFY_POSITION_CHANGE = 1 << 2,
     // NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR is used when mouse button is pressed
     // or released on a character in the focused editor.  The notification is
     // notified to IME as a mouse event.  If it's consumed by IME, NotifyIME()
     // returns NS_SUCCESS_EVENT_CONSUMED.  Otherwise, it returns NS_OK if it's
     // handled without any error.
-    NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR    = 1 << 3,
+    NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR = 1 << 3,
     // NOTE: NOTIFY_DURING_DEACTIVE isn't supported in environments where two
     //       or more compositions are possible.  E.g., Mac and Linux (GTK).
-    NOTIFY_DURING_DEACTIVE               = 1 << 7,
+    NOTIFY_DURING_DEACTIVE = 1 << 7,
 
-    NOTIFY_ALL = NOTIFY_TEXT_CHANGE |
-                 NOTIFY_POSITION_CHANGE |
+    NOTIFY_ALL = NOTIFY_TEXT_CHANGE | NOTIFY_POSITION_CHANGE |
                  NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR,
   };
 
-  IMENotificationRequests()
-    : mWantUpdates(NOTIFY_NOTHING)
-  {
-  }
+  IMENotificationRequests() : mWantUpdates(NOTIFY_NOTHING) {}
 
   explicit IMENotificationRequests(Notifications aWantUpdates)
-    : mWantUpdates(aWantUpdates)
-  {
-  }
+      : mWantUpdates(aWantUpdates) {}
 
-  IMENotificationRequests operator|(const IMENotificationRequests& aOther) const
-  {
+  IMENotificationRequests operator|(
+      const IMENotificationRequests& aOther) const {
     return IMENotificationRequests(aOther.mWantUpdates | mWantUpdates);
   }
-  IMENotificationRequests& operator|=(const IMENotificationRequests& aOther)
-  {
+  IMENotificationRequests& operator|=(const IMENotificationRequests& aOther) {
     mWantUpdates |= aOther.mWantUpdates;
     return *this;
   }
-  bool operator==(const IMENotificationRequests& aOther) const
-  {
+  bool operator==(const IMENotificationRequests& aOther) const {
     return mWantUpdates == aOther.mWantUpdates;
   }
 
-  bool WantTextChange() const
-  {
-    return !!(mWantUpdates & NOTIFY_TEXT_CHANGE);
-  }
+  bool WantTextChange() const { return !!(mWantUpdates & NOTIFY_TEXT_CHANGE); }
 
-  bool WantPositionChanged() const
-  {
+  bool WantPositionChanged() const {
     return !!(mWantUpdates & NOTIFY_POSITION_CHANGE);
   }
 
-  bool WantChanges() const
-  {
-    return WantTextChange();
-  }
+  bool WantChanges() const { return WantTextChange(); }
 
-  bool WantMouseButtonEventOnChar() const
-  {
+  bool WantMouseButtonEventOnChar() const {
     return !!(mWantUpdates & NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR);
   }
 
-  bool WantDuringDeactive() const
-  {
+  bool WantDuringDeactive() const {
     return !!(mWantUpdates & NOTIFY_DURING_DEACTIVE);
   }
 
@@ -115,8 +96,7 @@ struct IMENotificationRequests final
  * input context that the IME can use as hints if desired.
  */
 
-struct IMEState final
-{
+struct IMEState final {
   /**
    * IME enabled states, the mEnabled value of
    * SetInputContext()/GetInputContext() should be one value of following
@@ -126,8 +106,7 @@ struct IMEState final
    *   nsIDOMWindowUtils.idl
    *   nsContentUtils::GetWidgetStatusFromIMEStatus
    */
-  enum Enabled
-  {
+  enum Enabled {
     /**
      * 'Disabled' means the user cannot use IME. So, the IME open state should
      * be 'closed' during 'disabled'.
@@ -164,8 +143,7 @@ struct IMEState final
    * OPEN, CLOSE or DONT_CHANGE_OPEN_STATE.  GetInputContext() should return
    * OPEN, CLOSE or OPEN_STATE_NOT_SUPPORTED.
    */
-  enum Open
-  {
+  enum Open {
     /**
      * 'Unsupported' means the platform cannot return actual IME open state.
      * This value is used only by GetInputContext().
@@ -193,33 +171,22 @@ struct IMEState final
   };
   Open mOpen;
 
-  IMEState()
-    : mEnabled(ENABLED)
-    , mOpen(DONT_CHANGE_OPEN_STATE)
-  {
-  }
+  IMEState() : mEnabled(ENABLED), mOpen(DONT_CHANGE_OPEN_STATE) {}
 
   explicit IMEState(Enabled aEnabled, Open aOpen = DONT_CHANGE_OPEN_STATE)
-    : mEnabled(aEnabled)
-    , mOpen(aOpen)
-  {
-  }
+      : mEnabled(aEnabled), mOpen(aOpen) {}
 
   // Returns true if the user can input characters.
   // This means that a plain text editor, an HTML editor, a password editor or
   // a plain text editor whose ime-mode is "disabled".
-  bool IsEditable() const
-  {
+  bool IsEditable() const {
     return mEnabled == ENABLED || mEnabled == PASSWORD;
   }
   // Returns true if the user might be able to input characters.
   // This means that a plain text editor, an HTML editor, a password editor,
   // a plain text editor whose ime-mode is "disabled" or a windowless plugin
   // has focus.
-  bool MaybeEditable() const
-  {
-    return IsEditable() || mEnabled == PLUGIN;
-  }
+  bool MaybeEditable() const { return IsEditable() || mEnabled == PLUGIN; }
 };
 
 // NS_ONLY_ONE_NATIVE_IME_CONTEXT is a special value of native IME context.
@@ -227,8 +194,7 @@ struct IMEState final
 #define NS_ONLY_ONE_NATIVE_IME_CONTEXT \
   (reinterpret_cast<void*>(static_cast<intptr_t>(-1)))
 
-struct NativeIMEContext final
-{
+struct NativeIMEContext final {
   // Pointer to native IME context.  Typically this is the result of
   // nsIWidget::GetNativeData(NS_RAW_NATIVE_IME_CONTEXT) in the parent process.
   // See also NS_ONLY_ONE_NATIVE_IME_CONTEXT.
@@ -236,66 +202,52 @@ struct NativeIMEContext final
   // Process ID of the origin of mNativeIMEContext.
   uint64_t mOriginProcessID;
 
-  NativeIMEContext()
-    : mRawNativeIMEContext(0)
-    , mOriginProcessID(0)
-  {
+  NativeIMEContext() : mRawNativeIMEContext(0), mOriginProcessID(0) {
     Init(nullptr);
   }
 
   explicit NativeIMEContext(nsIWidget* aWidget)
-    : mRawNativeIMEContext(0)
-    , mOriginProcessID(0)
-  {
+      : mRawNativeIMEContext(0), mOriginProcessID(0) {
     Init(aWidget);
   }
 
-  bool IsValid() const
-  {
+  bool IsValid() const {
     return mRawNativeIMEContext &&
            mOriginProcessID != static_cast<uintptr_t>(-1);
   }
 
   void Init(nsIWidget* aWidget);
-  void InitWithRawNativeIMEContext(const void* aRawNativeIMEContext)
-  {
+  void InitWithRawNativeIMEContext(const void* aRawNativeIMEContext) {
     InitWithRawNativeIMEContext(const_cast<void*>(aRawNativeIMEContext));
   }
   void InitWithRawNativeIMEContext(void* aRawNativeIMEContext);
 
-  bool operator==(const NativeIMEContext& aOther) const
-  {
+  bool operator==(const NativeIMEContext& aOther) const {
     return mRawNativeIMEContext == aOther.mRawNativeIMEContext &&
            mOriginProcessID == aOther.mOriginProcessID;
   }
-  bool operator!=(const NativeIMEContext& aOther) const
-  {
+  bool operator!=(const NativeIMEContext& aOther) const {
     return !(*this == aOther);
   }
 };
 
-struct InputContext final
-{
+struct InputContext final {
   InputContext()
-    : mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT)
-    , mMayBeIMEUnaware(false)
-    , mHasHandledUserInput(false)
-    , mInPrivateBrowsing(false)
-  {
-  }
+      : mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT),
+        mMayBeIMEUnaware(false),
+        mHasHandledUserInput(false),
+        mInPrivateBrowsing(false) {}
 
   // If InputContext instance is a static variable, any heap allocated stuff
   // of its members need to be deleted at XPCOM shutdown.  Otherwise, it's
   // detected as memory leak.
-  void ShutDown()
-  {
+  void ShutDown() {
     mHTMLInputType.Truncate();
     mHTMLInputInputmode.Truncate();
     mActionHint.Truncate();
   }
 
-  bool IsPasswordEditor() const
-  {
+  bool IsPasswordEditor() const {
     return mHTMLInputType.LowerCaseEqualsLiteral("password");
   }
 
@@ -314,8 +266,7 @@ struct InputContext final
    * mOrigin indicates whether this focus event refers to main or remote
    * content.
    */
-  enum Origin
-  {
+  enum Origin {
     // Adjusting focus of content on the main process
     ORIGIN_MAIN,
     // Adjusting focus of content in a remote process
@@ -337,18 +288,11 @@ struct InputContext final
    * in private browsing mode. */
   bool mInPrivateBrowsing;
 
-  bool IsOriginMainProcess() const
-  {
-    return mOrigin == ORIGIN_MAIN;
-  }
+  bool IsOriginMainProcess() const { return mOrigin == ORIGIN_MAIN; }
 
-  bool IsOriginContentProcess() const
-  {
-    return mOrigin == ORIGIN_CONTENT;
-  }
+  bool IsOriginContentProcess() const { return mOrigin == ORIGIN_CONTENT; }
 
-  bool IsOriginCurrentProcess() const
-  {
+  bool IsOriginCurrentProcess() const {
     if (XRE_IsParentProcess()) {
       return IsOriginMainProcess();
     }
@@ -359,14 +303,12 @@ struct InputContext final
 // FYI: Implemented in nsBaseWidget.cpp
 const char* ToChar(InputContext::Origin aOrigin);
 
-struct InputContextAction final
-{
+struct InputContextAction final {
   /**
    * mCause indicates what action causes calling nsIWidget::SetInputContext().
    * It must be one of following values.
    */
-  enum Cause
-  {
+  enum Cause {
     // The cause is unknown but originated from content. Focus might have been
     // changed by content script.
     CAUSE_UNKNOWN,
@@ -390,8 +332,7 @@ struct InputContextAction final
   /**
    * mFocusChange indicates what happened for focus.
    */
-  enum FocusChange
-  {
+  enum FocusChange {
     FOCUS_NOT_CHANGED,
     // A content got focus.
     GOT_FOCUS,
@@ -410,14 +351,11 @@ struct InputContextAction final
   };
   FocusChange mFocusChange;
 
-  bool ContentGotFocusByTrustedCause() const
-  {
-    return (mFocusChange == GOT_FOCUS &&
-            mCause != CAUSE_UNKNOWN);
+  bool ContentGotFocusByTrustedCause() const {
+    return (mFocusChange == GOT_FOCUS && mCause != CAUSE_UNKNOWN);
   }
 
-  bool UserMightRequestOpenVKB() const
-  {
+  bool UserMightRequestOpenVKB() const {
     // If focus is changed, user must not request to open VKB.
     if (mFocusChange != FOCUS_NOT_CHANGED) {
       return false;
@@ -445,8 +383,7 @@ struct InputContextAction final
    * a user action.  E.g., when it's caused by Element.focus() in an event
    * handler of a user input, this returns true.
    */
-  static bool IsHandlingUserInput(Cause aCause)
-  {
+  static bool IsHandlingUserInput(Cause aCause) {
     switch (aCause) {
       case CAUSE_KEY:
       case CAUSE_MOUSE:
@@ -459,30 +396,21 @@ struct InputContextAction final
     }
   }
 
-  bool IsHandlingUserInput() const {
-    return IsHandlingUserInput(mCause);
-  }
+  bool IsHandlingUserInput() const { return IsHandlingUserInput(mCause); }
 
   InputContextAction()
-    : mCause(CAUSE_UNKNOWN)
-    , mFocusChange(FOCUS_NOT_CHANGED)
-  {
-  }
+      : mCause(CAUSE_UNKNOWN), mFocusChange(FOCUS_NOT_CHANGED) {}
 
   explicit InputContextAction(Cause aCause,
                               FocusChange aFocusChange = FOCUS_NOT_CHANGED)
-    : mCause(aCause)
-    , mFocusChange(aFocusChange)
-  {
-  }
+      : mCause(aCause), mFocusChange(aFocusChange) {}
 };
 
 // IMEMessage is shared by IMEStateManager and TextComposition.
 // Update values in GeckoEditable.java if you make changes here.
 // XXX Negative values are used in Android...
 typedef int8_t IMEMessageType;
-enum IMEMessage : IMEMessageType
-{
+enum IMEMessage : IMEMessageType {
   // This is used by IMENotification internally.  This means that the instance
   // hasn't been initialized yet.
   NOTIFY_IME_OF_NOTHING,
@@ -521,29 +449,18 @@ enum IMEMessage : IMEMessageType
 // FYI: Implemented in nsBaseWidget.cpp
 const char* ToChar(IMEMessage aIMEMessage);
 
-struct IMENotification final
-{
-  IMENotification()
-    : mMessage(NOTIFY_IME_OF_NOTHING)
-    , mSelectionChangeData()
-  {
-  }
+struct IMENotification final {
+  IMENotification() : mMessage(NOTIFY_IME_OF_NOTHING), mSelectionChangeData() {}
 
   IMENotification(const IMENotification& aOther)
-    : mMessage(NOTIFY_IME_OF_NOTHING)
-  {
+      : mMessage(NOTIFY_IME_OF_NOTHING) {
     Assign(aOther);
   }
 
-  ~IMENotification()
-  {
-    Clear();
-  }
+  ~IMENotification() { Clear(); }
 
   MOZ_IMPLICIT IMENotification(IMEMessage aMessage)
-    : mMessage(aMessage)
-    , mSelectionChangeData()
-  {
+      : mMessage(aMessage), mSelectionChangeData() {
     switch (aMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:
         mSelectionChangeData.mString = new nsString();
@@ -566,8 +483,7 @@ struct IMENotification final
     }
   }
 
-  void Assign(const IMENotification& aOther)
-  {
+  void Assign(const IMENotification& aOther) {
     bool changingMessage = mMessage != aOther.mMessage;
     if (changingMessage) {
       Clear();
@@ -591,14 +507,12 @@ struct IMENotification final
     }
   }
 
-  IMENotification& operator=(const IMENotification& aOther)
-  {
+  IMENotification& operator=(const IMENotification& aOther) {
     Assign(aOther);
     return *this;
   }
 
-  void Clear()
-  {
+  void Clear() {
     if (mMessage == NOTIFY_IME_OF_SELECTION_CHANGE) {
       MOZ_ASSERT(mSelectionChangeData.mString);
       delete mSelectionChangeData.mString;
@@ -607,13 +521,9 @@ struct IMENotification final
     mMessage = NOTIFY_IME_OF_NOTHING;
   }
 
-  bool HasNotification() const
-  {
-    return mMessage != NOTIFY_IME_OF_NOTHING;
-  }
+  bool HasNotification() const { return mMessage != NOTIFY_IME_OF_NOTHING; }
 
-  void MergeWith(const IMENotification& aNotification)
-  {
+  void MergeWith(const IMENotification& aNotification) {
     switch (mMessage) {
       case NOTIFY_IME_OF_NOTHING:
         MOZ_ASSERT(aNotification.mMessage != NOTIFY_IME_OF_NOTHING);
@@ -639,42 +549,31 @@ struct IMENotification final
 
   IMEMessage mMessage;
 
-  struct Point
-  {
+  struct Point {
     int32_t mX;
     int32_t mY;
 
-    void Set(const nsIntPoint& aPoint)
-    {
+    void Set(const nsIntPoint& aPoint) {
       mX = aPoint.x;
       mY = aPoint.y;
     }
-    nsIntPoint AsIntPoint() const
-    {
-      return nsIntPoint(mX, mY);
-    }
+    nsIntPoint AsIntPoint() const { return nsIntPoint(mX, mY); }
   };
 
-  struct Rect
-  {
+  struct Rect {
     int32_t mX;
     int32_t mY;
     int32_t mWidth;
     int32_t mHeight;
 
-    void Set(const nsIntRect& aRect)
-    {
+    void Set(const nsIntRect& aRect) {
       aRect.GetRect(&mX, &mY, &mWidth, &mHeight);
     }
-    nsIntRect AsIntRect() const
-    {
-      return nsIntRect(mX, mY, mWidth, mHeight);
-    }
+    nsIntRect AsIntRect() const { return nsIntRect(mX, mY, mWidth, mHeight); }
   };
 
   // NOTIFY_IME_OF_SELECTION_CHANGE specific data
-  struct SelectionChangeDataBase
-  {
+  struct SelectionChangeDataBase {
     // Selection range.
     uint32_t mOffset;
 
@@ -692,62 +591,37 @@ struct IMENotification final
     void SetWritingMode(const WritingMode& aWritingMode);
     WritingMode GetWritingMode() const;
 
-    uint32_t StartOffset() const
-    {
+    uint32_t StartOffset() const {
       return mOffset + (mReversed ? Length() : 0);
     }
-    uint32_t EndOffset() const
-    {
-      return mOffset + (mReversed ? 0 : Length());
-    }
-    const nsString& String() const
-    {
-      return *mString;
-    }
-    uint32_t Length() const
-    {
-      return mString->Length();
-    }
-    bool IsInInt32Range() const
-    {
-      return mOffset + Length() <= INT32_MAX;
-    }
-    bool IsCollapsed() const
-    {
-      return mString->IsEmpty();
-    }
-    void ClearSelectionData()
-    {
+    uint32_t EndOffset() const { return mOffset + (mReversed ? 0 : Length()); }
+    const nsString& String() const { return *mString; }
+    uint32_t Length() const { return mString->Length(); }
+    bool IsInInt32Range() const { return mOffset + Length() <= INT32_MAX; }
+    bool IsCollapsed() const { return mString->IsEmpty(); }
+    void ClearSelectionData() {
       mOffset = UINT32_MAX;
       mString->Truncate();
       mWritingMode = 0;
       mReversed = false;
     }
-    void Clear()
-    {
+    void Clear() {
       ClearSelectionData();
       mCausedByComposition = false;
       mCausedBySelectionEvent = false;
       mOccurredDuringComposition = false;
     }
-    bool IsValid() const
-    {
-      return mOffset != UINT32_MAX;
-    }
-    void Assign(const SelectionChangeDataBase& aOther)
-    {
+    bool IsValid() const { return mOffset != UINT32_MAX; }
+    void Assign(const SelectionChangeDataBase& aOther) {
       mOffset = aOther.mOffset;
       *mString = aOther.String();
       mWritingMode = aOther.mWritingMode;
       mReversed = aOther.mReversed;
-      AssignReason(aOther.mCausedByComposition,
-                   aOther.mCausedBySelectionEvent,
+      AssignReason(aOther.mCausedByComposition, aOther.mCausedBySelectionEvent,
                    aOther.mOccurredDuringComposition);
     }
-    void AssignReason(bool aCausedByComposition,
-                      bool aCausedBySelectionEvent,
-                      bool aOccurredDuringComposition)
-    {
+    void AssignReason(bool aCausedByComposition, bool aCausedBySelectionEvent,
+                      bool aOccurredDuringComposition) {
       mCausedByComposition = aCausedByComposition;
       mCausedBySelectionEvent = aCausedBySelectionEvent;
       mOccurredDuringComposition = aOccurredDuringComposition;
@@ -758,44 +632,37 @@ struct IMENotification final
   // the union.  Therefore, SelectionChangeData should only implement
   // constructors.  In other words, add other members to
   // SelectionChangeDataBase.
-  struct SelectionChangeData final : public SelectionChangeDataBase
-  {
-    SelectionChangeData()
-    {
+  struct SelectionChangeData final : public SelectionChangeDataBase {
+    SelectionChangeData() {
       mString = &mStringInstance;
       Clear();
     }
-    explicit SelectionChangeData(const SelectionChangeDataBase& aOther)
-    {
+    explicit SelectionChangeData(const SelectionChangeDataBase& aOther) {
       mString = &mStringInstance;
       Assign(aOther);
     }
-    SelectionChangeData(const SelectionChangeData& aOther)
-    {
+    SelectionChangeData(const SelectionChangeData& aOther) {
       mString = &mStringInstance;
       Assign(aOther);
     }
-    SelectionChangeData& operator=(const SelectionChangeDataBase& aOther)
-    {
+    SelectionChangeData& operator=(const SelectionChangeDataBase& aOther) {
       mString = &mStringInstance;
       Assign(aOther);
       return *this;
     }
-    SelectionChangeData& operator=(const SelectionChangeData& aOther)
-    {
+    SelectionChangeData& operator=(const SelectionChangeData& aOther) {
       mString = &mStringInstance;
       Assign(aOther);
       return *this;
     }
 
-  private:
+   private:
     // When SelectionChangeData is used outside of union, it shouldn't create
     // nsString instance in the heap as far as possible.
     nsString mStringInstance;
   };
 
-  struct TextChangeDataBase
-  {
+  struct TextChangeDataBase {
     // mStartOffset is the start offset of modified or removed text in
     // original content and inserted text in new content.
     uint32_t mStartOffset;
@@ -822,68 +689,54 @@ struct IMENotification final
     // change which did occur when there wasn't a composition ongoing.
     bool mIncludingChangesWithoutComposition;
 
-    uint32_t OldLength() const
-    {
+    uint32_t OldLength() const {
       MOZ_ASSERT(IsValid());
       return mRemovedEndOffset - mStartOffset;
     }
-    uint32_t NewLength() const
-    {
+    uint32_t NewLength() const {
       MOZ_ASSERT(IsValid());
       return mAddedEndOffset - mStartOffset;
     }
 
     // Positive if text is added. Negative if text is removed.
-    int64_t Difference() const
-    {
-      return mAddedEndOffset - mRemovedEndOffset;
-    }
+    int64_t Difference() const { return mAddedEndOffset - mRemovedEndOffset; }
 
-    bool IsInInt32Range() const
-    {
+    bool IsInInt32Range() const {
       MOZ_ASSERT(IsValid());
-      return mStartOffset <= INT32_MAX &&
-             mRemovedEndOffset <= INT32_MAX &&
+      return mStartOffset <= INT32_MAX && mRemovedEndOffset <= INT32_MAX &&
              mAddedEndOffset <= INT32_MAX;
     }
 
-    bool IsValid() const
-    {
-      return !(mStartOffset == UINT32_MAX &&
-               !mRemovedEndOffset && !mAddedEndOffset);
+    bool IsValid() const {
+      return !(mStartOffset == UINT32_MAX && !mRemovedEndOffset &&
+               !mAddedEndOffset);
     }
 
-    void Clear()
-    {
+    void Clear() {
       mStartOffset = UINT32_MAX;
       mRemovedEndOffset = mAddedEndOffset = 0;
     }
 
     void MergeWith(const TextChangeDataBase& aOther);
-    TextChangeDataBase& operator+=(const TextChangeDataBase& aOther)
-    {
+    TextChangeDataBase& operator+=(const TextChangeDataBase& aOther) {
       MergeWith(aOther);
       return *this;
     }
 
 #ifdef DEBUG
     void Test();
-#endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
   };
 
   // TextChangeDataBase cannot have constructors because they are used in union.
   // Therefore, TextChangeData should only implement constructor.  In other
   // words, add other members to TextChangeDataBase.
-  struct TextChangeData : public TextChangeDataBase
-  {
+  struct TextChangeData : public TextChangeDataBase {
     TextChangeData() { Clear(); }
 
-    TextChangeData(uint32_t aStartOffset,
-                   uint32_t aRemovedEndOffset,
-                   uint32_t aAddedEndOffset,
-                   bool aCausedByComposition,
-                   bool aOccurredDuringComposition)
-    {
+    TextChangeData(uint32_t aStartOffset, uint32_t aRemovedEndOffset,
+                   uint32_t aAddedEndOffset, bool aCausedByComposition,
+                   bool aOccurredDuringComposition) {
       MOZ_ASSERT(aRemovedEndOffset >= aStartOffset,
                  "removed end offset must not be smaller than start offset");
       MOZ_ASSERT(aAddedEndOffset >= aStartOffset,
@@ -893,14 +746,13 @@ struct IMENotification final
       mAddedEndOffset = aAddedEndOffset;
       mCausedOnlyByComposition = aCausedByComposition;
       mIncludingChangesDuringComposition =
-        !aCausedByComposition && aOccurredDuringComposition;
+          !aCausedByComposition && aOccurredDuringComposition;
       mIncludingChangesWithoutComposition =
-        !aCausedByComposition && !aOccurredDuringComposition;
+          !aCausedByComposition && !aOccurredDuringComposition;
     }
   };
 
-  struct MouseButtonEventData
-  {
+  struct MouseButtonEventData {
     // The value of WidgetEvent::mMessage
     EventMessage mEventMessage;
     // Character offset from the start of the focused editor under the cursor
@@ -916,8 +768,7 @@ struct IMENotification final
     Modifiers mModifiers;
   };
 
-  union
-  {
+  union {
     // NOTIFY_IME_OF_SELECTION_CHANGE specific data
     SelectionChangeDataBase mSelectionChangeData;
 
@@ -928,21 +779,18 @@ struct IMENotification final
     MouseButtonEventData mMouseButtonEventData;
   };
 
-  void SetData(const SelectionChangeDataBase& aSelectionChangeData)
-  {
+  void SetData(const SelectionChangeDataBase& aSelectionChangeData) {
     MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
     mSelectionChangeData.Assign(aSelectionChangeData);
   }
 
-  void SetData(const TextChangeDataBase& aTextChangeData)
-  {
+  void SetData(const TextChangeDataBase& aTextChangeData) {
     MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
     mTextChangeData = aTextChangeData;
   }
 };
 
-struct CandidateWindowPosition
-{
+struct CandidateWindowPosition {
   // Upper left corner of the candidate window if mExcludeRect is false.
   // Otherwise, the position currently interested.  E.g., caret position.
   LayoutDeviceIntPoint mPoint;
@@ -953,7 +801,7 @@ struct CandidateWindowPosition
   bool mExcludeRect;
 };
 
-} // namespace widget
-} // namespace mozilla
+}  // namespace widget
+}  // namespace mozilla
 
-#endif // #ifndef mozilla_widget_IMEData_h_
+#endif  // #ifndef mozilla_widget_IMEData_h_

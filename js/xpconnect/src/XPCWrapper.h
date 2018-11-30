@@ -11,10 +11,9 @@
 
 namespace XPCNativeWrapper {
 
-bool
-AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject);
+bool AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject);
 
-} // namespace XPCNativeWrapper
+}  // namespace XPCNativeWrapper
 
 // This namespace wraps some common functionality between the three existing
 // wrappers. Its main purpose is to allow XPCCrossOriginWrapper to act both
@@ -23,10 +22,8 @@ AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject);
 // objects).
 namespace XPCWrapper {
 
-JSObject*
-UnsafeUnwrapSecurityWrapper(JSObject* obj);
+JSObject* UnsafeUnwrapSecurityWrapper(JSObject* obj);
 
-} // namespace XPCWrapper
-
+}  // namespace XPCWrapper
 
 #endif

@@ -15,50 +15,40 @@
 namespace mozilla {
 namespace ipc {
 
-class ProtocolFuzzerHelper
-{
-public:
+class ProtocolFuzzerHelper {
+ public:
   static mozilla::dom::ContentParent* CreateContentParent(
-    mozilla::dom::ContentParent* aOpener,
-    const nsAString& aRemoteType);
+      mozilla::dom::ContentParent* aOpener, const nsAString& aRemoteType);
 
-  template<typename T>
-  static void AddShmemToProtocol(T* aProtocol,
-                                 Shmem::SharedMemory* aSegment,
-                                 int32_t aId)
-  {
+  template <typename T>
+  static void AddShmemToProtocol(T* aProtocol, Shmem::SharedMemory* aSegment,
+                                 int32_t aId) {
     GetToplevelState(aProtocol)->mShmemMap.AddWithID(aSegment, aId);
   }
 
-  template<typename T>
-  static void RemoveShmemFromProtocol(T* aProtocol, int32_t aId)
-  {
+  template <typename T>
+  static void RemoveShmemFromProtocol(T* aProtocol, int32_t aId) {
     GetToplevelState(aProtocol)->mShmemMap.RemoveIfPresent(aId);
   }
 
-private:
-  template<typename T>
+ private:
+  template <typename T>
   static mozilla::ipc::IToplevelProtocol::ToplevelState* GetToplevelState(
-    T* aProtocol)
-  {
+      T* aProtocol) {
     static_assert(std::is_base_of<mozilla::ipc::IToplevelProtocol, T>::value,
                   "Only ToplevelProtocols are supported for now");
     return static_cast<mozilla::ipc::IToplevelProtocol::ToplevelState*>(
-      static_cast<mozilla::ipc::IToplevelProtocol*>(aProtocol)->mState.get());
+        static_cast<mozilla::ipc::IToplevelProtocol*>(aProtocol)->mState.get());
   }
 };
 
-template<typename T>
-void
-FuzzProtocol(T* aProtocol,
-             const uint8_t* aData,
-             size_t aSize,
-             const nsTArray<nsCString>& aIgnoredMessageTypes)
-{
+template <typename T>
+void FuzzProtocol(T* aProtocol, const uint8_t* aData, size_t aSize,
+                  const nsTArray<nsCString>& aIgnoredMessageTypes) {
   while (true) {
     uint32_t msg_size =
-      IPC::Message::MessageSize(reinterpret_cast<const char*>(aData),
-                                reinterpret_cast<const char*>(aData) + aSize);
+        IPC::Message::MessageSize(reinterpret_cast<const char*>(aData),
+                                  reinterpret_cast<const char*>(aData) + aSize);
     if (msg_size == 0 || msg_size > aSize) {
       break;
     }
@@ -89,10 +79,8 @@ FuzzProtocol(T* aProtocol,
           break;
         }
         RefPtr<Shmem::SharedMemory> segment(
-          Shmem::Alloc(Shmem::PrivateIPDLCaller(),
-                       shmem_size,
-                       SharedMemory::TYPE_BASIC,
-                       false));
+            Shmem::Alloc(Shmem::PrivateIPDLCaller(), shmem_size,
+                         SharedMemory::TYPE_BASIC, false));
         if (!segment) {
           break;
         }
@@ -100,7 +88,7 @@ FuzzProtocol(T* aProtocol,
         Shmem shmem(Shmem::PrivateIPDLCaller(), segment.get(), i + 1);
         memcpy(shmem.get<uint8_t>(), aData, shmem_size);
         ProtocolFuzzerHelper::AddShmemToProtocol(
-          aProtocol, segment.forget().take(), i + 1);
+            aProtocol, segment.forget().take(), i + 1);
 
         aData += shmem_size;
         aSize -= shmem_size;
@@ -126,7 +114,7 @@ FuzzProtocol(T* aProtocol,
 
 nsTArray<nsCString> LoadIPCMessageBlacklist(const char* aPath);
 
-}
-}
+}  // namespace ipc
+}  // namespace mozilla
 
 #endif

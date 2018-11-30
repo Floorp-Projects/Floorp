@@ -20,9 +20,8 @@ class nsGridCell;
 /**
  * The grid data structure, i.e., the grid cellmap.
  */
-class nsGrid
-{
-public:
+class nsGrid {
+ public:
   nsGrid();
   ~nsGrid();
 
@@ -42,18 +41,27 @@ public:
   // row groups and columns have vertical orientation, whereas column
   // groups and rows are horizontal.)
 
-  nsSize GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
-  nsSize GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
-  nsSize GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
+  nsSize GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex,
+                        bool aIsHorizontal = true);
+  nsSize GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex,
+                       bool aIsHorizontal = true);
+  nsSize GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex,
+                       bool aIsHorizontal = true);
   nscoord GetRowFlex(int32_t aRowIndex, bool aIsHorizontal = true);
 
-  nscoord GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
-  nscoord GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
-  nscoord GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
-  void GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsHorizontal = true);
+  nscoord GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex,
+                           bool aIsHorizontal = true);
+  nscoord GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex,
+                          bool aIsHorizontal = true);
+  nscoord GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex,
+                          bool aIsHorizontal = true);
+  void GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom,
+                     bool aIsHorizontal = true);
 
-  void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, int32_t aIndex, bool aIsHorizontal = true);
-  void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, int32_t aIndex, bool aIsHorizontal = true);
+  void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, int32_t aIndex,
+                         bool aIsHorizontal = true);
+  void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, int32_t aIndex,
+                          bool aIsHorizontal = true);
   void DirtyRows(nsIFrame* aRowBox, nsBoxLayoutState& aState);
 #ifdef DEBUG_grid
   void PrintCellMap();
@@ -61,7 +69,7 @@ public:
   int32_t GetExtraColumnCount(bool aIsHorizontal = true);
   int32_t GetExtraRowCount(bool aIsHorizontal = true);
 
-// accessors
+  // accessors
   void SetBox(nsIFrame* aBox) { mBox = aBox; }
   nsIFrame* GetBox() { return mBox; }
   nsIFrame* GetRowsBox() { return mRowsBox; }
@@ -72,25 +80,27 @@ public:
   static nsIFrame* GetScrolledBox(nsIFrame* aChild);
   static nsIFrame* GetScrollBox(nsIFrame* aChild);
   static nsIGridPart* GetPartFromBox(nsIFrame* aBox);
-  void GetFirstAndLastRow(int32_t& aFirstIndex,
-                          int32_t& aLastIndex,
-                          nsGridRow*& aFirstRow,
-                          nsGridRow*& aLastRow,
+  void GetFirstAndLastRow(int32_t& aFirstIndex, int32_t& aLastIndex,
+                          nsGridRow*& aFirstRow, nsGridRow*& aLastRow,
                           bool aIsHorizontal);
 
-private:
-
+ private:
   nsMargin GetBoxTotalMargin(nsIFrame* aBox, bool aIsHorizontal = true);
 
   void FreeMap();
   void FindRowsAndColumns(nsIFrame** aRows, nsIFrame** aColumns);
   mozilla::UniquePtr<nsGridRow[]> BuildRows(nsIFrame* aBox, int32_t aSize,
                                             bool aIsHorizontal = true);
-  mozilla::UniquePtr<nsGridCell[]> BuildCellMap(int32_t aRows, int32_t aColumns);
-  void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, int32_t aRowCount, int32_t aColumnCount, bool aIsHorizontal = true);
-  void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount);
-  void SetLargestSize(nsSize& aSize, nscoord aHeight, bool aIsHorizontal = true);
-  void SetSmallestSize(nsSize& aSize, nscoord aHeight, bool aIsHorizontal = true);
+  mozilla::UniquePtr<nsGridCell[]> BuildCellMap(int32_t aRows,
+                                                int32_t aColumns);
+  void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, int32_t aRowCount,
+                       int32_t aColumnCount, bool aIsHorizontal = true);
+  void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount,
+                        int32_t& aComputedColumnCount);
+  void SetLargestSize(nsSize& aSize, nscoord aHeight,
+                      bool aIsHorizontal = true);
+  void SetSmallestSize(nsSize& aSize, nscoord aHeight,
+                       bool aIsHorizontal = true);
   bool IsGrid(nsIFrame* aBox);
 
   // the box that implement the <grid> tag
@@ -129,4 +139,3 @@ private:
 };
 
 #endif
-

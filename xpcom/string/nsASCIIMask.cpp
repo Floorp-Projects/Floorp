@@ -8,49 +8,31 @@
 
 namespace mozilla {
 
-constexpr bool TestWhitespace(char c)
-{
+constexpr bool TestWhitespace(char c) {
   return c == '\f' || c == '\t' || c == '\r' || c == '\n' || c == ' ';
 }
 constexpr ASCIIMaskArray sWhitespaceMask = CreateASCIIMask(TestWhitespace);
 
-constexpr bool TestCRLF(char c)
-{
-  return c == '\r' || c == '\n';
-}
+constexpr bool TestCRLF(char c) { return c == '\r' || c == '\n'; }
 constexpr ASCIIMaskArray sCRLFMask = CreateASCIIMask(TestCRLF);
 
-constexpr bool TestCRLFTab(char c)
-{
+constexpr bool TestCRLFTab(char c) {
   return c == '\r' || c == '\n' || c == '\t';
 }
 constexpr ASCIIMaskArray sCRLFTabMask = CreateASCIIMask(TestCRLFTab);
 
-constexpr bool TestZeroToNine(char c)
-{
-  return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' ||
-         c == '5' || c == '6' || c == '7' || c == '8' || c == '9';
+constexpr bool TestZeroToNine(char c) {
+  return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' ||
+         c == '6' || c == '7' || c == '8' || c == '9';
 }
 constexpr ASCIIMaskArray sZeroToNineMask = CreateASCIIMask(TestZeroToNine);
 
-const ASCIIMaskArray& ASCIIMask::MaskWhitespace()
-{
-  return sWhitespaceMask;
-}
+const ASCIIMaskArray& ASCIIMask::MaskWhitespace() { return sWhitespaceMask; }
 
-const ASCIIMaskArray& ASCIIMask::MaskCRLF()
-{
-  return sCRLFMask;
-}
+const ASCIIMaskArray& ASCIIMask::MaskCRLF() { return sCRLFMask; }
 
-const ASCIIMaskArray& ASCIIMask::MaskCRLFTab()
-{
-  return sCRLFTabMask;
-}
+const ASCIIMaskArray& ASCIIMask::MaskCRLFTab() { return sCRLFTabMask; }
 
-const ASCIIMaskArray& ASCIIMask::Mask0to9()
-{
-  return sZeroToNineMask;
-}
+const ASCIIMaskArray& ASCIIMask::Mask0to9() { return sZeroToNineMask; }
 
-} // namespace mozilla
+}  // namespace mozilla

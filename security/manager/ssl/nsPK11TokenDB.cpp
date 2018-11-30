@@ -22,21 +22,17 @@ extern mozilla::LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsPK11Token, nsIPK11Token)
 
-nsPK11Token::nsPK11Token(PK11SlotInfo* slot)
-  : mUIContext(new PipUIContext())
-{
+nsPK11Token::nsPK11Token(PK11SlotInfo* slot) : mUIContext(new PipUIContext()) {
   MOZ_ASSERT(slot);
   mSlot.reset(PK11_ReferenceSlot(slot));
-  mIsInternalCryptoToken = PK11_IsInternal(mSlot.get()) &&
-                           !PK11_IsInternalKeySlot(mSlot.get());
+  mIsInternalCryptoToken =
+      PK11_IsInternal(mSlot.get()) && !PK11_IsInternalKeySlot(mSlot.get());
   mIsInternalKeyToken = PK11_IsInternalKeySlot(mSlot.get());
   mSeries = PK11_GetSlotSeries(slot);
   Unused << refreshTokenInfo();
 }
 
-nsresult
-nsPK11Token::refreshTokenInfo()
-{
+nsresult nsPK11Token::refreshTokenInfo() {
   if (mIsInternalCryptoToken) {
     nsresult rv;
     if (PK11_IsFIPS()) {
@@ -70,10 +66,9 @@ nsPK11Token::refreshTokenInfo()
     }
   } else {
     const char* ccManID =
-      mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(tokInfo.manufacturerID);
+        mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(tokInfo.manufacturerID);
     mTokenManufacturerID.Assign(
-      ccManID,
-      strnlen(ccManID, sizeof(tokInfo.manufacturerID)));
+        ccManID, strnlen(ccManID, sizeof(tokInfo.manufacturerID)));
     mTokenManufacturerID.Trim(" ", false, true);
   }
 
@@ -91,7 +86,7 @@ nsPK11Token::refreshTokenInfo()
 
   // Set the Serial Number field
   const char* ccSerial =
-    mozilla::BitwiseCast<char*, CK_CHAR*>(tokInfo.serialNumber);
+      mozilla::BitwiseCast<char*, CK_CHAR*>(tokInfo.serialNumber);
   mTokenSerialNum.Assign(ccSerial,
                          strnlen(ccSerial, sizeof(tokInfo.serialNumber)));
   mTokenSerialNum.Trim(" ", false, true);
@@ -99,10 +94,8 @@ nsPK11Token::refreshTokenInfo()
   return NS_OK;
 }
 
-nsresult
-nsPK11Token::GetAttributeHelper(const nsACString& attribute,
-                        /*out*/ nsACString& xpcomOutParam)
-{
+nsresult nsPK11Token::GetAttributeHelper(const nsACString& attribute,
+                                         /*out*/ nsACString& xpcomOutParam) {
   // Handle removals/insertions.
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     nsresult rv = refreshTokenInfo();
@@ -116,54 +109,46 @@ nsPK11Token::GetAttributeHelper(const nsACString& attribute,
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetTokenName(/*out*/ nsACString& tokenName)
-{
+nsPK11Token::GetTokenName(/*out*/ nsACString& tokenName) {
   return GetAttributeHelper(mTokenName, tokenName);
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetIsInternalKeyToken(/*out*/ bool* _retval)
-{
+nsPK11Token::GetIsInternalKeyToken(/*out*/ bool* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = mIsInternalKeyToken;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetTokenManID(/*out*/ nsACString& tokenManufacturerID)
-{
+nsPK11Token::GetTokenManID(/*out*/ nsACString& tokenManufacturerID) {
   return GetAttributeHelper(mTokenManufacturerID, tokenManufacturerID);
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetTokenHWVersion(/*out*/ nsACString& tokenHWVersion)
-{
+nsPK11Token::GetTokenHWVersion(/*out*/ nsACString& tokenHWVersion) {
   return GetAttributeHelper(mTokenHWVersion, tokenHWVersion);
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetTokenFWVersion(/*out*/ nsACString& tokenFWVersion)
-{
+nsPK11Token::GetTokenFWVersion(/*out*/ nsACString& tokenFWVersion) {
   return GetAttributeHelper(mTokenFWVersion, tokenFWVersion);
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetTokenSerialNumber(/*out*/ nsACString& tokenSerialNum)
-{
+nsPK11Token::GetTokenSerialNumber(/*out*/ nsACString& tokenSerialNum) {
   return GetAttributeHelper(mTokenSerialNum, tokenSerialNum);
 }
 
 NS_IMETHODIMP
-nsPK11Token::IsLoggedIn(bool* _retval)
-{
+nsPK11Token::IsLoggedIn(bool* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PK11_IsLoggedIn(mSlot.get(), 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPK11Token::Login(bool force)
-{
+nsPK11Token::Login(bool force) {
   nsresult rv;
   bool test;
   rv = this->NeedsLogin(&test);
@@ -179,8 +164,7 @@ nsPK11Token::Login(bool force)
 }
 
 NS_IMETHODIMP
-nsPK11Token::LogoutSimple()
-{
+nsPK11Token::LogoutSimple() {
   // PK11_Logout() can fail if the user wasn't logged in beforehand. We want
   // this method to succeed even in this case, so we ignore the return value.
   Unused << PK11_Logout(mSlot.get());
@@ -188,58 +172,51 @@ nsPK11Token::LogoutSimple()
 }
 
 NS_IMETHODIMP
-nsPK11Token::LogoutAndDropAuthenticatedResources()
-{
+nsPK11Token::LogoutAndDropAuthenticatedResources() {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
   nsresult rv = LogoutSimple();
 
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
   return nssComponent->LogoutAuthenticatedPK11();
 }
 
 NS_IMETHODIMP
-nsPK11Token::Reset()
-{
+nsPK11Token::Reset() {
   return MapSECStatus(PK11_ResetToken(mSlot.get(), nullptr));
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetNeedsUserInit(bool* aNeedsUserInit)
-{
+nsPK11Token::GetNeedsUserInit(bool* aNeedsUserInit) {
   NS_ENSURE_ARG_POINTER(aNeedsUserInit);
   *aNeedsUserInit = PK11_NeedUserInit(mSlot.get());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPK11Token::CheckPassword(const nsACString& password, bool* _retval)
-{
+nsPK11Token::CheckPassword(const nsACString& password, bool* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   SECStatus srv =
-    PK11_CheckUserPassword(mSlot.get(), PromiseFlatCString(password).get());
+      PK11_CheckUserPassword(mSlot.get(), PromiseFlatCString(password).get());
   if (srv != SECSuccess) {
-    *_retval =  false;
+    *_retval = false;
     PRErrorCode error = PR_GetError();
     if (error != SEC_ERROR_BAD_PASSWORD) {
       /* something really bad happened - throw an exception */
       return mozilla::psm::GetXPCOMFromNSSError(error);
     }
   } else {
-    *_retval =  true;
+    *_retval = true;
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPK11Token::InitPassword(const nsACString& initialPassword)
-{
+nsPK11Token::InitPassword(const nsACString& initialPassword) {
   const nsCString& passwordCStr = PromiseFlatCString(initialPassword);
   // PSM initializes the sqlite-backed softoken with an empty password. The
   // implementation considers this not to be a password (GetHasPassword returns
@@ -258,21 +235,19 @@ nsPK11Token::InitPassword(const nsACString& initialPassword)
 
 NS_IMETHODIMP
 nsPK11Token::ChangePassword(const nsACString& oldPassword,
-                            const nsACString& newPassword)
-{
+                            const nsACString& newPassword) {
   // PK11_ChangePW() has different semantics for the empty string and for
   // nullptr. In order to support this difference, we need to check IsVoid() to
   // find out if our caller supplied null/undefined args or just empty strings.
   // See Bug 447589.
   return MapSECStatus(PK11_ChangePW(
-    mSlot.get(),
-    oldPassword.IsVoid() ? nullptr : PromiseFlatCString(oldPassword).get(),
-    newPassword.IsVoid() ? nullptr : PromiseFlatCString(newPassword).get()));
+      mSlot.get(),
+      oldPassword.IsVoid() ? nullptr : PromiseFlatCString(oldPassword).get(),
+      newPassword.IsVoid() ? nullptr : PromiseFlatCString(newPassword).get()));
 }
 
 NS_IMETHODIMP
-nsPK11Token::GetHasPassword(bool* hasPassword)
-{
+nsPK11Token::GetHasPassword(bool* hasPassword) {
   NS_ENSURE_ARG_POINTER(hasPassword);
   // PK11_NeedLogin returns true if the token is currently configured to require
   // the user to log in (whether or not the user is actually logged in makes no
@@ -282,8 +257,7 @@ nsPK11Token::GetHasPassword(bool* hasPassword)
 }
 
 NS_IMETHODIMP
-nsPK11Token::NeedsLogin(bool* _retval)
-{
+nsPK11Token::NeedsLogin(bool* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PK11_NeedLogin(mSlot.get());
   return NS_OK;
@@ -294,8 +268,7 @@ nsPK11Token::NeedsLogin(bool* _retval)
 NS_IMPL_ISUPPORTS(nsPK11TokenDB, nsIPK11TokenDB)
 
 NS_IMETHODIMP
-nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval)
-{
+nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {

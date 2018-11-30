@@ -21,7 +21,7 @@
 namespace mozilla {
 
 namespace details {
-template<typename T, bool IsPod = std::is_trivial<T>::value>
+template <typename T, bool IsPod = std::is_trivial<T>::value>
 struct MemoryOperations {
   /**
    * This allows zeroing (using memset) or default-constructing a number of
@@ -37,35 +37,28 @@ struct MemoryOperations {
   static void MoveOrCopy(T* aDestination, T* aSource, size_t aCount);
 };
 
-template<typename T>
-struct MemoryOperations<T, true>
-{
-  static void ConstructDefault(T* aDestination, size_t aCount)
-  {
+template <typename T>
+struct MemoryOperations<T, true> {
+  static void ConstructDefault(T* aDestination, size_t aCount) {
     PodZero(aDestination, aCount);
   }
-  static void MoveOrCopy(T* aDestination, T* aSource, size_t aCount)
-  {
+  static void MoveOrCopy(T* aDestination, T* aSource, size_t aCount) {
     PodCopy(aDestination, aSource, aCount);
   }
 };
 
-template<typename T>
-struct MemoryOperations<T, false>
-{
-  static void ConstructDefault(T* aDestination, size_t aCount)
-  {
+template <typename T>
+struct MemoryOperations<T, false> {
+  static void ConstructDefault(T* aDestination, size_t aCount) {
     for (size_t i = 0; i < aCount; i++) {
       aDestination[i] = T();
     }
   }
-  static void MoveOrCopy(T* aDestination, T* aSource, size_t aCount)
-  {
+  static void MoveOrCopy(T* aDestination, T* aSource, size_t aCount) {
     std::move(aSource, aSource + aCount, aDestination);
   }
 };
-}
-
+}  // namespace details
 
 /**
  * This data structure allows producing data from one thread, and consuming it
@@ -95,10 +88,9 @@ struct MemoryOperations<T, false>
  *   providing an external buffer to copy into is an easy way to have linear
  *   data for further processing.
  */
-template<typename T>
-class SPSCRingBufferBase
-{
-public:
+template <typename T>
+class SPSCRingBufferBase {
+ public:
   /**
    * Constructor for a ring buffer.
    *
@@ -107,15 +99,14 @@ public:
    *
    * @param Capacity The maximum number of element this ring buffer will hold.
    */
-  explicit
-  SPSCRingBufferBase(int aCapacity)
-    : mReadIndex(0)
-    , mWriteIndex(0)
-    /* One more element to distinguish from empty and full buffer. */
-    , mCapacity(aCapacity + 1)
-  {
+  explicit SPSCRingBufferBase(int aCapacity)
+      : mReadIndex(0),
+        mWriteIndex(0)
+        /* One more element to distinguish from empty and full buffer. */
+        ,
+        mCapacity(aCapacity + 1) {
     MOZ_ASSERT(StorageCapacity() < std::numeric_limits<int>::max() / 2,
-              "buffer too large for the type of index used.");
+               "buffer too large for the type of index used.");
     MOZ_ASSERT(mCapacity > 0 && aCapacity != std::numeric_limits<int>::max());
 
     mData = std::make_unique<T[]>(StorageCapacity());
@@ -131,9 +122,7 @@ public:
    * @return The number of element enqueued.
    */
   MOZ_MUST_USE
-  int EnqueueDefault(int aCount) {
-    return Enqueue(nullptr, aCount);
-  }
+  int EnqueueDefault(int aCount) { return Enqueue(nullptr, aCount); }
   /**
    * @brief Put an element in the queue.
    *
@@ -144,9 +133,7 @@ public:
    * @return 1 if the element was inserted, 0 otherwise.
    */
   MOZ_MUST_USE
-  int Enqueue(T& aElement) {
-    return Enqueue(&aElement, 1);
-  }
+  int Enqueue(T& aElement) { return Enqueue(&aElement, 1); }
   /**
    * Push `aCount` elements in the ring buffer.
    *
@@ -159,8 +146,7 @@ public:
    * inserted into the ring buffer.
    */
   MOZ_MUST_USE
-  int Enqueue(T* aElements, int aCount)
-  {
+  int Enqueue(T* aElements, int aCount) {
 #ifdef DEBUG
     AssertCorrectThread(mProducerId);
 #endif
@@ -180,10 +166,13 @@ public:
     int secondPart = toWrite - firstPart;
 
     if (aElements) {
-      details::MemoryOperations<T>::MoveOrCopy(mData.get() + wrIdx, aElements, firstPart);
-      details::MemoryOperations<T>::MoveOrCopy(mData.get(), aElements + firstPart, secondPart);
+      details::MemoryOperations<T>::MoveOrCopy(mData.get() + wrIdx, aElements,
+                                               firstPart);
+      details::MemoryOperations<T>::MoveOrCopy(
+          mData.get(), aElements + firstPart, secondPart);
     } else {
-      details::MemoryOperations<T>::ConstructDefault(mData.get() + wrIdx, firstPart);
+      details::MemoryOperations<T>::ConstructDefault(mData.get() + wrIdx,
+                                                     firstPart);
       details::MemoryOperations<T>::ConstructDefault(mData.get(), secondPart);
     }
 
@@ -204,8 +193,7 @@ public:
    * @return The number of elements written to `elements`.
    */
   MOZ_MUST_USE
-  int Dequeue(T* elements, int count)
-  {
+  int Dequeue(T* elements, int count) {
 #ifdef DEBUG
     AssertCorrectThread(mConsumerId);
 #endif
@@ -223,8 +211,10 @@ public:
     int secondPart = toRead - firstPart;
 
     if (elements) {
-      details::MemoryOperations<T>::MoveOrCopy(elements, mData.get() + rdIdx, firstPart);
-      details::MemoryOperations<T>::MoveOrCopy(elements + firstPart, mData.get(), secondPart);
+      details::MemoryOperations<T>::MoveOrCopy(elements, mData.get() + rdIdx,
+                                               firstPart);
+      details::MemoryOperations<T>::MoveOrCopy(elements + firstPart,
+                                               mData.get(), secondPart);
     }
 
     mReadIndex.store(IncrementIndex(rdIdx, toRead),
@@ -243,14 +233,13 @@ public:
    *
    * @return The number of available elements for reading.
    */
-  int AvailableRead() const
-  {
+  int AvailableRead() const {
 #ifdef DEBUG
     AssertCorrectThread(mConsumerId);
 #endif
     return AvailableReadInternal(
-      mReadIndex.load(std::memory_order::memory_order_relaxed),
-      mWriteIndex.load(std::memory_order::memory_order_relaxed));
+        mReadIndex.load(std::memory_order::memory_order_relaxed),
+        mWriteIndex.load(std::memory_order::memory_order_relaxed));
   }
   /**
    * Get the number of available elements for writing.
@@ -263,14 +252,13 @@ public:
    *
    * @return The number of empty slots in the buffer, available for writing.
    */
-  int AvailableWrite() const
-  {
+  int AvailableWrite() const {
 #ifdef DEBUG
     AssertCorrectThread(mProducerId);
 #endif
     return AvailableWriteInternal(
-      mReadIndex.load(std::memory_order::memory_order_relaxed),
-      mWriteIndex.load(std::memory_order::memory_order_relaxed));
+        mReadIndex.load(std::memory_order::memory_order_relaxed),
+        mWriteIndex.load(std::memory_order::memory_order_relaxed));
   }
   /**
    * Get the total Capacity, for this ring buffer.
@@ -285,13 +273,13 @@ public:
    * being changed. This has to be externally synchronized. This is no-op when
    * asserts are disabled.
    */
-  void ResetThreadIds()
-  {
+  void ResetThreadIds() {
 #ifdef DEBUG
     mConsumerId = mProducerId = std::thread::id();
 #endif
   }
-private:
+
+ private:
   /** Return true if the ring buffer is empty.
    *
    * This can be called from the consumer or the producer thread.
@@ -300,8 +288,7 @@ private:
    * @param writeIndex the write index to consider
    * @return true if the ring buffer is empty, false otherwise.
    **/
-  bool IsEmpty(int aReadIndex, int aWriteIndex) const
-  {
+  bool IsEmpty(int aReadIndex, int aWriteIndex) const {
     return aWriteIndex == aReadIndex;
   }
   /** Return true if the ring buffer is full.
@@ -315,8 +302,7 @@ private:
    * @param writeIndex the write index to consider
    * @return true if the ring buffer is full, false otherwise.
    **/
-  bool IsFull(int aReadIndex, int aWriteIndex) const
-  {
+  bool IsFull(int aReadIndex, int aWriteIndex) const {
     return (aWriteIndex + 1) % StorageCapacity() == aReadIndex;
   }
   /**
@@ -336,8 +322,7 @@ private:
    *
    * @return the number of available elements for reading.
    */
-  int AvailableReadInternal(int aReadIndex, int aWriteIndex) const
-  {
+  int AvailableReadInternal(int aReadIndex, int aWriteIndex) const {
     if (aWriteIndex >= aReadIndex) {
       return aWriteIndex - aReadIndex;
     } else {
@@ -352,8 +337,7 @@ private:
    *
    * @return the number of elements that can be written into the array.
    */
-  int AvailableWriteInternal(int aReadIndex, int aWriteIndex) const
-  {
+  int AvailableWriteInternal(int aReadIndex, int aWriteIndex) const {
     /* We subtract one element here to always keep at least one sample
      * free in the buffer, to distinguish between full and empty array. */
     int rv = aReadIndex - aWriteIndex - 1;
@@ -372,10 +356,8 @@ private:
    * @param increment the number by which `index` is incremented.
    * @return the new index.
    */
-  int IncrementIndex(int aIndex, int aIncrement) const
-  {
-    MOZ_ASSERT(aIncrement >= 0 &&
-               aIncrement < StorageCapacity() &&
+  int IncrementIndex(int aIndex, int aIncrement) const {
+    MOZ_ASSERT(aIncrement >= 0 && aIncrement < StorageCapacity() &&
                aIndex < StorageCapacity());
     return (aIndex + aIncrement) % StorageCapacity();
   }
@@ -389,8 +371,7 @@ private:
    * @param id the id of the thread that has called the calling method first.
    */
 #ifdef DEBUG
-  static void AssertCorrectThread(std::thread::id& aId)
-  {
+  static void AssertCorrectThread(std::thread::id& aId) {
     if (aId == std::thread::id()) {
       aId = std::this_thread::get_id();
       return;
@@ -420,9 +401,9 @@ private:
  * from two threads, one producer, one consumer (that never change role),
  * without explicit synchronization.
  */
-template<typename T>
+template <typename T>
 using SPSCQueue = SPSCRingBufferBase<T>;
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_LockFreeQueue_h
+#endif  // mozilla_LockFreeQueue_h

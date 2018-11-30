@@ -6,63 +6,51 @@
 
 #include "nsError.h"
 #include "nsSVGTransform.h"
-#include "nsContentUtils.h" // for NS_ENSURE_FINITE
+#include "nsContentUtils.h"  // for NS_ENSURE_FINITE
 #include "nsTextFormatter.h"
 
 namespace {
-  const double kRadPerDegree = 2.0 * M_PI / 360.0;
-} // namespace
+const double kRadPerDegree = 2.0 * M_PI / 360.0;
+}  // namespace
 
 namespace mozilla {
 
 using namespace dom::SVGTransform_Binding;
 
-void
-nsSVGTransform::GetValueAsString(nsAString& aValue) const
-{
+void nsSVGTransform::GetValueAsString(nsAString& aValue) const {
   switch (mType) {
     case SVG_TRANSFORM_TRANSLATE:
       // The spec say that if Y is not provided, it is assumed to be zero.
       if (mMatrix._32 != 0)
-        nsTextFormatter::ssprintf(aValue,
-            u"translate(%g, %g)",
-            mMatrix._31, mMatrix._32);
+        nsTextFormatter::ssprintf(aValue, u"translate(%g, %g)", mMatrix._31,
+                                  mMatrix._32);
       else
-        nsTextFormatter::ssprintf(aValue,
-            u"translate(%g)",
-            mMatrix._31);
+        nsTextFormatter::ssprintf(aValue, u"translate(%g)", mMatrix._31);
       break;
     case SVG_TRANSFORM_ROTATE:
       if (mOriginX != 0.0f || mOriginY != 0.0f)
-        nsTextFormatter::ssprintf(aValue,
-            u"rotate(%g, %g, %g)",
-            mAngle, mOriginX, mOriginY);
+        nsTextFormatter::ssprintf(aValue, u"rotate(%g, %g, %g)", mAngle,
+                                  mOriginX, mOriginY);
       else
-        nsTextFormatter::ssprintf(aValue,
-            u"rotate(%g)", mAngle);
+        nsTextFormatter::ssprintf(aValue, u"rotate(%g)", mAngle);
       break;
     case SVG_TRANSFORM_SCALE:
       if (mMatrix._11 != mMatrix._22)
-        nsTextFormatter::ssprintf(aValue,
-            u"scale(%g, %g)", mMatrix._11, mMatrix._22);
+        nsTextFormatter::ssprintf(aValue, u"scale(%g, %g)", mMatrix._11,
+                                  mMatrix._22);
       else
-        nsTextFormatter::ssprintf(aValue,
-            u"scale(%g)", mMatrix._11);
+        nsTextFormatter::ssprintf(aValue, u"scale(%g)", mMatrix._11);
       break;
     case SVG_TRANSFORM_SKEWX:
-      nsTextFormatter::ssprintf(aValue,
-                                u"skewX(%g)", mAngle);
+      nsTextFormatter::ssprintf(aValue, u"skewX(%g)", mAngle);
       break;
     case SVG_TRANSFORM_SKEWY:
-      nsTextFormatter::ssprintf(aValue,
-                                u"skewY(%g)", mAngle);
+      nsTextFormatter::ssprintf(aValue, u"skewY(%g)", mAngle);
       break;
     case SVG_TRANSFORM_MATRIX:
-      nsTextFormatter::ssprintf(aValue,
-          u"matrix(%g, %g, %g, %g, %g, %g)",
-                            mMatrix._11, mMatrix._12,
-                            mMatrix._21, mMatrix._22,
-                            mMatrix._31, mMatrix._32);
+      nsTextFormatter::ssprintf(aValue, u"matrix(%g, %g, %g, %g, %g, %g)",
+                                mMatrix._11, mMatrix._12, mMatrix._21,
+                                mMatrix._22, mMatrix._31, mMatrix._32);
       break;
     default:
       aValue.Truncate();
@@ -71,85 +59,72 @@ nsSVGTransform::GetValueAsString(nsAString& aValue) const
   }
 }
 
-void
-nsSVGTransform::SetMatrix(const gfxMatrix& aMatrix)
-{
-  mType    = SVG_TRANSFORM_MATRIX;
-  mMatrix  = aMatrix;
+void nsSVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
+  mType = SVG_TRANSFORM_MATRIX;
+  mMatrix = aMatrix;
   // We set the other members here too, since operator== requires it and
   // the DOM requires it for mAngle.
-  mAngle   = 0.f;
+  mAngle = 0.f;
   mOriginX = 0.f;
   mOriginY = 0.f;
 }
 
-void
-nsSVGTransform::SetTranslate(float aTx, float aTy)
-{
-  mType    = SVG_TRANSFORM_TRANSLATE;
-  mMatrix  = gfxMatrix::Translation(aTx, aTy);
-  mAngle   = 0.f;
+void nsSVGTransform::SetTranslate(float aTx, float aTy) {
+  mType = SVG_TRANSFORM_TRANSLATE;
+  mMatrix = gfxMatrix::Translation(aTx, aTy);
+  mAngle = 0.f;
   mOriginX = 0.f;
   mOriginY = 0.f;
 }
 
-void
-nsSVGTransform::SetScale(float aSx, float aSy)
-{
-  mType    = SVG_TRANSFORM_SCALE;
-  mMatrix  = gfxMatrix::Scaling(aSx, aSy);
-  mAngle   = 0.f;
+void nsSVGTransform::SetScale(float aSx, float aSy) {
+  mType = SVG_TRANSFORM_SCALE;
+  mMatrix = gfxMatrix::Scaling(aSx, aSy);
+  mAngle = 0.f;
   mOriginX = 0.f;
   mOriginY = 0.f;
 }
 
-void
-nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy)
-{
-  mType    = SVG_TRANSFORM_ROTATE;
-  mMatrix  = gfxMatrix::Translation(aCx, aCy)
-                       .PreRotate(aAngle*kRadPerDegree)
-                       .PreTranslate(-aCx, -aCy);
-  mAngle   = aAngle;
+void nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy) {
+  mType = SVG_TRANSFORM_ROTATE;
+  mMatrix = gfxMatrix::Translation(aCx, aCy)
+                .PreRotate(aAngle * kRadPerDegree)
+                .PreTranslate(-aCx, -aCy);
+  mAngle = aAngle;
   mOriginX = aCx;
   mOriginY = aCy;
 }
 
-nsresult
-nsSVGTransform::SetSkewX(float aAngle)
-{
-  double ta = tan(aAngle*kRadPerDegree);
+nsresult nsSVGTransform::SetSkewX(float aAngle) {
+  double ta = tan(aAngle * kRadPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
-  mType    = SVG_TRANSFORM_SKEWX;
-  mMatrix  = gfxMatrix();
+  mType = SVG_TRANSFORM_SKEWX;
+  mMatrix = gfxMatrix();
   mMatrix._21 = ta;
-  mAngle   = aAngle;
+  mAngle = aAngle;
   mOriginX = 0.f;
   mOriginY = 0.f;
   return NS_OK;
 }
 
-nsresult
-nsSVGTransform::SetSkewY(float aAngle)
-{
-  double ta = tan(aAngle*kRadPerDegree);
+nsresult nsSVGTransform::SetSkewY(float aAngle) {
+  double ta = tan(aAngle * kRadPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
-  mType    = SVG_TRANSFORM_SKEWY;
-  mMatrix  = gfxMatrix();
+  mType = SVG_TRANSFORM_SKEWY;
+  mMatrix = gfxMatrix();
   mMatrix._12 = ta;
-  mAngle   = aAngle;
+  mAngle = aAngle;
   mOriginX = 0.f;
   mOriginY = 0.f;
   return NS_OK;
 }
 
 SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
-  : mTransformType(aTransform.Type())
-{
+    : mTransformType(aTransform.Type()) {
   MOZ_ASSERT(mTransformType >= SVG_TRANSFORM_MATRIX &&
-             mTransformType <= SVG_TRANSFORM_SKEWY,
+                 mTransformType <= SVG_TRANSFORM_SKEWY,
              "Unexpected transform type");
 
   for (uint32_t i = 0; i < NUM_STORED_PARAMS; ++i) {
@@ -195,15 +170,12 @@ SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
   }
 }
 
-nsSVGTransform
-SVGTransformSMILData::ToSVGTransform() const
-{
+nsSVGTransform SVGTransformSMILData::ToSVGTransform() const {
   nsSVGTransform result;
 
   switch (mTransformType) {
     case SVG_TRANSFORM_MATRIX:
-      result.SetMatrix(gfxMatrix(mParams[0], mParams[1],
-                                 mParams[2], mParams[3],
+      result.SetMatrix(gfxMatrix(mParams[0], mParams[1], mParams[2], mParams[3],
                                  mParams[4], mParams[5]));
       break;
 
@@ -234,4 +206,4 @@ SVGTransformSMILData::ToSVGTransform() const
   return result;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

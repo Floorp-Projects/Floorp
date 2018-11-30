@@ -22,15 +22,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceServerTiming)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-JSObject*
-PerformanceServerTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return mozilla::dom::PerformanceServerTiming_Binding::Wrap(aCx, this, aGivenProto);
+JSObject* PerformanceServerTiming::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+  return mozilla::dom::PerformanceServerTiming_Binding::Wrap(aCx, this,
+                                                             aGivenProto);
 }
 
-void
-PerformanceServerTiming::GetName(nsAString& aName) const
-{
+void PerformanceServerTiming::GetName(nsAString& aName) const {
   aName.Truncate();
 
   if (!mServerTiming) {
@@ -45,9 +43,7 @@ PerformanceServerTiming::GetName(nsAString& aName) const
   aName.Assign(NS_ConvertUTF8toUTF16(name));
 }
 
-DOMHighResTimeStamp
-PerformanceServerTiming::Duration() const
-{
+DOMHighResTimeStamp PerformanceServerTiming::Duration() const {
   if (!mServerTiming) {
     return 0;
   }
@@ -60,9 +56,7 @@ PerformanceServerTiming::Duration() const
   return duration;
 }
 
-void
-PerformanceServerTiming::GetDescription(nsAString& aDescription) const
-{
+void PerformanceServerTiming::GetDescription(nsAString& aDescription) const {
   if (!mServerTiming) {
     return;
   }
@@ -75,5 +69,5 @@ PerformanceServerTiming::GetDescription(nsAString& aDescription) const
   aDescription.Assign(NS_ConvertUTF8toUTF16(description));
 }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

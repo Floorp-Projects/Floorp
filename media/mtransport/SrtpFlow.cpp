@@ -36,13 +36,10 @@ unsigned int SrtpFlow::SaltSize(int cipher_suite) {
   return srtp_profile_get_master_salt_length(profile);
 }
 
-RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
-                                           bool inbound,
-                                           const void *key,
-                                           size_t key_len) {
+RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite, bool inbound,
+                                  const void *key, size_t key_len) {
   nsresult res = Init();
-  if (!NS_SUCCEEDED(res))
-    return nullptr;
+  if (!NS_SUCCEEDED(res)) return nullptr;
 
   RefPtr<SrtpFlow> flow = new SrtpFlow();
 
@@ -51,8 +48,7 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
     return nullptr;
   }
 
-  if ((key_len > SRTP_MAX_KEY_LENGTH) ||
-      (key_len < SRTP_MIN_KEY_LENGTH)) {
+  if ((key_len > SRTP_MAX_KEY_LENGTH) || (key_len < SRTP_MIN_KEY_LENGTH)) {
     MOZ_ASSERT(false, "Invalid SRTP key length");
     return nullptr;
   }
@@ -64,41 +60,41 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   // since any flow can only have one cipher suite with DTLS-SRTP
   switch (cipher_suite) {
     case kDtlsSrtpAeadAes256Gcm:
-      MOZ_MTLOG(ML_DEBUG,
-                  "Setting SRTP cipher suite SRTP_AEAD_AES_256_GCM");
+      MOZ_MTLOG(ML_DEBUG, "Setting SRTP cipher suite SRTP_AEAD_AES_256_GCM");
       srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
       srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtcp);
       break;
     case kDtlsSrtpAeadAes128Gcm:
-      MOZ_MTLOG(ML_DEBUG,
-                  "Setting SRTP cipher suite SRTP_AEAD_AES_128_GCM");
+      MOZ_MTLOG(ML_DEBUG, "Setting SRTP cipher suite SRTP_AEAD_AES_128_GCM");
       srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
       srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
       break;
     case kDtlsSrtpAes128CmHmacSha1_80:
       MOZ_MTLOG(ML_DEBUG,
-                  "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_80");
+                "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_80");
       srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
       srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
       break;
     case kDtlsSrtpAes128CmHmacSha1_32:
       MOZ_MTLOG(ML_DEBUG,
-                  "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_32");
+                "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_32");
       srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp); // 80-bit per RFC 5764
-      break;                                                   // S 4.1.2.
+      srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(
+          &policy.rtcp);  // 80-bit per RFC 5764
+      break;              // S 4.1.2.
     default:
       MOZ_MTLOG(ML_ERROR, "Request to set unknown SRTP cipher suite");
       return nullptr;
   }
   // This key is copied into the srtp_t object, so we don't
   // need to keep it.
-  policy.key = const_cast<unsigned char *>(
-      static_cast<const unsigned char *>(key));
+  policy.key =
+      const_cast<unsigned char *>(static_cast<const unsigned char *>(key));
   policy.ssrc.type = inbound ? ssrc_any_inbound : ssrc_any_outbound;
   policy.ssrc.value = 0;
   policy.ekt = nullptr;
-  policy.window_size = 1024;   // Use the Chrome value.  Needs to be revisited.  Default is 128
+  policy.window_size =
+      1024;  // Use the Chrome value.  Needs to be revisited.  Default is 128
   policy.allow_repeat_tx = 1;  // Use Chrome value; needed for NACK mode to work
   policy.next = nullptr;
 
@@ -112,9 +108,8 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   return flow;
 }
 
-
-nsresult SrtpFlow::CheckInputs(bool protect, void *in, int in_len,
-                               int max_len, int *out_len) {
+nsresult SrtpFlow::CheckInputs(bool protect, void *in, int in_len, int max_len,
+                               int *out_len) {
   MOZ_ASSERT(in);
   if (!in) {
     MOZ_MTLOG(ML_ERROR, "NULL input value");
@@ -137,8 +132,7 @@ nsresult SrtpFlow::CheckInputs(bool protect, void *in, int in_len,
       MOZ_MTLOG(ML_ERROR, "Output too short");
       return NS_ERROR_ILLEGAL_VALUE;
     }
-  }
-  else {
+  } else {
     if (in_len > max_len) {
       MOZ_MTLOG(ML_ERROR, "Output too short");
       return NS_ERROR_ILLEGAL_VALUE;
@@ -148,11 +142,9 @@ nsresult SrtpFlow::CheckInputs(bool protect, void *in, int in_len,
   return NS_OK;
 }
 
-nsresult SrtpFlow::ProtectRtp(void *in, int in_len,
-                              int max_len, int *out_len) {
+nsresult SrtpFlow::ProtectRtp(void *in, int in_len, int max_len, int *out_len) {
   nsresult res = CheckInputs(true, in, in_len, max_len, out_len);
-  if (NS_FAILED(res))
-    return res;
+  if (NS_FAILED(res)) return res;
 
   int len = in_len;
   srtp_err_status_t r = srtp_protect(session_, in, &len);
@@ -165,18 +157,16 @@ nsresult SrtpFlow::ProtectRtp(void *in, int in_len,
   MOZ_ASSERT(len <= max_len);
   *out_len = len;
 
-
-  MOZ_MTLOG(ML_DEBUG, "Successfully protected an SRTP packet of len "
-                      << *out_len);
+  MOZ_MTLOG(ML_DEBUG,
+            "Successfully protected an SRTP packet of len " << *out_len);
 
   return NS_OK;
 }
 
-nsresult SrtpFlow::UnprotectRtp(void *in, int in_len,
-                                int max_len, int *out_len) {
+nsresult SrtpFlow::UnprotectRtp(void *in, int in_len, int max_len,
+                                int *out_len) {
   nsresult res = CheckInputs(false, in, in_len, max_len, out_len);
-  if (NS_FAILED(res))
-    return res;
+  if (NS_FAILED(res)) return res;
 
   int len = in_len;
   srtp_err_status_t r = srtp_unprotect(session_, in, &len);
@@ -189,17 +179,16 @@ nsresult SrtpFlow::UnprotectRtp(void *in, int in_len,
   MOZ_ASSERT(len <= max_len);
   *out_len = len;
 
-  MOZ_MTLOG(ML_DEBUG, "Successfully unprotected an SRTP packet of len "
-                      << *out_len);
+  MOZ_MTLOG(ML_DEBUG,
+            "Successfully unprotected an SRTP packet of len " << *out_len);
 
   return NS_OK;
 }
 
-nsresult SrtpFlow::ProtectRtcp(void *in, int in_len,
-                               int max_len, int *out_len) {
+nsresult SrtpFlow::ProtectRtcp(void *in, int in_len, int max_len,
+                               int *out_len) {
   nsresult res = CheckInputs(true, in, in_len, max_len, out_len);
-  if (NS_FAILED(res))
-    return res;
+  if (NS_FAILED(res)) return res;
 
   int len = in_len;
   srtp_err_status_t r = srtp_protect_rtcp(session_, in, &len);
@@ -212,17 +201,16 @@ nsresult SrtpFlow::ProtectRtcp(void *in, int in_len,
   MOZ_ASSERT(len <= max_len);
   *out_len = len;
 
-  MOZ_MTLOG(ML_DEBUG, "Successfully protected an SRTCP packet of len "
-                      << *out_len);
+  MOZ_MTLOG(ML_DEBUG,
+            "Successfully protected an SRTCP packet of len " << *out_len);
 
   return NS_OK;
 }
 
-nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len,
-                                 int max_len, int *out_len) {
+nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len, int max_len,
+                                 int *out_len) {
   nsresult res = CheckInputs(false, in, in_len, max_len, out_len);
-  if (NS_FAILED(res))
-    return res;
+  if (NS_FAILED(res)) return res;
 
   int len = in_len;
   srtp_err_status_t r = srtp_unprotect_rtcp(session_, in, &len);
@@ -235,8 +223,8 @@ nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len,
   MOZ_ASSERT(len <= max_len);
   *out_len = len;
 
-  MOZ_MTLOG(ML_DEBUG, "Successfully unprotected an SRTCP packet of len "
-                      << *out_len);
+  MOZ_MTLOG(ML_DEBUG,
+            "Successfully unprotected an SRTCP packet of len " << *out_len);
 
   return NS_OK;
 }
@@ -269,5 +257,4 @@ nsresult SrtpFlow::Init() {
   return NS_OK;
 }
 
-}  // end of namespace
-
+}  // namespace mozilla

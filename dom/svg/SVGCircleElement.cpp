@@ -17,26 +17,25 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-JSObject*
-SVGCircleElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SVGCircleElement::WrapNode(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return SVGCircleElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] =
-{
-  { nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { nsGkAtoms::r, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
-};
+nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] = {
+    {nsGkAtoms::cx, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::X},
+    {nsGkAtoms::cy, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::Y},
+    {nsGkAtoms::r, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
+     SVGContentUtils::XY}};
 
 //----------------------------------------------------------------------
 // Implementation
 
-SVGCircleElement::SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : SVGCircleElementBase(std::move(aNodeInfo))
-{
-}
+SVGCircleElement::SVGCircleElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGCircleElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -45,37 +44,27 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGCircleElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength>
-SVGCircleElement::Cx()
-{
+already_AddRefed<SVGAnimatedLength> SVGCircleElement::Cx() {
   return mLengthAttributes[ATTR_CX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGCircleElement::Cy()
-{
+already_AddRefed<SVGAnimatedLength> SVGCircleElement::Cy() {
   return mLengthAttributes[ATTR_CY].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength>
-SVGCircleElement::R()
-{
+already_AddRefed<SVGAnimatedLength> SVGCircleElement::R() {
   return mLengthAttributes[ATTR_R].ToDOMAnimatedLength(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-/* virtual */ bool
-SVGCircleElement::HasValidDimensions() const
-{
+/* virtual */ bool SVGCircleElement::HasValidDimensions() const {
   return mLengthAttributes[ATTR_R].IsExplicitlySet() &&
          mLengthAttributes[ATTR_R].GetAnimValInSpecifiedUnits() > 0;
 }
 
-nsSVGElement::LengthAttributesInfo
-SVGCircleElement::GetLengthInfo()
-{
+nsSVGElement::LengthAttributesInfo SVGCircleElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
 }
@@ -83,12 +72,9 @@ SVGCircleElement::GetLengthInfo()
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
 
-bool
-SVGCircleElement::GetGeometryBounds(Rect* aBounds,
-                                    const StrokeOptions& aStrokeOptions,
-                                    const Matrix& aToBoundsSpace,
-                                    const Matrix* aToNonScalingStrokeSpace)
-{
+bool SVGCircleElement::GetGeometryBounds(
+    Rect* aBounds, const StrokeOptions& aStrokeOptions,
+    const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   float x, y, r;
   GetAnimatedLengthValues(&x, &y, &r, nullptr);
 
@@ -107,8 +93,8 @@ SVGCircleElement::GetGeometryBounds(Rect* aBounds,
           MOZ_ASSERT(!aToNonScalingStrokeSpace->IsSingular());
           Rect userBounds(x - r, y - r, 2 * r, 2 * r);
           SVGContentUtils::RectilinearGetStrokeBounds(
-            userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,
-            aStrokeOptions.mLineWidth, aBounds);
+              userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,
+              aStrokeOptions.mLineWidth, aBounds);
           return true;
         }
         return false;
@@ -123,9 +109,7 @@ SVGCircleElement::GetGeometryBounds(Rect* aBounds,
   return false;
 }
 
-already_AddRefed<Path>
-SVGCircleElement::BuildPath(PathBuilder* aBuilder)
-{
+already_AddRefed<Path> SVGCircleElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, r;
   GetAnimatedLengthValues(&x, &y, &r, nullptr);
 
@@ -133,10 +117,10 @@ SVGCircleElement::BuildPath(PathBuilder* aBuilder)
     return nullptr;
   }
 
-  aBuilder->Arc(Point(x, y), r, 0, Float(2*M_PI));
+  aBuilder->Arc(Point(x, y), r, 0, Float(2 * M_PI));
 
   return aBuilder->Finish();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

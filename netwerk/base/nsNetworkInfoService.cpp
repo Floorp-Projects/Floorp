@@ -22,20 +22,14 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS(nsNetworkInfoService,
-                  nsINetworkInfoService)
+NS_IMPL_ISUPPORTS(nsNetworkInfoService, nsINetworkInfoService)
 
 nsNetworkInfoService::nsNetworkInfoService() = default;
 
-nsresult
-nsNetworkInfoService::Init()
-{
-  return NS_OK;
-}
+nsresult nsNetworkInfoService::Init() { return NS_OK; }
 
-nsresult
-nsNetworkInfoService::ListNetworkAddresses(nsIListNetworkAddressesListener* aListener)
-{
+nsresult nsNetworkInfoService::ListNetworkAddresses(
+    nsIListNetworkAddressesListener* aListener) {
   nsresult rv;
 
   AddrMapType addrMap;
@@ -46,14 +40,13 @@ nsNetworkInfoService::ListNetworkAddresses(nsIListNetworkAddressesListener* aLis
   }
 
   uint32_t addrCount = addrMap.Count();
-  const char** addrStrings = (const char**) malloc(sizeof(*addrStrings) * addrCount);
+  const char** addrStrings =
+      (const char**)malloc(sizeof(*addrStrings) * addrCount);
   if (!addrStrings) {
     aListener->OnListNetworkAddressesFailed();
     return NS_OK;
   }
-  auto autoFreeAddrStrings = MakeScopeExit([&] {
-    free(addrStrings);
-  });
+  auto autoFreeAddrStrings = MakeScopeExit([&] { free(addrStrings); });
 
   uint32_t idx = 0;
   for (auto iter = addrMap.Iter(); !iter.Done(); iter.Next()) {
@@ -65,9 +58,7 @@ nsNetworkInfoService::ListNetworkAddresses(nsIListNetworkAddressesListener* aLis
 
 // TODO: Bug 1275373: https://bugzilla.mozilla.org/show_bug.cgi?id=1275373
 // Use platform-specific implementation of DoGetHostname on Cocoa and Windows.
-static nsresult
-DoGetHostname(nsACString& aHostname)
-{
+static nsresult DoGetHostname(nsACString& aHostname) {
   char hostnameBuf[256];
   int result = gethostname(hostnameBuf, 256);
   if (result == -1) {
@@ -91,9 +82,7 @@ DoGetHostname(nsACString& aHostname)
   return NS_OK;
 }
 
-nsresult
-nsNetworkInfoService::GetHostname(nsIGetHostnameListener* aListener)
-{
+nsresult nsNetworkInfoService::GetHostname(nsIGetHostnameListener* aListener) {
   nsresult rv;
   nsCString hostnameStr;
   rv = DoGetHostname(hostnameStr);
@@ -107,5 +96,5 @@ nsNetworkInfoService::GetHostname(nsIGetHostnameListener* aListener)
   return NS_OK;
 }
 
-} // namespace net
-} // namespace mozilla
+}  // namespace net
+}  // namespace mozilla

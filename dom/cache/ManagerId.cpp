@@ -18,9 +18,8 @@ namespace cache {
 using mozilla::dom::quota::QuotaManager;
 
 // static
-nsresult
-ManagerId::Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut)
-{
+nsresult ManagerId::Create(nsIPrincipal* aPrincipal,
+                           ManagerId** aManagerIdOut) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // The QuotaManager::GetInfoFromPrincipal() has special logic for system
@@ -28,10 +27,12 @@ ManagerId::Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut)
   // order to interpret calls from QM correctly.
   nsCString quotaOrigin;
   nsresult rv = QuotaManager::GetInfoFromPrincipal(aPrincipal,
-                                                   nullptr,   // suffix
-                                                   nullptr,   // group
+                                                   nullptr,  // suffix
+                                                   nullptr,  // group
                                                    &quotaOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   RefPtr<ManagerId> ref = new ManagerId(aPrincipal, quotaOrigin);
   ref.forget(aManagerIdOut);
@@ -39,23 +40,18 @@ ManagerId::Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut)
   return NS_OK;
 }
 
-already_AddRefed<nsIPrincipal>
-ManagerId::Principal() const
-{
+already_AddRefed<nsIPrincipal> ManagerId::Principal() const {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIPrincipal> ref = mPrincipal;
   return ref.forget();
 }
 
 ManagerId::ManagerId(nsIPrincipal* aPrincipal, const nsACString& aQuotaOrigin)
-    : mPrincipal(aPrincipal)
-    , mQuotaOrigin(aQuotaOrigin)
-{
+    : mPrincipal(aPrincipal), mQuotaOrigin(aQuotaOrigin) {
   MOZ_DIAGNOSTIC_ASSERT(mPrincipal);
 }
 
-ManagerId::~ManagerId()
-{
+ManagerId::~ManagerId() {
   // If we're already on the main thread, then default destruction is fine
   if (NS_IsMainThread()) {
     return;
@@ -65,10 +61,10 @@ ManagerId::~ManagerId()
 
   // The PBackground worker thread shouldn't be running after the main thread
   // is stopped.  So main thread is guaranteed to exist here.
-  NS_ReleaseOnMainThreadSystemGroup(
-    "ManagerId::mPrincipal", mPrincipal.forget());
+  NS_ReleaseOnMainThreadSystemGroup("ManagerId::mPrincipal",
+                                    mPrincipal.forget());
 }
 
-} // namespace cache
-} // namespace dom
-} // namespace mozilla
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

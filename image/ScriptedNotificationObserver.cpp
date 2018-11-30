@@ -7,7 +7,7 @@
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsContentUtils.h"                     // for nsAutoScriptBlocker
+#include "nsContentUtils.h"  // for nsAutoScriptBlocker
 
 namespace mozilla {
 namespace image {
@@ -24,14 +24,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptedNotificationObserver)
 
 ScriptedNotificationObserver::ScriptedNotificationObserver(
     imgIScriptedNotificationObserver* aInner)
-: mInner(aInner)
-{ }
+    : mInner(aInner) {}
 
 NS_IMETHODIMP
-ScriptedNotificationObserver::Notify(imgIRequest* aRequest,
-                                     int32_t aType,
-                                     const nsIntRect* /*aUnused*/)
-{
+ScriptedNotificationObserver::Notify(imgIRequest* aRequest, int32_t aType,
+                                     const nsIntRect* /*aUnused*/) {
   // For now, we block (other) scripts from running to preserve the historical
   // behavior from when ScriptedNotificationObserver::Notify was called as part
   // of the observers list in nsImageLoadingContent::Notify. Now each
@@ -66,5 +63,5 @@ ScriptedNotificationObserver::Notify(imgIRequest* aRequest,
   return NS_OK;
 }
 
-} // namespace image
-} // namespace mozilla
+}  // namespace image
+}  // namespace mozilla

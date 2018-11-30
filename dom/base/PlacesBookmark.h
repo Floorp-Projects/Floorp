@@ -12,14 +12,13 @@
 namespace mozilla {
 namespace dom {
 
-class PlacesBookmark : public PlacesEvent
-{
-public:
-  explicit PlacesBookmark(PlacesEventType aEventType) : PlacesEvent(aEventType) {}
+class PlacesBookmark : public PlacesEvent {
+ public:
+  explicit PlacesBookmark(PlacesEventType aEventType)
+      : PlacesEvent(aEventType) {}
 
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
     return PlacesBookmark_Binding::Wrap(aCx, this, aGivenProto);
   }
 
@@ -43,11 +42,11 @@ public:
   uint16_t mSource;
   bool mIsTagging;
 
-protected:
+ protected:
   virtual ~PlacesBookmark() = default;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_PlacesBookmark_h
+#endif  // mozilla_dom_PlacesBookmark_h

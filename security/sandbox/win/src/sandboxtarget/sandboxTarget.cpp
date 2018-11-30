@@ -12,36 +12,29 @@ namespace mozilla {
 
 // We need to define this function out of line so that clang-cl doesn't inline
 // it.
-/* static */ SandboxTarget*
-SandboxTarget::Instance()
-{
+/* static */ SandboxTarget* SandboxTarget::Instance() {
   static SandboxTarget sb;
   return &sb;
 }
 
-void
-SandboxTarget::StartSandbox()
-{
+void SandboxTarget::StartSandbox() {
   if (mTargetServices) {
     mTargetServices->LowerToken();
   }
 }
 
-bool
-SandboxTarget::BrokerDuplicateHandle(HANDLE aSourceHandle,
-                                     DWORD aTargetProcessId,
-                                     HANDLE* aTargetHandle,
-                                     DWORD aDesiredAccess,
-                                     DWORD aOptions)
-{
+bool SandboxTarget::BrokerDuplicateHandle(HANDLE aSourceHandle,
+                                          DWORD aTargetProcessId,
+                                          HANDLE* aTargetHandle,
+                                          DWORD aDesiredAccess,
+                                          DWORD aOptions) {
   if (!mTargetServices) {
     return false;
   }
 
-  sandbox::ResultCode result =
-    mTargetServices->DuplicateHandle(aSourceHandle, aTargetProcessId,
-                                     aTargetHandle, aDesiredAccess, aOptions);
+  sandbox::ResultCode result = mTargetServices->DuplicateHandle(
+      aSourceHandle, aTargetProcessId, aTargetHandle, aDesiredAccess, aOptions);
   return (sandbox::SBOX_ALL_OK == result);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

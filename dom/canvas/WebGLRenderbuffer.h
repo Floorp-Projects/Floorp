@@ -19,57 +19,54 @@ namespace webgl {
 struct FormatUsageInfo;
 }
 
-class WebGLRenderbuffer final
-    : public nsWrapperCache
-    , public WebGLRefCountedObject<WebGLRenderbuffer>
-    , public LinkedListElement<WebGLRenderbuffer>
-    , public WebGLRectangleObject
-    , public CacheInvalidator
-{
-    friend class WebGLFramebuffer;
-    friend class WebGLFBAttachPoint;
+class WebGLRenderbuffer final : public nsWrapperCache,
+                                public WebGLRefCountedObject<WebGLRenderbuffer>,
+                                public LinkedListElement<WebGLRenderbuffer>,
+                                public WebGLRectangleObject,
+                                public CacheInvalidator {
+  friend class WebGLFramebuffer;
+  friend class WebGLFBAttachPoint;
 
-public:
-    const GLuint mPrimaryRB;
-    bool mHasBeenBound = false;
-protected:
-    const bool mEmulatePackedDepthStencil;
-    GLuint mSecondaryRB;
-    webgl::ImageInfo mImageInfo;
+ public:
+  const GLuint mPrimaryRB;
+  bool mHasBeenBound = false;
 
-public:
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLRenderbuffer)
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)
+ protected:
+  const bool mEmulatePackedDepthStencil;
+  GLuint mSecondaryRB;
+  webgl::ImageInfo mImageInfo;
 
-    explicit WebGLRenderbuffer(WebGLContext* webgl);
+ public:
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLRenderbuffer)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)
 
-    void Delete();
+  explicit WebGLRenderbuffer(WebGLContext* webgl);
 
-    const auto& ImageInfo() const { return mImageInfo; }
+  void Delete();
 
-    WebGLContext* GetParentObject() const {
-        return mContext;
-    }
+  const auto& ImageInfo() const { return mImageInfo; }
 
-    void RenderbufferStorage(uint32_t samples, GLenum internalFormat, uint32_t width,
-                             uint32_t height);
-    // Only handles a subset of `pname`s.
-    GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
+  WebGLContext* GetParentObject() const { return mContext; }
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
+  void RenderbufferStorage(uint32_t samples, GLenum internalFormat,
+                           uint32_t width, uint32_t height);
+  // Only handles a subset of `pname`s.
+  GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
 
-    auto MemoryUsage() const { return mImageInfo.MemoryUsage(); }
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
 
-protected:
-    ~WebGLRenderbuffer() {
-        DeleteOnce();
-    }
+  auto MemoryUsage() const { return mImageInfo.MemoryUsage(); }
 
-    void DoFramebufferRenderbuffer(GLenum attachment) const;
-    GLenum DoRenderbufferStorage(uint32_t samples, const webgl::FormatUsageInfo* format,
-                                 uint32_t width, uint32_t height);
+ protected:
+  ~WebGLRenderbuffer() { DeleteOnce(); }
+
+  void DoFramebufferRenderbuffer(GLenum attachment) const;
+  GLenum DoRenderbufferStorage(uint32_t samples,
+                               const webgl::FormatUsageInfo* format,
+                               uint32_t width, uint32_t height);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WEBGL_RENDERBUFFER_H_
+#endif  // WEBGL_RENDERBUFFER_H_

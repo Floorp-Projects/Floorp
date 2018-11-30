@@ -18,31 +18,29 @@ namespace dom {
 
 class SVGAngle;
 
-class SVGAnimatedAngle final : public nsWrapperCache
-{
-public:
+class SVGAnimatedAngle final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedAngle)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedAngle)
 
-  SVGAnimatedAngle(nsSVGAngle* aVal, nsSVGElement *aSVGElement)
-    : mVal(aVal), mSVGElement(aSVGElement)
-  {
-  }
+  SVGAnimatedAngle(nsSVGAngle* aVal, nsSVGElement* aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
   already_AddRefed<SVGAngle> BaseVal();
   already_AddRefed<SVGAngle> AnimVal();
 
-protected:
+ protected:
   ~SVGAnimatedAngle();
 
-  nsSVGAngle* mVal; // kept alive because it belongs to content
+  nsSVGAngle* mVal;  // kept alive because it belongs to content
   RefPtr<nsSVGElement> mSVGElement;
 };
 
-} //namespace dom
-} //namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_SVGAnimatedAngle_h
+#endif  // mozilla_dom_SVGAnimatedAngle_h

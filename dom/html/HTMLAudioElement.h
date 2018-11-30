@@ -16,9 +16,8 @@ typedef uint16_t nsMediaReadyState;
 namespace mozilla {
 namespace dom {
 
-class HTMLAudioElement final : public HTMLMediaElement
-{
-public:
+class HTMLAudioElement final : public HTMLMediaElement {
+ public:
   typedef mozilla::dom::NodeInfo NodeInfo;
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLAudioElement, audio)
@@ -36,17 +35,18 @@ public:
 
   // WebIDL
 
-  static already_AddRefed<HTMLAudioElement>
-  Audio(const GlobalObject& aGlobal,
-        const Optional<nsAString>& aSrc, ErrorResult& aRv);
+  static already_AddRefed<HTMLAudioElement> Audio(
+      const GlobalObject& aGlobal, const Optional<nsAString>& aSrc,
+      ErrorResult& aRv);
 
-protected:
+ protected:
   virtual ~HTMLAudioElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_HTMLAudioElement_h
+#endif  // mozilla_dom_HTMLAudioElement_h

@@ -21,10 +21,8 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class Storage : public nsISupports
-              , public nsWrapperCache
-{
-public:
+class Storage : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Storage)
 
@@ -44,69 +42,51 @@ public:
 
   virtual int64_t GetOriginQuotaUsage() const = 0;
 
-  nsIPrincipal*
-  Principal() const
-  {
-    return mPrincipal;
-  }
+  nsIPrincipal* Principal() const { return mPrincipal; }
 
   // WebIDL
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mWindow;
-  }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
-  virtual uint32_t
-  GetLength(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+  virtual uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
+                             ErrorResult& aRv) = 0;
 
-  virtual void
-  Key(uint32_t aIndex, nsAString& aResult,
-      nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+  virtual void Key(uint32_t aIndex, nsAString& aResult,
+                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
-  virtual void
-  GetItem(const nsAString& aKey, nsAString& aResult,
-          nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+  virtual void GetItem(const nsAString& aKey, nsAString& aResult,
+                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
-  virtual void
-  GetSupportedNames(nsTArray<nsString>& aKeys) = 0;
+  virtual void GetSupportedNames(nsTArray<nsString>& aKeys) = 0;
 
   void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,
-                   nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv)
-  {
+                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
     GetItem(aKey, aResult, aSubjectPrincipal, aRv);
     aFound = !aResult.IsVoid();
   }
 
-  virtual void
-  SetItem(const nsAString& aKey, const nsAString& aValue,
-          nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+  virtual void SetItem(const nsAString& aKey, const nsAString& aValue,
+                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
   void NamedSetter(const nsAString& aKey, const nsAString& aValue,
-                   nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv)
-  {
+                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
     SetItem(aKey, aValue, aSubjectPrincipal, aRv);
   }
 
-  virtual void
-  RemoveItem(const nsAString& aKey, nsIPrincipal& aSubjectPrincipal,
-             ErrorResult& aRv) = 0;
+  virtual void RemoveItem(const nsAString& aKey,
+                          nsIPrincipal& aSubjectPrincipal,
+                          ErrorResult& aRv) = 0;
 
   void NamedDeleter(const nsAString& aKey, bool& aFound,
-                    nsIPrincipal& aSubjectPrincipal,
-                    ErrorResult& aRv)
-  {
+                    nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
     RemoveItem(aKey, aSubjectPrincipal, aRv);
 
     aFound = !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION);
   }
 
-  virtual void
-  Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
+  virtual void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
 
   bool IsSessionOnly() const { return mIsSessionOnly; }
 
@@ -117,21 +97,15 @@ public:
   // preference for the benefit of automated-tests.  They are not exposed to
   // content.  See `Storage.webidl` for more details.
 
-  virtual void
-  Open(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
-  { }
+  virtual void Open(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {}
 
-  virtual void
-  Close(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
-  { }
+  virtual void Close(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {}
 
-  virtual void
-  BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
-  { }
+  virtual void BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                     ErrorResult& aRv) {}
 
-  virtual void
-  EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
-  { }
+  virtual void EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                   ErrorResult& aRv) {}
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -149,14 +123,14 @@ public:
   // assume our localstorage changes have already been applied.  This is the
   // case for message manager messages which are used by ContentTask testing
   // logic and webextensions.
-  static void
-  NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
-               const nsAString& aKey, const nsAString& aOldValue,
-               const nsAString& aNewValue, const char16_t* aStorageType,
-               const nsAString& aDocumentURI, bool aIsPrivate,
-               bool aImmediateDispatch);
+  static void NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
+                           const nsAString& aKey, const nsAString& aOldValue,
+                           const nsAString& aNewValue,
+                           const char16_t* aStorageType,
+                           const nsAString& aDocumentURI, bool aIsPrivate,
+                           bool aImmediateDispatch);
 
-protected:
+ protected:
   virtual ~Storage();
 
   // The method checks whether the caller can use a storage.
@@ -168,11 +142,9 @@ protected:
   // hand together).
   bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
 
-  virtual void
-  LastRelease()
-  { }
+  virtual void LastRelease() {}
 
-private:
+ private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
@@ -182,7 +154,7 @@ private:
   bool mIsSessionOnly : 1;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_Storage_h
+#endif  // mozilla_dom_Storage_h

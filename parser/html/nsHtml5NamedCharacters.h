@@ -29,8 +29,7 @@
 #include "mozilla/Logging.h"
 #include "nsMemory.h"
 
-struct nsHtml5CharacterName
-{
+struct nsHtml5CharacterName {
   uint16_t nameStart;
   uint16_t nameLen;
 #ifdef DEBUG
@@ -40,9 +39,8 @@ struct nsHtml5CharacterName
   char16_t charAt(int32_t index) const;
 };
 
-class nsHtml5NamedCharacters
-{
-public:
+class nsHtml5NamedCharacters {
+ public:
   static const nsHtml5CharacterName NAMES[];
   static const char16_t VALUES[][2];
   static char16_t** WINDOWS_1252;
@@ -50,4 +48,4 @@ public:
   static void releaseStatics();
 };
 
-#endif // nsHtml5NamedCharacters_h
+#endif  // nsHtml5NamedCharacters_h

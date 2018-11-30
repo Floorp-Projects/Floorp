@@ -13,40 +13,36 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleImage,
-                            xpcAccessibleGeneric,
+NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleImage, xpcAccessibleGeneric,
                             nsIAccessibleImage)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleImage
 
 NS_IMETHODIMP
-xpcAccessibleImage::GetImagePosition(uint32_t aCoordType,
-                                     int32_t* aX, int32_t* aY)
-{
+xpcAccessibleImage::GetImagePosition(uint32_t aCoordType, int32_t* aX,
+                                     int32_t* aY) {
   NS_ENSURE_ARG_POINTER(aX);
   *aX = 0;
   NS_ENSURE_ARG_POINTER(aY);
   *aY = 0;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   nsIntPoint point = Intl()->Position(aCoordType);
-  *aX = point.x; *aY = point.y;
+  *aX = point.x;
+  *aY = point.y;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleImage::GetImageSize(int32_t* aWidth, int32_t* aHeight)
-{
+xpcAccessibleImage::GetImageSize(int32_t* aWidth, int32_t* aHeight) {
   NS_ENSURE_ARG_POINTER(aWidth);
   *aWidth = 0;
   NS_ENSURE_ARG_POINTER(aHeight);
   *aHeight = 0;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   nsIntSize size = Intl()->Size();
   *aWidth = size.width;

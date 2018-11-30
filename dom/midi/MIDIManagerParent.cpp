@@ -10,26 +10,19 @@
 namespace mozilla {
 namespace dom {
 
-void
-MIDIManagerParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-}
+void MIDIManagerParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
-void
-MIDIManagerParent::Teardown()
-{
+void MIDIManagerParent::Teardown() {
   if (MIDIPlatformService::IsRunning()) {
     MIDIPlatformService::Get()->RemoveManager(this);
   }
 }
 
-mozilla::ipc::IPCResult
-MIDIManagerParent::RecvShutdown()
-{
+mozilla::ipc::IPCResult MIDIManagerParent::RecvShutdown() {
   Teardown();
   Unused << Send__delete__(this);
   return IPC_OK();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

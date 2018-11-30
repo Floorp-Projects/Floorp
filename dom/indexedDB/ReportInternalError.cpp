@@ -15,9 +15,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-void
-ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
-{
+void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   // Get leaf of file path
   for (const char* p = aFile; *p; ++p) {
     if (*p == '/' && *(p + 1)) {
@@ -26,11 +24,11 @@ ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
   }
 
   nsContentUtils::LogSimpleConsoleError(
-    NS_ConvertUTF8toUTF16(nsPrintfCString(
-                          "IndexedDB %s: %s:%" PRIu32, aStr, aFile, aLine)),
-    "indexedDB", false /* no IDB in private window */);
+      NS_ConvertUTF8toUTF16(
+          nsPrintfCString("IndexedDB %s: %s:%" PRIu32, aStr, aFile, aLine)),
+      "indexedDB", false /* no IDB in private window */);
 }
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

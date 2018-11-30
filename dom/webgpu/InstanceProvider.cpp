@@ -12,36 +12,28 @@ namespace mozilla {
 namespace webgpu {
 
 InstanceProvider::InstanceProvider(nsIGlobalObject* const global)
-    : mGlobal(global)
-{ }
+    : mGlobal(global) {}
 
 InstanceProvider::~InstanceProvider() = default;
 
-already_AddRefed<Instance>
-InstanceProvider::Webgpu() const
-{
-    if (!mInstance) {
-        const auto inst = Instance::Create(mGlobal);
-        mInstance = Some(inst);
-    }
-    auto ret = mInstance.value();
-    return ret.forget();
+already_AddRefed<Instance> InstanceProvider::Webgpu() const {
+  if (!mInstance) {
+    const auto inst = Instance::Create(mGlobal);
+    mInstance = Some(inst);
+  }
+  auto ret = mInstance.value();
+  return ret.forget();
 }
 
-void
-InstanceProvider::CcTraverse(nsCycleCollectionTraversalCallback& callback) const
-{
-    if (mInstance) {
-        CycleCollectionNoteChild(callback, mInstance.ref().get(),
-                                 "webgpu::InstanceProvider::mInstance", 0);
-    }
+void InstanceProvider::CcTraverse(
+    nsCycleCollectionTraversalCallback& callback) const {
+  if (mInstance) {
+    CycleCollectionNoteChild(callback, mInstance.ref().get(),
+                             "webgpu::InstanceProvider::mInstance", 0);
+  }
 }
 
-void
-InstanceProvider::CcUnlink()
-{
-    mInstance = Some(nullptr);
-}
+void InstanceProvider::CcUnlink() { mInstance = Some(nullptr); }
 
-} // namespace webgpu
-} // namespace mozilla
+}  // namespace webgpu
+}  // namespace mozilla

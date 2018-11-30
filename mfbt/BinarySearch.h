@@ -57,17 +57,16 @@ namespace mozilla {
  *   Vector<int> sortedInts = ...
  *
  *   size_t match;
- *   if (BinarySearchIf(sortedInts, 0, sortedInts.length(), Comparator(13), &match)) {
- *     printf("found 13 at %lu\n", match);
+ *   if (BinarySearchIf(sortedInts, 0, sortedInts.length(), Comparator(13),
+ * &match)) { printf("found 13 at %lu\n", match);
  *   }
  *
  */
 
-template<typename Container, typename Comparator>
-bool
-BinarySearchIf(const Container& aContainer, size_t aBegin, size_t aEnd,
-               const Comparator& aCompare, size_t* aMatchOrInsertionPoint)
-{
+template <typename Container, typename Comparator>
+bool BinarySearchIf(const Container& aContainer, size_t aBegin, size_t aEnd,
+                    const Comparator& aCompare,
+                    size_t* aMatchOrInsertionPoint) {
   MOZ_ASSERT(aBegin <= aEnd);
 
   size_t low = aBegin;
@@ -97,13 +96,10 @@ BinarySearchIf(const Container& aContainer, size_t aBegin, size_t aEnd,
 
 namespace detail {
 
-template<class T>
-class BinarySearchDefaultComparator
-{
-public:
-  explicit BinarySearchDefaultComparator(const T& aTarget)
-    : mTarget(aTarget)
-  {}
+template <class T>
+class BinarySearchDefaultComparator {
+ public:
+  explicit BinarySearchDefaultComparator(const T& aTarget) : mTarget(aTarget) {}
 
   template <class U>
   int operator()(const U& aVal) const {
@@ -118,22 +114,20 @@ public:
     return 1;
   }
 
-private:
+ private:
   const T& mTarget;
 };
 
-} // namespace detail
+}  // namespace detail
 
 template <typename Container, typename T>
-bool
-BinarySearch(const Container& aContainer, size_t aBegin, size_t aEnd,
-             T aTarget, size_t* aMatchOrInsertionPoint)
-{
+bool BinarySearch(const Container& aContainer, size_t aBegin, size_t aEnd,
+                  T aTarget, size_t* aMatchOrInsertionPoint) {
   return BinarySearchIf(aContainer, aBegin, aEnd,
                         detail::BinarySearchDefaultComparator<T>(aTarget),
                         aMatchOrInsertionPoint);
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_BinarySearch_h
+#endif  // mozilla_BinarySearch_h

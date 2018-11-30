@@ -54,8 +54,8 @@ namespace base {
 // installers.
 enum {
   PROCESS_END_NORMAL_TERMINATON = 0,
-  PROCESS_END_KILLED_BY_USER    = 1,
-  PROCESS_END_PROCESS_WAS_HUNG  = 2
+  PROCESS_END_KILLED_BY_USER = 1,
+  PROCESS_END_PROCESS_WAS_HUNG = 2
 };
 
 // Returns the id of the current process.
@@ -117,7 +117,7 @@ struct LaunchOptions {
 
 #if defined(OS_LINUX)
   struct ForkDelegate {
-    virtual ~ForkDelegate() { }
+    virtual ~ForkDelegate() {}
     virtual pid_t Fork() = 0;
   };
 
@@ -139,8 +139,7 @@ struct LaunchOptions {
 // stored there on a successful launch.
 // NOTE: In this case, the caller is responsible for closing the handle so
 //       that it doesn't leak!
-bool LaunchApp(const std::wstring& cmdline,
-               const LaunchOptions& options,
+bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
                ProcessHandle* process_handle);
 
 #elif defined(OS_POSIX)
@@ -152,12 +151,10 @@ bool LaunchApp(const std::wstring& cmdline,
 // Note that the first argument in argv must point to the filename,
 // and must be fully specified (i.e., this will not search $PATH).
 bool LaunchApp(const std::vector<std::string>& argv,
-               const LaunchOptions& options,
-               ProcessHandle* process_handle);
+               const LaunchOptions& options, ProcessHandle* process_handle);
 
 // Deleter for the array of strings allocated within BuildEnvironmentArray.
-struct FreeEnvVarsArray
-{
+struct FreeEnvVarsArray {
   void operator()(char** array);
 };
 
@@ -170,8 +167,7 @@ EnvironmentArray BuildEnvironmentArray(const environment_map& env_vars_to_set);
 
 // Executes the application specified by cl. This function delegates to one
 // of the above two platform-specific functions.
-bool LaunchApp(const CommandLine& cl,
-               const LaunchOptions&,
+bool LaunchApp(const CommandLine& cl, const LaunchOptions&,
                ProcessHandle* process_handle);
 
 // Attempts to kill the process identified by the given process
@@ -193,11 +189,10 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle);
 
 namespace mozilla {
 
-class EnvironmentLog
-{
-public:
+class EnvironmentLog {
+ public:
   explicit EnvironmentLog(const char* varname) {
-    const char *e = getenv(varname);
+    const char* e = getenv(varname);
     if (e && *e) {
       fname_ = e;
     }
@@ -206,8 +201,7 @@ public:
   ~EnvironmentLog() {}
 
   void print(const char* format, ...) {
-    if (!fname_.size())
-      return;
+    if (!fname_.size()) return;
 
     FILE* f;
     if (fname_.compare("-") == 0) {
@@ -216,8 +210,7 @@ public:
       f = fopen(fname_.c_str(), "a");
     }
 
-    if (!f)
-      return;
+    if (!f) return;
 
     va_list a;
     va_start(a, format);
@@ -226,13 +219,13 @@ public:
     fclose(f);
   }
 
-private:
+ private:
   std::string fname_;
 
   DISALLOW_EVIL_CONSTRUCTORS(EnvironmentLog);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #if defined(OS_WIN)
 // Undo the windows.h damage

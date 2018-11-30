@@ -44,8 +44,7 @@ namespace recordreplay {
 
 typedef uint32_t HashNumber;
 
-class StableHashTableInfo
-{
+class StableHashTableInfo {
   // Information about a key in the table: the key pointer, along with the new
   // hash number we have generated for the key.
   struct KeyInfo {
@@ -83,7 +82,8 @@ class StableHashTableInfo
   bool mDestroyed;
 
   // Get an existing key in the table.
-  KeyInfo* FindKeyInfo(HashNumber aOriginalHash, const void* aKey, HashInfo** aHashInfo = nullptr) {
+  KeyInfo* FindKeyInfo(HashNumber aOriginalHash, const void* aKey,
+                       HashInfo** aHashInfo = nullptr) {
     HashToKeyMap::iterator iter = mHashToKey.find(aOriginalHash);
     MOZ_RELEASE_ASSERT(iter != mHashToKey.end());
 
@@ -99,30 +99,29 @@ class StableHashTableInfo
     MOZ_CRASH();
   }
 
-public:
+ public:
   StableHashTableInfo()
-    : mLastKey(nullptr)
-    , mLastNewHash(0)
-    , mHashGenerator(0)
-    , mCallbackStorage(nullptr)
-    , mDestroyed(false)
-  {
+      : mLastKey(nullptr),
+        mLastNewHash(0),
+        mHashGenerator(0),
+        mCallbackStorage(nullptr),
+        mDestroyed(false) {
     // Use AllocateMemory, as the result will have RWX permissions.
-    mCallbackStorage = (uint8_t*) AllocateMemory(CallbackStorageCapacity, MemoryKind::Tracked);
+    mCallbackStorage =
+        (uint8_t*)AllocateMemory(CallbackStorageCapacity, MemoryKind::Tracked);
 
     MarkValid();
   }
 
   ~StableHashTableInfo() {
     MOZ_RELEASE_ASSERT(mHashToKey.empty());
-    DeallocateMemory(mCallbackStorage, CallbackStorageCapacity, MemoryKind::Tracked);
+    DeallocateMemory(mCallbackStorage, CallbackStorageCapacity,
+                     MemoryKind::Tracked);
 
     UnmarkValid();
   }
 
-  bool IsDestroyed() {
-    return mDestroyed;
-  }
+  bool IsDestroyed() { return mDestroyed; }
 
   void MarkDestroyed() {
     MOZ_RELEASE_ASSERT(!IsDestroyed());
@@ -132,7 +131,10 @@ public:
   void AddKey(HashNumber aOriginalHash, const void* aKey, HashNumber aNewHash) {
     HashToKeyMap::iterator iter = mHashToKey.find(aOriginalHash);
     if (iter == mHashToKey.end()) {
-      iter = mHashToKey.insert(HashToKeyMap::value_type(aOriginalHash, MakeUnique<HashInfo>())).first;
+      iter = mHashToKey
+                 .insert(HashToKeyMap::value_type(aOriginalHash,
+                                                  MakeUnique<HashInfo>()))
+                 .first;
     }
     HashInfo* hashInfo = iter->second.get();
 
@@ -165,8 +167,7 @@ public:
   // aMatch() is true for, returning its new hash number if found.
   bool HasMatchingKey(HashNumber aOriginalHash,
                       const std::function<bool(const void*)>& aMatch,
-                      HashNumber* aNewHash)
-  {
+                      HashNumber* aNewHash) {
     HashToKeyMap::const_iterator iter = mHashToKey.find(aOriginalHash);
     if (iter != mHashToKey.end()) {
       HashInfo* hashInfo = iter->second.get();
@@ -187,10 +188,10 @@ public:
   }
 
   class Assembler : public recordreplay::Assembler {
-  public:
+   public:
     explicit Assembler(StableHashTableInfo& aInfo)
-      : recordreplay::Assembler(aInfo.mCallbackStorage, CallbackStorageCapacity)
-    {}
+        : recordreplay::Assembler(aInfo.mCallbackStorage,
+                                  CallbackStorageCapacity) {}
   };
 
   // Use the callback storage buffer to create a new function T which has one
@@ -199,8 +200,8 @@ public:
   template <typename S, typename T>
   void NewBoundFunction(Assembler& aAssembler, S aFunction, void* aArgument,
                         size_t aArgumentPosition, T* aTarget) {
-    void* nfn = BindFunctionArgument(BitwiseCast<void*>(aFunction), aArgument, aArgumentPosition,
-                                     aAssembler);
+    void* nfn = BindFunctionArgument(BitwiseCast<void*>(aFunction), aArgument,
+                                     aArgumentPosition, aAssembler);
     BitwiseCast(nfn, aTarget);
   }
 
@@ -214,9 +215,7 @@ public:
     return mLastNewHash;
   }
 
-  bool HasLastKey() {
-    return !!mLastKey;
-  }
+  bool HasLastKey() { return !!mLastKey; }
 
   HashNumber GetLastNewHash(const void* aKey) {
     MOZ_RELEASE_ASSERT(aKey == mLastKey);
@@ -276,8 +275,7 @@ SpinLock StableHashTableInfo::gHashInfosLock;
 // For each PLHashTable in the process, a PLHashTableInfo is generated. This
 // structure becomes the |allocPriv| for the table, handled by the new
 // callbacks given to it.
-struct PLHashTableInfo : public StableHashTableInfo
-{
+struct PLHashTableInfo : public StableHashTableInfo {
   // Original callbacks for the table.
   PLHashFunction mKeyHash;
   PLHashComparator mKeyCompare;
@@ -287,15 +285,14 @@ struct PLHashTableInfo : public StableHashTableInfo
   // Original private value for the table.
   void* mAllocPrivate;
 
-  PLHashTableInfo(PLHashFunction aKeyHash,
-                  PLHashComparator aKeyCompare, PLHashComparator aValueCompare,
+  PLHashTableInfo(PLHashFunction aKeyHash, PLHashComparator aKeyCompare,
+                  PLHashComparator aValueCompare,
                   const PLHashAllocOps* aAllocOps, void* aAllocPrivate)
-    : mKeyHash(aKeyHash),
-      mKeyCompare(aKeyCompare),
-      mValueCompare(aValueCompare),
-      mAllocOps(aAllocOps),
-      mAllocPrivate(aAllocPrivate)
-  {}
+      : mKeyHash(aKeyHash),
+        mKeyCompare(aKeyCompare),
+        mValueCompare(aValueCompare),
+        mAllocOps(aAllocOps),
+        mAllocPrivate(aAllocPrivate) {}
 
   static PLHashTableInfo* FromPrivate(void* aAllocPrivate) {
     PLHashTableInfo* info = reinterpret_cast<PLHashTableInfo*>(aAllocPrivate);
@@ -304,18 +301,14 @@ struct PLHashTableInfo : public StableHashTableInfo
   }
 };
 
-static void*
-WrapPLHashAllocTable(void* aAllocPrivate, PRSize aSize)
-{
+static void* WrapPLHashAllocTable(void* aAllocPrivate, PRSize aSize) {
   PLHashTableInfo* info = PLHashTableInfo::FromPrivate(aAllocPrivate);
   return info->mAllocOps
-         ? info->mAllocOps->allocTable(info->mAllocPrivate, aSize)
-         : malloc(aSize);
+             ? info->mAllocOps->allocTable(info->mAllocPrivate, aSize)
+             : malloc(aSize);
 }
 
-static void
-WrapPLHashFreeTable(void* aAllocPrivate, void* aItem)
-{
+static void WrapPLHashFreeTable(void* aAllocPrivate, void* aItem) {
   PLHashTableInfo* info = PLHashTableInfo::FromPrivate(aAllocPrivate);
   if (info->mAllocOps) {
     info->mAllocOps->freeTable(info->mAllocPrivate, aItem);
@@ -324,9 +317,8 @@ WrapPLHashFreeTable(void* aAllocPrivate, void* aItem)
   }
 }
 
-static PLHashEntry*
-WrapPLHashAllocEntry(void* aAllocPrivate, const void* aKey)
-{
+static PLHashEntry* WrapPLHashAllocEntry(void* aAllocPrivate,
+                                         const void* aKey) {
   PLHashTableInfo* info = PLHashTableInfo::FromPrivate(aAllocPrivate);
 
   if (info->HasLastKey()) {
@@ -341,13 +333,12 @@ WrapPLHashAllocEntry(void* aAllocPrivate, const void* aKey)
   }
 
   return info->mAllocOps
-         ? info->mAllocOps->allocEntry(info->mAllocPrivate, aKey)
-         : (PLHashEntry*) malloc(sizeof(PLHashEntry));
+             ? info->mAllocOps->allocEntry(info->mAllocPrivate, aKey)
+             : (PLHashEntry*)malloc(sizeof(PLHashEntry));
 }
 
-static void
-WrapPLHashFreeEntry(void *aAllocPrivate, PLHashEntry *he, PRUintn flag)
-{
+static void WrapPLHashFreeEntry(void* aAllocPrivate, PLHashEntry* he,
+                                PRUintn flag) {
   PLHashTableInfo* info = PLHashTableInfo::FromPrivate(aAllocPrivate);
 
   // Ignore empty tables, due to the raw table manipulation described above.
@@ -364,46 +355,40 @@ WrapPLHashFreeEntry(void *aAllocPrivate, PLHashEntry *he, PRUintn flag)
 }
 
 static PLHashAllocOps gWrapPLHashAllocOps = {
-  WrapPLHashAllocTable, WrapPLHashFreeTable,
-  WrapPLHashAllocEntry, WrapPLHashFreeEntry
-};
+    WrapPLHashAllocTable, WrapPLHashFreeTable, WrapPLHashAllocEntry,
+    WrapPLHashFreeEntry};
 
-static uint32_t
-PLHashComputeHash(void* aKey, PLHashTableInfo* aInfo)
-{
+static uint32_t PLHashComputeHash(void* aKey, PLHashTableInfo* aInfo) {
   MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   uint32_t originalHash = aInfo->mKeyHash(aKey);
   HashNumber newHash;
   if (aInfo->HasMatchingKey(originalHash,
                             [=](const void* aExistingKey) {
                               return aInfo->mKeyCompare(aKey, aExistingKey);
-                            }, &newHash)) {
+                            },
+                            &newHash)) {
     return newHash;
   }
   return aInfo->SetLastKey(aKey);
 }
 
-void
-GeneratePLHashTableCallbacks(PLHashFunction* aKeyHash,
-                             PLHashComparator* aKeyCompare,
-                             PLHashComparator* aValueCompare,
-                             const PLHashAllocOps** aAllocOps,
-                             void** aAllocPrivate)
-{
-  PLHashTableInfo* info = new PLHashTableInfo(*aKeyHash, *aKeyCompare, *aValueCompare,
-                                              *aAllocOps, *aAllocPrivate);
+void GeneratePLHashTableCallbacks(PLHashFunction* aKeyHash,
+                                  PLHashComparator* aKeyCompare,
+                                  PLHashComparator* aValueCompare,
+                                  const PLHashAllocOps** aAllocOps,
+                                  void** aAllocPrivate) {
+  PLHashTableInfo* info = new PLHashTableInfo(
+      *aKeyHash, *aKeyCompare, *aValueCompare, *aAllocOps, *aAllocPrivate);
   PLHashTableInfo::Assembler assembler(*info);
   info->NewBoundFunction(assembler, PLHashComputeHash, info, 1, aKeyHash);
   *aAllocOps = &gWrapPLHashAllocOps;
   *aAllocPrivate = info;
 }
 
-void
-DestroyPLHashTableCallbacks(void* aAllocPrivate)
-{
+void DestroyPLHashTableCallbacks(void* aAllocPrivate) {
   PLHashTableInfo* info = PLHashTableInfo::FromPrivate(aAllocPrivate);
   info->MarkDestroyed();
-  //delete info;
+  // delete info;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -412,23 +397,20 @@ DestroyPLHashTableCallbacks(void* aAllocPrivate)
 
 // For each PLDHashTable in the process, a PLDHashTableInfo is generated. This
 // structure is supplied to its callbacks using bound functions.
-struct PLDHashTableInfo : public StableHashTableInfo
-{
+struct PLDHashTableInfo : public StableHashTableInfo {
   // Original callbacks for the table.
   const PLDHashTableOps* mOps;
 
   // Wrapper callbacks for the table.
   PLDHashTableOps mNewOps;
 
-  explicit PLDHashTableInfo(const PLDHashTableOps* aOps)
-    : mOps(aOps)
-  {
+  explicit PLDHashTableInfo(const PLDHashTableOps* aOps) : mOps(aOps) {
     PodZero(&mNewOps);
   }
 
   static PLDHashTableInfo* MaybeFromOps(const PLDHashTableOps* aOps) {
-    PLDHashTableInfo* res = reinterpret_cast<PLDHashTableInfo*>
-      ((uint8_t*)aOps - offsetof(PLDHashTableInfo, mNewOps));
+    PLDHashTableInfo* res = reinterpret_cast<PLDHashTableInfo*>(
+        (uint8_t*)aOps - offsetof(PLDHashTableInfo, mNewOps));
     if (res->IsValid()) {
       MOZ_RELEASE_ASSERT(!res->IsDestroyed());
       return res;
@@ -443,25 +425,26 @@ struct PLDHashTableInfo : public StableHashTableInfo
   }
 };
 
-static PLDHashNumber
-PLDHashTableComputeHash(const void* aKey, PLDHashTableInfo* aInfo)
-{
+static PLDHashNumber PLDHashTableComputeHash(const void* aKey,
+                                             PLDHashTableInfo* aInfo) {
   MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   uint32_t originalHash = aInfo->mOps->hashKey(aKey);
   HashNumber newHash;
   if (aInfo->HasMatchingKey(originalHash,
                             [=](const void* aExistingKey) {
-                              return aInfo->mOps->matchEntry((PLDHashEntryHdr*) aExistingKey, aKey);
-                            }, &newHash)) {
+                              return aInfo->mOps->matchEntry(
+                                  (PLDHashEntryHdr*)aExistingKey, aKey);
+                            },
+                            &newHash)) {
     return newHash;
   }
   return aInfo->SetLastKey(aKey);
 }
 
-static void
-PLDHashTableMoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo,
-                      PLDHashTableInfo* aInfo)
-{
+static void PLDHashTableMoveEntry(PLDHashTable* aTable,
+                                  const PLDHashEntryHdr* aFrom,
+                                  PLDHashEntryHdr* aTo,
+                                  PLDHashTableInfo* aInfo) {
   MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   aInfo->mOps->moveEntry(aTable, aFrom, aTo);
 
@@ -472,9 +455,9 @@ PLDHashTableMoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHas
   aInfo->AddKey(originalHash, aTo, newHash);
 }
 
-static void
-PLDHashTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PLDHashTableInfo* aInfo)
-{
+static void PLDHashTableClearEntry(PLDHashTable* aTable,
+                                   PLDHashEntryHdr* aEntry,
+                                   PLDHashTableInfo* aInfo) {
   MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   aInfo->mOps->clearEntry(aTable, aEntry);
 
@@ -482,9 +465,8 @@ PLDHashTableClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PLDHashTab
   aInfo->RemoveKey(originalHash, aEntry);
 }
 
-static void
-PLDHashTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey, PLDHashTableInfo* aInfo)
-{
+static void PLDHashTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey,
+                                  PLDHashTableInfo* aInfo) {
   MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
 
   if (aInfo->mOps->initEntry) {
@@ -498,29 +480,33 @@ PLDHashTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey, PLDHashTableInf
 extern "C" {
 
 MOZ_EXPORT const PLDHashTableOps*
-RecordReplayInterface_InternalGeneratePLDHashTableCallbacks(const PLDHashTableOps* aOps)
-{
+RecordReplayInterface_InternalGeneratePLDHashTableCallbacks(
+    const PLDHashTableOps* aOps) {
   PLDHashTableInfo* info = new PLDHashTableInfo(aOps);
   PLDHashTableInfo::Assembler assembler(*info);
-  info->NewBoundFunction(assembler, PLDHashTableComputeHash, info, 1, &info->mNewOps.hashKey);
+  info->NewBoundFunction(assembler, PLDHashTableComputeHash, info, 1,
+                         &info->mNewOps.hashKey);
   info->mNewOps.matchEntry = aOps->matchEntry;
-  info->NewBoundFunction(assembler, PLDHashTableMoveEntry, info, 3, &info->mNewOps.moveEntry);
-  info->NewBoundFunction(assembler, PLDHashTableClearEntry, info, 2, &info->mNewOps.clearEntry);
-  info->NewBoundFunction(assembler, PLDHashTableInitEntry, info, 2, &info->mNewOps.initEntry);
+  info->NewBoundFunction(assembler, PLDHashTableMoveEntry, info, 3,
+                         &info->mNewOps.moveEntry);
+  info->NewBoundFunction(assembler, PLDHashTableClearEntry, info, 2,
+                         &info->mNewOps.clearEntry);
+  info->NewBoundFunction(assembler, PLDHashTableInitEntry, info, 2,
+                         &info->mNewOps.initEntry);
   return &info->mNewOps;
 }
 
 MOZ_EXPORT const PLDHashTableOps*
-RecordReplayInterface_InternalUnwrapPLDHashTableCallbacks(const PLDHashTableOps* aOps)
-{
+RecordReplayInterface_InternalUnwrapPLDHashTableCallbacks(
+    const PLDHashTableOps* aOps) {
   PLDHashTableInfo* info = PLDHashTableInfo::FromOps(aOps);
   return info->mOps;
 }
 
-MOZ_EXPORT void
-RecordReplayInterface_InternalDestroyPLDHashTableCallbacks(const PLDHashTableOps* aOps)
-{
-  // Primordial PLDHashTables used in the copy constructor might not have any ops.
+MOZ_EXPORT void RecordReplayInterface_InternalDestroyPLDHashTableCallbacks(
+    const PLDHashTableOps* aOps) {
+  // Primordial PLDHashTables used in the copy constructor might not have any
+  // ops.
   if (!aOps) {
     return;
   }
@@ -532,20 +518,18 @@ RecordReplayInterface_InternalDestroyPLDHashTableCallbacks(const PLDHashTableOps
   if (info) {
     info->MarkDestroyed();
   }
-  //delete info;
+  // delete info;
 }
 
-MOZ_EXPORT void
-RecordReplayInterface_InternalMovePLDHashTableContents(const PLDHashTableOps* aFirstOps,
-                                                       const PLDHashTableOps* aSecondOps)
-{
+MOZ_EXPORT void RecordReplayInterface_InternalMovePLDHashTableContents(
+    const PLDHashTableOps* aFirstOps, const PLDHashTableOps* aSecondOps) {
   PLDHashTableInfo* firstInfo = PLDHashTableInfo::FromOps(aFirstOps);
   PLDHashTableInfo* secondInfo = PLDHashTableInfo::FromOps(aSecondOps);
 
   secondInfo->MoveContentsFrom(*firstInfo);
 }
 
-} // extern "C"
+}  // extern "C"
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla

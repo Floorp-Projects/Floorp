@@ -14,17 +14,15 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Link.h"
 
-class mock_Link : public mozilla::dom::Link
-{
-public:
+class mock_Link : public mozilla::dom::Link {
+ public:
   NS_DECL_ISUPPORTS
 
   explicit mock_Link(void (*aHandlerFunction)(nsLinkState),
                      bool aRunNextTest = true)
-  : mozilla::dom::Link()
-  , mHandler(aHandlerFunction)
-  , mRunNextTest(aRunNextTest)
-  {
+      : mozilla::dom::Link(),
+        mHandler(aHandlerFunction),
+        mRunNextTest(aRunNextTest) {
     // Create a cyclic ownership, so that the link will be released only
     // after its status has been updated.  This will ensure that, when it should
     // run the next test, it will happen at the end of the test function, if
@@ -33,8 +31,7 @@ public:
     mDeathGrip = this;
   }
 
-  virtual void SetLinkState(nsLinkState aState) override
-  {
+  virtual void SetLinkState(nsLinkState aState) override {
     // Notify our callback function.
     mHandler(aState);
 
@@ -42,15 +39,14 @@ public:
     mDeathGrip = nullptr;
   }
 
-  virtual size_t SizeOfExcludingThis(mozilla::SizeOfState& aState)
-    const override
-  {
-    return 0;   // the value shouldn't matter
+  virtual size_t SizeOfExcludingThis(
+      mozilla::SizeOfState& aState) const override {
+    return 0;  // the value shouldn't matter
   }
 
   void NodeInfoChanged(nsIDocument* aOldDoc) final {}
 
-protected:
+ protected:
   ~mock_Link() {
     // Run the next test if we are supposed to.
     if (mRunNextTest) {
@@ -58,15 +54,12 @@ protected:
     }
   }
 
-private:
+ private:
   void (*mHandler)(nsLinkState);
   bool mRunNextTest;
   RefPtr<Link> mDeathGrip;
 };
 
-NS_IMPL_ISUPPORTS(
-  mock_Link,
-  mozilla::dom::Link
-)
+NS_IMPL_ISUPPORTS(mock_Link, mozilla::dom::Link)
 
-#endif // mock_Link_h__
+#endif  // mock_Link_h__

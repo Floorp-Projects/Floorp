@@ -16,20 +16,16 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsTraversal::nsTraversal(nsINode *aRoot,
-                         uint32_t aWhatToShow,
-                         NodeFilter* aFilter) :
-    mRoot(aRoot),
-    mWhatToShow(aWhatToShow),
-    mFilter(aFilter),
-    mInAcceptNode(false)
-{
-    NS_ASSERTION(aRoot, "invalid root in call to nsTraversal constructor");
+nsTraversal::nsTraversal(nsINode* aRoot, uint32_t aWhatToShow,
+                         NodeFilter* aFilter)
+    : mRoot(aRoot),
+      mWhatToShow(aWhatToShow),
+      mFilter(aFilter),
+      mInAcceptNode(false) {
+  NS_ASSERTION(aRoot, "invalid root in call to nsTraversal constructor");
 }
 
-nsTraversal::~nsTraversal()
-{
-    /* destructor code */
+nsTraversal::~nsTraversal() { /* destructor code */
 }
 
 /*
@@ -39,29 +35,27 @@ nsTraversal::~nsTraversal()
  * @param aResult   Whether we succeeded
  * @returns         Filtervalue. See NodeFilter.webidl
  */
-int16_t
-nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult)
-{
-    if (mInAcceptNode) {
-        aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-        return 0;
-    }
+int16_t nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult) {
+  if (mInAcceptNode) {
+    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return 0;
+  }
 
-    uint16_t nodeType = aNode->NodeType();
+  uint16_t nodeType = aNode->NodeType();
 
-    if (nodeType <= 12 && !((1 << (nodeType-1)) & mWhatToShow)) {
-        return NodeFilter_Binding::FILTER_SKIP;
-    }
+  if (nodeType <= 12 && !((1 << (nodeType - 1)) & mWhatToShow)) {
+    return NodeFilter_Binding::FILTER_SKIP;
+  }
 
-    if (!mFilter) {
-        // No filter, just accept
-        return NodeFilter_Binding::FILTER_ACCEPT;
-    }
+  if (!mFilter) {
+    // No filter, just accept
+    return NodeFilter_Binding::FILTER_ACCEPT;
+  }
 
-    AutoRestore<bool> inAcceptNode(mInAcceptNode);
-    mInAcceptNode = true;
-    // No need to pass in an execution reason, since the generated default,
-    // "NodeFilter.acceptNode", is pretty much exactly what we'd say anyway.
-    return mFilter->AcceptNode(*aNode, aResult, nullptr,
-                               CallbackObject::eRethrowExceptions);
+  AutoRestore<bool> inAcceptNode(mInAcceptNode);
+  mInAcceptNode = true;
+  // No need to pass in an execution reason, since the generated default,
+  // "NodeFilter.acceptNode", is pretty much exactly what we'd say anyway.
+  return mFilter->AcceptNode(*aNode, aResult, nullptr,
+                             CallbackObject::eRethrowExceptions);
 }

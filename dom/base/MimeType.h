@@ -12,35 +12,40 @@
 #include "nsDataHashtable.h"
 #include "nsTArray.h"
 
-template<typename char_type> struct HashKeyType;
-template<> struct HashKeyType<char16_t> { typedef nsStringHashKey HashType; };
-template<> struct HashKeyType<char> { typedef nsCStringHashKey HashType; };
+template <typename char_type>
+struct HashKeyType;
+template <>
+struct HashKeyType<char16_t> {
+  typedef nsStringHashKey HashType;
+};
+template <>
+struct HashKeyType<char> {
+  typedef nsCStringHashKey HashType;
+};
 
 template <typename char_type>
-class TMimeType final
-{
-private:
-  class ParameterValue : public nsTString<char_type>
-  {
-  public:
+class TMimeType final {
+ private:
+  class ParameterValue : public nsTString<char_type> {
+   public:
     bool mRequiresQuoting;
 
-    ParameterValue()
-      : mRequiresQuoting(false)
-    {}
+    ParameterValue() : mRequiresQuoting(false) {}
   };
 
   nsTString<char_type> mType;
   nsTString<char_type> mSubtype;
-  nsDataHashtable<typename HashKeyType<char_type>::HashType, ParameterValue> mParameters;
+  nsDataHashtable<typename HashKeyType<char_type>::HashType, ParameterValue>
+      mParameters;
   nsTArray<nsTString<char_type>> mParameterNames;
 
-public:
-  TMimeType(const nsTSubstring<char_type>& aType, const nsTSubstring<char_type>& aSubtype)
-    : mType(aType), mSubtype(aSubtype)
-  {}
+ public:
+  TMimeType(const nsTSubstring<char_type>& aType,
+            const nsTSubstring<char_type>& aSubtype)
+      : mType(aType), mSubtype(aSubtype) {}
 
-  static mozilla::UniquePtr<TMimeType<char_type>> Parse(const nsTSubstring<char_type>& aStr);
+  static mozilla::UniquePtr<TMimeType<char_type>> Parse(
+      const nsTSubstring<char_type>& aStr);
 
   void Serialize(nsTSubstring<char_type>& aStr) const;
 
@@ -69,4 +74,4 @@ public:
 using MimeType = TMimeType<char16_t>;
 using CMimeType = TMimeType<char>;
 
-#endif // mozilla_dom_MimeType_h
+#endif  // mozilla_dom_MimeType_h

@@ -12,9 +12,7 @@
 BEGIN_QUOTA_NAMESPACE
 
 template <class FileStreamBase>
-NS_IMETHODIMP
-FileQuotaStream<FileStreamBase>::SetEOF()
-{
+NS_IMETHODIMP FileQuotaStream<FileStreamBase>::SetEOF() {
   nsresult rv = FileStreamBase::SetEOF();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -30,9 +28,7 @@ FileQuotaStream<FileStreamBase>::SetEOF()
 }
 
 template <class FileStreamBase>
-NS_IMETHODIMP
-FileQuotaStream<FileStreamBase>::Close()
-{
+NS_IMETHODIMP FileQuotaStream<FileStreamBase>::Close() {
   nsresult rv = FileStreamBase::Close();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -42,15 +38,13 @@ FileQuotaStream<FileStreamBase>::Close()
 }
 
 template <class FileStreamBase>
-nsresult
-FileQuotaStream<FileStreamBase>::DoOpen()
-{
+nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
   QuotaManager* quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
   NS_ASSERTION(!mQuotaObject, "Creating quota object more than once?");
-  mQuotaObject = quotaManager->GetQuotaObject(mPersistenceType, mGroup, mOrigin,
-    FileStreamBase::mOpenParams.localFile);
+  mQuotaObject = quotaManager->GetQuotaObject(
+      mPersistenceType, mGroup, mOrigin, FileStreamBase::mOpenParams.localFile);
 
   nsresult rv = FileStreamBase::DoOpen();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -63,11 +57,8 @@ FileQuotaStream<FileStreamBase>::DoOpen()
 }
 
 template <class FileStreamBase>
-NS_IMETHODIMP
-FileQuotaStreamWithWrite<FileStreamBase>::Write(const char* aBuf,
-                                                uint32_t aCount,
-                                                uint32_t* _retval)
-{
+NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
+    const char* aBuf, uint32_t aCount, uint32_t* _retval) {
   nsresult rv;
 
   if (FileQuotaStreamWithWrite::mQuotaObject) {
@@ -77,9 +68,9 @@ FileQuotaStreamWithWrite<FileStreamBase>::Write(const char* aBuf,
 
     MOZ_ASSERT(INT64_MAX - offset >= int64_t(aCount));
 
-    if (!FileQuotaStreamWithWrite::
-         mQuotaObject->MaybeUpdateSize(offset + int64_t(aCount),
-                                       /* aTruncate */ false)) {
+    if (!FileQuotaStreamWithWrite::mQuotaObject->MaybeUpdateSize(
+            offset + int64_t(aCount),
+            /* aTruncate */ false)) {
       return NS_ERROR_FILE_NO_DEVICE_SPACE;
     }
   }
@@ -90,49 +81,35 @@ FileQuotaStreamWithWrite<FileStreamBase>::Write(const char* aBuf,
   return NS_OK;
 }
 
-already_AddRefed<FileInputStream>
-CreateFileInputStream(PersistenceType aPersistenceType,
-                      const nsACString& aGroup,
-                      const nsACString& aOrigin,
-                      nsIFile* aFile,
-                      int32_t aIOFlags,
-                      int32_t aPerm,
-                      int32_t aBehaviorFlags)
-{
+already_AddRefed<FileInputStream> CreateFileInputStream(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
+    int32_t aBehaviorFlags) {
   RefPtr<FileInputStream> stream =
-    new FileInputStream(aPersistenceType, aGroup, aOrigin);
+      new FileInputStream(aPersistenceType, aGroup, aOrigin);
   nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();
 }
 
-already_AddRefed<FileOutputStream>
-CreateFileOutputStream(PersistenceType aPersistenceType,
-                       const nsACString& aGroup,
-                       const nsACString& aOrigin,
-                       nsIFile* aFile,
-                       int32_t aIOFlags,
-                       int32_t aPerm,
-                       int32_t aBehaviorFlags)
-{
+already_AddRefed<FileOutputStream> CreateFileOutputStream(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
+    int32_t aBehaviorFlags) {
   RefPtr<FileOutputStream> stream =
-    new FileOutputStream(aPersistenceType, aGroup, aOrigin);
+      new FileOutputStream(aPersistenceType, aGroup, aOrigin);
   nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();
 }
 
-already_AddRefed<FileStream>
-CreateFileStream(PersistenceType aPersistenceType,
-                 const nsACString& aGroup,
-                 const nsACString& aOrigin,
-                 nsIFile* aFile,
-                 int32_t aIOFlags,
-                 int32_t aPerm,
-                 int32_t aBehaviorFlags)
-{
-  RefPtr<FileStream> stream =
-    new FileStream(aPersistenceType, aGroup, aOrigin);
+already_AddRefed<FileStream> CreateFileStream(PersistenceType aPersistenceType,
+                                              const nsACString& aGroup,
+                                              const nsACString& aOrigin,
+                                              nsIFile* aFile, int32_t aIOFlags,
+                                              int32_t aPerm,
+                                              int32_t aBehaviorFlags) {
+  RefPtr<FileStream> stream = new FileStream(aPersistenceType, aGroup, aOrigin);
   nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return stream.forget();

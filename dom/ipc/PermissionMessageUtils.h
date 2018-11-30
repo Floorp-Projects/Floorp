@@ -13,56 +13,47 @@
 
 namespace IPC {
 
-template<>
-struct ParamTraits<nsIPrincipal>
-{
+template <>
+struct ParamTraits<nsIPrincipal> {
   static void Write(Message* aMsg, nsIPrincipal* aParam);
-  static bool Read(const Message* aMsg, PickleIterator* aIter, RefPtr<nsIPrincipal>* aResult);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   RefPtr<nsIPrincipal>* aResult);
 };
 
 /**
  * Legacy IPC::Principal type. Use nsIPrincipal directly in new IPDL code.
  */
-class Principal
-{
+class Principal {
   friend struct ParamTraits<Principal>;
 
-public:
-  Principal()
-    : mPrincipal(nullptr)
-  {}
+ public:
+  Principal() : mPrincipal(nullptr) {}
 
-  explicit Principal(nsIPrincipal* aPrincipal)
-    : mPrincipal(aPrincipal)
-  {}
+  explicit Principal(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {}
 
   operator nsIPrincipal*() const { return mPrincipal.get(); }
 
-  Principal& operator=(const Principal& aOther)
-  {
+  Principal& operator=(const Principal& aOther) {
     mPrincipal = aOther.mPrincipal;
     return *this;
   }
 
-private:
+ private:
   RefPtr<nsIPrincipal> mPrincipal;
 };
 
 template <>
-struct ParamTraits<Principal>
-{
+struct ParamTraits<Principal> {
   typedef Principal paramType;
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
+  static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mPrincipal);
   }
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
-  {
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mPrincipal);
   }
 };
 
-} // namespace IPC
+}  // namespace IPC
 
-#endif // mozilla_dom_permission_message_utils_h__
-
+#endif  // mozilla_dom_permission_message_utils_h__

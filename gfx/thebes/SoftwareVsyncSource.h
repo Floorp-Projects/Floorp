@@ -14,11 +14,10 @@
 #include "nsISupportsImpl.h"
 #include "VsyncSource.h"
 
-class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display
-{
+class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SoftwareDisplay)
 
-public:
+ public:
   SoftwareDisplay();
   virtual void EnableVsync() override;
   virtual void DisableVsync() override;
@@ -29,33 +28,32 @@ public:
   void ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp);
   void Shutdown() override;
 
-protected:
+ protected:
   ~SoftwareDisplay();
 
-private:
+ private:
   mozilla::TimeDuration mVsyncRate;
   // Use a chromium thread because nsITimers* fire on the main thread
   base::Thread* mVsyncThread;
-  RefPtr<mozilla::CancelableRunnable> mCurrentVsyncTask; // only access on vsync thread
-  bool mVsyncEnabled; // Only access on main thread
-}; // SoftwareDisplay
+  RefPtr<mozilla::CancelableRunnable>
+      mCurrentVsyncTask;  // only access on vsync thread
+  bool mVsyncEnabled;     // Only access on main thread
+};                        // SoftwareDisplay
 
 // Fallback option to use a software timer to mimic vsync. Useful for gtests
 // To mimic a hardware vsync thread, we create a dedicated software timer
 // vsync thread.
-class SoftwareVsyncSource : public mozilla::gfx::VsyncSource
-{
-public:
+class SoftwareVsyncSource : public mozilla::gfx::VsyncSource {
+ public:
   SoftwareVsyncSource();
   ~SoftwareVsyncSource();
 
-  virtual Display& GetGlobalDisplay() override
-  {
+  virtual Display& GetGlobalDisplay() override {
     MOZ_ASSERT(mGlobalDisplay != nullptr);
     return *mGlobalDisplay;
   }
 
-private:
+ private:
   RefPtr<SoftwareDisplay> mGlobalDisplay;
 };
 

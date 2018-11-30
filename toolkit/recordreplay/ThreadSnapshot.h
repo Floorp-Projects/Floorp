@@ -52,8 +52,7 @@ namespace recordreplay {
 bool SaveThreadState(size_t aId, int* aStackSeparator);
 
 // Information saved about the state of a thread.
-struct SavedThreadStack
-{
+struct SavedThreadStack {
   // Saved stack pointer.
   void* mStackPointer;
 
@@ -64,10 +63,7 @@ struct SavedThreadStack
   // Saved register state.
   jmp_buf mRegisters;
 
-  SavedThreadStack()
-  {
-    PodZero(this);
-  }
+  SavedThreadStack() { PodZero(this); }
 
   void ReleaseContents() {
     if (mStackBytes) {
@@ -76,14 +72,12 @@ struct SavedThreadStack
   }
 };
 
-struct SavedCheckpoint
-{
+struct SavedCheckpoint {
   CheckpointId mCheckpoint;
   SavedThreadStack mStacks[MaxRecordedThreadId];
 
   explicit SavedCheckpoint(CheckpointId aCheckpoint)
-    : mCheckpoint(aCheckpoint)
-  {}
+      : mCheckpoint(aCheckpoint) {}
 
   void ReleaseContents() {
     for (SavedThreadStack& stack : mStacks) {
@@ -113,7 +107,7 @@ void RestoreThreadStack(size_t aId);
 // Initialize state for taking thread snapshots.
 void InitializeThreadSnapshots(size_t aNumThreads);
 
-} // namespace recordreplay
-} // namespace mozilla
+}  // namespace recordreplay
+}  // namespace mozilla
 
-#endif // mozilla_recordreplay_ThreadSnapshot_h
+#endif  // mozilla_recordreplay_ThreadSnapshot_h

@@ -11,14 +11,19 @@
 #include "nsStyleStruct.h"
 
 namespace mozilla {
-  #define STYLE_STRUCT(name_) struct Gecko##name_ {nsStyle##name_ gecko;};
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
-}
-
 #define STYLE_STRUCT(name_) \
-  const nsStyle##name_* ServoComputedData::GetStyle##name_() const { return &name_.mPtr->gecko; }
+  struct Gecko##name_ {     \
+    nsStyle##name_ gecko;   \
+  };
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+}  // namespace mozilla
+
+#define STYLE_STRUCT(name_)                                          \
+  const nsStyle##name_* ServoComputedData::GetStyle##name_() const { \
+    return &name_.mPtr->gecko;                                       \
+  }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-#endif // mozilla_ServoComputedDataInlines_h
+#endif  // mozilla_ServoComputedDataInlines_h

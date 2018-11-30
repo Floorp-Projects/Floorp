@@ -17,12 +17,11 @@ namespace js {
 
 class GlobalObject;
 
-extern JSObject*
-InitBooleanClass(JSContext* cx, js::Handle<GlobalObject*> global);
+extern JSObject* InitBooleanClass(JSContext* cx,
+                                  js::Handle<GlobalObject*> global);
 
-extern JSString*
-BooleanToString(JSContext* cx, bool b);
+extern JSString* BooleanToString(JSContext* cx, bool b);
 
-} // namespace js
+}  // namespace js
 
 #endif /* builtin_Boolean_h */

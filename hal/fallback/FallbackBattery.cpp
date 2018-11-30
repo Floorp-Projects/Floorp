@@ -10,21 +10,15 @@
 namespace mozilla {
 namespace hal_impl {
 
-void
-EnableBatteryNotifications()
-{}
+void EnableBatteryNotifications() {}
 
-void
-DisableBatteryNotifications()
-{}
+void DisableBatteryNotifications() {}
 
-void
-GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
-{
+void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo) {
   aBatteryInfo->level() = dom::battery::kDefaultLevel;
   aBatteryInfo->charging() = dom::battery::kDefaultCharging;
   aBatteryInfo->remainingTime() = dom::battery::kDefaultRemainingTime;
 }
 
-} // hal_impl
-} // namespace mozilla
+}  // namespace hal_impl
+}  // namespace mozilla

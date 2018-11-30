@@ -37,9 +37,7 @@ using namespace JS;
 using namespace mozilla::scache;
 using mozilla::UniquePtr;
 
-void
-WaitForStartupTimer()
-{
+void WaitForStartupTimer() {
   StartupCache* sc = StartupCache::GetSingleton();
   PR_Sleep(10 * PR_TicksPerSecond());
 
@@ -52,17 +50,15 @@ WaitForStartupTimer()
   }
 }
 
-class TestStartupCache : public ::testing::Test
-{
-protected:
+class TestStartupCache : public ::testing::Test {
+ protected:
   TestStartupCache();
   ~TestStartupCache();
 
   nsCOMPtr<nsIFile> mSCFile;
 };
 
-TestStartupCache::TestStartupCache()
-{
+TestStartupCache::TestStartupCache() {
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mSCFile));
   mSCFile->AppendNative(NS_LITERAL_CSTRING("test-startupcache.tmp"));
 #ifdef XP_WIN
@@ -79,15 +75,12 @@ TestStartupCache::TestStartupCache()
 #endif
   StartupCache::GetSingleton()->InvalidateCache();
 }
-TestStartupCache::~TestStartupCache()
-{
+TestStartupCache::~TestStartupCache() {
   PR_SetEnv("MOZ_STARTUP_CACHE=");
   StartupCache::GetSingleton()->InvalidateCache();
 }
 
-
-TEST_F(TestStartupCache, StartupWriteRead)
-{
+TEST_F(TestStartupCache, StartupWriteRead) {
   nsresult rv;
   StartupCache* sc = StartupCache::GetSingleton();
 
@@ -112,8 +105,7 @@ TEST_F(TestStartupCache, StartupWriteRead)
   EXPECT_STREQ(buf, outbuf.get());
 }
 
-TEST_F(TestStartupCache, WriteInvalidateRead)
-{
+TEST_F(TestStartupCache, WriteInvalidateRead) {
   nsresult rv;
   const char* buf = "BeardBook competitive analysis";
   const char* id = "id";
@@ -131,16 +123,13 @@ TEST_F(TestStartupCache, WriteInvalidateRead)
   EXPECT_EQ(rv, NS_ERROR_NOT_AVAILABLE);
 }
 
-TEST_F(TestStartupCache, WriteObject)
-{
+TEST_F(TestStartupCache, WriteObject) {
   nsresult rv;
 
   nsCOMPtr<nsIURI> obj;
 
   NS_NAMED_LITERAL_CSTRING(spec, "http://www.mozilla.org");
-  rv = NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
-         .SetSpec(spec)
-         .Finalize(obj);
+  rv = NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID).SetSpec(spec).Finalize(obj);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   StartupCache* sc = StartupCache::GetSingleton();
@@ -150,19 +139,18 @@ TEST_F(TestStartupCache, WriteObject)
   // StartupCache::GetSingleton in debug builds, and we
   // don't have access to that here. Obviously.
   const char* id = "id";
-  nsCOMPtr<nsIStorageStream> storageStream
-    = do_CreateInstance("@mozilla.org/storagestream;1");
+  nsCOMPtr<nsIStorageStream> storageStream =
+      do_CreateInstance("@mozilla.org/storagestream;1");
   ASSERT_TRUE(storageStream);
 
-  rv = storageStream->Init(256, (uint32_t) -1);
+  rv = storageStream->Init(256, (uint32_t)-1);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-  nsCOMPtr<nsIObjectOutputStream> objectOutput
-    = do_CreateInstance("@mozilla.org/binaryoutputstream;1");
+  nsCOMPtr<nsIObjectOutputStream> objectOutput =
+      do_CreateInstance("@mozilla.org/binaryoutputstream;1");
   ASSERT_TRUE(objectOutput);
 
-  nsCOMPtr<nsIOutputStream> outputStream
-    = do_QueryInterface(storageStream);
+  nsCOMPtr<nsIOutputStream> outputStream = do_QueryInterface(storageStream);
 
   rv = objectOutput->SetOutputStream(outputStream);
   EXPECT_TRUE(NS_SUCCEEDED(rv));

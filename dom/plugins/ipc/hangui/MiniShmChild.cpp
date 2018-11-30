@@ -13,18 +13,16 @@ namespace mozilla {
 namespace plugins {
 
 MiniShmChild::MiniShmChild()
-  : mParentEvent(nullptr),
-    mParentGuard(nullptr),
-    mChildEvent(nullptr),
-    mChildGuard(nullptr),
-    mFileMapping(nullptr),
-    mRegWait(nullptr),
-    mView(nullptr),
-    mTimeout(INFINITE)
-{}
+    : mParentEvent(nullptr),
+      mParentGuard(nullptr),
+      mChildEvent(nullptr),
+      mChildGuard(nullptr),
+      mFileMapping(nullptr),
+      mRegWait(nullptr),
+      mView(nullptr),
+      mTimeout(INFINITE) {}
 
-MiniShmChild::~MiniShmChild()
-{
+MiniShmChild::~MiniShmChild() {
   if (mRegWait) {
     ::UnregisterWaitEx(mRegWait, INVALID_HANDLE_VALUE);
   }
@@ -50,10 +48,8 @@ MiniShmChild::~MiniShmChild()
   }
 }
 
-nsresult
-MiniShmChild::Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
-                   const DWORD aTimeout)
-{
+nsresult MiniShmChild::Init(MiniShmObserver* aObserver,
+                            const std::wstring& aCookie, const DWORD aTimeout) {
   if (aCookie.empty() || !aTimeout) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -66,9 +62,8 @@ MiniShmChild::Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
   if (!iss) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  ScopedMappedFileView view(::MapViewOfFile(mapHandle,
-                                            FILE_MAP_WRITE,
-                                            0, 0, 0));
+  ScopedMappedFileView view(
+      ::MapViewOfFile(mapHandle, FILE_MAP_WRITE, 0, 0, 0));
   if (!view.IsValid()) {
     return NS_ERROR_FAILURE;
   }
@@ -101,11 +96,8 @@ MiniShmChild::Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (!::RegisterWaitForSingleObject(&mRegWait,
-                                     initStruct->mChildEvent,
-                                     &SOnEvent,
-                                     this,
-                                     INFINITE,
+  if (!::RegisterWaitForSingleObject(&mRegWait, initStruct->mChildEvent,
+                                     &SOnEvent, this, INFINITE,
                                      WT_EXECUTEDEFAULT)) {
     return NS_ERROR_FAILURE;
   }
@@ -149,9 +141,7 @@ MiniShmChild::Init(MiniShmObserver* aObserver, const std::wstring& aCookie,
   return NS_OK;
 }
 
-nsresult
-MiniShmChild::Send()
-{
+nsresult MiniShmChild::Send() {
   if (!mParentEvent) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -161,13 +151,10 @@ MiniShmChild::Send()
   return NS_OK;
 }
 
-void
-MiniShmChild::OnEvent()
-{
+void MiniShmChild::OnEvent() {
   MiniShmBase::OnEvent();
   ::SetEvent(mChildGuard);
 }
 
-} // namespace plugins
-} // namespace mozilla
-
+}  // namespace plugins
+}  // namespace mozilla

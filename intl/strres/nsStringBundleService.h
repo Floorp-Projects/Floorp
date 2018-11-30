@@ -24,11 +24,10 @@ struct bundleCacheEntry_t;
 class nsStringBundleService : public nsIStringBundleService,
                               public nsIObserver,
                               public nsSupportsWeakReference,
-                              public nsIMemoryReporter
-{
+                              public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
-public:
+ public:
   nsStringBundleService();
 
   nsresult Init();
@@ -38,29 +37,29 @@ public:
   NS_DECL_NSIOBSERVER
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool anonymize) override
-  {
+                            nsISupports* aData, bool anonymize) override {
     size_t amt = SizeOfIncludingThis(MallocSizeOf);
 
-    MOZ_COLLECT_REPORT(
-      "explicit/string-bundles/service", KIND_HEAP, UNITS_BYTES,
-      amt,
-      "Memory used for StringBundleService overhead");
+    MOZ_COLLECT_REPORT("explicit/string-bundles/service", KIND_HEAP,
+                       UNITS_BYTES, amt,
+                       "Memory used for StringBundleService overhead");
     return NS_OK;
   };
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const override;
 
-  void SendContentBundles(mozilla::dom::ContentParent* aContentParent) const override;
+  void SendContentBundles(
+      mozilla::dom::ContentParent* aContentParent) const override;
 
   void RegisterContentBundle(const nsCString& aBundleURL,
                              const mozilla::ipc::FileDescriptor& aMapFile,
                              size_t aMapSize) override;
 
-private:
+ private:
   virtual ~nsStringBundleService();
 
-  void getStringBundle(const char *aUrl, nsIStringBundle** aResult);
+  void getStringBundle(const char* aUrl, nsIStringBundle** aResult);
   nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
                             uint32_t argCount, char16_t** argArray,
                             nsAString& result);
@@ -70,7 +69,7 @@ private:
   mozilla::UniquePtr<bundleCacheEntry_t> evictOneEntry();
 
   bundleCacheEntry_t* insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
-                                      const nsACString &aHashKey);
+                                      const nsACString& aHashKey);
 
   nsDataHashtable<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
   // LRU list of cached entries, with the least-recently-used entry first.
