@@ -5,5 +5,6 @@ void F();
   F()
 
 void positives() {
-  if (1) BAD_MACRO(1);
+  if (1)
+    BAD_MACRO(1);
 }

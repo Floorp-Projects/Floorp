@@ -1,5 +1,5 @@
 struct PositivePrivate {
- private:
+private:
   PositivePrivate();
   PositivePrivate(const PositivePrivate &);
   PositivePrivate &operator=(PositivePrivate &&);
