@@ -107,6 +107,45 @@ key:
         with self.assertRaises(parser.ParseError):
             self.parse("key: @true")
 
+    def test_list_expr(self):
+        self.compare(
+            """
+key:
+  if x == 1: [a]
+  [b]""",
+            ["DataNode", None,
+             [["KeyValueNode", "key",
+               [["ConditionalNode", None,
+                 [["BinaryExpressionNode", None,
+                   [["BinaryOperatorNode", "==", []],
+                    ["VariableNode", "x", []],
+                       ["NumberNode", "1", []]
+                    ]],
+                     ["ListNode", None,
+                      [["ValueNode", "a", []]]],
+                  ]],
+                ["ListNode", None,
+                 [["ValueNode", "b", []]]]]]]])
+
+    def test_list_heading(self):
+        self.compare(
+            """
+key:
+  if x == 1: [a]
+[b]""",
+            ["DataNode", None,
+             [["KeyValueNode", "key",
+               [["ConditionalNode", None,
+                 [["BinaryExpressionNode", None,
+                   [["BinaryOperatorNode", "==", []],
+                    ["VariableNode", "x", []],
+                       ["NumberNode", "1", []]
+                    ]],
+                     ["ListNode", None,
+                      [["ValueNode", "a", []]]],
+                  ]]]],
+              ["DataNode", "b", []]]])
+
 
 if __name__ == "__main__":
     unittest.main()
