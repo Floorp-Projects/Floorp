@@ -299,6 +299,9 @@ TypeInState::IsPropSet(nsAtom* aProp,
                        nsAString* outValue,
                        int32_t& outIndex)
 {
+  if (aAttr == nsGkAtoms::_empty) {
+    aAttr = nullptr;
+  }
   // linear search.  list should be short.
   size_t count = mSetArray.Length();
   for (size_t i = 0; i < count; i++) {
@@ -347,6 +350,9 @@ TypeInState::FindPropInList(nsAtom* aProp,
                             nsTArray<PropItem*>& aList,
                             int32_t& outIndex)
 {
+  if (aAttr == nsGkAtoms::_empty) {
+    aAttr = nullptr;
+  }
   // linear search.  list should be short.
   size_t count = aList.Length();
   for (size_t i = 0; i < count; i++) {
@@ -377,7 +383,7 @@ PropItem::PropItem(nsAtom* aTag,
                    nsAtom* aAttr,
                    const nsAString &aValue)
   : tag(aTag)
-  , attr(aAttr)
+  , attr(aAttr != nsGkAtoms::_empty ? aAttr : nullptr)
   , value(aValue)
 {
   MOZ_COUNT_CTOR(PropItem);
