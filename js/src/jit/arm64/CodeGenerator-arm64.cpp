@@ -869,11 +869,33 @@ void CodeGenerator::visitFloat32(LFloat32* ins) {
 }
 
 void CodeGenerator::visitTestDAndBranch(LTestDAndBranch* test) {
-  MOZ_CRASH("visitTestDAndBranch");
+  const LAllocation* opd = test->input();
+  MBasicBlock* ifTrue = test->ifTrue();
+  MBasicBlock* ifFalse = test->ifFalse();
+
+  masm.Fcmp(ARMFPRegister(ToFloatRegister(opd), 64), 0.0);
+
+  // If the compare set the 0 bit, then the result is definitely false.
+  jumpToBlock(ifFalse, Assembler::Zero);
+
+  // Overflow means one of the operands was NaN, which is also false.
+  jumpToBlock(ifFalse, Assembler::Overflow);
+  jumpToBlock(ifTrue);
 }
 
 void CodeGenerator::visitTestFAndBranch(LTestFAndBranch* test) {
-  MOZ_CRASH("visitTestFAndBranch");
+  const LAllocation* opd = test->input();
+  MBasicBlock* ifTrue = test->ifTrue();
+  MBasicBlock* ifFalse = test->ifFalse();
+
+  masm.Fcmp(ARMFPRegister(ToFloatRegister(opd), 32), 0.0);
+
+  // If the compare set the 0 bit, then the result is definitely false.
+  jumpToBlock(ifFalse, Assembler::Zero);
+
+  // Overflow means one of the operands was NaN, which is also false.
+  jumpToBlock(ifFalse, Assembler::Overflow);
+  jumpToBlock(ifTrue);
 }
 
 void CodeGenerator::visitCompareD(LCompareD* comp) {
