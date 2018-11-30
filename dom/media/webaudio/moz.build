@@ -47,7 +47,6 @@ EXPORTS.mozilla.dom += [
     'AudioListener.h',
     'AudioNode.h',
     'AudioParam.h',
-    'AudioParamDescriptorMap.h',
     'AudioParamMap.h',
     'AudioProcessingEvent.h',
     'AudioScheduledSourceNode.h',
