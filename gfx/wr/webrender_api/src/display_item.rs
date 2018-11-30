@@ -301,7 +301,7 @@ impl NormalBorder {
     pub fn normalize(&mut self, widths: &LayoutSideOffsets) {
         debug_assert!(
             self.do_aa || self.can_disable_antialiasing(),
-            "Unexpected disabled-antialising in a border, likely won't work or will be ignored"
+            "Unexpected disabled-antialiasing in a border, likely won't work or will be ignored"
         );
 
         #[inline]
