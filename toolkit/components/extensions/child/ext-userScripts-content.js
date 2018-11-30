@@ -133,9 +133,38 @@ class UserScript {
       return this.exportLazyGetters(valueToExport);
     }
 
+    if (className === "Array") {
+      return this.exportArray(valueToExport);
+    }
+
     let valueType = className || typeof valueToExport;
     throw new ExportError(privateOptions.errorMessage ||
                           `${valueType} cannot be exported to the userScript`);
+  }
+
+  /**
+   * Export all the elements of the `srcArray` into a newly created userScript array.
+   *
+   * @param {Array} srcArray
+   *        The apiScript array to export to the userScript code.
+   *
+   * @returns {Array}
+   *          The resulting userScript array.
+   *
+   * @throws {UserScriptError}
+   *         Throws an error when the array can't be exported successfully.
+   */
+  exportArray(srcArray) {
+    const destArray = Cu.cloneInto([], this.scriptSandbox);
+
+    for (let [idx, value] of this.shallowCloneEntries(srcArray)) {
+      destArray[idx] = this.export(value, {
+        errorMessage: `Error accessing disallowed element at index "${idx}"`,
+        Error: this.UserScriptError,
+      });
+    }
+
+    return destArray;
   }
 
   /**
