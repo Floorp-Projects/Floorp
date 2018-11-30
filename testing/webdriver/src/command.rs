@@ -1,9 +1,11 @@
-use actions::ActionSequence;
-use capabilities::{BrowserCapabilities, Capabilities, CapabilitiesMatching,
-                   LegacyNewSessionParameters, SpecNewSessionParameters};
-use common::{Date, FrameId, LocatorStrategy, WebElement, MAX_SAFE_INTEGER};
-use error::{ErrorStatus, WebDriverError, WebDriverResult};
-use httpapi::{Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
+use crate::actions::ActionSequence;
+use crate::capabilities::{
+    BrowserCapabilities, Capabilities, CapabilitiesMatching, LegacyNewSessionParameters,
+    SpecNewSessionParameters,
+};
+use crate::common::{Date, FrameId, LocatorStrategy, WebElement, MAX_SAFE_INTEGER};
+use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
+use crate::httpapi::{Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
 use regex::Captures;
 use serde::de::{self, Deserialize, Deserializer};
 use serde_json::{self, Value};
@@ -611,9 +613,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use capabilities::SpecNewSessionParameters;
+    use crate::capabilities::SpecNewSessionParameters;
+    use crate::test::check_deserialize;
     use serde_json;
-    use test::check_deserialize;
 
     #[test]
     fn test_json_actions_parameters_missing_actions_field() {

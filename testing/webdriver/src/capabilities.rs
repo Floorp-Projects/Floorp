@@ -1,5 +1,5 @@
-use common::MAX_SAFE_INTEGER;
-use error::{ErrorStatus, WebDriverError, WebDriverResult};
+use crate::common::MAX_SAFE_INTEGER;
+use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use serde_json::{Map, Value};
 use url::Url;
 
@@ -17,13 +17,13 @@ pub trait BrowserCapabilities {
     /// Set up the Capabilites object
     ///
     /// Typically used to create any internal caches
-    fn init(&mut self, &Capabilities);
+    fn init(&mut self, _: &Capabilities);
 
     /// Name of the browser
-    fn browser_name(&mut self, &Capabilities) -> WebDriverResult<Option<String>>;
+    fn browser_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>>;
 
     /// Version number of the browser
-    fn browser_version(&mut self, &Capabilities) -> WebDriverResult<Option<String>>;
+    fn browser_version(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>>;
 
     /// Compare actual browser version to that provided in a version specifier
     ///
@@ -34,22 +34,22 @@ pub trait BrowserCapabilities {
         -> WebDriverResult<bool>;
 
     /// Name of the platform/OS
-    fn platform_name(&mut self, &Capabilities) -> WebDriverResult<Option<String>>;
+    fn platform_name(&mut self, _: &Capabilities) -> WebDriverResult<Option<String>>;
 
     /// Whether insecure certificates are supported
-    fn accept_insecure_certs(&mut self, &Capabilities) -> WebDriverResult<bool>;
+    fn accept_insecure_certs(&mut self, _: &Capabilities) -> WebDriverResult<bool>;
 
     /// Indicates whether driver supports all of the window resizing and
     /// repositioning commands.
-    fn set_window_rect(&mut self, &Capabilities) -> WebDriverResult<bool>;
+    fn set_window_rect(&mut self, _: &Capabilities) -> WebDriverResult<bool>;
 
     /// Indicates that interactability checks will be applied to `<input type=file>`.
-    fn strict_file_interactability(&mut self, &Capabilities) -> WebDriverResult<bool>;
+    fn strict_file_interactability(&mut self, _: &Capabilities) -> WebDriverResult<bool>;
 
     fn accept_proxy(
         &mut self,
         proxy_settings: &Map<String, Value>,
-        &Capabilities,
+        _: &Capabilities,
     ) -> WebDriverResult<bool>;
 
     /// Type check custom properties
@@ -561,8 +561,8 @@ impl CapabilitiesMatching for LegacyNewSessionParameters {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test::check_deserialize;
     use serde_json::{self, Value};
-    use test::check_deserialize;
 
     fn validate_proxy(value: &str) -> WebDriverResult<()> {
         let data = serde_json::from_str::<Value>(value).unwrap();
