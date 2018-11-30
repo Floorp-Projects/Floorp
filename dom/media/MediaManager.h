@@ -207,11 +207,19 @@ class MediaManager final : public nsIMediaManagerService,
                                     nsIDOMGetUserMediaErrorCallback>
       GetUserMediaErrorCallback;
 
-  nsresult GetUserMedia(nsPIDOMWindowInner* aWindow,
-                        const dom::MediaStreamConstraints& aConstraints,
-                        GetUserMediaSuccessCallback&& onSuccess,
-                        GetUserMediaErrorCallback&& onError,
-                        dom::CallerType aCallerType);
+  static void CallOnError(const GetUserMediaErrorCallback* aCallback,
+                          dom::MediaStreamError& aError);
+  static void CallOnSuccess(const GetUserMediaSuccessCallback* aCallback,
+                            DOMMediaStream& aStream);
+
+  typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<dom::MediaStreamError>,
+                     true>
+      StreamPromise;
+
+  RefPtr<StreamPromise> GetUserMedia(
+      nsPIDOMWindowInner* aWindow,
+      const dom::MediaStreamConstraints& aConstraints,
+      dom::CallerType aCallerType);
 
   nsresult GetUserMediaDevices(
       nsPIDOMWindowInner* aWindow,
@@ -294,7 +302,7 @@ class MediaManager final : public nsIMediaManagerService,
       DeviceEnumerationType aAudioInputEnumType);
 
   RefPtr<BadConstraintsPromise> SelectSettings(
-      dom::MediaStreamConstraints& aConstraints, bool aIsChrome,
+      const dom::MediaStreamConstraints& aConstraints, bool aIsChrome,
       const RefPtr<MediaDeviceSetRefCnt>& aSources);
 
   void GetPref(nsIPrefBranch* aBranch, const char* aPref, const char* aData,

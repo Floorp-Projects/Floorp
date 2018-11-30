@@ -48,27 +48,6 @@ class FuzzTimerCallBack final : public nsITimerCallback, public nsINamed {
 
 NS_IMPL_ISUPPORTS(FuzzTimerCallBack, nsITimerCallback, nsINamed)
 
-class MediaDevices::GumResolver : public nsIDOMGetUserMediaSuccessCallback {
- public:
-  NS_DECL_ISUPPORTS
-
-  explicit GumResolver(Promise* aPromise) : mPromise(aPromise) {}
-
-  NS_IMETHOD
-  OnSuccess(nsISupports* aStream) override {
-    RefPtr<DOMMediaStream> stream = do_QueryObject(aStream);
-    if (!stream) {
-      return NS_ERROR_FAILURE;
-    }
-    mPromise->MaybeResolve(stream);
-    return NS_OK;
-  }
-
- private:
-  virtual ~GumResolver() {}
-  RefPtr<Promise> mPromise;
-};
-
 class MediaDevices::EnumDevResolver
     : public nsIGetUserMediaDevicesSuccessCallback {
  public:
@@ -163,7 +142,6 @@ MediaDevices::~MediaDevices() {
   }
 }
 
-NS_IMPL_ISUPPORTS(MediaDevices::GumResolver, nsIDOMGetUserMediaSuccessCallback)
 NS_IMPL_ISUPPORTS(MediaDevices::EnumDevResolver,
                   nsIGetUserMediaDevicesSuccessCallback)
 NS_IMPL_ISUPPORTS(MediaDevices::GumRejecter, nsIDOMGetUserMediaErrorCallback)
@@ -172,14 +150,25 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
     const MediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
-
-  MediaManager::GetUserMediaSuccessCallback resolver(new GumResolver(p));
-  MediaManager::GetUserMediaErrorCallback rejecter(new GumRejecter(p));
-
-  aRv = MediaManager::Get()->GetUserMedia(GetOwner(), aConstraints,
-                                          std::move(resolver),
-                                          std::move(rejecter), aCallerType);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  RefPtr<MediaDevices> self(this);
+  MediaManager::Get()
+      ->GetUserMedia(GetOwner(), aConstraints, aCallerType)
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
+               if (NS_FAILED(CheckInnerWindowCorrectness())) {
+                 return;  // Leave Promise pending after navigation by design.
+               }
+               p->MaybeResolve(std::move(aStream));
+             },
+             [this, self, p](const RefPtr<MediaStreamError>& error) {
+               if (NS_FAILED(CheckInnerWindowCorrectness())) {
+                 return;  // Leave Promise pending after navigation by design.
+               }
+               p->MaybeReject(error);
+             });
   return p.forget();
 }
 
