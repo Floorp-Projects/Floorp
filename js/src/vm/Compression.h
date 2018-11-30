@@ -70,9 +70,20 @@ class Compressor
     // Append the chunk offsets to |dest|.
     void finish(char* dest, size_t destBytes);
 
-    static void toChunkOffset(size_t uncompressedOffset, size_t* chunk, size_t* chunkOffset) {
-        *chunk = uncompressedOffset / CHUNK_SIZE;
-        *chunkOffset = uncompressedOffset % CHUNK_SIZE;
+    static void
+    rangeToChunkAndOffset(size_t uncompressedStart, size_t uncompressedLimit,
+                          size_t* firstChunk, size_t* firstChunkOffset, size_t* firstChunkSize,
+                          size_t* lastChunk, size_t* lastChunkSize)
+    {
+        *firstChunk = uncompressedStart / CHUNK_SIZE;
+        *firstChunkOffset = uncompressedStart % CHUNK_SIZE;
+        *firstChunkSize = CHUNK_SIZE - *firstChunkOffset;
+
+        MOZ_ASSERT(uncompressedStart < uncompressedLimit,
+                   "subtraction below requires a non-empty range");
+
+        *lastChunk = (uncompressedLimit - 1) / CHUNK_SIZE;
+        *lastChunkSize = ((uncompressedLimit - 1) % CHUNK_SIZE) + 1;
     }
 
     static size_t chunkSize(size_t uncompressedBytes, size_t chunk) {
