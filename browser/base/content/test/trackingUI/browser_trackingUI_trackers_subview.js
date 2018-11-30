@@ -9,35 +9,14 @@ const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/
 const TP_PREF = "privacy.trackingprotection.enabled";
 
 add_task(async function setup() {
+  // Avoid the content blocking tour interfering with our tests by popping up.
+  await SpecialPowers.pushPrefEnv({set: [[ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS]]});
   await UrlClassifierTestUtils.addTestTrackers();
-});
 
-function openIdentityPopup() {
-  let mainView = document.getElementById("identity-popup-mainView");
-  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  gIdentityHandler._identityBox.click();
-  return viewShown;
-}
-
-function waitForSecurityChange(counter) {
-  return new Promise(resolve => {
-    let webProgressListener = {
-      onStateChange: () => {},
-      onStatusChange: () => {},
-      onLocationChange: () => {},
-      onSecurityChange: (webProgress, request, oldState, state) => {
-        if (--counter == 0) {
-          gBrowser.removeProgressListener(webProgressListener);
-          resolve(counter);
-        }
-      },
-      onProgressChange: () => {},
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
-    };
-
-    gBrowser.addProgressListener(webProgressListener);
+  registerCleanupFunction(() => {
+    UrlClassifierTestUtils.cleanupTestTrackers();
   });
-}
+});
 
 async function assertSitesListed(blocked) {
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function(browser) {
@@ -53,7 +32,7 @@ async function assertSitesListed(blocked) {
 
     ok(true, "Trackers view was shown");
 
-    let listItems = document.querySelectorAll(".identity-popup-trackersView-list-item");
+    let listItems = trackersView.querySelectorAll(".identity-popup-content-blocking-list-item");
     is(listItems.length, 1, "We have 1 tracker in the list");
 
     let strictInfo = document.getElementById("identity-popup-trackersView-strict-info");
@@ -84,7 +63,7 @@ async function assertSitesListed(blocked) {
 
     ok(true, "Trackers view was shown");
 
-    listItems = Array.from(document.querySelectorAll(".identity-popup-trackersView-list-item"));
+    listItems = Array.from(trackersView.querySelectorAll(".identity-popup-content-blocking-list-item"));
     is(listItems.length, 2, "We have 2 trackers in the list");
 
     let listItem = listItems.find(item => item.querySelector("label").value == "trackertest.org");
@@ -102,19 +81,19 @@ async function assertSitesListed(blocked) {
 }
 
 add_task(async function testTrackersSubView() {
+  info("Testing trackers subview with TP disabled.");
   Services.prefs.setBoolPref(TP_PREF, false);
   await assertSitesListed(false);
+  info("Testing trackers subview with TP enabled.");
   Services.prefs.setBoolPref(TP_PREF, true);
   await assertSitesListed(true);
+  info("Testing trackers subview with TP enabled and a CB exception.");
   let uri = Services.io.newURI("https://tracking.example.org");
   Services.perms.add(uri, "trackingprotection", Services.perms.ALLOW_ACTION);
   await assertSitesListed(false);
+  info("Testing trackers subview with TP enabled and a CB exception removed.");
   Services.perms.remove(uri, "trackingprotection");
   await assertSitesListed(true);
-  Services.prefs.clearUserPref(TP_PREF);
-});
 
-add_task(function cleanup() {
   Services.prefs.clearUserPref(TP_PREF);
-  UrlClassifierTestUtils.cleanupTestTrackers();
 });
