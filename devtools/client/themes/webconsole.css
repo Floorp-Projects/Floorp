@@ -122,7 +122,13 @@ a {
   position: absolute;
 }
 
-.message.paused ~ .message:not(.command):not(.result) .message-body-wrapper {
+.message.paused.paused-before::before {
+  top: 0px;
+  bottom: inherit;
+}
+
+.message.paused ~ .message:not(.command):not(.result) .message-body-wrapper,
+.message.paused.paused-before .message-body-wrapper {
   opacity: 0.5;
 }
 
