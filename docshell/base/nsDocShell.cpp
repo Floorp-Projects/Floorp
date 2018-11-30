@@ -3193,6 +3193,22 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner) {
     }
   }
 
+  // If we're in the content process and have had a TreeOwner set on us, extract
+  // our TabChild actor. If we've already had our TabChild set, assert that it
+  // hasn't changed.
+  if (mTreeOwner && XRE_IsContentProcess()) {
+    nsCOMPtr<nsITabChild> newTabChild = do_GetInterface(mTreeOwner);
+    MOZ_ASSERT(newTabChild, "No TabChild actor for tree owner in Content!");
+
+    if (mTabChild) {
+      nsCOMPtr<nsITabChild> oldTabChild = do_QueryReferent(mTabChild);
+      MOZ_RELEASE_ASSERT(oldTabChild == newTabChild,
+                         "Cannot cahnge TabChild during nsDocShell lifetime!");
+    } else {
+      mTabChild = do_GetWeakReference(newTabChild);
+    }
+  }
+
   // Our tree owner has changed. Recompute scriptability.
   //
   // Note that this is near-redundant with the recomputation in
@@ -5044,6 +5060,8 @@ nsDocShell::Destroy() {
   mBrowsingContext->Detach();
 
   SetTreeOwner(nullptr);
+
+  mTabChild = nullptr;
 
   mOnePermittedSandboxedNavigator = nullptr;
 
@@ -13321,8 +13339,7 @@ nsDocShell::GetScriptableTabChild(nsITabChild** aTabChild) {
 }
 
 already_AddRefed<nsITabChild> nsDocShell::GetTabChild() {
-  nsCOMPtr<nsIDocShellTreeOwner> owner(mTreeOwner);
-  nsCOMPtr<nsITabChild> tc = do_GetInterface(owner);
+  nsCOMPtr<nsITabChild> tc = do_QueryReferent(mTabChild);
   return tc.forget();
 }
 
