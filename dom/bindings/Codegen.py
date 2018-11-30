@@ -12996,6 +12996,30 @@ class CGDictionary(CGThing):
                       "aOther")],
             body=body.define())
 
+    def canHaveEqualsOperator(self):
+        return all(m.type.isString() or m.type.isPrimitive() for (m,_) in
+                   self.memberInfo)
+
+    def equalsOperator(self):
+        body = CGList([])
+
+        for m, _ in self.memberInfo:
+            memberName = self.makeMemberName(m.identifier.name)
+            memberTest = CGGeneric(fill(
+                """
+                if (${memberName} != aOther.${memberName}) {
+                    return false;
+                }
+                """,
+                memberName=memberName))
+            body.append(memberTest)
+        body.append(CGGeneric("return true;\n"))
+        return ClassMethod(
+            "operator==", "bool",
+            [Argument("const %s&" % self.makeClassName(self.dictionary),
+                      "aOther")
+            ], const=True, body=body.define())
+
     def getStructs(self):
         d = self.dictionary
         selfName = self.makeClassName(d)
@@ -13075,6 +13099,9 @@ class CGDictionary(CGThing):
             methods.append(self.assignmentOperator())
         else:
             disallowCopyConstruction = True
+
+        if self.canHaveEqualsOperator():
+            methods.append(self.equalsOperator())
 
         struct = CGClass(selfName,
                          bases=[ClassBase(self.base())],

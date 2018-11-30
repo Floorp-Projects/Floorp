@@ -304,7 +304,7 @@ var SiteDataManager = {
         // We are clearing *All* across OAs so need to ensure a principal without suffix here,
         // or the call of `clearStoragesForPrincipal` would fail.
         principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(originNoSuffix);
-        let request = this._qms.clearStoragesForPrincipal(principal, null, true);
+        let request = this._qms.clearStoragesForPrincipal(principal, null, null, true);
         request.callback = resolve;
       }));
     }

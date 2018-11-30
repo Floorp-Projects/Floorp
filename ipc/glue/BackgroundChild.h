@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/Transport.h"
 
+class nsIEventTarget;
+
 namespace mozilla {
 namespace dom {
 
@@ -55,7 +57,7 @@ public:
 
   // See above.
   static PBackgroundChild*
-  GetOrCreateForCurrentThread();
+  GetOrCreateForCurrentThread(nsIEventTarget* aMainEventTarget = nullptr);
 
   // See above.
   static void

@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * Response to a `LSSimpleRequestPreloadedParams` request indicating whether the
+ * origin was preloaded.
+ */
+struct LSSimpleRequestPreloadedResponse
+{
+  bool preloaded;
+};
+
+/**
+ * Discriminated union which can contain an error code (`nsresult`) or
+ * particular simple request response.
+ */
+union LSSimpleRequestResponse
+{
+  nsresult;
+  LSSimpleRequestPreloadedResponse;
+};
+
+/**
+ * Simple requests are async-only from both a protocol perspective and the
+ * manner in which they're used.  In comparison, PBackgroundLSRequests are
+ * async only from a protocol perspective; they are used synchronously from the
+ * main thread via LSObject's RequestHelper mechanism.  (With the caveat that
+ * nsILocalStorageManager does expose LSRequests asynchronously.)
+ *
+ * These requests use the common idiom where the arguments to the request are
+ * sent in the constructor and the result is sent in the __delete__ response.
+ * Request types are indicated by the Params variant used and those live in
+ * `PBackgroundLSSharedTypes.ipdlh`.
+ */
+protocol PBackgroundLSSimpleRequest
+{
+  manager PBackground;
+
+child:
+  async __delete__(LSSimpleRequestResponse response);
+};
+
+} // namespace dom
+} // namespace mozilla

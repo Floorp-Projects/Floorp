@@ -619,10 +619,7 @@ ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
 ChromeUtils::IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
                                      const dom::OriginAttributesDictionary& aB)
 {
-  return aA.mAppId == aB.mAppId &&
-         aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
-         aA.mUserContextId == aB.mUserContextId &&
-         aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
+  return aA == aB;
 }
 
 #ifdef NIGHTLY_BUILD

@@ -418,7 +418,7 @@ public:
 
   bool ShouldCheckStartupModifications()
   {
-    return Type().EqualsLiteral("webextension-langpack");
+    return Type().EqualsLiteral("locale");
   }
 
 

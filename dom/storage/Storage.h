@@ -110,11 +110,41 @@ public:
 
   bool IsSessionOnly() const { return mIsSessionOnly; }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Testing Methods:
+  //
+  // These methods are exposed on the `Storage` WebIDL interface behind a
+  // preference for the benefit of automated-tests.  They are not exposed to
+  // content.  See `Storage.webidl` for more details.
+
+  virtual void
+  Open(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
+  { }
+
+  virtual void
+  Close(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
+  { }
+
+  virtual void
+  BeginExplicitSnapshot(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
+  { }
+
+  virtual void
+  EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
+  { }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Dispatch storage notification events on all impacted pages in the current
+  // process as well as for consumption by devtools.  Pages receive the
+  // notification via StorageNotifierService (not observers like in the past),
+  // while devtools does receive the notification via the observer service.
+  //
   // aStorage can be null if this method is called by LocalStorageCacheChild.
   //
   // aImmediateDispatch is for use by child IPC code (LocalStorageCacheChild)
   // so that PBackground ordering can be maintained.  Without this, the event
-  // would be/ enqueued and run in a future turn of the event loop, potentially
+  // would be enqueued and run in a future turn of the event loop, potentially
   // allowing other PBackground Recv* methods to trigger script that wants to
   // assume our localstorage changes have already been applied.  This is the
   // case for message manager messages which are used by ContentTask testing
@@ -137,6 +167,10 @@ protected:
   // state determination are complex and share the code (comes hand in
   // hand together).
   bool CanUseStorage(nsIPrincipal& aSubjectPrincipal);
+
+  virtual void
+  LastRelease()
+  { }
 
 private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;

@@ -258,16 +258,18 @@ class HighlightersOverlay {
    *
    * @param  {NodeFront} node
    *         The NodeFront of the flexbox container element to highlight.
-   * @param  {Object} options
-   *         Object used for passing options to the flexbox highlighter.
+   * @param. {String} trigger
+   *         String name matching "layout", "markup" or "rule" to indicate where the
+   *         flexbox highlighter was toggled on from. "layout" represents the layout view.
+   *         "markup" represents the markup view. "rule" represents the rule view.
    */
-  async toggleFlexboxHighlighter(node, options = {}) {
+  async toggleFlexboxHighlighter(node, trigger) {
     if (node == this.flexboxHighlighterShown) {
       await this.hideFlexboxHighlighter(node);
       return;
     }
 
-    await this.showFlexboxHighlighter(node, options);
+    await this.showFlexboxHighlighter(node, {}, trigger);
   }
 
   /**
@@ -277,8 +279,12 @@ class HighlightersOverlay {
    *         The NodeFront of the flexbox container element to highlight.
    * @param  {Object} options
    *         Object used for passing options to the flexbox highlighter.
+   * @param. {String} trigger
+   *         String name matching "layout", "markup" or "rule" to indicate where the
+   *         flexbox highlighter was toggled on from. "layout" represents the layout view.
+   *         "markup" represents the markup view. "rule" represents the rule view.
    */
-  async showFlexboxHighlighter(node, options) {
+  async showFlexboxHighlighter(node, options, trigger) {
     const highlighter = await this._getHighlighter("FlexboxHighlighter");
     if (!highlighter) {
       return;
@@ -292,6 +298,17 @@ class HighlightersOverlay {
     }
 
     this._toggleRuleViewIcon(node, true, ".ruleview-flex");
+
+    this.telemetry.toolOpened("flexbox_highlighter", this.inspector.toolbox.sessionId,
+      this);
+
+    if (trigger === "layout") {
+      this.telemetry.scalarAdd("devtools.layout.flexboxhighlighter.opened", 1);
+    } else if (trigger === "markup") {
+      this.telemetry.scalarAdd("devtools.markup.flexboxhighlighter.opened", 1);
+    } else if (trigger === "rule") {
+      this.telemetry.scalarAdd("devtools.rules.flexboxhighlighter.opened", 1);
+    }
 
     try {
       // Save flexbox highlighter state.
@@ -318,6 +335,9 @@ class HighlightersOverlay {
     if (!this.flexboxHighlighterShown || !this.highlighters.FlexboxHighlighter) {
       return;
     }
+
+    this.telemetry.toolClosed("flexbox_highlighter", this.inspector.toolbox.sessionId,
+      this);
 
     this._toggleRuleViewIcon(node, false, ".ruleview-flex");
 
@@ -407,10 +427,10 @@ class HighlightersOverlay {
    *
    * @param  {NodeFront} node
    *         The NodeFront of the grid container element to highlight.
-   * @param. {String|null} trigger
-   *         String name matching "grid" or "rule" to indicate where the
-   *         grid highlighter was toggled on from. "grid" represents the grid view
-   *         "rule" represents the rule view.
+   * @param. {String} trigger
+   *         String name matching "grid", "markup" or "rule" to indicate where the
+   *         grid highlighter was toggled on from. "grid" represents the grid view.
+   *         "markup" represents the markup view. "rule" represents the rule view.
    */
   async toggleGridHighlighter(node, trigger) {
     if (this.gridHighlighters.has(node)) {
@@ -428,10 +448,10 @@ class HighlightersOverlay {
    *         The NodeFront of the grid container element to highlight.
    * @param  {Object} options
    *         Object used for passing options to the grid highlighter.
-   * @param. {String|null} trigger
-   *         String name matching "grid" or "rule" to indicate where the
-   *         grid highlighter was toggled on from. "grid" represents the grid view
-   *         "rule" represents the rule view.
+   * @param. {String} trigger
+   *         String name matching "grid", "markup" or "rule" to indicate where the
+   *         grid highlighter was toggled on from. "grid" represents the grid view.
+   *         "markup" represents the markup view. "rule" represents the rule view.
    */
   async showGridHighlighter(node, options, trigger) {
     // When the grid highlighter has the given node, it is probably called with new
@@ -464,9 +484,11 @@ class HighlightersOverlay {
 
     this._toggleRuleViewIcon(node, true, ".ruleview-grid");
 
-    if (trigger == "grid") {
+    if (trigger === "grid") {
       this.telemetry.scalarAdd("devtools.grid.gridinspector.opened", 1);
-    } else if (trigger == "rule") {
+    } else if (trigger === "markup") {
+      this.telemetry.scalarAdd("devtools.markup.gridinspector.opened", 1);
+    } else if (trigger === "rule") {
       this.telemetry.scalarAdd("devtools.rules.gridinspector.opened", 1);
     }
 
@@ -968,7 +990,7 @@ class HighlightersOverlay {
 
     if (this._isRuleViewDisplayFlex(event.target)) {
       event.stopPropagation();
-      this.toggleFlexboxHighlighter(this.inspector.selection.nodeFront);
+      this.toggleFlexboxHighlighter(this.inspector.selection.nodeFront, "rule");
     }
 
     if (this._isRuleViewShapeSwatch(event.target)) {

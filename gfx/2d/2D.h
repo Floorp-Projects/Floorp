@@ -1865,7 +1865,7 @@ public:
 
 private:
   static FT_Library mFTLibrary;
-  static Mutex* mFTLock;
+  static StaticMutex mFTLock;
 public:
 #endif
 
