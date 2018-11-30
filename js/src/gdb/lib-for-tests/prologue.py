@@ -14,7 +14,7 @@ active_fragment = None
 # ('breakpoint', by default) and then select the calling frame.
 
 
-def run_fragment(fragment, function='breakpoint'):
+def run_fragment(fragment, function='gdb-tests.cpp:breakpoint'):
     # Arrange to stop at a reasonable place in the test program.
     bp = gdb.Breakpoint(function)
     try:

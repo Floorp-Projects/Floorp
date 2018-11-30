@@ -274,6 +274,11 @@ RootAccessible::ProcessDOMEvent(Event* aDOMEvent)
     logging::DOMEvent("processed", origTargetNode, eventType);
 #endif
 
+  if (!origTargetNode) {
+    // Original target has ceased to exist.
+    return;
+  }
+
   if (eventType.EqualsLiteral("popuphiding")) {
     HandlePopupHidingEvent(origTargetNode);
     return;
