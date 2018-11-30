@@ -4,12 +4,13 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibleSpec } = require("devtools/shared/specs/accessibility");
 
 loader.lazyRequireGetter(this, "getContrastRatioFor", "devtools/server/actors/utils/accessibility", true);
 loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
+loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 
 const nsIAccessibleRelation = Ci.nsIAccessibleRelation;
 const RELATIONS_TO_IGNORE = new Set([
@@ -19,6 +20,92 @@ const RELATIONS_TO_IGNORE = new Set([
   nsIAccessibleRelation.RELATION_PARENT_WINDOW_OF,
   nsIAccessibleRelation.RELATION_SUBWINDOW_OF,
 ]);
+
+const STATE_DEFUNCT = Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT;
+const CSS_TEXT_SELECTOR = "#text";
+
+/**
+ * Get node inforamtion such as nodeType and the unique CSS selector for the node.
+ * @param  {DOMNode} node
+ *         Node for which to get the information.
+ * @return {Object}
+ *         Information about the type of the node and how to locate it.
+ */
+function getNodeDescription(node) {
+  if (!node || Cu.isDeadWrapper(node)) {
+    return { nodeType: undefined, nodeCssSelector: "" };
+  }
+
+  const { nodeType } = node;
+  return {
+    nodeType,
+    // If node is a text node, we find a unique CSS selector for its parent and add a
+    // CSS_TEXT_SELECTOR postfix to indicate that it's a text node.
+    nodeCssSelector: nodeType === Node.TEXT_NODE ?
+      `${findCssSelector(node.parentNode)}${CSS_TEXT_SELECTOR}` :
+      findCssSelector(node),
+  };
+}
+
+/**
+ * Get a snapshot of the nsIAccessible object including its subtree. None of the subtree
+ * queried here is cached via accessible walker's refMap.
+ * @param  {nsIAccessible} acc
+ *         Accessible object to take a snapshot of.
+ * @param  {nsIAccessibilityService} a11yService
+ *         Accessibility service instance in the current process, used to get localized
+ *         string representation of various accessible properties.
+ * @return {JSON}
+ *         JSON snapshot of the accessibility tree with root at current accessible.
+ */
+function getSnapshot(acc, a11yService) {
+  if (isDefunct(acc)) {
+    return {
+      states: [ a11yService.getStringStates(0, STATE_DEFUNCT) ],
+    };
+  }
+
+  const actions = [];
+  for (let i = 0; i < acc.actionCount; i++) {
+    actions.push(acc.getActionDescription(i));
+  }
+
+  const attributes = {};
+  if (acc.attributes) {
+    for (const { key, value } of acc.attributes.enumerate()) {
+      attributes[key] = value;
+    }
+  }
+
+  const state = {};
+  const extState = {};
+  acc.getState(state, extState);
+  const states = [
+    ...a11yService.getStringStates(state.value, extState.value),
+  ];
+
+  const children = [];
+  for (let child = acc.firstChild; child; child = child.nextSibling) {
+    children.push(getSnapshot(child, a11yService));
+  }
+
+  const { nodeType, nodeCssSelector } = getNodeDescription(acc.DOMNode);
+  return {
+    name: acc.name,
+    role: a11yService.getStringRole(acc.role),
+    actions,
+    value: acc.value,
+    nodeCssSelector,
+    nodeType,
+    description: acc.description,
+    keyboardShortcut: acc.accessKey || acc.keyboardShortcut,
+    childCount: acc.childCount,
+    indexInParent: acc.indexInParent,
+    states,
+    children,
+    attributes,
+  };
+}
 
 /**
  * The AccessibleActor provides information about a given accessible object: its
@@ -315,6 +402,10 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     return this.isDefunct ? null : {
       contrastRatio: this._getContrastRatio(),
     };
+  },
+
+  snapshot() {
+    return getSnapshot(this.rawAccessible, this.walker.a11yService);
   },
 });
 
