@@ -2376,12 +2376,27 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
                 Debugger* dbg = *p;
                 for (FrameMap::Range r = dbg->frames.all(); !r.empty(); r.popFront()) {
                     AbstractFramePtr frame = r.front().key();
-                    NativeObject* frameobj = r.front().value();
+                    NativeObject* frameObj = r.front().value();
                     if (frame.isWasmDebugFrame()) {
                         continue;
                     }
                     if (frame.script() == trappingScript &&
-                        !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
+                        !frameObj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
+                    {
+                        stepperCount++;
+                    }
+                }
+
+                // Also count hooks set on suspended generator frames.
+                for (GeneratorWeakMap::Range r = dbg->generatorFrames.all(); !r.empty(); r.popFront()) {
+                    GeneratorObject& genObj = r.front().key()->as<GeneratorObject>();
+                    DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
+
+                    // Running frames were already counted in dbg->frames loop.
+                    if (!genObj.isRunning() &&
+                        !genObj.callee().isInterpretedLazy() &&
+                        genObj.callee().nonLazyScript() == trappingScript &&
+                        !frameObj.getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
                     {
                         stepperCount++;
                     }
