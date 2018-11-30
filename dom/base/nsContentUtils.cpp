@@ -8110,10 +8110,7 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
       }
 
       nsCOMPtr<nsISupports> data;
-      if (NS_FAILED(aTransferable->GetTransferData(flavorStr.get(),
-                                                   getter_AddRefs(data)))) {
-        continue;
-      }
+      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data));
 
       nsCOMPtr<nsISupportsString> text = do_QueryInterface(data);
       nsCOMPtr<nsISupportsCString> ctext = do_QueryInterface(data);

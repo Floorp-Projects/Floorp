@@ -482,9 +482,8 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         // the transferable for this clipboard and try to get the
         // text/unicode type for it.
         rv = trans->GetTransferData("text/unicode", getter_AddRefs(item));
-        if (NS_FAILED(rv) || !item) {
+        if (!item || NS_FAILED(rv))
             return;
-        }
 
         nsCOMPtr<nsISupportsString> wideString;
         wideString = do_QueryInterface(item);
@@ -534,7 +533,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
 
     if (selectionTarget == gdk_atom_intern(kHTMLMime, FALSE)) {
         rv = trans->GetTransferData(kHTMLMime, getter_AddRefs(item));
-        if (NS_FAILED(rv) || !item) {
+        if (!item || NS_FAILED(rv)) {
             return;
         }
 
@@ -565,7 +564,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
 
     rv = trans->GetTransferData(target_name, getter_AddRefs(item));
     // nothing found?
-    if (NS_FAILED(rv) || !item) {
+    if (!item || NS_FAILED(rv)) {
         g_free(target_name);
         return;
     }
