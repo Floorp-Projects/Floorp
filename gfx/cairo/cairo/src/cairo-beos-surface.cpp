@@ -1,4 +1,4 @@
-/* vim:set ts=8 sw=4 noet cin: */
+/* vim:set ts=8 sw=2 noet cin: */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Christian Biesinger <cbiesinger@web.de>

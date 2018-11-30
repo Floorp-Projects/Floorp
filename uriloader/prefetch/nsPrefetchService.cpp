@@ -1010,4 +1010,4 @@ nsPrefetchService::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
-// vim: ts=4 sw=4 expandtab
+// vim: ts=4 sw=2 expandtab
